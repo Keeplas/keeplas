@@ -145,15 +145,15 @@ export function SignupForm() {
         <div className="w-full max-w-md">
           {/* Header & Badge */}
           <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full mb-6 shadow-sm">
               <svg
-                className="w-4 h-4 text-secondary"
+                className="w-5 h-5 text-secondary"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
               </svg>
-              <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-secondary-container">
+              <span className="font-label text-[11px] uppercase tracking-widest font-bold text-primary">
                 Zero-Knowledge Encryption
               </span>
             </div>
@@ -280,11 +280,13 @@ export function SignupForm() {
             </button>
           </form>
 
-          {/* Divider — spacing-based, no line per design spec */}
-          <div className="flex items-center justify-center my-10">
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-10">
+            <div className="flex-1 h-px bg-outline-variant/15" />
             <span className="font-label text-[10px] uppercase tracking-widest text-outline-variant">
               Authorized via
             </span>
+            <div className="flex-1 h-px bg-outline-variant/15" />
           </div>
 
           {/* SSO */}

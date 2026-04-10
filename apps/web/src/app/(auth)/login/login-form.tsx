@@ -140,21 +140,15 @@ export function LoginForm() {
         <div className="w-full max-w-md">
           {/* Header & Badge */}
           <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full mb-6 shadow-sm">
               <svg
-                className="w-4 h-4 text-secondary"
-                fill="none"
+                className="w-5 h-5 text-secondary"
+                fill="currentColor"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7.864 4.243A7.5 7.5 0 0 1 19.5 10.5c0 2.92-.556 5.709-1.568 8.268M5.742 6.364A7.465 7.465 0 0 0 4.5 10.5a48.667 48.667 0 0 0-1.444 7.778M12 18.75a9 9 0 0 0 2.268-.235l.122-.029m-2.39.264-.088.014c-.74.123-1.498.185-2.262.185-1.753 0-3.45-.263-5.04-.757l-.106-.033M12 18.75c.69 0 1.366-.044 2.027-.127l.101-.013"
-                />
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
               </svg>
-              <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-secondary-container">
+              <span className="font-label text-[11px] uppercase tracking-widest font-bold text-primary">
                 Identification Required
               </span>
             </div>
@@ -250,11 +244,13 @@ export function LoginForm() {
             </button>
           </form>
 
-          {/* Divider — spacing-based, no line per design spec */}
-          <div className="flex items-center justify-center my-10">
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-10">
+            <div className="flex-1 h-px bg-outline-variant/15" />
             <span className="font-label text-[10px] uppercase tracking-widest text-outline-variant">
               Authorized via
             </span>
+            <div className="flex-1 h-px bg-outline-variant/15" />
           </div>
 
           {/* SSO */}
