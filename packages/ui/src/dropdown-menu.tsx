@@ -64,7 +64,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("my-1 h-px bg-surface-container-highest", className)}
+    className={cn("my-2", className)}
     {...props}
   />
 ));

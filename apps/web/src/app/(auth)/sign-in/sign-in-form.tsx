@@ -74,7 +74,6 @@ export function SignInForm() {
               precision of a curator, protected by the strength of a fortress.
             </p>
             <div className="flex items-center gap-4 py-8">
-              <div className="h-px w-12 bg-secondary-fixed/30" />
               <span className="font-label text-xs uppercase tracking-[0.3em] text-secondary-fixed/60">
                 Digital Heritage Protocols
               </span>
@@ -158,7 +157,7 @@ export function SignInForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@vault.curator"
                   required
-                  className="w-full bg-surface-container-low border-none rounded-xl py-4 px-6 focus:ring-0 focus:bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/40 transition-colors"
+                  className="w-full bg-surface-container-low border border-transparent rounded-xl py-4 px-6 focus:border-secondary/15 focus:bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/40 transition-colors focus:outline-none"
                 />
               </div>
 
@@ -185,7 +184,7 @@ export function SignInForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
-                  className="w-full bg-surface-container-low border-none rounded-xl py-4 px-6 focus:ring-0 focus:bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/40 transition-colors"
+                  className="w-full bg-surface-container-low border border-transparent rounded-xl py-4 px-6 focus:border-secondary/15 focus:bg-surface-container-high text-on-surface placeholder:text-on-surface-variant/40 transition-colors focus:outline-none"
                 />
               </div>
             </div>
@@ -202,13 +201,11 @@ export function SignInForm() {
             </div>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-4">
-            <div className="h-[1px] flex-1 bg-surface-container-high" />
+          {/* Divider — spacing-based, no line per design spec */}
+          <div className="flex items-center justify-center py-2">
             <span className="font-label text-[10px] uppercase tracking-widest text-outline-variant">
               Authorized via
             </span>
-            <div className="h-[1px] flex-1 bg-surface-container-high" />
           </div>
 
           {/* Google OAuth */}

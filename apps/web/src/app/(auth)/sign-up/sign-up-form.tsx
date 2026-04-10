@@ -75,7 +75,7 @@ export function SignUpForm() {
               Keeplas
             </h1>
           </div>
-          <div className="h-1 w-12 bg-secondary mb-12" />
+          <div className="mb-12" />
         </div>
 
         {/* Center: Hero text */}
@@ -179,7 +179,7 @@ export function SignUpForm() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Julian Voss"
                   required
-                  className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-secondary/20 focus:bg-surface-container-high transition-all"
+                  className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export function SignUpForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="curator@keeplas.vault"
                   required
-                  className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-secondary/20 focus:bg-surface-container-high transition-all"
+                  className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
                 />
               </div>
 
@@ -219,7 +219,7 @@ export function SignUpForm() {
                     placeholder="••••••••"
                     required
                     minLength={8}
-                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-secondary/20 focus:bg-surface-container-high transition-all"
+                    className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
                   />
                 </div>
                 <div className="space-y-2">
@@ -237,7 +237,7 @@ export function SignUpForm() {
                     placeholder="••••••••"
                     required
                     minLength={8}
-                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:ring-2 focus:ring-secondary/20 focus:bg-surface-container-high transition-all"
+                    className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
                   />
                 </div>
               </div>
@@ -272,13 +272,11 @@ export function SignUpForm() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center my-10 gap-4">
-            <div className="h-[1px] flex-1 bg-surface-container-high" />
+          {/* Divider — spacing-based, no line per design spec */}
+          <div className="flex items-center justify-center my-10">
             <span className="font-label text-[10px] uppercase tracking-widest text-outline-variant">
               Authorized via
             </span>
-            <div className="h-[1px] flex-1 bg-surface-container-high" />
           </div>
 
           {/* SSO */}
