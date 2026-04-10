@@ -16,10 +16,13 @@ export {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "./dropdown-menu";
+export { ErrorAlert } from "./error-alert";
 export { Input } from "./input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
+export { PasswordInput } from "./password-input";
 export { Progress } from "./progress";
 export { Separator } from "./separator";
 export { Switch } from "./switch";
+export { Spinner } from "./spinner";
 export { cn } from "./lib/utils";

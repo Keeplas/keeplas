@@ -3,6 +3,7 @@
 import { useConvexAuth, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Spinner } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
@@ -38,7 +39,7 @@ export default function DashboardLayout({
   if (isLoading || onboardingState === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+        <Spinner />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { categoryValidator, accessLevelValidator } from "./validators";
 
 export default defineSchema({
   // Auth tables (managed by @convex-dev/auth)
@@ -105,17 +106,7 @@ export default defineSchema({
     vaultId: v.id("vaults"),
     userId: v.id("users"),
 
-    category: v.union(
-      v.literal("personal_document"),
-      v.literal("financial_asset"),
-      v.literal("digital_asset"),
-      v.literal("health_directive"),
-      v.literal("legal_document"),
-      v.literal("business_continuity"),
-      v.literal("conditional_message"),
-      v.literal("personal_message"),
-      v.literal("credential")
-    ),
+    category: categoryValidator,
 
     title: v.string(),
     description: v.optional(v.string()),
@@ -131,12 +122,7 @@ export default defineSchema({
     fileSize: v.optional(v.number()),
 
     sharedWithContacts: v.array(v.id("trusted_contacts")),
-    accessLevel: v.union(
-      v.literal("private"),
-      v.literal("trusted_only"),
-      v.literal("emergency_only"),
-      v.literal("public")
-    ),
+    accessLevel: accessLevelValidator,
 
     status: v.union(
       v.literal("active"),

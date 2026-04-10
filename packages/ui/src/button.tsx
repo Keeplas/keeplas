@@ -9,6 +9,8 @@ const buttonVariants = cva(
       variant: {
         default:
           "gradient-signature text-on-primary shadow-sm hover:opacity-90",
+        vault:
+          "vault-gradient text-on-primary font-headline font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]",
         secondary:
           "bg-transparent text-secondary hover:bg-surface-container",
         outline:

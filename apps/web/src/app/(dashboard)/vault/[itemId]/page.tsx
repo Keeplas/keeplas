@@ -7,8 +7,8 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-
-type AccessLevel = "private" | "trusted_only" | "emergency_only" | "public";
+import type { AccessLevel } from "@keeplas/backend/shared-types";
+import { Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
 
 export default function VaultItemPage() {
   const params = useParams();
@@ -100,7 +100,7 @@ export default function VaultItemPage() {
   if (item === undefined) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+        <Spinner />
       </div>
     );
   }
@@ -139,17 +139,16 @@ export default function VaultItemPage() {
           </h2>
 
           {error && (
-            <div className="p-3 rounded-xl bg-error-container text-on-error-container text-sm">{error}</div>
+            <ErrorAlert message={error} className="mb-0" />
           )}
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Title</label>
-            <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none" />
+            <Label>Title</Label>
+            <Input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
           </div>
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Category</label>
+            <Label>Category</Label>
             <select value={editCategory} onChange={(e) => setEditCategory(e.target.value as VaultCategory)}
               className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer">
               {CATEGORIES.map((cat) => <option key={cat.key} value={cat.key}>{cat.label}</option>)}
@@ -157,19 +156,18 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Description</label>
-            <input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none" />
+            <Label>Description</Label>
+            <Input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Secure Content</label>
+            <Label>Secure Content</Label>
             <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} required rows={6}
               className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none resize-none" />
           </div>
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Access Level</label>
+            <Label>Access Level</Label>
             <select value={editAccessLevel} onChange={(e) => setEditAccessLevel(e.target.value as AccessLevel)}
               className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer">
               <option value="private">Private — Only you</option>
@@ -180,9 +178,8 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">Tags</label>
-            <input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none" />
+            <Label>Tags</Label>
+            <Input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} />
           </div>
 
           <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -268,7 +265,7 @@ export default function VaultItemPage() {
             </div>
             {decrypting ? (
               <div className="flex items-center gap-2 text-on-surface-variant">
-                <div className="w-4 h-4 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+                <Spinner size="sm" />
                 Decrypting...
               </div>
             ) : (

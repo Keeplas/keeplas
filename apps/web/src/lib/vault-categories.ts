@@ -1,13 +1,5 @@
-export type VaultCategory =
-  | "personal_document"
-  | "financial_asset"
-  | "digital_asset"
-  | "health_directive"
-  | "legal_document"
-  | "business_continuity"
-  | "conditional_message"
-  | "personal_message"
-  | "credential";
+import type { VaultCategory } from "@keeplas/backend/shared-types";
+export type { VaultCategory };
 
 export interface CategoryConfig {
   key: VaultCategory;

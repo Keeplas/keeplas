@@ -1,5 +1,5 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { query } from "./_generated/server";
+import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
 
 /**
  * Get all dashboard data in one query: integrity score, category counts,
@@ -8,21 +8,11 @@ import { query } from "./_generated/server";
 export const getDashboardData = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
-    // Get vault
-    const vault = await ctx.db
-      .query("vaults")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    // Get all active items
-    const items = await ctx.db
-      .query("vault_items")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.neq(q.field("status"), "archived"))
-      .collect();
+    const vault = await getUserVault(ctx, userId);
+    const items = await getActiveItems(ctx, userId);
 
     // Category counts
     const categoryCounts: Record<string, number> = {};

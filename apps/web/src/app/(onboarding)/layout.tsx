@@ -3,6 +3,7 @@
 import { useConvexAuth } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Spinner } from "@keeplas/ui";
 
 export default function OnboardingLayout({
   children,
@@ -21,7 +22,7 @@ export default function OnboardingLayout({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-surface">
-        <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+        <Spinner />
       </div>
     );
   }

@@ -1,5 +1,5 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
+import { requireAuth, optionalAuth, getUserVault } from "./helpers";
 
 /**
  * Get or create the user's vault.
@@ -7,14 +7,9 @@ import { mutation, query } from "./_generated/server";
 export const getOrCreateVault = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
-    const existing = await ctx.db
-      .query("vaults")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
+    const existing = await getUserVault(ctx, userId);
     if (existing) return existing._id;
 
     const now = Date.now();
@@ -40,12 +35,9 @@ export const getOrCreateVault = mutation({
 export const getVault = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
-    return await ctx.db
-      .query("vaults")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    return await getUserVault(ctx, userId);
   },
 });

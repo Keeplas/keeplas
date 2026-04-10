@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { phraseToHash } from "@keeplas/crypto/recovery";
+import { Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
 
 function pickRandomIndices(): number[] {
   const available = Array.from({ length: 24 }, (_, i) => i);
@@ -143,35 +144,15 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 rounded-xl bg-error-container text-on-error-container text-sm flex items-start gap-3">
-          <svg
-            className="w-5 h-5 shrink-0 mt-0.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-            />
-          </svg>
-          {error}
-        </div>
-      )}
+      {error && <ErrorAlert message={error} />}
 
       <form onSubmit={handleVerify} className="space-y-5">
         {indices.map((wordIndex, i) => (
           <div key={wordIndex} className="space-y-2">
-            <label
-              htmlFor={`word-${wordIndex}`}
-              className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1"
-            >
+            <Label htmlFor={`word-${wordIndex}`}>
               {ordinal(wordIndex)} word
-            </label>
-            <input
+            </Label>
+            <Input
               id={`word-${wordIndex}`}
               type="text"
               value={inputs[i]}
@@ -179,7 +160,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
               placeholder={`Enter the ${ordinal(wordIndex)} word`}
               required
               autoComplete="off"
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none font-mono uppercase tracking-wider"
+              className="font-mono uppercase tracking-wider"
             />
           </div>
         ))}
@@ -192,7 +173,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
           >
             {loading ? (
               <>
-                <div className="w-5 h-5 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
+                <Spinner size="md" className="border-on-primary border-t-transparent" />
                 Verifying...
               </>
             ) : (

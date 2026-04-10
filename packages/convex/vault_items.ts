@@ -1,26 +1,14 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { createAuditLog } from "./audit";
-
-const categoryValidator = v.union(
-  v.literal("personal_document"),
-  v.literal("financial_asset"),
-  v.literal("digital_asset"),
-  v.literal("health_directive"),
-  v.literal("legal_document"),
-  v.literal("business_continuity"),
-  v.literal("conditional_message"),
-  v.literal("personal_message"),
-  v.literal("credential")
-);
-
-const accessLevelValidator = v.union(
-  v.literal("private"),
-  v.literal("trusted_only"),
-  v.literal("emergency_only"),
-  v.literal("public")
-);
+import { categoryValidator, accessLevelValidator } from "./validators";
+import {
+  requireAuth,
+  optionalAuth,
+  getUserVault,
+  getActiveItems,
+  requireItemOwnership,
+  logVaultAction,
+} from "./helpers";
 
 // ─── Queries ────────────────────────────────────────────
 
@@ -30,14 +18,10 @@ const accessLevelValidator = v.union(
 export const getItems = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return [];
 
-    return await ctx.db
-      .query("vault_items")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.neq(q.field("status"), "archived"))
-      .collect();
+    return await getActiveItems(ctx, userId);
   },
 });
 
@@ -47,14 +31,10 @@ export const getItems = query({
 export const getItemsByCategory = query({
   args: { category: categoryValidator },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return [];
 
-    const vault = await ctx.db
-      .query("vaults")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
+    const vault = await getUserVault(ctx, userId);
     if (!vault) return [];
 
     return await ctx.db
@@ -73,7 +53,7 @@ export const getItemsByCategory = query({
 export const getItem = query({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
     const item = await ctx.db.get(args.itemId);
@@ -89,14 +69,10 @@ export const getItem = query({
 export const getCategoryCounts = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return {};
 
-    const items = await ctx.db
-      .query("vault_items")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.neq(q.field("status"), "archived"))
-      .collect();
+    const items = await getActiveItems(ctx, userId);
 
     const counts: Record<string, number> = {};
     for (const item of items) {
@@ -125,8 +101,7 @@ export const createItem = mutation({
     isCritical: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     // Verify vault ownership
     const vault = await ctx.db.get(args.vaultId);
@@ -160,15 +135,7 @@ export const createItem = mutation({
       updatedAt: now,
     });
 
-    // Audit log
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "vault_item_created",
-      resourceType: "vault_item",
-      resourceId: itemId,
-    });
+    await logVaultAction(ctx, userId, "vault_item_created", itemId);
 
     return itemId;
   },
@@ -190,17 +157,12 @@ export const updateItem = mutation({
     isCritical: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
-
-    const item = await ctx.db.get(args.itemId);
-    if (!item || item.userId !== userId) {
-      throw new Error("Item not found");
-    }
+    const userId = await requireAuth(ctx);
+    await requireItemOwnership(ctx, args.itemId, userId);
 
     const { itemId, ...updates } = args;
-    // Remove undefined values
-    const patch: Record<string, unknown> = { updatedAt: Date.now() };
+    const now = Date.now();
+    const patch: Record<string, unknown> = { updatedAt: now };
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
         patch[key] = value;
@@ -208,15 +170,7 @@ export const updateItem = mutation({
     }
 
     await ctx.db.patch(itemId, patch);
-
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "vault_item_updated",
-      resourceType: "vault_item",
-      resourceId: itemId,
-    });
+    await logVaultAction(ctx, userId, "vault_item_updated", itemId);
   },
 });
 
@@ -226,17 +180,14 @@ export const updateItem = mutation({
 export const deleteItem = mutation({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
 
-    const item = await ctx.db.get(args.itemId);
-    if (!item || item.userId !== userId) {
-      throw new Error("Item not found");
-    }
+    const now = Date.now();
 
     await ctx.db.patch(args.itemId, {
       status: "archived",
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     // Update vault counts
@@ -244,17 +195,10 @@ export const deleteItem = mutation({
     if (vault) {
       await ctx.db.patch(item.vaultId, {
         encryptedItemsCount: Math.max(0, vault.encryptedItemsCount - 1),
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
     }
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "vault_item_archived",
-      resourceType: "vault_item",
-      resourceId: args.itemId,
-    });
+    await logVaultAction(ctx, userId, "vault_item_archived", args.itemId);
   },
 });

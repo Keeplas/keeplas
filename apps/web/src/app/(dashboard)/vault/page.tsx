@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemCard } from "./vault-item-card";
 import { AddItemDialog } from "./add-item-dialog";
+import { Input } from "@keeplas/ui";
 
 export default function VaultPage() {
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
@@ -57,12 +58,12 @@ export default function VaultPage() {
 
       {/* Search */}
       <div className="mb-6">
-        <input
+        <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search vault items..."
-          className="w-full max-w-md bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
+          className="max-w-md"
         />
       </div>
 

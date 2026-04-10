@@ -6,14 +6,14 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { AccessLevel } from "@keeplas/backend/shared-types";
+import { Input, Label, ErrorAlert } from "@keeplas/ui";
 
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
   onClose: () => void;
   defaultCategory?: VaultCategory;
 }
-
-type AccessLevel = "private" | "trusted_only" | "emergency_only" | "public";
 
 export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDialogProps) {
   const createItem = useMutation(api.vault_items.createItem);
@@ -102,32 +102,23 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {error && (
-            <div className="p-3 rounded-xl bg-error-container text-on-error-container text-sm">
-              {error}
-            </div>
-          )}
+          <ErrorAlert message={error} />
 
           {/* Title */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
-              Title
-            </label>
-            <input
+            <Label>Title</Label>
+            <Input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Bank account, Passport, Will..."
               required
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
             />
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
-              Category
-            </label>
+            <Label>Category</Label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as VaultCategory)}
@@ -143,24 +134,21 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
 
           {/* Description */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
+            <Label>
               Description
               <span className="text-outline-variant ml-1">(optional)</span>
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description..."
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
             />
           </div>
 
           {/* Content */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
-              Secure Content
-            </label>
+            <Label>Secure Content</Label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -176,9 +164,7 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
 
           {/* Access Level */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
-              Access Level
-            </label>
+            <Label>Access Level</Label>
             <select
               value={accessLevel}
               onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
@@ -193,16 +179,15 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
 
           {/* Tags */}
           <div className="space-y-2">
-            <label className="font-label text-xs uppercase tracking-[0.1em] font-bold text-on-surface-variant ml-1">
+            <Label>
               Tags
               <span className="text-outline-variant ml-1">(comma separated)</span>
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="e.g., urgent, family, financial..."
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none"
             />
           </div>
 

@@ -2,27 +2,11 @@
 
 import { useCallback } from "react";
 import { useMasterKey } from "./master-key-context";
+import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 
 interface EncryptedPayload {
   ciphertext: string; // base64
   iv: string; // base64
-}
-
-function uint8ToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function base64ToUint8(base64: string): Uint8Array<ArrayBuffer> {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
 }
 
 /**

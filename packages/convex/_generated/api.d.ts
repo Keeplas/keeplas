@@ -13,9 +13,11 @@ import type * as auth from "../auth.js";
 import type * as convex__generated_api from "../convex/_generated/api.js";
 import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as dashboard from "../dashboard.js";
+import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as onboarding from "../onboarding.js";
 import type * as users from "../users.js";
+import type * as validators from "../validators.js";
 import type * as vault_items from "../vault_items.js";
 import type * as vaults from "../vaults.js";
 
@@ -31,9 +33,11 @@ declare const fullApi: ApiFromModules<{
   "convex/_generated/api": typeof convex__generated_api;
   "convex/_generated/server": typeof convex__generated_server;
   dashboard: typeof dashboard;
+  helpers: typeof helpers;
   http: typeof http;
   onboarding: typeof onboarding;
   users: typeof users;
+  validators: typeof validators;
   vault_items: typeof vault_items;
   vaults: typeof vaults;
 }>;

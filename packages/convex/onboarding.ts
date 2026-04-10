@@ -1,6 +1,6 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth, optionalAuth } from "./helpers";
 
 /**
  * Get the current user's onboarding state.
@@ -8,7 +8,7 @@ import { v } from "convex/values";
 export const getOnboardingState = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
     const user = await ctx.db.get(userId);
@@ -29,8 +29,7 @@ export const getOnboardingState = query({
 export const initOnboarding = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
@@ -59,8 +58,7 @@ export const advanceOnboardingStep = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     await ctx.db.patch(userId, {
       onboardingStep: args.step,
@@ -78,8 +76,7 @@ export const storeRecoveryPhraseHash = mutation({
     recoveryPhraseHash: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     await ctx.db.patch(userId, {
       recoveryPhraseHash: args.recoveryPhraseHash,
@@ -100,8 +97,7 @@ export const storeKeyBundle = mutation({
     keeplasShard: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not authenticated");
+    const userId = await requireAuth(ctx);
 
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,

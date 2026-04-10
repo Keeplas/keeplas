@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
+import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { phraseToKey } from "@keeplas/crypto/recovery";
 import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
@@ -277,12 +278,4 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
       )}
     </div>
   );
-}
-
-function uint8ToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }

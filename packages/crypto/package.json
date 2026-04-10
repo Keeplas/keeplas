@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./aes": "./src/aes/index.ts",
+    "./encoding": "./src/encoding.ts",
     "./recovery": "./src/recovery/index.ts",
     "./shamir": "./src/shamir/index.ts"
   },

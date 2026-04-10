@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@keeplas/backend/_generated/api";
+import { Spinner } from "@keeplas/ui";
 import { getCategoryConfig } from "@/lib/vault-categories";
 
 export function DashboardContent() {
@@ -12,7 +13,7 @@ export function DashboardContent() {
   if (data === undefined) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
+        <Spinner />
       </div>
     );
   }
