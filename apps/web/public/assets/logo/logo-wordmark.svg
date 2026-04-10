@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 56" fill="none">
+  <defs>
+    <linearGradient id="wShieldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#041632"/>
+      <stop offset="100%" stop-color="#1b2b48"/>
+    </linearGradient>
+    <linearGradient id="wAccentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b9eaff"/>
+      <stop offset="100%" stop-color="#28657a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield icon (compact) -->
+  <g transform="translate(4, 2) scale(0.1)">
+    <path
+      d="M256 28 L462 120 C462 120 472 320 256 484 C40 320 50 120 50 120 Z"
+      fill="url(#wShieldGrad)"
+    />
+    <circle cx="256" cy="220" r="72" fill="none" stroke="url(#wAccentGrad)" stroke-width="8"/>
+    <path
+      d="M256 190 C240 190 228 202 228 218 C228 230 236 240 248 244 L242 290 C242 294 245 298 250 298 L262 298 C267 298 270 294 270 290 L264 244 C276 240 284 230 284 218 C284 202 272 190 256 190Z"
+      fill="url(#wAccentGrad)"
+    />
+    <rect
+      x="248" y="100" width="16" height="16"
+      rx="2"
+      transform="rotate(45 256 108)"
+      fill="#b9eaff"
+      opacity="0.8"
+    />
+  </g>
+
+  <!-- Wordmark -->
+  <text
+    x="68"
+    y="40"
+    font-family="'Manrope', 'Inter', system-ui, sans-serif"
+    font-size="34"
+    font-weight="800"
+    letter-spacing="-1.5"
+    fill="#041632"
+  >Keeplas</text>
+</svg>

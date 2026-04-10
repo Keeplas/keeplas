@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   KEEPLAS DESIGN SYSTEM — "The Digital Curator"
+   Ref: PRD/Design/design-guidelines.md
+   ═══════════════════════════════════════════════ */
+
+@theme inline {
+  /* ── Typography ── */
+  --font-sans: var(--font-inter);
+  --font-headline: var(--font-manrope);
+  --font-body: var(--font-inter);
+  --font-label: var(--font-inter);
+
+  /* ── Primary — Vault Navy ── */
+  --color-primary: #041632;
+  --color-primary-container: #1b2b48;
+  --color-primary-fixed: #d4e3ff;
+  --color-primary-fixed-dim: #a4c4f0;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #b8cfe8;
+  --color-on-primary-fixed: #041632;
+  --color-on-primary-fixed-variant: #1b2b48;
+
+  /* ── Secondary — Reassurance Teal ── */
+  --color-secondary: #28657a;
+  --color-secondary-container: #3a7d91;
+  --color-secondary-fixed: #b9eaff;
+  --color-secondary-fixed-dim: #8ec8d8;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #c5e4ed;
+  --color-on-secondary-fixed: #001f2a;
+  --color-on-secondary-fixed-variant: #28657a;
+
+  /* ── Tertiary — Deep Shadow ── */
+  --color-tertiary: #001a20;
+  --color-tertiary-container: #0a2e38;
+  --color-tertiary-fixed: #a0f0d4;
+  --color-tertiary-fixed-dim: #6fd4b8;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #b0f0d8;
+  --color-on-tertiary-fixed: #001a20;
+  --color-on-tertiary-fixed-variant: #0a2e38;
+
+  /* ── Surface tiers (tonal layering, NO borders) ── */
+  --color-background: #fcf9f8;
+  --color-on-background: #1d1b1a;
+  --color-surface: #fcf9f8;
+  --color-surface-dim: #d9d5d4;
+  --color-surface-variant: #e2dfe0;
+  --color-surface-tint: #041632;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container: #f0eded;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-highest: #e5e2e1;
+
+  /* ── On-surface ── */
+  --color-on-surface: #1d1b1a;
+  --color-on-surface-variant: #4a4644;
+
+  /* ── Outline ── */
+  --color-outline: #7b7674;
+  --color-outline-variant: #c5c6ce;
+
+  /* ── Inverse ── */
+  --color-inverse-surface: #322f2e;
+  --color-inverse-on-surface: #f5f0ee;
+  --color-inverse-primary: #a4c4f0;
+
+  /* ── Error ── */
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #410002;
+
+  /* ── Border radius — Subtle architectural scale ── */
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* ── Animation ── */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-slide-down: slide-down 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Base styles ── */
+body {
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+/* ── Typography utilities ── */
+.text-display-lg {
+  font-family: var(--font-manrope);
+  font-size: 3.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.text-display-md {
+  font-family: var(--font-manrope);
+  font-size: 2.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.text-headline-lg {
+  font-family: var(--font-manrope);
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+
+.text-headline-md {
+  font-family: var(--font-manrope);
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.text-body-lg {
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.text-body-md {
+  font-family: var(--font-inter);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.text-label-lg {
+  font-family: var(--font-inter);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.text-label-md {
+  font-family: var(--font-inter);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: color-mix(in srgb, var(--color-primary) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+}
+
+.glass-light {
+  background: color-mix(in srgb, var(--color-surface-container-lowest) 80%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/* ── Signature gradient (135deg primary → primary-container) ── */
+.gradient-signature {
+  background: linear-gradient(135deg, #041632 0%, #1b2b48 100%);
+}
+
+/* ── Ghost border (outline-variant at 15% opacity — only allowed border) ── */
+.ghost-border {
+  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 15%, transparent);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
+}

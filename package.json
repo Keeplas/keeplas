@@ -1,0 +1,29 @@
+{
+  "name": "keeplas",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open-source Life Continuity Platform — securely store, organize, and transmit vital information to trusted contacts.",
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@10.8.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.9.6",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "convex": "^1.35.1"
+  }
+}

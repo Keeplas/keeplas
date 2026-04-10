@@ -1,0 +1,11 @@
+# Keeplas Code Ownership
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Crypto package — founders only (security-critical)
+/packages/crypto/ @prince-keeplas @ghislain-keeplas
+
+# Security audits — founders only
+/security/ @prince-keeplas @ghislain-keeplas
+
+# All other code — open to community
+* @prince-keeplas
