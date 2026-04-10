@@ -18,12 +18,14 @@ export default defineSchema({
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),
 
-    authProviders: v.array(
-      v.union(
-        v.literal("passkey"),
-        v.literal("email"),
-        v.literal("google"),
-        v.literal("apple")
+    authProviders: v.optional(
+      v.array(
+        v.union(
+          v.literal("passkey"),
+          v.literal("email"),
+          v.literal("google"),
+          v.literal("apple")
+        )
       )
     ),
 
@@ -39,25 +41,27 @@ export default defineSchema({
       )
     ),
 
-    publicKey: v.string(),
-    encryptedKeyBundle: v.string(),
-    recoveryPhraseHash: v.string(),
-    recoveryVerified: v.boolean(),
-    zkVerifierKey: v.string(),
+    // Crypto fields — populated during onboarding (Phase 2)
+    publicKey: v.optional(v.string()),
+    encryptedKeyBundle: v.optional(v.string()),
+    recoveryPhraseHash: v.optional(v.string()),
+    recoveryVerified: v.optional(v.boolean()),
+    zkVerifierKey: v.optional(v.string()),
+    keeplasShard: v.optional(v.string()),
 
-    keeplasShard: v.string(),
-
-    onboardingStep: v.union(
-      v.literal("recovery_phrase"),
-      v.literal("dashboard"),
-      v.literal("complete")
+    onboardingStep: v.optional(
+      v.union(
+        v.literal("recovery_phrase"),
+        v.literal("dashboard"),
+        v.literal("complete")
+      )
     ),
-    vaultIntegrityScore: v.number(),
+    vaultIntegrityScore: v.optional(v.number()),
 
-    isActive: v.boolean(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    lastSeenAt: v.number(),
+    isActive: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
+    lastSeenAt: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_last_seen", ["lastSeenAt"]),
