@@ -27,6 +27,10 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     setStep("verification");
   }, []);
 
+  const handleBackToPhrase = useCallback(() => {
+    setStep("recovery_phrase");
+  }, []);
+
   const handleVerified = useCallback(() => {
     setStep("key_generation");
   }, []);
@@ -61,7 +65,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
               <div
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-label transition-colors ${
                   i <= currentStepIndex
-                    ? "bg-secondary-container text-on-secondary-container font-bold"
+                    ? "bg-secondary text-on-secondary font-bold"
                     : "bg-surface-container text-on-surface-variant"
                 }`}
               >
@@ -90,7 +94,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           />
         )}
         {step === "verification" && phrase && (
-          <VerificationStep phrase={phrase} onVerified={handleVerified} />
+          <VerificationStep phrase={phrase} onVerified={handleVerified} onBack={handleBackToPhrase} />
         )}
         {step === "key_generation" && phrase && (
           <KeyGenerationStep phrase={phrase} />

@@ -70,7 +70,7 @@ export function RecoveryPhraseStep({
         <div className="flex gap-3 print:hidden">
           <button
             onClick={handleCopyAll}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2"
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
             <svg
               className="w-5 h-5"
@@ -89,7 +89,7 @@ export function RecoveryPhraseStep({
           </button>
           <button
             onClick={handlePrint}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2"
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
           >
             <svg
               className="w-5 h-5"
@@ -242,7 +242,7 @@ export function RecoveryPhraseStep({
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-1 w-5 h-5 rounded-lg border-2 border-outline-variant/30 text-secondary focus:ring-secondary/20 focus:ring-offset-0 accent-secondary"
+            className="mt-1 w-5 h-5 rounded-lg border-2 border-outline-variant/30 text-secondary focus:ring-secondary/20 focus:ring-offset-0 accent-secondary cursor-pointer"
           />
           <span className="text-sm text-on-surface font-body">
             I have written down my 24 Recovery Words and stored them in a safe
@@ -254,7 +254,7 @@ export function RecoveryPhraseStep({
         <button
           onClick={handleContinue}
           disabled={!confirmed}
-          className="w-full vault-gradient text-on-primary font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:pointer-events-none"
+          className="w-full vault-gradient text-on-primary font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
         >
           I saved my words — continue
           <svg

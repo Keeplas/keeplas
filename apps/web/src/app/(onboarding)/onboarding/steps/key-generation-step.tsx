@@ -264,7 +264,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl"
+            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl cursor-pointer"
           >
             Try again
           </button>
