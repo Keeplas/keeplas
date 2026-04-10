@@ -4,6 +4,12 @@
   "private": true,
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./aes": "./src/aes/index.ts",
+    "./recovery": "./src/recovery/index.ts",
+    "./shamir": "./src/shamir/index.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

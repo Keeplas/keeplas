@@ -14,6 +14,7 @@
     "@auth/core": "^0.37.4",
     "@convex-dev/auth": "^0.0.91",
     "@keeplas/backend": "workspace:*",
+    "@keeplas/crypto": "workspace:*",
     "@keeplas/ui": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

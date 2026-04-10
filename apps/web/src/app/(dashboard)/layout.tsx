@@ -1,10 +1,11 @@
 "use client";
 
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { api } from "@keeplas/backend/_generated/api";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,10 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
+  const onboardingState = useQuery(
+    api.onboarding.getOnboardingState,
+    isAuthenticated ? {} : "skip"
+  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -20,7 +25,13 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (onboardingState && onboardingState.onboardingStep !== "complete") {
+      router.push("/onboarding");
+    }
+  }, [onboardingState, router]);
+
+  if (isLoading || onboardingState === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 rounded-full border-2 border-secondary border-t-transparent animate-spin" />
@@ -29,6 +40,10 @@ export default function DashboardLayout({
   }
 
   if (!isAuthenticated) {
+    return null;
+  }
+
+  if (onboardingState && onboardingState.onboardingStep !== "complete") {
     return null;
   }
 

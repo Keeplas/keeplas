@@ -10,7 +10,7 @@
 |-------|--------|-----------|
 | **Phase 0 — Foundation** | **DONE** | Monorepo, scaffolding, CI, governance, `.env.example` |
 | **Phase 1 — Design System + Auth** | **DONE** | Design tokens, ShadCN components, Convex Auth (Google + Password), auth pages (sign-in/sign-up), app shell (sidebar + glass nav), protected routes, dashboard placeholder |
-| Phase 2 — Crypto Core + Onboarding | Pending | — |
+| **Phase 2 — Crypto Core + Onboarding** | **IN PROGRESS** | BIP-39 (generatePhrase, phraseToKey, phraseToHash), Shamir split/reconstruct (GF256), AES tests, onboarding flow UI (recovery phrase display, 3-word verification, key generation), Convex mutations (onboardingStep, recoveryPhraseHash, encryptedKeyBundle), onboarding guard. Remaining: Passkey key bundle encryption (using wrapping key MVP), shard encryption with contact public keys, recovery flow |
 | Phase 3 — Vault Core | Pending | — |
 | Phase 4 — Emergency Card | Pending | — |
 | Phase 5 — Trusted Contacts | Pending | — |
@@ -399,18 +399,18 @@ Acceptance Criteria:
 
 #### Tasks
 
-| # | Task | Details |
-|---|------|---------|
-| 2.1 | AES Master Key generation | `masterKey.ts`: Generate 256-bit AES-GCM key via `crypto.subtle.generateKey()` |
-| 2.2 | AES encrypt | `encrypt.ts`: `encrypt(plaintext, key) → { ciphertext, iv, tag }` using AES-256-GCM |
-| 2.3 | AES decrypt | `decrypt.ts`: `decrypt(ciphertext, key, iv) → plaintext` |
-| 2.4 | BIP-39 phrase generation | `bip39.ts`: Generate 24-word phrase from wordlist, derive key from phrase |
-| 2.5 | BIP-39 phrase verification | Verify subset of words matches, compute SHA-256 hash for server storage |
-| 2.6 | Shamir split | `split.ts`: Split 256-bit secret into 5 shares with threshold 3 |
-| 2.7 | Shamir reconstruct | `reconstruct.ts`: Reconstruct secret from any 3+ shares |
-| 2.8 | Shard encryption | `encryptShards.ts`: Encrypt each shard with recipient's public key (ECDH + AES) |
-| 2.9 | Key bundle encryption | Encrypt Master Key with Passkey credential for device storage |
-| 2.10 | Unit tests | Exhaustive tests: encrypt→decrypt roundtrip, split→reconstruct, edge cases, different key sizes |
+| # | Task | Details | Status |
+|---|------|---------|--------|
+| 2.1 | AES Master Key generation | `masterKey.ts`: Generate 256-bit AES-GCM key via `crypto.subtle.generateKey()` | **DONE** |
+| 2.2 | AES encrypt | `encrypt.ts`: `encrypt(plaintext, key) → { ciphertext, iv, tag }` using AES-256-GCM | **DONE** |
+| 2.3 | AES decrypt | `decrypt.ts`: `decrypt(ciphertext, key, iv) → plaintext` | **DONE** |
+| 2.4 | BIP-39 phrase generation | `bip39.ts`: Generate 24-word phrase from wordlist, derive key from phrase | **DONE** |
+| 2.5 | BIP-39 phrase verification | Verify subset of words matches, compute SHA-256 hash for server storage | **DONE** |
+| 2.6 | Shamir split | `split.ts`: Split 256-bit secret into 5 shares with threshold 3 | **DONE** |
+| 2.7 | Shamir reconstruct | `reconstruct.ts`: Reconstruct secret from any 3+ shares | **DONE** |
+| 2.8 | Shard encryption | `encryptShards.ts`: Encrypt each shard with recipient's public key (ECDH + AES) | Pending |
+| 2.9 | Key bundle encryption | Encrypt Master Key with Passkey credential for device storage | Pending (MVP: AES wrapping key) |
+| 2.10 | Unit tests | Exhaustive tests: encrypt→decrypt roundtrip, split→reconstruct, edge cases, different key sizes | **DONE** (51 tests) |
 
 #### Crypto Architecture (Zero-Knowledge Rules)
 
@@ -474,19 +474,19 @@ Acceptance Criteria:
 
 #### Tasks
 
-| # | Task | Details |
-|---|------|---------|
-| 2.11 | Recovery Phrase display | 3-column grid of 24 numbered words, copy button, print button |
-| 2.12 | "I saved my words" confirmation | Checkbox + continue button |
-| 2.13 | 3-word verification screen | 3 randomly chosen indices, input fields, validate against phrase |
-| 2.14 | Master Key generation trigger | After verification: generate key, split, encrypt bundle, store |
-| 2.15 | Store encryptedKeyBundle | Convex mutation: store encrypted key bundle for user |
-| 2.16 | Store recoveryPhraseHash | Convex mutation: store SHA-256 hash only (never the phrase) |
-| 2.17 | Shard 1 local storage | Encrypt shard with device biometrics, store in IndexedDB/localStorage |
-| 2.18 | Shard 5 Keeplas shard | Encrypt for Keeplas (simple RSA/AES for MVP, ZK post-MVP) |
-| 2.19 | Onboarding state machine | `onboardingStep` enum: `auth_complete → recovery_phrase → verification → key_generation → complete` |
-| 2.20 | Recovery flow | Enter 24 words → verify hash → reconstruct Master Key → create new Passkey |
-| 2.21 | Vocabulary mapping | All UI text uses friendly terms (see table below) |
+| # | Task | Details | Status |
+|---|------|---------|--------|
+| 2.11 | Recovery Phrase display | 3-column grid of 24 numbered words, copy button, print button | **DONE** |
+| 2.12 | "I saved my words" confirmation | Checkbox + continue button | **DONE** |
+| 2.13 | 3-word verification screen | 3 randomly chosen indices, input fields, validate against phrase | **DONE** |
+| 2.14 | Master Key generation trigger | After verification: generate key, split, encrypt bundle, store | **DONE** |
+| 2.15 | Store encryptedKeyBundle | Convex mutation: store encrypted key bundle for user | **DONE** |
+| 2.16 | Store recoveryPhraseHash | Convex mutation: store SHA-256 hash only (never the phrase) | **DONE** |
+| 2.17 | Shard 1 local storage | Encrypt shard with device biometrics, store in IndexedDB/localStorage | **DONE** (localStorage MVP) |
+| 2.18 | Shard 5 Keeplas shard | Encrypt for Keeplas (simple RSA/AES for MVP, ZK post-MVP) | **DONE** (base64 MVP) |
+| 2.19 | Onboarding state machine | `onboardingStep` enum: `auth_complete → recovery_phrase → verification → key_generation → complete` | **DONE** |
+| 2.20 | Recovery flow | Enter 24 words → verify hash → reconstruct Master Key → create new Passkey | Pending |
+| 2.21 | Vocabulary mapping | All UI text uses friendly terms (see table below) | **DONE** |
 
 #### Vocabulary Mapping (No Technical Jargon)
 

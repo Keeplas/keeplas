@@ -51,8 +51,10 @@ export default defineSchema({
 
     onboardingStep: v.optional(
       v.union(
+        v.literal("auth_complete"),
         v.literal("recovery_phrase"),
-        v.literal("dashboard"),
+        v.literal("verification"),
+        v.literal("key_generation"),
         v.literal("complete")
       )
     ),

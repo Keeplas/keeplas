@@ -18,7 +18,7 @@ export function SignupForm() {
     setLoading(true);
     setError("");
     try {
-      const result = await signIn("google", { redirectTo: "/dashboard" });
+      const result = await signIn("google", { redirectTo: "/onboarding" });
       if (result.redirect) {
         window.location.href = result.redirect.toString();
       }
@@ -32,7 +32,7 @@ export function SignupForm() {
     setLoading(true);
     setError("");
     try {
-      const result = await signIn("apple", { redirectTo: "/dashboard" });
+      const result = await signIn("apple", { redirectTo: "/onboarding" });
       if (result.redirect) {
         window.location.href = result.redirect.toString();
       }
