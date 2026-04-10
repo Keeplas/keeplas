@@ -8,7 +8,18 @@ import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared-types";
-import { Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
+import {
+  Input,
+  Label,
+  ErrorAlert,
+  Select,
+  Textarea,
+  Spinner,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@keeplas/ui";
 
 export default function VaultItemPage() {
   const params = useParams();
@@ -149,10 +160,9 @@ export default function VaultItemPage() {
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <select value={editCategory} onChange={(e) => setEditCategory(e.target.value as VaultCategory)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer">
+            <Select value={editCategory} onChange={(e) => setEditCategory(e.target.value as VaultCategory)}>
               {CATEGORIES.map((cat) => <option key={cat.key} value={cat.key}>{cat.label}</option>)}
-            </select>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -162,19 +172,17 @@ export default function VaultItemPage() {
 
           <div className="space-y-2">
             <Label>Secure Content</Label>
-            <textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} required rows={6}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none resize-none" />
+            <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} required rows={6} />
           </div>
 
           <div className="space-y-2">
             <Label>Access Level</Label>
-            <select value={editAccessLevel} onChange={(e) => setEditAccessLevel(e.target.value as AccessLevel)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer">
+            <Select value={editAccessLevel} onChange={(e) => setEditAccessLevel(e.target.value as AccessLevel)}>
               <option value="private">Private — Only you</option>
               <option value="trusted_only">Trusted Contacts</option>
               <option value="emergency_only">Emergency Only</option>
               <option value="public">Public</option>
-            </select>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -281,27 +289,24 @@ export default function VaultItemPage() {
           </p>
 
           {/* Delete Confirmation */}
-          {showDeleteConfirm && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
-              <div className="relative bg-surface rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
-                <h3 className="font-headline text-xl font-bold text-primary mb-2">Archive this item?</h3>
-                <p className="text-sm text-on-surface-variant mb-6">
-                  This item will be archived and removed from your active vault. You can restore it later.
-                </p>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer">
-                    Cancel
-                  </button>
-                  <button onClick={handleDelete}
-                    className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer">
-                    Archive
-                  </button>
-                </div>
+          <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <DialogContent className="max-w-sm p-8 text-center">
+              <DialogTitle className="mb-2">Archive this item?</DialogTitle>
+              <DialogDescription className="mb-6">
+                This item will be archived and removed from your active vault. You can restore it later.
+              </DialogDescription>
+              <div className="flex gap-3">
+                <button onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer">
+                  Cancel
+                </button>
+                <button onClick={handleDelete}
+                  className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer">
+                  Archive
+                </button>
               </div>
-            </div>
-          )}
+            </DialogContent>
+          </Dialog>
         </>
       )}
     </div>

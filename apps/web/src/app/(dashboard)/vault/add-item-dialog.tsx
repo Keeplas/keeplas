@@ -7,15 +7,28 @@ import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared-types";
-import { Input, Label, ErrorAlert } from "@keeplas/ui";
+import {
+  Input,
+  Label,
+  Select,
+  Textarea,
+  ErrorAlert,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@keeplas/ui";
 
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   defaultCategory?: VaultCategory;
 }
 
-export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDialogProps) {
+export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
   const createItem = useMutation(api.vault_items.createItem);
   const { encryptContent, computeHash, isReady } = useVaultCrypto();
 
@@ -63,7 +76,7 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
         isCritical,
       });
 
-      onClose();
+      onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save item.");
       setSaving(false);
@@ -71,34 +84,22 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-primary/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Dialog */}
-      <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-surface p-6 pb-4 border-b border-outline-variant/10 flex items-center justify-between">
+        <DialogHeader>
           <div>
-            <h2 className="font-headline text-xl font-extrabold text-primary tracking-tight">
-              Add to Vault
-            </h2>
-            <p className="text-sm text-on-surface-variant">
+            <DialogTitle>Add to Vault</DialogTitle>
+            <DialogDescription>
               Content is encrypted on your device before storage.
-            </p>
+            </DialogDescription>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer"
-          >
+          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
             <svg className="w-5 h-5 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
-          </button>
-        </div>
+          </DialogClose>
+        </DialogHeader>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -119,17 +120,16 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
           {/* Category */}
           <div className="space-y-2">
             <Label>Category</Label>
-            <select
+            <Select
               value={category}
               onChange={(e) => setCategory(e.target.value as VaultCategory)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.key} value={cat.key}>
                   {cat.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Description */}
@@ -149,13 +149,12 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
           {/* Content */}
           <div className="space-y-2">
             <Label>Secure Content</Label>
-            <textarea
+            <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Enter the sensitive information you want to protect..."
               required
               rows={5}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface placeholder:text-outline-variant focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none resize-none"
             />
             <p className="text-[11px] text-outline-variant ml-1">
               This content will be encrypted with AES-256-GCM before leaving your device.
@@ -165,16 +164,15 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
           {/* Access Level */}
           <div className="space-y-2">
             <Label>Access Level</Label>
-            <select
+            <Select
               value={accessLevel}
               onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
-              className="w-full bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-on-surface focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none cursor-pointer"
             >
               <option value="private">Private — Only you</option>
               <option value="trusted_only">Trusted Contacts — Shared with approved contacts</option>
               <option value="emergency_only">Emergency Only — Post-mortem access</option>
               <option value="public">Public — Visible on Emergency Card</option>
-            </select>
+            </Select>
           </div>
 
           {/* Tags */}
@@ -213,7 +211,7 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
           <div className="flex gap-3 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               className="flex-1 py-3 px-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm text-on-surface transition-colors cursor-pointer"
             >
               Cancel
@@ -227,7 +225,7 @@ export function AddItemDialog({ vaultId, onClose, defaultCategory }: AddItemDial
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

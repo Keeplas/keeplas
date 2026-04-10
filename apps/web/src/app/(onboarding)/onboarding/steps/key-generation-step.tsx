@@ -9,6 +9,7 @@ import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { phraseToKey } from "@keeplas/crypto/recovery";
 import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
+import { Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
   phrase: string[];
@@ -233,7 +234,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
                   />
                 </svg>
               ) : isCurrent ? (
-                <div className="w-5 h-5 rounded-full border-2 border-secondary border-t-transparent animate-spin shrink-0" />
+                <Spinner size="md" className="shrink-0" />
               ) : (
                 <div className="w-5 h-5 rounded-full border-2 border-outline-variant/30 shrink-0" />
               )}

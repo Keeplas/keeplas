@@ -139,10 +139,11 @@ export default function VaultPage() {
       )}
 
       {/* Add Item Dialog */}
-      {showAddDialog && vault && (
+      {vault && (
         <AddItemDialog
           vaultId={vault._id}
-          onClose={() => setShowAddDialog(false)}
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
           defaultCategory={activeCategory !== "all" ? activeCategory : undefined}
         />
       )}
