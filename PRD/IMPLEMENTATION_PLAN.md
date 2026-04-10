@@ -11,7 +11,7 @@
 | **Phase 0 — Foundation** | **DONE** | Monorepo, scaffolding, CI, governance, `.env.example` |
 | **Phase 1 — Design System + Auth** | **DONE** | Design tokens, ShadCN components, Convex Auth (Google + Password), auth pages (sign-in/sign-up), app shell (sidebar + glass nav), protected routes, dashboard placeholder |
 | **Phase 2 — Crypto Core + Onboarding** | **IN PROGRESS** | BIP-39 (generatePhrase, phraseToKey, phraseToHash), Shamir split/reconstruct (GF256), AES tests, onboarding flow UI (recovery phrase display, 3-word verification, key generation), Convex mutations (onboardingStep, recoveryPhraseHash, encryptedKeyBundle), onboarding guard. Remaining: Passkey key bundle encryption (using wrapping key MVP), shard encryption with contact public keys, recovery flow |
-| Phase 3 — Vault Core | Pending | — |
+| **Phase 3 — Vault Core** | **IN PROGRESS** | Convex vault mutations/queries (CRUD + audit logs), client-side encryption hooks (useVaultCrypto, MasterKeyProvider), vault list view (9 categories, filters, search, tags, critical), add item dialog (encrypted), vault item detail (decrypt, edit, archive), dashboard with Vault Integrity Score (circular widget, priority actions, category summary, protection banner, nudge messages). Remaining: file upload (encrypted), category-specific fields |
 | Phase 4 — Emergency Card | Pending | — |
 | Phase 5 — Trusted Contacts | Pending | — |
 | Phase 6 — Life Check MVP | Pending | — |

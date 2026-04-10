@@ -7,6 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { phraseToKey } from "@keeplas/crypto/recovery";
 import { split } from "@keeplas/crypto/shamir";
+import { useMasterKey } from "@/lib/master-key-context";
 
 interface KeyGenerationStepProps {
   phrase: string[];
@@ -40,6 +41,7 @@ const PHASE_PROGRESS: Record<GenerationPhase, number> = {
 
 export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
   const router = useRouter();
+  const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const [phase, setPhase] = useState<GenerationPhase>("deriving_key");
   const [error, setError] = useState("");
@@ -54,6 +56,9 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
         // Phase 1: Derive key from recovery phrase
         setPhase("deriving_key");
         const masterKey = await phraseToKey(phrase);
+
+        // Store Master Key in memory for vault operations
+        setMasterKey(masterKey);
 
         // Phase 2: Export key and split into Shamir shards
         setPhase("splitting_shards");
@@ -126,7 +131,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
     }
 
     generateAndStore();
-  }, [phrase, storeKeyBundle, router]);
+  }, [phrase, storeKeyBundle, router, setMasterKey]);
 
   return (
     <div className="w-full max-w-lg mx-auto text-center">

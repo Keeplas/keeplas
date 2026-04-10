@@ -3,6 +3,7 @@
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { ReactNode, useState } from "react";
+import { MasterKeyProvider } from "@/lib/master-key-context";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -28,6 +29,8 @@ export default function ConvexClientProvider({
   }
 
   return (
-    <ConvexAuthProvider client={client}>{children}</ConvexAuthProvider>
+    <ConvexAuthProvider client={client}>
+      <MasterKeyProvider>{children}</MasterKeyProvider>
+    </ConvexAuthProvider>
   );
 }

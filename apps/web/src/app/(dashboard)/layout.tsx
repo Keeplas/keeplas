@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
 import { api } from "@keeplas/backend/_generated/api";
 
 export default function DashboardLayout({
@@ -18,6 +19,9 @@ export default function DashboardLayout({
     api.onboarding.getOnboardingState,
     isAuthenticated ? {} : "skip"
   );
+
+  // Restore Master Key from encrypted bundle on dashboard load
+  useRestoreMasterKey();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
