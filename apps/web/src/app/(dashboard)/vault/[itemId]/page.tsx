@@ -7,7 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import type { AccessLevel } from "@keeplas/backend/shared-types";
+import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
   Input,
   Label,

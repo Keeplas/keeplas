@@ -12,7 +12,7 @@
 | **Phase 1 — Design System + Auth** | **DONE** | Design tokens, ShadCN components, Convex Auth (Google + Password), auth pages (sign-in/sign-up), app shell (sidebar + glass nav), protected routes, dashboard placeholder |
 | **Phase 2 — Crypto Core + Onboarding** | **DONE** | BIP-39 (generatePhrase, phraseToKey, phraseToHash, wordlist), Shamir split/reconstruct (GF256, gf256.ts), AES-256-GCM (encrypt/decrypt/masterKey), 51 unit tests, onboarding flow UI (recovery phrase display + wireframe style, 3-word verification + back nav + why-important, key generation with progress), Convex mutations (onboardingStep state machine, recoveryPhraseHash, encryptedKeyBundle, keeplasShard), onboarding guard in dashboard layout, MasterKeyProvider context, key bundle restore on login (useRestoreMasterKey). MVP: wrapping key for bundle, base64 for Keeplas shard. Deferred: Passkey credential encryption, shard encryption with contact public keys, recovery flow (task 2.20) |
 | **Phase 3 — Vault Core** | **DONE** | Convex vault mutations/queries (createItem, updateItem, deleteItem soft-delete, getItems, getItemsByCategory, getItem, getCategoryCounts, getOrCreateVault), audit log utility with hash chain (audit.ts), shared validators/helpers refactored, client-side encryption hooks (useVaultCrypto: encryptContent, decryptContent, computeHash), vault categories config (9 categories with icons), vault list view (category tabs, search, empty states), add item dialog (ShadCN Dialog, encrypted save), vault item detail page (decrypt, edit mode, archive confirmation dialog), dashboard with Vault Integrity Score (circular SVG widget, nudge messages, priority actions, category summary cards, recent items, protection banner for 0 contacts), dashboard query (getDashboardData: score algorithm, all metrics in one query). Deferred: encrypted file upload, category-specific form fields |
-| Phase 4 — Emergency Card | Pending | — |
+| **Phase 4 — Emergency Card** | **IN PROGRESS** | Schema updated (medications, additionalNotes, showMedications, showAdditionalNotes), Convex CRUD (createOrUpdate, getMyCard, getByQrToken public query, markPrinted, audit logging), Emergency Card page (form + privacy toggles + live preview matching wireframe), QR code generation (qrcode.react), public emergency page `/emergency/[token]` (no auth, shows toggled-on fields), print CSS. Deferred: Apple Wallet `.pkpass`, Google Wallet integration |
 | Phase 5 — Trusted Contacts | Pending | — |
 | Phase 6 — Life Check MVP | Pending | — |
 | Phase 7 — Polish + Beta Launch | Pending | — |
@@ -784,52 +784,52 @@ Acceptance Criteria:
 
 ### Tasks
 
-| # | Task | Details |
-|---|------|---------|
-| 4.1 | Emergency card form | Fields: full name, blood type, allergies, medical conditions, medications, emergency contact (name + phone), additional notes |
-| 4.2 | Privacy toggles | ShadCN Switch for each field: `showFullName`, `showBloodType`, `showAllergies`, etc. |
-| 4.3 | Card preview | Real-time preview as user fills form, dark vault-gradient style |
-| 4.4 | QR code generation | Generate unique `qrCodeToken`, create QR code image |
-| 4.5 | Public page `/emergency/[token]` | SSR page, no auth required, shows only toggled-on fields |
-| 4.6 | Save to Apple Wallet | Generate `.pkpass` file with emergency data + QR code |
-| 4.7 | Save to Google Wallet | Google Wallet API integration |
-| 4.8 | Print layout | CSS `@media print` styles, credit-card size format |
-| 4.9 | Convex CRUD | `emergency_cards` table: create, update, get, `by_qr_token` index |
+| # | Task | Details | Status |
+|---|------|---------|--------|
+| 4.1 | Emergency card form | Fields: full name, blood type, allergies, medical conditions, medications, emergency contact (name + phone), additional notes | **DONE** |
+| 4.2 | Privacy toggles | ShadCN Switch for each field: `showFullName`, `showBloodType`, `showAllergies`, etc. | **DONE** |
+| 4.3 | Card preview | Real-time preview as user fills form, dark vault-gradient style | **DONE** |
+| 4.4 | QR code generation | Generate unique `qrCodeToken`, create QR code image | **DONE** |
+| 4.5 | Public page `/emergency/[token]` | SSR page, no auth required, shows only toggled-on fields | **DONE** |
+| 4.6 | Save to Apple Wallet | Generate `.pkpass` file with emergency data + QR code | Pending |
+| 4.7 | Save to Google Wallet | Google Wallet API integration | Pending |
+| 4.8 | Print layout | CSS `@media print` styles, credit-card size format | **DONE** |
+| 4.9 | Convex CRUD | `emergency_cards` table: create, update, get, `by_qr_token` index | **DONE** |
 
 ### User Stories
 
-**E6-S1: Emergency Card Creation**
+**E6-S1: Emergency Card Creation** — DONE
 > As a user, I want to create an emergency card with my vital medical information so that first responders can help me.
 
 Acceptance Criteria:
-- [ ] Form fields: Full Name, Blood Type (dropdown: A+, A-, B+, B-, O+, O-, AB+, AB-), Allergies (multi-line), Medical Conditions (multi-line), Current Medications (multi-line), Emergency Contact Name, Emergency Contact Phone, Additional Notes
-- [ ] All fields optional (user fills what they want)
-- [ ] Card saved to Convex `emergency_cards` table
-- [ ] One card per user (create or update)
+- [x] Form fields: Full Name, Blood Type (dropdown: A+, A-, B+, B-, O+, O-, AB+, AB-), Allergies (multi-line), Medical Conditions (multi-line), Current Medications (multi-line), Emergency Contact Name, Emergency Contact Phone, Additional Notes
+- [x] All fields optional (user fills what they want)
+- [x] Card saved to Convex `emergency_cards` table
+- [x] One card per user (create or update)
 
-**E6-S2: Privacy Toggles**
+**E6-S2: Privacy Toggles** — DONE
 > As a user, I want privacy toggles for each field on my emergency card so that I control exactly what is publicly visible.
 
 Acceptance Criteria:
-- [ ] ShadCN Switch toggle next to each field
-- [ ] Default: all toggles OFF (maximum privacy by default)
-- [ ] Card preview updates in real-time as toggles change
-- [ ] Only toggled-ON fields appear on public QR page
-- [ ] Toggle state stored in Convex: `showFullName`, `showBloodType`, etc.
+- [x] ShadCN Switch toggle next to each field
+- [x] Default: all toggles OFF (maximum privacy by default)
+- [x] Card preview updates in real-time as toggles change
+- [x] Only toggled-ON fields appear on public QR page
+- [x] Toggle state stored in Convex: `showFullName`, `showBloodType`, etc.
 
-**E6-S3: Public QR Code Page**
+**E6-S3: Public QR Code Page** — DONE
 > As a first responder, I want to scan a QR code and see emergency information without any login so that I can help quickly.
 
 Acceptance Criteria:
-- [ ] QR code on card links to `/emergency/[qrCodeToken]`
-- [ ] Public page renders without authentication (no login wall)
-- [ ] Shows only fields where privacy toggle is ON
-- [ ] Page styled with Keeplas branding (primary colors, clean layout)
-- [ ] Loads fast: SSR with minimal JS
-- [ ] Shows "Keeplas Emergency Card" header
-- [ ] Shows "Last updated: [date]" at bottom
+- [x] QR code on card links to `/emergency/[qrCodeToken]`
+- [x] Public page renders without authentication (no login wall)
+- [x] Shows only fields where privacy toggle is ON
+- [x] Page styled with Keeplas branding (primary colors, clean layout)
+- [ ] Loads fast: SSR with minimal JS — uses client-side rendering via Convex useQuery
+- [x] Shows "Keeplas Emergency Card" header
+- [x] Shows "Last updated: [date]" at bottom
 
-**E6-S4: Save to Wallet**
+**E6-S4: Save to Wallet** — Pending
 > As a user, I want to save my emergency card to Apple Wallet or Google Wallet so that it's always on my phone.
 
 Acceptance Criteria:
@@ -838,15 +838,15 @@ Acceptance Criteria:
 - [ ] Wallet pass shows: name, blood type, QR code at minimum
 - [ ] Pass updates when card is modified (if platform supports)
 
-**E6-S5: Print Physical Card**
+**E6-S5: Print Physical Card** — DONE
 > As a user, I want to print my emergency card as a physical card for my wallet.
 
 Acceptance Criteria:
-- [ ] "Print" button opens browser print dialog
-- [ ] Print layout: credit-card dimensions (85.6mm x 53.98mm)
-- [ ] Front: Name, blood type, allergies, QR code
-- [ ] Back: Emergency contact, medical conditions, medications
-- [ ] CSS `@media print` hides all non-card elements
+- [x] "Print" button opens browser print dialog
+- [x] Print layout: credit-card dimensions (85.6mm x 53.98mm)
+- [x] Front: Name, blood type, allergies, QR code
+- [ ] Back: Emergency contact, medical conditions, medications — single-side print for MVP
+- [x] CSS `@media print` hides all non-card elements
 
 ### Milestone Verification
 ```

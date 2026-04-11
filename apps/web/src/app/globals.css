@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 /* ═══════════════════════════════════════════════
    KEEPLAS DESIGN SYSTEM — "The Digital Curator"
@@ -9,6 +11,7 @@
   /* ── Typography ── */
   --font-sans: var(--font-inter);
   --font-headline: var(--font-manrope);
+  --font-heading: var(--font-manrope);
   --font-body: var(--font-inter);
   --font-label: var(--font-inter);
 
@@ -21,6 +24,7 @@
   --color-on-primary-container: #b8cfe8;
   --color-on-primary-fixed: #041632;
   --color-on-primary-fixed-variant: #1b2b48;
+  --color-primary-foreground: #ffffff;
 
   /* ── Secondary — Reassurance Teal ── */
   --color-secondary: #28657a;
@@ -31,6 +35,7 @@
   --color-on-secondary-container: #c5e4ed;
   --color-on-secondary-fixed: #001f2a;
   --color-on-secondary-fixed-variant: #28657a;
+  --color-secondary-foreground: #ffffff;
 
   /* ── Tertiary — Deep Shadow ── */
   --color-tertiary: #001a20;
@@ -58,6 +63,7 @@
   /* ── On-surface ── */
   --color-on-surface: #1d1b1a;
   --color-on-surface-variant: #4a4644;
+  --color-foreground: #1d1b1a;
 
   /* ── Outline ── */
   --color-outline: #7b7674;
@@ -73,11 +79,30 @@
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
   --color-on-error-container: #410002;
+  --color-destructive: #ba1a1a;
+
+  /* ── shadcn compatibility tokens ── */
+  --color-muted: #f0eded;
+  --color-muted-foreground: #4a4644;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1d1b1a;
+  --color-card: #f6f3f2;
+  --color-card-foreground: #1d1b1a;
+  --color-border: #c5c6ce;
+  --color-input: #c5c6ce;
+  --color-ring: #28657a;
+  --color-accent: #eae7e7;
+  --color-accent-foreground: #1d1b1a;
 
   /* ── Border radius — Subtle architectural scale ── */
   --radius-DEFAULT: 0.125rem;
+  --radius-sm: 0.075rem;
+  --radius-md: 0.1rem;
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+  --radius-4xl: 0.875rem;
   --radius-full: 0.75rem;
 
   /* ── Animation ── */
@@ -211,3 +236,49 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-outline);
 }
+
+/* ── Print Styles — Emergency Card ── */
+@media print {
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide everything except the card */
+  body > * {
+    display: none !important;
+  }
+
+  #emergency-card-printable {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 85.6mm;
+    height: 53.98mm;
+    border-radius: 3mm !important;
+    overflow: hidden;
+    box-shadow: none !important;
+    border: 1px solid #e5e2e1;
+    font-size: 8px;
+    page-break-after: avoid;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .print\\:max-w-none {
+    max-width: none !important;
+  }
+
+  .print\\:rounded-none {
+    border-radius: 0 !important;
+  }
+
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+}
+

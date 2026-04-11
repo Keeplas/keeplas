@@ -40,4 +40,5 @@ export { Separator } from "./separator";
 export { Switch } from "./switch";
 export { Spinner } from "./spinner";
 export { Textarea } from "./textarea";
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip";
 export { cn } from "./lib/utils";

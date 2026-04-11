@@ -1,4 +1,4 @@
-import type { VaultCategory } from "@keeplas/backend/shared-types";
+import type { VaultCategory } from "@keeplas/backend/shared_types";
 export type { VaultCategory };
 
 export interface CategoryConfig {
