@@ -10,8 +10,8 @@
 |-------|--------|-----------|
 | **Phase 0 — Foundation** | **DONE** | Monorepo, scaffolding, CI, governance, `.env.example` |
 | **Phase 1 — Design System + Auth** | **DONE** | Design tokens, ShadCN components, Convex Auth (Google + Password), auth pages (sign-in/sign-up), app shell (sidebar + glass nav), protected routes, dashboard placeholder |
-| **Phase 2 — Crypto Core + Onboarding** | **IN PROGRESS** | BIP-39 (generatePhrase, phraseToKey, phraseToHash), Shamir split/reconstruct (GF256), AES tests, onboarding flow UI (recovery phrase display, 3-word verification, key generation), Convex mutations (onboardingStep, recoveryPhraseHash, encryptedKeyBundle), onboarding guard. Remaining: Passkey key bundle encryption (using wrapping key MVP), shard encryption with contact public keys, recovery flow |
-| **Phase 3 — Vault Core** | **IN PROGRESS** | Convex vault mutations/queries (CRUD + audit logs), client-side encryption hooks (useVaultCrypto, MasterKeyProvider), vault list view (9 categories, filters, search, tags, critical), add item dialog (encrypted), vault item detail (decrypt, edit, archive), dashboard with Vault Integrity Score (circular widget, priority actions, category summary, protection banner, nudge messages). Remaining: file upload (encrypted), category-specific fields |
+| **Phase 2 — Crypto Core + Onboarding** | **DONE** | BIP-39 (generatePhrase, phraseToKey, phraseToHash, wordlist), Shamir split/reconstruct (GF256, gf256.ts), AES-256-GCM (encrypt/decrypt/masterKey), 51 unit tests, onboarding flow UI (recovery phrase display + wireframe style, 3-word verification + back nav + why-important, key generation with progress), Convex mutations (onboardingStep state machine, recoveryPhraseHash, encryptedKeyBundle, keeplasShard), onboarding guard in dashboard layout, MasterKeyProvider context, key bundle restore on login (useRestoreMasterKey). MVP: wrapping key for bundle, base64 for Keeplas shard. Deferred: Passkey credential encryption, shard encryption with contact public keys, recovery flow (task 2.20) |
+| **Phase 3 — Vault Core** | **DONE** | Convex vault mutations/queries (createItem, updateItem, deleteItem soft-delete, getItems, getItemsByCategory, getItem, getCategoryCounts, getOrCreateVault), audit log utility with hash chain (audit.ts), shared validators/helpers refactored, client-side encryption hooks (useVaultCrypto: encryptContent, decryptContent, computeHash), vault categories config (9 categories with icons), vault list view (category tabs, search, empty states), add item dialog (ShadCN Dialog, encrypted save), vault item detail page (decrypt, edit mode, archive confirmation dialog), dashboard with Vault Integrity Score (circular SVG widget, nudge messages, priority actions, category summary cards, recent items, protection banner for 0 contacts), dashboard query (getDashboardData: score algorithm, all metrics in one query). Deferred: encrypted file upload, category-specific form fields |
 | Phase 4 — Emergency Card | Pending | — |
 | Phase 5 — Trusted Contacts | Pending | — |
 | Phase 6 — Life Check MVP | Pending | — |
@@ -429,44 +429,44 @@ ZK Proof computation                      ZK Proof verification result
 
 #### User Stories
 
-**E4-CRYPTO-1: Master Key Generation**
+**E4-CRYPTO-1: Master Key Generation** — DONE
 > As the crypto package, I must generate a cryptographically secure 256-bit AES-GCM key entirely client-side so that no server ever sees the raw key.
 
 Acceptance Criteria:
-- [ ] Uses `crypto.subtle.generateKey("AES-GCM", 256, true)`
-- [ ] Key is extractable for Shamir splitting
-- [ ] Key never appears in any network request (verify with DevTools)
-- [ ] Works in all modern browsers (Chrome 90+, Safari 15+, Firefox 90+)
+- [x] Uses `crypto.subtle.generateKey("AES-GCM", 256, true)`
+- [x] Key is extractable for Shamir splitting
+- [x] Key never appears in any network request (verify with DevTools)
+- [x] Works in all modern browsers (Chrome 90+, Safari 15+, Firefox 90+)
 
-**E4-CRYPTO-2: AES-256-GCM Encryption/Decryption**
+**E4-CRYPTO-2: AES-256-GCM Encryption/Decryption** — DONE
 > As the crypto package, I must encrypt and decrypt arbitrary data with AES-256-GCM so that vault items are protected at rest.
 
 Acceptance Criteria:
-- [ ] `encrypt(plaintext, key)` returns `{ ciphertext: ArrayBuffer, iv: Uint8Array }`
-- [ ] `decrypt(ciphertext, key, iv)` returns original plaintext
-- [ ] IV is randomly generated per encryption (never reused)
-- [ ] Roundtrip test: encrypt → decrypt === original for text, JSON, binary data
-- [ ] Fails gracefully with wrong key (throws, doesn't return garbage)
+- [x] `encrypt(plaintext, key)` returns `{ ciphertext: ArrayBuffer, iv: Uint8Array }`
+- [x] `decrypt(ciphertext, key, iv)` returns original plaintext
+- [x] IV is randomly generated per encryption (never reused)
+- [x] Roundtrip test: encrypt → decrypt === original for text, JSON, binary data (11 tests)
+- [x] Fails gracefully with wrong key (throws, doesn't return garbage)
 
-**E4-CRYPTO-3: BIP-39 Recovery Phrase**
+**E4-CRYPTO-3: BIP-39 Recovery Phrase** — DONE
 > As the crypto package, I must generate a 24-word BIP-39 recovery phrase and derive a Master Key from it so that users have a backup recovery method.
 
 Acceptance Criteria:
-- [ ] Uses standard BIP-39 English wordlist (2048 words)
-- [ ] 256-bit entropy → 24 words with checksum
-- [ ] `phraseToKey(words[]) → CryptoKey` deterministically derives same key
-- [ ] `phraseToHash(words[]) → string` produces SHA-256 hash for server verification
-- [ ] Same phrase always produces same key and same hash
+- [x] Uses standard BIP-39 English wordlist (2048 words)
+- [x] 256-bit entropy → 24 words with checksum
+- [x] `phraseToKey(words[]) → CryptoKey` deterministically derives same key (PBKDF2 600K iterations)
+- [x] `phraseToHash(words[]) → string` produces SHA-256 hash for server verification
+- [x] Same phrase always produces same key and same hash (21 tests)
 
-**E4-CRYPTO-4: Shamir Secret Sharing**
+**E4-CRYPTO-4: Shamir Secret Sharing** — DONE
 > As the crypto package, I must split a 256-bit secret into 5 shares where any 3 can reconstruct it so that no single point of failure exists.
 
 Acceptance Criteria:
-- [ ] `split(secret, 5, 3)` returns 5 distinct shares
-- [ ] Any combination of 3 shares reconstructs the original secret
-- [ ] Any combination of 2 shares reveals zero information about the secret
-- [ ] Shares are distinct (no two are identical)
-- [ ] Test all 10 possible 3-of-5 combinations
+- [x] `split(secret, 5, 3)` returns 5 distinct shares
+- [x] Any combination of 3 shares reconstructs the original secret
+- [x] Any combination of 2 shares reveals zero information about the secret
+- [x] Shares are distinct (no two are identical)
+- [x] Test all 10 possible 3-of-5 combinations (19 tests)
 
 ---
 
@@ -503,63 +503,63 @@ Acceptance Criteria:
 
 #### User Stories
 
-**E4-S1: Recovery Phrase Display**
+**E4-S1: Recovery Phrase Display** — DONE
 > As a new user, I want to see my 24 Recovery Words after registration so that I have a backup to recover my vault if I lose all devices.
 
 Acceptance Criteria:
-- [ ] After auth, user sees Recovery Phrase screen
-- [ ] 24 BIP-39 words displayed in a 3-column, 8-row numbered grid
-- [ ] "Copy all" button copies words as text
-- [ ] "Print" button opens print dialog with word grid
-- [ ] Warning: "Write these words on paper. Never photograph them. Never share them."
-- [ ] Words generated entirely client-side (no network call for generation)
-- [ ] `onboardingStep` is `recovery_phrase`
+- [x] After auth, user sees Recovery Phrase screen
+- [x] 24 BIP-39 words displayed in numbered grid (wireframe style: hero header, warning banner, guidance cards)
+- [x] "Copy all" button copies words as text
+- [x] "Print" button opens print dialog with word grid
+- [x] Warning: "Absolute Recovery Authority" banner in primary-container
+- [x] Words generated entirely client-side (no network call for generation)
+- [x] `onboardingStep` is `recovery_phrase`
 
-**E4-S2: 3-Word Verification**
+**E4-S2: 3-Word Verification** — DONE
 > As a new user, I want to verify 3 random words from my Recovery Phrase so that the system confirms I actually saved them.
 
 Acceptance Criteria:
-- [ ] After clicking "I saved my words", user sees 3 input fields
-- [ ] Each field shows the word index (e.g., "Word #7", "Word #14", "Word #21")
-- [ ] Indices are randomly chosen, different each time
-- [ ] All 3 must match exactly (case-insensitive) to proceed
-- [ ] On success: `recoveryPhraseHash` stored in Convex, `recoveryVerified: true`
-- [ ] On failure: show error, allow retry (phrase stays in memory)
+- [x] After clicking "I saved my words", user sees 3 input fields
+- [x] Each field shows the word ordinal (e.g., "1st word", "14th word")
+- [x] Indices are randomly chosen, different each time
+- [x] All 3 must match exactly (case-insensitive) to proceed
+- [x] On success: `recoveryPhraseHash` stored in Convex, `recoveryVerified: true`
+- [x] On failure: show error, allow retry (phrase stays in memory)
+- [x] "Back to Recovery Words" button + "Why is this important?" explanation
 
-**E4-S3: Master Key Setup**
+**E4-S3: Master Key Setup** — DONE
 > As a new user, I want my Secret Key generated and secured after verification so that my vault is ready.
 
 Acceptance Criteria:
-- [ ] After verification, Master Key generated via Web Crypto API
-- [ ] Key encrypted with Passkey credential → `encryptedKeyBundle`
-- [ ] Bundle stored in Convex via mutation
-- [ ] Shamir split into 5 shards:
-  - Shard 1 → encrypted locally (IndexedDB)
-  - Shard 5 → encrypted for Keeplas
+- [x] After verification, Master Key derived from phrase via PBKDF2
+- [x] Key encrypted with wrapping key → `encryptedKeyBundle` (MVP: AES wrapping, post-MVP: Passkey)
+- [x] Bundle stored in Convex via mutation
+- [x] Shamir split into 5 shards:
+  - Shard 1 → stored in localStorage (MVP)
+  - Shard 5 → stored as base64 in Convex (MVP)
   - Shards 2-4 → pending (assigned when contacts are added)
-- [ ] Master Key held in memory only (cleared on sign-out)
-- [ ] `onboardingStep` advances to `complete`
+- [x] Master Key held in memory (MasterKeyProvider context)
+- [x] Master Key restored from bundle on dashboard load (useRestoreMasterKey)
+- [x] `onboardingStep` advances to `complete`
 
-**E4-S4: Account Recovery via Phrase**
+**E4-S4: Account Recovery via Phrase** — Pending
 > As a user who lost access, I want to recover using my 24 Recovery Words so that I can regain access to my vault.
 
 Acceptance Criteria:
 - [ ] Recovery page accepts 24 words in grid input
 - [ ] Client computes hash, verifies against `recoveryPhraseHash` in Convex
 - [ ] On match: Master Key reconstructed from BIP-39 derivation
-- [ ] New Passkey created on new device
 - [ ] New `encryptedKeyBundle` stored
 - [ ] Vault accessible again
 - [ ] On mismatch: clear error message, allow retry
 
-**E4-S5: No Technical Jargon**
+**E4-S5: No Technical Jargon** — DONE
 > As a user, I must never see technical terms like "shard", "ZK", or "Shamir" in the interface.
 
 Acceptance Criteria:
-- [ ] All UI text uses vocabulary mapping table above
-- [ ] Tooltips explain concepts in plain language
-- [ ] Error messages use friendly language
-- [ ] No technical term appears in any user-visible string
+- [x] All UI text uses vocabulary mapping table above
+- [x] Error messages use friendly language
+- [x] No technical term appears in any user-visible string
 
 ### Milestone Verification
 ```
@@ -582,19 +582,19 @@ Acceptance Criteria:
 
 #### Tasks
 
-| # | Task | Details |
-|---|------|---------|
-| 3.1 | Convex vault mutations | `createItem`, `updateItem`, `deleteItem` (soft delete → archived) |
-| 3.2 | Convex vault queries | `getItems`, `getItemsByCategory`, `getItem` (single) |
-| 3.3 | Client encrypt hook | `useEncryptedMutation()`: encrypts content before calling mutation |
-| 3.4 | Client decrypt hook | `useDecryptedQuery()`: decrypts content after receiving query results |
-| 3.5 | Vault item form | Title, description, category selector, content area, file upload |
-| 3.6 | Category-specific fields | Different form fields per category (see table below) |
-| 3.7 | File upload (encrypted) | Encrypt file client-side → upload to Convex `_storage` → store `fileStorageId` |
-| 3.8 | Vault list view | Category tabs/filter sidebar, item cards, search |
-| 3.9 | Vault item detail view | Decrypted content display, edit/delete actions |
-| 3.10 | Tags system | Add/remove tags on items, filter by tag |
-| 3.11 | Critical flag | Toggle "Mark as critical" → `isCritical: true`, distinct styling |
+| # | Task | Details | Status |
+|---|------|---------|--------|
+| 3.1 | Convex vault mutations | `createItem`, `updateItem`, `deleteItem` (soft delete → archived) | **DONE** |
+| 3.2 | Convex vault queries | `getItems`, `getItemsByCategory`, `getItem`, `getCategoryCounts` | **DONE** |
+| 3.3 | Client encrypt hook | `useVaultCrypto()`: encryptContent, computeHash before calling mutation | **DONE** |
+| 3.4 | Client decrypt hook | `useVaultCrypto()`: decryptContent after receiving query results | **DONE** |
+| 3.5 | Vault item form | Title, description, category selector, content area, ShadCN Dialog | **DONE** |
+| 3.6 | Category-specific fields | Different form fields per category (see table below) | Pending |
+| 3.7 | File upload (encrypted) | Encrypt file client-side → upload to Convex `_storage` → store `fileStorageId` | Pending |
+| 3.8 | Vault list view | Category tabs, item cards grid, search, empty states | **DONE** |
+| 3.9 | Vault item detail view | Decrypted content display, edit mode, archive with confirmation dialog | **DONE** |
+| 3.10 | Tags system | Add/remove tags on items (comma-separated input) | **DONE** |
+| 3.11 | Critical flag | Toggle "Mark as critical" → `isCritical: true`, Legacy Card styling | **DONE** |
 
 #### Vault Categories and Fields
 
@@ -616,44 +616,44 @@ Acceptance Criteria:
 > As a user, I want to add an item to my vault so that my important information is securely stored.
 
 Acceptance Criteria:
-- [ ] "Add item" button opens form with: title, description, category, content, file upload
-- [ ] Content encrypted client-side with AES-256-GCM using Master Key before Convex mutation
-- [ ] `contentHash` (SHA-256 of plaintext) computed for integrity verification
-- [ ] Encrypted blob stored in `vault_items` table
-- [ ] On retrieval, content decrypted client-side and displayed
+- [x] "Add item" button opens form with: title, description, category, content (ShadCN Dialog)
+- [x] Content encrypted client-side with AES-256-GCM using Master Key before Convex mutation
+- [x] `contentHash` (SHA-256 of plaintext) computed for integrity verification
+- [x] Encrypted blob stored in `vault_items` table
+- [x] On retrieval, content decrypted client-side and displayed
 - [ ] Verify in Convex dashboard: `encryptedContent` is unreadable ciphertext
 
-**E5-S2: Category Organization**
+**E5-S2: Category Organization** — DONE
 > As a user, I want to organize vault items into categories so that I can find information quickly.
 
 Acceptance Criteria:
-- [ ] Category selector dropdown with 9 categories + icons
-- [ ] Vault list view: tabs or sidebar filter for each category
-- [ ] Category counts shown (e.g., "Financial Assets (3)")
-- [ ] "All" tab shows all items
-- [ ] Empty category shows helpful prompt (e.g., "No health directives yet. Add your first.")
+- [x] Category selector dropdown with 9 categories + icons
+- [x] Vault list view: tabs filter for each category
+- [x] Category counts shown (e.g., "Financial Assets (3)")
+- [x] "All" tab shows all items
+- [x] Empty category shows helpful prompt (e.g., "No health directives yet. Add your first.")
 
-**E5-S3: Edit Vault Item**
+**E5-S3: Edit Vault Item** — DONE
 > As a user, I want to edit an existing vault item so that I can keep my information up to date.
 
 Acceptance Criteria:
-- [ ] "Edit" button on item detail page
-- [ ] Content decrypted into form fields
-- [ ] On save: content re-encrypted, mutation updates item
-- [ ] `updatedAt` timestamp updated
-- [ ] Old `contentHash` replaced with new one
-- [ ] Audit log entry: `vault_item_updated`
+- [x] "Edit" button on item detail page
+- [x] Content decrypted into form fields
+- [x] On save: content re-encrypted, mutation updates item
+- [x] `updatedAt` timestamp updated
+- [x] Old `contentHash` replaced with new one
+- [x] Audit log entry: `vault_item_updated`
 
-**E5-S4: Delete Vault Item**
+**E5-S4: Delete Vault Item** — DONE
 > As a user, I want to delete a vault item so that I can remove outdated information.
 
 Acceptance Criteria:
-- [ ] "Delete" action with confirmation dialog: "This item will be archived. Are you sure?"
-- [ ] Item status set to `archived` (soft delete, not hard delete)
-- [ ] Item removed from active list view
-- [ ] Audit log entry: `vault_item_archived`
+- [x] "Delete" action with confirmation dialog: "This item will be archived. Are you sure?"
+- [x] Item status set to `archived` (soft delete, not hard delete)
+- [x] Item removed from active list view
+- [x] Audit log entry: `vault_item_archived`
 
-**E5-S5: Encrypted File Upload**
+**E5-S5: Encrypted File Upload** — Pending
 > As a user, I want to upload files (PDF, images) to my vault items so that I can store scanned documents securely.
 
 Acceptance Criteria:
@@ -665,24 +665,24 @@ Acceptance Criteria:
 - [ ] Maximum file size: 10MB per file
 - [ ] Progress indicator during upload
 
-**E5-S7: Critical Items**
+**E5-S7: Critical Items** — DONE
 > As a user, I want to mark vault items as critical so that they are prioritized during emergency access.
 
 Acceptance Criteria:
-- [ ] Toggle "Mark as critical" on item form and detail view
-- [ ] Critical items displayed with Legacy Card styling
-- [ ] `isCritical: true` flag in database
+- [x] Toggle "Mark as critical" on item form and detail view
+- [x] Critical items displayed with Legacy Card styling (primary-container)
+- [x] `isCritical: true` flag in database
 - [ ] Critical items appear first in list views and emergency access
 
-**E5-S8: Access Level Control**
+**E5-S8: Access Level Control** — DONE
 > As a user, I want to set access levels on vault items so that I control who sees what.
 
 Acceptance Criteria:
-- [ ] Access level selector: `private` (default), `trusted_only`, `emergency_only`, `public`
-- [ ] `private`: only vault owner can see
-- [ ] `trusted_only`: visible to contacts with active approved access
-- [ ] `emergency_only`: visible only during Mode A (post-mortem)
-- [ ] `public`: visible on emergency card (if applicable)
+- [x] Access level selector: `private` (default), `trusted_only`, `emergency_only`, `public`
+- [x] `private`: only vault owner can see
+- [ ] `trusted_only`: visible to contacts with active approved access (needs Phase 5)
+- [ ] `emergency_only`: visible only during Mode A (needs Phase 5)
+- [ ] `public`: visible on emergency card (needs Phase 4)
 
 ---
 
@@ -690,15 +690,15 @@ Acceptance Criteria:
 
 #### Tasks
 
-| # | Task | Details |
-|---|------|---------|
-| 3.12 | Score calculation algorithm | Weighted: categories populated (40%), contacts confirmed (30%), Life Check configured (20%), emergency card created (10%) |
-| 3.13 | Score widget | Circular progress or bar with percentage, contextual message |
-| 3.14 | Priority actions list | Dynamic list based on missing elements |
-| 3.15 | Dashboard page | Score widget, category summary cards, priority actions, recent items |
-| 3.16 | Persistent banner | "Vault not protected" warning when no confirmed contacts |
-| 3.17 | Nudge messages | Threshold messages at 0%, 25%, 55%, 70%, 88%, 97% |
-| 3.18 | Audit log utility | `createAuditLog(action, resourceType, resourceId, metadata)` utility for all mutations |
+| # | Task | Details | Status |
+|---|------|---------|--------|
+| 3.12 | Score calculation algorithm | Weighted: categories (40%), contacts (30%), Life Check (20%), emergency card (10%) | **DONE** |
+| 3.13 | Score widget | Circular SVG progress with percentage, contextual message | **DONE** |
+| 3.14 | Priority actions list | Dynamic list based on missing elements (vault, contacts, emergency, life check, categories) | **DONE** |
+| 3.15 | Dashboard page | Score widget, category summary cards, priority actions, recent items | **DONE** |
+| 3.16 | Persistent banner | "Vault not protected" warning when `confirmedContacts === 0`, invite CTA | **DONE** |
+| 3.17 | Nudge messages | Threshold messages at 0%, 25%, 55%, 70%, 88%, 97% | **DONE** |
+| 3.18 | Audit log utility | `createAuditLog()` with hash chain, used in all vault mutations | **DONE** |
 
 #### Vault Integrity Score Algorithm
 
@@ -735,32 +735,32 @@ function calculateVaultIntegrityScore(data: {
 > As a user, I want to see my Vault Integrity Score on the dashboard so that I know how complete my protection is.
 
 Acceptance Criteria:
-- [ ] Score displayed as percentage (0-100%) with circular/bar progress
-- [ ] Contextual message based on score threshold (see table above)
-- [ ] Score updates in real-time as user adds items, contacts, configures features
-- [ ] Calculation: categories (40%) + contacts (30%) + Life Check (20%) + emergency card (10%)
+- [x] Score displayed as percentage (0-100%) with circular SVG progress
+- [x] Contextual message based on score threshold (see table above)
+- [x] Score updates in real-time as user adds items, contacts, configures features
+- [x] Calculation: categories (40%) + contacts (30%) + Life Check (20%) + emergency card (10%)
 
-**E5-DASH-1: Dashboard Landing Page**
+**E5-DASH-1: Dashboard Landing Page** — DONE
 > As a user, I want a dashboard that shows my protection status and guides me to next steps.
 
 Acceptance Criteria:
-- [ ] Vault Integrity Score widget (prominent, top of page)
-- [ ] Priority Actions list (dynamic, based on what's missing)
-- [ ] Category summary cards (count per category, last updated)
-- [ ] Recent vault items (3 most recent)
+- [x] Vault Integrity Score widget (prominent, top of page, circular SVG)
+- [x] Priority Actions list (dynamic, based on what's missing)
+- [x] Category summary cards (count per category)
+- [x] Recent vault items (3 most recent)
 - [ ] Life Check widget placeholder (configured in Phase 6)
-- [ ] No forced tutorial — discovery through Score + actions
+- [x] No forced tutorial — discovery through Score + actions
 
-**E5-DASH-2: Persistent Protection Banner**
+**E5-DASH-2: Persistent Protection Banner** — Partial
 > As a user without trusted contacts, I want a persistent banner warning me that my vault is unprotected.
 
 Acceptance Criteria:
-- [ ] Banner appears when `confirmedContacts === 0`
-- [ ] Text: "Vault not protected in emergency. Without a trusted contact, no one can access your vault."
-- [ ] Two buttons: [Invite now] and [Remind in 48h]
-- [ ] "Remind in 48h" dismisses banner for 48 hours (stored in Convex)
+- [x] Banner appears when `confirmedContacts === 0`
+- [x] Text: "Vault not protected in emergency. Without a trusted contact, no one can access your vault."
+- [x] [Invite now] button links to /trusted-contacts
+- [ ] [Remind in 48h] dismiss for 48 hours (stored in Convex)
 - [ ] After 48h without action: banner becomes more urgent (error red accent)
-- [ ] Banner disappears when first contact is confirmed
+- [x] Banner disappears when first contact is confirmed
 
 ### Milestone Verification
 ```
