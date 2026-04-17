@@ -20,6 +20,10 @@ export interface SelectProps<Value = string> {
   popupClassName?: string;
   renderValue?: (value: Value) => React.ReactNode;
   align?: "start" | "center" | "end";
+  items?:
+    | Record<string, React.ReactNode>
+    | ReadonlyArray<{ label: React.ReactNode; value: Value }>;
+  modal?: boolean;
 }
 
 function SelectImpl<Value = string>({
@@ -38,6 +42,8 @@ function SelectImpl<Value = string>({
   popupClassName,
   renderValue,
   align = "start",
+  items,
+  modal = false,
 }: SelectProps<Value>) {
   return (
     <BaseSelect.Root<Value>
@@ -51,6 +57,8 @@ function SelectImpl<Value = string>({
       readOnly={readOnly}
       name={name}
       id={id}
+      items={items as never}
+      modal={modal}
     >
       <BaseSelect.Trigger
         className={cn(
@@ -92,7 +100,7 @@ function SelectImpl<Value = string>({
         <BaseSelect.Positioner
           sideOffset={6}
           align={align}
-          className="z-50 outline-none"
+          className="z-[60] outline-none"
         >
           <BaseSelect.Popup
             className={cn(

@@ -128,6 +128,7 @@ export function InviteContactDialog({
               value={role}
               onValueChange={setRole}
               placeholder="Select a role"
+              items={ROLES}
             >
               {ROLES.map((r) => (
                 <SelectItem key={r.value} value={r.value}>

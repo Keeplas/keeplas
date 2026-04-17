@@ -51,9 +51,9 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <Sidebar />
-      <main className="flex-1 px-6 py-6 pb-24 md:pb-6">
+      <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">
         {children}
       </main>
     </div>
