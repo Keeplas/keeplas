@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
+import { getErrorMessage } from "@/lib/utils";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
@@ -79,7 +80,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save item.");
+      setError(getErrorMessage(err, "Failed to save item."));
       setSaving(false);
     }
   }

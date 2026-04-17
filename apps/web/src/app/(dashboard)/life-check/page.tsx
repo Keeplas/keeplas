@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Switch, Loader, ErrorAlert, DatePicker } from "@keeplas/ui";
+import { getErrorMessage } from "@/lib/utils";
 import { LifeCheckHistory } from "./life-check-history";
 
 const FREQUENCIES = [
@@ -118,7 +119,7 @@ export default function LifeCheckPage() {
       });
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save configuration");
+      setError(getErrorMessage(err, "Failed to save configuration"));
     } finally {
       setSaving(false);
     }
@@ -133,7 +134,7 @@ export default function LifeCheckPage() {
       });
       setTravelMode(!travelMode);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to toggle travel mode");
+      setError(getErrorMessage(err, "Failed to toggle travel mode"));
     }
   }
 
@@ -141,7 +142,7 @@ export default function LifeCheckPage() {
     try {
       await validateCycle({ method: "tap" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to validate");
+      setError(getErrorMessage(err, "Failed to validate"));
     }
   }
 
@@ -149,7 +150,7 @@ export default function LifeCheckPage() {
     try {
       await postponeCycle({ duration });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to postpone");
+      setError(getErrorMessage(err, "Failed to postpone"));
     }
   }
 

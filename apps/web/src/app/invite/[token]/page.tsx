@@ -6,6 +6,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader, ErrorAlert } from "@keeplas/ui";
+import { getErrorMessage } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family member",
@@ -138,9 +139,7 @@ export default function InvitationPage({
       await acceptInvitation({ token });
       setDone(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to accept invitation"
-      );
+      setError(getErrorMessage(err, "Failed to accept invitation"));
     } finally {
       setAccepting(false);
     }
@@ -154,9 +153,7 @@ export default function InvitationPage({
       await declineInvitation({ token });
       setDone(true);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to decline invitation"
-      );
+      setError(getErrorMessage(err, "Failed to decline invitation"));
     } finally {
       setDeclining(false);
     }

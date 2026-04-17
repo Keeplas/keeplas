@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
+import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
@@ -99,7 +100,7 @@ export default function VaultItemPage() {
       setDecryptedContent(editContent);
       setEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update.");
+      setError(getErrorMessage(err, "Failed to update."));
     } finally {
       setSaving(false);
     }

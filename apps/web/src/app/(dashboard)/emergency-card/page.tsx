@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Input, Label, Select, SelectItem, Switch, Textarea, ErrorAlert } from "@keeplas/ui";
+import { getErrorMessage } from "@/lib/utils";
 import { EmergencyCardPreview } from "./emergency-card-preview";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
@@ -127,7 +128,7 @@ export default function EmergencyCardPage() {
       });
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save emergency card");
+      setError(getErrorMessage(err, "Failed to save emergency card"));
     } finally {
       setSaving(false);
     }

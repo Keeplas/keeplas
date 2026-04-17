@@ -13,6 +13,7 @@ import {
   SelectItem,
 } from "@keeplas/ui";
 import { Input, Label, ErrorAlert } from "@keeplas/ui";
+import { getErrorMessage } from "@/lib/utils";
 
 const ROLES = [
   { value: "family", label: "Family member" },
@@ -63,9 +64,7 @@ export function InviteContactDialog({
       setRole("family");
       onOpenChange(false);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to send invitation"
-      );
+      setError(getErrorMessage(err, "Failed to send invitation"));
     } finally {
       setSaving(false);
     }

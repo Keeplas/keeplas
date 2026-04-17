@@ -9,6 +9,8 @@ import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { phraseToKey } from "@keeplas/crypto/recovery";
 import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
+import { STORAGE_KEYS } from "@/lib/storage-keys";
+import { getErrorMessage } from "@/lib/utils";
 import { Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
@@ -97,7 +99,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
         // Store shard 1 in localStorage (device shard)
         const shard1Base64 = uint8ToBase64(shards[0]);
         try {
-          localStorage.setItem("keeplas_device_shard", shard1Base64);
+          localStorage.setItem(STORAGE_KEYS.deviceShard, shard1Base64);
         } catch {
           // localStorage may not be available — continue anyway
         }
@@ -126,9 +128,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
       } catch (err) {
         console.error("Key generation failed:", err);
         setPhase("error");
-        setError(
-          err instanceof Error ? err.message : "Key generation failed. Please try again."
-        );
+        setError(getErrorMessage(err, "Key generation failed. Please try again."));
       }
     }
 
