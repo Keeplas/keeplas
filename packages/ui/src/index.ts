@@ -37,7 +37,14 @@ export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
 export { PasswordInput } from "./password-input";
 export { Progress } from "./progress";
-export { Select } from "./select";
+export {
+  Select,
+  SelectItem,
+  SelectGroup,
+  SelectGroupLabel,
+  type SelectProps,
+  type SelectItemProps,
+} from "./select";
 export { Separator } from "./separator";
 export { Switch } from "./switch";
 export { Spinner } from "./spinner";

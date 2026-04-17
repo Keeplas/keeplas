@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Input, Label, Select, Spinner, Switch, ErrorAlert, cn } from "@keeplas/ui";
+import { Input, Label, Select, SelectItem, Spinner, Switch, ErrorAlert, cn } from "@keeplas/ui";
 
 const SECTIONS = [
   {
@@ -510,12 +510,13 @@ export function SettingsContent() {
                 </Label>
                 <Select
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+                  onValueChange={setLanguage}
+                  placeholder="Choose language"
                 >
                   {LANGUAGES.map((lang) => (
-                    <option key={lang.value} value={lang.value}>
+                    <SelectItem key={lang.value} value={lang.value}>
                       {lang.label}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Select>
               </div>
@@ -525,12 +526,13 @@ export function SettingsContent() {
                 </Label>
                 <Select
                   value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
+                  onValueChange={setTimezone}
+                  placeholder="Choose timezone"
                 >
                   {TIMEZONES.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
+                    <SelectItem key={tz.value} value={tz.value}>
                       {tz.label}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Select>
               </div>
@@ -540,12 +542,13 @@ export function SettingsContent() {
                 </Label>
                 <Select
                   value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
+                  onValueChange={setCurrency}
+                  placeholder="Choose currency"
                 >
                   {CURRENCIES.map((c) => (
-                    <option key={c.value} value={c.value}>
+                    <SelectItem key={c.value} value={c.value}>
                       {c.label}
-                    </option>
+                    </SelectItem>
                   ))}
                 </Select>
               </div>

@@ -11,6 +11,7 @@ import {
   Input,
   Label,
   Select,
+  SelectItem,
   Textarea,
   ErrorAlert,
   Dialog,
@@ -120,14 +121,15 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           {/* Category */}
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select
+            <Select<VaultCategory>
               value={category}
-              onChange={(e) => setCategory(e.target.value as VaultCategory)}
+              onValueChange={setCategory}
+              placeholder="Choose a category"
             >
               {CATEGORIES.map((cat) => (
-                <option key={cat.key} value={cat.key}>
+                <SelectItem key={cat.key} value={cat.key}>
                   {cat.label}
-                </option>
+                </SelectItem>
               ))}
             </Select>
           </div>
@@ -164,14 +166,15 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           {/* Access Level */}
           <div className="space-y-2">
             <Label>Access Level</Label>
-            <Select
+            <Select<AccessLevel>
               value={accessLevel}
-              onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
+              onValueChange={setAccessLevel}
+              placeholder="Choose access level"
             >
-              <option value="private">Private — Only you</option>
-              <option value="trusted_only">Trusted Contacts — Shared with approved contacts</option>
-              <option value="emergency_only">Emergency Only — Post-mortem access</option>
-              <option value="public">Public — Visible on Emergency Card</option>
+              <SelectItem value="private">Private — Only you</SelectItem>
+              <SelectItem value="trusted_only">Trusted Contacts — Shared with approved contacts</SelectItem>
+              <SelectItem value="emergency_only">Emergency Only — Post-mortem access</SelectItem>
+              <SelectItem value="public">Public — Visible on Emergency Card</SelectItem>
             </Select>
           </div>
 

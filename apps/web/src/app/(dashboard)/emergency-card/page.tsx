@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Input, Label, Select, Switch, Textarea, ErrorAlert } from "@keeplas/ui";
+import { Input, Label, Select, SelectItem, Switch, Textarea, ErrorAlert } from "@keeplas/ui";
 import { EmergencyCardPreview } from "./emergency-card-preview";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
@@ -176,11 +176,11 @@ export default function EmergencyCardPage() {
                 <Select
                   id="bloodType"
                   value={formData.bloodType}
-                  onChange={(e) => updateField("bloodType", e.target.value)}
+                  onValueChange={(v) => updateField("bloodType", v)}
+                  placeholder="Select blood type"
                 >
-                  <option value="">Select blood type</option>
                   {BLOOD_TYPES.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </Select>
               </div>

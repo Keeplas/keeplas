@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Badge } from "@keeplas/ui";
+import { Badge, Select, SelectItem } from "@keeplas/ui";
 
 const DURATION_OPTIONS = [
   { value: 24, label: "24 hours" },
@@ -145,19 +145,17 @@ export function AccessRequestsSection() {
 
               {req.accessMode === "mode_b1" && (
                 <div className="flex items-center gap-3">
-                  <select
+                  <Select<number>
                     value={selectedDuration}
-                    onChange={(e) =>
-                      setSelectedDuration(Number(e.target.value))
-                    }
-                    className="px-3 py-2 bg-surface-container-lowest rounded-lg text-sm text-on-surface focus:outline-none"
+                    onValueChange={setSelectedDuration}
+                    triggerClassName="w-auto min-w-[140px] px-3 py-2 text-sm bg-surface-container-lowest"
                   >
                     {DURATION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
+                      <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                  </Select>
 
                   <button
                     onClick={() => handleApprove(req._id)}

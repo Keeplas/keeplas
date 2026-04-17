@@ -9,6 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  Select,
+  SelectItem,
 } from "@keeplas/ui";
 import { Input, Label, ErrorAlert } from "@keeplas/ui";
 
@@ -121,18 +123,18 @@ export function InviteContactDialog({
 
           <div className="space-y-2">
             <Label htmlFor="contact-role">Role</Label>
-            <select
+            <Select<Role>
               id="contact-role"
               value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface focus:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-secondary/20 transition-colors"
+              onValueChange={setRole}
+              placeholder="Select a role"
             >
               {ROLES.map((r) => (
-                <option key={r.value} value={r.value}>
+                <SelectItem key={r.value} value={r.value}>
                   {r.label}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+            </Select>
           </div>
 
           {error && <ErrorAlert message={error} />}

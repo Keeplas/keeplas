@@ -13,6 +13,7 @@ import {
   Label,
   ErrorAlert,
   Select,
+  SelectItem,
   Textarea,
   Spinner,
   Dialog,
@@ -160,8 +161,10 @@ export default function VaultItemPage() {
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select value={editCategory} onChange={(e) => setEditCategory(e.target.value as VaultCategory)}>
-              {CATEGORIES.map((cat) => <option key={cat.key} value={cat.key}>{cat.label}</option>)}
+            <Select<VaultCategory> value={editCategory} onValueChange={setEditCategory}>
+              {CATEGORIES.map((cat) => (
+                <SelectItem key={cat.key} value={cat.key}>{cat.label}</SelectItem>
+              ))}
             </Select>
           </div>
 
@@ -177,11 +180,11 @@ export default function VaultItemPage() {
 
           <div className="space-y-2">
             <Label>Access Level</Label>
-            <Select value={editAccessLevel} onChange={(e) => setEditAccessLevel(e.target.value as AccessLevel)}>
-              <option value="private">Private — Only you</option>
-              <option value="trusted_only">Trusted Contacts</option>
-              <option value="emergency_only">Emergency Only</option>
-              <option value="public">Public</option>
+            <Select<AccessLevel> value={editAccessLevel} onValueChange={setEditAccessLevel}>
+              <SelectItem value="private">Private — Only you</SelectItem>
+              <SelectItem value="trusted_only">Trusted Contacts</SelectItem>
+              <SelectItem value="emergency_only">Emergency Only</SelectItem>
+              <SelectItem value="public">Public</SelectItem>
             </Select>
           </div>
 
