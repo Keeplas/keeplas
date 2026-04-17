@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Spinner } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
-import { TopNav } from "@/components/top-nav";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -21,7 +20,6 @@ export default function DashboardLayout({
     isAuthenticated ? {} : "skip"
   );
 
-  // Restore Master Key from encrypted bundle on dashboard load
   useRestoreMasterKey();
 
   useEffect(() => {
@@ -55,12 +53,9 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <TopNav />
-        <main className="flex-1 px-6 py-6 pb-24 md:pb-6">
-          {children}
-        </main>
-      </div>
+      <main className="flex-1 px-6 py-6 pb-24 md:pb-6">
+        {children}
+      </main>
     </div>
   );
 }

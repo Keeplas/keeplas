@@ -229,7 +229,7 @@ export function SettingsContent() {
       </header>
 
       {/* Sticky section nav */}
-      <nav className="sticky top-20 z-20 bg-surface/80 backdrop-blur-xl -mx-6 md:mx-0 md:rounded-2xl overflow-x-auto">
+      <nav className="sticky top-14 md:top-0 z-20 bg-surface/80 backdrop-blur-xl -mx-6 md:mx-0 md:rounded-2xl overflow-x-auto">
         <ul className="flex items-center gap-1 py-3 px-6 md:px-4">
           {SECTIONS.map((section) => (
             <li key={section.id}>
@@ -372,7 +372,7 @@ export function SettingsContent() {
 
       {/* SECURITY */}
       <section id="security" className="scroll-mt-32 flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-        <div className="md:w-1/3 md:sticky md:top-40">
+        <div className="md:w-1/3 md:sticky md:top-20">
           <h2 className="text-primary font-headline text-2xl font-bold tracking-tight mb-4">
             Fortress Protocol
           </h2>
