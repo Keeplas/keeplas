@@ -212,18 +212,18 @@ export function SettingsContent() {
     : "Unknown";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-16 md:space-y-20">
+    <div className="max-w-6xl mx-auto space-y-12 md:space-y-16">
       {/* Editorial Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <span className="text-secondary font-headline font-extrabold uppercase tracking-[0.2em] text-xs">
+          <span className="text-secondary font-headline font-extrabold uppercase tracking-[0.2em] text-[11px]">
             Settings & Curation
           </span>
-          <h1 className="text-primary font-headline text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-none">
+          <h1 className="text-primary font-headline text-3xl md:text-4xl font-black tracking-tight leading-none">
             Identity & Control.
           </h1>
         </div>
-        <p className="text-on-surface-variant max-w-sm leading-relaxed">
+        <p className="text-on-surface-variant max-w-sm leading-relaxed text-sm">
           Configure your digital sanctuary. These settings ensure your legacy remains protected and accessible only to those you trust.
         </p>
       </header>
@@ -251,8 +251,8 @@ export function SettingsContent() {
 
       {/* IDENTITY */}
       <section id="identity" className="grid grid-cols-1 md:grid-cols-12 gap-8 scroll-mt-32">
-        <div className="md:col-span-4 space-y-4">
-          <h2 className="text-primary font-headline text-2xl font-bold tracking-tight">
+        <div className="md:col-span-4 space-y-3">
+          <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
             Identity Details
           </h2>
           <p className="text-sm text-on-surface-variant leading-relaxed">
@@ -265,27 +265,27 @@ export function SettingsContent() {
           className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6"
         >
           {/* Profile Card */}
-          <div className="col-span-full bg-surface-container-low rounded-2xl p-8 flex flex-col sm:flex-row items-start sm:items-center gap-8">
+          <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="relative group shrink-0">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={avatarUrl}
                   alt={name || "Profile"}
-                  className="w-24 h-24 rounded-full object-cover shadow-xl border-4 border-surface"
+                  className="w-20 h-20 rounded-full object-cover shadow-xl border-4 border-surface"
                   onError={() => setAvatarUrl("")}
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline font-bold text-2xl shadow-xl border-4 border-surface">
+                <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline font-bold text-xl shadow-xl border-4 border-surface">
                   {initials}
                 </div>
               )}
             </div>
             <div className="space-y-1 flex-1 min-w-0">
-              <h3 className="font-headline text-xl font-bold text-primary truncate">
+              <h3 className="font-headline text-lg font-bold text-primary truncate">
                 {name || "Unnamed Curator"}
               </h3>
-              <p className="text-sm text-on-surface-variant truncate">
+              <p className="text-xs text-on-surface-variant truncate">
                 Curator since {curatorSince}
               </p>
               <div className="pt-2 flex flex-wrap gap-2">
@@ -302,7 +302,7 @@ export function SettingsContent() {
           </div>
 
           {/* Form Fields */}
-          <div className="bg-surface-container-low rounded-2xl p-6 space-y-2">
+          <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
             <Label htmlFor="display-name" className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
               Display Name
             </Label>
@@ -314,7 +314,7 @@ export function SettingsContent() {
             />
           </div>
 
-          <div className="bg-surface-container-low rounded-2xl p-6 space-y-2">
+          <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
             <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
               Primary Email
             </Label>
@@ -330,7 +330,7 @@ export function SettingsContent() {
             </p>
           </div>
 
-          <div className="bg-surface-container-low rounded-2xl p-6 space-y-2">
+          <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
             <Label htmlFor="phone" className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
               Phone Number
             </Label>
@@ -343,7 +343,7 @@ export function SettingsContent() {
             />
           </div>
 
-          <div className="bg-surface-container-low rounded-2xl p-6 space-y-2">
+          <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
             <Label htmlFor="avatar" className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
               Avatar URL
             </Label>
@@ -371,20 +371,20 @@ export function SettingsContent() {
       </section>
 
       {/* SECURITY */}
-      <section id="security" className="scroll-mt-32 flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+      <section id="security" className="scroll-mt-32 flex flex-col md:flex-row gap-8 md:gap-10 items-start">
         <div className="md:w-1/3 md:sticky md:top-20">
-          <h2 className="text-primary font-headline text-2xl font-bold tracking-tight mb-4">
+          <h2 className="text-primary font-headline text-xl font-bold tracking-tight mb-3">
             Fortress Protocol
           </h2>
-          <p className="text-sm text-on-surface-variant leading-relaxed mb-6">
+          <p className="text-sm text-on-surface-variant leading-relaxed mb-5">
             Security is the bedrock of The Vault. Enable biometric layers for instantaneous yet unbreakable access.
           </p>
-          <div className="p-6 bg-primary-container rounded-2xl text-on-primary-container space-y-4">
+          <div className="p-5 bg-primary-container rounded-2xl text-on-primary-container space-y-3">
             <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-secondary-fixed" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-secondary-fixed" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm-1 16-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7Z" />
               </svg>
-              <span className="font-bold font-headline text-xs uppercase tracking-widest text-on-primary">
+              <span className="font-bold font-headline text-[11px] uppercase tracking-widest text-on-primary">
                 Sentinel Active
               </span>
             </div>
@@ -394,11 +394,11 @@ export function SettingsContent() {
           </div>
         </div>
 
-        <div className="md:w-2/3 space-y-6 flex-1">
+        <div className="md:w-2/3 space-y-5 flex-1">
           <div className="bg-surface-container-low rounded-2xl overflow-hidden">
-            <div className="p-8 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-headline font-bold text-primary">Two-Factor Authentication</p>
+            <div className="p-6 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <p className="font-headline font-bold text-primary text-sm">Two-Factor Authentication</p>
                 <p className="text-xs text-on-surface-variant">Recommended for all high-value legacies.</p>
               </div>
               <Switch
@@ -406,10 +406,10 @@ export function SettingsContent() {
                 onCheckedChange={() => toggleSecurity("twoFactor")}
               />
             </div>
-            <div className="h-px bg-outline-variant/15 mx-8" />
-            <div className="p-8 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-headline font-bold text-primary">Biometric Access</p>
+            <div className="h-px bg-outline-variant/15 mx-6" />
+            <div className="p-6 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <p className="font-headline font-bold text-primary text-sm">Biometric Access</p>
                 <p className="text-xs text-on-surface-variant">Unlock your vault using FaceID or TouchID.</p>
               </div>
               <Switch
@@ -417,41 +417,41 @@ export function SettingsContent() {
                 onCheckedChange={() => toggleSecurity("biometric")}
               />
             </div>
-            <div className="h-px bg-outline-variant/15 mx-8" />
-            <div className="p-8 flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-headline font-bold text-primary">Hardware Key Support</p>
+            <div className="h-px bg-outline-variant/15 mx-6" />
+            <div className="p-6 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <p className="font-headline font-bold text-primary text-sm">Hardware Key Support</p>
                 <p className="text-xs text-on-surface-variant">Register a physical YubiKey or Titan key.</p>
               </div>
-              <button className="text-secondary font-headline text-xs font-bold uppercase tracking-widest hover:underline cursor-pointer">
+              <button className="text-secondary font-headline text-[11px] font-bold uppercase tracking-widest hover:underline cursor-pointer">
                 Manage Keys
               </button>
             </div>
           </div>
 
-          <button className="w-full p-6 bg-surface-container-high rounded-2xl flex items-center justify-between group hover:bg-surface-container-highest transition-colors cursor-pointer">
-            <div className="flex items-center gap-4">
-              <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <button className="w-full p-5 bg-surface-container-high rounded-2xl flex items-center justify-between group hover:bg-surface-container-highest transition-colors cursor-pointer">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
               </svg>
-              <span className="font-headline font-bold text-primary">Reset Master Password</span>
+              <span className="font-headline font-bold text-primary text-sm">Reset Master Password</span>
             </div>
-            <svg className="w-5 h-5 text-on-surface-variant group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-4 h-4 text-on-surface-variant group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
 
           <button
             onClick={() => signOut()}
-            className="w-full p-6 bg-error-container/40 rounded-2xl flex items-center justify-between group hover:bg-error-container/60 transition-colors cursor-pointer"
+            className="w-full p-5 bg-error-container/40 rounded-2xl flex items-center justify-between group hover:bg-error-container/60 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-4">
-              <svg className="w-6 h-6 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
               </svg>
-              <span className="font-headline font-bold text-error">Sign out of this session</span>
+              <span className="font-headline font-bold text-error text-sm">Sign out of this session</span>
             </div>
-            <svg className="w-5 h-5 text-error/60 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-4 h-4 text-error/60 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
@@ -462,9 +462,9 @@ export function SettingsContent() {
       <section id="preferences" className="scroll-mt-32 space-y-6">
         <form onSubmit={handleSavePreferences} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Platform */}
-          <div className="bg-surface-container-low rounded-2xl p-8 space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
+          <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+            <div className="space-y-1.5">
+              <h2 className="text-primary font-headline text-lg font-bold tracking-tight">
                 Platform Localization
               </h2>
               <p className="text-xs text-on-surface-variant">
@@ -521,9 +521,9 @@ export function SettingsContent() {
           </div>
 
           {/* Notifications */}
-          <div className="bg-surface-container-low rounded-2xl p-8 space-y-6">
-            <div className="space-y-2">
-              <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
+          <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+            <div className="space-y-1.5">
+              <h2 className="text-primary font-headline text-lg font-bold tracking-tight">
                 Alert Preferences
               </h2>
               <p className="text-xs text-on-surface-variant">
@@ -553,7 +553,7 @@ export function SettingsContent() {
                     <p className="font-headline font-bold text-sm text-primary truncate">
                       {item.label}
                     </p>
-                    <p className="text-[11px] text-on-surface-variant">
+                    <p className="text-xs text-on-surface-variant">
                       {item.description}
                     </p>
                   </div>
@@ -583,8 +583,8 @@ export function SettingsContent() {
 
       {/* VAULT ACCESS */}
       <section id="access" className="scroll-mt-32 grid grid-cols-1 md:grid-cols-12 gap-8">
-        <div className="md:col-span-4 space-y-4">
-          <h2 className="text-primary font-headline text-2xl font-bold tracking-tight">
+        <div className="md:col-span-4 space-y-3">
+          <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
             Vault Access
           </h2>
           <p className="text-sm text-on-surface-variant leading-relaxed">
@@ -641,31 +641,31 @@ export function SettingsContent() {
       </section>
 
       {/* BILLING — Legacy Card visual anchor */}
-      <section id="billing" className="scroll-mt-32 bg-primary text-on-primary rounded-2xl p-8 md:p-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-secondary opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
-          <div className="space-y-4 max-w-xl">
+      <section id="billing" className="scroll-mt-32 bg-primary text-on-primary rounded-2xl p-6 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-52 h-52 bg-secondary opacity-10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-3 max-w-xl">
             <span className="inline-flex items-center px-3 py-1 bg-on-primary/10 backdrop-blur rounded-full text-[10px] font-bold font-headline uppercase tracking-widest ghost-border">
               Current Tier
             </span>
-            <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tight">
               Pro Legacy Curator
             </h2>
-            <p className="text-on-primary/70 leading-relaxed">
+            <p className="text-on-primary/70 leading-relaxed text-sm">
               You are currently utilizing the Pro tier, which includes 50GB encrypted storage, unlimited heirs, and automated Life Checks.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-            <div className="p-6 bg-on-primary/5 backdrop-blur rounded-xl ghost-border min-w-[180px]">
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+            <div className="p-5 bg-on-primary/5 backdrop-blur rounded-xl ghost-border min-w-[160px]">
               <p className="text-[10px] uppercase tracking-widest text-secondary-fixed font-bold mb-1">
                 Renewal Date
               </p>
-              <p className="text-xl font-headline font-bold">—</p>
+              <p className="text-lg font-headline font-bold">—</p>
               <p className="text-[10px] text-on-primary/50 mt-1 uppercase tracking-widest">
                 Free plan active
               </p>
             </div>
-            <button className="bg-secondary-fixed text-on-secondary-fixed px-6 py-4 rounded-xl font-headline font-extrabold uppercase tracking-widest text-xs hover:bg-secondary-fixed-dim transition-colors cursor-pointer">
+            <button className="bg-secondary-fixed text-on-secondary-fixed px-6 py-3 rounded-xl font-headline font-extrabold uppercase tracking-widest text-[11px] hover:bg-secondary-fixed-dim transition-colors cursor-pointer">
               Upgrade Plan
             </button>
           </div>

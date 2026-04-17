@@ -178,20 +178,20 @@ export default function LifeCheckPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="max-w-2xl">
-          <h1 className="font-headline font-extrabold text-4xl md:text-5xl text-primary tracking-tight leading-tight mb-3">
+          <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight leading-tight mb-3">
             Life Continuity
             <br />
             <span className="text-secondary">Verification Engine</span>
           </h1>
-          <p className="text-on-surface-variant text-base md:text-lg max-w-xl">
+          <p className="text-on-surface-variant text-sm md:text-base max-w-xl">
             Configure your automated proof-of-life protocol. If you are unresponsive, Keeplas securely executes your legacy directives.
           </p>
         </div>
 
         {isConfigured && (
-          <div className="bg-surface-container-low p-5 rounded-2xl flex items-center gap-6 shadow-sm shrink-0">
+          <div className="bg-surface-container-low p-4 rounded-2xl flex items-center gap-5 shadow-sm shrink-0">
             <div className="flex flex-col">
-              <span className="font-headline font-bold text-primary">
+              <span className="font-headline font-bold text-primary text-sm">
                 {travelMode ? "Travel Mode" : isActive ? "Active" : "Paused"}
               </span>
               <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
@@ -248,17 +248,17 @@ export default function LifeCheckPage() {
         {/* Left — Configuration */}
         <div className="lg:col-span-7 space-y-6">
           {/* Inactivity Threshold */}
-          <section className="bg-surface-container-low rounded-2xl p-10 relative overflow-hidden">
-            <h3 className="text-xl font-bold font-headline text-primary mb-2 flex items-center gap-2">
+          <section className="bg-surface-container-low rounded-2xl p-6 relative overflow-hidden">
+            <h3 className="text-lg font-bold font-headline text-primary mb-1.5 flex items-center gap-2">
               <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
               Inactivity Threshold
             </h3>
-            <p className="text-on-surface-variant text-sm mb-8">
+            <p className="text-on-surface-variant text-xs md:text-sm mb-6">
               The period of total silence before the verification sequence begins.
             </p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {FREQUENCIES.map((freq) => {
                 const selected = frequency === freq.value;
                 return (
@@ -270,11 +270,11 @@ export default function LifeCheckPage() {
                     }}
                     className={
                       selected
-                        ? "flex flex-col items-center justify-center p-6 bg-secondary text-on-secondary rounded-xl shadow-lg scale-105 transition-transform cursor-pointer"
-                        : "flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl hover:scale-105 transition-transform cursor-pointer group"
+                        ? "flex flex-col items-center justify-center p-5 bg-secondary text-on-secondary rounded-xl shadow-lg scale-[1.03] transition-transform cursor-pointer"
+                        : "flex flex-col items-center justify-center p-5 bg-surface-container-highest rounded-xl hover:scale-[1.03] transition-transform cursor-pointer group"
                     }
                   >
-                    <span className={`text-3xl font-black font-headline ${selected ? "" : "text-primary group-hover:text-secondary"}`}>
+                    <span className={`text-2xl font-black font-headline ${selected ? "" : "text-primary group-hover:text-secondary"}`}>
                       {freq.label}
                     </span>
                     <span className={`text-[10px] uppercase font-bold tracking-tighter mt-1 ${selected ? "opacity-80" : "text-on-surface-variant"}`}>
@@ -290,8 +290,8 @@ export default function LifeCheckPage() {
           </section>
 
           {/* Verification Channels */}
-          <section className="bg-surface-container-lowest rounded-2xl p-10 shadow-sm">
-            <h3 className="text-xl font-bold font-headline text-primary mb-6 flex items-center gap-2">
+          <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold font-headline text-primary mb-5 flex items-center gap-2">
               <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
               </svg>
@@ -303,16 +303,16 @@ export default function LifeCheckPage() {
                 .map((ch) => (
                   <div
                     key={ch.type}
-                    className={`flex items-center justify-between p-4 bg-surface-container-low rounded-xl ${ch.isEnabled ? "" : "opacity-60"}`}
+                    className={`flex items-center justify-between p-3 bg-surface-container-low rounded-xl ${ch.isEnabled ? "" : "opacity-60"}`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 flex items-center justify-center bg-surface-container-lowest rounded-lg shadow-sm">
-                        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 flex items-center justify-center bg-surface-container-lowest rounded-lg shadow-sm">
+                        <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d={ch.iconPath} />
                         </svg>
                       </div>
                       <div>
-                        <p className="font-bold text-primary">{ch.label}</p>
+                        <p className="font-bold text-primary text-sm">{ch.label}</p>
                         <p className="text-xs text-on-surface-variant">{ch.description}</p>
                       </div>
                     </div>
@@ -326,10 +326,10 @@ export default function LifeCheckPage() {
           </section>
 
           {/* Travel Mode */}
-          <section className="bg-surface-container-low rounded-2xl p-10">
+          <section className="bg-surface-container-low rounded-2xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-headline font-bold text-xl text-primary flex items-center gap-2">
+                <h3 className="font-headline font-bold text-lg text-primary flex items-center gap-2">
                   <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5M3.75 4.5h16.5M12 4.5v15" />
                   </svg>
@@ -385,51 +385,51 @@ export default function LifeCheckPage() {
 
         {/* Right — Escalation Timeline */}
         <aside className="lg:col-span-5">
-          <div className="vault-gradient rounded-2xl p-10 text-on-primary h-full shadow-2xl relative overflow-hidden">
-            <h3 className="text-2xl font-black font-headline mb-2 tracking-tight">
+          <div className="vault-gradient rounded-2xl p-8 text-on-primary h-full shadow-2xl relative overflow-hidden">
+            <h3 className="text-xl font-black font-headline mb-1.5 tracking-tight">
               Escalation Protocol
             </h3>
-            <p className="text-on-primary-container text-sm mb-12">
+            <p className="text-on-primary-container text-xs md:text-sm mb-10">
               Visual logic of the fail-safe trigger.
             </p>
 
             <div className="relative">
-              <div className="absolute left-3.5 top-0 bottom-0 w-0.5 bg-secondary/30" />
+              <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-secondary/30" />
 
-              <div className="space-y-10">
+              <div className="space-y-8">
                 {/* J+0 */}
-                <div className="relative pl-14">
-                  <div className="absolute left-0 top-1 w-7 h-7 rounded-full bg-secondary ring-4 ring-secondary/20 z-10" />
-                  <p className="font-bold text-lg mb-1 text-on-primary">J+0: Verification Window Opens</p>
-                  <p className="text-on-primary-container text-sm">
+                <div className="relative pl-12">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary ring-4 ring-secondary/20 z-10" />
+                  <p className="font-bold text-base mb-1 text-on-primary">J+0: Verification Window Opens</p>
+                  <p className="text-on-primary-container text-xs md:text-sm">
                     A discreet notification is sent to your active devices. No one else is notified.
                   </p>
                 </div>
 
                 {/* J+7 */}
-                <div className="relative pl-14">
-                  <div className="absolute left-0 top-1 w-7 h-7 rounded-full bg-secondary/50 z-10" />
-                  <p className="font-bold text-lg mb-1 text-on-primary/90">J+7: Secondary Reach-out</p>
-                  <p className="text-on-primary-container text-sm">
+                <div className="relative pl-12">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-secondary/50 z-10" />
+                  <p className="font-bold text-base mb-1 text-on-primary/90">J+7: Secondary Reach-out</p>
+                  <p className="text-on-primary-container text-xs md:text-sm">
                     Alternative channels (SMS/Recovery Email) are utilized. Frequency increases to daily.
                   </p>
                 </div>
 
                 {/* J+25 */}
-                <div className="relative pl-14">
-                  <div className="absolute left-0 top-1 w-7 h-7 rounded-full bg-error/50 z-10" />
-                  <p className="font-bold text-lg mb-1 text-error-container">J+25: Critical Alert</p>
-                  <p className="text-on-primary-container text-sm font-medium">
+                <div className="relative pl-12">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-error/50 z-10" />
+                  <p className="font-bold text-base mb-1 text-error-container">J+25: Critical Alert</p>
+                  <p className="text-on-primary-container text-xs md:text-sm font-medium">
                     Final countdown. This is the last chance to abort the automated protocol.
                   </p>
                 </div>
 
                 {/* J+30 */}
-                <div className="relative pl-14">
-                  <div className="absolute left-0 top-1 w-7 h-7 rounded-full bg-error ring-4 ring-error/30 z-10" />
-                  <div className="bg-on-primary/5 p-5 rounded-xl backdrop-blur-sm">
-                    <p className="font-black text-xl mb-2 text-on-primary">J+30: Protocol Triggered</p>
-                    <p className="text-on-primary-container text-sm mb-4">
+                <div className="relative pl-12">
+                  <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-error ring-4 ring-error/30 z-10" />
+                  <div className="bg-on-primary/5 p-4 rounded-xl backdrop-blur-sm">
+                    <p className="font-black text-lg mb-1.5 text-on-primary">J+30: Protocol Triggered</p>
+                    <p className="text-on-primary-container text-xs md:text-sm mb-3">
                       The Vault decrypts. Access keys are released to your Trusted Contacts automatically.
                     </p>
                     <div className="flex gap-2 flex-wrap">
@@ -445,12 +445,12 @@ export default function LifeCheckPage() {
               </div>
             </div>
 
-            <div className="mt-10 p-5 bg-on-primary/5 rounded-xl ghost-border">
+            <div className="mt-8 p-4 bg-on-primary/5 rounded-xl ghost-border">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-secondary-fixed shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
                 </svg>
-                <p className="text-xs text-on-primary-container leading-relaxed italic">
+                <p className="text-[11px] text-on-primary-container leading-relaxed italic">
                   Keeplas uses zero-knowledge encryption. Even our system administrators cannot abort a triggered protocol once the J+30 threshold is crossed without your master key.
                 </p>
               </div>
@@ -460,12 +460,12 @@ export default function LifeCheckPage() {
       </div>
 
       {/* Final action row */}
-      <div className="mt-10 flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-8 rounded-2xl gap-6">
+      <div className="mt-8 flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
         <div>
-          <h3 className="font-headline font-black text-primary text-xl">
+          <h3 className="font-headline font-black text-primary text-lg">
             {isConfigured ? "Update Verification Profile" : "Confirm Verification Profile"}
           </h3>
-          <p className="text-on-surface-variant text-sm">
+          <p className="text-on-surface-variant text-xs md:text-sm">
             Settings take effect across all linked vaults immediately.
           </p>
         </div>
@@ -479,7 +479,7 @@ export default function LifeCheckPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-10 py-4 vault-gradient text-on-primary font-headline font-extrabold rounded-xl shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+            className="px-8 py-3 vault-gradient text-on-primary font-headline font-extrabold text-sm rounded-xl shadow-xl hover:scale-[1.03] active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
           >
             {saving
               ? "Saving..."

@@ -14,7 +14,7 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
   return (
     <Link
       href={`/vault/${item._id}`}
-      className={`block p-6 rounded-full transition-all group cursor-pointer space-y-4 ${
+      className={`block p-5 rounded-full transition-all group cursor-pointer space-y-3 ${
         item.isCritical
           ? "bg-primary-container text-on-primary-container hover:bg-primary-container/90"
           : "bg-surface-container hover:bg-surface-container-high"
@@ -22,13 +22,13 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
     >
       <div className="flex items-start justify-between">
         <div
-          className={`p-3 rounded-xl shadow-sm transition-colors ${
+          className={`p-2.5 rounded-xl shadow-sm transition-colors ${
             item.isCritical
               ? "bg-primary text-on-primary"
               : "bg-surface-container-lowest text-primary group-hover:bg-secondary group-hover:text-on-secondary"
           }`}
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d={category.icon} />
           </svg>
         </div>
@@ -49,7 +49,7 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
 
       <div>
         <h3
-          className={`font-bold text-lg ${item.isCritical ? "text-on-primary" : "text-primary"}`}
+          className={`font-bold text-base ${item.isCritical ? "text-on-primary" : "text-primary"}`}
         >
           {item.title}
         </h3>

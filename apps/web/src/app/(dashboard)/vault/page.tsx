@@ -81,18 +81,18 @@ export default function VaultPage() {
       {/* Header & Action Row */}
       <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
-          <h1 className="font-headline text-primary text-4xl md:text-5xl font-extrabold tracking-tighter leading-tight">
+          <h1 className="font-headline text-primary text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
             Digital Vault
           </h1>
-          <p className="text-on-surface-variant font-body max-w-md">
-            Your life's core documentation, secured with end-to-end zero-knowledge encryption.
+          <p className="text-on-surface-variant text-sm md:text-base max-w-md">
+            Your life&apos;s core documentation, secured with end-to-end zero-knowledge encryption.
           </p>
         </div>
         <button
           onClick={() => setShowAddDialog(true)}
-          className="vault-gradient text-on-primary px-7 py-4 rounded-xl font-bold flex items-center gap-3 shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+          className="vault-gradient text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2.5 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer text-sm"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
           Add New Entry
@@ -102,38 +102,38 @@ export default function VaultPage() {
       {/* Integrity Summary & Bento Stats */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Vault Integrity — spans 2 cols */}
-        <div className="md:col-span-2 bg-primary text-on-primary p-8 rounded-full flex flex-col justify-between relative overflow-hidden min-h-[220px]">
+        <div className="md:col-span-2 bg-primary text-on-primary p-6 rounded-full flex flex-col justify-between relative overflow-hidden min-h-[180px]">
           <div className="relative z-10">
             <span className="inline-block bg-secondary px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold">
               Status: Active
             </span>
-            <h3 className="text-2xl md:text-3xl font-headline font-bold mt-4">
+            <h3 className="text-xl md:text-2xl font-headline font-bold mt-3">
               Vault Integrity: {integrityPct}%
             </h3>
-            <p className="text-on-primary-container mt-2 max-w-sm text-sm leading-relaxed">
+            <p className="text-on-primary-container mt-1.5 max-w-sm text-xs md:text-sm leading-relaxed">
               {totalCount === 0
                 ? "No encrypted blocks detected yet. Add your first entry to establish integrity."
                 : `System last verified moments ago. No vulnerabilities detected in ${totalCount} encrypted blocks.`}
             </p>
           </div>
-          <div className="flex mt-8 gap-4 relative z-10">
-            <div className="bg-primary-container p-4 rounded-xl flex-1">
+          <div className="flex mt-6 gap-3 relative z-10">
+            <div className="bg-primary-container p-3 rounded-xl flex-1">
               <p className="text-[10px] uppercase tracking-widest text-on-primary-container">
                 Encrypted Items
               </p>
-              <p className="text-2xl font-bold mt-1">{totalCount}</p>
+              <p className="text-xl font-bold mt-1">{totalCount}</p>
             </div>
-            <div className="bg-primary-container p-4 rounded-xl flex-1">
+            <div className="bg-primary-container p-3 rounded-xl flex-1">
               <p className="text-[10px] uppercase tracking-widest text-on-primary-container">
                 Categories
               </p>
-              <p className="text-2xl font-bold mt-1">
+              <p className="text-xl font-bold mt-1">
                 {Object.values((categoryCounts as Record<string, number>) ?? {}).filter((c) => c > 0).length}
               </p>
             </div>
           </div>
           <svg
-            className="absolute -right-5 -bottom-5 w-52 h-52 text-on-primary opacity-[0.08]"
+            className="absolute -right-5 -bottom-5 w-40 h-40 text-on-primary opacity-[0.08]"
             fill="currentColor" viewBox="0 0 24 24"
           >
             <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm-1 16-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7Z" />
@@ -141,17 +141,17 @@ export default function VaultPage() {
         </div>
 
         {/* Last Access */}
-        <div className="bg-surface-container-low p-8 rounded-full flex flex-col items-center justify-center text-center min-h-[220px]">
-          <svg className="w-10 h-10 text-secondary mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="bg-surface-container-low p-6 rounded-full flex flex-col items-center justify-center text-center min-h-[180px]">
+          <svg className="w-8 h-8 text-secondary mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
-          <p className="text-[11px] font-medium text-on-surface-variant uppercase tracking-widest">
+          <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">
             Last Access
           </p>
-          <p className="text-xl font-bold text-primary mt-1">
+          <p className="text-base font-bold text-primary mt-1">
             {lastUpdated ? formatFullTime(lastUpdated) : "No activity"}
           </p>
-          <p className="text-[11px] text-on-surface-variant/60 mt-2">
+          <p className="text-[10px] text-on-surface-variant/60 mt-1">
             Verified session
           </p>
         </div>
@@ -232,13 +232,13 @@ export default function VaultPage() {
             const groupItems = groupedItems[group.title];
             if (!groupItems || groupItems.length === 0) return null;
             return (
-              <section key={group.title} className="space-y-5">
+              <section key={group.title} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-headline font-bold text-primary flex items-center gap-3">
-                    <span className={`w-2 h-8 rounded-full ${group.accent}`} />
+                  <h2 className="text-xl font-headline font-bold text-primary flex items-center gap-3">
+                    <span className={`w-1.5 h-6 rounded-full ${group.accent}`} />
                     {group.title}
                   </h2>
-                  <span className="text-xs text-on-surface-variant uppercase tracking-widest font-bold">
+                  <span className="text-[11px] text-on-surface-variant uppercase tracking-widest font-bold">
                     {groupItems.length} {groupItems.length === 1 ? "item" : "items"}
                   </span>
                 </div>

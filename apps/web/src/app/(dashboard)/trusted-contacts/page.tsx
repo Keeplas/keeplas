@@ -53,12 +53,12 @@ export default function TrustedContactsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Hero */}
-      <header className="mb-12 max-w-3xl">
-        <h1 className="font-headline font-extrabold text-4xl md:text-5xl text-primary tracking-tight mb-5 leading-tight">
+      <header className="mb-10 max-w-3xl">
+        <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight mb-4 leading-tight">
           Social Recovery &<br />
           <span className="text-secondary">Trusted Circles</span>
         </h1>
-        <p className="text-base md:text-lg text-on-surface-variant leading-relaxed">
+        <p className="text-sm md:text-base text-on-surface-variant leading-relaxed">
           Designate the individuals you trust to protect your legacy. These contacts act as your digital guardians, ensuring continuity when it matters most.
         </p>
       </header>
@@ -66,8 +66,8 @@ export default function TrustedContactsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left — explanation + invite */}
         <aside className="lg:col-span-4 space-y-6">
-          <section className="bg-surface-container-low p-8 rounded-2xl">
-            <h3 className="font-headline font-bold text-xl mb-6 text-primary">
+          <section className="bg-surface-container-low p-6 rounded-2xl">
+            <h3 className="font-headline font-bold text-lg mb-5 text-primary">
               The Role of Guardians
             </h3>
             <div className="space-y-6">
@@ -82,7 +82,7 @@ export default function TrustedContactsPage() {
                     <p className="font-bold text-[11px] uppercase tracking-widest text-primary mb-1">
                       {role.title}
                     </p>
-                    <p className="text-xs text-on-surface-variant leading-normal">
+                    <p className="text-sm text-on-surface-variant leading-normal">
                       {role.description}
                     </p>
                   </div>
@@ -92,19 +92,19 @@ export default function TrustedContactsPage() {
           </section>
 
           {/* Secure Invitation CTA */}
-          <section className="relative overflow-hidden rounded-2xl vault-gradient p-8 text-on-primary shadow-xl">
-            <h3 className="font-headline font-bold text-lg mb-2">
+          <section className="relative overflow-hidden rounded-2xl vault-gradient p-6 text-on-primary shadow-xl">
+            <h3 className="font-headline font-bold text-base mb-2">
               Secure Invitation
             </h3>
-            <p className="text-sm opacity-80 mb-6 leading-relaxed">
+            <p className="text-sm opacity-80 mb-5 leading-relaxed">
               Each contact must verify their identity and accept their role via encrypted invitation.
             </p>
             <button
               onClick={() => setShowInviteDialog(true)}
               disabled={!canInvite}
-              className="w-full py-4 bg-secondary text-on-secondary font-bold rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-secondary text-on-secondary font-bold text-sm rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
               </svg>
               Add New Guardian
@@ -112,20 +112,20 @@ export default function TrustedContactsPage() {
           </section>
 
           {/* Trust Stats */}
-          <section className="bg-primary-container p-8 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[180px] flex flex-col justify-end">
+          <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[150px] flex flex-col justify-end">
             <svg
-              className="absolute top-4 right-4 w-20 h-20 opacity-10 text-on-primary"
+              className="absolute top-3 right-3 w-16 h-16 opacity-10 text-on-primary"
               fill="currentColor" viewBox="0 0 24 24"
             >
               <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Z" />
             </svg>
-            <p className="text-4xl font-headline font-black mb-2 text-on-primary">
+            <p className="text-3xl font-headline font-black mb-1.5 text-on-primary">
               {activeContacts.length} / {MAX_CONTACTS}
             </p>
-            <p className="text-xs font-medium uppercase tracking-widest text-on-primary-container">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-on-primary-container">
               Network Strength: {activeContacts.length >= 3 ? "Stable" : activeContacts.length >= 1 ? "Developing" : "Unprotected"}
             </p>
-            <div className="mt-4 h-1.5 w-full bg-primary rounded-full overflow-hidden">
+            <div className="mt-3 h-1.5 w-full bg-primary rounded-full overflow-hidden">
               <div
                 className="h-full bg-secondary-fixed rounded-full transition-all"
                 style={{ width: `${trustPct}%` }}

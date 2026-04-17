@@ -66,16 +66,16 @@ export function DashboardContent() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
         <div>
-          <h1 className="font-headline font-extrabold text-4xl md:text-5xl text-primary tracking-tight leading-none mb-2">
+          <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight leading-none mb-2">
             Welcome back, {firstName}.
           </h1>
-          <p className="text-on-surface-variant font-body text-base md:text-lg max-w-xl">
+          <p className="text-on-surface-variant font-body text-sm md:text-base max-w-xl">
             Your legacy is protected and synchronized across all secure nodes.
           </p>
         </div>
-        <div className="flex items-center gap-3 px-5 py-3 bg-surface-container-low rounded-full self-start md:self-end">
+        <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full self-start md:self-end">
           <svg className="w-4 h-4 text-secondary" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm-1 16-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7Z" />
           </svg>
@@ -113,7 +113,7 @@ export function DashboardContent() {
         {/* Left: Score + Actions */}
         <div className="lg:col-span-4 space-y-6">
           {/* Score Widget */}
-          <div className="bg-surface-container rounded-full p-10 flex flex-col items-center justify-center text-center aspect-square relative overflow-hidden shadow-sm">
+          <div className="bg-surface-container rounded-full p-8 flex flex-col items-center justify-center text-center aspect-square relative overflow-hidden shadow-sm">
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
@@ -121,7 +121,7 @@ export function DashboardContent() {
                   "radial-gradient(circle at center, color-mix(in srgb, var(--color-secondary) 6%, transparent), transparent 70%)",
               }}
             />
-            <div className="relative w-44 h-44 flex items-center justify-center mb-4">
+            <div className="relative w-36 h-36 flex items-center justify-center mb-3">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 192 192">
                 <circle
                   cx="96" cy="96" r="88"
@@ -142,13 +142,13 @@ export function DashboardContent() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-5xl font-headline font-black text-primary">{score}%</span>
+                <span className="text-4xl font-headline font-black text-primary">{score}%</span>
                 <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
                   Complete
                 </span>
               </div>
             </div>
-            <h3 className="font-headline font-bold text-lg text-primary">Vault Integrity</h3>
+            <h3 className="font-headline font-bold text-base text-primary">Vault Integrity</h3>
             <p className="text-sm text-on-surface-variant mt-2 leading-relaxed max-w-[220px]">
               {data.nudgeMessage}
             </p>
@@ -205,13 +205,13 @@ export function DashboardContent() {
                   href="/vault"
                   className={
                     isIncomplete
-                      ? "bg-primary-container p-8 rounded-full flex flex-col justify-between min-h-[220px] relative overflow-hidden group"
-                      : "bg-surface-container-low p-8 rounded-full flex flex-col justify-between min-h-[220px] hover:bg-surface-container transition-all group"
+                      ? "bg-primary-container p-6 rounded-full flex flex-col justify-between min-h-[180px] relative overflow-hidden group"
+                      : "bg-surface-container-low p-6 rounded-full flex flex-col justify-between min-h-[180px] hover:bg-surface-container transition-all group"
                   }
                 >
                   <div className="flex items-start justify-between">
                     <svg
-                      className={`w-7 h-7 ${isIncomplete ? "text-on-primary" : "text-primary"}`}
+                      className={`w-6 h-6 ${isIncomplete ? "text-on-primary" : "text-primary"}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d={cat.icon} />
@@ -227,7 +227,7 @@ export function DashboardContent() {
                     </span>
                   </div>
                   <div>
-                    <p className={`text-xl font-headline font-extrabold ${isIncomplete ? "text-on-primary" : "text-primary"}`}>
+                    <p className={`text-lg font-headline font-extrabold ${isIncomplete ? "text-on-primary" : "text-primary"}`}>
                       {cat.label}
                     </p>
                     <p className={`text-[11px] mt-1 uppercase tracking-tight ${isIncomplete ? "text-on-primary-container" : "text-on-surface-variant"}`}>
@@ -242,7 +242,7 @@ export function DashboardContent() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-surface-container-lowest p-8 rounded-2xl shadow-sm">
+          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h4 className="font-label text-xs font-bold uppercase tracking-widest text-on-surface-variant">
                 Recent Activity

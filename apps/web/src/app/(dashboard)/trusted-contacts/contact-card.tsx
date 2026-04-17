@@ -148,15 +148,15 @@ export function ContactCard({ contact }: ContactCardProps) {
   return (
     <div
       className={cn(
-        "bg-surface-container-low p-8 rounded-2xl group hover:bg-surface-container transition-all",
+        "bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all",
         contact.isFirstResponder && "ring-1 ring-secondary/40"
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className={cn("w-14 h-14 rounded-full border-2 p-0.5", statusConfig.avatarBorder)}>
+      <div className="flex items-start justify-between mb-5">
+        <div className={cn("w-12 h-12 rounded-full border-2 p-0.5", statusConfig.avatarBorder)}>
           <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
-            <span className="font-headline font-bold text-on-primary-container text-sm">
+            <span className="font-headline font-bold text-on-primary-container text-xs">
               {initials}
             </span>
           </div>
@@ -172,10 +172,10 @@ export function ContactCard({ contact }: ContactCardProps) {
       </div>
 
       {/* Name + Email */}
-      <h3 className="font-headline font-bold text-xl text-primary">
+      <h3 className="font-headline font-bold text-lg text-primary">
         {contact.name}
       </h3>
-      <p className="text-sm text-on-surface-variant mb-6 truncate">
+      <p className="text-xs text-on-surface-variant mb-5 truncate">
         {contact.email}
       </p>
 
