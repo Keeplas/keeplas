@@ -1,0 +1,158 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@keeplas/ui";
+import { Input, Label, ErrorAlert } from "@keeplas/ui";
+
+const ROLES = [
+  { value: "family", label: "Family member" },
+  { value: "friend", label: "Friend" },
+  { value: "lawyer", label: "Lawyer" },
+  { value: "doctor", label: "Doctor" },
+  { value: "other", label: "Other" },
+] as const;
+
+type Role = (typeof ROLES)[number]["value"];
+
+interface InviteContactDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function InviteContactDialog({
+  open,
+  onOpenChange,
+}: InviteContactDialogProps) {
+  const inviteContact = useMutation(api.trusted_contacts.inviteContact);
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<Role>("family");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) return;
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await inviteContact({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phoneNumber: phone.trim() || undefined,
+        role,
+      });
+      // Reset form
+      setName("");
+      setEmail("");
+      setPhone("");
+      setRole("family");
+      onOpenChange(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to send invitation"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-surface max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-headline text-primary text-xl font-bold">
+            Invite Trusted Contact
+          </DialogTitle>
+          <DialogDescription className="text-on-surface-variant">
+            This person will receive a recovery fragment and can help you regain
+            access to your vault.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="contact-name">Full Name *</Label>
+            <Input
+              id="contact-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter their full name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact-email">Email *</Label>
+            <Input
+              id="contact-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="contact@example.com"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact-phone">Phone (optional)</Label>
+            <Input
+              id="contact-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+1 (555) 000-0000"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contact-role">Role</Label>
+            <select
+              id="contact-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as Role)}
+              className="w-full px-4 py-3 bg-surface-container-low rounded-xl text-on-surface focus:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-secondary/20 transition-colors"
+            >
+              {ROLES.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && <ErrorAlert message={error} />}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 py-3 rounded-xl font-headline font-bold text-on-surface-variant bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || !name.trim() || !email.trim()}
+              className="flex-1 vault-gradient text-on-primary py-3 rounded-xl font-headline font-bold hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+            >
+              {saving ? "Sending..." : "Send Invitation"}
+            </button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
