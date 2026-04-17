@@ -97,14 +97,9 @@ export function Sidebar() {
             height={40}
             className="shrink-0"
           />
-          <div className="flex flex-col">
-            <span className="font-headline font-black text-primary text-sm tracking-widest">
-              THE VAULT
-            </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-secondary/70">
-              Security: Maximum
-            </span>
-          </div>
+          <span className="font-headline font-extrabold text-primary text-xl tracking-tight">
+            Keeplas
+          </span>
         </div>
 
         {/* Navigation */}
