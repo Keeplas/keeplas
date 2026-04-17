@@ -173,7 +173,7 @@ export default function TrustedContactsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {activeContacts.map((contact) => (
-                <ContactCard key={contact._id} contact={contact as any} />
+                <ContactCard key={contact._id} contact={contact} />
               ))}
               {canInvite && (
                 <button

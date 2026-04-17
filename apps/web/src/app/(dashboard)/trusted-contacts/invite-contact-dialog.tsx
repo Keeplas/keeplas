@@ -12,7 +12,7 @@ import {
   Select,
   SelectItem,
 } from "@keeplas/ui";
-import { Input, Label, ErrorAlert } from "@keeplas/ui";
+import { Button, Input, Label, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 
 const ROLES = [
@@ -140,20 +140,24 @@ export function InviteContactDialog({
           {error && <ErrorAlert message={error} />}
 
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="md"
               onClick={() => onOpenChange(false)}
-              className="flex-1 py-3 rounded-xl font-headline font-bold text-on-surface-variant bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer"
+              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="vault"
+              size="md"
               disabled={saving || !name.trim() || !email.trim()}
-              className="flex-1 vault-gradient text-on-primary py-3 rounded-xl font-headline font-bold hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+              className="flex-1 cursor-pointer"
             >
               {saving ? "Sending..." : "Send Invitation"}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>

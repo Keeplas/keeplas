@@ -9,6 +9,7 @@ import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
+  Button,
   Input,
   Label,
   Select,
@@ -213,20 +214,24 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="md"
               onClick={() => onOpenChange(false)}
-              className="flex-1 py-3 px-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm text-on-surface transition-colors cursor-pointer"
+              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="vault"
+              size="md"
               disabled={saving || !isReady}
-              className="flex-1 vault-gradient text-on-primary py-3 px-4 rounded-xl font-headline font-bold text-sm shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="flex-1 text-sm cursor-pointer"
             >
               {saving ? "Encrypting..." : "Encrypt & Save"}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>

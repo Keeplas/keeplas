@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { phraseToHash } from "@keeplas/crypto/recovery";
-import { Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
+import { Button, Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
 
 function pickRandomIndices(): number[] {
   const available = Array.from({ length: 24 }, (_, i) => i);
@@ -166,10 +166,12 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
         ))}
 
         <div className="pt-2 space-y-3">
-          <button
+          <Button
             type="submit"
+            variant="vault"
+            size="xl"
             disabled={loading || inputs.some((v) => !v.trim())}
-            className="w-full vault-gradient text-on-primary font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            className="w-full group cursor-pointer disabled:pointer-events-none disabled:opacity-40"
           >
             {loading ? (
               <>
@@ -194,7 +196,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
                 </svg>
               </>
             )}
-          </button>
+          </Button>
 
           <button
             type="button"

@@ -11,7 +11,7 @@ import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { getErrorMessage } from "@/lib/utils";
-import { Spinner } from "@keeplas/ui";
+import { Button, Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
   phrase: string[];
@@ -269,12 +269,14 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
           <div className="p-4 bg-error-container rounded-xl mb-4">
             <p className="text-sm text-on-error-container">{error}</p>
           </div>
-          <button
+          <Button
+            variant="vault"
+            size="md"
             onClick={() => window.location.reload()}
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl cursor-pointer"
+            className="cursor-pointer"
           >
             Try again
-          </button>
+          </Button>
         </div>
       )}
     </div>

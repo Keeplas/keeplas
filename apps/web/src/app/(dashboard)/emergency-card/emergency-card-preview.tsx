@@ -1,28 +1,11 @@
 "use client";
 
+import type { CardFormData, PrivacyToggles } from "./sections/constants";
 import { QRCodeSVG } from "./qr-code-svg";
 
 interface EmergencyCardPreviewProps {
-  formData: {
-    fullName: string;
-    bloodType: string;
-    allergies: string;
-    medicalConditions: string;
-    medications: string;
-    emergencyContactName: string;
-    emergencyContactPhone: string;
-    emergencyContactRelation: string;
-    additionalNotes: string;
-  };
-  toggles: {
-    showFullName: boolean;
-    showBloodType: boolean;
-    showAllergies: boolean;
-    showMedicalConditions: boolean;
-    showMedications: boolean;
-    showEmergencyContact: boolean;
-    showAdditionalNotes: boolean;
-  };
+  formData: CardFormData;
+  toggles: PrivacyToggles;
   qrUrl: string | null;
 }
 

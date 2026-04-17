@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { createNotification, requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 
 const MAX_CONTACTS = 5;
@@ -16,20 +16,6 @@ export const getContacts = query({
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
-      .collect();
-  },
-});
-
-/**
- * Get all contacts including revoked (for history).
- */
-export const getAllContacts = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-    return await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
   },
 });
@@ -140,17 +126,14 @@ export const inviteContact = mutation({
     });
 
     // Create notification for the inviting user
-    await ctx.db.insert("notifications", {
+    await createNotification(ctx, {
       userId,
       type: "contact_invited",
       title: "Invitation sent",
       body: `You invited ${args.name} as a trusted contact.`,
       actionUrl: "/trusted-contacts",
-      channels: ["push"],
-      isRead: false,
       relatedId: contactId,
       relatedType: "trusted_contact",
-      createdAt: now,
     });
 
     await createAuditLog(ctx, {
@@ -241,17 +224,15 @@ export const acceptInvitation = mutation({
     });
 
     // Notify the vault owner
-    await ctx.db.insert("notifications", {
+    await createNotification(ctx, {
       userId: contact.userId,
       type: "contact_confirmed",
       title: "Contact accepted",
       body: `${contact.name} accepted your invitation and is now a trusted contact.`,
       actionUrl: "/trusted-contacts",
       channels: ["push", "email"],
-      isRead: false,
       relatedId: contact._id,
       relatedType: "trusted_contact",
-      createdAt: now,
     });
 
     await createAuditLog(ctx, {
@@ -292,17 +273,14 @@ export const declineInvitation = mutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.db.insert("notifications", {
+    await createNotification(ctx, {
       userId: contact.userId,
       type: "contact_invited",
       title: "Invitation declined",
       body: `${contact.name} declined your trusted contact invitation.`,
       actionUrl: "/trusted-contacts",
-      channels: ["push"],
-      isRead: false,
       relatedId: contact._id,
       relatedType: "trusted_contact",
-      createdAt: Date.now(),
     });
 
     return { success: true };
@@ -472,16 +450,14 @@ export const revokeContact = mutation({
 
     // Notify the revoked contact if they had an account
     if (contact.contactUserId) {
-      await ctx.db.insert("notifications", {
+      await createNotification(ctx, {
         userId: contact.contactUserId,
         type: "security_alert",
         title: "Trusted contact access revoked",
         body: "Your trusted contact access has been revoked by the vault owner.",
         channels: ["push", "email"],
-        isRead: false,
         relatedId: contact._id,
         relatedType: "trusted_contact",
-        createdAt: Date.now(),
       });
     }
 

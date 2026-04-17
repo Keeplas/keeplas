@@ -10,6 +10,7 @@ import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-c
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
+  Button,
   Input,
   Label,
   ErrorAlert,
@@ -202,14 +203,24 @@ export default function VaultItemPage() {
           </label>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => setEditing(false)}
-              className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm text-on-surface transition-colors cursor-pointer">
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              onClick={() => setEditing(false)}
+              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+            >
               Cancel
-            </button>
-            <button type="submit" disabled={saving}
-              className="flex-1 vault-gradient text-on-primary py-3 rounded-xl font-headline font-bold text-sm shadow-lg disabled:opacity-40 cursor-pointer">
+            </Button>
+            <Button
+              type="submit"
+              variant="vault"
+              size="md"
+              disabled={saving}
+              className="flex-1 text-sm cursor-pointer"
+            >
               {saving ? "Encrypting..." : "Save Changes"}
-            </button>
+            </Button>
           </div>
         </form>
       ) : (

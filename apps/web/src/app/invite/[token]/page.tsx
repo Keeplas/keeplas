@@ -5,7 +5,7 @@ import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader, ErrorAlert } from "@keeplas/ui";
+import { Button, buttonVariants, Loader, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -59,7 +59,7 @@ export default function InvitationPage({
           </p>
           <Link
             href="/login"
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl inline-block"
+            className={buttonVariants({ variant: "vault", size: "md" })}
           >
             Go to Keeplas
           </Link>
@@ -84,7 +84,7 @@ export default function InvitationPage({
           </p>
           <Link
             href="/dashboard"
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl inline-block"
+            className={buttonVariants({ variant: "vault", size: "md" })}
           >
             Go to Dashboard
           </Link>
@@ -122,7 +122,7 @@ export default function InvitationPage({
           </p>
           <Link
             href="/dashboard"
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl inline-block"
+            className={buttonVariants({ variant: "vault", size: "md" })}
           >
             Go to Dashboard
           </Link>
@@ -225,7 +225,11 @@ export default function InvitationPage({
               </p>
               <Link
                 href={`/signup?redirect=/invite/${token}`}
-                className="vault-gradient text-on-primary w-full py-3 rounded-xl font-headline font-bold block"
+                className={buttonVariants({
+                  variant: "vault",
+                  size: "md",
+                  className: "w-full",
+                })}
               >
                 Create Account
               </Link>
@@ -240,13 +244,15 @@ export default function InvitationPage({
             <div className="space-y-3">
               {error && <ErrorAlert message={error} />}
 
-              <button
+              <Button
+                variant="vault"
+                size="md"
+                className="w-full cursor-pointer"
                 onClick={handleAccept}
                 disabled={accepting || declining}
-                className="vault-gradient text-on-primary w-full py-3 rounded-xl font-headline font-bold hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
               >
                 {accepting ? "Accepting..." : "Accept Invitation"}
-              </button>
+              </Button>
 
               <button
                 onClick={handleDecline}

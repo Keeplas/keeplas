@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn } from "@keeplas/ui";
+
+type AccessMode = "mode_a" | "mode_b1" | "mode_b2" | "mode_b3" | "mode_b4";
 
 const ROLE_BADGE_ICONS: Record<string, string> = {
   family:
@@ -57,23 +60,8 @@ const ACCESS_MODE_LABELS: Record<string, string> = {
   mode_b1: "On-demand",
 };
 
-interface Contact {
-  _id: string;
-  name: string;
-  email: string;
-  phoneNumber?: string;
-  role: string;
-  isFirstResponder: boolean;
-  isMedicalContact: boolean;
-  accessModes: string[];
-  invitationStatus: string;
-  invitedAt: number;
-  acceptedAt?: number;
-  shardConfirmed: boolean;
-}
-
 interface ContactCardProps {
-  contact: Contact;
+  contact: Doc<"trusted_contacts">;
 }
 
 export function ContactCard({ contact }: ContactCardProps) {
@@ -104,7 +92,7 @@ export function ContactCard({ contact }: ContactCardProps) {
     }
     setRevoking(true);
     try {
-      await revokeContact({ contactId: contact._id as any });
+      await revokeContact({ contactId: contact._id });
     } finally {
       setRevoking(false);
       setConfirmRevoke(false);
@@ -112,17 +100,16 @@ export function ContactCard({ contact }: ContactCardProps) {
   }
 
   async function handleToggleFirstResponder() {
-    await toggleFirstResponder({ contactId: contact._id as any });
+    await toggleFirstResponder({ contactId: contact._id });
   }
 
-  async function handleToggleMode(mode: "mode_a" | "mode_b1") {
-    const currentModes = contact.accessModes as Array<"mode_a" | "mode_b1" | "mode_b2" | "mode_b3" | "mode_b4">;
-    const newModes = currentModes.includes(mode)
-      ? currentModes.filter((m) => m !== mode)
-      : [...currentModes, mode];
+  async function handleToggleMode(mode: Extract<AccessMode, "mode_a" | "mode_b1">) {
+    const newModes = contact.accessModes.includes(mode)
+      ? contact.accessModes.filter((m) => m !== mode)
+      : [...contact.accessModes, mode];
     await updateAccessModes({
-      contactId: contact._id as any,
-      accessModes: newModes as any,
+      contactId: contact._id,
+      accessModes: newModes,
     });
   }
 

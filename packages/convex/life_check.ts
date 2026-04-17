@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { createNotification, requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 
@@ -387,17 +387,14 @@ export const initiateCycle = internalMutation({
     });
 
     // Create notification
-    await ctx.db.insert("notifications", {
+    await createNotification(ctx, {
       userId: config.userId,
       type: "life_check",
       title: "Life Check",
       body: "Confirm you are well. Tap to verify.",
       actionUrl: "/life-check",
-      channels: ["push"],
-      isRead: false,
       relatedId: cycleId,
       relatedType: "life_check_cycle",
-      createdAt: now,
     });
 
     await createAuditLog(ctx, {

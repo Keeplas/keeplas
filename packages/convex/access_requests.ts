@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { createNotification, requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 
 /**
@@ -53,17 +53,15 @@ export const requestAccess = mutation({
     });
 
     // Notify vault owner
-    await ctx.db.insert("notifications", {
+    await createNotification(ctx, {
       userId: contact.userId,
       type: "access_request",
       title: "Access request",
       body: `${contact.name} is requesting access to your vault.`,
       actionUrl: "/trusted-contacts",
       channels: ["push", "email"],
-      isRead: false,
       relatedId: requestId,
       relatedType: "access_request",
-      createdAt: now,
     });
 
     await createAuditLog(ctx, {
@@ -173,17 +171,15 @@ export const approveRequest = mutation({
     // Notify the requesting contact
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
-      await ctx.db.insert("notifications", {
+      await createNotification(ctx, {
         userId: contact.contactUserId,
         type: "access_request",
         title: "Access approved",
         body: `Your access request has been approved for ${args.durationHours} hours.`,
         actionUrl: "/trusted-contacts",
         channels: ["push", "email"],
-        isRead: false,
         relatedId: args.requestId,
         relatedType: "access_request",
-        createdAt: now,
       });
     }
 
@@ -234,7 +230,7 @@ export const denyRequest = mutation({
     // Notify the requesting contact
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
-      await ctx.db.insert("notifications", {
+      await createNotification(ctx, {
         userId: contact.contactUserId,
         type: "access_request",
         title: "Access denied",
@@ -242,11 +238,8 @@ export const denyRequest = mutation({
           ? `Your access request was denied: ${args.reason}`
           : "Your access request was denied.",
         actionUrl: "/trusted-contacts",
-        channels: ["push"],
-        isRead: false,
         relatedId: args.requestId,
         relatedType: "access_request",
-        createdAt: now,
       });
     }
 
@@ -317,17 +310,15 @@ export const initiateEmergencyAccess = mutation({
 
       if (quorumReached) {
         // Notify vault owner about grace period
-        await ctx.db.insert("notifications", {
+        await createNotification(ctx, {
           userId: contact.userId,
           type: "security_alert",
           title: "Emergency access initiated",
           body: "Two or more contacts have initiated emergency access. You have 72 hours to cancel.",
           actionUrl: "/trusted-contacts",
           channels: ["push", "email"],
-          isRead: false,
           relatedId: existingModeA._id,
           relatedType: "access_request",
-          createdAt: now,
         });
       }
 
@@ -399,16 +390,14 @@ export const cancelEmergencyAccess = mutation({
       for (const contactId of request.contactsInitiated) {
         const contact = await ctx.db.get(contactId);
         if (contact?.contactUserId) {
-          await ctx.db.insert("notifications", {
+          await createNotification(ctx, {
             userId: contact.contactUserId,
             type: "security_alert",
             title: "Emergency access cancelled",
             body: "The vault owner cancelled the emergency access request.",
             channels: ["push", "email"],
-            isRead: false,
             relatedId: args.requestId,
             relatedType: "access_request",
-            createdAt: now,
           });
         }
       }

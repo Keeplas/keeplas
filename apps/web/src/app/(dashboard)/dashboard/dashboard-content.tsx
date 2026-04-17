@@ -3,20 +3,17 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@keeplas/backend/_generated/api";
-import { Loader } from "@keeplas/ui";
+import { buttonVariants, Icon, Loader } from "@keeplas/ui";
 import { getCategoryConfig } from "@/lib/vault-categories";
+import { ICON_PATHS } from "@/lib/icons";
+import { formatTimeAgo } from "@/lib/format";
 
 const ACTION_ICONS: Record<string, string> = {
-  add_item:
-    "M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M12 15h.008v.008H12V15Zm-3.375-7.5V5.625C8.625 4.175 9.8 3 11.25 3h1.5c1.45 0 2.625 1.175 2.625 2.625V7.5",
-  invite_contact:
-    "M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z",
-  emergency_card:
-    "M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z",
-  life_check:
-    "M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z",
-  more_categories:
-    "M12 4.5v15m7.5-7.5h-15",
+  add_item: ICON_PATHS.archive,
+  invite_contact: ICON_PATHS.userPlus,
+  emergency_card: ICON_PATHS.emergencyCard,
+  life_check: ICON_PATHS.heartbeat,
+  more_categories: ICON_PATHS.plus,
 };
 
 const CATEGORY_CARDS = [
@@ -88,9 +85,10 @@ export function DashboardContent() {
       {/* Protection Banner */}
       {data.confirmedContacts === 0 && (
         <div className="bg-primary-container text-on-primary-container p-6 rounded-2xl mb-10 flex items-start gap-4">
-          <svg className="w-6 h-6 text-secondary-fixed shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
+          <Icon
+            path={ICON_PATHS.warning}
+            className="w-6 h-6 text-secondary-fixed shrink-0 mt-0.5"
+          />
           <div className="flex-1">
             <h3 className="font-headline font-bold text-on-primary mb-1">
               Vault not protected in emergency
@@ -169,22 +167,17 @@ export function DashboardContent() {
                   >
                     <span className="flex items-center gap-3 font-headline font-bold text-sm text-primary">
                       <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                        <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d={ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item}
-                          />
-                        </svg>
+                        <Icon
+                          path={ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item}
+                          className="w-4 h-4 text-primary"
+                        />
                       </span>
                       {action.label}
                     </span>
-                    <svg
+                    <Icon
+                      path={ICON_PATHS.chevronRight}
                       className="w-5 h-5 text-outline-variant group-hover:translate-x-1 transition-transform"
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
+                    />
                   </Link>
                 ))}
               </div>
@@ -210,12 +203,10 @@ export function DashboardContent() {
                   }
                 >
                   <div className="flex items-start justify-between">
-                    <svg
+                    <Icon
+                      path={cat.icon}
                       className={`w-6 h-6 ${isIncomplete ? "text-on-primary" : "text-primary"}`}
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d={cat.icon} />
-                    </svg>
+                    />
                     <span
                       className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${
                         isIncomplete
@@ -260,7 +251,7 @@ export function DashboardContent() {
                 </p>
                 <Link
                   href="/vault"
-                  className="inline-flex vault-gradient text-on-primary font-headline font-bold py-2.5 px-5 rounded-xl text-sm cursor-pointer"
+                  className={buttonVariants({ variant: "vault", size: "sm" })}
                 >
                   Add your first item
                 </Link>
@@ -276,12 +267,7 @@ export function DashboardContent() {
                       className="flex items-center gap-4 group cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center shrink-0">
-                        <svg
-                          className="w-4 h-4 text-secondary"
-                          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d={cat.icon} />
-                        </svg>
+                        <Icon path={cat.icon} className="w-4 h-4 text-secondary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-primary truncate">
@@ -296,12 +282,10 @@ export function DashboardContent() {
                           Critical
                         </span>
                       )}
-                      <svg
+                      <Icon
+                        path={ICON_PATHS.chevronRight}
                         className="w-4 h-4 text-outline-variant group-hover:text-secondary transition-colors"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                      </svg>
+                      />
                     </Link>
                   );
                 })}
@@ -314,13 +298,3 @@ export function DashboardContent() {
   );
 }
 
-function formatTimeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}

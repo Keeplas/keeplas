@@ -73,3 +73,44 @@ export async function logVaultAction(
     resourceId: itemId,
   });
 }
+
+export type NotificationType =
+  | "life_check"
+  | "access_request"
+  | "contact_invited"
+  | "contact_confirmed"
+  | "vault_update"
+  | "security_alert"
+  | "system";
+
+export interface NotificationInput {
+  userId: Id<"users">;
+  type: NotificationType;
+  title: string;
+  body: string;
+  actionUrl?: string;
+  channels?: string[];
+  relatedId?: string;
+  relatedType?: string;
+}
+
+/**
+ * Insert a notification row. Defaults channels to ["push"] and stamps createdAt.
+ */
+export async function createNotification(
+  ctx: MutationCtx,
+  input: NotificationInput
+) {
+  return await ctx.db.insert("notifications", {
+    userId: input.userId,
+    type: input.type,
+    title: input.title,
+    body: input.body,
+    actionUrl: input.actionUrl,
+    channels: input.channels ?? ["push"],
+    isRead: false,
+    relatedId: input.relatedId,
+    relatedType: input.relatedType,
+    createdAt: Date.now(),
+  });
+}

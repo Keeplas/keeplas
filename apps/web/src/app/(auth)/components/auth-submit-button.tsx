@@ -1,7 +1,7 @@
 "use client";
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { Button, cn } from "@keeplas/ui";
 
 interface AuthSubmitButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,19 +14,14 @@ export function AuthSubmitButton({
   ...props
 }: AuthSubmitButtonProps) {
   return (
-    <button
+    <Button
       type="submit"
-      className={cn(
-        "w-full vault-gradient text-on-primary font-headline font-bold py-4 rounded-xl",
-        "shadow-lg shadow-primary/10 hover:shadow-primary/20",
-        "hover:scale-[1.02] active:scale-[0.98] transition-all",
-        "flex items-center justify-center gap-2 group",
-        "disabled:opacity-60",
-        className
-      )}
+      variant="vault"
+      size="xl"
+      className={cn("w-full group", className)}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   );
 }

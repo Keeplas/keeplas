@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Badge, Select, SelectItem } from "@keeplas/ui";
 
 const DURATION_OPTIONS = [
@@ -25,11 +26,11 @@ export function AccessRequestsSection() {
 
   if (!pendingRequests?.length && !allRequests?.length) return null;
 
-  async function handleApprove(requestId: string) {
+  async function handleApprove(requestId: Id<"access_requests">) {
     setProcessing(requestId);
     try {
       await approveRequest({
-        requestId: requestId as any,
+        requestId,
         accessType: "read",
         durationHours: selectedDuration,
         sectionsApproved: ["all"],
@@ -39,19 +40,19 @@ export function AccessRequestsSection() {
     }
   }
 
-  async function handleDeny(requestId: string) {
+  async function handleDeny(requestId: Id<"access_requests">) {
     setProcessing(requestId);
     try {
-      await denyRequest({ requestId: requestId as any });
+      await denyRequest({ requestId });
     } finally {
       setProcessing(null);
     }
   }
 
-  async function handleCancelEmergency(requestId: string) {
+  async function handleCancelEmergency(requestId: Id<"access_requests">) {
     setProcessing(requestId);
     try {
-      await cancelEmergency({ requestId: requestId as any });
+      await cancelEmergency({ requestId });
     } finally {
       setProcessing(null);
     }

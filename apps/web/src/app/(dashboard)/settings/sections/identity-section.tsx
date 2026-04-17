@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Input, Label } from "@keeplas/ui";
+import { Button, Input, Label, UserAvatar } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
+import { getInitials } from "@/lib/user";
 
 interface IdentitySectionProps {
   user: Doc<"users">;
@@ -42,12 +43,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
     }
   }
 
-  const initials = (user.name || user.email || "?")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = getInitials(user.name || user.email);
 
   const curatorSince = user._creationTime
     ? new Date(user._creationTime).toLocaleDateString(undefined, {
@@ -75,21 +71,15 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6"
       >
         <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="relative group shrink-0">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={name || "Profile"}
-                className="w-20 h-20 rounded-full object-cover shadow-xl border-4 border-surface"
-                onError={() => setAvatarUrl("")}
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-headline font-bold text-xl shadow-xl border-4 border-surface">
-                {initials}
-              </div>
-            )}
-          </div>
+          <UserAvatar
+            size="xl"
+            imageUrl={avatarUrl || null}
+            initials={initials}
+            alt={name || "Profile"}
+            imageClassName="shadow-xl border-4 border-surface"
+            className="shadow-xl border-4 border-surface"
+            onImageError={() => setAvatarUrl("")}
+          />
           <div className="space-y-1 flex-1 min-w-0">
             <h3 className="font-headline text-lg font-bold text-primary truncate">
               {name || "Unnamed Curator"}
@@ -181,13 +171,15 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               Profile updated ✓
             </span>
           )}
-          <button
+          <Button
             type="submit"
+            variant="vault"
+            size="md"
             disabled={saving}
-            className="px-8 py-3 vault-gradient text-on-primary font-headline font-bold rounded-xl shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+            className="cursor-pointer"
           >
             {saving ? "Saving..." : "Save Identity"}
-          </button>
+          </Button>
         </div>
       </form>
     </section>

@@ -32,6 +32,7 @@ export {
   DropdownMenuLabel,
 } from "./dropdown-menu";
 export { ErrorAlert } from "./error-alert";
+export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
@@ -51,4 +52,5 @@ export { Spinner } from "./spinner";
 export { Loader, KeeplasLogoMark, type LoaderProps } from "./loader";
 export { Textarea } from "./textarea";
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip";
+export { UserAvatar, type UserAvatarProps } from "./user-avatar";
 export { cn } from "./lib/utils";

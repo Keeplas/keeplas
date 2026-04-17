@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Loader } from "@keeplas/ui";
+import { Button, Loader } from "@keeplas/ui";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 
 interface RecoveryPhraseStepProps {
@@ -247,10 +247,12 @@ export function RecoveryPhraseStep({
           </span>
         </label>
 
-        <button
+        <Button
+          variant="vault"
+          size="xl"
           onClick={handleContinue}
           disabled={!confirmed}
-          className="w-full vault-gradient text-on-primary font-headline font-bold py-4 rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+          className="w-full group cursor-pointer disabled:pointer-events-none disabled:opacity-40"
         >
           I saved my words — continue
           <svg
@@ -266,7 +268,7 @@ export function RecoveryPhraseStep({
               d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
             />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );

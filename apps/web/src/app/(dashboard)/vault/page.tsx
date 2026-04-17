@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from "react";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemCard } from "./vault-item-card";
 import { AddItemDialog } from "./add-item-dialog";
-import { Input } from "@keeplas/ui";
+import { Button, Input } from "@keeplas/ui";
 
 const SECTION_GROUPS: Array<{
   title: string;
@@ -88,15 +88,17 @@ export default function VaultPage() {
             Your life&apos;s core documentation, secured with end-to-end zero-knowledge encryption.
           </p>
         </div>
-        <button
+        <Button
+          variant="vault"
+          size="md"
           onClick={() => setShowAddDialog(true)}
-          className="vault-gradient text-on-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2.5 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer text-sm"
+          className="text-sm shadow-xl shadow-primary/20 cursor-pointer"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
           Add New Entry
-        </button>
+        </Button>
       </section>
 
       {/* Integrity Summary & Bento Stats */}
@@ -219,12 +221,14 @@ export default function VaultPage() {
               ? "Start by adding your first secure item."
               : CATEGORIES.find((c) => c.key === activeCategory)?.emptyMessage}
           </p>
-          <button
+          <Button
+            variant="vault"
+            size="md"
             onClick={() => setShowAddDialog(true)}
-            className="vault-gradient text-on-primary font-headline font-bold py-3 px-6 rounded-xl cursor-pointer"
+            className="cursor-pointer"
           >
             Add your first item
-          </button>
+          </Button>
         </div>
       ) : showGrouped ? (
         <div className="space-y-10">

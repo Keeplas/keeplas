@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Label, Select, SelectItem, Switch } from "@keeplas/ui";
+import { Button, Label, Select, SelectItem, Switch } from "@keeplas/ui";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import {
   useLocalStorageState,
@@ -192,13 +192,15 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               Preferences saved ✓
             </span>
           )}
-          <button
+          <Button
             type="submit"
+            variant="vault"
+            size="md"
             disabled={saving}
-            className="px-8 py-3 vault-gradient text-on-primary font-headline font-bold rounded-xl shadow-lg shadow-primary/10 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 cursor-pointer"
+            className="cursor-pointer"
           >
             {saving ? "Saving..." : "Save Preferences"}
-          </button>
+          </Button>
         </div>
       </form>
     </section>
