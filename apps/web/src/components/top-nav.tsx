@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery, useMutation } from "convex/react";
 import Image from "next/image";
-import Link from "next/link";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   DropdownMenu,
@@ -41,11 +40,11 @@ function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-xl hover:bg-on-primary/10 transition-colors cursor-pointer"
+        className="relative p-2 text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 rounded-lg transition-all scale-95 active:scale-90 duration-200 cursor-pointer"
         aria-label="Notifications"
       >
         <svg
-          className="w-5 h-5 text-on-primary/80"
+          className="w-5 h-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -58,9 +57,7 @@ function NotificationBell() {
           />
         </svg>
         {(unreadCount ?? 0) > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-error text-on-error text-[10px] font-bold flex items-center justify-center">
-            {unreadCount! > 9 ? "9+" : unreadCount}
-          </span>
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-secondary" />
         )}
       </button>
 
@@ -70,7 +67,7 @@ function NotificationBell() {
             className="fixed inset-0 z-40"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-2xl shadow-2xl z-50 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low">
               <span className="font-headline font-bold text-sm text-primary">
                 Notifications
@@ -164,8 +161,8 @@ export function TopNav() {
   const user = useQuery(api.users.viewer);
 
   return (
-    <header className="sticky top-0 z-40 glass">
-      <div className="flex items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-40 bg-primary/80 backdrop-blur-xl shadow-2xl shadow-on-surface/10">
+      <div className="flex items-center justify-between px-6 md:px-8 py-4">
         {/* Mobile logo */}
         <div className="md:hidden flex items-center gap-2">
           <Image
@@ -174,46 +171,55 @@ export function TopNav() {
             width={28}
             height={28}
           />
-          <span className="font-headline text-lg font-bold text-on-primary">
+          <span className="font-headline text-lg font-extrabold tracking-tighter text-on-primary">
             Keeplas
           </span>
         </div>
 
-        {/* Spacer for desktop (logo is in sidebar) */}
+        {/* Desktop spacer (nav lives in sidebar) */}
         <div className="hidden md:block" />
 
-        {/* Right side */}
+        {/* Right icons */}
         <div className="flex items-center gap-2">
+          <button
+            aria-label="Verified session"
+            className="p-2 text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 rounded-lg transition-all scale-95 active:scale-90 duration-200 cursor-default hidden sm:inline-flex"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+            </svg>
+          </button>
+
           <NotificationBell />
 
           <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-on-primary/10 transition-colors outline-none">
-              <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-sm font-medium text-on-secondary-container">
-                {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
-              </div>
-              <span className="hidden sm:block text-sm text-on-primary/90 max-w-[150px] truncate">
-                {user?.name || user?.email || "Account"}
-              </span>
-            </button>
-          </DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-2 py-1 rounded-xl text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 transition-colors outline-none cursor-pointer">
+                <div className="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-sm font-bold text-on-secondary-fixed">
+                  {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                </div>
+                <span className="hidden sm:block text-sm font-medium max-w-[150px] truncate">
+                  {user?.name || user?.email || "Account"}
+                </span>
+              </button>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              {user?.email || "No email"}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              destructive
-              onClick={() => signOut()}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-              </svg>
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                {user?.email || "No email"}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                destructive
+                onClick={() => signOut()}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

@@ -144,24 +144,21 @@ export default function EmergencyCardPage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <section className="mb-10">
-        <span className="font-label text-secondary font-semibold uppercase tracking-[0.2em] text-xs mb-3 block">
-          Public Safety Profile
-        </span>
-        <h1 className="font-headline text-primary text-4xl md:text-5xl font-extrabold tracking-tighter leading-tight">
+      <header className="mb-12 max-w-2xl">
+        <h1 className="font-headline text-primary text-4xl md:text-5xl font-extrabold tracking-tight leading-none mb-4">
           Emergency Card
         </h1>
-        <p className="text-on-surface-variant text-lg max-w-md mt-4">
+        <p className="text-on-surface-variant text-base md:text-lg">
           Customize your public safety profile. This information remains accessible to responders even when your vault is locked.
         </p>
-      </section>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left: Form + Privacy Controls */}
-        <section className="lg:col-span-5 space-y-8">
-          <form onSubmit={handleSave} className="space-y-8">
+        <section className="lg:col-span-5 space-y-6">
+          <form onSubmit={handleSave} className="space-y-6">
             {/* Personal Information */}
-            <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+            <div className="bg-surface-container-low rounded-2xl p-8 space-y-5">
               <h3 className="font-headline font-bold text-xl text-primary">Personal Information</h3>
 
               <div className="space-y-2">
@@ -223,7 +220,7 @@ export default function EmergencyCardPage() {
             </div>
 
             {/* Emergency Contact */}
-            <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+            <div className="bg-surface-container-low rounded-2xl p-8 space-y-5">
               <h3 className="font-headline font-bold text-xl text-primary">Emergency Contact</h3>
 
               <div className="space-y-2">
@@ -259,7 +256,7 @@ export default function EmergencyCardPage() {
             </div>
 
             {/* Additional Notes */}
-            <div className="bg-surface-container-low rounded-xl p-6 space-y-5">
+            <div className="bg-surface-container-low rounded-2xl p-8 space-y-5">
               <h3 className="font-headline font-bold text-xl text-primary">Additional Notes</h3>
               <Textarea
                 id="additionalNotes"
@@ -271,16 +268,16 @@ export default function EmergencyCardPage() {
             </div>
 
             {/* Privacy Controls */}
-            <div className="bg-surface-container-low rounded-xl p-6 space-y-6">
+            <div className="bg-surface-container-low rounded-2xl p-8 space-y-5">
               <h3 className="font-headline font-bold text-xl text-primary">Privacy Controls</h3>
               <p className="text-sm text-on-surface-variant">
                 Choose which fields are visible on your public emergency card. All toggles are off by default for maximum privacy.
               </p>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {PRIVACY_FIELDS.map((field) => (
                   <div
                     key={field.key}
-                    className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl"
+                    className="flex items-center justify-between p-4 bg-surface-container-lowest rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-secondary text-xl" aria-hidden="true">

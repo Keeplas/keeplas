@@ -1,9 +1,11 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@keeplas/ui";
+import { api } from "@keeplas/backend/_generated/api";
 
 const navItems = [
   {
@@ -16,7 +18,7 @@ const navItems = [
     ),
   },
   {
-    label: "Vault",
+    label: "Digital Vault",
     href: "/vault",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -55,27 +57,56 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const user = useQuery(api.users.viewer);
+
+  const initials = (user?.name || user?.email || "?")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container-low">
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5">
+      <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-surface-container-low p-6 space-y-8">
+        {/* Brand + Vault header */}
+        <div className="flex items-center gap-3">
           <Image
             src="/assets/logo/logo.svg"
             alt="Keeplas"
-            width={36}
-            height={36}
+            width={40}
+            height={40}
+            className="shrink-0"
           />
-          <span className="font-headline text-xl font-bold tracking-tight text-primary">
-            Keeplas
-          </span>
+          <div className="flex flex-col">
+            <span className="font-headline font-black text-primary text-sm tracking-widest">
+              THE VAULT
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-widest text-secondary/70">
+              Security: Maximum
+            </span>
+          </div>
+        </div>
+
+        {/* User badge */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-sm">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="font-headline font-bold text-primary text-sm truncate">
+              {user?.name || "Curator"}
+            </p>
+            <p className="text-[10px] text-on-surface-variant truncate">
+              {user?.email}
+            </p>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2">
-          <ul className="space-y-1">
+        <nav className="flex-1">
+          <ul className="flex flex-col space-y-2">
             {navItems.map((item) => {
               const isActive = pathname?.startsWith(item.href);
               return (
@@ -83,20 +114,31 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                      "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
                       isActive
-                        ? "bg-secondary-container text-on-secondary-container"
-                        : "text-on-surface-variant hover:bg-surface-container-high"
+                        ? "bg-secondary text-on-secondary shadow-lg"
+                        : "text-secondary/70 hover:bg-surface-container-highest"
                     )}
                   >
                     {item.icon}
-                    {item.label}
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </nav>
+
+        {/* Emergency Access CTA */}
+        <Link
+          href="/emergency-card"
+          className="vault-gradient text-on-primary py-4 px-6 rounded-xl font-headline font-bold text-xs uppercase tracking-widest text-center shadow-xl hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+          </svg>
+          Emergency Access
+        </Link>
       </aside>
 
       {/* Mobile bottom nav */}
@@ -109,14 +151,16 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-xs transition-colors",
+                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-tighter transition-colors",
                     isActive
                       ? "text-secondary-fixed"
                       : "text-on-primary/60 hover:text-on-primary/80"
                   )}
                 >
                   {item.icon}
-                  <span className="truncate max-w-[60px]">{item.label}</span>
+                  <span className="truncate max-w-[60px]">
+                    {item.label.split(" ")[0]}
+                  </span>
                 </Link>
               </li>
             );

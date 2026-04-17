@@ -11,7 +11,7 @@ const PasswordInput = React.forwardRef<
   const [showPassword, setShowPassword] = React.useState(false);
 
   return (
-    <div className="relative">
+    <div style={{ position: "relative", width: "100%" }}>
       <Input
         type={showPassword ? "text" : "password"}
         className={cn("pr-11", className)}
@@ -20,8 +20,23 @@ const PasswordInput = React.forwardRef<
       />
       <button
         type="button"
+        tabIndex={-1}
+        aria-label={showPassword ? "Hide password" : "Show password"}
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-on-surface-variant transition-colors"
+        style={{
+          position: "absolute",
+          top: "50%",
+          right: "12px",
+          transform: "translateY(-50%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "4px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+        }}
+        className="text-on-surface-variant/60 hover:text-on-surface-variant transition-colors focus:outline-none"
       >
         {showPassword ? (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
