@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useParams } from "next/navigation";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 
 export default function PublicEmergencyPage() {
   const params = useParams<{ token: string }>();
@@ -12,7 +12,7 @@ export default function PublicEmergencyPage() {
   if (card === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

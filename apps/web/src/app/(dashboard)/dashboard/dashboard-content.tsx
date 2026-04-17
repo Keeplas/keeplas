@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "@keeplas/backend/_generated/api";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 import { getCategoryConfig } from "@/lib/vault-categories";
 
 const ACTION_ICONS: Record<string, string> = {
@@ -50,7 +50,7 @@ export function DashboardContent() {
   if (data === undefined) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

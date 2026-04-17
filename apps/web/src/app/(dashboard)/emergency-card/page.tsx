@@ -153,9 +153,9 @@ export default function EmergencyCardPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* Left: Form + Privacy Controls */}
-        <section className="lg:col-span-5 space-y-6">
+        <section className="lg:col-span-5 space-y-6 order-last lg:order-none">
           <form onSubmit={handleSave} className="space-y-6">
             {/* Personal Information */}
             <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
@@ -346,17 +346,19 @@ export default function EmergencyCardPage() {
           </form>
         </section>
 
-        {/* Right: Card Preview + Actions */}
-        <section className="lg:col-span-7 flex flex-col items-center lg:items-end">
-          <EmergencyCardPreview
-            formData={formData}
-            toggles={toggles}
-            qrUrl={qrUrl}
-          />
+        {/* Right: Card Preview + Actions — sticky on desktop so preview stays visible while filling the form */}
+        <section className="lg:col-span-7 order-first lg:order-none lg:sticky lg:top-6 lg:self-start flex flex-col items-center lg:items-end">
+          <div className="w-full max-w-[260px] sm:max-w-xs md:max-w-sm lg:max-w-md">
+            <EmergencyCardPreview
+              formData={formData}
+              toggles={toggles}
+              qrUrl={qrUrl}
+            />
+          </div>
 
           {/* Secondary Actions */}
           {card && (
-            <div className="mt-12 flex gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   if (qrUrl) {

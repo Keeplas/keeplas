@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 import { ContactCard } from "./contact-card";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
@@ -35,7 +35,7 @@ export default function TrustedContactsPage() {
   if (contacts === undefined) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Spinner />
+        <Loader size="md" />
       </div>
     );
   }

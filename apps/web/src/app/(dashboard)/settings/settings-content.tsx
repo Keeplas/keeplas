@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Input, Label, Select, SelectItem, Spinner, Switch, ErrorAlert, cn } from "@keeplas/ui";
+import { Input, Label, Select, SelectItem, Loader, Switch, ErrorAlert, cn } from "@keeplas/ui";
 
 const SECTIONS = [
   {
@@ -212,7 +212,7 @@ export function SettingsContent() {
   if (user === undefined) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Switch, Spinner, ErrorAlert, DatePicker } from "@keeplas/ui";
+import { Switch, Loader, ErrorAlert, DatePicker } from "@keeplas/ui";
 import { LifeCheckHistory } from "./life-check-history";
 
 const FREQUENCIES = [
@@ -165,7 +165,7 @@ export default function LifeCheckPage() {
   if (config === undefined) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

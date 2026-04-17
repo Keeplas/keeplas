@@ -5,7 +5,7 @@ import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
-import { Spinner, ErrorAlert } from "@keeplas/ui";
+import { Loader, ErrorAlert } from "@keeplas/ui";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family member",
@@ -40,7 +40,7 @@ export default function InvitationPage({
   if (invitation === undefined || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

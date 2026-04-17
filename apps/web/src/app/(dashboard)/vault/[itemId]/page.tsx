@@ -16,6 +16,7 @@ import {
   SelectItem,
   Textarea,
   Spinner,
+  Loader,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -112,7 +113,7 @@ export default function VaultItemPage() {
   if (item === undefined) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

@@ -3,7 +3,7 @@
 import { useConvexAuth, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
 import { api } from "@keeplas/backend/_generated/api";
@@ -37,7 +37,7 @@ export default function DashboardLayout({
   if (isLoading || onboardingState === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
+        <Loader label="Unlocking your vault" />
       </div>
     );
   }

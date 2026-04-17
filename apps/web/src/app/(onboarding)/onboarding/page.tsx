@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 import { OnboardingFlow } from "./onboarding-flow";
 
 export default function OnboardingPage() {
@@ -30,7 +30,7 @@ export default function OnboardingPage() {
   if (onboardingState === undefined) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
+        <Loader />
       </div>
     );
   }

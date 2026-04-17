@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Spinner } from "@keeplas/ui";
+import { Loader } from "@keeplas/ui";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 
 interface RecoveryPhraseStepProps {
@@ -47,12 +47,7 @@ export function RecoveryPhraseStep({
 
   if (!phrase) {
     return (
-      <div className="flex flex-col items-center gap-4">
-        <Spinner />
-        <p className="text-on-surface-variant font-body">
-          Generating your Recovery Words...
-        </p>
-      </div>
+      <Loader label="Generating your Recovery Words" />
     );
   }
 
