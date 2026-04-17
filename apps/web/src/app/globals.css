@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Scan the shared UI package so Tailwind compiles its classes (required in v4 monorepos). */
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
 /* ═══════════════════════════════════════════════
    KEEPLAS DESIGN SYSTEM — "The Digital Curator"
    Ref: PRD/Design/design-guidelines.md

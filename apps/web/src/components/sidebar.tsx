@@ -108,7 +108,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden">
           <ul className="flex flex-col space-y-2">
             {navItems.map((item) => {
               const isActive = pathname?.startsWith(item.href);
@@ -130,30 +130,27 @@ export function Sidebar() {
               );
             })}
           </ul>
-
-          {/* Utilities cluster */}
-          <div className="mt-6 pt-6 border-t border-outline-variant/15 space-y-2">
-            <NotificationsMenu variant="sidebar" />
-            <Link
-              href="/settings"
-              className={cn(
-                "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
-                pathname?.startsWith("/settings")
-                  ? "bg-secondary text-on-secondary shadow-lg"
-                  : "text-secondary/70 hover:bg-surface-container-highest"
-              )}
-            >
-              {settingsIcon}
-              <span>Settings</span>
-            </Link>
-          </div>
         </nav>
 
-        {/* User footer */}
-        <div className="pt-6 mt-4">
+        {/* Footer — utilities + user */}
+        <div className="mt-4 pt-4 border-t border-outline-variant/15 space-y-2">
+          <NotificationsMenu variant="sidebar" />
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
+              pathname?.startsWith("/settings")
+                ? "bg-secondary text-on-secondary shadow-lg"
+                : "text-secondary/70 hover:bg-surface-container-highest"
+            )}
+          >
+            {settingsIcon}
+            <span>Settings</span>
+          </Link>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer">
+              <button className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer">
                 {user?.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

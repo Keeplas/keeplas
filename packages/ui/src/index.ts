@@ -1,6 +1,8 @@
 export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 export { Badge, type BadgeProps, badgeVariants } from "./badge";
 export { Button, type ButtonProps, buttonVariants } from "./button";
+export { Calendar, type CalendarProps } from "./calendar";
+export { DatePicker, type DatePickerProps } from "./date-picker";
 export {
   Card,
   CardHeader,

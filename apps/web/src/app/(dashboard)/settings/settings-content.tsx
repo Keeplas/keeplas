@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Input, Label, Select, Spinner, Switch, ErrorAlert } from "@keeplas/ui";
+import { Input, Label, Select, Spinner, Switch, ErrorAlert, cn } from "@keeplas/ui";
 
 const SECTIONS = [
   {
@@ -100,6 +100,7 @@ export function SettingsContent() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [prefsSaved, setPrefsSaved] = useState(false);
   const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState<string>(SECTIONS[0].id);
 
   useEffect(() => {
     if (user) {
@@ -110,6 +111,27 @@ export function SettingsContent() {
       setTimezone(user.timezone ?? "UTC");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActiveSection(visible.target.id);
+      },
+      { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+
+    SECTIONS.forEach((section) => {
+      const element = document.getElementById(section.id);
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -231,19 +253,29 @@ export function SettingsContent() {
       {/* Sticky section nav */}
       <nav className="sticky top-14 md:top-0 z-20 bg-surface/80 backdrop-blur-xl -mx-6 md:mx-0 md:rounded-2xl overflow-x-auto">
         <ul className="flex items-center gap-1 py-3 px-6 md:px-4">
-          {SECTIONS.map((section) => (
-            <li key={section.id}>
-              <a
-                href={`#${section.id}`}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors whitespace-nowrap"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={section.icon} />
-                </svg>
-                {section.label}
-              </a>
-            </li>
-          ))}
+          {SECTIONS.map((section) => {
+            const isActive = activeSection === section.id;
+            return (
+              <li key={section.id}>
+                <a
+                  href={`#${section.id}`}
+                  aria-current={isActive ? "true" : undefined}
+                  onClick={() => setActiveSection(section.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                    isActive
+                      ? "bg-primary text-on-primary shadow-sm"
+                      : "text-on-surface-variant hover:bg-surface-container-high hover:text-primary"
+                  )}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={section.icon} />
+                  </svg>
+                  {section.label}
+                </a>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

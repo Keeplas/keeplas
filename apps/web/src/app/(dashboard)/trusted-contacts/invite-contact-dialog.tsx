@@ -71,18 +71,20 @@ export function InviteContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface max-w-md">
+      <DialogContent className="bg-surface max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-headline text-primary text-xl font-bold">
-            Invite Trusted Contact
-          </DialogTitle>
-          <DialogDescription className="text-on-surface-variant">
-            This person will receive a recovery fragment and can help you regain
-            access to your vault.
-          </DialogDescription>
+          <div className="flex-1 min-w-0">
+            <DialogTitle className="font-headline text-primary text-xl font-bold">
+              Invite Trusted Contact
+            </DialogTitle>
+            <DialogDescription className="text-on-surface-variant mt-1">
+              This person will receive a recovery fragment and can help you regain
+              access to your vault.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-5 p-6 pt-4">
           <div className="space-y-2">
             <Label htmlFor="contact-name">Full Name *</Label>
             <Input

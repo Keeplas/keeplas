@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Switch, Spinner, ErrorAlert } from "@keeplas/ui";
+import { Switch, Spinner, ErrorAlert, DatePicker } from "@keeplas/ui";
 import { LifeCheckHistory } from "./life-check-history";
 
 const FREQUENCIES = [
@@ -359,16 +359,19 @@ export default function LifeCheckPage() {
             ) : (
               <div className="flex items-end gap-3">
                 <div className="flex-1">
-                  <label className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold block mb-1">
+                  <label
+                    htmlFor="travel-until"
+                    className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold block mb-1"
+                  >
                     Return date
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
+                    id="travel-until"
                     value={travelUntil}
-                    onChange={(e) => setTravelUntil(e.target.value)}
+                    onChange={setTravelUntil}
                     min={new Date().toISOString().split("T")[0]}
                     max={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
-                    className="w-full px-4 py-3 bg-surface-container-lowest rounded-xl text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-secondary/40"
+                    placeholder="Pick your return date"
                   />
                 </div>
                 <button
