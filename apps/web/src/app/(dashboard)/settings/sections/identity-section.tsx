@@ -53,19 +53,10 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
     : "Unknown";
 
   return (
-    <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
-      <div className="md:col-span-4 space-y-3">
-        <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
-          Identity Details
-        </h2>
-        <p className="text-sm text-on-surface-variant leading-relaxed">
-          Your profile information is encrypted at rest. Update your public-facing curator details here.
-        </p>
-      </div>
-
+    <section>
       <form
         onSubmit={handleSubmit}
-        className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-6"
       >
         <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <UserAvatar
