@@ -20,11 +20,13 @@ import {
   Select,
   SelectItem,
   Textarea,
+  UserAvatar,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/format";
+import { getInitials } from "@/lib/user";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 type TriggerType =
@@ -42,169 +44,406 @@ const TRIGGER_LABELS: Record<TriggerType, string> = {
   manual: "Manual Trigger",
 };
 
-const STATUS_BADGES: Record<string, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-surface-container-high text-on-surface-variant" },
-  active: { label: "Primary Active", className: "bg-secondary text-on-secondary" },
-  sealed: { label: "Sealed", className: "bg-tertiary text-on-tertiary" },
-  released: { label: "Released", className: "bg-error text-on-error" },
-  cancelled: { label: "Cancelled", className: "bg-surface-container text-on-surface-variant line-through" },
+const TRIGGER_ICONS: Record<TriggerType, string> = {
+  life_check_failure: ICON_PATHS.heartbeat,
+  time_based: ICON_PATHS.timer,
+  age_based: ICON_PATHS.familyHistory,
+  legal_event: ICON_PATHS.lawyer,
+  manual: ICON_PATHS.editNote,
 };
+
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  draft: { label: "Draft Status", color: "text-outline" },
+  active: { label: "Active", color: "text-secondary" },
+  sealed: { label: "Sealed", color: "text-tertiary" },
+  released: { label: "Released", color: "text-error" },
+  cancelled: { label: "Cancelled", color: "text-outline" },
+};
+
+function formatDate(ts: number) {
+  return new Date(ts).toLocaleDateString([], {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
 export default function ConditionalMessagesPage() {
   const messages = useQuery(api.conditional_messages.listMessages);
   const status = useQuery(api.conditional_messages.getDeadManStatus);
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const setStatus = useMutation(api.conditional_messages.setMessageStatus);
-  const deleteMessage = useMutation(api.conditional_messages.deleteMessage);
 
   const [showCompose, setShowCompose] = useState(false);
 
-  if (messages === undefined || status === undefined) {
+  if (messages === undefined || status === undefined || contacts === undefined) {
     return <Loader fullscreen label="Loading conditional messages" />;
   }
 
+  const activeMessages = messages.filter((m) => m.status === "active");
+  const featured = activeMessages[0] ?? messages[0];
+  const secondary = messages.filter((m) => m._id !== featured?._id).slice(0, 2);
+
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          <h1 className="font-headline text-primary text-3xl md:text-4xl font-extrabold tracking-tight">
+    <div className="max-w-6xl mx-auto space-y-16">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div className="max-w-2xl space-y-3">
+          <span className="text-secondary font-bold tracking-widest text-xs uppercase block">
+            Life Continuity Systems
+          </span>
+          <h1 className="font-headline text-5xl font-extrabold tracking-tighter text-primary leading-none">
             Conditional Messages
           </h1>
-          <p className="text-on-surface-variant text-sm md:text-base max-w-md">
-            Encrypted letters and instructions released by life events or time triggers.
+          <p className="text-lg text-on-surface-variant leading-relaxed">
+            A sanctuary for words intended for the future. These messages remain encrypted
+            and sealed until specific life events trigger their release.
           </p>
         </div>
 
-        <div
-          className={cn(
-            "rounded-2xl px-5 py-4 text-on-primary min-w-[260px]",
-            status?.isActive ? "vault-gradient" : "bg-tertiary"
-          )}
-        >
-          <p className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
-            Dead Man Switch
-          </p>
-          <p className="font-headline text-xl font-extrabold mt-1">
-            {status?.isActive ? "Active" : "Inactive"}
-          </p>
-          <p className="text-xs opacity-80 mt-1">
-            Last heartbeat{" "}
-            {status?.lastHeartbeatAt ? formatTimeAgo(status.lastHeartbeatAt) : "—"}.
-          </p>
+        <div className="bg-primary-container p-8 rounded-xl text-on-primary-container min-w-[320px] shadow-sm relative overflow-hidden">
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon
+                path={ICON_PATHS.vibration}
+                className="w-5 h-5 text-secondary-fixed"
+              />
+              <span className="font-bold text-xs uppercase tracking-widest">
+                Dead Man Switch Status
+              </span>
+            </div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-white text-2xl font-headline font-bold">
+                {status.isActive ? "Active" : "Paused"}
+              </span>
+              <span className="bg-secondary/20 text-secondary-fixed px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                {status.isActive ? "Monitoring" : "Idle"}
+              </span>
+            </div>
+            <p className="text-xs opacity-80 mb-6">
+              Last heartbeat detected:{" "}
+              {status.lastHeartbeatAt
+                ? `${formatTimeAgo(status.lastHeartbeatAt)} via Mobile App`
+                : "no recent signal"}
+              .
+            </p>
+            <button className="w-full bg-white/10 hover:bg-white/20 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+              Configure Trigger Logic
+            </button>
+          </div>
+          <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+            <Icon path={ICON_PATHS.lockClock} className="w-36 h-36" />
+          </div>
         </div>
       </header>
 
-      <div className="bg-surface-container-low rounded-3xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-widest text-on-surface-variant font-medium">
-            Draft a New Legacy
-          </p>
-          <p className="text-on-surface mt-1 max-w-md">
-            Write encrypted instructions or letters that release only when conditions are met.
-          </p>
+      {/* Bento Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        {/* Draft a New Legacy */}
+        <button
+          onClick={() => setShowCompose(true)}
+          className="md:col-span-4 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between group cursor-pointer hover:bg-surface-container-high transition-colors text-left"
+        >
+          <div>
+            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Icon path={ICON_PATHS.editNote} className="w-6 h-6 text-secondary" />
+            </div>
+            <h3 className="font-headline text-2xl font-bold text-primary mb-2 leading-tight">
+              Draft a New Legacy
+            </h3>
+            <p className="text-on-surface-variant text-sm leading-relaxed">
+              Prepare a message for business partners, children, or spouse to be opened only
+              when needed.
+            </p>
+          </div>
+          <div className="mt-8 flex items-center gap-2 text-secondary font-bold text-sm">
+            Create Message
+            <Icon path={ICON_PATHS.arrowForward} className="w-5 h-5" />
+          </div>
+        </button>
+
+        {/* Featured Message */}
+        {featured ? (
+          <FeaturedMessage
+            message={featured}
+            contacts={contacts}
+          />
+        ) : (
+          <div className="md:col-span-8 bg-surface-container p-8 rounded-xl ghost-border flex flex-col items-center justify-center text-center min-h-[280px]">
+            <Icon
+              path={ICON_PATHS.notes}
+              className="w-10 h-10 text-outline-variant mb-4"
+            />
+            <h3 className="font-headline text-xl font-bold text-primary mb-2">
+              No messages yet
+            </h3>
+            <p className="text-on-surface-variant max-w-sm">
+              Your first conditional message will appear here once composed.
+            </p>
+          </div>
+        )}
+
+        {/* Secondary cards */}
+        {secondary.map((msg) => (
+          <SecondaryCard key={msg._id} message={msg} />
+        ))}
+        {secondary.length < 2 &&
+          Array.from({ length: 2 - secondary.length }).map((_, i) => (
+            <button
+              key={`placeholder-${i}`}
+              onClick={() => setShowCompose(true)}
+              className="md:col-span-6 bg-surface-container-low p-8 rounded-xl ghost-border flex flex-col items-start justify-center gap-2 min-h-[180px] hover:bg-surface-container transition-colors cursor-pointer text-left"
+            >
+              <Icon path={ICON_PATHS.plusCircle} className="w-8 h-8 text-outline-variant" />
+              <span className="text-on-surface-variant">Draft another message</span>
+            </button>
+          ))}
+
+        {/* Dead Man Switch Philosophy */}
+        <div className="md:col-span-12 mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 bg-primary py-16 px-12 rounded-[2rem] text-white">
+          <div className="space-y-6">
+            <h2 className="font-headline text-4xl font-extrabold tracking-tight leading-tight">
+              The &ldquo;Dead Man Switch&rdquo; Philosophy
+            </h2>
+            <p className="text-on-primary-container text-lg leading-relaxed">
+              Our system uses a multi-layered verification protocol. If you fail to respond
+              to check-ins over a predefined period, your designated &ldquo;Legacy
+              Curators&rdquo; are contacted to verify your status before any message is
+              unsealed.
+            </p>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <button className="bg-secondary-fixed text-on-secondary-fixed px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-95 cursor-pointer">
+                Verify Verification Logic
+              </button>
+              <button className="border border-on-primary-container px-6 py-3 rounded-xl font-bold text-sm tracking-wide hover:bg-white/10 transition-all cursor-pointer">
+                Audit My Security
+              </button>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div
+              className="absolute inset-0 bg-secondary/20 blur-3xl"
+              style={{ borderRadius: "50%" }}
+            />
+            <div className="relative z-10 space-y-4">
+              <PhilosophyCard
+                icon={ICON_PATHS.security}
+                title="Curator Check-in Protocol"
+                hint={`${status.curatorsRequired} contacts required to authorize release`}
+              />
+              <PhilosophyCard
+                icon={ICON_PATHS.timer}
+                title="Heartbeat Interval"
+                hint="Currently set to 14 days"
+              />
+            </div>
+          </div>
         </div>
-        <Button variant="vault" size="md" onClick={() => setShowCompose(true)}>
-          <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
-          Compose Message
-        </Button>
-      </div>
-
-      {messages.length === 0 ? (
-        <div className="bg-surface-container-low rounded-3xl p-12 text-center text-on-surface-variant">
-          No conditional messages yet. Compose your first one above.
-        </div>
-      ) : (
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {messages.map((msg) => {
-            const badge = STATUS_BADGES[msg.status];
-            return (
-              <li
-                key={msg._id}
-                className="bg-surface-container-low rounded-3xl p-6 flex flex-col gap-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span
-                      className={cn(
-                        "inline-block text-[10px] uppercase tracking-[0.2em] font-bold px-2.5 py-1 rounded-full",
-                        badge?.className
-                      )}
-                    >
-                      {badge?.label ?? msg.status}
-                    </span>
-                    <h3 className="font-headline text-lg font-bold text-on-surface mt-3">
-                      {msg.title}
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => deleteMessage({ messageId: msg._id })}
-                    className="text-xs text-error hover:underline cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                </div>
-
-                <dl className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <dt className="text-on-surface-variant">Trigger</dt>
-                    <dd className="text-on-surface font-medium">
-                      {TRIGGER_LABELS[msg.triggerType]}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-on-surface-variant">Recipients</dt>
-                    <dd className="text-on-surface font-medium">{msg.recipients.length}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-on-surface-variant">Curators required</dt>
-                    <dd className="text-on-surface font-medium">{msg.curatorsRequired}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-on-surface-variant">Created</dt>
-                    <dd className="text-on-surface font-medium">{formatTimeAgo(msg.createdAt)}</dd>
-                  </div>
-                </dl>
-
-                <div className="flex gap-2 pt-2 border-t border-outline-variant/15">
-                  {msg.status === "active" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStatus({ messageId: msg._id, status: "sealed" })}
-                    >
-                      Seal
-                    </Button>
-                  )}
-                  {msg.status === "draft" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStatus({ messageId: msg._id, status: "active" })}
-                    >
-                      Activate
-                    </Button>
-                  )}
-                  {msg.status !== "cancelled" && msg.status !== "released" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStatus({ messageId: msg._id, status: "cancelled" })}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      </section>
 
       <ComposeMessageDialog
         open={showCompose}
         onOpenChange={setShowCompose}
-        contacts={contacts ?? []}
+        contacts={contacts}
       />
+    </div>
+  );
+}
+
+interface Contact {
+  _id: Id<"trusted_contacts">;
+  name: string;
+  avatarUrl?: string;
+}
+
+function FeaturedMessage({
+  message,
+  contacts,
+}: {
+  message: {
+    _id: Id<"conditional_messages">;
+    title: string;
+    status: string;
+    triggerType: TriggerType;
+    recipients: Id<"trusted_contacts">[];
+  };
+  contacts: Contact[];
+}) {
+  const recipientContacts = contacts.filter((c) =>
+    message.recipients.includes(c._id)
+  );
+  const visibleRecipients = recipientContacts.slice(0, 2);
+  const extraCount = recipientContacts.length - visibleRecipients.length;
+
+  return (
+    <article className="md:col-span-8 bg-surface-container p-8 rounded-xl shadow-sm ghost-border">
+      <div className="flex justify-between items-start mb-8 gap-4">
+        <div className="min-w-0">
+          <span className="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 inline-block">
+            Primary {message.status.charAt(0).toUpperCase() + message.status.slice(1)}
+          </span>
+          <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary break-words">
+            &ldquo;{message.title}&rdquo;
+          </h2>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button
+            className="p-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer"
+            aria-label="Preview message"
+          >
+            <Icon path={ICON_PATHS.visibility} className="w-5 h-5" />
+          </button>
+          <button
+            className="p-2 hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer"
+            aria-label="More options"
+          >
+            <Icon path={ICON_PATHS.moreVert} className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 border-t border-outline-variant/20 pt-8">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+            Recipients
+          </span>
+          {recipientContacts.length === 0 ? (
+            <p className="text-sm text-on-surface-variant">No recipients</p>
+          ) : (
+            <div className="flex -space-x-2">
+              {visibleRecipients.map((c) => (
+                <div
+                  key={c._id}
+                  className="w-8 h-8 border-2 border-surface shadow-sm overflow-hidden"
+                  style={{ borderRadius: "50%" }}
+                >
+                  <UserAvatar
+                    size="sm"
+                    imageUrl={c.avatarUrl}
+                    initials={getInitials(c.name)}
+                    alt={c.name}
+                    fallbackClassName="bg-primary text-on-primary"
+                  />
+                </div>
+              ))}
+              {extraCount > 0 && (
+                <div
+                  className="w-8 h-8 bg-surface-container-highest border-2 border-surface flex items-center justify-center text-[10px] font-bold"
+                  style={{ borderRadius: "50%" }}
+                >
+                  +{extraCount}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+            Trigger Protocol
+          </span>
+          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <Icon
+              path={TRIGGER_ICONS[message.triggerType]}
+              className="w-4 h-4"
+            />
+            {TRIGGER_LABELS[message.triggerType]}
+          </div>
+        </div>
+
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+            Encryption
+          </span>
+          <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
+            <Icon path={ICON_PATHS.verifiedFill} className="w-4 h-4" />
+            Zero-Knowledge Seal
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SecondaryCard({
+  message,
+}: {
+  message: {
+    _id: Id<"conditional_messages">;
+    title: string;
+    status: string;
+    triggerType: TriggerType;
+    updatedAt: number;
+  };
+}) {
+  const statusMeta = STATUS_LABELS[message.status] ?? STATUS_LABELS.draft;
+  const isActive = message.status === "active";
+  const icon = isActive ? ICON_PATHS.familyHistory : ICON_PATHS.historyEdu;
+
+  return (
+    <article className="md:col-span-6 bg-surface-container-low p-8 rounded-xl ghost-border">
+      <div className="flex justify-between mb-6">
+        <span
+          className={cn(
+            "font-black uppercase tracking-[0.2em] text-[10px]",
+            statusMeta.color
+          )}
+        >
+          {statusMeta.label}
+        </span>
+        <Icon
+          path={icon}
+          className={cn("w-5 h-5", isActive ? "text-secondary" : "text-outline")}
+        />
+      </div>
+      <h3 className="font-headline text-xl font-bold text-primary mb-2 leading-tight">
+        {message.title}
+      </h3>
+      <p className="text-on-surface-variant text-sm mb-6">
+        Encrypted under{" "}
+        <span className="font-semibold text-primary">
+          {TRIGGER_LABELS[message.triggerType]}
+        </span>
+        .
+      </p>
+      <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+        <span className="text-xs text-on-surface-variant">
+          {isActive
+            ? `Release trigger: ${TRIGGER_LABELS[message.triggerType]}`
+            : `Last edited: ${formatDate(message.updatedAt)}`}
+        </span>
+        <button className="text-secondary text-sm font-bold flex items-center gap-1 cursor-pointer">
+          {isActive ? "Manage" : "Resume"}
+          <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function PhilosophyCard({
+  icon,
+  title,
+  hint,
+}: {
+  icon: string;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <div className="bg-white/10 p-6 rounded-2xl backdrop-blur-md border border-white/10">
+      <div className="flex gap-4 items-start">
+        <div
+          className="w-10 h-10 bg-secondary-fixed/20 flex items-center justify-center flex-shrink-0"
+          style={{ borderRadius: "50%" }}
+        >
+          <Icon path={icon} className="w-5 h-5 text-secondary-fixed" />
+        </div>
+        <div>
+          <h4 className="font-headline font-bold text-lg">{title}</h4>
+          <p className="text-sm opacity-70">{hint}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -345,9 +584,9 @@ function ComposeMessageDialog({
               onValueChange={(v) => setTriggerType(v)}
               placeholder="Choose a trigger"
             >
-              {Object.entries(TRIGGER_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key as TriggerType}>
-                  {label}
+              {(Object.keys(TRIGGER_LABELS) as TriggerType[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {TRIGGER_LABELS[key]}
                 </SelectItem>
               ))}
             </Select>

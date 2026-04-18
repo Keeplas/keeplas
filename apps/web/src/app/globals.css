@@ -240,7 +240,7 @@ body {
   background: var(--color-outline);
 }
 
-/* ── Print Styles — Emergency Card ── */
+/* ── Print Styles ── */
 @media print {
   body {
     background: white !important;
@@ -248,11 +248,12 @@ body {
     padding: 0;
   }
 
-  /* Hide everything except the card */
+  /* Hide everything except the designated printable nodes. */
   body > * {
     display: none !important;
   }
 
+  /* Emergency Card — wallet-sized business card */
   #emergency-card-printable {
     display: flex !important;
     position: fixed;
@@ -266,6 +267,19 @@ body {
     border: 1px solid #e5e2e1;
     font-size: 8px;
     page-break-after: avoid;
+  }
+
+  /* Recovery Kit — full-page architectural document */
+  #recovery-kit-printable {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
   }
 
   .print\\:hidden {
