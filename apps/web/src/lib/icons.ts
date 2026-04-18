@@ -127,6 +127,7 @@ export const ICON_PATHS = {
     "M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3",
   download:
     "M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5",
+  menu: "M3.75 6.75h16.5M3.75 12H20.25m-16.5 5.25H20.25",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

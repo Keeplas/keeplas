@@ -53,10 +53,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
     : "Unknown";
 
   return (
-    <section
-      id="identity"
-      className="grid grid-cols-1 md:grid-cols-12 gap-8 scroll-mt-32"
-    >
+    <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
       <div className="md:col-span-4 space-y-3">
         <h2 className="text-primary font-headline text-xl font-bold tracking-tight">
           Identity Details

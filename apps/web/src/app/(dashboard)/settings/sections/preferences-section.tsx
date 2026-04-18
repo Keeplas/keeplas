@@ -88,7 +88,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   }
 
   return (
-    <section id="preferences" className="scroll-mt-32 space-y-6">
+    <section className="space-y-6">
       <form
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-2 gap-6"

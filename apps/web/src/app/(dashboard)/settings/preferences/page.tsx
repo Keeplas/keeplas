@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { ErrorAlert, Loader } from "@keeplas/ui";
-import { IdentitySection } from "./sections/identity-section";
+import { PreferencesSection } from "../sections/preferences-section";
 
-export default function SettingsIdentityPage() {
+export default function SettingsPreferencesPage() {
   const user = useQuery(api.users.viewer);
   const [error, setError] = useState("");
 
@@ -16,7 +16,7 @@ export default function SettingsIdentityPage() {
   return (
     <div className="space-y-6">
       {error && <ErrorAlert message={error} />}
-      <IdentitySection user={user} onError={setError} />
+      <PreferencesSection user={user} onError={setError} />
     </div>
   );
 }

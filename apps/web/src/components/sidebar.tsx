@@ -41,11 +41,6 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Security", href: "/security", iconPath: ICON_PATHS.key },
 ];
 
-const secondaryItems: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Subscription", href: "/subscription", iconPath: ICON_PATHS.creditCard },
-  { label: "Recovery Kit", href: "/recovery-kit", iconPath: ICON_PATHS.key },
-];
-
 const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Dashboard", href: "/dashboard", iconPath: DASHBOARD_ICON },
   { label: "Vault", href: "/vault", iconPath: ICON_PATHS.lock },
@@ -120,24 +115,6 @@ export function Sidebar() {
         </nav>
 
         <div className="mt-4 pt-4 border-t border-outline-variant/15 space-y-2">
-          {secondaryItems.map((item) => {
-            const isActive = pathname?.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
-                  isActive
-                    ? "bg-secondary text-on-secondary shadow-lg"
-                    : "text-secondary/70 hover:bg-surface-container-highest"
-                )}
-              >
-                <Icon path={item.iconPath} />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
           <NotificationsMenu variant="sidebar" />
           <Link
             href="/settings"

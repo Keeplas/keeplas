@@ -18,10 +18,7 @@ export function SecuritySection() {
   }
 
   return (
-    <section
-      id="security"
-      className="scroll-mt-32 flex flex-col md:flex-row gap-8 md:gap-10 items-start"
-    >
+    <section className="flex flex-col md:flex-row gap-8 md:gap-10 items-start">
       <div className="md:w-1/3 md:sticky md:top-20">
         <h2 className="text-primary font-headline text-xl font-bold tracking-tight mb-3">
           Fortress Protocol
