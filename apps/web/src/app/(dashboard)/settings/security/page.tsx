@@ -1,7 +1,7 @@
 "use client";
 
-import { SecuritySection } from "../sections/security-section";
+import { SecurityCenterSection } from "../sections/security-center-section";
 
 export default function SettingsSecurityPage() {
-  return <SecuritySection />;
+  return <SecurityCenterSection />;
 }

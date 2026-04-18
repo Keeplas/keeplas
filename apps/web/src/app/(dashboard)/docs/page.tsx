@@ -95,7 +95,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
 const QUICK_LINKS: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Dashboard", href: "/dashboard", iconPath: ICON_PATHS.shieldCheck },
   { label: "Life Map", href: "/life-map", iconPath: ICON_PATHS.hub },
-  { label: "Security Center", href: "/security", iconPath: ICON_PATHS.key },
+  { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.key },
   { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
   { label: "Subscription", href: "/settings/subscription", iconPath: ICON_PATHS.creditCard },
 ];
@@ -141,7 +141,7 @@ export default function DocsPage() {
               Export Recovery Kit
             </Link>
             <Link
-              href="/security"
+              href="/settings/security"
               className="inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/10 transition-all font-headline font-bold"
             >
               Security Center

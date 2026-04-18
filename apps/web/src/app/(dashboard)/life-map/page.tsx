@@ -365,7 +365,7 @@ export default function LifeMapPage() {
                     : "Review Vault"}
               </Link>
               <Link
-                href="/security"
+                href="/settings/security"
                 className="text-white border border-white/20 hover:bg-white/10 px-6 py-3 rounded-xl transition-all font-headline font-bold"
               >
                 Review Risks

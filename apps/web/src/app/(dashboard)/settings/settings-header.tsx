@@ -16,8 +16,9 @@ const SECTION_META: Record<string, SectionMeta> = {
     description: "Update your account information and how others see you on the platform.",
   },
   "/settings/security": {
-    title: "Security",
-    description: "Manage authentication, biometrics, and session controls.",
+    title: "Security Center",
+    description:
+      "Social recovery, Shamir shards, biometrics and hash-chained audit log.",
   },
   "/settings/preferences": {
     title: "Preferences",
