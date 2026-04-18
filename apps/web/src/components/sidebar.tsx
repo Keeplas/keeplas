@@ -27,7 +27,6 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Life Check", href: "/life-check", iconPath: ICON_PATHS.heartbeat },
   { label: "Scenario Engine", href: "/scenario", iconPath: ICON_PATHS.warning },
   { label: "Emergency Card", href: "/emergency-card", iconPath: ICON_PATHS.emergencyCard },
-  { label: "Security", href: "/settings/security", iconPath: ICON_PATHS.key },
 ];
 
 const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
