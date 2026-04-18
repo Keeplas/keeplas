@@ -117,10 +117,6 @@ export default defineSchema({
     ),
     contentHash: v.string(),
 
-    fileStorageId: v.optional(v.id("_storage")),
-    fileType: v.optional(v.string()),
-    fileSize: v.optional(v.number()),
-
     sharedWithContacts: v.array(v.id("trusted_contacts")),
     accessLevel: accessLevelValidator,
 
@@ -140,6 +136,34 @@ export default defineSchema({
     .index("by_vault", ["vaultId"])
     .index("by_category", ["vaultId", "category"])
     .index("by_status", ["vaultId", "status"])
+    .index("by_user", ["userId"]),
+
+  // ═══════════════════════════════════════════════
+  // VAULT ITEM FILES (encrypted blobs in Convex storage)
+  // ═══════════════════════════════════════════════
+
+  vault_item_files: defineTable({
+    itemId: v.id("vault_items"),
+    userId: v.id("users"),
+    storageId: v.id("_storage"),
+
+    name: v.string(),
+    mimeType: v.string(),
+    size: v.number(),
+    iv: v.string(),
+
+    kind: v.union(
+      v.literal("document"),
+      v.literal("audio"),
+      v.literal("video"),
+      v.literal("image")
+    ),
+
+    durationSec: v.optional(v.number()),
+    order: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_item", ["itemId"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════

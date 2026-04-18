@@ -45,6 +45,10 @@ function SelectImpl<Value = string>({
   items,
   modal = false,
 }: SelectProps<Value>) {
+  const [portalContainer, setPortalContainer] = React.useState<HTMLElement | null>(
+    null
+  );
+
   return (
     <BaseSelect.Root<Value>
       value={value}
@@ -61,6 +65,11 @@ function SelectImpl<Value = string>({
       modal={modal}
     >
       <BaseSelect.Trigger
+        ref={(node) => {
+          setPortalContainer(
+            node?.closest("[data-keeplas-dialog-content]") as HTMLElement | null
+          );
+        }}
         className={cn(
           "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
           "hover:bg-surface-container focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
@@ -96,15 +105,20 @@ function SelectImpl<Value = string>({
           </svg>
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
-      <BaseSelect.Portal>
+      <BaseSelect.Portal container={portalContainer ?? undefined}>
         <BaseSelect.Positioner
           sideOffset={6}
           align={align}
-          className="z-[60] outline-none"
+          // pointer-events-auto: when this select is rendered inside a Radix
+          // Dialog, Radix sets `pointer-events: none` on <body> (see
+          // @radix-ui/react-dismissable-layer). The Base UI portal is a body
+          // child, so without this override the popup renders but all hover
+          // and click interactions are blocked.
+          className="z-[60] outline-none pointer-events-auto"
         >
           <BaseSelect.Popup
             className={cn(
-              "min-w-[var(--anchor-width)] bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body",
+              "pointer-events-auto min-w-[var(--anchor-width)] bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body",
               "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[ending-style]:scale-[0.98]",
               "transition-[opacity,transform] duration-150 origin-[var(--transform-origin)]",
               popupClassName

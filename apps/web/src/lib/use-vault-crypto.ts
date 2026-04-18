@@ -3,11 +3,15 @@
 import { useCallback } from "react";
 import { useMasterKey } from "./master-key-context";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
+import { encryptStream, decryptStream } from "@keeplas/crypto";
 
 interface EncryptedPayload {
   ciphertext: string; // base64
   iv: string; // base64
 }
+
+const STREAM_THRESHOLD_BYTES = 8 * 1024 * 1024; // 8 MB
+const STREAM_IV_SENTINEL = "__stream__";
 
 /**
  * Hook providing encrypt/decrypt functions for vault item content.
@@ -81,9 +85,65 @@ export function useVaultCrypto() {
       .join("");
   }, []);
 
+  /**
+   * Encrypt an arbitrary Blob for upload to Convex storage.
+   * Small blobs (< 8 MB) use a single AES-GCM call; larger payloads (video)
+   * fall back to chunked streaming so we never hold 2× the plaintext in memory.
+   */
+  const encryptBlob = useCallback(
+    async (blob: Blob): Promise<{ cipherBlob: Blob; iv: string }> => {
+      if (!masterKey) throw new Error("Master Key not available");
+
+      if (blob.size <= STREAM_THRESHOLD_BYTES) {
+        const buf = await blob.arrayBuffer();
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ciphertext = await crypto.subtle.encrypt(
+          { name: "AES-GCM", iv },
+          masterKey,
+          buf
+        );
+        return {
+          cipherBlob: new Blob([ciphertext]),
+          iv: uint8ToBase64(iv),
+        };
+      }
+
+      const { cipherBlob } = await encryptStream(blob, masterKey);
+      return { cipherBlob, iv: STREAM_IV_SENTINEL };
+    },
+    [masterKey]
+  );
+
+  /**
+   * Decrypt a Blob produced by {@link encryptBlob}. The IV value carries
+   * the dispatch: a sentinel "__stream__" means chunked, otherwise base64 IV
+   * is used for single-shot decryption.
+   */
+  const decryptBlob = useCallback(
+    async (cipherBlob: Blob, iv: string): Promise<Blob> => {
+      if (!masterKey) throw new Error("Master Key not available");
+
+      if (iv === STREAM_IV_SENTINEL) {
+        return await decryptStream(cipherBlob, masterKey);
+      }
+
+      const ivBytes = base64ToUint8(iv);
+      const cipherBuf = await cipherBlob.arrayBuffer();
+      const plaintext = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: ivBytes },
+        masterKey,
+        cipherBuf
+      );
+      return new Blob([plaintext]);
+    },
+    [masterKey]
+  );
+
   return {
     encryptContent,
     decryptContent,
+    encryptBlob,
+    decryptBlob,
     computeHash,
     isReady: masterKey !== null,
   };

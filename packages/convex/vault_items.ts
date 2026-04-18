@@ -82,11 +82,68 @@ export const getCategoryCounts = query({
   },
 });
 
+/**
+ * List the encrypted files attached to a vault item, sorted by their stored order.
+ */
+export const getItemFiles = query({
+  args: { itemId: v.id("vault_items") },
+  handler: async (ctx, args) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) return [];
+
+    const item = await ctx.db.get(args.itemId);
+    if (!item || item.userId !== userId) return [];
+
+    const files = await ctx.db
+      .query("vault_item_files")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .collect();
+
+    return files.sort((a, b) => a.order - b.order);
+  },
+});
+
+/**
+ * Return a short-lived signed URL that lets the client fetch a stored
+ * ciphertext blob for in-browser decryption.
+ */
+export const getItemFileUrl = query({
+  args: { fileId: v.id("vault_item_files") },
+  handler: async (ctx, args) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) return null;
+
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.userId !== userId) return null;
+
+    return await ctx.storage.getUrl(file.storageId);
+  },
+});
+
 // ─── Mutations ──────────────────────────────────────────
 
 /**
- * Create a new encrypted vault item.
- * Content is already encrypted client-side — we store the ciphertext as-is.
+ * Issue a short-lived signed URL so the client can POST an
+ * encrypted blob directly to Convex storage.
+ */
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAuth(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+const fileKindValidator = v.union(
+  v.literal("document"),
+  v.literal("audio"),
+  v.literal("video"),
+  v.literal("image")
+);
+
+/**
+ * Create a new encrypted vault item, optionally attaching pre-uploaded
+ * encrypted blobs stored in Convex storage.
  */
 export const createItem = mutation({
   args: {
@@ -99,6 +156,19 @@ export const createItem = mutation({
     accessLevel: accessLevelValidator,
     tags: v.array(v.string()),
     isCritical: v.boolean(),
+    files: v.optional(
+      v.array(
+        v.object({
+          storageId: v.id("_storage"),
+          name: v.string(),
+          mimeType: v.string(),
+          size: v.number(),
+          iv: v.string(),
+          kind: fileKindValidator,
+          durationSec: v.optional(v.number()),
+        })
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -128,6 +198,26 @@ export const createItem = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    if (args.files && args.files.length > 0) {
+      await Promise.all(
+        args.files.map((file, index) =>
+          ctx.db.insert("vault_item_files", {
+            itemId,
+            userId,
+            storageId: file.storageId,
+            name: file.name,
+            mimeType: file.mimeType,
+            size: file.size,
+            iv: file.iv,
+            kind: file.kind,
+            durationSec: file.durationSec,
+            order: index,
+            createdAt: now,
+          })
+        )
+      );
+    }
 
     // Update vault counts
     await ctx.db.patch(args.vaultId, {
@@ -175,7 +265,8 @@ export const updateItem = mutation({
 });
 
 /**
- * Soft-delete a vault item (archive it).
+ * Soft-delete a vault item (archive it). Attached encrypted files are
+ * kept in storage — restoration can undo the archive.
  */
 export const deleteItem = mutation({
   args: { itemId: v.id("vault_items") },

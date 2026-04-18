@@ -10,6 +10,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
   Button,
+  Icon,
   Input,
   Label,
   Select,
@@ -24,6 +25,8 @@ import {
   DialogClose,
   cn,
 } from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
+import { MediaRecorderPanel } from "@/components/media-recorder-panel";
 
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
@@ -35,12 +38,16 @@ interface AddItemDialogProps {
 const ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
+type FileKind = "document" | "audio" | "video" | "image";
+
 interface PreparedFile {
   id: string;
   name: string;
   mimeType: string;
   size: number;
-  data: string; // base64
+  blob: Blob;
+  kind: FileKind;
+  durationSec?: number;
 }
 
 const ACCESS_LEVELS: Array<{
@@ -89,40 +96,54 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function readFileAsBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("Read failed"));
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result !== "string") {
-        reject(new Error("Unexpected FileReader result"));
-        return;
-      }
-      const commaIdx = result.indexOf(",");
-      resolve(commaIdx >= 0 ? result.slice(commaIdx + 1) : result);
-    };
-    reader.readAsDataURL(file);
-  });
+function formatDuration(totalSec?: number): string | null {
+  if (!totalSec || !Number.isFinite(totalSec)) return null;
+  const m = Math.floor(totalSec / 60);
+  const s = Math.floor(totalSec % 60);
+  if (m === 0) return `${s}s`;
+  return `${m}m${s.toString().padStart(2, "0")}s`;
+}
+
+function inferFileKind(mimeType: string): FileKind {
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("image/")) return "image";
+  return "document";
+}
+
+function iconForKind(kind: FileKind): string {
+  switch (kind) {
+    case "audio":
+      return ICON_PATHS.mic;
+    case "video":
+      return ICON_PATHS.videocam;
+    case "image":
+      return ICON_PATHS.image;
+    default:
+      return ICON_PATHS.pictureAsPdf;
+  }
 }
 
 export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
   const createItem = useMutation(api.vault_items.createItem);
-  const { encryptContent, computeHash, isReady } = useVaultCrypto();
+  const generateUploadUrl = useMutation(api.vault_items.generateUploadUrl);
+  const { encryptContent, encryptBlob, computeHash, isReady } = useVaultCrypto();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<VaultCategory>(defaultCategory ?? "personal_document");
   const [files, setFiles] = useState<PreparedFile[]>([]);
+  const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("private");
   const [tags, setTags] = useState("");
   const [isCritical, setIsCritical] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState("");
 
-  async function ingestFiles(list: FileList | File[]) {
+  function ingestFiles(list: FileList | File[]) {
     const incoming = Array.from(list);
     const accepted: PreparedFile[] = [];
     for (const file of incoming) {
@@ -134,18 +155,14 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         setError(`${file.name} — exceeds 50 MB limit.`);
         continue;
       }
-      try {
-        const data = await readFileAsBase64(file);
-        accepted.push({
-          id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-          name: file.name,
-          mimeType: file.type,
-          size: file.size,
-          data,
-        });
-      } catch (err) {
-        setError(getErrorMessage(err, "Failed to read file."));
-      }
+      accepted.push({
+        id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: file.name,
+        mimeType: file.type,
+        size: file.size,
+        blob: file,
+        kind: inferFileKind(file.type),
+      });
     }
     if (accepted.length) {
       setError("");
@@ -155,7 +172,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
   function handleFilePick(e: ChangeEvent<HTMLInputElement>) {
     if (e.target.files) {
-      void ingestFiles(e.target.files);
+      ingestFiles(e.target.files);
       e.target.value = "";
     }
   }
@@ -164,12 +181,54 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files) {
-      void ingestFiles(e.dataTransfer.files);
+      ingestFiles(e.dataTransfer.files);
     }
+  }
+
+  function handleRecorded(
+    blob: Blob,
+    meta: { mimeType: string; durationSec: number }
+  ) {
+    if (!recorderMode) return;
+    const isVideo = recorderMode === "video";
+    const ext = meta.mimeType.includes("mp4") ? "mp4" : "webm";
+    const stamp = new Date().toLocaleString();
+    setFiles((prev) => [
+      ...prev,
+      {
+        id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: `${isVideo ? "Video" : "Voice"} message — ${stamp}.${ext}`,
+        mimeType: meta.mimeType,
+        size: blob.size,
+        blob,
+        kind: isVideo ? "video" : "audio",
+        durationSec: meta.durationSec,
+      },
+    ]);
+    setRecorderMode(null);
   }
 
   function removeFile(id: string) {
     setFiles((prev) => prev.filter((f) => f.id !== id));
+  }
+
+  function resetDialog() {
+    setTitle("");
+    setDescription("");
+    setCategory(defaultCategory ?? "personal_document");
+    setFiles([]);
+    setRecorderMode(null);
+    setAccessLevel("private");
+    setTags("");
+    setIsCritical(false);
+    setSaving(false);
+    setProgress("");
+    setError("");
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next) resetDialog();
+    onOpenChange(next);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -182,22 +241,55 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       setError("Asset name is required.");
       return;
     }
-    if (files.length === 0) {
-      setError("Attach at least one document to secure.");
-      return;
-    }
 
     setSaving(true);
     setError("");
 
     try {
-      const payload = JSON.stringify({
-        version: 1,
-        kind: "file_bundle",
-        files: files.map(({ id: _id, ...rest }) => rest),
-      });
-      const encryptedContent = await encryptContent(payload);
-      const contentHash = await computeHash(payload);
+      const uploadedFiles: Array<{
+        storageId: Id<"_storage">;
+        name: string;
+        mimeType: string;
+        size: number;
+        iv: string;
+        kind: FileKind;
+        durationSec?: number;
+      }> = [];
+
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        setProgress(`Encrypting ${index + 1}/${files.length} — ${file.name}`);
+        const { cipherBlob, iv } = await encryptBlob(file.blob);
+
+        setProgress(`Uploading ${index + 1}/${files.length} — ${file.name}`);
+        const uploadUrl = await generateUploadUrl();
+        const res = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.mimeType || "application/octet-stream" },
+          body: cipherBlob,
+        });
+        if (!res.ok) {
+          throw new Error(`Upload failed (${res.status}) for ${file.name}`);
+        }
+        const { storageId } = (await res.json()) as {
+          storageId: Id<"_storage">;
+        };
+
+        uploadedFiles.push({
+          storageId,
+          name: file.name,
+          mimeType: file.mimeType,
+          size: cipherBlob.size,
+          iv,
+          kind: file.kind,
+          durationSec: file.durationSec,
+        });
+      }
+
+      setProgress("Sealing vault entry…");
+      const textPayload = description.trim();
+      const encryptedContent = await encryptContent(textPayload);
+      const contentHash = await computeHash(textPayload);
       const tagList = tags
         .split(",")
         .map((t) => t.trim())
@@ -213,26 +305,26 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         accessLevel,
         tags: tagList,
         isCritical,
+        files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       });
 
-      onOpenChange(false);
+      handleOpenChange(false);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to save item."));
       setSaving(false);
+      setProgress("");
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
         {/* Header */}
         <DialogHeader className="px-8 py-6 items-start">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-[10px] text-secondary font-label uppercase tracking-[0.18em]">
               <span>Vault</span>
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-              </svg>
+              <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
               <span className="text-on-surface-variant/50">Secure New Asset</span>
             </div>
             <DialogTitle className="text-3xl font-black tracking-tighter leading-none">
@@ -244,9 +336,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
-            <svg className="w-5 h-5 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+            <Icon path={ICON_PATHS.close} className="w-5 h-5 text-on-surface-variant" strokeWidth={2} />
           </DialogClose>
         </DialogHeader>
 
@@ -304,87 +394,121 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           <section className="bg-surface-container-low rounded-2xl p-6">
             <SectionHeading step="02" title="Secure Documentation" />
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPTED_TYPES}
-              multiple
-              onChange={handleFilePick}
-              className="sr-only"
-            />
+            {recorderMode ? (
+              <MediaRecorderPanel
+                mode={recorderMode}
+                onRecorded={handleRecorded}
+                onCancel={() => setRecorderMode(null)}
+              />
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRecorderMode("audio")}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Icon path={ICON_PATHS.mic} className="w-4 h-4" />
+                    Record audio
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRecorderMode("video")}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
+                    Record video
+                  </Button>
+                  <div className="flex items-center text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant/60 ml-auto">
+                    or drop a file below
+                  </div>
+                </div>
 
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => fileInputRef.current?.click()}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  fileInputRef.current?.click();
-                }
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              className={cn(
-                "border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
-                "hover:bg-surface-container-high/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-                isDragging && "bg-surface-container-high/80 border-secondary/40"
-              )}
-            >
-              <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 7.5m0 0L7.5 12M12 7.5v13.5" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-base font-headline font-bold text-primary">
-                  Drag and drop secure files
-                </p>
-                <p className="text-xs text-on-surface-variant font-body mt-1">
-                  PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.
-                </p>
-              </div>
-              <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full font-label font-bold text-[10px] uppercase tracking-[0.18em] hover:bg-surface-container-highest transition-colors">
-                Browse System
-              </span>
-            </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_TYPES}
+                  multiple
+                  onChange={handleFilePick}
+                  className="sr-only"
+                />
+
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
+                    "hover:bg-surface-container-high/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
+                    isDragging && "bg-surface-container-high/80 border-secondary/40"
+                  )}
+                >
+                  <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <Icon path={ICON_PATHS.download} className="w-7 h-7 rotate-180" strokeWidth={1.75} />
+                  </div>
+                  <div>
+                    <p className="text-base font-headline font-bold text-primary">
+                      Drag and drop secure files
+                    </p>
+                    <p className="text-xs text-on-surface-variant font-body mt-1">
+                      PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.
+                    </p>
+                  </div>
+                  <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full font-label font-bold text-[10px] uppercase tracking-[0.18em] hover:bg-surface-container-highest transition-colors">
+                    Browse System
+                  </span>
+                </div>
+              </>
+            )}
 
             {files.length > 0 && (
               <div className="mt-5 flex flex-wrap gap-3">
-                {files.map((file) => (
-                  <div
-                    key={file.id}
-                    className="bg-surface px-3 py-2.5 rounded-xl flex items-center gap-3 max-w-full"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                      </svg>
-                    </div>
-                    <div className="text-left min-w-0">
-                      <p className="text-xs font-bold text-primary truncate max-w-[180px]">
-                        {file.name}
-                      </p>
-                      <p className="text-[10px] text-on-surface-variant">
-                        {formatFileSize(file.size)} • Encrypted
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(file.id)}
-                      aria-label={`Remove ${file.name}`}
-                      className="ml-1 p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
+                {files.map((file) => {
+                  const duration = formatDuration(file.durationSec);
+                  return (
+                    <div
+                      key={file.id}
+                      className="bg-surface px-3 py-2.5 rounded-xl flex items-center gap-3 max-w-full"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+                      <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
+                      </div>
+                      <div className="text-left min-w-0">
+                        <p className="text-xs font-bold text-primary truncate max-w-[200px]">
+                          {file.name}
+                        </p>
+                        <p className="text-[10px] text-on-surface-variant">
+                          {formatFileSize(file.size)}
+                          {duration ? ` • ${duration}` : ""} • Encrypted
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(file.id)}
+                        aria-label={`Remove ${file.name}`}
+                        className="ml-1 p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
+                      >
+                        <Icon path={ICON_PATHS.close} className="w-4 h-4" strokeWidth={2} />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -434,9 +558,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
               <div className="flex items-start justify-between gap-4 bg-surface rounded-xl p-4 mt-2">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                    </svg>
+                    <Icon path={ICON_PATHS.warning} className="w-5 h-5" strokeWidth={1.75} />
                   </div>
                   <div>
                     <p className="font-headline font-bold text-primary text-sm">
@@ -460,26 +582,29 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           <div className="flex items-center justify-between gap-4 pt-2">
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               className="flex items-center gap-2 text-on-surface-variant hover:text-primary font-headline font-bold text-sm transition-colors cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-              </svg>
+              <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4 rotate-180" strokeWidth={2} />
               Cancel
             </button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="lg"
-              disabled={saving || !isReady}
-              className="gap-3 cursor-pointer"
-            >
-              <span>{saving ? "Encrypting..." : "Secure Asset to Vault"}</span>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-1.5 0A2.25 2.25 0 0 0 3.75 12.75v6.75A2.25 2.25 0 0 0 6 21.75h8.25M18 16.5v1.5l1.5 1.5M21.75 19.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-              </svg>
-            </Button>
+            <div className="flex items-center gap-4">
+              {progress && (
+                <span className="text-[11px] text-on-surface-variant font-label uppercase tracking-[0.12em]">
+                  {progress}
+                </span>
+              )}
+              <Button
+                type="submit"
+                variant="vault"
+                size="lg"
+                disabled={saving || !isReady}
+                className="gap-3 cursor-pointer"
+              >
+                <span>{saving ? "Sealing…" : "Secure Asset to Vault"}</span>
+                <Icon path={ICON_PATHS.lock} className="w-5 h-5" strokeWidth={1.75} />
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

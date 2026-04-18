@@ -27,24 +27,69 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitives.Overlay.displayName;
 
+// Prevent Radix Dialog's dismissal / focus-trap from interfering with popups
+// portaled by Base UI (Select, DatePicker, Tooltip) while they're open inside
+// the Dialog. Without this, clicking a Base UI popup is treated as "outside"
+// the Dialog and the popup is closed (or never paints) before the user can
+// interact with it.
+function isInsideBaseUiPortal(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    target.closest(
+      "[data-base-ui-portal], [data-base-ui-popup], [data-popup], [data-floating-ui-portal]"
+    ) !== null
+  );
+}
+
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitives.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitives.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitives.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </DialogPrimitives.Content>
-  </DialogPortal>
-));
+>(
+  (
+    {
+      className,
+      children,
+      onPointerDownOutside,
+      onInteractOutside,
+      onFocusOutside,
+      ...props
+    },
+    ref
+  ) => (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitives.Content
+        ref={ref}
+        data-keeplas-dialog-content=""
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          className
+        )}
+        onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        onFocusOutside={(event) => {
+          onFocusOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        {...props}
+      >
+        {children}
+      </DialogPrimitives.Content>
+    </DialogPortal>
+  )
+);
 DialogContent.displayName = DialogPrimitives.Content.displayName;
 
 const DialogHeader = ({
