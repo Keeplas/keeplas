@@ -5,7 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useState, useEffect, useMemo } from "react";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemCard } from "./vault-item-card";
-import { AddItemDialog } from "./add-item-dialog";
+import { AddItemDialog } from "@/components/add-item-dialog";
 import { Button, Input } from "@keeplas/ui";
 
 const SECTION_GROUPS: Array<{

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
+import { FabAddEntry } from "@/components/fab-add-entry";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -52,6 +53,7 @@ export default function DashboardLayout({
       <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">
         {children}
       </main>
+      <FabAddEntry />
     </div>
   );
 }
