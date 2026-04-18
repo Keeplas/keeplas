@@ -31,11 +31,7 @@ export default function LifeCheckPage() {
   } = useLifeCheckConfig();
 
   if (config === undefined) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader />
-      </div>
-    );
+    return <Loader />;
   }
 
   const isConfigured = config !== null;

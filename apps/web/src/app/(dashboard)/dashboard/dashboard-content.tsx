@@ -45,11 +45,7 @@ export function DashboardContent() {
   const data = useQuery(api.dashboard.getDashboardData);
 
   if (data === undefined) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (data === null) return null;

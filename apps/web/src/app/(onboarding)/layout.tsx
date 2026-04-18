@@ -20,11 +20,7 @@ export default function OnboardingLayout({
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-surface">
-        <Loader />
-      </div>
-    );
+    return <Loader fullscreen />;
   }
 
   if (!isAuthenticated) {

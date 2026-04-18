@@ -28,11 +28,7 @@ export default function OnboardingPage() {
   }, [onboardingState, router, initOnboarding]);
 
   if (onboardingState === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader />
-      </div>
-    );
+    return <Loader fullscreen />;
   }
 
   if (onboardingState === null) {

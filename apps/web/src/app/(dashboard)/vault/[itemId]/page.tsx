@@ -113,11 +113,7 @@ export default function VaultItemPage() {
   }
 
   if (item === undefined) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (item === null) {

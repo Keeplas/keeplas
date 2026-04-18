@@ -10,11 +10,7 @@ export default function PublicEmergencyPage() {
   const card = useQuery(api.emergency_cards.getByQrToken, { token: params.token });
 
   if (card === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <Loader />
-      </div>
-    );
+    return <Loader fullscreen />;
   }
 
   if (card === null) {

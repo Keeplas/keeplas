@@ -35,11 +35,7 @@ export default function DashboardLayout({
   }, [onboardingState, router]);
 
   if (isLoading || onboardingState === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader label="Unlocking your vault" />
-      </div>
-    );
+    return <Loader fullscreen label="Unlocking your vault" />;
   }
 
   if (!isAuthenticated) {

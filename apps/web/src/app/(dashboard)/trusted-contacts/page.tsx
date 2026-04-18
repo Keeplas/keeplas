@@ -33,11 +33,7 @@ export default function TrustedContactsPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   if (contacts === undefined) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader size="md" />
-      </div>
-    );
+    return <Loader size="md" />;
   }
 
   const activeContacts = contacts.filter(

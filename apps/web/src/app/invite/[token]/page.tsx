@@ -39,11 +39,7 @@ export default function InvitationPage({
   const [done, setDone] = useState(false);
 
   if (invitation === undefined || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <Loader />
-      </div>
-    );
+    return <Loader fullscreen />;
   }
 
   if (invitation === null) {

@@ -18,11 +18,7 @@ export function SettingsContent() {
   const [error, setError] = useState("");
 
   if (user === undefined) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Loader />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (user === null) return null;

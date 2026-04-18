@@ -24,37 +24,22 @@ export function Loader({
   fullscreen = false,
 }: LoaderProps) {
   const px = SIZE_PX[size];
-  const ringSize = px + Math.max(16, Math.round(px * 0.3));
 
   const content = (
     <div
       className={cn(
-        "inline-flex flex-col items-center justify-center gap-4",
+        "flex min-h-[70vh] w-full flex-col items-center justify-center gap-4",
         className
       )}
       role="status"
       aria-live="polite"
       aria-label={label ?? "Loading"}
     >
-      <div
-        className="relative inline-flex items-center justify-center"
-        style={{ width: ringSize, height: ringSize }}
-      >
-        <span
-          className="absolute inset-0 rounded-full border-2 border-secondary/15"
-          aria-hidden
-        />
-        <span
-          className="absolute inset-0 rounded-full border-2 border-transparent border-t-secondary animate-spin"
-          style={{ animationDuration: "1.2s" }}
-          aria-hidden
-        />
-        <KeeplasLogoMark
-          width={px}
-          height={px}
-          className="keeplas-loader-breathe"
-        />
-      </div>
+      <KeeplasLogoMark
+        width={px}
+        height={px}
+        className="keeplas-loader-breathe"
+      />
 
       {label && (
         <span className="font-headline text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
