@@ -104,13 +104,15 @@ function SelectImpl<Value = string>({
         >
           <BaseSelect.Popup
             className={cn(
-              "min-w-[var(--anchor-width)] max-h-[min(24rem,var(--available-height))] overflow-y-auto bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body",
+              "min-w-[var(--anchor-width)] bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body",
               "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[ending-style]:scale-[0.98]",
               "transition-[opacity,transform] duration-150 origin-[var(--transform-origin)]",
               popupClassName
             )}
           >
-            {children}
+            <BaseSelect.List className="max-h-[min(24rem,var(--available-height))] overflow-y-auto">
+              {children}
+            </BaseSelect.List>
           </BaseSelect.Popup>
         </BaseSelect.Positioner>
       </BaseSelect.Portal>

@@ -1,4 +1,6 @@
-import { MutationCtx } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
+import { v } from "convex/values";
+import { MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 /**
@@ -56,3 +58,56 @@ export async function createAuditLog(
     createdAt: Date.now(),
   });
 }
+
+/**
+ * Fetch the most recent audit log entries for the authenticated user.
+ */
+export const listLogs = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return [];
+
+    const limit = args.limit ?? 50;
+    return await ctx.db
+      .query("audit_logs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(limit);
+  },
+});
+
+/**
+ * Aggregate counts to drive a "Security Center" dashboard.
+ */
+export const getSecuritySummary = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (userId === null) return null;
+
+    const recentLogs = await ctx.db
+      .query("audit_logs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(100);
+
+    const accessRequests = await ctx.db
+      .query("access_requests")
+      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", userId))
+      .collect();
+
+    const lastLogin = recentLogs.find((l) => l.action.includes("login"));
+    const lastVaultAction = recentLogs.find((l) => l.resourceType === "vault_item");
+
+    return {
+      totalEvents: recentLogs.length,
+      lastEventAt: recentLogs[0]?.createdAt ?? null,
+      lastLoginAt: lastLogin?.createdAt ?? null,
+      lastVaultActionAt: lastVaultAction?.createdAt ?? null,
+      pendingAccessRequests: accessRequests.filter((r) => r.status === "pending").length,
+      approvedAccessRequests: accessRequests.filter((r) => r.status === "approved").length,
+      deniedAccessRequests: accessRequests.filter((r) => r.status === "denied").length,
+    };
+  },
+});

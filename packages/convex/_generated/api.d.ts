@@ -11,6 +11,7 @@
 import type * as access_requests from "../access_requests.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
+import type * as conditional_messages from "../conditional_messages.js";
 import type * as convex__generated_api from "../convex/_generated/api.js";
 import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as dashboard from "../dashboard.js";
@@ -20,6 +21,7 @@ import type * as http from "../http.js";
 import type * as life_check from "../life_check.js";
 import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
+import type * as scenarios from "../scenarios.js";
 import type * as shared_types from "../shared_types.js";
 import type * as trusted_contacts from "../trusted_contacts.js";
 import type * as users from "../users.js";
@@ -37,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   access_requests: typeof access_requests;
   audit: typeof audit;
   auth: typeof auth;
+  conditional_messages: typeof conditional_messages;
   "convex/_generated/api": typeof convex__generated_api;
   "convex/_generated/server": typeof convex__generated_server;
   dashboard: typeof dashboard;
@@ -46,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   life_check: typeof life_check;
   notifications: typeof notifications;
   onboarding: typeof onboarding;
+  scenarios: typeof scenarios;
   shared_types: typeof shared_types;
   trusted_contacts: typeof trusted_contacts;
   users: typeof users;

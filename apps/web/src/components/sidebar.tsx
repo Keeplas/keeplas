@@ -31,10 +31,27 @@ const CHEVRON_EXPAND = "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9";
 
 const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Dashboard", href: "/dashboard", iconPath: DASHBOARD_ICON },
+  { label: "Life Map", href: "/life-map", iconPath: ICON_PATHS.shieldCheck },
   { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
+  { label: "Messages", href: "/messages", iconPath: ICON_PATHS.notes },
   { label: "Trusted Contacts", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
   { label: "Life Check", href: "/life-check", iconPath: ICON_PATHS.heartbeat },
+  { label: "Scenario Engine", href: "/scenario", iconPath: ICON_PATHS.warning },
   { label: "Emergency Card", href: "/emergency-card", iconPath: ICON_PATHS.emergencyCard },
+  { label: "Security", href: "/security", iconPath: ICON_PATHS.key },
+];
+
+const secondaryItems: Array<{ label: string; href: string; iconPath: string }> = [
+  { label: "Subscription", href: "/subscription", iconPath: ICON_PATHS.creditCard },
+  { label: "Recovery Kit", href: "/recovery-kit", iconPath: ICON_PATHS.key },
+];
+
+const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
+  { label: "Dashboard", href: "/dashboard", iconPath: DASHBOARD_ICON },
+  { label: "Vault", href: "/vault", iconPath: ICON_PATHS.lock },
+  { label: "Map", href: "/life-map", iconPath: ICON_PATHS.shieldCheck },
+  { label: "Messages", href: "/messages", iconPath: ICON_PATHS.notes },
+  { label: "Trust", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
 ];
 
 function SettingsIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -103,6 +120,24 @@ export function Sidebar() {
         </nav>
 
         <div className="mt-4 pt-4 border-t border-outline-variant/15 space-y-2">
+          {secondaryItems.map((item) => {
+            const isActive = pathname?.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
+                  isActive
+                    ? "bg-secondary text-on-secondary shadow-lg"
+                    : "text-secondary/70 hover:bg-surface-container-highest"
+                )}
+              >
+                <Icon path={item.iconPath} />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
           <NotificationsMenu variant="sidebar" />
           <Link
             href="/settings"
@@ -215,7 +250,7 @@ export function Sidebar() {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass">
         <ul className="flex items-center justify-around py-2 px-1">
-          {navItems.map((item) => {
+          {MOBILE_NAV.map((item) => {
             const isActive = pathname?.startsWith(item.href);
             return (
               <li key={item.href}>

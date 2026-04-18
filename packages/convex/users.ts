@@ -54,3 +54,63 @@ export const updatePreferences = mutation({
     await ctx.db.patch(userId, patch);
   },
 });
+
+/**
+ * Permanently delete every record owned by the authenticated user.
+ * Includes vault, vault items, contacts, scenarios, messages, life check,
+ * emergency card, notifications, audit logs, access requests and the user row.
+ * Irreversible — caller must already have re-authenticated the user upstream.
+ */
+export const deleteAccount = mutation({
+  args: { confirmation: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirmation !== "DELETE") {
+      throw new Error("Confirmation phrase mismatch");
+    }
+    const userId = await requireAuth(ctx);
+
+    const tablesByUser = [
+      "vault_items",
+      "trusted_contacts",
+      "life_check_configs",
+      "life_check_cycles",
+      "passive_signals",
+      "scenarios",
+      "conditional_messages",
+      "emergency_cards",
+      "notifications",
+      "audit_logs",
+      "vaults",
+    ] as const;
+
+    for (const table of tablesByUser) {
+      const rows = await ctx.db
+        .query(table)
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      for (const row of rows) {
+        await ctx.db.delete(row._id);
+      }
+    }
+
+    const scenarioSteps = await ctx.db
+      .query("scenario_steps")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+    for (const row of scenarioSteps) {
+      await ctx.db.delete(row._id);
+    }
+
+    const accessRequests = await ctx.db
+      .query("access_requests")
+      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", userId))
+      .collect();
+    for (const row of accessRequests) {
+      await ctx.db.delete(row._id);
+    }
+
+    await ctx.db.delete(userId);
+
+    return { success: true };
+  },
+});
