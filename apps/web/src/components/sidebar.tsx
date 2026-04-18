@@ -1,21 +1,10 @@
 "use client";
 
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  cn,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Icon,
-  UserAvatar,
-} from "@keeplas/ui";
+import { cn, Icon, UserAvatar } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getInitials } from "@/lib/user";
@@ -67,7 +56,6 @@ function SettingsIcon({ className = "w-5 h-5" }: { className?: string }) {
 export function Sidebar() {
   const pathname = usePathname();
   const user = useQuery(api.users.viewer);
-  const { signOut } = useAuthActions();
 
   const initials = getInitials(user?.name || user?.email);
   const isSettingsActive = pathname?.startsWith("/settings");
@@ -129,49 +117,30 @@ export function Sidebar() {
             <span>Settings</span>
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer">
-                <UserAvatar
-                  size="md"
-                  imageUrl={user?.avatarUrl}
-                  initials={initials}
-                  alt={user?.name ?? "User"}
-                  fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
-                />
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="font-headline font-bold text-primary text-sm truncate">
-                    {user?.name || "Curator"}
-                  </p>
-                  <p className="text-[10px] text-secondary font-medium uppercase tracking-widest truncate">
-                    {user?.email ?? "Secure session"}
-                  </p>
-                </div>
-                <Icon
-                  path={CHEVRON_EXPAND}
-                  className="w-4 h-4 text-outline-variant shrink-0 group-hover:text-secondary transition-colors"
-                />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuLabel>{user?.email || "No email"}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <SettingsIcon />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem destructive onClick={() => signOut()}>
-                <Icon path={ICON_PATHS.signOut} className="w-4 h-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Link
+            href="/settings"
+            className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer"
+          >
+            <UserAvatar
+              size="md"
+              imageUrl={user?.avatarUrl}
+              initials={initials}
+              alt={user?.name ?? "User"}
+              fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
+            />
+            <div className="min-w-0 flex-1 text-left">
+              <p className="font-headline font-bold text-primary text-sm truncate">
+                {user?.name || "Curator"}
+              </p>
+              <p className="text-[10px] text-secondary font-medium uppercase tracking-widest truncate">
+                {user?.email ?? "Secure session"}
+              </p>
+            </div>
+            <Icon
+              path={CHEVRON_EXPAND}
+              className="w-4 h-4 text-outline-variant shrink-0 group-hover:text-secondary transition-colors"
+            />
+          </Link>
         </div>
       </aside>
 
@@ -190,37 +159,19 @@ export function Sidebar() {
         </div>
         <div className="flex items-center gap-2">
           <NotificationsMenu variant="icon" align="end" />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-1 rounded-xl outline-none cursor-pointer">
-                <UserAvatar
-                  size="sm"
-                  imageUrl={user?.avatarUrl}
-                  initials={initials}
-                  alt={user?.name ?? "User"}
-                  fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
-                />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>{user?.email || "No email"}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <SettingsIcon />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem destructive onClick={() => signOut()}>
-                <Icon path={ICON_PATHS.signOut} className="w-4 h-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Link
+            href="/settings"
+            aria-label="Open settings"
+            className="p-1 rounded-xl outline-none cursor-pointer"
+          >
+            <UserAvatar
+              size="sm"
+              imageUrl={user?.avatarUrl}
+              initials={initials}
+              alt={user?.name ?? "User"}
+              fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
+            />
+          </Link>
         </div>
       </header>
 

@@ -153,7 +153,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           />
         </div>
 
-        <div className="col-span-full flex items-center justify-end gap-4">
+        <div className="col-span-full flex items-center justify-start gap-4">
           {saved && (
             <span className="text-xs text-secondary font-medium">
               Profile updated ✓
