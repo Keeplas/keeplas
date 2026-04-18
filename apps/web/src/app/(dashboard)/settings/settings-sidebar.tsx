@@ -150,7 +150,7 @@ export function SettingsSidebar({
           ))}
         </nav>
 
-        {/* Footer — Documentation + Sign out */}
+        {/* Footer — Documentation + Contact Us + Sign out */}
         <div className="p-4 border-t border-outline-variant/15 space-y-1">
           <a
             href="/docs"
@@ -165,6 +165,23 @@ export function SettingsSidebar({
               className="w-3 h-3 text-outline-variant shrink-0"
             />
           </a>
+          <Link
+            href="/settings/contact"
+            replace
+            onClick={onCloseMobile}
+            aria-current={
+              isItemActive(pathname, "/settings/contact") ? "page" : undefined
+            }
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              isItemActive(pathname, "/settings/contact")
+                ? "ghost-border bg-surface-container-lowest text-primary font-bold"
+                : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+            )}
+          >
+            <Icon path={ICON_PATHS.mail} className="w-4 h-4 shrink-0" />
+            <span className="flex-1 truncate">Contact Us</span>
+          </Link>
           <button
             type="button"
             onClick={() => signOut()}

@@ -23,6 +23,7 @@ import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
 import type * as scenarios from "../scenarios.js";
 import type * as shared_types from "../shared_types.js";
+import type * as support from "../support.js";
 import type * as trusted_contacts from "../trusted_contacts.js";
 import type * as users from "../users.js";
 import type * as validators from "../validators.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   onboarding: typeof onboarding;
   scenarios: typeof scenarios;
   shared_types: typeof shared_types;
+  support: typeof support;
   trusted_contacts: typeof trusted_contacts;
   users: typeof users;
   validators: typeof validators;

@@ -574,6 +574,39 @@ export default defineSchema({
     .index("by_created", ["userId", "createdAt"]),
 
   // ═══════════════════════════════════════════════
+  // SUPPORT TICKETS
+  // ═══════════════════════════════════════════════
+
+  support_tickets: defineTable({
+    userId: v.optional(v.id("users")),
+
+    name: v.string(),
+    email: v.string(),
+    topic: v.union(
+      v.literal("general"),
+      v.literal("security"),
+      v.literal("billing"),
+      v.literal("recovery"),
+      v.literal("feature_request"),
+      v.literal("other")
+    ),
+    subject: v.string(),
+    message: v.string(),
+
+    status: v.union(
+      v.literal("open"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+      v.literal("closed")
+    ),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status", "createdAt"]),
+
+  // ═══════════════════════════════════════════════
   // NOTIFICATIONS
   // ═══════════════════════════════════════════════
 

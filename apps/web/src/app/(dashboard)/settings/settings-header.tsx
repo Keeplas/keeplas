@@ -32,6 +32,11 @@ const SECTION_META: Record<string, SectionMeta> = {
     title: "Subscription",
     description: "Plans, billing, and the lifetime tier for your legacy.",
   },
+  "/settings/contact": {
+    title: "Contact Us",
+    description:
+      "Questions, feedback or security concerns — our concierge team is here to help.",
+  },
 };
 
 const FALLBACK: SectionMeta = {
