@@ -117,6 +117,20 @@ export function Sidebar() {
             <span>Settings</span>
           </Link>
 
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
+          >
+            <Icon path={ICON_PATHS.book} />
+            <span className="flex-1 truncate">Documentation</span>
+            <Icon
+              path={ICON_PATHS.openInNew}
+              className="w-3 h-3 text-outline-variant shrink-0"
+            />
+          </a>
+
           <Link
             href="/settings"
             className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer"

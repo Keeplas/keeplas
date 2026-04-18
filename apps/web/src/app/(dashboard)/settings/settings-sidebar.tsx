@@ -150,8 +150,21 @@ export function SettingsSidebar({
           ))}
         </nav>
 
-        {/* Footer — Sign out */}
-        <div className="p-4 border-t border-outline-variant/15">
+        {/* Footer — Documentation + Sign out */}
+        <div className="p-4 border-t border-outline-variant/15 space-y-1">
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
+          >
+            <Icon path={ICON_PATHS.book} className="w-4 h-4 shrink-0" />
+            <span className="flex-1 truncate">Documentation</span>
+            <Icon
+              path={ICON_PATHS.openInNew}
+              className="w-3 h-3 text-outline-variant shrink-0"
+            />
+          </a>
           <button
             type="button"
             onClick={() => signOut()}
