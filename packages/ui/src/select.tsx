@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Select as BaseSelect } from "@base-ui/react/select";
+import * as SelectPrimitives from "@radix-ui/react-select";
 import { cn } from "./lib/utils";
 
 export interface SelectProps<Value = string> {
@@ -20,10 +20,24 @@ export interface SelectProps<Value = string> {
   popupClassName?: string;
   renderValue?: (value: Value) => React.ReactNode;
   align?: "start" | "center" | "end";
-  items?:
-    | Record<string, React.ReactNode>
-    | ReadonlyArray<{ label: React.ReactNode; value: Value }>;
-  modal?: boolean;
+}
+
+type ItemValueMap<Value> = Map<string, Value>;
+
+function collectItemValues<Value>(
+  children: React.ReactNode,
+  map: ItemValueMap<Value>
+) {
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement(child)) return;
+    const props = child.props as { value?: unknown; children?: React.ReactNode };
+    if (props.value !== undefined && props.value !== null) {
+      map.set(String(props.value), props.value as Value);
+    }
+    if (props.children) {
+      collectItemValues(props.children, map);
+    }
+  });
 }
 
 function SelectImpl<Value = string>({
@@ -33,7 +47,6 @@ function SelectImpl<Value = string>({
   placeholder,
   disabled,
   required,
-  readOnly,
   name,
   id,
   children,
@@ -42,44 +55,62 @@ function SelectImpl<Value = string>({
   popupClassName,
   renderValue,
   align = "start",
-  items,
-  modal = false,
 }: SelectProps<Value>) {
+  const valueMap = React.useMemo(() => {
+    const map: ItemValueMap<Value> = new Map();
+    collectItemValues(children, map);
+    return map;
+  }, [children]);
+
+  const handleValueChange = React.useCallback(
+    (stringValue: string) => {
+      if (!onValueChange) return;
+      const mapped = valueMap.get(stringValue);
+      onValueChange(mapped !== undefined ? mapped : (stringValue as Value));
+    },
+    [onValueChange, valueMap]
+  );
+
+  const stringValue =
+    value !== undefined && value !== null ? String(value) : undefined;
+  const stringDefaultValue =
+    defaultValue !== undefined && defaultValue !== null
+      ? String(defaultValue)
+      : undefined;
+
   return (
-    <BaseSelect.Root<Value>
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={(v) => {
-        if (v !== null && onValueChange) onValueChange(v);
-      }}
+    <SelectPrimitives.Root
+      value={stringValue}
+      defaultValue={stringDefaultValue}
+      onValueChange={handleValueChange}
       disabled={disabled}
       required={required}
-      readOnly={readOnly}
       name={name}
-      id={id}
-      items={items as never}
-      modal={modal}
     >
-      <BaseSelect.Trigger
+      <SelectPrimitives.Trigger
+        id={id}
         className={cn(
           "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
           "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-          "data-[popup-open]:bg-surface-container-high",
+          "data-[state=open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
           triggerClassName,
           className
         )}
       >
-        <BaseSelect.Value
-          className="truncate data-[placeholder]:text-outline-variant"
+        <SelectPrimitives.Value
           placeholder={placeholder}
+          asChild={renderValue !== undefined}
         >
-          {renderValue
-            ? (v: Value) =>
-                v === null || v === undefined ? placeholder : renderValue(v)
-            : undefined}
-        </BaseSelect.Value>
-        <BaseSelect.Icon className="shrink-0 text-on-surface-variant">
+          {renderValue !== undefined ? (
+            <span className="truncate data-[placeholder]:text-outline-variant">
+              {value !== undefined && value !== null
+                ? renderValue(value)
+                : placeholder}
+            </span>
+          ) : undefined}
+        </SelectPrimitives.Value>
+        <SelectPrimitives.Icon className="shrink-0 text-on-surface-variant">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -94,40 +125,26 @@ function SelectImpl<Value = string>({
               d="m19.5 8.25-7.5 7.5-7.5-7.5"
             />
           </svg>
-        </BaseSelect.Icon>
-      </BaseSelect.Trigger>
-      <BaseSelect.Portal>
-        <BaseSelect.Positioner
+        </SelectPrimitives.Icon>
+      </SelectPrimitives.Trigger>
+      <SelectPrimitives.Portal>
+        <SelectPrimitives.Content
+          position="popper"
           sideOffset={6}
           align={align}
-          // Render as a regular dropdown below the trigger. Base UI's default
-          // `alignItemWithTrigger` mode overlays the popup on the trigger with
-          // the selected item aligned to it (macOS style), which relies on
-          // exact trigger geometry and breaks inside animated/transformed
-          // ancestors (e.g. our Dialog's zoom-in transition).
-          alignItemWithTrigger={false}
-          // pointer-events-auto: when this select is rendered inside a Radix
-          // Dialog, Radix sets `pointer-events: none` on <body> (see
-          // @radix-ui/react-dismissable-layer). The Base UI portal is a body
-          // child, so without this override the popup renders but all hover
-          // and click interactions are blocked.
-          className="z-[60] outline-none pointer-events-auto"
+          className={cn(
+            "z-[60] min-w-[var(--radix-select-trigger-width)] max-h-[min(24rem,var(--radix-select-content-available-height))]",
+            "bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
+            "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+            popupClassName
+          )}
         >
-          <BaseSelect.Popup
-            className={cn(
-              "pointer-events-auto min-w-[var(--anchor-width)] bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body",
-              "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[ending-style]:scale-[0.98]",
-              "transition-[opacity,transform] duration-150 origin-[var(--transform-origin)]",
-              popupClassName
-            )}
-          >
-            <BaseSelect.List className="max-h-[min(24rem,var(--available-height))] overflow-y-auto">
-              {children}
-            </BaseSelect.List>
-          </BaseSelect.Popup>
-        </BaseSelect.Positioner>
-      </BaseSelect.Portal>
-    </BaseSelect.Root>
+          <SelectPrimitives.Viewport className="p-0">
+            {children}
+          </SelectPrimitives.Viewport>
+        </SelectPrimitives.Content>
+      </SelectPrimitives.Portal>
+    </SelectPrimitives.Root>
   );
 }
 
@@ -145,20 +162,20 @@ export interface SelectItemProps {
 
 export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ value, disabled, children, className, label }, ref) => (
-    <BaseSelect.Item
-      ref={ref as React.Ref<HTMLElement>}
-      value={value}
+    <SelectPrimitives.Item
+      ref={ref}
+      value={String(value)}
       disabled={disabled}
-      label={label}
+      textValue={label}
       className={cn(
         "relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
         "data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary",
-        "data-[selected]:bg-secondary/10 data-[selected]:text-secondary data-[selected]:font-semibold",
+        "data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
         "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",
         className
       )}
     >
-      <BaseSelect.ItemIndicator className="shrink-0 text-secondary">
+      <SelectPrimitives.ItemIndicator className="shrink-0 text-secondary">
         <svg
           className="w-4 h-4"
           fill="none"
@@ -169,21 +186,22 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
         </svg>
-      </BaseSelect.ItemIndicator>
-      <BaseSelect.ItemText className="flex-1 truncate">
+      </SelectPrimitives.ItemIndicator>
+      <SelectPrimitives.ItemText className="flex-1 truncate">
         {children}
-      </BaseSelect.ItemText>
-    </BaseSelect.Item>
+      </SelectPrimitives.ItemText>
+    </SelectPrimitives.Item>
   )
 );
 SelectItem.displayName = "SelectItem";
 
-export const SelectGroup = BaseSelect.Group;
+export const SelectGroup = SelectPrimitives.Group;
+
 export const SelectGroupLabel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <BaseSelect.GroupLabel
+  <SelectPrimitives.Label
     ref={ref}
     className={cn(
       "px-3 pt-3 pb-1.5 text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface-variant",
