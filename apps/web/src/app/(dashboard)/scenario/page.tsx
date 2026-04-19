@@ -113,7 +113,7 @@ export default function ScenarioPage() {
   const lastCheck = scenario?.lastCheckAt ?? scenario?.createdAt ?? null;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto">
       {/* Header */}
       <header className="flex flex-col xl:flex-row xl:justify-between xl:items-end gap-8 mb-12">
         <div className="space-y-4">

@@ -82,7 +82,7 @@ export default function VaultPage() {
   const lastAccessTs = user?.lastSeenAt ?? user?._creationTime ?? null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div className="max-w-screen-2xl mx-auto space-y-10">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">

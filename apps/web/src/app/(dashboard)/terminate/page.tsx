@@ -48,7 +48,7 @@ export default function TerminatePage() {
   const itemCount = items?.length ?? 0;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl">
         <aside className="vault-gradient text-on-primary p-10 flex flex-col justify-between min-h-[500px]">
           <div>

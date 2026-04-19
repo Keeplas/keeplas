@@ -84,7 +84,7 @@ export default function ConditionalMessagesPage() {
   const secondary = messages.filter((m) => m._id !== featured?._id).slice(0, 2);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-16">
+    <div className="max-w-screen-2xl mx-auto space-y-16">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
         <div className="max-w-2xl space-y-3">

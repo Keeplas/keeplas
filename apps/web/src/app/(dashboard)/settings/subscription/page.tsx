@@ -119,7 +119,7 @@ export default function SubscriptionPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div className="max-w-screen-2xl mx-auto space-y-10">
       <header className="space-y-3 text-center md:text-left">
         <h1 className="text-headline-lg text-primary">
           Legacy Architecture. Secured Forever.

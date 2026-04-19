@@ -130,6 +130,12 @@
 }
 
 /* ── Base styles ── */
+/* Root font-size set to 90% so all rem-based spacing and typography scale down
+   by 10%. This matches the density observed at 90% browser zoom. */
+html {
+  font-size: 85%;
+}
+
 body {
   background: var(--color-surface);
   color: var(--color-on-surface);

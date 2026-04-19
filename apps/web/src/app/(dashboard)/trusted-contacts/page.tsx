@@ -47,7 +47,7 @@ export default function TrustedContactsPage() {
   const trustPct = Math.min(100, Math.round((activeContacts.length / MAX_CONTACTS) * 100));
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto">
       {/* Hero */}
       <header className="mb-10 max-w-3xl">
         <h1 className="text-headline-lg text-primary mb-4">

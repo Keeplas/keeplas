@@ -27,7 +27,7 @@ export default function EmergencyCardPage() {
     : null;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto">
       <header className="mb-10 max-w-2xl">
         <h1 className="text-headline-lg text-primary mb-3">
           Emergency Card

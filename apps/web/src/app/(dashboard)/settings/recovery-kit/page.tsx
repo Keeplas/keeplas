@@ -60,7 +60,7 @@ export default function RecoveryKitPage() {
   const generatedAt = formatKitTimestamp(user?._creationTime);
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-10">
+    <div className="max-w-screen-2xl mx-auto flex flex-col gap-10">
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 print:hidden">
         <div className="max-w-2xl space-y-4">

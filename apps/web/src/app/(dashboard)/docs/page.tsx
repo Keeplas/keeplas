@@ -102,7 +102,7 @@ const QUICK_LINKS: Array<{ label: string; href: string; iconPath: string }> = [
 
 export default function DocsPage() {
   return (
-    <div className="max-w-5xl mx-auto space-y-16">
+    <div className="max-w-screen-2xl mx-auto space-y-16">
       {/* Header */}
       <header className="space-y-4">
         <span className="text-label-md text-secondary">
