@@ -62,8 +62,8 @@ function SelectImpl<Value = string>({
     >
       <BaseSelect.Trigger
         className={cn(
-          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
-          "hover:bg-surface-container focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
+          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
+          "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           "data-[popup-open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
           triggerClassName,
