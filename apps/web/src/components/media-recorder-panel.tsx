@@ -16,7 +16,7 @@ interface MediaRecorderPanelProps {
   onCancel: () => void;
 }
 
-type RecorderState = "idle" | "recording" | "stopped";
+type Phase = "warming" | "live" | "recording" | "stopped" | "error";
 
 const AUDIO_MIME_CANDIDATES = [
   "audio/mp4;codecs=mp4a.40.2",
@@ -38,6 +38,8 @@ const MAX_DURATION_SEC: Record<RecorderMode, number> = {
   audio: 15 * 60,
   video: 3 * 60,
 };
+
+const WAVEFORM_BARS = 40;
 
 function pickMimeType(mode: RecorderMode): string {
   const list = mode === "audio" ? AUDIO_MIME_CANDIDATES : VIDEO_MIME_CANDIDATES;
@@ -62,6 +64,20 @@ function formatDuration(totalSec: number): string {
   return `${minutes}:${seconds}`;
 }
 
+function friendlyError(err: unknown, mode: RecorderMode): string {
+  const name = (err as { name?: string }).name ?? "";
+  if (name === "NotAllowedError") {
+    return `Permission refused. Enable ${mode === "video" ? "camera and microphone" : "microphone"} access in your browser settings.`;
+  }
+  if (name === "NotFoundError") {
+    return `No ${mode === "video" ? "camera or microphone" : "microphone"} detected on this device.`;
+  }
+  if (name === "NotReadableError") {
+    return `${mode === "video" ? "Camera" : "Microphone"} is busy in another app.`;
+  }
+  return getErrorMessage(err, "Unable to access capture devices.");
+}
+
 export function MediaRecorderPanel({
   mode,
   onRecorded,
@@ -71,10 +87,21 @@ export function MediaRecorderPanel({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const livePreviewRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const rafRef = useRef<number | null>(null);
   const startedAtRef = useRef<number>(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const phaseRef = useRef<Phase>("warming");
 
-  const [state, setState] = useState<RecorderState>("idle");
+  const [phase, _setPhase] = useState<Phase>("warming");
+  const setPhase = useCallback((next: Phase) => {
+    phaseRef.current = next;
+    _setPhase(next);
+  }, []);
+
   const [error, setError] = useState<string>("");
   const [elapsed, setElapsed] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -90,6 +117,18 @@ export function MediaRecorderPanel({
     }
   }, []);
 
+  const teardownAudioAnalyser = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    sourceNodeRef.current?.disconnect();
+    sourceNodeRef.current = null;
+    analyserRef.current = null;
+    audioContextRef.current?.close().catch(() => {});
+    audioContextRef.current = null;
+  }, []);
+
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
       clearInterval(timerRef.current);
@@ -97,16 +136,89 @@ export function MediaRecorderPanel({
     }
   }, []);
 
-  useEffect(() => {
-    return () => {
-      clearTimer();
-      recorderRef.current?.state === "recording" && recorderRef.current.stop();
-      stopStream();
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [clearTimer, stopStream, previewUrl]);
+  const drawWaveform = useCallback(() => {
+    const canvas = canvasRef.current;
+    const analyser = analyserRef.current;
+    if (!canvas || !analyser) return;
 
-  async function requestStream(): Promise<MediaStream> {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = canvas.clientWidth;
+    const cssHeight = canvas.clientHeight;
+    if (canvas.width !== cssWidth * dpr || canvas.height !== cssHeight * dpr) {
+      canvas.width = cssWidth * dpr;
+      canvas.height = cssHeight * dpr;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const data = new Uint8Array(bufferLength);
+
+    const render = () => {
+      analyser.getByteFrequencyData(data);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+      const barWidth = cssWidth / WAVEFORM_BARS;
+      const isRecording = phaseRef.current === "recording";
+      const color = isRecording ? "#ba1a1a" : "#28657a";
+
+      for (let i = 0; i < WAVEFORM_BARS; i++) {
+        const idx = Math.floor((i * bufferLength) / WAVEFORM_BARS);
+        const value = data[idx] ?? 0;
+        const normalized = value / 255;
+        const height = Math.max(3, normalized * cssHeight * 0.85);
+
+        const x = i * barWidth + barWidth * 0.15;
+        const w = barWidth * 0.7;
+        const y = (cssHeight - height) / 2;
+
+        ctx.fillStyle = color;
+        // Rounded bar — fallback for older browsers that lack roundRect
+        if (typeof ctx.roundRect === "function") {
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, height, 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x, y, w, height);
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(render);
+    };
+
+    render();
+  }, []);
+
+  const setupAudioAnalyser = useCallback(
+    (stream: MediaStream) => {
+      try {
+        const Ctor =
+          typeof AudioContext !== "undefined"
+            ? AudioContext
+            : (window as unknown as { webkitAudioContext?: typeof AudioContext })
+                .webkitAudioContext;
+        if (!Ctor) return;
+        const audioCtx = new Ctor();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.7;
+        source.connect(analyser);
+
+        audioContextRef.current = audioCtx;
+        sourceNodeRef.current = source;
+        analyserRef.current = analyser;
+        drawWaveform();
+      } catch {
+        // Waveform is optional — silent failure keeps recording functional.
+      }
+    },
+    [drawWaveform]
+  );
+
+  const requestStream = useCallback(async (): Promise<MediaStream> => {
     const constraints: MediaStreamConstraints =
       mode === "audio"
         ? { audio: true }
@@ -119,42 +231,97 @@ export function MediaRecorderPanel({
             },
           };
     return await navigator.mediaDevices.getUserMedia(constraints);
+  }, [mode]);
+
+  // Pre-arm camera / microphone as soon as the panel mounts so the user
+  // sees a live preview (video) or waveform (audio) before clicking Start.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function warm() {
+      setPhase("warming");
+      setError("");
+      try {
+        if (
+          typeof navigator === "undefined" ||
+          !navigator.mediaDevices?.getUserMedia
+        ) {
+          throw new Error("Media capture is not available in this browser.");
+        }
+        const stream = await requestStream();
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+
+        if (mode === "video" && livePreviewRef.current) {
+          livePreviewRef.current.srcObject = stream;
+        }
+        setupAudioAnalyser(stream);
+        setPhase("live");
+      } catch (err) {
+        if (!cancelled) {
+          setError(friendlyError(err, mode));
+          setPhase("error");
+        }
+      }
+    }
+
+    warm();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, requestStream, setupAudioAnalyser, setPhase]);
+
+  // Global cleanup on unmount — stop recorder, release stream and waveform.
+  useEffect(() => {
+    return () => {
+      clearTimer();
+      if (recorderRef.current?.state === "recording") {
+        recorderRef.current.stop();
+      }
+      teardownAudioAnalyser();
+      stopStream();
+    };
+  }, [clearTimer, stopStream, teardownAudioAnalyser]);
+
+  // Revoke preview URL when it changes.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  async function handleRetryWarm() {
+    stopStream();
+    teardownAudioAnalyser();
+    setError("");
+    setPhase("warming");
+    try {
+      const stream = await requestStream();
+      streamRef.current = stream;
+      if (mode === "video" && livePreviewRef.current) {
+        livePreviewRef.current.srcObject = stream;
+      }
+      setupAudioAnalyser(stream);
+      setPhase("live");
+    } catch (err) {
+      setError(friendlyError(err, mode));
+      setPhase("error");
+    }
   }
 
-  async function handleStart() {
-    setError("");
-
+  function handleStart() {
+    const stream = streamRef.current;
+    if (!stream) {
+      setError("Capture device is not ready yet. Please wait.");
+      return;
+    }
     if (typeof MediaRecorder === "undefined") {
       setError("Recording is not supported in this browser.");
       return;
-    }
-
-    let stream: MediaStream;
-    try {
-      stream = await requestStream();
-    } catch (err) {
-      const name = (err as { name?: string }).name ?? "";
-      if (name === "NotAllowedError") {
-        setError(
-          `Permission refused. Enable ${mode === "video" ? "camera and microphone" : "microphone"} access in your browser settings.`
-        );
-      } else if (name === "NotFoundError") {
-        setError(
-          `No ${mode === "video" ? "camera or microphone" : "microphone"} detected on this device.`
-        );
-      } else if (name === "NotReadableError") {
-        setError(
-          `${mode === "video" ? "Camera" : "Microphone"} is busy in another app.`
-        );
-      } else {
-        setError(getErrorMessage(err, "Unable to start recording."));
-      }
-      return;
-    }
-
-    streamRef.current = stream;
-    if (mode === "video" && livePreviewRef.current) {
-      livePreviewRef.current.srcObject = stream;
     }
 
     const mimeType = pickMimeType(mode);
@@ -164,7 +331,6 @@ export function MediaRecorderPanel({
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
     } catch (err) {
-      stopStream();
       setError(getErrorMessage(err, "MediaRecorder initialization failed."));
       return;
     }
@@ -175,7 +341,8 @@ export function MediaRecorderPanel({
     };
     recorder.onstop = () => {
       clearTimer();
-      const finalMime = recorder.mimeType || mimeType || "application/octet-stream";
+      const finalMime =
+        recorder.mimeType || mimeType || "application/octet-stream";
       const blob = new Blob(chunksRef.current, { type: finalMime });
       const durationSec = Math.max(
         1,
@@ -185,21 +352,22 @@ export function MediaRecorderPanel({
       setRecordedMime(finalMime);
       setRecordedDuration(durationSec);
       setPreviewUrl(URL.createObjectURL(blob));
-      setState("stopped");
+      teardownAudioAnalyser();
       stopStream();
+      setPhase("stopped");
     };
 
     recorderRef.current = recorder;
     startedAtRef.current = Date.now();
     recorder.start(250);
-    setState("recording");
+    setPhase("recording");
     setElapsed(0);
 
     timerRef.current = setInterval(() => {
       const secs = Math.floor((Date.now() - startedAtRef.current) / 1000);
       setElapsed(secs);
       if (secs >= MAX_DURATION_SEC[mode]) {
-        recorder.state === "recording" && recorder.stop();
+        if (recorder.state === "recording") recorder.stop();
       }
     }, 250);
   }
@@ -210,19 +378,20 @@ export function MediaRecorderPanel({
     }
   }
 
-  function handleReset() {
+  async function handleReset() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setRecordedBlob(null);
     setRecordedMime("");
     setRecordedDuration(0);
     setPreviewUrl("");
     setElapsed(0);
-    setState("idle");
+    await handleRetryWarm();
   }
 
   function handleSave() {
     if (!recordedBlob) return;
-    const mimeType = recordedMime || recordedBlob.type || "application/octet-stream";
+    const mimeType =
+      recordedMime || recordedBlob.type || "application/octet-stream";
     onRecorded(recordedBlob, { mimeType, durationSec: recordedDuration });
   }
 
@@ -230,6 +399,7 @@ export function MediaRecorderPanel({
     if (recorderRef.current?.state === "recording") {
       recorderRef.current.stop();
     }
+    teardownAudioAnalyser();
     stopStream();
     clearTimer();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -237,6 +407,16 @@ export function MediaRecorderPanel({
   }
 
   const remainingSec = MAX_DURATION_SEC[mode] - elapsed;
+
+  const subheadline = (() => {
+    if (phase === "warming") return "Preparing capture device…";
+    if (phase === "error")
+      return "Capture unavailable. Adjust permissions and retry.";
+    if (phase === "recording")
+      return `Recording — ${formatDuration(elapsed)} / max ${formatDuration(MAX_DURATION_SEC[mode])}`;
+    if (phase === "stopped") return `Preview — ${formatDuration(recordedDuration)}`;
+    return `Encrypted on your device. Max ${formatDuration(MAX_DURATION_SEC[mode])}.`;
+  })();
 
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
@@ -259,13 +439,7 @@ export function MediaRecorderPanel({
             <p className="font-headline font-bold text-primary text-sm">
               {mode === "audio" ? "Voice recording" : "Video recording"}
             </p>
-            <p className="text-[11px] text-on-surface-variant">
-              {state === "recording"
-                ? `Recording — ${formatDuration(elapsed)} / max ${formatDuration(MAX_DURATION_SEC[mode])}`
-                : state === "stopped"
-                  ? `Preview — ${formatDuration(recordedDuration)}`
-                  : `Encrypted on your device. Max ${formatDuration(MAX_DURATION_SEC[mode])}.`}
-            </p>
+            <p className="text-[11px] text-on-surface-variant">{subheadline}</p>
           </div>
         </div>
         <button
@@ -281,23 +455,86 @@ export function MediaRecorderPanel({
       {error && (
         <div
           role="alert"
-          className="bg-error-container/40 text-on-error-container text-xs rounded-xl px-4 py-3"
+          className="flex items-start gap-3 bg-error-container/40 text-on-error-container text-xs rounded-xl px-4 py-3"
         >
-          {error}
+          <Icon path={ICON_PATHS.warning} className="w-4 h-4 mt-0.5 shrink-0" />
+          <span className="flex-1">{error}</span>
+          {phase === "error" && (
+            <button
+              type="button"
+              onClick={handleRetryWarm}
+              className="font-bold uppercase tracking-[0.12em] text-[10px] hover:underline cursor-pointer"
+            >
+              Try again
+            </button>
+          )}
         </div>
       )}
 
-      {mode === "video" && state !== "stopped" && (
-        <video
-          ref={livePreviewRef}
-          autoPlay
-          muted
-          playsInline
-          className="w-full aspect-video rounded-xl bg-primary/5 object-cover"
-        />
+      {/* Live visual — video preview or audio waveform */}
+      {mode === "video" && phase !== "stopped" && (
+        <div className="relative w-full aspect-video rounded-xl bg-primary/5 overflow-hidden">
+          <video
+            ref={livePreviewRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {phase === "warming" && (
+            <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant text-xs gap-2 bg-surface-container-high/60">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
+              </span>
+              Turning on camera…
+            </div>
+          )}
+          {(phase === "live" || phase === "recording") && (
+            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-[10px] font-bold uppercase tracking-[0.15em] px-3 py-1 rounded-full">
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  phase === "recording" ? "bg-error animate-pulse" : "bg-secondary"
+                )}
+              />
+              {phase === "recording" ? "Recording" : "Live preview"}
+            </div>
+          )}
+        </div>
       )}
 
-      {state === "recording" && (
+      {mode === "audio" && phase !== "stopped" && (
+        <div className="relative w-full h-28 rounded-xl bg-surface overflow-hidden flex items-center justify-center">
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full"
+            aria-hidden
+          />
+          {phase === "warming" && (
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-xs text-on-surface-variant bg-surface-container-high/60">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
+              </span>
+              Enabling microphone…
+            </div>
+          )}
+          {(phase === "live" || phase === "recording") && (
+            <div className="absolute top-2 right-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+              <span
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full",
+                  phase === "recording" ? "bg-error animate-pulse" : "bg-secondary"
+                )}
+              />
+              {phase === "recording" ? "Recording" : "Mic live"}
+            </div>
+          )}
+        </div>
+      )}
+
+      {phase === "recording" && (
         <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3">
           <span className="relative flex h-3 w-3 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error/70 opacity-75" />
@@ -312,7 +549,7 @@ export function MediaRecorderPanel({
         </div>
       )}
 
-      {state === "stopped" && previewUrl && (
+      {phase === "stopped" && previewUrl && (
         <div className="rounded-xl overflow-hidden bg-surface">
           {mode === "audio" ? (
             <audio controls src={previewUrl} className="w-full" />
@@ -336,12 +573,13 @@ export function MediaRecorderPanel({
         </button>
 
         <div className="flex items-center gap-2">
-          {state === "idle" && (
+          {(phase === "warming" || phase === "error" || phase === "live") && (
             <Button
               type="button"
               variant="vault"
               size="md"
               onClick={handleStart}
+              disabled={phase !== "live"}
               className="gap-2 cursor-pointer"
             >
               <Icon path={ICON_PATHS.record} className="w-4 h-4" />
@@ -349,7 +587,7 @@ export function MediaRecorderPanel({
             </Button>
           )}
 
-          {state === "recording" && (
+          {phase === "recording" && (
             <Button
               type="button"
               variant="destructive"
@@ -362,7 +600,7 @@ export function MediaRecorderPanel({
             </Button>
           )}
 
-          {state === "stopped" && (
+          {phase === "stopped" && (
             <>
               <Button
                 type="button"

@@ -7,6 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
+import { VaultItemAttachments } from "@/components/vault-item-attachments";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
@@ -274,25 +275,32 @@ export default function VaultItemPage() {
           </div>
 
           {/* Decrypted Content */}
-          <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-              </svg>
-              <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
-                Decrypted Content
-              </span>
-            </div>
-            {decrypting ? (
-              <div className="flex items-center gap-2 text-on-surface-variant">
-                <Spinner size="sm" />
-                Decrypting...
+          {(decrypting || (decryptedContent && decryptedContent.length > 0)) && (
+            <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+                <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
+                  Decrypted Content
+                </span>
               </div>
-            ) : (
-              <pre className="whitespace-pre-wrap text-sm text-on-surface font-body leading-relaxed">
-                {decryptedContent}
-              </pre>
-            )}
+              {decrypting ? (
+                <div className="flex items-center gap-2 text-on-surface-variant">
+                  <Spinner size="sm" />
+                  Decrypting...
+                </div>
+              ) : (
+                <pre className="whitespace-pre-wrap text-sm text-on-surface font-body leading-relaxed">
+                  {decryptedContent}
+                </pre>
+              )}
+            </div>
+          )}
+
+          {/* Secure Attachments */}
+          <div className="mb-6">
+            <VaultItemAttachments itemId={itemId} />
           </div>
 
           {/* Timestamp */}
