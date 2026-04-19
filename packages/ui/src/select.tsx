@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Select as BaseSelect } from "@base-ui/react/select";
-import { useDialogLayerContainer } from "./dialog";
 import { cn } from "./lib/utils";
 
 export interface SelectProps<Value = string> {
@@ -46,8 +45,6 @@ function SelectImpl<Value = string>({
   items,
   modal = false,
 }: SelectProps<Value>) {
-  const portalContainer = useDialogLayerContainer();
-
   return (
     <BaseSelect.Root<Value>
       value={value}
@@ -99,10 +96,16 @@ function SelectImpl<Value = string>({
           </svg>
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
-      <BaseSelect.Portal container={portalContainer ?? undefined}>
+      <BaseSelect.Portal>
         <BaseSelect.Positioner
           sideOffset={6}
           align={align}
+          // Render as a regular dropdown below the trigger. Base UI's default
+          // `alignItemWithTrigger` mode overlays the popup on the trigger with
+          // the selected item aligned to it (macOS style), which relies on
+          // exact trigger geometry and breaks inside animated/transformed
+          // ancestors (e.g. our Dialog's zoom-in transition).
+          alignItemWithTrigger={false}
           // pointer-events-auto: when this select is rendered inside a Radix
           // Dialog, Radix sets `pointer-events: none` on <body> (see
           // @radix-ui/react-dismissable-layer). The Base UI portal is a body

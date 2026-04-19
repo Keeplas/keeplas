@@ -4,8 +4,6 @@ import * as React from "react";
 import * as DialogPrimitives from "@radix-ui/react-dialog";
 import { cn } from "./lib/utils";
 
-const DialogLayerContext = React.createContext<HTMLElement | null>(null);
-
 const Dialog = DialogPrimitives.Root;
 
 const DialogTrigger = DialogPrimitives.Trigger;
@@ -43,10 +41,6 @@ function isInsideBaseUiPortal(target: EventTarget | null) {
   );
 }
 
-export function useDialogLayerContainer() {
-  return React.useContext(DialogLayerContext);
-}
-
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitives.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitives.Content>
@@ -61,53 +55,40 @@ const DialogContent = React.forwardRef<
       ...props
     },
     ref
-  ) => {
-    const [layerContainer, setLayerContainer] =
-      React.useState<HTMLDivElement | null>(null);
-
-    return (
-      <DialogPortal>
-        <DialogOverlay />
-        <DialogLayerContext.Provider value={layerContainer}>
-          <div
-            ref={setLayerContainer}
-            data-keeplas-dialog-layer=""
-            aria-hidden="true"
-            className="fixed inset-0 z-[60] pointer-events-none"
-          />
-          <DialogPrimitives.Content
-            ref={ref}
-            data-keeplas-dialog-content=""
-            className={cn(
-              "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-              className
-            )}
-            onPointerDownOutside={(event) => {
-              onPointerDownOutside?.(event);
-              if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
-                event.preventDefault();
-              }
-            }}
-            onInteractOutside={(event) => {
-              onInteractOutside?.(event);
-              if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
-                event.preventDefault();
-              }
-            }}
-            onFocusOutside={(event) => {
-              onFocusOutside?.(event);
-              if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
-                event.preventDefault();
-              }
-            }}
-            {...props}
-          >
-            {children}
-          </DialogPrimitives.Content>
-        </DialogLayerContext.Provider>
-      </DialogPortal>
-    );
-  }
+  ) => (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitives.Content
+        ref={ref}
+        data-keeplas-dialog-content=""
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 bg-surface rounded-2xl shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          className
+        )}
+        onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        onFocusOutside={(event) => {
+          onFocusOutside?.(event);
+          if (!event.defaultPrevented && isInsideBaseUiPortal(event.target)) {
+            event.preventDefault();
+          }
+        }}
+        {...props}
+      >
+        {children}
+      </DialogPrimitives.Content>
+    </DialogPortal>
+  )
 );
 DialogContent.displayName = DialogPrimitives.Content.displayName;
 
