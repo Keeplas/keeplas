@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Select as BaseSelect } from "@base-ui/react/select";
+import { useDialogLayerContainer } from "./dialog";
 import { cn } from "./lib/utils";
 
 export interface SelectProps<Value = string> {
@@ -45,9 +46,7 @@ function SelectImpl<Value = string>({
   items,
   modal = false,
 }: SelectProps<Value>) {
-  const [portalContainer, setPortalContainer] = React.useState<HTMLElement | null>(
-    null
-  );
+  const portalContainer = useDialogLayerContainer();
 
   return (
     <BaseSelect.Root<Value>
@@ -65,11 +64,6 @@ function SelectImpl<Value = string>({
       modal={modal}
     >
       <BaseSelect.Trigger
-        ref={(node) => {
-          setPortalContainer(
-            node?.closest("[data-keeplas-dialog-content]") as HTMLElement | null
-          );
-        }}
         className={cn(
           "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-transparent rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
           "hover:bg-surface-container focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
