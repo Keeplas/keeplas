@@ -167,6 +167,13 @@ body {
   font-weight: 600;
 }
 
+@utility text-headline-sm {
+  font-family: var(--font-manrope);
+  font-size: 1.25rem;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
 @utility text-body-lg {
   font-family: var(--font-inter);
   font-size: 1rem;

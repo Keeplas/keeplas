@@ -64,14 +64,14 @@ export function AuthFormShell({
               >
                 <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
               </svg>
-              <span className="font-label text-[11px] uppercase tracking-widest font-bold text-primary">
+              <span className="text-label-md text-primary">
                 {badgeLabel}
               </span>
             </div>
-            <h3 className="font-headline text-3xl font-bold text-primary tracking-tight mb-2">
+            <h3 className="text-headline-md text-primary mb-2">
               {heading}
             </h3>
-            <p className="text-on-surface-variant font-body">{description}</p>
+            <p className="text-body-lg text-on-surface-variant">{description}</p>
           </div>
 
           <ErrorAlert message={error} />
@@ -87,7 +87,7 @@ export function AuthFormShell({
             setLoading={onLoadingChange}
           />
 
-          <p className="mt-12 text-center text-sm font-body text-on-surface-variant">
+          <p className="mt-12 text-center text-body-md text-on-surface-variant">
             {footer.prompt}{" "}
             <Link href={footer.href} className={accentClass}>
               {footer.label}

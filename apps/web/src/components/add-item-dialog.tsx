@@ -322,15 +322,15 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         {/* Header */}
         <DialogHeader className="px-8 py-6 items-start">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] text-secondary font-label uppercase tracking-[0.18em]">
+            <div className="flex items-center gap-2 text-label-md text-secondary">
               <span>Vault</span>
               <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
               <span className="text-on-surface-variant/50">Secure New Asset</span>
             </div>
-            <DialogTitle className="text-3xl font-black tracking-tighter leading-none">
+            <DialogTitle className="text-headline-md">
               Add to Vault
             </DialogTitle>
-            <DialogDescription className="max-w-md leading-relaxed">
+            <DialogDescription className="text-body-md max-w-md">
               Deposit a critical asset. Files are encrypted on your device
               before they leave. AES-256-GCM.
             </DialogDescription>

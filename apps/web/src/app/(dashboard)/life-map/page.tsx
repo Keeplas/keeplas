@@ -64,10 +64,10 @@ export default function LifeMapPage() {
       {/* Header */}
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="font-headline text-5xl font-extrabold text-primary tracking-tighter mb-2 leading-none">
+          <h1 className="text-headline-lg text-primary mb-2">
             Life Map
           </h1>
-          <p className="text-secondary font-medium tracking-wide max-w-lg">
+          <p className="text-body-lg text-secondary max-w-lg">
             A holistic visual overview of your protected legacy and continuity readiness.
           </p>
         </div>
@@ -97,15 +97,15 @@ export default function LifeMapPage() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="font-headline font-bold text-primary text-xs">
+            <span className="font-headline font-bold text-primary text-body-md">
               {continuityScore}%
             </span>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+            <p className="text-label-md text-on-surface-variant">
               Continuity Score
             </p>
-            <p className="text-sm font-bold text-primary">{scoreLabel}</p>
+            <p className="text-body-md font-bold text-primary">{scoreLabel}</p>
           </div>
         </div>
       </header>
@@ -126,10 +126,10 @@ export default function LifeMapPage() {
             style={{ borderRadius: "50%" }}
           >
             <Icon path={ICON_PATHS.fingerprint} className="w-10 h-10 mb-2" />
-            <p className="font-headline font-extrabold text-lg leading-tight uppercase tracking-tighter">
+            <p className="text-headline-sm uppercase tracking-wide">
               Your Legacy
             </p>
-            <p className="text-[10px] text-secondary-fixed font-medium mt-1 uppercase tracking-widest">
+            <p className="text-label-md text-secondary-fixed mt-1">
               Central Node
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function LifeMapPage() {
           status="protected"
         >
           {contacts.length === 0 ? (
-            <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+            <p className="text-body-md text-on-surface-variant mt-2">
               No guardians linked yet.
             </p>
           ) : (
@@ -180,14 +180,14 @@ export default function LifeMapPage() {
                 ))}
                 {contacts.length > 3 && (
                   <div
-                    className="w-10 h-10 border-2 border-surface bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant"
+                    className="w-10 h-10 border-2 border-surface bg-surface-container-high flex items-center justify-center text-label-md text-on-surface-variant"
                     style={{ borderRadius: "50%" }}
                   >
                     +{contacts.length - 3}
                   </div>
                 )}
               </div>
-              <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-widest">
+              <p className="text-label-md text-on-surface-variant">
                 {contacts.length} Primary Guardian{contacts.length > 1 ? "s" : ""} Linked
               </p>
             </>
@@ -206,7 +206,7 @@ export default function LifeMapPage() {
             style={{ borderRadius: "2rem" }}
           >
             {missingDirectives && (
-              <div className="absolute -top-3 -right-3 bg-error text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter animate-pulse">
+              <div className="absolute -top-3 -right-3 bg-error text-white text-label-md px-3 py-1 rounded-full animate-pulse">
                 Action Required
               </div>
             )}
@@ -224,7 +224,7 @@ export default function LifeMapPage() {
               </div>
               <span
                 className={cn(
-                  "text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded",
+                  "text-label-md px-2 py-1 rounded",
                   missingDirectives
                     ? "text-error bg-error/10"
                     : "text-secondary bg-secondary-container/20"
@@ -233,15 +233,15 @@ export default function LifeMapPage() {
                 {missingDirectives ? "Unmapped" : "Protected"}
               </span>
             </div>
-            <h3 className="font-headline font-bold text-primary mb-1">Directives</h3>
+            <h3 className="text-headline-sm text-primary mb-1">Directives</h3>
             {missingDirectives ? (
               <>
-                <p className="text-xs text-on-surface-variant mt-2 leading-relaxed">
+                <p className="text-body-md text-on-surface-variant mt-2">
                   Medical POA and Advance Directives are currently missing or expired.
                 </p>
                 <Link
                   href="/vault"
-                  className="mt-4 w-full py-2 bg-error text-white rounded-lg text-xs font-bold font-headline transition-transform active:scale-95 flex items-center justify-center"
+                  className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center"
                 >
                   Update Now
                 </Link>
@@ -249,7 +249,7 @@ export default function LifeMapPage() {
             ) : (
               <div className="space-y-3 mt-4">
                 {directives.slice(0, 3).map((d) => (
-                  <div key={d._id} className="flex justify-between items-center text-xs">
+                  <div key={d._id} className="flex justify-between items-center text-body-md">
                     <span className="text-on-surface-variant truncate">{d.title}</span>
                     <Icon
                       path={ICON_PATHS.checkCircle}
@@ -275,7 +275,7 @@ export default function LifeMapPage() {
               >
                 <Icon path={ICON_PATHS.description} className="w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded">
+              <span className="text-label-md text-secondary bg-secondary-container/20 px-2 py-1 rounded">
                 {documents.length > 0 ? "Protected" : "Empty"}
               </span>
             </div>
@@ -340,11 +340,11 @@ export default function LifeMapPage() {
                 path={ICON_PATHS.psychology}
                 className="w-8 h-8 text-secondary-fixed"
               />
-              <h2 className="font-headline text-2xl font-bold tracking-tight">
+              <h2 className="text-headline-md">
                 AI Completeness Analyzer
               </h2>
             </div>
-            <p className="text-on-primary-container max-w-lg mb-8 text-lg leading-relaxed italic">
+            <p className="text-body-lg text-on-primary-container max-w-lg mb-8 italic">
               &ldquo;You have secured {aiPercentage}% of your vital legacy.{" "}
               {missingDirectives
                 ? "The missing link is your Digital Life Directive, which prevents executors from accessing your encrypted assets."
@@ -379,7 +379,7 @@ export default function LifeMapPage() {
           className="bg-surface-container-low p-8 flex flex-col justify-center"
           style={{ borderRadius: "2rem" }}
         >
-          <h3 className="font-headline font-bold text-primary mb-4 text-xl">
+          <h3 className="text-headline-sm text-primary mb-4">
             Protected Zones
           </h3>
           <ul className="space-y-4">
@@ -460,7 +460,7 @@ function NodeCard({
             Protected
           </span>
         </div>
-        <h3 className="font-headline font-bold text-primary mb-1">{title}</h3>
+        <h3 className="text-headline-sm text-primary mb-1">{title}</h3>
         {children}
       </div>
     </div>
@@ -469,7 +469,7 @@ function NodeCard({
 
 function AssetLine({ label, present }: { label: string; present: boolean }) {
   return (
-    <div className="flex justify-between items-center text-xs">
+    <div className="flex justify-between items-center text-body-md">
       <span className="text-on-surface-variant">{label}</span>
       <Icon
         path={ICON_PATHS.checkCircle}
@@ -486,7 +486,7 @@ function DocThumbnail({ icon, label }: { icon: string; label: string }) {
   return (
     <div className="bg-surface-container p-2 rounded-lg flex flex-col items-center justify-center aspect-square text-center">
       <Icon path={icon} className="w-5 h-5 text-on-surface-variant" />
-      <span className="text-[8px] font-bold mt-1 uppercase text-on-surface-variant">
+      <span className="text-label-md mt-1 text-on-surface-variant">
         {label}
       </span>
     </div>
@@ -502,7 +502,7 @@ function ZoneLine({ label, safe }: { label: string; safe: boolean }) {
       />
       <span
         className={cn(
-          "text-sm",
+          "text-body-md",
           safe ? "font-medium text-on-surface" : "font-bold text-error"
         )}
       >
@@ -528,9 +528,9 @@ function BentoItem({
     >
       <div>
         <Icon path={iconPath} className="w-6 h-6 text-secondary-fixed-dim mb-3" />
-        <h4 className="font-headline font-bold text-primary">{title}</h4>
+        <h4 className="text-headline-sm text-primary">{title}</h4>
       </div>
-      <p className="text-xs text-on-surface-variant mt-4">{hint}</p>
+      <p className="text-body-md text-on-surface-variant mt-4">{hint}</p>
     </div>
   );
 }

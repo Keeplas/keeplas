@@ -29,10 +29,10 @@ export default function EmergencyCardPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <header className="mb-10 max-w-2xl">
-        <h1 className="font-headline text-primary text-3xl md:text-4xl font-extrabold tracking-tight leading-none mb-3">
+        <h1 className="text-headline-lg text-primary mb-3">
           Emergency Card
         </h1>
-        <p className="text-on-surface-variant text-sm md:text-base">
+        <p className="text-body-lg text-on-surface-variant">
           Customize your public safety profile. This information remains accessible to responders even when your vault is locked.
         </p>
       </header>
@@ -51,7 +51,7 @@ export default function EmergencyCardPage() {
             {error && <ErrorAlert message={error} />}
 
             {saved && (
-              <div className="bg-secondary/10 text-secondary rounded-xl p-4 text-sm font-medium">
+              <div className="bg-secondary/10 text-secondary rounded-xl p-4 text-body-md font-medium">
                 Emergency card saved successfully.
               </div>
             )}

@@ -102,13 +102,13 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
 
       {/* Header */}
       <div className="mb-10">
-        <span className="font-label text-secondary font-semibold uppercase tracking-[0.2em] text-xs mb-3 block">
+        <span className="text-label-md text-secondary mb-3 block">
           Backup Confirmation
         </span>
-        <h2 className="font-headline text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-4">
+        <h2 className="text-display-lg text-primary mb-4">
           Verify your Recovery Words
         </h2>
-        <p className="text-on-surface-variant font-body text-base leading-relaxed max-w-lg">
+        <p className="text-body-lg text-on-surface-variant max-w-lg">
           To make sure you saved your words correctly, enter the 3 words below
           from your Recovery Words. This confirms your backup is complete and
           you will be able to recover your vault if needed.

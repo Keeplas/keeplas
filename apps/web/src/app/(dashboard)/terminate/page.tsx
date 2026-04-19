@@ -55,18 +55,18 @@ export default function TerminatePage() {
             <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-on-primary/10 backdrop-blur">
               <Icon path={ICON_PATHS.warning} className="w-7 h-7" />
             </span>
-            <h1 className="font-headline text-3xl md:text-4xl font-extrabold mt-6 leading-tight">
+            <h1 className="text-headline-lg mt-6">
               Irreversible
               <br />
               Destruction
             </h1>
-            <p className="mt-4 text-sm md:text-base opacity-90 max-w-sm">
+            <p className="mt-4 text-body-lg opacity-90 max-w-sm">
               Once destroyed, your encrypted archive cannot be reconstructed. There is no
               backup, no admin override, no recovery path. Zero-knowledge means zero recovery.
             </p>
           </div>
 
-          <dl className="space-y-3 text-xs uppercase tracking-[0.2em] opacity-80">
+          <dl className="space-y-3 text-label-md opacity-80">
             <div className="flex justify-between">
               <dt>Archive status</dt>
               <dd>{vault ? "Active" : "Empty"}</dd>
@@ -80,17 +80,17 @@ export default function TerminatePage() {
 
         <section className="bg-surface p-10 space-y-6">
           <div>
-            <h2 className="font-headline text-2xl font-extrabold text-primary leading-tight">
+            <h2 className="text-headline-md text-primary">
               Terminate Your Continuity Plan?
             </h2>
-            <p className="text-on-surface-variant text-sm mt-2">
+            <p className="text-body-md text-on-surface-variant mt-2">
               This wipes the vault, every protocol, contact, message, audit entry and the user
               record itself.
             </p>
           </div>
 
-          <div className="bg-error/10 border border-error/20 rounded-2xl p-4 text-sm text-error">
-            <p className="font-bold uppercase tracking-widest text-[10px] mb-1">
+          <div className="bg-error/10 border border-error/20 rounded-2xl p-4 text-body-md text-error">
+            <p className="text-label-md mb-1">
               ⚠ Warning
             </p>
             This action cannot be undone. We recommend exporting your Recovery Kit and pausing
@@ -99,18 +99,18 @@ export default function TerminatePage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-surface-container-low rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              <p className="text-label-md text-on-surface-variant">
                 Vault data
               </p>
-              <p className="font-headline text-lg font-bold text-on-surface mt-1">
+              <p className="text-headline-sm text-on-surface mt-1">
                 {itemCount} encrypted items
               </p>
             </div>
             <div className="bg-surface-container-low rounded-2xl p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+              <p className="text-label-md text-on-surface-variant">
                 Protocols
               </p>
-              <p className="font-headline text-lg font-bold text-on-surface mt-1">
+              <p className="text-headline-sm text-on-surface mt-1">
                 Life Check, Scenario, Messages
               </p>
             </div>
@@ -153,7 +153,7 @@ export default function TerminatePage() {
             </div>
           </form>
 
-          <p className="text-[10px] text-outline-variant font-mono">
+          <p className="text-label-md text-outline-variant font-mono">
             Request ID: {requestId || "—"}
           </p>
         </section>

@@ -120,7 +120,7 @@ export default function VaultItemPage() {
   if (item === null) {
     return (
       <div className="max-w-2xl mx-auto text-center py-24">
-        <h2 className="font-headline text-2xl font-bold text-primary mb-2">Item not found</h2>
+        <h2 className="text-headline-md text-primary mb-2">Item not found</h2>
         <button onClick={() => router.push("/vault")} className="text-secondary font-bold cursor-pointer">
           Back to Vault
         </button>
@@ -146,7 +146,7 @@ export default function VaultItemPage() {
       {editing ? (
         /* ─── Edit Mode ─── */
         <form onSubmit={handleSave} className="space-y-5">
-          <h2 className="font-headline text-2xl font-extrabold text-primary tracking-tight mb-6">
+          <h2 className="text-headline-md text-primary mb-6">
             Edit Item
           </h2>
 
@@ -234,16 +234,16 @@ export default function VaultItemPage() {
                   {category.label}
                 </span>
                 {item.isCritical && (
-                  <span className="text-[10px] font-label font-bold uppercase tracking-widest text-on-primary bg-primary-container px-2 py-0.5 rounded-lg">
+                  <span className="text-label-md text-on-primary bg-primary-container px-2 py-0.5 rounded-lg">
                     Critical
                   </span>
                 )}
               </div>
-              <h1 className="font-headline text-3xl font-extrabold text-primary tracking-tight">
+              <h1 className="text-headline-lg text-primary">
                 {item.title}
               </h1>
               {item.description && (
-                <p className="text-on-surface-variant mt-1">{item.description}</p>
+                <p className="text-body-lg text-on-surface-variant mt-1">{item.description}</p>
               )}
             </div>
             <div className="flex items-center gap-2">

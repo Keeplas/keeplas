@@ -41,12 +41,12 @@ export default function LifeCheckPage() {
     <div className="max-w-6xl mx-auto">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="max-w-2xl">
-          <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight leading-tight mb-3">
+          <h1 className="text-headline-lg text-primary mb-3">
             Life Continuity
             <br />
             <span className="text-secondary">Verification Engine</span>
           </h1>
-          <p className="text-on-surface-variant text-sm md:text-base max-w-xl">
+          <p className="text-body-lg text-on-surface-variant max-w-xl">
             Configure your automated proof-of-life protocol. If you are unresponsive, Keeplas securely executes your legacy directives.
           </p>
         </div>
@@ -54,10 +54,10 @@ export default function LifeCheckPage() {
         {isConfigured && (
           <div className="bg-surface-container-low p-4 rounded-2xl flex items-center gap-5 shadow-sm shrink-0">
             <div className="flex flex-col">
-              <span className="font-headline font-bold text-primary text-sm">
+              <span className="text-headline-sm text-primary">
                 {travelMode ? "Travel Mode" : isActive ? "Active" : "Paused"}
               </span>
-              <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              <span className="text-label-md text-on-surface-variant">
                 Pause Life Check
               </span>
             </div>
@@ -98,19 +98,19 @@ export default function LifeCheckPage() {
 
       <div className="mt-8 flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
         <div>
-          <h3 className="font-headline font-black text-primary text-lg">
+          <h3 className="text-headline-sm text-primary">
             {isConfigured
               ? "Update Verification Profile"
               : "Confirm Verification Profile"}
           </h3>
-          <p className="text-on-surface-variant text-xs md:text-sm">
+          <p className="text-body-md text-on-surface-variant">
             Settings take effect across all linked vaults immediately.
           </p>
         </div>
         <div className="flex gap-3">
           {error && <ErrorAlert message={error} />}
           {saved && (
-            <span className="text-sm text-secondary font-medium self-center">
+            <span className="text-body-md text-secondary font-medium self-center">
               Saved ✓
             </span>
           )}
@@ -119,7 +119,7 @@ export default function LifeCheckPage() {
             size="md"
             onClick={handleSave}
             disabled={saving}
-            className="font-extrabold text-sm shadow-xl cursor-pointer"
+            className="shadow-xl cursor-pointer"
           >
             {saving
               ? "Saving..."

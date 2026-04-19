@@ -9,7 +9,7 @@ export function MobileBrand() {
         width={28}
         height={28}
       />
-      <h1 className="font-headline text-primary text-2xl font-black tracking-tighter">
+      <h1 className="text-headline-md text-primary">
         Keeplas
       </h1>
     </div>

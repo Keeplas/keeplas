@@ -22,7 +22,7 @@ export function AuthHeroSection() {
             width={36}
             height={36}
           />
-          <h1 className="font-headline text-surface-container-lowest text-4xl font-extrabold tracking-tighter">
+          <h1 className="text-headline-lg text-surface-container-lowest">
             Keeplas
           </h1>
         </div>
@@ -31,14 +31,14 @@ export function AuthHeroSection() {
 
       {/* Center: Hero text */}
       <div className="relative z-10 max-w-lg">
-        <span className="font-headline uppercase tracking-[0.2em] text-secondary-fixed text-sm mb-6 block">
+        <span className="text-label-md text-secondary-fixed mb-6 block">
           The Digital Curator
         </span>
-        <h2 className="font-headline text-surface-container-lowest text-6xl font-bold leading-[1.1] mb-8 tracking-tight">
+        <h2 className="text-display-lg text-surface-container-lowest mb-8">
           Secure Your <br />
           Digital Legacy.
         </h2>
-        <p className="text-on-primary-container text-xl leading-relaxed font-light">
+        <p className="text-body-lg text-on-primary-container font-light">
           A private gallery for your most vital assets. Protected by
           architectural-grade encryption, curated for your next generation.
         </p>
@@ -47,18 +47,18 @@ export function AuthHeroSection() {
       {/* Bottom: Stats */}
       <div className="relative z-10 flex gap-12 items-center">
         <div className="flex flex-col">
-          <span className="font-headline font-bold text-surface-container-lowest text-2xl tracking-tighter">
+          <span className="text-headline-md text-surface-container-lowest">
             AES-256
           </span>
-          <span className="font-label text-xs uppercase tracking-widest text-on-primary-container">
+          <span className="text-label-md text-on-primary-container">
             Encryption Standard
           </span>
         </div>
         <div className="flex flex-col">
-          <span className="font-headline font-bold text-surface-container-lowest text-2xl tracking-tighter">
+          <span className="text-headline-md text-surface-container-lowest">
             Zero-Knowledge
           </span>
-          <span className="font-label text-xs uppercase tracking-widest text-on-primary-container">
+          <span className="text-label-md text-on-primary-container">
             Architecture
           </span>
         </div>

@@ -105,13 +105,13 @@ export default function DocsPage() {
     <div className="max-w-5xl mx-auto space-y-16">
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-secondary font-headline font-extrabold uppercase tracking-[0.2em] text-xs">
+        <span className="text-label-md text-secondary">
           Documentation
         </span>
-        <h1 className="font-headline text-4xl md:text-5xl font-extrabold text-primary tracking-tighter leading-none">
+        <h1 className="text-headline-lg text-primary">
           How Keeplas protects your legacy.
         </h1>
-        <p className="text-base md:text-lg text-on-surface-variant max-w-2xl leading-relaxed">
+        <p className="text-body-lg text-on-surface-variant max-w-2xl">
           Keeplas is a life-continuity platform. We combine a zero-knowledge vault, a
           multi-channel life check, an autonomous scenario engine and a social recovery
           network so your digital legacy outlives you — on your terms.
@@ -122,13 +122,13 @@ export default function DocsPage() {
       <section className="bg-primary text-on-primary rounded-[2rem] p-10 md:p-12 relative overflow-hidden">
         <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] pointer-events-none" />
         <div className="relative z-10 space-y-5 max-w-2xl">
-          <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur rounded-full text-[10px] font-bold font-headline uppercase tracking-widest border border-white/20">
+          <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur rounded-full text-label-md border border-white/20">
             Zero-knowledge by design
           </span>
-          <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
+          <h2 className="text-headline-lg">
             Your key never leaves your device.
           </h2>
-          <p className="text-on-primary-container text-base md:text-lg leading-relaxed">
+          <p className="text-body-lg text-on-primary-container">
             The master key that unlocks your vault is generated and stored only on your
             devices. Keeplas servers hold encrypted blobs plus the public metadata needed
             to orchestrate life checks — nothing more. Even we cannot read your vault.
@@ -154,7 +154,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-secondary rounded-full" />
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
+          <h2 className="text-headline-md text-primary">
             Core Features
           </h2>
         </div>
@@ -171,14 +171,14 @@ export default function DocsPage() {
                 <Icon path={feature.iconPath} className="w-5 h-5" />
               </span>
               <div className="space-y-2">
-                <h3 className="font-headline text-lg font-bold text-primary">
+                <h3 className="text-headline-sm text-primary">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-on-surface-variant leading-relaxed">
+                <p className="text-body-md text-on-surface-variant">
                   {feature.description}
                 </p>
               </div>
-              <span className="mt-auto pt-2 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary">
+              <span className="mt-auto pt-2 flex items-center gap-2 text-label-md text-secondary">
                 Open
                 <Icon
                   path={ICON_PATHS.chevronRight}
@@ -194,7 +194,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-primary rounded-full" />
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
+          <h2 className="text-headline-md text-primary">
             Security Model
           </h2>
         </div>
@@ -208,10 +208,10 @@ export default function DocsPage() {
                 <Icon path={point.iconPath} className="w-5 h-5" />
               </span>
               <div className="space-y-1">
-                <h3 className="font-headline text-base font-bold text-primary">
+                <h3 className="text-headline-sm text-primary">
                   {point.title}
                 </h3>
-                <p className="text-sm text-on-surface-variant leading-relaxed">
+                <p className="text-body-md text-on-surface-variant">
                   {point.body}
                 </p>
               </div>
@@ -224,7 +224,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-error rounded-full" />
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary tracking-tight">
+          <h2 className="text-headline-md text-primary">
             What happens after inactivity
           </h2>
         </div>
@@ -260,10 +260,10 @@ export default function DocsPage() {
       <section className="bg-surface-container-low rounded-2xl p-8 ghost-border">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
           <div>
-            <h2 className="font-headline text-xl font-bold text-primary">
+            <h2 className="text-headline-sm text-primary">
               Jump to a feature
             </h2>
-            <p className="text-sm text-on-surface-variant mt-1">
+            <p className="text-body-md text-on-surface-variant mt-1">
               All documentation is inline with the product — each screen has its own
               guided empty state and tooltips.
             </p>
@@ -274,7 +274,7 @@ export default function DocsPage() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container transition-colors text-sm font-medium text-primary"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container transition-colors text-body-md font-medium text-primary"
               >
                 <Icon path={link.iconPath} className="w-4 h-4 text-secondary shrink-0" />
                 <span className="truncate">{link.label}</span>
@@ -284,7 +284,7 @@ export default function DocsPage() {
         </ul>
       </section>
 
-      <footer className="pt-8 pb-12 text-center text-xs text-on-surface-variant">
+      <footer className="pt-8 pb-12 text-center text-body-md text-on-surface-variant">
         Keeplas — Life Continuity Protocol · Version 0.1
       </footer>
     </div>
@@ -307,11 +307,11 @@ function LifecycleStep({
       <span
         className={`absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface ${accent}`}
       />
-      <p className="text-xs font-bold uppercase tracking-tighter text-on-surface-variant">
+      <p className="text-label-md text-on-surface-variant">
         {value} days inactivity
       </p>
-      <h3 className="font-headline text-lg font-bold text-primary mt-1">{title}</h3>
-      <p className="text-sm text-on-surface-variant mt-1 leading-relaxed max-w-xl">
+      <h3 className="text-headline-sm text-primary mt-1">{title}</h3>
+      <p className="text-body-md text-on-surface-variant mt-1 max-w-xl">
         {body}
       </p>
     </li>

@@ -88,13 +88,13 @@ export default function ConditionalMessagesPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
         <div className="max-w-2xl space-y-3">
-          <span className="text-secondary font-bold tracking-widest text-xs uppercase block">
+          <span className="text-label-md text-secondary block">
             Life Continuity Systems
           </span>
-          <h1 className="font-headline text-5xl font-extrabold tracking-tighter text-primary leading-none">
+          <h1 className="text-headline-lg text-primary">
             Conditional Messages
           </h1>
-          <p className="text-lg text-on-surface-variant leading-relaxed">
+          <p className="text-body-lg text-on-surface-variant">
             A sanctuary for words intended for the future. These messages remain encrypted
             and sealed until specific life events trigger their release.
           </p>
@@ -107,26 +107,26 @@ export default function ConditionalMessagesPage() {
                 path={ICON_PATHS.vibration}
                 className="w-5 h-5 text-secondary-fixed"
               />
-              <span className="font-bold text-xs uppercase tracking-widest">
+              <span className="text-label-md">
                 Dead Man Switch Status
               </span>
             </div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white text-2xl font-headline font-bold">
+              <span className="text-white text-headline-md">
                 {status.isActive ? "Active" : "Paused"}
               </span>
-              <span className="bg-secondary/20 text-secondary-fixed px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+              <span className="bg-secondary/20 text-secondary-fixed px-3 py-1 rounded-full text-label-md">
                 {status.isActive ? "Monitoring" : "Idle"}
               </span>
             </div>
-            <p className="text-xs opacity-80 mb-6">
+            <p className="text-body-md opacity-80 mb-6">
               Last heartbeat detected:{" "}
               {status.lastHeartbeatAt
                 ? `${formatTimeAgo(status.lastHeartbeatAt)} via Mobile App`
                 : "no recent signal"}
               .
             </p>
-            <button className="w-full bg-white/10 hover:bg-white/20 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+            <button className="w-full bg-white/10 hover:bg-white/20 py-2 rounded-lg text-label-md transition-colors cursor-pointer">
               Configure Trigger Logic
             </button>
           </div>
@@ -147,15 +147,15 @@ export default function ConditionalMessagesPage() {
             <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Icon path={ICON_PATHS.editNote} className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="font-headline text-2xl font-bold text-primary mb-2 leading-tight">
+            <h3 className="text-headline-md text-primary mb-2">
               Draft a New Legacy
             </h3>
-            <p className="text-on-surface-variant text-sm leading-relaxed">
+            <p className="text-body-md text-on-surface-variant">
               Prepare a message for business partners, children, or spouse to be opened only
               when needed.
             </p>
           </div>
-          <div className="mt-8 flex items-center gap-2 text-secondary font-bold text-sm">
+          <div className="mt-8 flex items-center gap-2 text-secondary font-bold text-body-md">
             Create Message
             <Icon path={ICON_PATHS.arrowForward} className="w-5 h-5" />
           </div>
@@ -173,10 +173,10 @@ export default function ConditionalMessagesPage() {
               path={ICON_PATHS.notes}
               className="w-10 h-10 text-outline-variant mb-4"
             />
-            <h3 className="font-headline text-xl font-bold text-primary mb-2">
+            <h3 className="text-headline-sm text-primary mb-2">
               No messages yet
             </h3>
-            <p className="text-on-surface-variant max-w-sm">
+            <p className="text-body-lg text-on-surface-variant max-w-sm">
               Your first conditional message will appear here once composed.
             </p>
           </div>
@@ -194,27 +194,27 @@ export default function ConditionalMessagesPage() {
               className="md:col-span-6 bg-surface-container-low p-8 rounded-xl ghost-border flex flex-col items-start justify-center gap-2 min-h-[180px] hover:bg-surface-container transition-colors cursor-pointer text-left"
             >
               <Icon path={ICON_PATHS.plusCircle} className="w-8 h-8 text-outline-variant" />
-              <span className="text-on-surface-variant">Draft another message</span>
+              <span className="text-body-md text-on-surface-variant">Draft another message</span>
             </button>
           ))}
 
         {/* Dead Man Switch Philosophy */}
         <div className="md:col-span-12 mt-8 grid grid-cols-1 md:grid-cols-2 gap-12 bg-primary py-16 px-12 rounded-[2rem] text-white">
           <div className="space-y-6">
-            <h2 className="font-headline text-4xl font-extrabold tracking-tight leading-tight">
+            <h2 className="text-headline-lg">
               The &ldquo;Dead Man Switch&rdquo; Philosophy
             </h2>
-            <p className="text-on-primary-container text-lg leading-relaxed">
+            <p className="text-body-lg text-on-primary-container">
               Our system uses a multi-layered verification protocol. If you fail to respond
               to check-ins over a predefined period, your designated &ldquo;Legacy
               Curators&rdquo; are contacted to verify your status before any message is
               unsealed.
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
-              <button className="bg-secondary-fixed text-on-secondary-fixed px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-95 cursor-pointer">
+              <button className="bg-secondary-fixed text-on-secondary-fixed px-6 py-3 rounded-xl font-bold text-body-md transition-all active:scale-95 cursor-pointer">
                 Verify Verification Logic
               </button>
-              <button className="border border-on-primary-container px-6 py-3 rounded-xl font-bold text-sm tracking-wide hover:bg-white/10 transition-all cursor-pointer">
+              <button className="border border-on-primary-container px-6 py-3 rounded-xl font-bold text-body-md hover:bg-white/10 transition-all cursor-pointer">
                 Audit My Security
               </button>
             </div>
@@ -279,10 +279,10 @@ function FeaturedMessage({
     <article className="md:col-span-8 bg-surface-container p-8 rounded-xl shadow-sm ghost-border">
       <div className="flex justify-between items-start mb-8 gap-4">
         <div className="min-w-0">
-          <span className="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 inline-block">
+          <span className="bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full text-label-md mb-4 inline-block">
             Primary {message.status.charAt(0).toUpperCase() + message.status.slice(1)}
           </span>
-          <h2 className="font-headline text-2xl md:text-3xl font-bold text-primary break-words">
+          <h2 className="text-headline-md text-primary break-words">
             &ldquo;{message.title}&rdquo;
           </h2>
         </div>
@@ -304,11 +304,11 @@ function FeaturedMessage({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 border-t border-outline-variant/20 pt-8">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+          <span className="text-label-md text-on-surface-variant mb-2 block">
             Recipients
           </span>
           {recipientContacts.length === 0 ? (
-            <p className="text-sm text-on-surface-variant">No recipients</p>
+            <p className="text-body-md text-on-surface-variant">No recipients</p>
           ) : (
             <div className="flex -space-x-2">
               {visibleRecipients.map((c) => (
@@ -339,10 +339,10 @@ function FeaturedMessage({
         </div>
 
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+          <span className="text-label-md text-on-surface-variant mb-2 block">
             Trigger Protocol
           </span>
-          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+          <div className="flex items-center gap-2 text-body-md font-semibold text-primary">
             <Icon
               path={TRIGGER_ICONS[message.triggerType]}
               className="w-4 h-4"
@@ -352,10 +352,10 @@ function FeaturedMessage({
         </div>
 
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 block">
+          <span className="text-label-md text-on-surface-variant mb-2 block">
             Encryption
           </span>
-          <div className="flex items-center gap-2 text-sm font-semibold text-secondary">
+          <div className="flex items-center gap-2 text-body-md font-semibold text-secondary">
             <Icon path={ICON_PATHS.verifiedFill} className="w-4 h-4" />
             Zero-Knowledge Seal
           </div>
@@ -385,7 +385,7 @@ function SecondaryCard({
       <div className="flex justify-between mb-6">
         <span
           className={cn(
-            "font-black uppercase tracking-[0.2em] text-[10px]",
+            "text-label-md",
             statusMeta.color
           )}
         >
@@ -396,10 +396,10 @@ function SecondaryCard({
           className={cn("w-5 h-5", isActive ? "text-secondary" : "text-outline")}
         />
       </div>
-      <h3 className="font-headline text-xl font-bold text-primary mb-2 leading-tight">
+      <h3 className="text-headline-sm text-primary mb-2">
         {message.title}
       </h3>
-      <p className="text-on-surface-variant text-sm mb-6">
+      <p className="text-body-md text-on-surface-variant mb-6">
         Encrypted under{" "}
         <span className="font-semibold text-primary">
           {TRIGGER_LABELS[message.triggerType]}
@@ -407,12 +407,12 @@ function SecondaryCard({
         .
       </p>
       <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
-        <span className="text-xs text-on-surface-variant">
+        <span className="text-body-md text-on-surface-variant">
           {isActive
             ? `Release trigger: ${TRIGGER_LABELS[message.triggerType]}`
             : `Last edited: ${formatDate(message.updatedAt)}`}
         </span>
-        <button className="text-secondary text-sm font-bold flex items-center gap-1 cursor-pointer">
+        <button className="text-secondary text-body-md font-bold flex items-center gap-1 cursor-pointer">
           {isActive ? "Manage" : "Resume"}
           <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
         </button>
@@ -440,8 +440,8 @@ function PhilosophyCard({
           <Icon path={icon} className="w-5 h-5 text-secondary-fixed" />
         </div>
         <div>
-          <h4 className="font-headline font-bold text-lg">{title}</h4>
-          <p className="text-sm opacity-70">{hint}</p>
+          <h4 className="text-headline-sm">{title}</h4>
+          <p className="text-body-md opacity-70">{hint}</p>
         </div>
       </div>
     </div>
@@ -641,7 +641,7 @@ function ComposeMessageDialog({
           <div className="space-y-2">
             <Label>Recipients</Label>
             {contacts.length === 0 ? (
-              <p className="text-xs text-on-surface-variant">
+              <p className="text-body-md text-on-surface-variant">
                 No trusted contacts yet. Add some in Trusted Contacts.
               </p>
             ) : (

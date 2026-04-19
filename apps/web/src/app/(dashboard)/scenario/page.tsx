@@ -117,13 +117,13 @@ export default function ScenarioPage() {
       {/* Header */}
       <header className="flex flex-col xl:flex-row xl:justify-between xl:items-end gap-8 mb-12">
         <div className="space-y-4">
-          <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded-full">
+          <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-full">
             Protocol Configuration
           </span>
-          <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-primary leading-none">
+          <h1 className="text-headline-lg text-primary">
             Scenario Engine
           </h1>
-          <p className="text-on-surface-variant max-w-xl text-base leading-relaxed">
+          <p className="text-on-surface-variant max-w-xl text-body-lg">
             Configure autonomous actions triggered by a Life Check failure. These events will
             only execute if the inactivity window is breached without a manual override.
           </p>
@@ -131,10 +131,10 @@ export default function ScenarioPage() {
 
         <div className="bg-surface-container-low p-6 rounded-full flex items-center space-x-6 ghost-border">
           <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-secondary">
+            <div className="text-label-md text-secondary">
               Safe Pause
             </div>
-            <div className="text-xs text-on-surface-variant">
+            <div className="text-body-md text-on-surface-variant">
               {scenario?.isSafePauseActive ? "Active for Travel" : "Engine Live"}
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function ScenarioPage() {
               <Icon path={ICON_PATHS.historyToggleOff} className="w-24 h-24" />
             </div>
 
-            <h2 className="text-2xl font-headline font-bold text-primary mb-10 flex items-center">
+            <h2 className="text-headline-md text-primary mb-10 flex items-center">
               <Icon path={ICON_PATHS.accountTree} className="w-6 h-6 mr-3 text-secondary" />
               Triggered Event Chain
             </h2>
@@ -187,13 +187,13 @@ export default function ScenarioPage() {
                         <div className="flex-1">
                           <div
                             className={cn(
-                              "text-sm font-bold uppercase tracking-tighter mb-1",
+                              "text-label-md mb-1",
                               dotTextColor(idx, total)
                             )}
                           >
                             T+ {step.triggerValue} Days Inactivity
                           </div>
-                          <h3 className="text-xl font-headline font-bold text-primary">
+                          <h3 className="text-headline-sm text-primary">
                             {step.label}
                           </h3>
                           <div className="mt-4 flex flex-wrap gap-3">
@@ -256,7 +256,7 @@ export default function ScenarioPage() {
           {/* Engine Status */}
           <div className="bg-primary text-white p-8 rounded-full shadow-2xl shadow-primary/10 relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-primary-container mb-6">
+            <div className="text-label-md text-on-primary-container mb-6">
               Engine Status
             </div>
             <div className="flex items-center space-x-4 mb-4">
@@ -268,11 +268,11 @@ export default function ScenarioPage() {
                     : "bg-secondary-fixed animate-pulse"
                 )}
               />
-              <span className="text-2xl font-headline font-bold">
+              <span className="text-headline-md">
                 {scenario?.isSafePauseActive ? "Paused (Travel)" : "Armed & Ready"}
               </span>
             </div>
-            <p className="text-xs text-on-primary-container leading-relaxed">
+            <p className="text-body-md text-on-primary-container">
               System monitored. Last life check{" "}
               {lastCheck ? formatTimeAgo(lastCheck) : "—"}. All scenarios synchronized with
               the main vault.
@@ -281,7 +281,7 @@ export default function ScenarioPage() {
 
           {/* Action Library */}
           <div className="bg-surface-container-low p-8 rounded-full">
-            <h3 className="font-headline font-bold text-primary mb-6 flex items-center">
+            <h3 className="text-headline-sm text-primary mb-6 flex items-center">
               <Icon
                 path={ICON_PATHS.settingsSuggest}
                 className="w-5 h-5 mr-2 text-secondary"
@@ -302,7 +302,7 @@ export default function ScenarioPage() {
                       <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center">
                         <Icon path={meta.iconPath} className="w-4 h-4 text-secondary" />
                       </div>
-                      <span className="text-xs font-bold text-primary uppercase tracking-tight">
+                      <span className="text-label-md text-primary">
                         {meta.label}
                       </span>
                     </div>
@@ -319,7 +319,7 @@ export default function ScenarioPage() {
           {/* Fail-Safe Log */}
           <div className="bg-surface-container-highest p-8 rounded-full ghost-border">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">
+              <span className="text-label-md text-secondary">
                 Fail-Safe Log
               </span>
               <Icon path={ICON_PATHS.info} className="w-4 h-4 text-on-surface-variant" />

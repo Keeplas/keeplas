@@ -56,10 +56,10 @@ export function RecoveryPhraseStep({
       {/* Hero Header */}
       <section className="mb-10 flex flex-col md:flex-row justify-between items-end gap-6">
         <div>
-          <span className="font-label text-secondary font-semibold uppercase tracking-[0.2em] text-xs mb-3 block">
+          <span className="text-label-md text-secondary mb-3 block">
             Cryptographic Foundation
           </span>
-          <h1 className="font-headline text-primary text-4xl md:text-5xl font-extrabold tracking-tighter leading-tight">
+          <h1 className="text-display-lg text-primary">
             Master Recovery Words
           </h1>
         </div>

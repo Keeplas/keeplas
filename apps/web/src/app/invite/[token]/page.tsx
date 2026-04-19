@@ -46,7 +46,7 @@ export default function InvitationPage({
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface px-6">
         <div className="text-center max-w-md">
-          <h1 className="font-headline text-primary text-3xl font-bold mb-4">
+          <h1 className="text-display-lg text-primary mb-4">
             Invalid Invitation
           </h1>
           <p className="text-on-surface-variant mb-6">
@@ -68,7 +68,7 @@ export default function InvitationPage({
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface px-6">
         <div className="text-center max-w-md">
-          <h1 className="font-headline text-primary text-3xl font-bold mb-4">
+          <h1 className="text-display-lg text-primary mb-4">
             Invitation Already Processed
           </h1>
           <p className="text-on-surface-variant mb-6">
@@ -108,7 +108,7 @@ export default function InvitationPage({
               />
             </svg>
           </div>
-          <h1 className="font-headline text-primary text-3xl font-bold mb-4">
+          <h1 className="text-display-lg text-primary mb-4">
             You&apos;re now a Trusted Contact
           </h1>
           <p className="text-on-surface-variant mb-6">
@@ -166,7 +166,7 @@ export default function InvitationPage({
             width={36}
             height={36}
           />
-          <span className="font-headline text-xl font-bold tracking-tight text-primary">
+          <span className="text-headline-md text-primary">
             Keeplas
           </span>
         </div>
@@ -189,11 +189,11 @@ export default function InvitationPage({
             </svg>
           </div>
 
-          <h1 className="font-headline text-primary text-2xl font-bold mb-2">
+          <h1 className="text-headline-md text-primary mb-2">
             Trusted Contact Invitation
           </h1>
 
-          <p className="text-on-surface-variant mb-6">
+          <p className="text-body-lg text-on-surface-variant mb-6">
             <strong>{invitation.inviterName}</strong> has designated you as a{" "}
             <strong>
               {ROLE_LABELS[invitation.role] ?? "trusted contact"}

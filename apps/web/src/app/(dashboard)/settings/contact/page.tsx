@@ -76,10 +76,10 @@ export default function SettingsContactPage() {
             <Icon path={ICON_PATHS.checkCircle} className="w-7 h-7" />
           </span>
           <div className="space-y-2">
-            <h2 className="font-headline text-2xl font-extrabold text-primary tracking-tight">
+            <h2 className="text-headline-md text-primary">
               Message sent
             </h2>
-            <p className="text-on-surface-variant leading-relaxed">
+            <p className="text-body-lg text-on-surface-variant">
               Our concierge team will reply at{" "}
               <strong className="text-primary">{email}</strong> within 48 hours.
             </p>
@@ -111,7 +111,7 @@ export default function SettingsContactPage() {
             path={ICON_PATHS.shieldCheck}
             className="w-5 h-5 text-secondary shrink-0 mt-0.5"
           />
-          <p className="text-sm text-on-secondary-container leading-relaxed">
+          <p className="text-body-md text-on-secondary-container">
             Need help with your vault or a guardian? Our team reads every message. For
             urgent security issues, mention it in the subject line.
           </p>
@@ -179,7 +179,7 @@ export default function SettingsContactPage() {
             rows={6}
             required
           />
-          <p className="text-[11px] text-on-surface-variant">
+          <p className="text-label-md text-on-surface-variant">
             {message.length}/10 characters minimum. Never share your seed phrase with anyone,
             including our team.
           </p>
@@ -195,7 +195,7 @@ export default function SettingsContactPage() {
           >
             {submitting ? "Sending..." : "Send Message"}
           </Button>
-          <p className="text-xs text-on-surface-variant">
+          <p className="text-body-md text-on-surface-variant">
             Typical response time: under 48 hours.
           </p>
         </div>

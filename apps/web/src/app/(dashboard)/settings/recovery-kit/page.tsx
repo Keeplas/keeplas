@@ -64,10 +64,10 @@ export default function RecoveryKitPage() {
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 print:hidden">
         <div className="max-w-2xl space-y-4">
-          <h1 className="font-headline text-4xl md:text-5xl text-primary tracking-tight font-extrabold leading-none">
+          <h1 className="text-headline-lg text-primary">
             Master Recovery Key
           </h1>
-          <p className="text-base md:text-lg text-on-surface-variant leading-relaxed">
+          <p className="text-body-lg text-on-surface-variant">
             This document is the sole method for recovering your Keeplas Architectural Vault
             should you lose access. Keep it in a physically secure, fireproof location. Do
             not share these credentials with anyone.
@@ -117,10 +117,10 @@ export default function RecoveryKitPage() {
         <aside className="w-full md:w-1/3 bg-primary text-on-primary-container p-10 md:p-12 flex flex-col justify-between relative">
           <div className="space-y-12 relative z-10">
             <div className="space-y-1">
-              <div className="font-headline text-3xl font-black tracking-tighter text-white">
+              <div className="text-headline-md text-white">
                 Keeplas
               </div>
-              <div className="uppercase tracking-widest text-[10px] opacity-70">
+              <div className="text-label-md opacity-70">
                 The Architectural Vault
               </div>
             </div>
@@ -140,10 +140,10 @@ export default function RecoveryKitPage() {
           </div>
 
           <div className="mt-12 pt-12 border-t border-white/10 relative z-10">
-            <div className="text-[10px] uppercase tracking-widest opacity-40 mb-2">
+            <div className="text-label-md opacity-40 mb-2">
               Document ID
             </div>
-            <div className="font-mono text-xs opacity-60">{documentId}</div>
+            <div className="font-mono text-body-md opacity-60">{documentId}</div>
           </div>
         </aside>
 
@@ -153,10 +153,10 @@ export default function RecoveryKitPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
             <div className="space-y-5">
               <StepBadge label="Step 01" />
-              <h2 className="font-headline text-2xl text-primary font-extrabold tracking-tight">
+              <h2 className="text-headline-md text-primary">
                 Recovery QR Code
               </h2>
-              <p className="text-sm text-on-surface-variant leading-relaxed">
+              <p className="text-body-md text-on-surface-variant">
                 Scan this code using the Keeplas Recovery portal or any secure
                 Material-compatible device to initiate the vault restoration process.
               </p>
@@ -174,7 +174,7 @@ export default function RecoveryKitPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-2">
                 <StepBadge label="Step 02" />
-                <h2 className="font-headline text-2xl text-primary font-extrabold tracking-tight">
+                <h2 className="text-headline-md text-primary">
                   Recovery Seed Phrase
                 </h2>
               </div>
@@ -218,7 +218,7 @@ export default function RecoveryKitPage() {
                   )}
                   style={{ borderRadius: "50%" }}
                 />
-                <span className="text-[11px] font-mono">
+                <span className="text-label-md font-mono">
                   SECURE_AUTH_STATUS: {user?.recoveryVerified ? "VALIDATED" : "PENDING"}
                 </span>
               </div>
@@ -243,13 +243,13 @@ function QRPanel({ words }: { words: string[] | null }) {
         ) : (
           <div className="flex flex-col items-center justify-center text-on-surface-variant gap-3">
             <Icon path={ICON_PATHS.lock} className="w-12 h-12 opacity-30" />
-            <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+            <span className="text-label-md opacity-60">
               QR sealed until unlock
             </span>
           </div>
         )}
       </div>
-      <div className="absolute -bottom-3 bg-white px-4 py-1 shadow-sm ghost-border rounded-full text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">
+      <div className="absolute -bottom-3 bg-white px-4 py-1 shadow-sm ghost-border rounded-full text-label-md text-on-surface-variant">
         Secure Scan Point
       </div>
     </div>
@@ -284,10 +284,10 @@ function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void })
         className="bg-surface-container-low rounded-xl p-6 space-y-4"
       >
         <div className="space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+          <p className="text-label-md text-on-surface-variant">
             Unlock &amp; Reveal
           </p>
-          <p className="text-xs text-on-surface-variant leading-relaxed">
+          <p className="text-body-md text-on-surface-variant">
             Enter your recovery phrase to render the QR and seed grid. Your phrase is
             processed locally and never sent to Keeplas.
           </p>
@@ -314,7 +314,7 @@ function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void })
 
 function StepBadge({ label }: { label: string }) {
   return (
-    <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-[10px] font-bold uppercase tracking-widest rounded">
+    <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded">
       {label}
     </span>
   );
@@ -322,7 +322,7 @@ function StepBadge({ label }: { label: string }) {
 
 function CheckItem({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 text-sm text-primary font-semibold">
+    <div className="flex items-center gap-3 text-body-md text-primary font-semibold">
       <Icon path={ICON_PATHS.checkCircle} className="w-4 h-4 text-secondary" />
       <span>{label}</span>
     </div>
@@ -341,8 +341,8 @@ function FeatureCard({
   return (
     <div className="p-6 bg-white/5 rounded-xl space-y-3">
       <Icon path={icon} className="w-7 h-7 text-secondary-fixed" />
-      <h3 className="font-headline text-lg text-white font-bold">{title}</h3>
-      <p className="text-sm opacity-80 leading-relaxed">{description}</p>
+      <h3 className="text-headline-sm text-white">{title}</h3>
+      <p className="text-body-md opacity-80">{description}</p>
     </div>
   );
 }
@@ -365,7 +365,7 @@ function PhraseBlock({
     >
       <span
         className={cn(
-          "text-[10px] font-bold",
+          "text-label-md",
           masked
             ? "text-on-surface-variant/40"
             : "text-on-surface-variant/50 group-hover:text-white/50"
@@ -375,7 +375,7 @@ function PhraseBlock({
       </span>
       <span
         className={cn(
-          "font-mono text-sm font-bold uppercase tracking-wider truncate",
+          "font-mono text-body-md font-bold uppercase tracking-wider truncate",
           masked
             ? "text-outline-variant"
             : "text-primary group-hover:text-white"
@@ -407,11 +407,11 @@ function BottomInfoCard({
         <Icon path={icon} className="w-5 h-5 text-primary" />
       </div>
       <div className="space-y-1">
-        <div className="font-bold text-xs uppercase tracking-wider text-on-surface">
+        <div className="text-label-md text-on-surface">
           {title}
         </div>
         {children}
-        <p className="text-[11px] text-on-surface-variant leading-normal">{description}</p>
+        <p className="text-body-md text-on-surface-variant">{description}</p>
       </div>
     </div>
   );

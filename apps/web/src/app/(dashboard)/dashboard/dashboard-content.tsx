@@ -61,10 +61,10 @@ export function DashboardContent() {
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
         <div>
-          <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight leading-none mb-2">
+          <h1 className="text-headline-lg text-primary mb-2">
             Welcome back, {firstName}.
           </h1>
-          <p className="text-on-surface-variant font-body text-sm md:text-base max-w-xl">
+          <p className="text-on-surface-variant text-body-lg max-w-xl">
             Your legacy is protected and synchronized across all secure nodes.
           </p>
         </div>
@@ -86,10 +86,10 @@ export function DashboardContent() {
             className="w-6 h-6 text-secondary-fixed shrink-0 mt-0.5"
           />
           <div className="flex-1">
-            <h3 className="font-headline font-bold text-on-primary mb-1">
+            <h3 className="text-headline-sm text-on-primary mb-1">
               Vault not protected in emergency
             </h3>
-            <p className="text-sm text-on-primary-container leading-relaxed">
+            <p className="text-body-md text-on-primary-container">
               Without a trusted contact, no one can access your vault if something happens to you.
             </p>
           </div>
@@ -142,8 +142,8 @@ export function DashboardContent() {
                 </span>
               </div>
             </div>
-            <h3 className="font-headline font-bold text-base text-primary">Vault Integrity</h3>
-            <p className="text-sm text-on-surface-variant mt-2 leading-relaxed max-w-[220px]">
+            <h3 className="text-headline-sm text-primary">Vault Integrity</h3>
+            <p className="text-body-md text-on-surface-variant mt-2 max-w-[220px]">
               {data.nudgeMessage}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function DashboardContent() {
           {/* Priority Actions */}
           {data.priorityActions.length > 0 && (
             <div>
-              <h4 className="font-label text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-3 px-1">
+              <h4 className="text-label-md text-on-surface-variant mb-3 px-1">
                 Priority Actions
               </h4>
               <div className="space-y-2">
@@ -214,10 +214,10 @@ export function DashboardContent() {
                     </span>
                   </div>
                   <div>
-                    <p className={`text-lg font-headline font-extrabold ${isIncomplete ? "text-on-primary" : "text-primary"}`}>
+                    <p className={`text-headline-sm ${isIncomplete ? "text-on-primary" : "text-primary"}`}>
                       {cat.label}
                     </p>
-                    <p className={`text-[11px] mt-1 uppercase tracking-tight ${isIncomplete ? "text-on-primary-container" : "text-on-surface-variant"}`}>
+                    <p className={`text-label-md mt-1 ${isIncomplete ? "text-on-primary-container" : "text-on-surface-variant"}`}>
                       {count === 0
                         ? "Critical: 0 Items Synced"
                         : `${count} ${count === 1 ? "item" : "items"} secured`}
@@ -231,7 +231,7 @@ export function DashboardContent() {
           {/* Recent Activity */}
           <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h4 className="font-label text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+              <h4 className="text-label-md text-on-surface-variant">
                 Recent Activity
               </h4>
               {data.totalItems > 0 && (

@@ -22,10 +22,10 @@ export default function PublicEmergencyPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
             </svg>
           </div>
-          <h1 className="font-headline text-2xl font-bold text-primary mb-2">
+          <h1 className="text-headline-md text-primary mb-2">
             Card Not Found
           </h1>
-          <p className="text-on-surface-variant">
+          <p className="text-body-lg text-on-surface-variant">
             This emergency card is no longer active or does not exist.
           </p>
         </div>
@@ -54,21 +54,21 @@ export default function PublicEmergencyPage() {
               </svg>
             </div>
             <div>
-              <span className="text-[0.65rem] uppercase tracking-[0.2em] font-label opacity-70">
+              <span className="text-label-md opacity-70">
                 Keeplas Emergency Card
               </span>
             </div>
           </div>
 
           {card.fullName && (
-            <h1 className="font-headline font-extrabold text-4xl mb-2">
+            <h1 className="text-display-lg mb-2">
               {card.fullName}
             </h1>
           )}
 
           <div className="flex items-center gap-2 mt-4">
             <div className="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse" />
-            <span className="text-sm font-medium tracking-wide opacity-80">ACTIVE PROTECTION</span>
+            <span className="text-body-md opacity-80">Active Protection</span>
           </div>
         </div>
       </header>
@@ -82,20 +82,20 @@ export default function PublicEmergencyPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {card.bloodType && (
                   <div className="bg-surface-container-low rounded-xl p-6">
-                    <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-2">
+                    <span className="text-label-md text-on-surface-variant block mb-2">
                       Blood Type
                     </span>
-                    <p className="font-headline font-bold text-3xl text-primary">
+                    <p className="text-headline-md text-primary">
                       {card.bloodType}
                     </p>
                   </div>
                 )}
                 {card.allergies && (
                   <div className="bg-surface-container-low rounded-xl p-6">
-                    <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-2">
+                    <span className="text-label-md text-on-surface-variant block mb-2">
                       Allergies
                     </span>
-                    <p className="font-headline font-bold text-lg text-primary whitespace-pre-line">
+                    <p className="text-headline-sm text-primary whitespace-pre-line">
                       {card.allergies}
                     </p>
                   </div>
@@ -106,10 +106,10 @@ export default function PublicEmergencyPage() {
             {/* Medical Conditions */}
             {card.medicalConditions && (
               <div className="bg-surface-container-low rounded-xl p-6">
-                <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-2">
+                <span className="text-label-md text-on-surface-variant block mb-2">
                   Medical Conditions
                 </span>
-                <p className="font-headline font-bold text-lg text-primary whitespace-pre-line">
+                <p className="text-headline-sm text-primary whitespace-pre-line">
                   {card.medicalConditions}
                 </p>
               </div>
@@ -118,10 +118,10 @@ export default function PublicEmergencyPage() {
             {/* Medications */}
             {card.medications && (
               <div className="bg-surface-container-low rounded-xl p-6">
-                <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-2">
+                <span className="text-label-md text-on-surface-variant block mb-2">
                   Current Medications
                 </span>
-                <p className="font-headline font-bold text-lg text-primary whitespace-pre-line">
+                <p className="text-headline-sm text-primary whitespace-pre-line">
                   {card.medications}
                 </p>
               </div>
@@ -130,13 +130,13 @@ export default function PublicEmergencyPage() {
             {/* Emergency Contact */}
             {card.emergencyContactName && (
               <div className="bg-primary-container rounded-xl p-6">
-                <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-primary-container block mb-2">
+                <span className="text-label-md text-on-primary-container block mb-2">
                   Emergency Contact
                 </span>
-                <p className="font-headline font-bold text-xl text-on-primary">
+                <p className="text-headline-sm text-on-primary">
                   {card.emergencyContactName}
                   {card.emergencyContactRelation && (
-                    <span className="text-on-primary-container font-normal text-base ml-2">
+                    <span className="text-body-md text-on-primary-container font-normal ml-2">
                       ({card.emergencyContactRelation})
                     </span>
                   )}
@@ -144,7 +144,7 @@ export default function PublicEmergencyPage() {
                 {card.emergencyContactPhone && (
                   <a
                     href={`tel:${card.emergencyContactPhone}`}
-                    className="text-secondary-fixed font-bold text-lg mt-1 block hover:underline"
+                    className="text-headline-sm text-secondary-fixed mt-1 block hover:underline"
                   >
                     {card.emergencyContactPhone}
                   </a>
@@ -155,10 +155,10 @@ export default function PublicEmergencyPage() {
             {/* Additional Notes */}
             {card.additionalNotes && (
               <div className="bg-surface-container-low rounded-xl p-6">
-                <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-2">
+                <span className="text-label-md text-on-surface-variant block mb-2">
                   Additional Notes
                 </span>
-                <p className="text-on-surface whitespace-pre-line">
+                <p className="text-body-lg text-on-surface whitespace-pre-line">
                   {card.additionalNotes}
                 </p>
               </div>
@@ -166,21 +166,21 @@ export default function PublicEmergencyPage() {
           </div>
         ) : (
           <div className="text-center py-12 text-on-surface-variant">
-            <p className="text-lg">No emergency information has been shared on this card.</p>
+            <p className="text-body-lg">No emergency information has been shared on this card.</p>
           </div>
         )}
       </main>
 
       {/* Footer */}
       <footer className="max-w-2xl mx-auto px-6 py-8 text-center">
-        <p className="text-xs text-on-surface-variant uppercase tracking-widest">
+        <p className="text-label-md text-on-surface-variant">
           Last updated: {new Date(card.updatedAt).toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
             day: "numeric",
           })}
         </p>
-        <p className="text-xs text-on-surface-variant mt-2 uppercase tracking-widest">
+        <p className="text-label-md text-on-surface-variant mt-2">
           Powered by Keeplas — Life Continuity Platform
         </p>
       </footer>

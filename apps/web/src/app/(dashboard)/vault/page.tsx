@@ -86,10 +86,10 @@ export default function VaultPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
-          <h1 className="font-headline text-5xl font-extrabold text-primary tracking-tighter leading-none">
+          <h1 className="text-headline-lg text-primary">
             Digital Vault
           </h1>
-          <p className="text-on-surface-variant max-w-md">
+          <p className="text-body-lg text-on-surface-variant max-w-md">
             Your life&apos;s core documentation, secured with end-to-end zero-knowledge
             encryption.
           </p>
@@ -109,13 +109,13 @@ export default function VaultPage() {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 bg-primary text-white p-8 rounded-full flex flex-col justify-between relative overflow-hidden min-h-[220px]">
           <div className="relative z-10">
-            <span className="inline-block bg-secondary px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.2em] font-bold">
+            <span className="inline-block bg-secondary px-3 py-1 rounded-full text-label-md">
               Status: Active
             </span>
-            <h3 className="text-3xl font-headline font-bold mt-4">
+            <h3 className="text-headline-md mt-4">
               Vault Integrity: {integrityScore}%
             </h3>
-            <p className="text-on-primary-container mt-2 max-w-sm leading-relaxed">
+            <p className="text-body-md text-on-primary-container mt-2 max-w-sm">
               {totalItems === 0
                 ? "Empty vault. Add your first encrypted block to establish integrity."
                 : `System last verified ${lastVerifiedTs ? formatTimeAgo(lastVerifiedTs) : "recently"}. No vulnerabilities detected in ${encryptedBlocks.toLocaleString()} encrypted blocks.`}
@@ -124,16 +124,16 @@ export default function VaultPage() {
 
           <div className="flex mt-8 gap-4 relative z-10">
             <div className="bg-primary-container p-4 rounded-xl flex-1">
-              <p className="text-[10px] uppercase tracking-widest text-on-primary-container">
+              <p className="text-label-md text-on-primary-container">
                 Encrypted Items
               </p>
-              <p className="text-2xl font-headline font-bold">{totalItems}</p>
+              <p className="text-headline-md">{totalItems}</p>
             </div>
             <div className="bg-primary-container p-4 rounded-xl flex-1">
-              <p className="text-[10px] uppercase tracking-widest text-on-primary-container">
+              <p className="text-label-md text-on-primary-container">
                 Secure Nodes
               </p>
-              <p className="text-2xl font-headline font-bold">{secureNodes}</p>
+              <p className="text-headline-md">{secureNodes}</p>
             </div>
           </div>
 
@@ -144,15 +144,15 @@ export default function VaultPage() {
 
         <div className="bg-surface-container-low p-8 rounded-full ghost-border flex flex-col items-center justify-center text-center">
           <Icon path={ICON_PATHS.history} className="w-10 h-10 text-secondary mb-4" />
-          <p className="text-sm font-medium text-on-surface-variant uppercase tracking-widest">
+          <p className="text-label-md text-on-surface-variant">
             Last Access
           </p>
-          <p className="text-xl font-headline font-bold text-primary mt-1">
+          <p className="text-headline-sm text-primary mt-1">
             {lastAccessTs
               ? `Today, ${formatTimeShort(lastAccessTs)}`
               : "No access recorded"}
           </p>
-          <p className="text-xs text-on-surface-variant mt-2">
+          <p className="text-body-md text-on-surface-variant mt-2">
             Verified Device · Zero-Knowledge Session
           </p>
         </div>
@@ -250,23 +250,23 @@ function VaultSection({
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-headline font-bold flex items-center gap-3 text-primary">
+        <h2 className="text-headline-md flex items-center gap-3 text-primary">
           <span className={cn("w-2 h-8 rounded-full", accent)} />
           {title}
         </h2>
         {showViewAll && (
-          <button className="text-secondary text-sm font-bold hover:underline cursor-pointer">
+          <button className="text-secondary text-body-md font-bold hover:underline cursor-pointer">
             View All
           </button>
         )}
       </div>
       {isEmpty ? (
         <div className="bg-surface-container-low rounded-full p-10 text-center">
-          <p className="text-on-surface-variant mb-4">{emptyMessage}</p>
+          <p className="text-body-lg text-on-surface-variant mb-4">{emptyMessage}</p>
           {onAdd && (
             <button
               onClick={onAdd}
-              className="text-secondary text-sm font-bold hover:underline cursor-pointer"
+              className="text-secondary text-body-md font-bold hover:underline cursor-pointer"
             >
               Add entry
             </button>
@@ -295,10 +295,10 @@ function DocumentCard({ item }: { item: Doc<"vault_items"> }) {
           className="w-4 h-4 text-secondary"
         />
       </div>
-      <h4 className="font-headline font-bold text-lg text-primary truncate">
+      <h4 className="text-headline-sm text-primary truncate">
         {item.title}
       </h4>
-      <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
+      <p className="text-label-md text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>
     </Link>
@@ -318,16 +318,16 @@ function FinancialTable({ items }: { items: Doc<"vault_items">[] }) {
       <table className="w-full text-left border-collapse">
         <thead className="border-b border-outline-variant/10">
           <tr>
-            <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
+            <th className="px-8 py-5 text-label-md text-on-surface-variant">
               Asset Name
             </th>
-            <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
+            <th className="px-8 py-5 text-label-md text-on-surface-variant">
               Encryption Status
             </th>
-            <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
+            <th className="px-8 py-5 text-label-md text-on-surface-variant">
               Last Updated
             </th>
-            <th className="px-8 py-5 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant text-right">
+            <th className="px-8 py-5 text-label-md text-on-surface-variant text-right">
               Action
             </th>
           </tr>
@@ -348,12 +348,12 @@ function FinancialTable({ items }: { items: Doc<"vault_items">[] }) {
                 </div>
               </td>
               <td className="px-8 py-6">
-                <span className="inline-flex items-center gap-2 text-xs font-bold text-on-tertiary-container bg-tertiary-fixed px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-2 text-label-md text-on-tertiary-container bg-tertiary-fixed px-3 py-1 rounded-full">
                   <Icon path={ICON_PATHS.verifiedFill} className="w-3.5 h-3.5" />
-                  ZERO-KNOWLEDGE
+                  Zero-Knowledge
                 </span>
               </td>
-              <td className="px-8 py-6 text-on-surface-variant text-sm">
+              <td className="px-8 py-6 text-body-md text-on-surface-variant">
                 {formatDate(item.updatedAt)}
               </td>
               <td className="px-8 py-6 text-right">
@@ -380,13 +380,13 @@ function MessageCard({ item }: { item: Doc<"vault_items"> }) {
       className="block bg-white p-6 rounded-full shadow-sm hover:shadow-md transition-shadow ghost-border"
     >
       <div className="flex justify-between items-center mb-3">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-error bg-error-container px-3 py-1 rounded-full">
+        <span className="text-label-md text-error bg-error-container px-3 py-1 rounded-full">
           Dead Man&apos;s Switch
         </span>
         <Icon path={ICON_PATHS.mail} className="w-5 h-5 text-on-surface-variant" />
       </div>
-      <h4 className="font-headline font-bold text-primary">{item.title}</h4>
-      <p className="text-sm text-on-surface-variant mt-2 line-clamp-2">
+      <h4 className="text-headline-sm text-primary">{item.title}</h4>
+      <p className="text-body-md text-on-surface-variant mt-2 line-clamp-2">
         {item.description ??
           "This message will be released when your life check protocol triggers."}
       </p>
@@ -408,10 +408,10 @@ function DigitalAssetRow({ item }: { item: Doc<"vault_items"> }) {
           <Icon path={iconPath} className="w-5 h-5 text-primary" />
         </div>
         <div className="min-w-0">
-          <h4 className="font-headline font-bold text-primary truncate">
+          <h4 className="text-headline-sm text-primary truncate">
             {item.title}
           </h4>
-          <p className="text-xs text-on-surface-variant uppercase tracking-widest truncate">
+          <p className="text-label-md text-on-surface-variant truncate">
             {sharedCount > 0
               ? `Shared with ${sharedCount} Contact${sharedCount === 1 ? "" : "s"}`
               : "Private"}

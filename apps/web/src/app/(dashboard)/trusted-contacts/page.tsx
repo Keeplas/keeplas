@@ -50,11 +50,11 @@ export default function TrustedContactsPage() {
     <div className="max-w-6xl mx-auto">
       {/* Hero */}
       <header className="mb-10 max-w-3xl">
-        <h1 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight mb-4 leading-tight">
+        <h1 className="text-headline-lg text-primary mb-4">
           Social Recovery &<br />
           <span className="text-secondary">Trusted Circles</span>
         </h1>
-        <p className="text-sm md:text-base text-on-surface-variant leading-relaxed">
+        <p className="text-body-lg text-on-surface-variant">
           Designate the individuals you trust to protect your legacy. These contacts act as your digital guardians, ensuring continuity when it matters most.
         </p>
       </header>
@@ -63,7 +63,7 @@ export default function TrustedContactsPage() {
         {/* Left — explanation + invite */}
         <aside className="lg:col-span-4 space-y-6">
           <section className="bg-surface-container-low p-6 rounded-2xl">
-            <h3 className="font-headline font-bold text-lg mb-5 text-primary">
+            <h3 className="text-headline-sm text-primary mb-5">
               The Role of Guardians
             </h3>
             <div className="space-y-6">
@@ -75,10 +75,10 @@ export default function TrustedContactsPage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-[11px] uppercase tracking-widest text-primary mb-1">
+                    <p className="text-label-md text-primary mb-1">
                       {role.title}
                     </p>
-                    <p className="text-sm text-on-surface-variant leading-normal">
+                    <p className="text-body-md text-on-surface-variant">
                       {role.description}
                     </p>
                   </div>
@@ -89,16 +89,16 @@ export default function TrustedContactsPage() {
 
           {/* Secure Invitation CTA */}
           <section className="relative overflow-hidden rounded-2xl vault-gradient p-6 text-on-primary shadow-xl">
-            <h3 className="font-headline font-bold text-base mb-2">
+            <h3 className="text-headline-sm mb-2">
               Secure Invitation
             </h3>
-            <p className="text-sm opacity-80 mb-5 leading-relaxed">
+            <p className="text-body-md opacity-80 mb-5">
               Each contact must verify their identity and accept their role via encrypted invitation.
             </p>
             <button
               onClick={() => setShowInviteDialog(true)}
               disabled={!canInvite}
-              className="w-full py-3 bg-secondary text-on-secondary font-bold text-sm rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
@@ -115,10 +115,10 @@ export default function TrustedContactsPage() {
             >
               <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Z" />
             </svg>
-            <p className="text-3xl font-headline font-black mb-1.5 text-on-primary">
+            <p className="text-headline-md font-black mb-1.5 text-on-primary">
               {activeContacts.length} / {MAX_CONTACTS}
             </p>
-            <p className="text-[11px] font-medium uppercase tracking-widest text-on-primary-container">
+            <p className="text-label-md text-on-primary-container">
               Network Strength: {activeContacts.length >= 3 ? "Stable" : activeContacts.length >= 1 ? "Developing" : "Unprotected"}
             </p>
             <div className="mt-3 h-1.5 w-full bg-primary rounded-full overflow-hidden">
@@ -135,7 +135,7 @@ export default function TrustedContactsPage() {
           {/* Warnings */}
           {activeContacts.length > 0 && !hasFirstResponder && (
             <div className="p-4 bg-secondary-fixed/20 rounded-xl border-l-4 border-secondary">
-              <p className="text-sm text-on-surface font-medium">
+              <p className="text-body-md text-on-surface font-medium">
                 No First Responder designated. Assign one contact as your First
                 Responder for Life Check escalation.
               </p>
@@ -143,7 +143,7 @@ export default function TrustedContactsPage() {
           )}
           {modeAContacts.length === 1 && (
             <div className="p-4 bg-error-container/30 rounded-xl border-l-4 border-error">
-              <p className="text-sm text-on-surface font-medium">
+              <p className="text-body-md text-on-surface font-medium">
                 Post-mortem access requires at least 2 contacts. Only{" "}
                 {modeAContacts[0].name} is currently assigned.
               </p>
@@ -159,10 +159,10 @@ export default function TrustedContactsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </div>
-              <h3 className="font-headline font-bold text-primary">
+              <h3 className="text-headline-sm text-primary">
                 Invite Your First Guardian
               </h3>
-              <p className="text-xs text-on-surface-variant mt-2 text-center max-w-xs">
+              <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
                 Up to {MAX_CONTACTS} trusted guardians can receive recovery fragments.
               </p>
             </div>
@@ -181,10 +181,10 @@ export default function TrustedContactsPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                   </div>
-                  <p className="font-headline font-bold text-primary text-sm">
+                  <p className="text-headline-sm text-primary">
                     Invite Next Contact
                   </p>
-                  <p className="text-[11px] text-on-surface-variant mt-1">
+                  <p className="text-label-md text-on-surface-variant mt-1">
                     {MAX_CONTACTS - activeContacts.length} slots remaining
                   </p>
                 </button>

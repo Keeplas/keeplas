@@ -84,10 +84,10 @@ function PriceDisplay({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
   if (plan.id === "lifetime") {
     return (
       <div className="flex items-baseline gap-2">
-        <span className={cn("text-5xl font-bold", plan.dark ? "text-white" : "text-on-surface")}>
+        <span className={cn("text-headline-lg", plan.dark ? "text-white" : "text-on-surface")}>
           {plan.priceOneTime}
         </span>
-        <span className={cn("text-sm", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
+        <span className={cn("text-body-md", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
           {plan.priceSuffix}
         </span>
       </div>
@@ -101,15 +101,15 @@ function PriceDisplay({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
   return (
     <div className="space-y-1">
       <div className="flex items-baseline gap-2">
-        <span className={cn("text-5xl font-bold", plan.dark ? "text-white" : "text-on-surface")}>
+        <span className={cn("text-headline-lg", plan.dark ? "text-white" : "text-on-surface")}>
           {display}
         </span>
-        <span className={cn("text-sm", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
+        <span className={cn("text-body-md", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
           {suffix}
         </span>
       </div>
       {plan.id === "keeper" && cycle === "monthly" && plan.yearlyHint && (
-        <p className="text-sm text-on-surface-variant">{plan.yearlyHint}</p>
+        <p className="text-body-md text-on-surface-variant">{plan.yearlyHint}</p>
       )}
     </div>
   );
@@ -121,10 +121,10 @@ export default function SubscriptionPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-10">
       <header className="space-y-3 text-center md:text-left">
-        <h1 className="font-headline text-primary text-3xl md:text-4xl font-extrabold tracking-tight">
+        <h1 className="text-headline-lg text-primary">
           Legacy Architecture. Secured Forever.
         </h1>
-        <p className="text-on-surface-variant max-w-2xl">
+        <p className="text-body-lg text-on-surface-variant max-w-2xl">
           Choose the protection level that fits your continuity plan. All tiers run the same
           zero-knowledge encryption — only the surface area changes.
         </p>
@@ -137,7 +137,7 @@ export default function SubscriptionPage() {
               key={c}
               onClick={() => setCycle(c)}
               className={cn(
-                "px-5 py-2 rounded-xl text-sm font-medium uppercase tracking-wider transition-all cursor-pointer",
+                "px-5 py-2 rounded-xl text-label-md transition-all cursor-pointer",
                 cycle === c
                   ? "bg-secondary text-on-secondary shadow"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -161,7 +161,7 @@ export default function SubscriptionPage() {
             )}
           >
             {plan.popular && (
-              <span className="absolute top-6 right-6 text-[10px] uppercase tracking-[0.2em] font-bold bg-secondary text-on-secondary px-3 py-1 rounded-full">
+              <span className="absolute top-6 right-6 text-label-md bg-secondary text-on-secondary px-3 py-1 rounded-full">
                 Popular
               </span>
             )}
@@ -170,13 +170,13 @@ export default function SubscriptionPage() {
               <div>
                 <h2
                   className={cn(
-                    "font-headline text-2xl font-bold",
+                    "text-headline-md",
                     plan.dark ? "text-white" : "text-primary"
                   )}
                 >
                   {plan.name}
                 </h2>
-                <p className={cn("text-sm mt-1", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
+                <p className={cn("text-body-md mt-1", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
                   {plan.tagline}
                 </p>
               </div>
@@ -206,7 +206,7 @@ export default function SubscriptionPage() {
                     </span>
                     <span
                       className={cn(
-                        "text-sm leading-relaxed",
+                        "text-body-md",
                         feature.included
                           ? plan.dark
                             ? "text-white"
@@ -241,7 +241,7 @@ export default function SubscriptionPage() {
         ))}
       </section>
 
-      <footer className="text-center text-xs text-on-surface-variant pt-6">
+      <footer className="text-center text-body-md text-on-surface-variant pt-6">
         Pricing displayed in USD. Switching plans never deletes your vault.
       </footer>
     </div>

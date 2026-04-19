@@ -71,10 +71,10 @@ export function SettingsHeader({
           <Icon path={ICON_PATHS.menu} className="w-5 h-5" />
         </button>
         <div className="min-w-0 space-y-1">
-          <DialogTitle className="font-headline text-xl md:text-2xl font-extrabold text-primary tracking-tight">
+          <DialogTitle className="text-headline-md text-primary">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-sm text-on-surface-variant">
+          <DialogDescription className="text-body-md text-on-surface-variant">
             {description}
           </DialogDescription>
         </div>

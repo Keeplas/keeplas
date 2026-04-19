@@ -23,24 +23,24 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
         <div className="vault-gradient p-8 text-on-primary">
           <div className="flex justify-between items-start mb-10">
             <div className="flex flex-col">
-              <span className="text-[0.65rem] uppercase tracking-[0.2em] font-label opacity-70 mb-1">
+              <span className="text-label-md opacity-70 mb-1">
                 Keeplas Identity
               </span>
-              <h2 className="font-headline font-extrabold text-3xl">
+              <h2 className="text-headline-md">
                 {toggles.showFullName && formData.fullName
                   ? formData.fullName
                   : "Your Name"}
               </h2>
             </div>
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-on-primary font-headline font-bold text-lg">
+            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-on-primary text-headline-sm">
               {formData.fullName ? formData.fullName.charAt(0).toUpperCase() : "?"}
             </div>
           </div>
           <div>
-            <span className="text-[0.6rem] uppercase tracking-widest font-label opacity-60">Status</span>
+            <span className="text-label-md opacity-60">Status</span>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse" />
-              <span className="text-sm font-medium tracking-wide">ACTIVE PROTECTION</span>
+              <span className="text-body-md font-medium">Active Protection</span>
             </div>
           </div>
         </div>
@@ -54,20 +54,20 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                 <div className="grid grid-cols-2 gap-8">
                   {toggles.showBloodType && (
                     <div>
-                      <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                      <span className="text-label-md text-on-surface-variant block mb-1">
                         Blood Type
                       </span>
-                      <p className="font-headline font-bold text-2xl text-primary">
+                      <p className="text-headline-md text-primary">
                         {formData.bloodType || "—"}
                       </p>
                     </div>
                   )}
                   {toggles.showAllergies && (
                     <div>
-                      <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                      <span className="text-label-md text-on-surface-variant block mb-1">
                         Allergies
                       </span>
-                      <p className="font-headline font-bold text-lg text-primary">
+                      <p className="text-headline-sm text-primary">
                         {formData.allergies || "None Recorded"}
                       </p>
                     </div>
@@ -78,10 +78,10 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
               {/* Medical Conditions */}
               {toggles.showMedicalConditions && (
                 <div>
-                  <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                  <span className="text-label-md text-on-surface-variant block mb-1">
                     Medical Conditions
                   </span>
-                  <p className="font-headline font-bold text-lg text-primary">
+                  <p className="text-headline-sm text-primary">
                     {formData.medicalConditions || "None Recorded"}
                   </p>
                 </div>
@@ -90,10 +90,10 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
               {/* Medications */}
               {toggles.showMedications && (
                 <div>
-                  <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                  <span className="text-label-md text-on-surface-variant block mb-1">
                     Current Medications
                   </span>
-                  <p className="font-headline font-bold text-lg text-primary">
+                  <p className="text-headline-sm text-primary">
                     {formData.medications || "None"}
                   </p>
                 </div>
@@ -102,16 +102,16 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
               {/* Emergency Contact */}
               {toggles.showEmergencyContact && (
                 <div>
-                  <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                  <span className="text-label-md text-on-surface-variant block mb-1">
                     Emergency Contact
                   </span>
-                  <p className="font-headline font-bold text-lg text-primary">
+                  <p className="text-headline-sm text-primary">
                     {formData.emergencyContactName
                       ? `${formData.emergencyContactName}${formData.emergencyContactRelation ? ` (${formData.emergencyContactRelation})` : ""}`
                       : "Not Set"}
                   </p>
                   {formData.emergencyContactPhone && (
-                    <p className="text-secondary font-medium">
+                    <p className="text-body-md text-secondary font-medium">
                       {formData.emergencyContactPhone}
                     </p>
                   )}
@@ -121,10 +121,10 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
               {/* Additional Notes */}
               {toggles.showAdditionalNotes && formData.additionalNotes && (
                 <div>
-                  <span className="text-[0.65rem] uppercase tracking-widest font-label text-on-surface-variant block mb-1">
+                  <span className="text-label-md text-on-surface-variant block mb-1">
                     Notes
                   </span>
-                  <p className="text-on-surface text-sm">
+                  <p className="text-body-md text-on-surface">
                     {formData.additionalNotes}
                   </p>
                 </div>
@@ -132,8 +132,8 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
             </div>
           ) : (
             <div className="text-center py-8 text-on-surface-variant">
-              <p className="font-headline font-bold text-lg mb-2">No fields visible</p>
-              <p className="text-sm">Toggle on privacy controls to display information on your card.</p>
+              <p className="text-headline-sm mb-2">No fields visible</p>
+              <p className="text-body-md">Toggle on privacy controls to display information on your card.</p>
             </div>
           )}
 
@@ -144,13 +144,13 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                 <QRCodeSVG value={qrUrl} size={128} />
               ) : (
                 <div className="w-32 h-32 bg-surface-container-high rounded-lg flex items-center justify-center">
-                  <span className="text-xs text-on-surface-variant text-center px-2">
+                  <span className="text-body-md text-on-surface-variant text-center px-2">
                     QR code will appear after saving
                   </span>
                 </div>
               )}
             </div>
-            <p className="text-[0.7rem] uppercase tracking-[0.15em] font-label text-on-surface-variant text-center leading-relaxed">
+            <p className="text-label-md text-on-surface-variant text-center">
               Scan for Emergency Info<br />& Medical Directives
             </p>
           </div>

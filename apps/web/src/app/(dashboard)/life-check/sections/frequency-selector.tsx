@@ -14,11 +14,11 @@ interface FrequencySelectorProps {
 export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
   return (
     <section className="bg-surface-container-low rounded-2xl p-6 relative overflow-hidden">
-      <h3 className="text-lg font-bold font-headline text-primary mb-1.5 flex items-center gap-2">
+      <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
         <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
         Inactivity Threshold
       </h3>
-      <p className="text-on-surface-variant text-xs md:text-sm mb-6">
+      <p className="text-body-md text-on-surface-variant mb-6">
         The period of total silence before the verification sequence begins.
       </p>
       <div className="grid grid-cols-3 gap-3">
@@ -35,21 +35,21 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
               }
             >
               <span
-                className={`text-2xl font-black font-headline ${
+                className={`text-headline-md font-black ${
                   selected ? "" : "text-primary group-hover:text-secondary"
                 }`}
               >
                 {freq.label}
               </span>
               <span
-                className={`text-[10px] uppercase font-bold tracking-tighter mt-1 ${
+                className={`text-label-md mt-1 ${
                   selected ? "opacity-80" : "text-on-surface-variant"
                 }`}
               >
                 {freq.unit}
               </span>
               <span
-                className={`text-[9px] uppercase tracking-widest mt-1 ${
+                className={`text-label-md mt-1 ${
                   selected ? "opacity-60" : "text-on-surface-variant/60"
                 }`}
               >

@@ -69,18 +69,18 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             onImageError={() => setAvatarUrl("")}
           />
           <div className="space-y-1 flex-1 min-w-0">
-            <h3 className="font-headline text-lg font-bold text-primary truncate">
+            <h3 className="text-headline-sm text-primary truncate">
               {name || "Unnamed Curator"}
             </h3>
-            <p className="text-xs text-on-surface-variant truncate">
+            <p className="text-body-md text-on-surface-variant truncate">
               Curator since {curatorSince}
             </p>
             <div className="pt-2 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-headline uppercase tracking-wider bg-secondary-container text-on-secondary-container">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
                 Verified Identity
               </span>
               {user.recoveryVerified && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-headline uppercase tracking-wider bg-primary-container text-on-primary-container">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-primary-container text-on-primary-container">
                   Recovery Set
                 </span>
               )}
@@ -91,7 +91,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <Label
             htmlFor="display-name"
-            className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline"
+            className="text-label-md text-secondary"
           >
             Display Name
           </Label>
@@ -106,7 +106,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <Label
             htmlFor="email"
-            className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline"
+            className="text-label-md text-secondary"
           >
             Primary Email
           </Label>
@@ -117,7 +117,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             disabled
             className="opacity-70"
           />
-          <p className="text-[10px] text-on-surface-variant mt-1">
+          <p className="text-label-md text-on-surface-variant mt-1">
             Managed by your auth provider
           </p>
         </div>
@@ -125,7 +125,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <Label
             htmlFor="phone"
-            className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline"
+            className="text-label-md text-secondary"
           >
             Phone Number
           </Label>
@@ -141,7 +141,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <Label
             htmlFor="avatar"
-            className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline"
+            className="text-label-md text-secondary"
           >
             Avatar URL
           </Label>
@@ -155,7 +155,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
         <div className="col-span-full flex items-center justify-start gap-4">
           {saved && (
-            <span className="text-xs text-secondary font-medium">
+            <span className="text-body-md text-secondary font-medium">
               Profile updated ✓
             </span>
           )}
