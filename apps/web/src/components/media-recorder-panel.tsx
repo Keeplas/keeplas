@@ -436,10 +436,10 @@ export function MediaRecorderPanel({
             />
           </div>
           <div>
-            <p className="font-headline font-bold text-primary text-sm">
+            <p className="text-headline-sm text-primary">
               {mode === "audio" ? "Voice recording" : "Video recording"}
             </p>
-            <p className="text-[11px] text-on-surface-variant">{subheadline}</p>
+            <p className="text-label-md text-on-surface-variant">{subheadline}</p>
           </div>
         </div>
         <button
@@ -455,7 +455,7 @@ export function MediaRecorderPanel({
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-3 bg-error-container/40 text-on-error-container text-xs rounded-xl px-4 py-3"
+          className="flex items-start gap-3 bg-error-container/40 text-on-error-container text-body-md rounded-xl px-4 py-3"
         >
           <Icon path={ICON_PATHS.warning} className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="flex-1">{error}</span>
@@ -463,7 +463,7 @@ export function MediaRecorderPanel({
             <button
               type="button"
               onClick={handleRetryWarm}
-              className="font-bold uppercase tracking-[0.12em] text-[10px] hover:underline cursor-pointer"
+              className="text-label-md hover:underline cursor-pointer"
             >
               Try again
             </button>
@@ -482,7 +482,7 @@ export function MediaRecorderPanel({
             className="w-full h-full object-cover"
           />
           {phase === "warming" && (
-            <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant text-xs gap-2 bg-surface-container-high/60">
+            <div className="absolute inset-0 flex items-center justify-center text-body-md text-on-surface-variant gap-2 bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
@@ -491,7 +491,7 @@ export function MediaRecorderPanel({
             </div>
           )}
           {(phase === "live" || phase === "recording") && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-[10px] font-bold uppercase tracking-[0.15em] px-3 py-1 rounded-full">
+            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-label-md px-3 py-1 rounded-full">
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full",
@@ -512,7 +512,7 @@ export function MediaRecorderPanel({
             aria-hidden
           />
           {phase === "warming" && (
-            <div className="absolute inset-0 flex items-center justify-center gap-2 text-xs text-on-surface-variant bg-surface-container-high/60">
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-body-md text-on-surface-variant bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
@@ -521,7 +521,7 @@ export function MediaRecorderPanel({
             </div>
           )}
           {(phase === "live" || phase === "recording") && (
-            <div className="absolute top-2 right-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+            <div className="absolute top-2 right-3 flex items-center gap-2 text-label-md text-on-surface-variant">
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full",
@@ -540,10 +540,10 @@ export function MediaRecorderPanel({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error/70 opacity-75" />
             <span className="relative inline-flex rounded-full h-3 w-3 bg-error" />
           </span>
-          <span className="font-mono text-sm text-primary tabular-nums">
+          <span className="font-mono text-body-md text-primary tabular-nums">
             {formatDuration(elapsed)}
           </span>
-          <span className="ml-auto text-[11px] text-on-surface-variant">
+          <span className="ml-auto text-label-md text-on-surface-variant">
             {formatDuration(Math.max(0, remainingSec))} left
           </span>
         </div>
@@ -567,7 +567,7 @@ export function MediaRecorderPanel({
         <button
           type="button"
           onClick={handleCancelAll}
-          className="text-on-surface-variant hover:text-primary font-headline font-bold text-sm transition-colors cursor-pointer"
+          className="text-body-md font-bold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
           Cancel
         </button>

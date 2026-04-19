@@ -75,10 +75,10 @@ export function InviteContactDialog({
       <DialogContent className="bg-surface max-w-lg">
         <DialogHeader>
           <div className="flex-1 min-w-0">
-            <DialogTitle className="font-headline text-primary text-xl font-bold">
+            <DialogTitle>
               Invite Trusted Contact
             </DialogTitle>
-            <DialogDescription className="text-on-surface-variant mt-1">
+            <DialogDescription className="mt-1">
               This person will receive a recovery fragment and can help you regain
               access to your vault.
             </DialogDescription>

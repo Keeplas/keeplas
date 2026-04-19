@@ -17,16 +17,16 @@ export function ActiveCycleBanner({
     <div className="mb-8 bg-primary-container text-on-primary-container rounded-2xl p-6">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-headline font-bold text-on-primary mb-1">
+          <h3 className="text-headline-sm text-on-primary mb-1">
             Life Check Active
           </h3>
-          <p className="text-sm text-on-primary-container/90">
+          <p className="text-body-md text-on-primary-container/90">
             {status === "running"
               ? "Please confirm you are well."
               : "Escalation in progress."}
           </p>
         </div>
-        <span className="text-xs px-3 py-1 rounded-full bg-secondary text-on-secondary font-bold uppercase tracking-widest">
+        <span className="text-label-md px-3 py-1 rounded-full bg-secondary text-on-secondary">
           Level {currentLevel}
         </span>
       </div>

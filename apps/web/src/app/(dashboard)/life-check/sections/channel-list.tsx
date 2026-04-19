@@ -14,7 +14,7 @@ export function ChannelList({ channels, onToggle }: ChannelListProps) {
 
   return (
     <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
-      <h3 className="text-lg font-bold font-headline text-primary mb-5 flex items-center gap-2">
+      <h3 className="text-headline-sm text-primary mb-5 flex items-center gap-2">
         <Icon path={ICON_PATHS.bell} className="w-5 h-5 text-secondary" />
         Verification Channels
       </h3>
@@ -31,8 +31,8 @@ export function ChannelList({ channels, onToggle }: ChannelListProps) {
                 <Icon path={ch.iconPath} className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-primary text-sm">{ch.label}</p>
-                <p className="text-xs text-on-surface-variant">
+                <p className="text-body-md font-bold text-primary">{ch.label}</p>
+                <p className="text-body-md text-on-surface-variant">
                   {ch.description}
                 </p>
               </div>

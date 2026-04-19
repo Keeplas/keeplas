@@ -27,7 +27,7 @@ const LegacyCardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-headline text-xl font-semibold leading-none tracking-tight",
+      "text-headline-sm",
       className
     )}
     {...props}

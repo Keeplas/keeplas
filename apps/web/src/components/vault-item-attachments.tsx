@@ -47,7 +47,7 @@ export function VaultItemAttachments({
 
   if (files === undefined) {
     return (
-      <div className="bg-surface-container-low rounded-2xl p-6 flex items-center gap-3 text-on-surface-variant text-sm">
+      <div className="bg-surface-container-low rounded-2xl p-6 flex items-center gap-3 text-body-md text-on-surface-variant">
         <Spinner size="sm" />
         Loading secure attachments…
       </div>
@@ -60,7 +60,7 @@ export function VaultItemAttachments({
     <section className="space-y-4">
       <div className="flex items-center gap-2">
         <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
-        <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
+        <span className="text-label-md text-secondary">
           Secure Attachments · {files.length}
         </span>
       </div>
@@ -143,17 +143,17 @@ function AttachmentCard({ file }: { file: AttachmentFile }) {
             <Icon path={iconForKind(file.kind)} className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="font-headline font-bold text-primary text-sm truncate">
+            <p className="text-headline-sm text-primary truncate">
               {file.name}
             </p>
-            <p className="text-[11px] text-on-surface-variant mt-0.5">{meta}</p>
+            <p className="text-label-md text-on-surface-variant mt-0.5">{meta}</p>
           </div>
         </div>
         {plainUrl && (
           <a
             href={plainUrl}
             download={file.name}
-            className="flex items-center gap-2 text-[10px] font-label font-bold uppercase tracking-[0.15em] text-secondary hover:text-primary transition-colors cursor-pointer"
+            className="flex items-center gap-2 text-label-md text-secondary hover:text-primary transition-colors cursor-pointer"
           >
             <Icon path={ICON_PATHS.download} className="w-4 h-4" />
             Download
@@ -162,14 +162,14 @@ function AttachmentCard({ file }: { file: AttachmentFile }) {
       </header>
 
       {decrypting && !plainUrl && (
-        <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+        <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
           <Spinner size="sm" />
           Decrypting…
         </div>
       )}
 
       {error && (
-        <p className="text-xs text-error bg-error-container/30 rounded-lg px-3 py-2">
+        <p className="text-body-md text-error bg-error-container/30 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
@@ -198,7 +198,7 @@ function AttachmentCard({ file }: { file: AttachmentFile }) {
       )}
 
       {plainUrl && file.kind === "document" && (
-        <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3 text-xs text-on-surface-variant">
+        <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3 text-body-md text-on-surface-variant">
           <Icon path={ICON_PATHS.pictureAsPdf} className="w-4 h-4 text-secondary" />
           Document ready — open or download to view.
           <a

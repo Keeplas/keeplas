@@ -11,7 +11,7 @@ interface ContactSectionProps {
 export function ContactSection({ formData, onUpdate }: ContactSectionProps) {
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
-      <h3 className="font-headline font-bold text-lg text-primary">
+      <h3 className="text-headline-sm text-primary">
         Emergency Contact
       </h3>
 

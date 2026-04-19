@@ -143,14 +143,14 @@ export function ContactCard({ contact }: ContactCardProps) {
       <div className="flex items-start justify-between mb-5">
         <div className={cn("w-12 h-12 rounded-full border-2 p-0.5", statusConfig.avatarBorder)}>
           <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
-            <span className="font-headline font-bold text-on-primary-container text-xs">
+            <span className="text-label-md text-on-primary-container">
               {initials}
             </span>
           </div>
         </div>
         <span
           className={cn(
-            "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full",
+            "px-3 py-1 text-label-md rounded-full",
             statusConfig.className
           )}
         >
@@ -159,10 +159,10 @@ export function ContactCard({ contact }: ContactCardProps) {
       </div>
 
       {/* Name + Email */}
-      <h3 className="font-headline font-bold text-lg text-primary">
+      <h3 className="text-headline-sm text-primary">
         {contact.name}
       </h3>
-      <p className="text-xs text-on-surface-variant mb-5 truncate">
+      <p className="text-body-md text-on-surface-variant mb-5 truncate">
         {contact.email}
       </p>
 
@@ -176,13 +176,13 @@ export function ContactCard({ contact }: ContactCardProps) {
             <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d={badge.icon} />
             </svg>
-            <span className="text-[10px] font-bold uppercase tracking-tight text-primary">
+            <span className="text-label-md text-primary">
               {badge.label}
             </span>
           </span>
         ))}
         {contact.shardConfirmed && (
-          <span className="text-[10px] px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container font-bold uppercase tracking-tight">
+          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
             Fragment Assigned
           </span>
         )}
@@ -194,7 +194,7 @@ export function ContactCard({ contact }: ContactCardProps) {
           {contact.accessModes.map((mode) => (
             <span
               key={mode}
-              className="text-[10px] px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium"
+              className="text-label-md px-2 py-0.5 rounded bg-surface-container text-on-surface-variant"
             >
               {ACCESS_MODE_LABELS[mode] ?? mode}
             </span>
@@ -207,12 +207,12 @@ export function ContactCard({ contact }: ContactCardProps) {
         {contact.invitationStatus === "accepted" ? (
           <button
             onClick={() => setShowActions(!showActions)}
-            className="text-xs font-bold text-secondary hover:underline cursor-pointer"
+            className="text-body-md font-bold text-secondary hover:underline cursor-pointer"
           >
             {showActions ? "Hide access" : "Manage Access"}
           </button>
         ) : (
-          <span className="text-xs font-bold text-primary/40">
+          <span className="text-body-md font-bold text-primary/40">
             Awaiting Verification
           </span>
         )}

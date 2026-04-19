@@ -10,7 +10,7 @@ interface NotesSectionProps {
 export function NotesSection({ value, onChange }: NotesSectionProps) {
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
-      <h3 className="font-headline font-bold text-lg text-primary">
+      <h3 className="text-headline-sm text-primary">
         Additional Notes
       </h3>
       <Textarea

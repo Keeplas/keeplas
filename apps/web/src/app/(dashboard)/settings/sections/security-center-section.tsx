@@ -70,16 +70,16 @@ export function SecurityCenterSection() {
           <div>
             <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
               <div>
-                <h2 className="font-headline text-xl font-bold text-primary mb-2">
+                <h2 className="text-headline-md text-primary mb-2">
                   Social Recovery
                 </h2>
-                <p className="text-xs uppercase tracking-widest text-secondary font-semibold">
+                <p className="text-label-md text-secondary">
                   {accepted.length > 0
                     ? "Status: Active & Secure"
                     : "Status: Awaiting Guardians"}
                 </p>
               </div>
-              <div className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap">
+              <div className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full text-body-md font-bold whitespace-nowrap">
                 {accepted.length} of {TOTAL_GUARDIAN_SLOTS} Guardians Verified
               </div>
             </div>
@@ -119,7 +119,7 @@ export function SecurityCenterSection() {
                       </div>
                       <span
                         className={cn(
-                          "text-xs font-bold text-center truncate max-w-[80px]",
+                          "text-label-md text-center truncate max-w-[80px]",
                           verified ? "text-primary" : "text-outline"
                         )}
                       >
@@ -142,7 +142,7 @@ export function SecurityCenterSection() {
                     >
                       <Icon path={ICON_PATHS.person} className="w-6 h-6 text-outline" />
                     </div>
-                    <span className="text-xs font-bold text-outline">Pending...</span>
+                    <span className="text-label-md text-outline">Pending...</span>
                   </div>
                 );
               })}
@@ -152,14 +152,14 @@ export function SecurityCenterSection() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/trusted-contacts"
-              className="bg-surface-container-highest hover:bg-surface-variant text-primary px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center space-x-2"
+              className="bg-surface-container-highest hover:bg-surface-variant text-primary px-5 py-2.5 rounded-xl text-body-md font-bold transition-all flex items-center justify-center space-x-2"
             >
               <Icon path={ICON_PATHS.mail} className="w-4 h-4" />
               <span>{pending.length > 0 ? "Resend Invites" : "Invite Guardian"}</span>
             </Link>
             <Link
               href="/trusted-contacts"
-              className="text-secondary hover:underline px-5 py-2.5 font-bold text-sm transition-all text-center"
+              className="text-secondary hover:underline px-5 py-2.5 text-body-md font-bold transition-all text-center"
             >
               Manage Guardian Rules
             </Link>
@@ -173,10 +173,10 @@ export function SecurityCenterSection() {
               path={ICON_PATHS.description}
               className="w-10 h-10 mb-5 text-secondary-fixed"
             />
-            <h2 className="font-headline text-xl font-bold text-white mb-3">
+            <h2 className="text-headline-md text-white mb-3">
               Recovery Kit
             </h2>
-            <p className="text-sm text-on-primary-container mb-6 leading-relaxed">
+            <p className="text-body-md text-on-primary-container mb-6">
               Generate a physical, offline recovery sheet containing encrypted metadata
               shards for your vault.
             </p>
@@ -194,11 +194,11 @@ export function SecurityCenterSection() {
         <section className="md:col-span-7 bg-surface-container p-6 md:p-8 rounded-2xl">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
-            <h2 className="font-headline text-xl font-bold text-primary">
+            <h2 className="text-headline-md text-primary">
               Master Recovery
             </h2>
           </div>
-          <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">
+          <p className="text-body-md text-on-surface-variant mb-6">
             Your master key is split into{" "}
             <strong className="text-primary">7 cryptographic shards</strong> using
             Shamir&apos;s Secret Sharing. You need{" "}
@@ -234,14 +234,14 @@ export function SecurityCenterSection() {
               className="w-full p-3.5 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center space-x-2 text-on-surface-variant hover:bg-surface-container-low transition-colors"
             >
               <Icon path={ICON_PATHS.plus} className="w-5 h-5" />
-              <span className="text-sm font-bold">Configure Additional Shard</span>
+              <span className="text-body-md font-bold">Configure Additional Shard</span>
             </Link>
           </div>
         </section>
 
         {/* Biometrics */}
         <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
-          <h2 className="font-headline text-xl font-bold text-primary">Biometrics</h2>
+          <h2 className="text-headline-md text-primary">Biometrics</h2>
 
           <div className="space-y-5">
             <BiometricRow
@@ -264,7 +264,7 @@ export function SecurityCenterSection() {
                 path={ICON_PATHS.warning}
                 className="w-5 h-5 text-error shrink-0 mt-0.5"
               />
-              <p className="text-xs leading-relaxed text-on-error-container">
+              <p className="text-body-md text-on-error-container">
                 Biometrics are convenient but should never be your{" "}
                 <strong>only</strong> recovery method. Ensure your physical kit is printed.
               </p>
@@ -278,9 +278,9 @@ export function SecurityCenterSection() {
         <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
           <div className="flex items-center space-x-3">
             <Icon path={ICON_PATHS.shieldCheck} className="w-6 h-6 text-secondary" />
-            <h2 className="font-headline text-xl font-bold text-primary">Activity Log</h2>
+            <h2 className="text-headline-md text-primary">Activity Log</h2>
           </div>
-          <span className="text-xs uppercase tracking-widest text-on-surface-variant font-medium">
+          <span className="text-label-md text-on-surface-variant">
             Hash-chained · {logs.length} entries
           </span>
         </div>
@@ -302,7 +302,7 @@ export function SecurityCenterSection() {
         </div>
 
         {logs.length === 0 ? (
-          <p className="text-on-surface-variant text-center py-12">
+          <p className="text-body-lg text-on-surface-variant text-center py-12">
             No events recorded yet.
           </p>
         ) : (
@@ -324,18 +324,18 @@ export function SecurityCenterSection() {
                     <Icon path={iconPath} className="w-4 h-4" />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-on-surface">
+                    <p className="text-body-md font-medium text-on-surface">
                       {humanizeAction(log.action)}
                     </p>
-                    <p className="text-xs text-on-surface-variant truncate">
+                    <p className="text-body-md text-on-surface-variant truncate">
                       {log.resourceType} · actor: {log.actorType}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-xs text-on-surface-variant">
+                    <p className="text-body-md text-on-surface-variant">
                       {formatTimeAgo(log.createdAt)}
                     </p>
-                    <p className="text-[10px] font-mono text-outline-variant truncate max-w-[120px]">
+                    <p className="text-label-md font-mono text-outline-variant truncate max-w-[120px]">
                       #{log.logHash}
                     </p>
                   </div>
@@ -367,8 +367,8 @@ function ShardRow({
           <Icon path={icon} className="w-5 h-5" />
         </div>
         <div>
-          <p className="text-sm font-bold text-primary">{label}</p>
-          <p className="text-xs text-on-surface-variant">{hint}</p>
+          <p className="text-body-md font-bold text-primary">{label}</p>
+          <p className="text-body-md text-on-surface-variant">{hint}</p>
         </div>
       </div>
       <Icon
@@ -398,8 +398,8 @@ function BiometricRow({
       <div className="flex items-center space-x-3">
         <Icon path={icon} className="w-6 h-6 text-primary" />
         <div>
-          <p className="font-bold text-primary text-sm">{label}</p>
-          <p className="text-xs text-on-surface-variant">{hint}</p>
+          <p className="text-body-md font-bold text-primary">{label}</p>
+          <p className="text-body-md text-on-surface-variant">{hint}</p>
         </div>
       </div>
       <Switch checked={enabled} disabled />
@@ -410,10 +410,10 @@ function BiometricRow({
 function SummaryStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-surface-container rounded-xl p-3.5">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-semibold">
+      <p className="text-label-md text-on-surface-variant">
         {label}
       </p>
-      <p className="font-headline text-lg font-bold text-primary mt-1">{value}</p>
+      <p className="text-headline-sm text-primary mt-1">{value}</p>
     </div>
   );
 }

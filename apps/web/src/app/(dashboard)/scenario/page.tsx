@@ -117,9 +117,6 @@ export default function ScenarioPage() {
       {/* Header */}
       <header className="flex flex-col xl:flex-row xl:justify-between xl:items-end gap-8 mb-12">
         <div className="space-y-4">
-          <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-full">
-            Protocol Configuration
-          </span>
           <h1 className="text-headline-lg text-primary">
             Scenario Engine
           </h1>

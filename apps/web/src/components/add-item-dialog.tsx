@@ -80,10 +80,10 @@ const ACCESS_LEVELS: Array<{
 function SectionHeading({ step, title }: { step: string; title: string }) {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <div className="w-9 h-9 bg-primary text-on-primary rounded-full flex items-center justify-center font-headline font-bold text-sm shrink-0">
+      <div className="w-9 h-9 bg-primary text-on-primary rounded-full flex items-center justify-center text-body-md font-bold shrink-0">
         {step}
       </div>
-      <h3 className="text-lg font-bold font-headline tracking-tight text-primary">
+      <h3 className="text-headline-sm text-primary">
         {title}
       </h3>
     </div>
@@ -349,7 +349,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             <SectionHeading step="01" title="Asset Identity" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                <Label className="text-label-md text-on-surface-variant">
                   Asset Name
                 </Label>
                 <Input
@@ -361,7 +361,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                <Label className="text-label-md text-on-surface-variant">
                   Category
                 </Label>
                 <Select<VaultCategory>
@@ -377,7 +377,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                 </Select>
               </div>
               <div className="md:col-span-2 space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                <Label className="text-label-md text-on-surface-variant">
                   Asset Description <span className="text-outline-variant normal-case tracking-normal">(optional)</span>
                 </Label>
                 <Input
@@ -423,7 +423,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                     <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
                     Record video
                   </Button>
-                  <div className="flex items-center text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant/60 ml-auto">
+                  <div className="flex items-center text-label-md text-on-surface-variant/60 ml-auto">
                     or drop a file below
                   </div>
                 </div>
@@ -463,14 +463,14 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                     <Icon path={ICON_PATHS.download} className="w-7 h-7 rotate-180" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <p className="text-base font-headline font-bold text-primary">
+                    <p className="text-headline-sm text-primary">
                       Drag and drop secure files
                     </p>
-                    <p className="text-xs text-on-surface-variant font-body mt-1">
+                    <p className="text-body-md text-on-surface-variant mt-1">
                       PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.
                     </p>
                   </div>
-                  <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full font-label font-bold text-[10px] uppercase tracking-[0.18em] hover:bg-surface-container-highest transition-colors">
+                  <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full text-label-md hover:bg-surface-container-highest transition-colors">
                     Browse System
                   </span>
                 </div>
@@ -490,10 +490,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                         <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
                       </div>
                       <div className="text-left min-w-0">
-                        <p className="text-xs font-bold text-primary truncate max-w-[200px]">
+                        <p className="text-body-md font-bold text-primary truncate max-w-[200px]">
                           {file.name}
                         </p>
-                        <p className="text-[10px] text-on-surface-variant">
+                        <p className="text-label-md text-on-surface-variant">
                           {formatFileSize(file.size)}
                           {duration ? ` • ${duration}` : ""} • Encrypted
                         </p>
@@ -518,7 +518,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             <SectionHeading step="03" title="Transmission Logic" />
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                <Label className="text-label-md text-on-surface-variant">
                   Access Level
                 </Label>
                 <Select<AccessLevel>
@@ -534,7 +534,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                     <SelectItem key={level.value} value={level.value}>
                       <div className="flex flex-col gap-0.5 py-0.5">
                         <span className="font-semibold">{level.label}</span>
-                        <span className="text-[11px] text-on-surface-variant font-normal">
+                        <span className="text-label-md text-on-surface-variant font-normal">
                           {level.description}
                         </span>
                       </div>
@@ -544,7 +544,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                <Label className="text-label-md text-on-surface-variant">
                   Tags <span className="text-outline-variant normal-case tracking-normal">(comma separated)</span>
                 </Label>
                 <Input
@@ -561,10 +561,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                     <Icon path={ICON_PATHS.warning} className="w-5 h-5" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <p className="font-headline font-bold text-primary text-sm">
+                    <p className="text-headline-sm text-primary">
                       Mark as critical
                     </p>
-                    <p className="text-[11px] text-on-surface-variant leading-relaxed mt-0.5">
+                    <p className="text-body-md text-on-surface-variant mt-0.5">
                       Critical items are prioritized during emergency access.
                     </p>
                   </div>
@@ -583,14 +583,14 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             <button
               type="button"
               onClick={() => handleOpenChange(false)}
-              className="flex items-center gap-2 text-on-surface-variant hover:text-primary font-headline font-bold text-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-body-md font-bold transition-colors cursor-pointer"
             >
               <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4 rotate-180" strokeWidth={2} />
               Cancel
             </button>
             <div className="flex items-center gap-4">
               {progress && (
-                <span className="text-[11px] text-on-surface-variant font-label uppercase tracking-[0.12em]">
+                <span className="text-label-md text-on-surface-variant">
                   {progress}
                 </span>
               )}

@@ -95,16 +95,16 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
       >
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
-            <h2 className="text-primary font-headline text-lg font-bold tracking-tight">
+            <h2 className="text-headline-sm text-primary">
               Platform Localization
             </h2>
-            <p className="text-xs text-on-surface-variant">
+            <p className="text-body-md text-on-surface-variant">
               Define how your legacy is presented across global regions.
             </p>
           </div>
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
+              <Label className="text-label-md text-secondary">
                 Interface Language
               </Label>
               <Select
@@ -120,7 +120,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
+              <Label className="text-label-md text-secondary">
                 Timezone
               </Label>
               <Select
@@ -136,7 +136,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-widest font-bold text-secondary font-headline">
+              <Label className="text-label-md text-secondary">
                 Currency Display
               </Label>
               <Select
@@ -156,10 +156,10 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
 
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
-            <h2 className="text-primary font-headline text-lg font-bold tracking-tight">
+            <h2 className="text-headline-sm text-primary">
               Alert Preferences
             </h2>
-            <p className="text-xs text-on-surface-variant">
+            <p className="text-body-md text-on-surface-variant">
               Control the frequency of Life Checks and vault synchronization alerts.
             </p>
           </div>
@@ -170,10 +170,10 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
                 className="flex items-center justify-between gap-4"
               >
                 <div className="space-y-0.5 min-w-0">
-                  <p className="font-headline font-bold text-sm text-primary truncate">
+                  <p className="text-body-md font-bold text-primary truncate">
                     {item.label}
                   </p>
-                  <p className="text-xs text-on-surface-variant">
+                  <p className="text-body-md text-on-surface-variant">
                     {item.description}
                   </p>
                 </div>
@@ -188,7 +188,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
 
         <div className="col-span-full flex items-center justify-end gap-4">
           {saved && (
-            <span className="text-xs text-secondary font-medium">
+            <span className="text-body-md text-secondary font-medium">
               Preferences saved ✓
             </span>
           )}

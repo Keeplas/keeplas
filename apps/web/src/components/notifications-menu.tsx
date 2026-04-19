@@ -45,13 +45,13 @@ export function NotificationsMenu({
       {variant === "sidebar" ? (
         <button
           onClick={() => setOpen(!open)}
-          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest text-secondary/70 hover:bg-surface-container-highest hover:translate-x-1 transition-transform cursor-pointer"
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-label-md text-secondary/70 hover:bg-surface-container-highest hover:translate-x-1 transition-transform cursor-pointer"
           aria-label="Notifications"
         >
           {bellIcon}
           <span className="flex-1 text-left">Notifications</span>
           {(unreadCount ?? 0) > 0 && (
-            <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-error text-on-error text-[10px] font-bold flex items-center justify-center">
+            <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-error text-on-error text-label-md flex items-center justify-center">
               {unreadCount! > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -79,7 +79,7 @@ export function NotificationsMenu({
             )}
           >
             <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low">
-              <span className="font-headline font-bold text-sm text-primary">
+              <span className="text-headline-sm text-primary">
                 Notifications
               </span>
               {(unreadCount ?? 0) > 0 && (
@@ -88,7 +88,7 @@ export function NotificationsMenu({
                     markAllAsRead();
                     setOpen(false);
                   }}
-                  className="text-xs text-secondary font-medium cursor-pointer hover:underline"
+                  className="text-body-md text-secondary font-medium cursor-pointer hover:underline"
                 >
                   Mark all read
                 </button>
@@ -97,7 +97,7 @@ export function NotificationsMenu({
 
             <div className="max-h-80 overflow-y-auto">
               {!notifications || notifications.length === 0 ? (
-                <div className="p-6 text-center text-sm text-on-surface-variant">
+                <div className="p-6 text-center text-body-md text-on-surface-variant">
                   No notifications yet
                 </div>
               ) : (
@@ -122,13 +122,13 @@ export function NotificationsMenu({
                         className="w-4 h-4 text-secondary mt-0.5 shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-on-surface truncate">
+                        <p className="text-body-md font-medium text-on-surface truncate">
                           {n.title}
                         </p>
-                        <p className="text-xs text-on-surface-variant line-clamp-2 mt-0.5">
+                        <p className="text-body-md text-on-surface-variant line-clamp-2 mt-0.5">
                           {n.body}
                         </p>
-                        <p className="text-[10px] text-on-surface-variant/60 mt-1">
+                        <p className="text-label-md text-on-surface-variant/60 mt-1">
                           {formatTimeAgo(n.createdAt)}
                         </p>
                       </div>

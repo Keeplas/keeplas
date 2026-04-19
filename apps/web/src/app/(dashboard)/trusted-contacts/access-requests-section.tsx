@@ -87,7 +87,7 @@ export function AccessRequestsSection() {
 
   return (
     <section className="space-y-6">
-      <h2 className="font-headline font-bold text-xl text-primary">
+      <h2 className="text-headline-md text-primary">
         Access Requests
       </h2>
 
@@ -101,10 +101,10 @@ export function AccessRequestsSection() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h4 className="font-headline font-bold text-on-surface">
+                  <h4 className="text-headline-sm text-on-surface">
                     {req.contactName}
                   </h4>
-                  <p className="text-sm text-on-surface-variant">
+                  <p className="text-body-md text-on-surface-variant">
                     {req.accessMode === "mode_a"
                       ? "Emergency Access (Post-mortem)"
                       : "On-demand Access"}
@@ -183,7 +183,7 @@ export function AccessRequestsSection() {
       {/* Request History */}
       {allRequests && allRequests.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-label font-bold text-on-surface-variant uppercase tracking-wider">
+          <h3 className="text-label-md text-on-surface-variant">
             History
           </h3>
           {allRequests

@@ -98,10 +98,10 @@ export function SettingsSidebar({
             fallbackClassName="bg-primary text-on-primary"
           />
           <div className="min-w-0 flex-1">
-            <p className="font-headline font-bold text-primary text-sm truncate">
+            <p className="text-headline-sm text-primary truncate">
               {user?.name || "Curator"}
             </p>
-            <p className="text-xs text-on-surface-variant truncate">
+            <p className="text-body-md text-on-surface-variant truncate">
               {user?.email ?? "Secure session"}
             </p>
           </div>
@@ -119,7 +119,7 @@ export function SettingsSidebar({
         <nav className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
           {SETTINGS_NAV_GROUPS.map((group) => (
             <div key={group.label} className="space-y-1">
-              <p className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/60">
+              <p className="px-3 text-label-md text-on-surface-variant/60">
                 {group.label}
               </p>
               <ul className="space-y-0.5">
@@ -133,7 +133,7 @@ export function SettingsSidebar({
                         onClick={onCloseMobile}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-body-md transition-colors",
                           active
                             ? "ghost-border bg-surface-container-lowest text-primary font-bold"
                             : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
@@ -156,7 +156,7 @@ export function SettingsSidebar({
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
           >
             <Icon path={ICON_PATHS.book} className="w-4 h-4 shrink-0" />
             <span className="flex-1 truncate">Documentation</span>
@@ -173,7 +173,7 @@ export function SettingsSidebar({
               isItemActive(pathname, "/settings/contact") ? "page" : undefined
             }
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md transition-colors",
               isItemActive(pathname, "/settings/contact")
                 ? "ghost-border bg-surface-container-lowest text-primary font-bold"
                 : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
@@ -185,7 +185,7 @@ export function SettingsSidebar({
           <button
             type="button"
             onClick={() => signOut()}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-error hover:bg-error-container/40 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md text-error hover:bg-error-container/40 transition-colors cursor-pointer"
           >
             <Icon path={ICON_PATHS.signOut} className="w-4 h-4 shrink-0" />
             <span>Sign Out</span>

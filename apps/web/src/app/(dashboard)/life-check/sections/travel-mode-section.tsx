@@ -33,11 +33,11 @@ export function TravelModeSection({
     <section className="bg-surface-container-low rounded-2xl p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="font-headline font-bold text-lg text-primary flex items-center gap-2">
+          <h3 className="text-headline-sm text-primary flex items-center gap-2">
             <Icon path={CALENDAR_ICON} className="w-5 h-5 text-secondary" />
             Travel Mode
           </h3>
-          <p className="text-sm text-on-surface-variant mt-1">
+          <p className="text-body-md text-on-surface-variant mt-1">
             Suspend Life Check for up to 90 days when traveling.
           </p>
         </div>
@@ -46,7 +46,7 @@ export function TravelModeSection({
       {enabled ? (
         <div className="space-y-3">
           <div className="p-4 bg-secondary/10 rounded-xl">
-            <p className="text-sm text-secondary font-medium">
+            <p className="text-body-md text-secondary font-medium">
               Travel mode active
               {until && <> until {new Date(until).toLocaleDateString()}</>}
             </p>
@@ -63,7 +63,7 @@ export function TravelModeSection({
           <div className="flex-1">
             <label
               htmlFor="travel-until"
-              className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold block mb-1"
+              className="text-label-md text-on-surface-variant block mb-1"
             >
               Return date
             </label>

@@ -71,7 +71,7 @@ export function Sidebar() {
             height={40}
             className="shrink-0"
           />
-          <span className="font-headline font-extrabold text-primary text-xl tracking-tight">
+          <span className="text-headline-md text-primary">
             Keeplas
           </span>
         </div>
@@ -86,7 +86,7 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
+                      "flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1",
                       isActive
                         ? "bg-secondary text-on-secondary shadow-lg"
                         : "text-secondary/70 hover:bg-surface-container-highest"
@@ -120,7 +120,7 @@ export function Sidebar() {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
+            className="flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
           >
             <Icon path={ICON_PATHS.book} />
             <span className="flex-1 truncate">Documentation</span>
@@ -142,10 +142,10 @@ export function Sidebar() {
               fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
             />
             <div className="min-w-0 flex-1 text-left">
-              <p className="font-headline font-bold text-primary text-sm truncate">
+              <p className="text-headline-sm text-primary truncate">
                 {user?.name || "Curator"}
               </p>
-              <p className="text-[10px] text-secondary font-medium uppercase tracking-widest truncate">
+              <p className="text-label-md text-secondary truncate">
                 {user?.email ?? "Secure session"}
               </p>
             </div>
@@ -166,7 +166,7 @@ export function Sidebar() {
             width={28}
             height={28}
           />
-          <span className="font-headline text-base font-extrabold tracking-tight text-primary">
+          <span className="text-headline-sm text-primary">
             Keeplas
           </span>
         </div>
@@ -198,7 +198,7 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-tighter transition-colors",
+                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
                     isActive
                       ? "text-secondary-fixed"
                       : "text-on-primary/60 hover:text-on-primary/80"
@@ -216,7 +216,7 @@ export function Sidebar() {
             <Link
               href="/settings"
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-tighter transition-colors",
+                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
                 isSettingsActive
                   ? "text-secondary-fixed"
                   : "text-on-primary/60 hover:text-on-primary/80"
