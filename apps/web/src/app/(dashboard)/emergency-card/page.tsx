@@ -1,6 +1,18 @@
 "use client";
 
-import { Button, ErrorAlert } from "@keeplas/ui";
+import { useState } from "react";
+import {
+  Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  ErrorAlert,
+  Icon,
+} from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
 import { EmergencyCardPreview } from "./emergency-card-preview";
 import { CardActions } from "./sections/card-actions";
 import { ContactSection } from "./sections/contact-section";
@@ -22,6 +34,8 @@ export default function EmergencyCardPage() {
     handleSave,
   } = useEmergencyCardForm();
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   const qrUrl = card?.qrCodeToken
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/emergency/${card.qrCodeToken}`
     : null;
@@ -38,7 +52,7 @@ export default function EmergencyCardPage() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        <section className="lg:col-span-5 space-y-6 order-last lg:order-none">
+        <section className="lg:col-span-5 space-y-6">
           <form onSubmit={handleSave} className="space-y-6">
             <PersonalInfoSection formData={formData} onUpdate={updateField} />
             <ContactSection formData={formData} onUpdate={updateField} />
@@ -72,7 +86,7 @@ export default function EmergencyCardPage() {
           </form>
         </section>
 
-        <section className="lg:col-span-7 order-first lg:order-none lg:sticky lg:top-6 lg:self-start flex flex-col items-center lg:items-end lg:pr-8 xl:pr-16">
+        <section className="hidden lg:col-span-7 lg:flex lg:sticky lg:top-6 lg:self-start flex-col items-end lg:pr-8 xl:pr-16">
           <div className="w-full max-w-[260px] sm:max-w-xs md:max-w-sm lg:max-w-md">
             <EmergencyCardPreview
               formData={formData}
@@ -84,6 +98,40 @@ export default function EmergencyCardPage() {
           </div>
         </section>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setPreviewOpen(true)}
+        className="lg:hidden fixed left-6 bottom-24 md:bottom-6 z-40 flex items-center gap-2 h-12 px-5 rounded-full bg-primary text-on-primary shadow-2xl shadow-primary/30 cursor-pointer hover:bg-primary-container transition-colors"
+        aria-label="Preview emergency card"
+      >
+        <Icon path={ICON_PATHS.emergencyCard} className="w-5 h-5" />
+        <span className="text-label-lg font-semibold">Preview Card</span>
+      </button>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden">
+          <DialogHeader className="px-5 py-4 border-b-0">
+            <div>
+              <DialogTitle className="text-headline-sm">Card Preview</DialogTitle>
+              <DialogDescription className="mt-1">
+                Live preview of your emergency card.
+              </DialogDescription>
+            </div>
+            <DialogClose className="rounded-full p-1.5 hover:bg-surface-container cursor-pointer">
+              <Icon path={ICON_PATHS.close} className="w-5 h-5" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="px-5 pb-6 flex flex-col items-center">
+            <EmergencyCardPreview
+              formData={formData}
+              toggles={toggles}
+              qrUrl={qrUrl}
+            />
+            {card && <CardActions qrUrl={qrUrl} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
