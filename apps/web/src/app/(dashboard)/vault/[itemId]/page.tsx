@@ -2,21 +2,25 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
+import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
+import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
   Button,
+  Icon,
   Input,
   Label,
   ErrorAlert,
   Select,
   SelectItem,
+  Switch,
   Textarea,
   Spinner,
   Loader,
@@ -25,6 +29,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
+
+const GROUP_PREFIX = "group:";
+const CONTACT_PREFIX = "contact:";
 
 export default function VaultItemPage() {
   const params = useParams();
@@ -34,7 +42,22 @@ export default function VaultItemPage() {
   const item = useQuery(api.vault_items.getItem, { itemId });
   const updateItem = useMutation(api.vault_items.updateItem);
   const deleteItem = useMutation(api.vault_items.deleteItem);
-  const { decryptContent, encryptContent, computeHash, isReady } = useVaultCrypto();
+  const {
+    decryptContent,
+    encryptContent,
+    encryptContentWithKey,
+    computeHash,
+    isReady,
+  } = useVaultCrypto();
+  const {
+    generateDekAndWrap,
+    wrapExistingDek,
+    unwrapOwnerDek,
+    isReady: cryptoReady,
+  } = useRecipientCrypto();
+
+  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
+  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
 
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decrypting, setDecrypting] = useState(false);
@@ -46,11 +69,31 @@ export default function VaultItemPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
-  const [editAccessLevel, setEditAccessLevel] = useState<AccessLevel>("private");
+  const [editIsPublic, setEditIsPublic] = useState(false);
+  const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
   const [editTags, setEditTags] = useState("");
   const [editCritical, setEditCritical] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const recipientOptions = useMemo<MultiSelectOption[]>(() => {
+    const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
+      value: `${GROUP_PREFIX}${g._id}`,
+      label: g.name,
+      hint:
+        g.memberContactIds.length === 1
+          ? "1 contact"
+          : `${g.memberContactIds.length} contacts`,
+      groupLabel: "Groups",
+    }));
+    const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
+      value: `${CONTACT_PREFIX}${c._id}`,
+      label: c.name,
+      hint: c.email,
+      groupLabel: "Individual contacts",
+    }));
+    return [...groupOpts, ...contactOpts];
+  }, [recipientGroups, allContacts]);
 
   // Decrypt content when item loads
   useEffect(() => {

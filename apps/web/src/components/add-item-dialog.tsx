@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
@@ -27,6 +27,13 @@ import {
   DialogClose,
   cn,
 } from "@keeplas/ui";
+// AccessLevel is now derived from recipient selection + isPublic switch
+// instead of being chosen directly. Mapping:
+//   isPublic on              → "public"
+//   no recipients selected   → "private"
+//   recipients selected      → "trusted_only"
+// "emergency_only" was redundant with "trusted_only" (both released at trigger)
+// and has been collapsed into "trusted_only".
 import { ICON_PATHS } from "@/lib/icons";
 import { MediaRecorderPanel } from "@/components/media-recorder-panel";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
@@ -57,33 +64,6 @@ interface PreparedFile {
   kind: FileKind;
   durationSec?: number;
 }
-
-const ACCESS_LEVELS: Array<{
-  value: AccessLevel;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "private",
-    label: "Private",
-    description: "Only you. Fully sealed under your master key.",
-  },
-  {
-    value: "trusted_only",
-    label: "Trusted Contacts",
-    description: "Released to approved contacts you've granted access.",
-  },
-  {
-    value: "emergency_only",
-    label: "Emergency Only",
-    description: "Post-mortem release to your legacy beneficiaries.",
-  },
-  {
-    value: "public",
-    label: "Public",
-    description: "Visible on the Emergency Card you share.",
-  },
-];
 
 function SectionHeading({ step, title }: { step: string; title: string }) {
   return (
@@ -152,14 +132,27 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [category, setCategory] = useState<VaultCategory>(defaultCategory ?? "personal_document");
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
-  const [accessLevel, setAccessLevel] = useState<AccessLevel>("private");
   const [tags, setTags] = useState("");
   const [isCritical, setIsCritical] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
+  const [recipientsTouched, setRecipientsTouched] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState("");
+
+  // Pre-select the user's default group on first open of the dialog so
+  // most items go to "all trust contacts" without any picking. The user
+  // can then narrow down or clear to make the item private.
+  useEffect(() => {
+    if (!open || recipientsTouched) return;
+    if (recipientGroups.length === 0) return;
+    const defaultGroup = recipientGroups.find((g) => g.isDefault);
+    if (defaultGroup) {
+      setRecipientSelection([`${GROUP_PREFIX}${defaultGroup._id}`]);
+    }
+  }, [open, recipientGroups, recipientsTouched]);
 
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
@@ -184,10 +177,8 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     mode: RecipientMode;
     sharedWithGroups: Id<"recipient_groups">[];
     sharedWithContacts: Id<"trusted_contacts">[];
+    derivedAccessLevel: AccessLevel;
   } {
-    if (recipientSelection.length === 0) {
-      return { mode: "default", sharedWithGroups: [], sharedWithContacts: [] };
-    }
     const groupIds = recipientSelection
       .filter((v) => v.startsWith(GROUP_PREFIX))
       .map((v) => v.slice(GROUP_PREFIX.length) as Id<"recipient_groups">);
@@ -195,17 +186,38 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       .filter((v) => v.startsWith(CONTACT_PREFIX))
       .map((v) => v.slice(CONTACT_PREFIX.length) as Id<"trusted_contacts">);
 
-    if (contactIds.length > 0) {
+    if (isPublic) {
+      // Items on the emergency card go to "public" regardless of which
+      // groups are picked. We still record the recipient config so the
+      // owner can also release the item to specific people at trigger.
+    }
+
+    if (groupIds.length === 0 && contactIds.length === 0) {
+      // Empty selection = private. Mode "default" means "all trust contacts"
+      // in the resolver, but private items are skipped at release time so
+      // this never fires distribution.
+      return {
+        mode: "default",
+        sharedWithGroups: [],
+        sharedWithContacts: [],
+        derivedAccessLevel: isPublic ? "public" : "private",
+      };
+    }
+
+    if (contactIds.length > 0 && groupIds.length === 0) {
       return {
         mode: "explicit",
         sharedWithGroups: [],
         sharedWithContacts: contactIds,
+        derivedAccessLevel: isPublic ? "public" : "trusted_only",
       };
     }
+
     return {
       mode: "groups",
       sharedWithGroups: groupIds,
-      sharedWithContacts: [],
+      sharedWithContacts: contactIds,
+      derivedAccessLevel: isPublic ? "public" : "trusted_only",
     };
   }
 
@@ -284,10 +296,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setCategory(defaultCategory ?? "personal_document");
     setFiles([]);
     setRecorderMode(null);
-    setAccessLevel("private");
     setTags("");
     setIsCritical(false);
+    setIsPublic(false);
     setRecipientSelection([]);
+    setRecipientsTouched(false);
     setSaving(false);
     setProgress("");
     setError("");
@@ -344,16 +357,9 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             contactPublicKey: c.contactPublicKey,
           }));
       } else {
-        resolvedRecipients = allContacts
-          .filter(
-            (c) =>
-              (c.contactType ?? "trust") === "trust" &&
-              c.invitationStatus === "accepted"
-          )
-          .map((c) => ({
-            contactId: c._id,
-            contactPublicKey: c.contactPublicKey,
-          }));
+        // mode "default" — empty selection. The item is private (no
+        // recipients) so we don't need any wrapped DEKs beyond the owner's.
+        resolvedRecipients = [];
       }
 
       setProgress("Generating per-item key…");
@@ -416,7 +422,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         description: description.trim() || undefined,
         encryptedContent,
         contentHash,
-        accessLevel,
+        accessLevel: recipientConfig.derivedAccessLevel,
         tags: tagList,
         isCritical,
         encryptionType: "zero_knowledge",
@@ -651,70 +657,63 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
-                  Access Level
+                  Who receives this at trigger?
                 </Label>
-                <Select<AccessLevel>
-                  value={accessLevel}
-                  onValueChange={setAccessLevel}
-                  placeholder="Choose access level"
-                  renderValue={(v) => {
-                    const level = ACCESS_LEVELS.find((l) => l.value === v);
-                    return level ? level.label : "";
+                <MultiSelect
+                  options={recipientOptions}
+                  selected={recipientSelection}
+                  onChange={(next) => {
+                    setRecipientsTouched(true);
+                    setRecipientSelection(next);
                   }}
-                >
-                  {ACCESS_LEVELS.map((level) => (
-                    <SelectItem key={level.value} value={level.value}>
-                      <div className="flex flex-col gap-0.5 py-0.5">
-                        <span className="font-semibold">{level.label}</span>
-                        <span className="text-label-md text-on-surface-variant font-normal">
-                          {level.description}
+                  placeholder="No one — keep private"
+                  searchPlaceholder="Search groups or contacts…"
+                  emptyMessage="No groups or contacts yet."
+                  renderTrigger={(selected) => {
+                    if (selected.length === 0) {
+                      return (
+                        <span className="text-outline-variant">
+                          No one — keep private
                         </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </Select>
+                      );
+                    }
+                    const labels = selected
+                      .map(
+                        (v) =>
+                          recipientOptions.find((o) => o.value === v)?.label
+                      )
+                      .filter(Boolean);
+                    return (
+                      <span className="truncate">{labels.join(", ")}</span>
+                    );
+                  }}
+                />
+                <p className="text-label-md text-on-surface-variant/70">
+                  Pick one or more groups (your trust contacts are already a
+                  group), or specific people. Empty = the item stays private.
+                </p>
               </div>
 
-              {accessLevel !== "private" && (
-                <div className="space-y-2">
-                  <Label className="text-label-md text-on-surface-variant">
-                    Release Recipients{" "}
-                    <span className="text-outline-variant normal-case tracking-normal">
-                      (default: all trust contacts)
-                    </span>
-                  </Label>
-                  <MultiSelect
-                    options={recipientOptions}
-                    selected={recipientSelection}
-                    onChange={setRecipientSelection}
-                    placeholder="All trust contacts (default)"
-                    searchPlaceholder="Search groups or contacts…"
-                    emptyMessage="No groups or contacts yet."
-                    renderTrigger={(selected) => {
-                      if (selected.length === 0) {
-                        return (
-                          <span className="text-outline-variant">
-                            All trust contacts (default)
-                          </span>
-                        );
-                      }
-                      const labels = selected
-                        .map(
-                          (v) =>
-                            recipientOptions.find((o) => o.value === v)?.label
-                        )
-                        .filter(Boolean);
-                      return (
-                        <span className="truncate">{labels.join(", ")}</span>
-                      );
-                    }}
-                  />
-                  <p className="text-label-md text-on-surface-variant/70">
-                    Pick a group, individual contacts, or leave empty to release
-                    to every trust contact at trigger.
-                  </p>
+              <div className="flex items-start justify-between gap-4 bg-surface rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
+                    <Icon path={ICON_PATHS.emergencyCard} className="w-5 h-5" strokeWidth={1.75} />
+                  </div>
+                  <div>
+                    <p className="text-headline-sm text-primary">
+                      Show on Emergency Card
+                    </p>
+                    <p className="text-body-md text-on-surface-variant mt-0.5">
+                      Anyone scanning your QR card will see this item.
+                    </p>
+                  </div>
                 </div>
-              )}
+                <Switch
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                  className="mt-1"
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">

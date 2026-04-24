@@ -147,7 +147,56 @@ export function useRecipientCrypto() {
   const unwrapOwnerDek = useCallback(
     async (wrap: WrappedDek): Promise<CryptoKey> => {
       const { privateKey } = await ensureOwnerKeypair();
-      return await unwrapDek(wrap, privateKey);
+      // unwrap returns a non-extractable key; we need extractable for
+      // re-wrapping during edits, so re-import as extractable.
+      const unwrapped = await unwrapDek(wrap, privateKey);
+      const raw = await crypto.subtle.exportKey("raw", unwrapped);
+      return await crypto.subtle.importKey(
+        "raw",
+        raw,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+      );
+    },
+    [ensureOwnerKeypair]
+  );
+
+  /**
+   * Wrap an already-known DEK (e.g., recovered from an existing item via
+   * {@link unwrapOwnerDek}) for a new recipient set. Returns a fresh
+   * owner wrap + per-recipient wraps. Reuses the same DEK so previously
+   * uploaded files stay decryptable.
+   */
+  const wrapExistingDek = useCallback(
+    async (
+      dek: CryptoKey,
+      recipients: Array<{ contactId: string; contactPublicKey?: string }>
+    ): Promise<{
+      ownerWrap: WrappedDek;
+      recipientWraps: RecipientWrap[];
+      skippedRecipientIds: string[];
+    }> => {
+      const { publicKey: ownerPublic } = await ensureOwnerKeypair();
+      const ownerWrap = await wrapDek(dek, ownerPublic);
+
+      const recipientWraps: RecipientWrap[] = [];
+      const skippedRecipientIds: string[] = [];
+      for (const r of recipients) {
+        if (!r.contactPublicKey) {
+          skippedRecipientIds.push(r.contactId);
+          continue;
+        }
+        try {
+          const publicKey = await importPublicKey(r.contactPublicKey);
+          const wrap = await wrapDek(dek, publicKey);
+          recipientWraps.push({ contactId: r.contactId, ...wrap });
+        } catch {
+          skippedRecipientIds.push(r.contactId);
+        }
+      }
+
+      return { ownerWrap, recipientWraps, skippedRecipientIds };
     },
     [ensureOwnerKeypair]
   );
@@ -155,6 +204,7 @@ export function useRecipientCrypto() {
   return {
     isReady: viewer !== undefined && masterKey !== null,
     generateDekAndWrap,
+    wrapExistingDek,
     unwrapOwnerDek,
     ensureOwnerKeypair,
   };
