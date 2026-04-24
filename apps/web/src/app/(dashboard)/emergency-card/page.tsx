@@ -72,16 +72,16 @@ export default function EmergencyCardPage() {
           </form>
         </section>
 
-        <section className="lg:col-span-7 order-first lg:order-none lg:sticky lg:top-6 lg:self-start flex flex-col items-center lg:items-end">
+        <section className="lg:col-span-7 order-first lg:order-none lg:sticky lg:top-6 lg:self-start flex flex-col items-center lg:items-end lg:pr-8 xl:pr-16">
           <div className="w-full max-w-[260px] sm:max-w-xs md:max-w-sm lg:max-w-md">
             <EmergencyCardPreview
               formData={formData}
               toggles={toggles}
               qrUrl={qrUrl}
             />
-          </div>
 
-          {card && <CardActions qrUrl={qrUrl} />}
+            {card && <CardActions qrUrl={qrUrl} />}
+          </div>
         </section>
       </div>
     </div>

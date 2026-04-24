@@ -16,6 +16,7 @@ import {
   Select,
   SelectItem,
   Switch,
+  Textarea,
   ErrorAlert,
   Dialog,
   DialogContent,
@@ -380,11 +381,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                 <Label className="text-label-md text-on-surface-variant">
                   Asset Description <span className="text-outline-variant normal-case tracking-normal">(optional)</span>
                 </Label>
-                <Input
-                  type="text"
+                <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe the significance and location of this asset..."
+                  rows={4}
                 />
               </div>
             </div>

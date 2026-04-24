@@ -3,6 +3,7 @@ import { Inter, Manrope, Geist } from "next/font/google";
 import ConvexClientProvider from "./convex-client-provider";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@keeplas/ui";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -37,6 +38,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-surface text-on-surface font-sans">
         <ConvexClientProvider>{children}</ConvexClientProvider>
+        <Toaster />
       </body>
     </html>
   );
