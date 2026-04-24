@@ -106,29 +106,156 @@ export default function VaultItemPage() {
     }
   }, [item, isReady, decryptedContent, decrypting, decryptContent]);
 
-  // Populate edit form when entering edit mode
   function startEditing() {
     if (!item || decryptedContent === null) return;
     setEditTitle(item.title);
     setEditDescription(item.description ?? "");
     setEditContent(decryptedContent);
     setEditCategory(item.category);
-    setEditAccessLevel(item.accessLevel);
+    setEditIsPublic(item.accessLevel === "public");
     setEditTags(item.tags.join(", "));
     setEditCritical(item.isCritical);
+
+    const initial: string[] = [];
+    const mode = item.recipientMode ?? "default";
+    if (mode === "groups") {
+      for (const gid of item.sharedWithGroups ?? []) {
+        initial.push(`${GROUP_PREFIX}${gid}`);
+      }
+    } else if (mode === "explicit") {
+      for (const cid of item.sharedWithContacts ?? []) {
+        initial.push(`${CONTACT_PREFIX}${cid}`);
+      }
+    } else if (mode === "default" && item.accessLevel !== "private") {
+      // Legacy "default = all trust contacts": prefer the user's default group.
+      const defaultGroup = recipientGroups.find((g) => g.isDefault);
+      if (defaultGroup) initial.push(`${GROUP_PREFIX}${defaultGroup._id}`);
+    }
+    setEditRecipientSelection(initial);
+
     setEditing(true);
+  }
+
+  function resolveEditRecipientConfig(): {
+    mode: "default" | "groups" | "explicit";
+    sharedWithGroups: Id<"recipient_groups">[];
+    sharedWithContacts: Id<"trusted_contacts">[];
+    derivedAccessLevel: AccessLevel;
+  } {
+    const groupIds = editRecipientSelection
+      .filter((v) => v.startsWith(GROUP_PREFIX))
+      .map((v) => v.slice(GROUP_PREFIX.length) as Id<"recipient_groups">);
+    const contactIds = editRecipientSelection
+      .filter((v) => v.startsWith(CONTACT_PREFIX))
+      .map((v) => v.slice(CONTACT_PREFIX.length) as Id<"trusted_contacts">);
+
+    if (groupIds.length === 0 && contactIds.length === 0) {
+      return {
+        mode: "default",
+        sharedWithGroups: [],
+        sharedWithContacts: [],
+        derivedAccessLevel: editIsPublic ? "public" : "private",
+      };
+    }
+    if (contactIds.length > 0 && groupIds.length === 0) {
+      return {
+        mode: "explicit",
+        sharedWithGroups: [],
+        sharedWithContacts: contactIds,
+        derivedAccessLevel: editIsPublic ? "public" : "trusted_only",
+      };
+    }
+    return {
+      mode: "groups",
+      sharedWithGroups: groupIds,
+      sharedWithContacts: contactIds,
+      derivedAccessLevel: editIsPublic ? "public" : "trusted_only",
+    };
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!isReady) return;
+    if (!isReady || !cryptoReady || !item) return;
     setSaving(true);
     setError("");
 
     try {
-      const encryptedContent = await encryptContent(editContent);
-      const contentHash = await computeHash(editContent);
+      const config = resolveEditRecipientConfig();
       const tagList = editTags.split(",").map((t) => t.trim()).filter(Boolean);
+
+      const byId = new Map(allContacts.map((c) => [c._id, c]));
+      let resolvedRecipients: Array<{
+        contactId: string;
+        contactPublicKey?: string;
+      }> = [];
+      if (config.mode === "explicit") {
+        resolvedRecipients = config.sharedWithContacts
+          .map((id) => byId.get(id))
+          .filter((c): c is NonNullable<typeof c> => Boolean(c))
+          .map((c) => ({
+            contactId: c._id,
+            contactPublicKey: c.contactPublicKey,
+          }));
+      } else if (config.mode === "groups") {
+        const groupSet = new Set(config.sharedWithGroups);
+        const memberSet = new Set<string>();
+        for (const g of recipientGroups) {
+          if (!groupSet.has(g._id)) continue;
+          for (const cid of g.memberContactIds) memberSet.add(cid);
+        }
+        resolvedRecipients = Array.from(memberSet)
+          .map((id) => byId.get(id as Id<"trusted_contacts">))
+          .filter((c): c is NonNullable<typeof c> => Boolean(c))
+          .map((c) => ({
+            contactId: c._id,
+            contactPublicKey: c.contactPublicKey,
+          }));
+      }
+
+      let encryptedContent: string;
+      let ownerWrappedDek: string | undefined;
+      let ownerWrappedDekIv: string | undefined;
+      let recipientKeysPayload: Array<{
+        contactId: Id<"trusted_contacts">;
+        wrappedDek: string;
+        wrappedDekIv: string;
+      }> = [];
+      let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" = "zero_knowledge";
+
+      if (item.ownerWrappedDek && item.ownerWrappedDekIv !== undefined) {
+        const dek = await unwrapOwnerDek({
+          wrappedDek: item.ownerWrappedDek,
+          wrappedDekIv: item.ownerWrappedDekIv,
+        });
+        encryptedContent = await encryptContentWithKey(editContent, dek);
+        const wraps = await wrapExistingDek(dek, resolvedRecipients);
+        ownerWrappedDek = wraps.ownerWrap.wrappedDek;
+        ownerWrappedDekIv = wraps.ownerWrap.wrappedDekIv;
+        recipientKeysPayload = wraps.recipientWraps.map((rw) => ({
+          contactId: rw.contactId as Id<"trusted_contacts">,
+          wrappedDek: rw.wrappedDek,
+          wrappedDekIv: rw.wrappedDekIv,
+        }));
+      } else if (item.encryptionType === "zero_knowledge") {
+        // Item flagged ZK but somehow missing the owner wrap — re-key it.
+        const fresh = await generateDekAndWrap(resolvedRecipients);
+        encryptedContent = await encryptContentWithKey(editContent, fresh.dek);
+        ownerWrappedDek = fresh.ownerWrap.wrappedDek;
+        ownerWrappedDekIv = fresh.ownerWrap.wrappedDekIv;
+        recipientKeysPayload = fresh.recipientWraps.map((rw) => ({
+          contactId: rw.contactId as Id<"trusted_contacts">,
+          wrappedDek: rw.wrappedDek,
+          wrappedDekIv: rw.wrappedDekIv,
+        }));
+      } else {
+        // Legacy item still encrypted under master key — keep that flow.
+        // Recipient release won't work on legacy items until they're re-saved
+        // with files re-encrypted. For now, save with master-key content.
+        encryptedContent = await encryptContent(editContent);
+        nextEncryptionType = "aes_256_gcm";
+      }
+
+      const contentHash = await computeHash(editContent);
 
       await updateItem({
         itemId,
@@ -137,9 +264,19 @@ export default function VaultItemPage() {
         encryptedContent,
         contentHash,
         category: editCategory,
-        accessLevel: editAccessLevel,
+        accessLevel: config.derivedAccessLevel,
         tags: tagList,
         isCritical: editCritical,
+        recipientMode: config.mode,
+        sharedWithGroups: config.sharedWithGroups,
+        sharedWithContacts: config.sharedWithContacts,
+        ...(nextEncryptionType === "zero_knowledge" && ownerWrappedDek
+          ? {
+              ownerWrappedDek,
+              ownerWrappedDekIv,
+              recipientKeys: recipientKeysPayload,
+            }
+          : {}),
       });
 
       setDecryptedContent(editContent);
@@ -222,13 +359,53 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Access Level</Label>
-            <Select<AccessLevel> value={editAccessLevel} onValueChange={setEditAccessLevel}>
-              <SelectItem value="private">Private — Only you</SelectItem>
-              <SelectItem value="trusted_only">Trusted Contacts</SelectItem>
-              <SelectItem value="emergency_only">Emergency Only</SelectItem>
-              <SelectItem value="public">Public</SelectItem>
-            </Select>
+            <Label>Who receives this at trigger?</Label>
+            <MultiSelect
+              options={recipientOptions}
+              selected={editRecipientSelection}
+              onChange={setEditRecipientSelection}
+              placeholder="No one — keep private"
+              searchPlaceholder="Search groups or contacts…"
+              emptyMessage="No groups or contacts yet."
+              renderTrigger={(selected) => {
+                if (selected.length === 0) {
+                  return (
+                    <span className="text-outline-variant">
+                      No one — keep private
+                    </span>
+                  );
+                }
+                const labels = selected
+                  .map((v) => recipientOptions.find((o) => o.value === v)?.label)
+                  .filter(Boolean);
+                return <span className="truncate">{labels.join(", ")}</span>;
+              }}
+            />
+            <p className="text-label-md text-on-surface-variant/70">
+              Pick one or more groups (your trust contacts are already a group),
+              or specific people. Empty = the item stays private.
+            </p>
+          </div>
+
+          <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
+                <Icon path={ICON_PATHS.emergencyCard} className="w-5 h-5" strokeWidth={1.75} />
+              </div>
+              <div>
+                <p className="text-headline-sm text-primary">
+                  Show on Emergency Card
+                </p>
+                <p className="text-body-md text-on-surface-variant mt-0.5">
+                  Anyone scanning your QR card will see this item.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={editIsPublic}
+              onCheckedChange={setEditIsPublic}
+              className="mt-1"
+            />
           </div>
 
           <div className="space-y-2">
@@ -236,11 +413,26 @@ export default function VaultItemPage() {
             <Input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} />
           </div>
 
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input type="checkbox" checked={editCritical} onChange={(e) => setEditCritical(e.target.checked)}
-              className="w-5 h-5 rounded-lg border-2 border-outline-variant/30 text-secondary accent-secondary cursor-pointer" />
-            <span className="text-sm font-body font-medium text-on-surface">Mark as critical</span>
-          </label>
+          <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
+                <Icon path={ICON_PATHS.warning} className="w-5 h-5" strokeWidth={1.75} />
+              </div>
+              <div>
+                <p className="text-headline-sm text-primary">
+                  Mark as critical
+                </p>
+                <p className="text-body-md text-on-surface-variant mt-0.5">
+                  Critical items are prioritized during emergency access.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={editCritical}
+              onCheckedChange={setEditCritical}
+              className="mt-1"
+            />
+          </div>
 
           <div className="flex gap-3 pt-2">
             <Button
@@ -307,9 +499,37 @@ export default function VaultItemPage() {
 
           {/* Metadata */}
           <div className="flex flex-wrap gap-3 mb-6">
-            <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
-              {item.accessLevel === "private" ? "Private" : item.accessLevel === "trusted_only" ? "Trusted Only" : item.accessLevel === "emergency_only" ? "Emergency Only" : "Public"}
-            </span>
+            {(() => {
+              const mode = item.recipientMode ?? "default";
+              const labels: string[] = [];
+              if (mode === "groups") {
+                for (const gid of item.sharedWithGroups ?? []) {
+                  const g = recipientGroups.find((x) => x._id === gid);
+                  if (g) labels.push(g.name);
+                }
+              } else if (mode === "explicit") {
+                for (const cid of item.sharedWithContacts ?? []) {
+                  const c = allContacts.find((x) => x._id === cid);
+                  if (c) labels.push(c.name);
+                }
+              }
+              const summary =
+                item.accessLevel === "private"
+                  ? "Private"
+                  : labels.length > 0
+                    ? `Released to ${labels.join(", ")}`
+                    : "Released to all trust contacts";
+              return (
+                <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
+                  {summary}
+                </span>
+              );
+            })()}
+            {item.accessLevel === "public" && (
+              <span className="text-[11px] font-label font-bold text-on-secondary-container bg-secondary-container px-3 py-1 rounded-lg">
+                On Emergency Card
+              </span>
+            )}
             {item.tags.map((tag) => (
               <span key={tag} className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
                 {tag}
