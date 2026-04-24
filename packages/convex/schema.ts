@@ -118,6 +118,16 @@ export default defineSchema({
     contentHash: v.string(),
 
     sharedWithContacts: v.array(v.id("trusted_contacts")),
+    sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
+    recipientMode: v.optional(
+      v.union(
+        v.literal("default"),
+        v.literal("groups"),
+        v.literal("explicit")
+      )
+    ),
+    ownerWrappedDek: v.optional(v.string()),
+    ownerWrappedDekIv: v.optional(v.string()),
     accessLevel: accessLevelValidator,
 
     status: v.union(
@@ -137,6 +147,30 @@ export default defineSchema({
     .index("by_category", ["vaultId", "category"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"]),
+
+  recipient_groups: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    color: v.optional(v.string()),
+    memberContactIds: v.array(v.id("trusted_contacts")),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_default", ["userId", "isDefault"]),
+
+  vault_item_recipient_keys: defineTable({
+    itemId: v.id("vault_items"),
+    contactId: v.id("trusted_contacts"),
+    wrappedDek: v.string(),
+    wrappedDekIv: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_item", ["itemId"])
+    .index("by_contact", ["contactId"])
+    .index("by_item_contact", ["itemId", "contactId"]),
 
   // ═══════════════════════════════════════════════
   // VAULT ITEM FILES (encrypted blobs in Convex storage)
@@ -186,6 +220,10 @@ export default defineSchema({
       v.literal("other")
     ),
 
+    contactType: v.optional(
+      v.union(v.literal("trust"), v.literal("recipient_only"))
+    ),
+
     isFirstResponder: v.boolean(),
     isMedicalContact: v.boolean(),
 
@@ -199,10 +237,10 @@ export default defineSchema({
       )
     ),
 
-    shardIndex: v.number(),
-    encryptedShard: v.string(),
-    shardPublicKeyUsed: v.string(),
-    shardConfirmed: v.boolean(),
+    shardIndex: v.optional(v.number()),
+    encryptedShard: v.optional(v.string()),
+    shardPublicKeyUsed: v.optional(v.string()),
+    shardConfirmed: v.optional(v.boolean()),
     shardConfirmedAt: v.optional(v.number()),
 
     contactRecoveryHash: v.optional(v.string()),

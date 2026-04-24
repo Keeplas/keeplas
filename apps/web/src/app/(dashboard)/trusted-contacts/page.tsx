@@ -8,7 +8,7 @@ import { ContactCard } from "./contact-card";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
 
-const MAX_CONTACTS = 5;
+const MAX_TRUST_CONTACTS = 5;
 
 const GUARDIAN_ROLES = [
   {
@@ -39,12 +39,21 @@ export default function TrustedContactsPage() {
   const activeContacts = contacts.filter(
     (c) => c.invitationStatus !== "revoked"
   );
-  const canInvite = activeContacts.length < MAX_CONTACTS;
-  const hasFirstResponder = activeContacts.some((c) => c.isFirstResponder);
-  const modeAContacts = activeContacts.filter((c) =>
+  const trustContacts = activeContacts.filter(
+    (c) => (c.contactType ?? "trust") === "trust"
+  );
+  const recipientContacts = activeContacts.filter(
+    (c) => c.contactType === "recipient_only"
+  );
+  const canInviteTrust = trustContacts.length < MAX_TRUST_CONTACTS;
+  const hasFirstResponder = trustContacts.some((c) => c.isFirstResponder);
+  const modeAContacts = trustContacts.filter((c) =>
     c.accessModes.includes("mode_a")
   );
-  const trustPct = Math.min(100, Math.round((activeContacts.length / MAX_CONTACTS) * 100));
+  const trustPct = Math.min(
+    100,
+    Math.round((trustContacts.length / MAX_TRUST_CONTACTS) * 100)
+  );
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -97,8 +106,7 @@ export default function TrustedContactsPage() {
             </p>
             <button
               onClick={() => setShowInviteDialog(true)}
-              disabled={!canInvite}
-              className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
@@ -116,10 +124,10 @@ export default function TrustedContactsPage() {
               <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Z" />
             </svg>
             <p className="text-headline-md font-black mb-1.5 text-on-primary">
-              {activeContacts.length} / {MAX_CONTACTS}
+              {trustContacts.length} / {MAX_TRUST_CONTACTS}
             </p>
             <p className="text-label-md text-on-primary-container">
-              Network Strength: {activeContacts.length >= 3 ? "Stable" : activeContacts.length >= 1 ? "Developing" : "Unprotected"}
+              Network Strength: {trustContacts.length >= 3 ? "Stable" : trustContacts.length >= 1 ? "Developing" : "Unprotected"}
             </p>
             <div className="mt-3 h-1.5 w-full bg-primary rounded-full overflow-hidden">
               <div
@@ -163,31 +171,88 @@ export default function TrustedContactsPage() {
                 Invite Your First Guardian
               </h3>
               <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                Up to {MAX_CONTACTS} trusted guardians can receive recovery fragments.
+                Up to {MAX_TRUST_CONTACTS} trusted guardians can receive recovery fragments. Recipient-only contacts have no cap.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeContacts.map((contact) => (
-                <ContactCard key={contact._id} contact={contact} />
-              ))}
-              {canInvite && (
-                <button
-                  onClick={() => setShowInviteDialog(true)}
-                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
-                >
-                  <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+            <div className="space-y-8">
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-headline-sm text-primary">
+                    Trust Contacts
+                    <span className="text-label-md text-on-surface-variant ml-2">
+                      ({trustContacts.length}/{MAX_TRUST_CONTACTS})
+                    </span>
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {trustContacts.map((contact) => (
+                    <ContactCard key={contact._id} contact={contact} />
+                  ))}
+                  {canInviteTrust && (
+                    <button
+                      onClick={() => setShowInviteDialog(true)}
+                      className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </div>
+                      <p className="text-headline-sm text-primary">
+                        Invite Next Trust Contact
+                      </p>
+                      <p className="text-label-md text-on-surface-variant mt-1">
+                        {MAX_TRUST_CONTACTS - trustContacts.length} slots remaining
+                      </p>
+                    </button>
+                  )}
+                </div>
+              </section>
+
+              {(recipientContacts.length > 0 || trustContacts.length >= MAX_TRUST_CONTACTS) && (
+                <section>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-headline-sm text-primary">
+                      Recipients Only
+                      <span className="text-label-md text-on-surface-variant ml-2">
+                        ({recipientContacts.length})
+                      </span>
+                    </h2>
                   </div>
-                  <p className="text-headline-sm text-primary">
-                    Invite Next Contact
-                  </p>
-                  <p className="text-label-md text-on-surface-variant mt-1">
-                    {MAX_CONTACTS - activeContacts.length} slots remaining
-                  </p>
-                </button>
+                  {recipientContacts.length === 0 ? (
+                    <button
+                      onClick={() => setShowInviteDialog(true)}
+                      className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                    >
+                      <p className="text-headline-sm text-primary">
+                        Add a Recipient
+                      </p>
+                      <p className="text-label-md text-on-surface-variant mt-1 text-center max-w-md">
+                        People who only receive items at trigger — no recovery role, no shard, no cap.
+                      </p>
+                    </button>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {recipientContacts.map((contact) => (
+                        <ContactCard key={contact._id} contact={contact} />
+                      ))}
+                      <button
+                        onClick={() => setShowInviteDialog(true)}
+                        className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                      >
+                        <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                        </div>
+                        <p className="text-headline-sm text-primary">
+                          Add Recipient
+                        </p>
+                      </button>
+                    </div>
+                  )}
+                </section>
               )}
             </div>
           )}

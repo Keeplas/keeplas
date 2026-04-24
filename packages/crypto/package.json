@@ -9,6 +9,7 @@
     "./aes": "./src/aes/index.ts",
     "./encoding": "./src/encoding.ts",
     "./recovery": "./src/recovery/index.ts",
+    "./rsa": "./src/rsa/index.ts",
     "./shamir": "./src/shamir/index.ts"
   },
   "scripts": {

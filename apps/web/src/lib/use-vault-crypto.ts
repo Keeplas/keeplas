@@ -21,20 +21,18 @@ export function useVaultCrypto() {
   const { masterKey } = useMasterKey();
 
   /**
-   * Encrypt plaintext content for storage.
-   * Returns a JSON string containing base64-encoded ciphertext + IV.
+   * Encrypt plaintext content with the given AES-GCM key. Returns a JSON
+   * string containing base64-encoded ciphertext + IV.
    */
-  const encryptContent = useCallback(
-    async (plaintext: string): Promise<string> => {
-      if (!masterKey) throw new Error("Master Key not available");
-
+  const encryptContentWithKey = useCallback(
+    async (plaintext: string, key: CryptoKey): Promise<string> => {
       const encoder = new TextEncoder();
       const data = encoder.encode(plaintext);
       const iv = crypto.getRandomValues(new Uint8Array(12));
 
       const ciphertext = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
-        masterKey,
+        key,
         data
       );
 
@@ -45,7 +43,18 @@ export function useVaultCrypto() {
 
       return JSON.stringify(payload);
     },
-    [masterKey]
+    []
+  );
+
+  /**
+   * Encrypt plaintext content using the user's master key.
+   */
+  const encryptContent = useCallback(
+    async (plaintext: string): Promise<string> => {
+      if (!masterKey) throw new Error("Master Key not available");
+      return await encryptContentWithKey(plaintext, masterKey);
+    },
+    [masterKey, encryptContentWithKey]
   );
 
   /**
@@ -86,20 +95,20 @@ export function useVaultCrypto() {
   }, []);
 
   /**
-   * Encrypt an arbitrary Blob for upload to Convex storage.
-   * Small blobs (< 8 MB) use a single AES-GCM call; larger payloads (video)
-   * fall back to chunked streaming so we never hold 2× the plaintext in memory.
+   * Encrypt a Blob with the given AES-GCM key. Small blobs use a single
+   * AES-GCM call; larger payloads fall back to chunked streaming.
    */
-  const encryptBlob = useCallback(
-    async (blob: Blob): Promise<{ cipherBlob: Blob; iv: string }> => {
-      if (!masterKey) throw new Error("Master Key not available");
-
+  const encryptBlobWithKey = useCallback(
+    async (
+      blob: Blob,
+      key: CryptoKey
+    ): Promise<{ cipherBlob: Blob; iv: string }> => {
       if (blob.size <= STREAM_THRESHOLD_BYTES) {
         const buf = await blob.arrayBuffer();
         const iv = crypto.getRandomValues(new Uint8Array(12));
         const ciphertext = await crypto.subtle.encrypt(
           { name: "AES-GCM", iv },
-          masterKey,
+          key,
           buf
         );
         return {
@@ -108,10 +117,22 @@ export function useVaultCrypto() {
         };
       }
 
-      const { cipherBlob } = await encryptStream(blob, masterKey);
+      const { cipherBlob } = await encryptStream(blob, key);
       return { cipherBlob, iv: STREAM_IV_SENTINEL };
     },
-    [masterKey]
+    []
+  );
+
+  /**
+   * Encrypt an arbitrary Blob for upload to Convex storage with the
+   * user's master key.
+   */
+  const encryptBlob = useCallback(
+    async (blob: Blob): Promise<{ cipherBlob: Blob; iv: string }> => {
+      if (!masterKey) throw new Error("Master Key not available");
+      return await encryptBlobWithKey(blob, masterKey);
+    },
+    [masterKey, encryptBlobWithKey]
   );
 
   /**
@@ -141,8 +162,10 @@ export function useVaultCrypto() {
 
   return {
     encryptContent,
+    encryptContentWithKey,
     decryptContent,
     encryptBlob,
+    encryptBlobWithKey,
     decryptBlob,
     computeHash,
     isReady: masterKey !== null,

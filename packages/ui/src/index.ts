@@ -31,6 +31,21 @@ export {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "./dropdown-menu";
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverAnchor,
+  PopoverContent,
+} from "./popover";
+export {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandSeparator,
+  CommandItem,
+} from "./command";
 export { ErrorAlert } from "./error-alert";
 export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";

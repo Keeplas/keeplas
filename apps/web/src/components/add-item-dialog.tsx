@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
-import { useMutation } from "convex/react";
+import { useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
+import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -28,6 +29,12 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { MediaRecorderPanel } from "@/components/media-recorder-panel";
+import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
+
+const GROUP_PREFIX = "group:";
+const CONTACT_PREFIX = "contact:";
+
+type RecipientMode = "default" | "groups" | "explicit";
 
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
@@ -128,8 +135,17 @@ function iconForKind(kind: FileKind): string {
 export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
   const createItem = useMutation(api.vault_items.createItem);
   const generateUploadUrl = useMutation(api.vault_items.generateUploadUrl);
-  const { encryptContent, encryptBlob, computeHash, isReady } = useVaultCrypto();
+  const {
+    encryptContentWithKey,
+    encryptBlobWithKey,
+    computeHash,
+    isReady,
+  } = useVaultCrypto();
+  const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
+  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -139,10 +155,59 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("private");
   const [tags, setTags] = useState("");
   const [isCritical, setIsCritical] = useState(false);
+  const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState("");
+
+  const recipientOptions = useMemo<MultiSelectOption[]>(() => {
+    const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
+      value: `${GROUP_PREFIX}${g._id}`,
+      label: g.name,
+      hint:
+        g.memberContactIds.length === 1
+          ? "1 contact"
+          : `${g.memberContactIds.length} contacts`,
+      groupLabel: "Groups",
+    }));
+    const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
+      value: `${CONTACT_PREFIX}${c._id}`,
+      label: c.name,
+      hint: c.email,
+      groupLabel: "Individual contacts",
+    }));
+    return [...groupOpts, ...contactOpts];
+  }, [recipientGroups, allContacts]);
+
+  function resolveRecipientConfig(): {
+    mode: RecipientMode;
+    sharedWithGroups: Id<"recipient_groups">[];
+    sharedWithContacts: Id<"trusted_contacts">[];
+  } {
+    if (recipientSelection.length === 0) {
+      return { mode: "default", sharedWithGroups: [], sharedWithContacts: [] };
+    }
+    const groupIds = recipientSelection
+      .filter((v) => v.startsWith(GROUP_PREFIX))
+      .map((v) => v.slice(GROUP_PREFIX.length) as Id<"recipient_groups">);
+    const contactIds = recipientSelection
+      .filter((v) => v.startsWith(CONTACT_PREFIX))
+      .map((v) => v.slice(CONTACT_PREFIX.length) as Id<"trusted_contacts">);
+
+    if (contactIds.length > 0) {
+      return {
+        mode: "explicit",
+        sharedWithGroups: [],
+        sharedWithContacts: contactIds,
+      };
+    }
+    return {
+      mode: "groups",
+      sharedWithGroups: groupIds,
+      sharedWithContacts: [],
+    };
+  }
 
   function ingestFiles(list: FileList | File[]) {
     const incoming = Array.from(list);
@@ -222,6 +287,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setAccessLevel("private");
     setTags("");
     setIsCritical(false);
+    setRecipientSelection([]);
     setSaving(false);
     setProgress("");
     setError("");
@@ -234,7 +300,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isReady) {
+    if (!isReady || !cryptoReady) {
       setError("Encryption key not available. Please sign in again.");
       return;
     }
@@ -247,6 +313,53 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setError("");
 
     try {
+      const recipientConfig = resolveRecipientConfig();
+
+      let resolvedRecipients: Array<{
+        contactId: string;
+        contactPublicKey?: string;
+      }> = [];
+      if (recipientConfig.mode === "explicit") {
+        const byId = new Map(allContacts.map((c) => [c._id, c]));
+        resolvedRecipients = recipientConfig.sharedWithContacts
+          .map((id) => byId.get(id))
+          .filter((c): c is NonNullable<typeof c> => Boolean(c))
+          .map((c) => ({
+            contactId: c._id,
+            contactPublicKey: c.contactPublicKey,
+          }));
+      } else if (recipientConfig.mode === "groups") {
+        const byId = new Map(allContacts.map((c) => [c._id, c]));
+        const groupSet = new Set(recipientConfig.sharedWithGroups);
+        const memberSet = new Set<string>();
+        for (const g of recipientGroups) {
+          if (!groupSet.has(g._id)) continue;
+          for (const cid of g.memberContactIds) memberSet.add(cid);
+        }
+        resolvedRecipients = Array.from(memberSet)
+          .map((id) => byId.get(id as Id<"trusted_contacts">))
+          .filter((c): c is NonNullable<typeof c> => Boolean(c))
+          .map((c) => ({
+            contactId: c._id,
+            contactPublicKey: c.contactPublicKey,
+          }));
+      } else {
+        resolvedRecipients = allContacts
+          .filter(
+            (c) =>
+              (c.contactType ?? "trust") === "trust" &&
+              c.invitationStatus === "accepted"
+          )
+          .map((c) => ({
+            contactId: c._id,
+            contactPublicKey: c.contactPublicKey,
+          }));
+      }
+
+      setProgress("Generating per-item key…");
+      const { dek, ownerWrap, recipientWraps, skippedRecipientIds } =
+        await generateDekAndWrap(resolvedRecipients);
+
       const uploadedFiles: Array<{
         storageId: Id<"_storage">;
         name: string;
@@ -260,7 +373,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       for (let index = 0; index < files.length; index++) {
         const file = files[index];
         setProgress(`Encrypting ${index + 1}/${files.length} — ${file.name}`);
-        const { cipherBlob, iv } = await encryptBlob(file.blob);
+        const { cipherBlob, iv } = await encryptBlobWithKey(file.blob, dek);
 
         setProgress(`Uploading ${index + 1}/${files.length} — ${file.name}`);
         const uploadUrl = await generateUploadUrl();
@@ -289,7 +402,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
       setProgress("Sealing vault entry…");
       const textPayload = description.trim();
-      const encryptedContent = await encryptContent(textPayload);
+      const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const contentHash = await computeHash(textPayload);
       const tagList = tags
         .split(",")
@@ -306,8 +419,26 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         accessLevel,
         tags: tagList,
         isCritical,
+        encryptionType: "zero_knowledge",
+        ownerWrappedDek: ownerWrap.wrappedDek,
+        ownerWrappedDekIv: ownerWrap.wrappedDekIv,
+        recipientMode: recipientConfig.mode,
+        sharedWithGroups: recipientConfig.sharedWithGroups,
+        sharedWithContacts: recipientConfig.sharedWithContacts,
+        recipientKeys: recipientWraps.map((rw) => ({
+          contactId: rw.contactId as Id<"trusted_contacts">,
+          wrappedDek: rw.wrappedDek,
+          wrappedDekIv: rw.wrappedDekIv,
+        })),
         files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       });
+
+      if (skippedRecipientIds.length > 0) {
+        const skippedCount = skippedRecipientIds.length;
+        setProgress(
+          `Sealed. ${skippedCount} recipient${skippedCount === 1 ? "" : "s"} won't receive this item until they accept their invitation.`
+        );
+      }
 
       handleOpenChange(false);
     } catch (err) {
@@ -543,6 +674,47 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   ))}
                 </Select>
               </div>
+
+              {accessLevel !== "private" && (
+                <div className="space-y-2">
+                  <Label className="text-label-md text-on-surface-variant">
+                    Release Recipients{" "}
+                    <span className="text-outline-variant normal-case tracking-normal">
+                      (default: all trust contacts)
+                    </span>
+                  </Label>
+                  <MultiSelect
+                    options={recipientOptions}
+                    selected={recipientSelection}
+                    onChange={setRecipientSelection}
+                    placeholder="All trust contacts (default)"
+                    searchPlaceholder="Search groups or contacts…"
+                    emptyMessage="No groups or contacts yet."
+                    renderTrigger={(selected) => {
+                      if (selected.length === 0) {
+                        return (
+                          <span className="text-outline-variant">
+                            All trust contacts (default)
+                          </span>
+                        );
+                      }
+                      const labels = selected
+                        .map(
+                          (v) =>
+                            recipientOptions.find((o) => o.value === v)?.label
+                        )
+                        .filter(Boolean);
+                      return (
+                        <span className="truncate">{labels.join(", ")}</span>
+                      );
+                    }}
+                  />
+                  <p className="text-label-md text-on-surface-variant/70">
+                    Pick a group, individual contacts, or leave empty to release
+                    to every trust contact at trigger.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">

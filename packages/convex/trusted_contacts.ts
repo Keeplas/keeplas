@@ -3,7 +3,12 @@ import { mutation, query } from "./_generated/server";
 import { createNotification, requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 
-const MAX_CONTACTS = 5;
+const MAX_TRUST_CONTACTS = 5;
+
+const contactTypeValidator = v.union(
+  v.literal("trust"),
+  v.literal("recipient_only")
+);
 
 /**
  * Get all trusted contacts for the authenticated user.
@@ -52,7 +57,8 @@ export const getContactCount = query({
 });
 
 /**
- * Invite a new trusted contact.
+ * Invite a new contact. Pass contactType="recipient_only" to skip the
+ * social-recovery role (no shard, no 5-cap).
  */
 export const inviteContact = mutation({
   args: {
@@ -66,22 +72,27 @@ export const inviteContact = mutation({
       v.literal("doctor"),
       v.literal("other")
     ),
+    contactType: v.optional(contactTypeValidator),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
+    const contactType = args.contactType ?? "trust";
 
-    // Enforce max 5 contacts
     const existing = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
       .collect();
 
-    if (existing.length >= MAX_CONTACTS) {
-      throw new Error("Maximum of 5 trusted contacts reached");
+    if (contactType === "trust") {
+      const trustCount = existing.filter(
+        (c) => (c.contactType ?? "trust") === "trust"
+      ).length;
+      if (trustCount >= MAX_TRUST_CONTACTS) {
+        throw new Error("Maximum of 5 trusted contacts reached");
+      }
     }
 
-    // Check for duplicate email
     const duplicate = existing.find(
       (c) => c.email.toLowerCase() === args.email.toLowerCase()
     );
@@ -89,48 +100,66 @@ export const inviteContact = mutation({
       throw new Error("A contact with this email already exists");
     }
 
-    // Generate invitation token
     const tokenBytes = new Uint8Array(32);
     crypto.getRandomValues(tokenBytes);
     const invitationToken = Array.from(tokenBytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // Find next available shard index (2-4 for contacts, 1=local, 5=keeplas)
-    const usedIndices = new Set(existing.map((c) => c.shardIndex));
-    let shardIndex = 2;
-    while (usedIndices.has(shardIndex) && shardIndex <= 4) {
-      shardIndex++;
-    }
-
     const now = Date.now();
 
-    const contactId = await ctx.db.insert("trusted_contacts", {
+    const baseFields = {
       userId,
       name: args.name,
       email: args.email,
       phoneNumber: args.phoneNumber,
       role: args.role,
+      contactType,
       isFirstResponder: false,
       isMedicalContact: false,
-      accessModes: ["mode_a"],
-      shardIndex,
-      encryptedShard: "",
-      shardPublicKeyUsed: "",
-      shardConfirmed: false,
-      invitationStatus: "pending",
+      invitationStatus: "pending" as const,
       invitationToken,
       invitedAt: now,
       createdAt: now,
       updatedAt: now,
-    });
+    };
 
-    // Create notification for the inviting user
+    let contactId;
+    if (contactType === "trust") {
+      const usedIndices = new Set(
+        existing
+          .filter((c) => (c.contactType ?? "trust") === "trust")
+          .map((c) => c.shardIndex)
+          .filter((i): i is number => typeof i === "number")
+      );
+      let shardIndex = 2;
+      while (usedIndices.has(shardIndex) && shardIndex <= 4) {
+        shardIndex++;
+      }
+
+      contactId = await ctx.db.insert("trusted_contacts", {
+        ...baseFields,
+        accessModes: ["mode_a"],
+        shardIndex,
+        encryptedShard: "",
+        shardPublicKeyUsed: "",
+        shardConfirmed: false,
+      });
+    } else {
+      contactId = await ctx.db.insert("trusted_contacts", {
+        ...baseFields,
+        accessModes: [],
+      });
+    }
+
     await createNotification(ctx, {
       userId,
       type: "contact_invited",
       title: "Invitation sent",
-      body: `You invited ${args.name} as a trusted contact.`,
+      body:
+        contactType === "trust"
+          ? `You invited ${args.name} as a trusted contact.`
+          : `You invited ${args.name} as a recipient.`,
       actionUrl: "/trusted-contacts",
       relatedId: contactId,
       relatedType: "trusted_contact",
@@ -143,7 +172,11 @@ export const inviteContact = mutation({
       action: "contact_invited",
       resourceType: "trusted_contact",
       resourceId: contactId,
-      metadata: JSON.stringify({ email: args.email, role: args.role }),
+      metadata: JSON.stringify({
+        email: args.email,
+        role: args.role,
+        contactType,
+      }),
     });
 
     return { contactId, invitationToken };

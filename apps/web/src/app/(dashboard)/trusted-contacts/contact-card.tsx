@@ -113,6 +113,8 @@ export function ContactCard({ contact }: ContactCardProps) {
     });
   }
 
+  const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
+
   const roleBadges: Array<{ icon: string; label: string }> = [];
   if (contact.isFirstResponder) {
     roleBadges.push({
@@ -148,14 +150,26 @@ export function ContactCard({ contact }: ContactCardProps) {
             </span>
           </div>
         </div>
-        <span
-          className={cn(
-            "px-3 py-1 text-label-md rounded-full",
-            statusConfig.className
-          )}
-        >
-          {statusConfig.label}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "px-3 py-1 text-label-md rounded-full",
+              isRecipientOnly
+                ? "bg-surface-container-high text-on-surface-variant"
+                : "bg-primary/10 text-primary"
+            )}
+          >
+            {isRecipientOnly ? "Recipient" : "Trust"}
+          </span>
+          <span
+            className={cn(
+              "px-3 py-1 text-label-md rounded-full",
+              statusConfig.className
+            )}
+          >
+            {statusConfig.label}
+          </span>
+        </div>
       </div>
 
       {/* Name + Email */}
@@ -232,7 +246,7 @@ export function ContactCard({ contact }: ContactCardProps) {
       {/* Actions panel */}
       {showActions && (
         <div className="mt-4 space-y-2 pt-4 border-t border-outline-variant/15">
-          {contact.invitationStatus === "accepted" && (
+          {contact.invitationStatus === "accepted" && !isRecipientOnly && (
             <>
               <button
                 onClick={handleToggleFirstResponder}

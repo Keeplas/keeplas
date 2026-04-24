@@ -8,7 +8,20 @@ import {
   getActiveItems,
   requireItemOwnership,
   logVaultAction,
+  resolveItemRecipients,
 } from "./helpers";
+
+const recipientModeValidator = v.union(
+  v.literal("default"),
+  v.literal("groups"),
+  v.literal("explicit")
+);
+
+const recipientKeyValidator = v.object({
+  contactId: v.id("trusted_contacts"),
+  wrappedDek: v.string(),
+  wrappedDekIv: v.string(),
+});
 
 // ─── Queries ────────────────────────────────────────────
 
@@ -144,6 +157,12 @@ const fileKindValidator = v.union(
 /**
  * Create a new encrypted vault item, optionally attaching pre-uploaded
  * encrypted blobs stored in Convex storage.
+ *
+ * Per-recipient release: pass recipientMode + sharedWithGroups OR
+ * sharedWithContacts, plus recipientKeys (DEK pre-wrapped to each
+ * recipient's contactPublicKey). When mode is "default", the client
+ * still wraps DEKs to all current trust contacts so the trigger doesn't
+ * need user keys.
  */
 export const createItem = mutation({
   args: {
@@ -156,6 +175,15 @@ export const createItem = mutation({
     accessLevel: accessLevelValidator,
     tags: v.array(v.string()),
     isCritical: v.boolean(),
+    encryptionType: v.optional(
+      v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge"))
+    ),
+    ownerWrappedDek: v.optional(v.string()),
+    ownerWrappedDekIv: v.optional(v.string()),
+    recipientMode: v.optional(recipientModeValidator),
+    sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
+    sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
+    recipientKeys: v.optional(v.array(recipientKeyValidator)),
     files: v.optional(
       v.array(
         v.object({
@@ -173,10 +201,32 @@ export const createItem = mutation({
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
 
-    // Verify vault ownership
     const vault = await ctx.db.get(args.vaultId);
     if (!vault || vault.userId !== userId) {
       throw new Error("Vault not found");
+    }
+
+    const recipientMode = args.recipientMode ?? "default";
+    const sharedWithContacts = args.sharedWithContacts ?? [];
+    const sharedWithGroups = args.sharedWithGroups ?? [];
+
+    if (sharedWithContacts.length > 0 || sharedWithGroups.length > 0) {
+      const own = await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      const ownContactIds = new Set(own.map((c) => c._id));
+      for (const cid of sharedWithContacts) {
+        if (!ownContactIds.has(cid)) {
+          throw new Error("One or more contacts are not yours");
+        }
+      }
+      for (const gid of sharedWithGroups) {
+        const g = await ctx.db.get(gid);
+        if (!g || g.userId !== userId) {
+          throw new Error("One or more groups are not yours");
+        }
+      }
     }
 
     const now = Date.now();
@@ -188,9 +238,13 @@ export const createItem = mutation({
       title: args.title,
       description: args.description,
       encryptedContent: args.encryptedContent,
-      encryptionType: "aes_256_gcm",
+      encryptionType: args.encryptionType ?? "aes_256_gcm",
       contentHash: args.contentHash,
-      sharedWithContacts: [],
+      sharedWithContacts,
+      sharedWithGroups,
+      recipientMode,
+      ownerWrappedDek: args.ownerWrappedDek,
+      ownerWrappedDekIv: args.ownerWrappedDekIv,
       accessLevel: args.accessLevel,
       status: "active",
       tags: args.tags,
@@ -198,6 +252,20 @@ export const createItem = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    if (args.recipientKeys && args.recipientKeys.length > 0) {
+      await Promise.all(
+        args.recipientKeys.map((rk) =>
+          ctx.db.insert("vault_item_recipient_keys", {
+            itemId,
+            contactId: rk.contactId,
+            wrappedDek: rk.wrappedDek,
+            wrappedDekIv: rk.wrappedDekIv,
+            createdAt: now,
+          })
+        )
+      );
+    }
 
     if (args.files && args.files.length > 0) {
       await Promise.all(
@@ -219,7 +287,6 @@ export const createItem = mutation({
       );
     }
 
-    // Update vault counts
     await ctx.db.patch(args.vaultId, {
       encryptedItemsCount: vault.encryptedItemsCount + 1,
       updatedAt: now,
@@ -232,7 +299,9 @@ export const createItem = mutation({
 });
 
 /**
- * Update an existing vault item (re-encrypted content).
+ * Update an existing vault item (re-encrypted content). When recipient
+ * configuration changes, pass recipientKeys to re-wrap the DEK for the
+ * new recipient set; existing wrapped-DEK rows are replaced.
  */
 export const updateItem = mutation({
   args: {
@@ -245,12 +314,16 @@ export const updateItem = mutation({
     accessLevel: v.optional(accessLevelValidator),
     tags: v.optional(v.array(v.string())),
     isCritical: v.optional(v.boolean()),
+    recipientMode: v.optional(recipientModeValidator),
+    sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
+    sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
+    recipientKeys: v.optional(v.array(recipientKeyValidator)),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
 
-    const { itemId, ...updates } = args;
+    const { itemId, recipientKeys, ...updates } = args;
     const now = Date.now();
     const patch: Record<string, unknown> = { updatedAt: now };
     for (const [key, value] of Object.entries(updates)) {
@@ -260,7 +333,44 @@ export const updateItem = mutation({
     }
 
     await ctx.db.patch(itemId, patch);
+
+    if (recipientKeys !== undefined) {
+      const existing = await ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_item", (q) => q.eq("itemId", itemId))
+        .collect();
+      await Promise.all(existing.map((row) => ctx.db.delete(row._id)));
+      await Promise.all(
+        recipientKeys.map((rk) =>
+          ctx.db.insert("vault_item_recipient_keys", {
+            itemId,
+            contactId: rk.contactId,
+            wrappedDek: rk.wrappedDek,
+            wrappedDekIv: rk.wrappedDekIv,
+            createdAt: now,
+          })
+        )
+      );
+    }
+
     await logVaultAction(ctx, userId, "vault_item_updated", itemId);
+  },
+});
+
+/**
+ * Resolve the effective recipient list for a vault item (preview before
+ * trigger). Useful for the UI to display "Will reach: A, B, C".
+ */
+export const resolveRecipientsForItem = query({
+  args: { itemId: v.id("vault_items") },
+  handler: async (ctx, args) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) return [];
+
+    const item = await ctx.db.get(args.itemId);
+    if (!item || item.userId !== userId) return [];
+
+    return await resolveItemRecipients(ctx, item, userId);
   },
 });
 

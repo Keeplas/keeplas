@@ -7,6 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button, buttonVariants, Loader, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
+import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
+import { exportPublicKey } from "@keeplas/crypto";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family member",
@@ -32,6 +34,7 @@ export default function InvitationPage({
   const declineInvitation = useMutation(
     api.trusted_contacts.declineInvitation
   );
+  const { ensureOwnerKeypair, isReady: cryptoReady } = useRecipientCrypto();
 
   const [accepting, setAccepting] = useState(false);
   const [declining, setDeclining] = useState(false);
@@ -132,7 +135,12 @@ export default function InvitationPage({
     setAccepting(true);
     setError("");
     try {
-      await acceptInvitation({ token });
+      let contactPublicKey: string | undefined;
+      if (cryptoReady) {
+        const { publicKey } = await ensureOwnerKeypair();
+        contactPublicKey = await exportPublicKey(publicKey);
+      }
+      await acceptInvitation({ token, contactPublicKey });
       setDone(true);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to accept invitation"));
