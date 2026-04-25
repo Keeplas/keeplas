@@ -36,23 +36,6 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
         </p>
       </div>
 
-      {item.tags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {item.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] font-label font-bold px-2 py-0.5 rounded-lg bg-surface-container-lowest text-on-surface-variant"
-            >
-              {tag}
-            </span>
-          ))}
-          {item.tags.length > 3 && (
-            <span className="text-[10px] text-on-surface-variant">
-              +{item.tags.length - 3}
-            </span>
-          )}
-        </div>
-      )}
     </Link>
   );
 }

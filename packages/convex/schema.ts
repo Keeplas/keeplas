@@ -157,7 +157,7 @@ export default defineSchema({
     ),
     releasedAt: v.optional(v.number()),
 
-    tags: v.array(v.string()),
+    tags: v.optional(v.array(v.string())),
 
     createdAt: v.number(),
     updatedAt: v.number(),

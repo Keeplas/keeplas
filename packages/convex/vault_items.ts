@@ -184,7 +184,6 @@ export const createItem = mutation({
     encryptedLinks: v.optional(v.string()),
     contentHash: v.string(),
     accessLevel: accessLevelValidator,
-    tags: v.array(v.string()),
     encryptionType: v.optional(
       v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge"))
     ),
@@ -262,7 +261,6 @@ export const createItem = mutation({
       status: "active",
       triggerType: args.triggerType,
       triggerConfig: args.triggerConfig,
-      tags: args.tags,
       createdAt: now,
       updatedAt: now,
     });
@@ -327,7 +325,6 @@ export const updateItem = mutation({
     contentHash: v.optional(v.string()),
     category: v.optional(categoryValidator),
     accessLevel: v.optional(accessLevelValidator),
-    tags: v.optional(v.array(v.string())),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),

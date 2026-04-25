@@ -75,6 +75,30 @@ export const migrateRecipients = internalMutation({
 });
 
 /**
+ * Strip the deprecated `tags` field from every vault_items row. Tags were
+ * never used for filter/search and have been removed from the UI. After
+ * this migration runs (and the field is observed undefined on every row),
+ * the `tags` field can be removed from the schema entirely.
+ */
+export const dropVaultItemTags = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let cleared = 0;
+    const items = await ctx.db.query("vault_items").collect();
+    for (const item of items) {
+      if (item.tags !== undefined) {
+        await ctx.db.patch(item._id, {
+          tags: undefined,
+          updatedAt: Date.now(),
+        });
+        cleared++;
+      }
+    }
+    return { cleared };
+  },
+});
+
+/**
  * Convert any legacy vault_items with category="personal_message" to
  * "conditional_message" — the two were redundant and have been collapsed
  * into a single "Letter / Personal Message" category. Idempotent.
