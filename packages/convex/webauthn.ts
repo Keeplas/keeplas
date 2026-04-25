@@ -179,7 +179,7 @@ export const startAuthentication = mutation({
     if (trimmed) {
       const user = await ctx.db
         .query("users")
-        .withIndex("by_email", (q) => q.eq("email", trimmed))
+        .withIndex("email", (q) => q.eq("email", trimmed))
         .first();
       if (user) {
         resolvedUserId = user._id;
