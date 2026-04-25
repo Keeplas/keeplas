@@ -63,6 +63,7 @@ export {
 } from "./select";
 export { Separator } from "./separator";
 export { Switch } from "./switch";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export { Spinner } from "./spinner";
 export { Loader, KeeplasLogoMark, type LoaderProps } from "./loader";
 export { Textarea } from "./textarea";

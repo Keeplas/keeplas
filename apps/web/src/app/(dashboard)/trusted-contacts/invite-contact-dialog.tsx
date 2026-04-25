@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -31,12 +31,14 @@ interface InviteContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onContactInvited?: (contactId: Id<"trusted_contacts">) => void;
+  initialContactType?: ContactType;
 }
 
 export function InviteContactDialog({
   open,
   onOpenChange,
   onContactInvited,
+  initialContactType = "trust",
 }: InviteContactDialogProps) {
   const inviteContact = useMutation(api.trusted_contacts.inviteContact);
 
@@ -44,9 +46,13 @@ export function InviteContactDialog({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<Role>("family");
-  const [contactType, setContactType] = useState<ContactType>("trust");
+  const [contactType, setContactType] = useState<ContactType>(initialContactType);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (open) setContactType(initialContactType);
+  }, [open, initialContactType]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,7 +73,7 @@ export function InviteContactDialog({
       setEmail("");
       setPhone("");
       setRole("family");
-      setContactType("trust");
+      setContactType(initialContactType);
       onOpenChange(false);
       onContactInvited?.(result.contactId);
     } catch (err) {
