@@ -73,6 +73,9 @@ export function ContactCard({ contact }: ContactCardProps) {
   const toggleFirstResponder = useMutation(
     api.trusted_contacts.toggleFirstResponder
   );
+  const toggleLegalAuthority = useMutation(
+    api.trusted_contacts.toggleLegalAuthority
+  );
   const updateAccessModes = useMutation(
     api.trusted_contacts.updateAccessModes
   );
@@ -103,6 +106,10 @@ export function ContactCard({ contact }: ContactCardProps) {
     await toggleFirstResponder({ contactId: contact._id });
   }
 
+  async function handleToggleLegalAuthority() {
+    await toggleLegalAuthority({ contactId: contact._id });
+  }
+
   async function handleToggleMode(mode: Extract<AccessMode, "mode_a" | "mode_b1">) {
     const newModes = contact.accessModes.includes(mode)
       ? contact.accessModes.filter((m) => m !== mode)
@@ -126,6 +133,12 @@ export function ContactCard({ contact }: ContactCardProps) {
     roleBadges.push({
       icon: ROLE_BADGE_ICONS.doctor,
       label: "Medical",
+    });
+  }
+  if (contact.isLegalAuthority) {
+    roleBadges.push({
+      icon: ROLE_BADGE_ICONS.lawyer,
+      label: "Legal Authority",
     });
   }
   const roleIcon = ROLE_BADGE_ICONS[contact.role] ?? ROLE_BADGE_ICONS.other;
@@ -255,6 +268,14 @@ export function ContactCard({ contact }: ContactCardProps) {
                 {contact.isFirstResponder
                   ? "Remove as First Responder"
                   : "Set as First Responder"}
+              </button>
+              <button
+                onClick={handleToggleLegalAuthority}
+                className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface"
+              >
+                {contact.isLegalAuthority
+                  ? "Remove as Legal Authority"
+                  : "Set as Legal Authority"}
               </button>
               <button
                 onClick={() => handleToggleMode("mode_a")}

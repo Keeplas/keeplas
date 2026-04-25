@@ -196,3 +196,54 @@ export const mergeConditionalMessagesIntoVault = internalMutation({
     return { merged, orphaned };
   },
 });
+
+/**
+ * Rewrite legacy `scenario_steps.actions` entries to the new 3-action set.
+ *
+ * Mapping:
+ *   - `send_message` → `grant_access` (closest functional equivalent: the
+ *     scenario engine fans out vault items to recipients; per-message
+ *     timed triggers continue to live on `vault_items.triggerType`).
+ *   - `unlock_vault` → dropped (vault unlock is now implicit when the
+ *     scenario dispatches; no per-step toggle needed).
+ *
+ * After this migration runs and observation confirms no rows still hold
+ * `send_message` / `unlock_vault`, the legacy literals can be removed from
+ * the `scenario_steps.actions[].actionType` validator in `schema.ts`.
+ *
+ * Idempotent: rows whose actions already use only the new set are skipped.
+ */
+export const migrateScenarioActions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let stepsPatched = 0;
+    let stepsCleared = 0;
+
+    const steps = await ctx.db.query("scenario_steps").collect();
+    for (const step of steps) {
+      let touched = false;
+      const next: typeof step.actions = [];
+      for (const action of step.actions) {
+        // The literals are no longer in the typed union after the schema
+        // narrow. Compare via a string cast so this migration remains
+        // re-runnable against environments still holding legacy rows.
+        const actionType = action.actionType as string;
+        if (actionType === "send_message") {
+          next.push({ ...action, actionType: "grant_access" });
+          touched = true;
+        } else if (actionType === "unlock_vault") {
+          touched = true;
+        } else {
+          next.push(action);
+        }
+      }
+      if (touched) {
+        await ctx.db.patch(step._id, { actions: next });
+        if (next.length === 0) stepsCleared++;
+        else stepsPatched++;
+      }
+    }
+
+    return { stepsPatched, stepsCleared };
+  },
+});

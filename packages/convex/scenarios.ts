@@ -4,10 +4,8 @@ import { requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 
 const ACTION_TYPE = v.union(
-  v.literal("send_message"),
   v.literal("grant_access"),
   v.literal("alert_authority"),
-  v.literal("unlock_vault"),
   v.literal("account_wipe")
 );
 

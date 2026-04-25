@@ -265,6 +265,7 @@ export default defineSchema({
 
     isFirstResponder: v.boolean(),
     isMedicalContact: v.boolean(),
+    isLegalAuthority: v.optional(v.boolean()),
 
     accessModes: v.array(
       v.union(
@@ -624,10 +625,8 @@ export default defineSchema({
     actions: v.array(
       v.object({
         actionType: v.union(
-          v.literal("send_message"),
           v.literal("grant_access"),
           v.literal("alert_authority"),
-          v.literal("unlock_vault"),
           v.literal("account_wipe")
         ),
         targetContactId: v.optional(v.id("trusted_contacts")),

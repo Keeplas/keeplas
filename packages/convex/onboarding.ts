@@ -33,19 +33,22 @@ const DEFAULT_SCENARIO_STEPS: Array<{
   triggerValue: number;
   label: string;
   category: "primary_outreach" | "incapacity" | "posthumous_release" | "wipe";
-  actions: Array<{ actionType: "alert_authority" | "send_message"; config: string }>;
+  actions: Array<{
+    actionType: "alert_authority" | "grant_access" | "account_wipe";
+    config: string;
+  }>;
 }> = [
   {
     triggerValue: 30,
-    label: "Notify First Responder",
+    label: "Notify Legal Authority",
     category: "primary_outreach",
     actions: [{ actionType: "alert_authority", config: "{}" }],
   },
   {
     triggerValue: 90,
-    label: "Release messages to recipients",
+    label: "Grant access to recipients",
     category: "posthumous_release",
-    actions: [{ actionType: "send_message", config: "{}" }],
+    actions: [{ actionType: "grant_access", config: "{}" }],
   },
 ];
 

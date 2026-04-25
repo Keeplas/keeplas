@@ -426,6 +426,30 @@ export const toggleMedicalContact = mutation({
 });
 
 /**
+ * Toggle legal authority designation. Used by the scenario engine's
+ * `alert_authority` action — only fires after a confirmed Life Check
+ * failure. Multiple legal authorities are allowed (no singleton).
+ */
+export const toggleLegalAuthority = mutation({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.userId !== userId) {
+      throw new Error("Contact not found");
+    }
+
+    await ctx.db.patch(args.contactId, {
+      isLegalAuthority: !(contact.isLegalAuthority ?? false),
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
  * Update access modes for a contact.
  */
 export const updateAccessModes = mutation({
@@ -481,6 +505,7 @@ export const revokeContact = mutation({
       shardConfirmed: false,
       isFirstResponder: false,
       isMedicalContact: false,
+      isLegalAuthority: false,
       updatedAt: Date.now(),
     });
 

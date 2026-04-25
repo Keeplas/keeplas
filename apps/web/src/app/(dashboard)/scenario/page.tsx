@@ -14,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
   ErrorAlert,
+  HelpHint,
   Icon,
+  InfoCallout,
   Input,
   Label,
   Loader,
@@ -26,12 +28,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/format";
 
-type ActionType =
-  | "send_message"
-  | "grant_access"
-  | "alert_authority"
-  | "unlock_vault"
-  | "account_wipe";
+type ActionType = "grant_access" | "alert_authority" | "account_wipe";
 
 type StepCategory =
   | "primary_outreach"
@@ -48,37 +45,37 @@ const CATEGORY_LABELS: Record<StepCategory, string> = {
 
 const ACTION_META: Record<
   ActionType,
-  { label: string; description: string; iconPath: string; chipIconPath: string }
+  {
+    label: string;
+    description: string;
+    iconPath: string;
+    chipIconPath: string;
+    helpContent: string;
+  }
 > = {
-  send_message: {
-    label: "Send Message",
-    description: "Release encrypted messages to selected recipients.",
-    iconPath: ICON_PATHS.mail,
-    chipIconPath: ICON_PATHS.mail,
-  },
   grant_access: {
     label: "Grant Access",
-    description: "Open vault sections to trusted contacts.",
+    description: "Open vault sections to the contacts and groups you assigned.",
     iconPath: ICON_PATHS.share,
     chipIconPath: ICON_PATHS.key,
+    helpContent:
+      "Releases vault items to their pre-assigned recipients (per item, group, or contact). Each recipient only receives what you explicitly shared with them — never the whole vault.",
   },
   alert_authority: {
-    label: "Alert Authority",
-    description: "Notify legal counsel or chosen first responder.",
+    label: "Alert Legal Authority",
+    description: "Notify your nominated legal authority once unavailability is confirmed.",
     iconPath: ICON_PATHS.notificationsActive,
     chipIconPath: ICON_PATHS.lawyer,
-  },
-  unlock_vault: {
-    label: "Unlock Vault",
-    description: "Release decryption shards to threshold contacts.",
-    iconPath: ICON_PATHS.encrypted,
-    chipIconPath: ICON_PATHS.encrypted,
+    helpContent:
+      "Sends a notice to a contact you marked as Legal Authority. Only fires after the Life Check escalation has confirmed your unavailability (J+30). No vault content is shared at this stage — the alert is administrative.",
   },
   account_wipe: {
     label: "Account Wipe",
     description: "Irreversible erasure of vault and metadata.",
     iconPath: ICON_PATHS.cloudOff,
     chipIconPath: ICON_PATHS.cloudOff,
+    helpContent:
+      "Permanently destroys the vault, encrypted backups, and metadata. The on-chain audit trail is preserved as a tamper-evident record. Irreversible — use only as a terminal fail-safe.",
   },
 };
 
@@ -112,6 +109,7 @@ type DialogState =
 
 export default function ScenarioPage() {
   const data = useQuery(api.scenarios.getScenario);
+  const contacts = useQuery(api.trusted_contacts.getContacts);
   const getOrCreate = useMutation(api.scenarios.getOrCreateScenario);
   const setSafePause = useMutation(api.scenarios.setSafePause);
   const addStep = useMutation(api.scenarios.addStep);
@@ -133,6 +131,8 @@ export default function ScenarioPage() {
   const scenario = data?.scenario;
   const steps = data?.steps ?? [];
   const lastCheck = scenario?.lastCheckAt ?? scenario?.createdAt ?? null;
+  const hasLegalAuthority =
+    contacts?.some((c) => c.isLegalAuthority === true) ?? false;
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -317,25 +317,28 @@ export default function ScenarioPage() {
               {(Object.keys(ACTION_META) as ActionType[]).map((type) => {
                 const meta = ACTION_META[type];
                 return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setDialog({ mode: "create" })}
-                    className="w-full bg-white p-4 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-secondary/5 transition-colors text-left"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center">
-                        <Icon path={meta.iconPath} className="w-4 h-4 text-secondary" />
+                  <div key={type} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setDialog({ mode: "create" })}
+                      className="w-full bg-white p-4 pr-12 rounded-xl flex items-center group cursor-pointer hover:bg-secondary/5 transition-colors text-left"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center">
+                          <Icon path={meta.iconPath} className="w-4 h-4 text-secondary" />
+                        </div>
+                        <span className="text-label-md text-primary">
+                          {meta.label}
+                        </span>
                       </div>
-                      <span className="text-label-md text-primary">
-                        {meta.label}
-                      </span>
-                    </div>
-                    <Icon
-                      path={ICON_PATHS.chevronRight}
-                      className="w-3 h-3 text-on-surface-variant group-hover:translate-x-1 transition-transform"
+                    </button>
+                    <HelpHint
+                      content={meta.helpContent}
+                      side="left"
+                      className="absolute top-1/2 -translate-y-1/2 right-4"
+                      label={`What does ${meta.label} do?`}
                     />
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -375,6 +378,7 @@ export default function ScenarioPage() {
 
       <MilestoneDialog
         state={dialog}
+        hasLegalAuthority={hasLegalAuthority}
         onOpenChange={(open) => {
           if (!open) setDialog(null);
         }}
@@ -401,12 +405,14 @@ type MilestoneFormValues = {
 
 function MilestoneDialog({
   state,
+  hasLegalAuthority,
   onOpenChange,
   onCreate,
   onUpdate,
   onDelete,
 }: {
   state: DialogState;
+  hasLegalAuthority: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (params: MilestoneFormValues) => Promise<void>;
   onUpdate: (
@@ -423,8 +429,9 @@ function MilestoneDialog({
   const [category, setCategory] =
     useState<StepCategory>("primary_outreach");
   const [selectedActions, setSelectedActions] = useState<Set<ActionType>>(
-    new Set<ActionType>(["send_message"])
+    new Set<ActionType>(["grant_access"])
   );
+  const [wipeConfirmText, setWipeConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -446,8 +453,9 @@ function MilestoneDialog({
       setTriggerValue(7);
       setLabel("Primary Outreach Phase");
       setCategory("primary_outreach");
-      setSelectedActions(new Set<ActionType>(["send_message"]));
+      setSelectedActions(new Set<ActionType>(["grant_access"]));
     }
+    setWipeConfirmText("");
     setError("");
   }, [state]);
 
@@ -464,6 +472,10 @@ function MilestoneDialog({
     e.preventDefault();
     if (!label.trim() || selectedActions.size === 0) {
       setError("Provide a label and at least one action.");
+      return;
+    }
+    if (selectedActions.has("account_wipe") && wipeConfirmText !== "WIPE") {
+      setError("Type WIPE in the confirmation field to enable Account Wipe.");
       return;
     }
     setSaving(true);
@@ -567,31 +579,70 @@ function MilestoneDialog({
 
           <div className="space-y-2">
             <Label>Actions</Label>
+            <InfoCallout icon={ICON_PATHS.encrypted} tone="info">
+              Vault unlock is automatic when this scenario triggers. Each
+              recipient or trustee only receives what you have explicitly
+              assigned to them — by item, group, or contact. Conditional
+              messages keep their own per-item triggers and are not
+              duplicated here.
+            </InfoCallout>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {(Object.keys(ACTION_META) as ActionType[]).map((type) => {
                 const meta = ACTION_META[type];
                 const selected = selectedActions.has(type);
                 return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => toggleAction(type)}
-                    className={cn(
-                      "text-left p-3 rounded-xl border transition-all cursor-pointer",
-                      selected
-                        ? "border-secondary bg-secondary/10"
-                        : "border-outline-variant/30 hover:border-secondary/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon path={meta.iconPath} className="w-4 h-4 text-secondary" />
-                      <span className="text-sm font-medium">{meta.label}</span>
-                    </div>
-                    <p className="text-xs text-on-surface-variant mt-1">{meta.description}</p>
-                  </button>
+                  <div key={type} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => toggleAction(type)}
+                      className={cn(
+                        "w-full text-left p-3 pr-9 rounded-xl border transition-all cursor-pointer",
+                        selected
+                          ? "border-secondary bg-secondary/10"
+                          : "border-outline-variant/30 hover:border-secondary/50"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon path={meta.iconPath} className="w-4 h-4 text-secondary" />
+                        <span className="text-sm font-medium">{meta.label}</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant mt-1">{meta.description}</p>
+                    </button>
+                    <HelpHint
+                      content={meta.helpContent}
+                      side="top"
+                      className="absolute top-2 right-2"
+                      label={`What does ${meta.label} do?`}
+                    />
+                  </div>
                 );
               })}
             </div>
+            {selectedActions.has("alert_authority") && !hasLegalAuthority && (
+              <InfoCallout icon={ICON_PATHS.info} tone="warning">
+                No contact is currently marked as <strong>Legal Authority</strong>.
+                This action will be skipped at runtime until you mark one in{" "}
+                <a href="/trusted-contacts" className="underline font-medium">
+                  Trusted Contacts
+                </a>
+                .
+              </InfoCallout>
+            )}
+            {selectedActions.has("account_wipe") && (
+              <div className="space-y-2">
+                <InfoCallout icon={ICON_PATHS.cloudOff} tone="warning">
+                  Account Wipe is irreversible. The on-chain audit trail is
+                  preserved for forensics, but every other record is destroyed.
+                  Type <strong>WIPE</strong> below to confirm.
+                </InfoCallout>
+                <Input
+                  value={wipeConfirmText}
+                  onChange={(e) => setWipeConfirmText(e.target.value)}
+                  placeholder="Type WIPE to confirm"
+                  aria-label="Account Wipe confirmation"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 pt-2">

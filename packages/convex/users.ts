@@ -1,6 +1,8 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, MutationCtx, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
+import { createAuditLog } from "./audit";
 
 export const viewer = query({
   args: {},
@@ -88,10 +90,73 @@ export const updatePreferences = mutation({
 });
 
 /**
- * Permanently delete every record owned by the authenticated user.
- * Includes vault, vault items, contacts, scenarios, messages, life check,
- * emergency card, notifications, audit logs, access requests and the user row.
- * Irreversible — caller must already have re-authenticated the user upstream.
+ * Wipe every record owned by `userId` while preserving the `audit_logs` table
+ * (the on-chain trail must outlive the user). Writes a final tamper-evident
+ * audit entry BEFORE deletion so the wipe itself is recorded in the chain.
+ */
+export async function wipeUserData(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  actor: {
+    actorType: "user" | "trusted_contact" | "system" | "ai_assistant";
+    actorId: string;
+  }
+) {
+  await createAuditLog(ctx, {
+    userId,
+    actorType: actor.actorType,
+    actorId: actor.actorId,
+    action: "account_wipe_executed",
+    resourceType: "user",
+    resourceId: userId,
+  });
+
+  const tablesByUser = [
+    "vault_items",
+    "trusted_contacts",
+    "life_check_configs",
+    "life_check_cycles",
+    "passive_signals",
+    "scenarios",
+    "conditional_messages",
+    "emergency_cards",
+    "notifications",
+    "vaults",
+  ] as const;
+
+  for (const table of tablesByUser) {
+    const rows = await ctx.db
+      .query(table)
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const row of rows) {
+      await ctx.db.delete(row._id);
+    }
+  }
+
+  const scenarioSteps = await ctx.db
+    .query("scenario_steps")
+    .filter((q) => q.eq(q.field("userId"), userId))
+    .collect();
+  for (const row of scenarioSteps) {
+    await ctx.db.delete(row._id);
+  }
+
+  const accessRequests = await ctx.db
+    .query("access_requests")
+    .withIndex("by_vault_user", (q) => q.eq("vaultUserId", userId))
+    .collect();
+  for (const row of accessRequests) {
+    await ctx.db.delete(row._id);
+  }
+
+  await ctx.db.delete(userId);
+}
+
+/**
+ * User-initiated permanent deletion. Requires the literal "DELETE"
+ * confirmation phrase and that the user has already re-authenticated upstream.
+ * `audit_logs` are intentionally preserved (immutable on-chain trail).
  */
 export const deleteAccount = mutation({
   args: { confirmation: v.string() },
@@ -101,47 +166,10 @@ export const deleteAccount = mutation({
     }
     const userId = await requireAuth(ctx);
 
-    const tablesByUser = [
-      "vault_items",
-      "trusted_contacts",
-      "life_check_configs",
-      "life_check_cycles",
-      "passive_signals",
-      "scenarios",
-      "conditional_messages",
-      "emergency_cards",
-      "notifications",
-      "audit_logs",
-      "vaults",
-    ] as const;
-
-    for (const table of tablesByUser) {
-      const rows = await ctx.db
-        .query(table)
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
-      for (const row of rows) {
-        await ctx.db.delete(row._id);
-      }
-    }
-
-    const scenarioSteps = await ctx.db
-      .query("scenario_steps")
-      .filter((q) => q.eq(q.field("userId"), userId))
-      .collect();
-    for (const row of scenarioSteps) {
-      await ctx.db.delete(row._id);
-    }
-
-    const accessRequests = await ctx.db
-      .query("access_requests")
-      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", userId))
-      .collect();
-    for (const row of accessRequests) {
-      await ctx.db.delete(row._id);
-    }
-
-    await ctx.db.delete(userId);
+    await wipeUserData(ctx, userId, {
+      actorType: "user",
+      actorId: userId,
+    });
 
     return { success: true };
   },

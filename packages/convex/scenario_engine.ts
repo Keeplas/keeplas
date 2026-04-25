@@ -4,6 +4,7 @@ import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { createAuditLog } from "./audit";
 import { createNotification } from "./helpers";
+import { wipeUserData } from "./users";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -143,12 +144,7 @@ export const executeStep = internalMutation({
 });
 
 type ScenarioActionInput = {
-  actionType:
-    | "send_message"
-    | "grant_access"
-    | "alert_authority"
-    | "unlock_vault"
-    | "account_wipe";
+  actionType: "grant_access" | "alert_authority" | "account_wipe";
   targetContactId?: Id<"trusted_contacts">;
   config: string;
 };
@@ -159,23 +155,25 @@ async function dispatchAction(
   action: ScenarioActionInput
 ) {
   switch (action.actionType) {
-    case "send_message":
+    case "alert_authority":
+      await alertLegalAuthority(ctx, userId, action.targetContactId);
+      return;
+    case "account_wipe":
+      await wipeUserData(ctx, userId, {
+        actorType: "system",
+        actorId: "scenario_engine",
+      });
+      return;
+    case "grant_access":
       await ctx.scheduler.runAfter(0, internal.release.triggerRelease, {
         userId,
         reason: "scenario_step",
       });
-      return;
-    case "alert_authority":
-      await alertFirstResponder(ctx, userId, action.targetContactId);
-      return;
-    case "grant_access":
-    case "unlock_vault":
-    case "account_wipe":
       await createAuditLog(ctx, {
         userId,
         actorType: "system",
         actorId: "scenario_engine",
-        action: `scenario_action_${action.actionType}_pending`,
+        action: "scenario_action_grant_access_dispatched",
         resourceType: "scenario_action",
         resourceId: action.actionType,
         metadata: action.config,
@@ -184,7 +182,7 @@ async function dispatchAction(
   }
 }
 
-async function alertFirstResponder(
+async function alertLegalAuthority(
   ctx: MutationCtx,
   userId: Id<"users">,
   targetContactId?: Id<"trusted_contacts">
@@ -193,22 +191,30 @@ async function alertFirstResponder(
   if (targetContactId) {
     contact = await ctx.db.get(targetContactId);
   } else {
-    const responders = await ctx.db
+    const candidates = await ctx.db
       .query("trusted_contacts")
-      .withIndex("by_first_responder", (q) =>
-        q.eq("userId", userId).eq("isFirstResponder", true)
-      )
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    contact = responders[0] ?? null;
+    contact = candidates.find((c) => c.isLegalAuthority === true) ?? null;
   }
-  if (!contact) return;
+  if (!contact) {
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "system",
+      actorId: "scenario_engine",
+      action: "alert_authority_skipped_no_contact",
+      resourceType: "scenario_action",
+      resourceId: "alert_authority",
+    });
+    return;
+  }
 
   if (contact.contactUserId) {
     await createNotification(ctx, {
       userId: contact.contactUserId,
       type: "security_alert",
-      title: "First Responder alert",
-      body: "You have been activated as a First Responder. Open Keeplas for next steps.",
+      title: "Legal Authority activation",
+      body: "You have been activated as a Legal Authority. Open Keeplas for next steps.",
       channels: ["push", "email"],
       actionUrl: "/trusted-contacts",
     });
@@ -218,7 +224,7 @@ async function alertFirstResponder(
     userId,
     actorType: "system",
     actorId: "scenario_engine",
-    action: "first_responder_alerted",
+    action: "legal_authority_alerted",
     resourceType: "trusted_contact",
     resourceId: contact._id,
   });
