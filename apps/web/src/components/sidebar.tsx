@@ -22,7 +22,6 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Dashboard", href: "/dashboard", iconPath: DASHBOARD_ICON },
   { label: "Life Map", href: "/life-map", iconPath: ICON_PATHS.shieldCheck },
   { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
-  { label: "Messages", href: "/messages", iconPath: ICON_PATHS.notes },
   { label: "Trusted Contacts", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
   { label: "Recipients & Groups", href: "/recipients", iconPath: ICON_PATHS.userPlus },
   { label: "Life Check", href: "/life-check", iconPath: ICON_PATHS.heartbeat },
@@ -34,7 +33,6 @@ const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Dashboard", href: "/dashboard", iconPath: DASHBOARD_ICON },
   { label: "Vault", href: "/vault", iconPath: ICON_PATHS.lock },
   { label: "Map", href: "/life-map", iconPath: ICON_PATHS.shieldCheck },
-  { label: "Messages", href: "/messages", iconPath: ICON_PATHS.notes },
   { label: "Trust", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
 ];
 

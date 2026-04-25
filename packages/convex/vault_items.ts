@@ -11,6 +11,16 @@ import {
   resolveItemRecipients,
 } from "./helpers";
 
+const triggerTypeValidator = v.union(
+  v.literal("life_check_failure"),
+  v.literal("time_based"),
+  v.literal("manual")
+);
+
+const triggerConfigValidator = v.object({
+  releaseDate: v.optional(v.number()),
+});
+
 const recipientModeValidator = v.union(
   v.literal("default"),
   v.literal("groups"),
@@ -197,6 +207,8 @@ export const createItem = mutation({
         })
       )
     ),
+    triggerType: v.optional(triggerTypeValidator),
+    triggerConfig: v.optional(triggerConfigValidator),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -248,6 +260,8 @@ export const createItem = mutation({
       ownerWrappedDekIv: args.ownerWrappedDekIv,
       accessLevel: args.accessLevel,
       status: "active",
+      triggerType: args.triggerType,
+      triggerConfig: args.triggerConfig,
       tags: args.tags,
       createdAt: now,
       updatedAt: now,
@@ -401,5 +415,36 @@ export const deleteItem = mutation({
     }
 
     await logVaultAction(ctx, userId, "vault_item_archived", args.itemId);
+  },
+});
+
+/**
+ * Heartbeat / Dead-Man-Switch overall status derived from the user's life
+ * check config plus any vault items configured with a trigger.
+ */
+export const getDeadManStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+
+    const config = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.neq(q.field("triggerType"), undefined))
+      .collect();
+
+    return {
+      isActive: !!config?.isActive && !config.travelModeEnabled,
+      lastHeartbeatAt: config?.lastCheckAt ?? null,
+      nextHeartbeatAt: config?.nextCheckAt ?? null,
+      activeMessages: items.filter((m) => m.status === "active").length,
+      draftMessages: items.filter((m) => m.status === "draft").length,
+      curatorsRequired: 3,
+    };
   },
 });

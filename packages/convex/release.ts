@@ -135,3 +135,39 @@ export const simulateEmergencyTrigger = mutation({
     return await fanOutRelease(ctx, userId, "manual_simulation");
   },
 });
+
+/**
+ * Cron entry point: release every active vault item with a time_based
+ * trigger whose releaseDate has passed. Idempotent — flips status to
+ * "released" so we never re-fire.
+ */
+export const processScheduledReleases = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    const due = await ctx.db
+      .query("vault_items")
+      .withIndex("by_trigger", (q) =>
+        q.eq("triggerType", "time_based").eq("status", "active")
+      )
+      .collect();
+
+    let released = 0;
+    for (const item of due) {
+      const releaseAt = item.triggerConfig?.releaseDate;
+      if (!releaseAt || releaseAt > now) continue;
+
+      await fanOutRelease(ctx, item.userId, `time_based:${item._id}`);
+
+      await ctx.db.patch(item._id, {
+        status: "released",
+        releasedAt: now,
+        updatedAt: now,
+      });
+      released++;
+    }
+
+    return { scanned: due.length, released };
+  },
+});

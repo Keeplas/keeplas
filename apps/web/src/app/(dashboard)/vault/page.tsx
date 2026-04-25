@@ -62,7 +62,7 @@ const DOCUMENT_CATEGORIES: VaultCategory[] = [
   "business_continuity",
 ];
 const FINANCIAL_CATEGORIES: VaultCategory[] = ["financial_asset"];
-const MESSAGE_CATEGORIES: VaultCategory[] = ["conditional_message", "personal_message"];
+const MESSAGE_CATEGORIES: VaultCategory[] = ["conditional_message"];
 const DIGITAL_CATEGORIES: VaultCategory[] = ["digital_asset", "credential"];
 
 const SECTION_DEFAULT_CATEGORY: Record<VaultSectionKey, VaultCategory> = {

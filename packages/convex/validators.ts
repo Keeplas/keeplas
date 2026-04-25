@@ -8,7 +8,6 @@ export const categoryValidator = v.union(
   v.literal("legal_document"),
   v.literal("business_continuity"),
   v.literal("conditional_message"),
-  v.literal("personal_message"),
   v.literal("credential")
 );
 

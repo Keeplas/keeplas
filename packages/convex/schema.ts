@@ -139,8 +139,23 @@ export default defineSchema({
       v.literal("active"),
       v.literal("draft"),
       v.literal("archived"),
-      v.literal("sealed")
+      v.literal("sealed"),
+      v.literal("released")
     ),
+
+    triggerType: v.optional(
+      v.union(
+        v.literal("life_check_failure"),
+        v.literal("time_based"),
+        v.literal("manual")
+      )
+    ),
+    triggerConfig: v.optional(
+      v.object({
+        releaseDate: v.optional(v.number()),
+      })
+    ),
+    releasedAt: v.optional(v.number()),
 
     tags: v.array(v.string()),
 
@@ -150,7 +165,8 @@ export default defineSchema({
     .index("by_vault", ["vaultId"])
     .index("by_category", ["vaultId", "category"])
     .index("by_status", ["vaultId", "status"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_trigger", ["triggerType", "status"]),
 
   recipient_groups: defineTable({
     userId: v.id("users"),

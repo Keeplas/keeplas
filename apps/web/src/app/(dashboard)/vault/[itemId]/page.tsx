@@ -76,7 +76,6 @@ export default function VaultItemPage() {
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
-  const [editTags, setEditTags] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -127,7 +126,6 @@ export default function VaultItemPage() {
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
     setEditIsPublic(item.accessLevel === "public");
-    setEditTags(item.tags.join(", "));
 
     const initial: string[] = [];
     const mode = item.recipientMode ?? "default";
@@ -204,7 +202,6 @@ export default function VaultItemPage() {
 
     try {
       const config = resolveEditRecipientConfig();
-      const tagList = editTags.split(",").map((t) => t.trim()).filter(Boolean);
 
       const byId = new Map(allContacts.map((c) => [c._id, c]));
       let resolvedRecipients: Array<{
@@ -293,7 +290,6 @@ export default function VaultItemPage() {
         contentHash,
         category: editCategory,
         accessLevel: config.derivedAccessLevel,
-        tags: tagList,
         recipientMode: config.mode,
         sharedWithGroups: config.sharedWithGroups,
         sharedWithContacts: config.sharedWithContacts,
@@ -440,11 +436,6 @@ export default function VaultItemPage() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Tags</Label>
-            <Input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} />
-          </div>
-
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
@@ -536,11 +527,6 @@ export default function VaultItemPage() {
                 On Emergency Card
               </span>
             )}
-            {item.tags.map((tag) => (
-              <span key={tag} className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
-                {tag}
-              </span>
-            ))}
           </div>
 
           {/* Decrypted Content */}

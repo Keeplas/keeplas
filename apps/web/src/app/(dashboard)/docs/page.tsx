@@ -38,11 +38,11 @@ const CORE_FEATURES: Feature[] = [
     accent: "bg-primary/10 text-primary",
   },
   {
-    title: "Conditional Messages",
+    title: "Letters & Messages",
     description:
-      "Sealed letters released by specific life events or dates. Recipients only receive them once curators validate the trigger.",
+      "Sealed letters released by specific life events or dates. Compose them as a Letter / Message item from your vault — recipients receive them once curators validate the trigger.",
     iconPath: ICON_PATHS.notes,
-    href: "/messages",
+    href: "/vault",
     accent: "bg-tertiary/15 text-tertiary",
   },
   {

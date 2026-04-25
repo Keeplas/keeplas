@@ -6,7 +6,6 @@ export type VaultCategory =
   | "legal_document"
   | "business_continuity"
   | "conditional_message"
-  | "personal_message"
   | "credential";
 
 export type AccessLevel =

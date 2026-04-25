@@ -9,15 +9,18 @@ import { getErrorMessage } from "@/lib/utils";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
+import Link from "next/link";
 import {
   Button,
+  DatePicker,
   Icon,
+  InfoCallout,
   Input,
   Label,
+  RichTextEditor,
   Select,
   SelectItem,
   Switch,
-  Textarea,
   ErrorAlert,
   Dialog,
   DialogContent,
@@ -44,6 +47,32 @@ const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
 
 type RecipientMode = "default" | "groups" | "explicit";
+
+type TriggerType = "life_check_failure" | "time_based" | "manual";
+
+interface TriggerOption {
+  value: TriggerType;
+  label: string;
+  hint: string;
+}
+
+const TRIGGER_OPTIONS: TriggerOption[] = [
+  {
+    value: "life_check_failure",
+    label: "Verified Life-Check Failure",
+    hint: "Released when you stop responding to Life Checks for the configured number of days.",
+  },
+  {
+    value: "time_based",
+    label: "Time-based Release",
+    hint: "Released on a specific calendar date — useful for birthdays, anniversaries, or coming-of-age letters.",
+  },
+  {
+    value: "manual",
+    label: "Manual Trigger",
+    hint: "Released only when you (or a curator) explicitly approve from the dashboard.",
+  },
+];
 
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
@@ -135,14 +164,17 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
   const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
-  const [tags, setTags] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [recipientsTouched, setRecipientsTouched] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [triggerType, setTriggerType] = useState<TriggerType>("life_check_failure");
+  const [releaseDate, setReleaseDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState("");
+
+  const isLetter = category === "conditional_message";
 
   // Pre-select the user's default group on first open of the dialog so
   // most items go to "all trust contacts" without any picking. The user
@@ -308,10 +340,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setFiles([]);
     setLinkUrls([""]);
     setRecorderMode(null);
-    setTags("");
     setIsPublic(false);
     setRecipientSelection([]);
     setRecipientsTouched(false);
+    setTriggerType("life_check_failure");
+    setReleaseDate("");
     setSaving(false);
     setProgress("");
     setError("");
@@ -337,6 +370,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
     if (invalidUrl) {
       setError(`Invalid URL: ${invalidUrl}`);
+      return;
+    }
+
+    if (isLetter && triggerType === "time_based" && !releaseDate) {
+      setError("Pick a release date for the time-based trigger.");
       return;
     }
 
@@ -432,10 +470,16 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         cleanUrls.length > 0
           ? await encryptContentWithKey(serializeLinks(cleanUrls), dek)
           : undefined;
-      const tagList = tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+
+      const triggerArgs = isLetter
+        ? {
+            triggerType,
+            triggerConfig:
+              triggerType === "time_based" && releaseDate
+                ? { releaseDate: new Date(releaseDate).getTime() }
+                : undefined,
+          }
+        : {};
 
       await createItem({
         vaultId,
@@ -446,7 +490,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         encryptedLinks,
         contentHash,
         accessLevel: recipientConfig.derivedAccessLevel,
-        tags: tagList,
         encryptionType: "zero_knowledge",
         ownerWrappedDek: ownerWrap.wrappedDek,
         ownerWrappedDekIv: ownerWrap.wrappedDekIv,
@@ -459,6 +502,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           wrappedDekIv: rw.wrappedDekIv,
         })),
         files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+        ...triggerArgs,
       });
 
       if (skippedRecipientIds.length > 0) {
@@ -541,15 +585,78 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
               </div>
               <div className="md:col-span-2 space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
-                  Asset Description <span className="text-outline-variant normal-case tracking-normal">(optional)</span>
+                  {isLetter ? "Message" : "Asset Description"}{" "}
+                  {!isLetter && (
+                    <span className="text-outline-variant normal-case tracking-normal">
+                      (optional)
+                    </span>
+                  )}
                 </Label>
-                <Textarea
+                <RichTextEditor
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the significance and location of this asset..."
-                  rows={4}
+                  onChange={setDescription}
+                  placeholder={
+                    isLetter
+                      ? "Write the message that will be released…"
+                      : "Describe the significance and location of this asset…"
+                  }
+                  minHeight={isLetter ? 240 : 160}
                 />
               </div>
+
+              {isLetter && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-label-md text-on-surface-variant">
+                    Trigger
+                  </Label>
+                  <Select<TriggerType>
+                    value={triggerType}
+                    onValueChange={setTriggerType}
+                    placeholder="Choose a trigger"
+                  >
+                    {TRIGGER_OPTIONS.map((opt) => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        label={opt.label}
+                        description={opt.hint}
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              )}
+
+              {isLetter && triggerType === "time_based" && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-label-md text-on-surface-variant">
+                    Release on
+                  </Label>
+                  <DatePicker
+                    value={releaseDate}
+                    onChange={setReleaseDate}
+                    min={new Date().toISOString().split("T")[0]}
+                    placeholder="Pick a release date"
+                  />
+                </div>
+              )}
+
+              {isLetter && triggerType === "life_check_failure" && (
+                <div className="md:col-span-2">
+                  <InfoCallout icon={ICON_PATHS.heartbeat}>
+                    Uses your global Life Check cadence and escalation. Adjust
+                    the inactivity threshold once in{" "}
+                    <Link
+                      href="/life-check"
+                      className="text-secondary font-semibold hover:underline"
+                    >
+                      Life Check settings
+                    </Link>
+                    — it applies to every letter with this trigger.
+                  </InfoCallout>
+                </div>
+              )}
             </div>
           </section>
 
@@ -743,18 +850,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   checked={isPublic}
                   onCheckedChange={setIsPublic}
                   className="mt-1"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-label-md text-on-surface-variant">
-                  Tags <span className="text-outline-variant normal-case tracking-normal">(comma separated)</span>
-                </Label>
-                <Input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. urgent, family, financial..."
                 />
               </div>
 

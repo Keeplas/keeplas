@@ -21,7 +21,7 @@ export default function LifeMapPage() {
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const lifeCheck = useQuery(api.life_check.getConfig);
-  const messages = useQuery(api.conditional_messages.listMessages);
+  const messages = items?.filter((i) => i.triggerType !== undefined) ?? [];
 
   if (items === undefined || contacts === undefined) {
     return <Loader fullscreen label="Loading Life Map" />;
@@ -52,8 +52,8 @@ export default function LifeMapPage() {
         : "Action Required";
 
   const missingDirectives = directives.length === 0;
-  const missingMessages = (messages?.length ?? 0) === 0;
-  const aiPercentage = Math.min(continuityScore + (messages && messages.length > 0 ? 5 : 0), 99);
+  const missingMessages = messages.length === 0;
+  const aiPercentage = Math.min(continuityScore + (messages.length > 0 ? 5 : 0), 99);
 
   const verifiedTrustees = contacts.filter((c) => c.invitationStatus === "accepted").length;
   const circumference = 2 * Math.PI * 20;
@@ -358,7 +358,7 @@ export default function LifeMapPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href={missingDirectives ? "/vault" : "/messages"}
+                href="/vault"
                 className="bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/20"
               >
                 {missingDirectives
