@@ -1,7 +1,9 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
 import { createAuditLog } from "./audit";
+
+export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 
 /**
  * Require an authenticated user (for mutations). Throws if not authenticated.
@@ -17,6 +19,33 @@ export async function requireAuth(ctx: { auth: QueryCtx["auth"] }) {
  */
 export async function optionalAuth(ctx: { auth: QueryCtx["auth"] }) {
   return await getAuthUserId(ctx);
+}
+
+/**
+ * Like `requireAuth` but additionally enforces that, if the user has TOTP
+ * enrolled, the current Convex Auth session has cleared the TOTP step.
+ *
+ * Throws `"TOTP_REQUIRED"` for callers to detect and redirect the client to
+ * the TOTP challenge page. Users without TOTP enrolled bypass the gate.
+ */
+export async function requireAuthWithTotp(ctx: QueryCtx) {
+  const userId = await requireAuth(ctx);
+  const totp = await ctx.db
+    .query("totp_secrets")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+  if (!totp || !totp.verifiedAt) return userId;
+
+  const sessionId = await getAuthSessionId(ctx);
+  if (!sessionId) throw new Error(TOTP_REQUIRED_ERROR);
+
+  const cleared = await ctx.db
+    .query("auth_session_totp")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .first();
+  if (!cleared) throw new Error(TOTP_REQUIRED_ERROR);
+
+  return userId;
 }
 
 /**

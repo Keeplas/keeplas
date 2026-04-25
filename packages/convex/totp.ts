@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
@@ -130,6 +131,7 @@ export const getMyTotpStatus = query({
       verifiedAt: null as number | null,
       lastUsedAt: null as number | null,
       createdAt: null as number | null,
+      recoveryBound: false,
     };
     const userId = await optionalAuth(ctx);
     if (userId === null) return empty;
@@ -137,7 +139,8 @@ export const getMyTotpStatus = query({
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    if (!row) return empty;
+    const user = await ctx.db.get(userId);
+    if (!row) return { ...empty, recoveryBound: !!user?.totpResetVerifierHash };
     return {
       enrolled: !!row.verifiedAt,
       pending: !row.verifiedAt,
@@ -145,7 +148,40 @@ export const getMyTotpStatus = query({
       verifiedAt: row.verifiedAt ?? null,
       lastUsedAt: row.lastUsedAt ?? null,
       createdAt: row.createdAt as number | null,
+      recoveryBound: !!user?.totpResetVerifierHash,
     };
+  },
+});
+
+/**
+ * Gate state for the current Convex Auth session: tells the client whether
+ * the dashboard layout should redirect to /login/totp.
+ */
+export const getMyTotpGate = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) {
+      return { authenticated: false, required: false, recoveryBound: false };
+    }
+    const totp = await ctx.db
+      .query("totp_secrets")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const user = await ctx.db.get(userId);
+    const recoveryBound = !!user?.totpResetVerifierHash;
+    if (!totp || !totp.verifiedAt) {
+      return { authenticated: true, required: false, recoveryBound };
+    }
+    const sessionId = await getAuthSessionId(ctx);
+    if (!sessionId) {
+      return { authenticated: true, required: true, recoveryBound };
+    }
+    const cleared = await ctx.db
+      .query("auth_session_totp")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .first();
+    return { authenticated: true, required: !cleared, recoveryBound };
   },
 });
 
@@ -190,8 +226,11 @@ export const startEnrollment = mutation({
 });
 
 export const verifyAndEnable = mutation({
-  args: { code: v.string() },
-  handler: async (ctx, { code }) => {
+  args: {
+    code: v.string(),
+    recoveryVerifierHash: v.optional(v.string()),
+  },
+  handler: async (ctx, { code, recoveryVerifierHash }) => {
     const userId = await requireAuth(ctx);
     const row = await ctx.db
       .query("totp_secrets")
@@ -211,14 +250,160 @@ export const verifyAndEnable = mutation({
     if (user) {
       const providers = new Set(user.authProviders ?? []);
       providers.add("totp");
-      await ctx.db.patch(userId, {
+      const patch: Partial<Doc<"users">> = {
         authProviders: Array.from(providers) as Doc<"users">["authProviders"],
         updatedAt: now,
+      };
+      if (recoveryVerifierHash) {
+        patch.totpResetVerifierHash = recoveryVerifierHash;
+      }
+      await ctx.db.patch(userId, patch);
+    }
+
+    // The same session that just enrolled TOTP should not be locked out by
+    // the new gate — credit it immediately.
+    const sessionId = await getAuthSessionId(ctx);
+    if (sessionId) {
+      const existing = await ctx.db
+        .query("auth_session_totp")
+        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+        .first();
+      if (!existing) {
+        await ctx.db.insert("auth_session_totp", {
+          sessionId,
+          userId,
+          verifiedAt: now,
+        });
+      }
+    }
+    return { success: true };
+  },
+});
+
+/**
+ * Bind (or replace) the seed-derived recovery verifier on an already-enrolled
+ * TOTP. Called from settings when the user wants to add the recovery path
+ * after the fact, or rebind to a new recovery phrase.
+ */
+export const bindRecoveryReset = mutation({
+  args: { recoveryVerifierHash: v.string() },
+  handler: async (ctx, { recoveryVerifierHash }) => {
+    const userId = await requireAuth(ctx);
+    const totp = await ctx.db
+      .query("totp_secrets")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (!totp || !totp.verifiedAt) {
+      throw new Error("Enable TOTP before binding a recovery phrase.");
+    }
+    await ctx.db.patch(userId, {
+      totpResetVerifierHash: recoveryVerifierHash,
+      updatedAt: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+/**
+ * Verify a TOTP code for the *current* Convex Auth session and mark the
+ * session as having cleared the second factor.
+ */
+export const submitTotpForSession = mutation({
+  args: { code: v.string() },
+  handler: async (ctx, { code }) => {
+    const userId = await requireAuth(ctx);
+    const totp = await ctx.db
+      .query("totp_secrets")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (!totp || !totp.verifiedAt) {
+      throw new Error("TOTP is not enrolled for this account.");
+    }
+    const ok = await verifyTotp(totp.secret, code, Date.now());
+    if (!ok) throw new Error("Invalid or expired code. Try again.");
+
+    const sessionId = await getAuthSessionId(ctx);
+    if (!sessionId) throw new Error("No active session.");
+
+    const now = Date.now();
+    await ctx.db.patch(totp._id, { lastUsedAt: now });
+
+    const existing = await ctx.db
+      .query("auth_session_totp")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .first();
+    if (!existing) {
+      await ctx.db.insert("auth_session_totp", {
+        sessionId,
+        userId,
+        verifiedAt: now,
       });
     }
     return { success: true };
   },
 });
+
+/**
+ * Recovery-phrase escape hatch: client derives a verifier from the user's
+ * seed and submits the SHA-256 hex. On match we disable TOTP entirely (the
+ * user must re-enrol) and credit the current session so the dashboard
+ * unlocks on the same redirect.
+ */
+export const submitTotpRecovery = mutation({
+  args: { verifierHash: v.string() },
+  handler: async (ctx, { verifierHash }) => {
+    const userId = await requireAuth(ctx);
+    const user = await ctx.db.get(userId);
+    if (!user || !user.totpResetVerifierHash) {
+      throw new Error("Recovery via seed is not configured for this account.");
+    }
+    if (!constantTimeStringEquals(user.totpResetVerifierHash, verifierHash)) {
+      throw new Error("Recovery phrase did not match. Try again.");
+    }
+
+    const totp = await ctx.db
+      .query("totp_secrets")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (totp) {
+      await ctx.db.delete(totp._id);
+    }
+    const now = Date.now();
+    const providers = (user.authProviders ?? []).filter((p) => p !== "totp");
+    await ctx.db.patch(userId, {
+      authProviders:
+        providers.length > 0
+          ? (providers as Doc<"users">["authProviders"])
+          : undefined,
+      updatedAt: now,
+    });
+
+    const sessionId = await getAuthSessionId(ctx);
+    if (sessionId) {
+      const existing = await ctx.db
+        .query("auth_session_totp")
+        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+        .first();
+      if (!existing) {
+        await ctx.db.insert("auth_session_totp", {
+          sessionId,
+          userId,
+          verifiedAt: now,
+        });
+      }
+    }
+    return { success: true };
+  },
+});
+
+function constantTimeStringEquals(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
 
 export const disable = mutation({
   args: {},
@@ -232,10 +417,11 @@ export const disable = mutation({
     await ctx.db.delete(row._id);
 
     const user = await ctx.db.get(userId);
-    if (user?.authProviders) {
-      const next = user.authProviders.filter((p) => p !== "totp");
+    if (user) {
+      const next = (user.authProviders ?? []).filter((p) => p !== "totp");
       await ctx.db.patch(userId, {
         authProviders: next.length > 0 ? next : undefined,
+        totpResetVerifierHash: undefined,
         updatedAt: Date.now(),
       });
     }

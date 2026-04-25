@@ -21,6 +21,10 @@ export default function DashboardLayout({
     api.onboarding.getOnboardingState,
     isAuthenticated ? {} : "skip"
   );
+  const totpGate = useQuery(
+    api.totp.getMyTotpGate,
+    isAuthenticated ? {} : "skip"
+  );
 
   useRestoreMasterKey();
   usePassiveSignal(
@@ -39,7 +43,13 @@ export default function DashboardLayout({
     }
   }, [onboardingState, router]);
 
-  if (isLoading || onboardingState === undefined) {
+  useEffect(() => {
+    if (totpGate?.required) {
+      router.push("/login/totp");
+    }
+  }, [totpGate?.required, router]);
+
+  if (isLoading || onboardingState === undefined || totpGate === undefined) {
     return <Loader fullscreen label="Unlocking your vault" />;
   }
 
@@ -48,6 +58,10 @@ export default function DashboardLayout({
   }
 
   if (onboardingState && onboardingState.onboardingStep !== "complete") {
+    return null;
+  }
+
+  if (totpGate.required) {
     return null;
   }
 

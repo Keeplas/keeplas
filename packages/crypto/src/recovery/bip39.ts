@@ -108,6 +108,50 @@ export async function phraseToKey(words: string[]): Promise<CryptoKey> {
 }
 
 /**
+ * Derive a SHA-256 hex verifier dedicated to TOTP reset.
+ *
+ * Uses PBKDF2 with the same parameters as `phraseToKey` but a different,
+ * domain-separated salt (`"keeplas-totp-reset-v1"`). Output bytes are then
+ * SHA-256-hashed so what's stored server-side is irreversible.
+ *
+ * The verifier proves possession of the recovery phrase without coupling
+ * the TOTP-reset path with vault-key derivation or `phraseToHash`.
+ */
+export async function phraseToTotpResetVerifier(words: string[]): Promise<string> {
+  if (words.length !== 24) {
+    throw new Error("Recovery phrase must be exactly 24 words");
+  }
+
+  const passphrase = words.map((w) => w.toLowerCase().trim()).join(" ");
+  const encoder = new TextEncoder();
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(passphrase),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode("keeplas-totp-reset-v1"),
+      iterations: 600_000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    256
+  );
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", derivedBits);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
  * Compute SHA-256 hash of a phrase for server-side verification.
  * The hash is safe to store on the server (non-reversible).
  *

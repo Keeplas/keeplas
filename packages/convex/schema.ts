@@ -38,6 +38,9 @@ export default defineSchema({
     recoveryVerified: v.optional(v.boolean()),
     zkVerifierKey: v.optional(v.string()),
     keeplasShard: v.optional(v.string()),
+    // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
+    // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
+    totpResetVerifierHash: v.optional(v.string()),
 
     onboardingStep: v.optional(
       v.union(
@@ -106,6 +109,17 @@ export default defineSchema({
     lastUsedAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  // Marker that a Convex Auth session has cleared the TOTP step. Sessions
+  // without a row here are blocked from TOTP-gated functions when the user
+  // has TOTP enrolled. Rows live as long as the underlying authSessions row.
+  auth_session_totp: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    verifiedAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // VAULTS

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { QRCodeSVG as QRCode } from "qrcode.react";
+import { phraseToTotpResetVerifier } from "@keeplas/crypto";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Button,
@@ -16,6 +17,7 @@ import {
   Label,
   Loader,
   Spinner,
+  Textarea,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
@@ -27,20 +29,27 @@ type EnrollmentSession = {
   account: string;
 };
 
+type DialogPhase = "code" | "bind-recovery";
+type BindMode = "enrollment" | "post-hoc";
+
 export function TotpManager() {
   const status = useQuery(api.totp.getMyTotpStatus);
   const startEnrollment = useMutation(api.totp.startEnrollment);
   const verifyAndEnable = useMutation(api.totp.verifyAndEnable);
   const cancelEnrollment = useMutation(api.totp.cancelEnrollment);
+  const bindRecoveryReset = useMutation(api.totp.bindRecoveryReset);
   const disable = useMutation(api.totp.disable);
 
   const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<DialogPhase>("code");
+  const [bindMode, setBindMode] = useState<BindMode>("enrollment");
   const [session, setSession] = useState<EnrollmentSession | null>(null);
   const [code, setCode] = useState("");
+  const [phrase, setPhrase] = useState("");
   const [showSecret, setShowSecret] = useState(false);
-  const [busy, setBusy] = useState<"starting" | "verifying" | "disabling" | null>(
-    null
-  );
+  const [busy, setBusy] = useState<
+    "starting" | "verifying" | "binding" | "disabling" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -55,9 +64,12 @@ export function TotpManager() {
   function resetDialog() {
     setSession(null);
     setCode("");
+    setPhrase("");
     setShowSecret(false);
     setError(null);
     setCopied(false);
+    setPhase("code");
+    setBindMode("enrollment");
   }
 
   async function handleStart() {
@@ -65,7 +77,13 @@ export function TotpManager() {
     setError(null);
     try {
       const result = await startEnrollment({});
-      setSession({ secret: result.secret, uri: result.uri, account: result.account });
+      setSession({
+        secret: result.secret,
+        uri: result.uri,
+        account: result.account,
+      });
+      setPhase("code");
+      setBindMode("enrollment");
       setOpen(true);
     } catch (err) {
       setError(getErrorMessage(err, "Could not start enrollment."));
@@ -81,8 +99,8 @@ export function TotpManager() {
     setError(null);
     try {
       await verifyAndEnable({ code: code.trim() });
-      setOpen(false);
-      resetDialog();
+      setPhase("bind-recovery");
+      setBindMode("enrollment");
     } catch (err) {
       setError(getErrorMessage(err, "Verification failed."));
     } finally {
@@ -90,13 +108,51 @@ export function TotpManager() {
     }
   }
 
+  function openBindDialog() {
+    setPhase("bind-recovery");
+    setBindMode("post-hoc");
+    setPhrase("");
+    setError(null);
+    setOpen(true);
+  }
+
+  async function handleBind(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    const words = phrase
+      .trim()
+      .split(/\s+/)
+      .map((w) => w.toLowerCase());
+    if (words.length !== 24) {
+      setError("Please enter all 24 words of your recovery phrase.");
+      return;
+    }
+    setBusy("binding");
+    setError(null);
+    try {
+      const verifierHash = await phraseToTotpResetVerifier(words);
+      await bindRecoveryReset({ recoveryVerifierHash: verifierHash });
+      setOpen(false);
+      resetDialog();
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not bind the recovery phrase."));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function handleSkipBind() {
+    setOpen(false);
+    resetDialog();
+  }
+
   async function handleCloseDialog(nextOpen: boolean) {
     if (nextOpen) return;
-    if (session && !status?.enrolled) {
+    if (phase === "code" && session && !status?.enrolled) {
       try {
         await cancelEnrollment({});
       } catch {
-        /* ignore — best-effort cleanup */
+        /* best-effort */
       }
     }
     setOpen(false);
@@ -134,6 +190,7 @@ export function TotpManager() {
   }
 
   const enrolled = status?.enrolled ?? false;
+  const recoveryBound = status?.recoveryBound ?? false;
 
   return (
     <section className="md:col-span-6 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
@@ -158,35 +215,72 @@ export function TotpManager() {
       )}
 
       {enrolled ? (
-        <div className="flex items-center justify-between gap-3 p-3.5 bg-surface-container-lowest rounded-xl">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
-              <Icon path={ICON_PATHS.verifiedFill} className="w-5 h-5" />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3 p-3.5 bg-surface-container-lowest rounded-xl">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                <Icon path={ICON_PATHS.verifiedFill} className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-body-md font-bold text-primary truncate">
+                  Authenticator enrolled
+                </p>
+                <p className="text-body-md text-on-surface-variant truncate">
+                  {status.verifiedAt
+                    ? `Verified ${formatTimeAgo(status.verifiedAt)}`
+                    : "Verified"}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-body-md font-bold text-primary truncate">
-                Authenticator enrolled
-              </p>
-              <p className="text-body-md text-on-surface-variant truncate">
-                {status.verifiedAt
-                  ? `Verified ${formatTimeAgo(status.verifiedAt)}`
-                  : "Verified"}
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={handleDisable}
+              disabled={busy !== null}
+              className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-40 shrink-0"
+              aria-label="Disable authenticator app"
+            >
+              {busy === "disabling" ? (
+                <Spinner size="sm" />
+              ) : (
+                <Icon path={ICON_PATHS.close} className="w-5 h-5" />
+              )}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleDisable}
-            disabled={busy !== null}
-            className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-40 shrink-0"
-            aria-label="Disable authenticator app"
+
+          <div
+            className={
+              recoveryBound
+                ? "flex items-center gap-3 p-3 bg-secondary-container/30 rounded-xl"
+                : "flex items-center justify-between gap-3 p-3 bg-surface-container-lowest rounded-xl"
+            }
           >
-            {busy === "disabling" ? (
-              <Spinner size="sm" />
-            ) : (
-              <Icon path={ICON_PATHS.close} className="w-5 h-5" />
+            <div className="flex items-center gap-3 min-w-0">
+              <Icon
+                path={
+                  recoveryBound ? ICON_PATHS.verifiedUser : ICON_PATHS.warning
+                }
+                className={
+                  recoveryBound
+                    ? "w-5 h-5 text-secondary shrink-0"
+                    : "w-5 h-5 text-error shrink-0"
+                }
+              />
+              <p className="text-body-md text-on-surface-variant">
+                {recoveryBound
+                  ? "Recovery via seed phrase: ON"
+                  : "Recovery via seed phrase: OFF — you cannot reset 2FA if you lose your phone."}
+              </p>
+            </div>
+            {!recoveryBound && (
+              <button
+                type="button"
+                onClick={openBindDialog}
+                className="text-secondary hover:underline text-label-md font-bold shrink-0"
+              >
+                Set up
+              </button>
             )}
-          </button>
+          </div>
         </div>
       ) : (
         <div className="border-2 border-dashed border-outline-variant/40 rounded-xl p-6 text-center">
@@ -231,96 +325,184 @@ export function TotpManager() {
       <Dialog open={open} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Set up authenticator app</DialogTitle>
+            <DialogTitle>
+              {phase === "code"
+                ? "Set up authenticator app"
+                : "Tie 2FA to your recovery phrase"}
+            </DialogTitle>
           </DialogHeader>
           <div className="p-6 pt-4 space-y-5">
-            <DialogDescription>
-              Open your authenticator app, scan the QR code below, then enter
-              the 6-digit code to confirm.
-            </DialogDescription>
-
-            {session ? (
+            {phase === "code" && (
               <>
-                <div className="flex justify-center">
-                  <div className="bg-white p-4 rounded-xl">
-                    <QRCode
-                      value={session.uri}
-                      size={192}
-                      level="M"
-                      bgColor="#ffffff"
-                      fgColor="#041632"
-                    />
-                  </div>
-                </div>
+                <DialogDescription>
+                  Open your authenticator app, scan the QR code below, then
+                  enter the 6-digit code to confirm.
+                </DialogDescription>
 
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowSecret((s) => !s)}
-                    className="text-body-md text-secondary hover:underline"
-                  >
-                    {showSecret ? "Hide" : "Can't scan? Enter the key manually"}
-                  </button>
-                  {showSecret && (
-                    <div className="flex items-center justify-between gap-3 p-3 bg-surface-container rounded-xl">
-                      <code className="font-mono text-body-md text-primary break-all">
-                        {session.secret.match(/.{1,4}/g)?.join(" ")}
-                      </code>
+                {session ? (
+                  <>
+                    <div className="flex justify-center">
+                      <div className="bg-white p-4 rounded-xl">
+                        <QRCode
+                          value={session.uri}
+                          size={192}
+                          level="M"
+                          bgColor="#ffffff"
+                          fgColor="#041632"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
                       <button
                         type="button"
-                        onClick={handleCopySecret}
-                        className="text-secondary hover:underline text-label-md font-bold shrink-0"
+                        onClick={() => setShowSecret((s) => !s)}
+                        className="text-body-md text-secondary hover:underline"
                       >
-                        {copied ? "Copied" : "Copy"}
+                        {showSecret
+                          ? "Hide"
+                          : "Can't scan? Enter the key manually"}
                       </button>
+                      {showSecret && (
+                        <div className="flex items-center justify-between gap-3 p-3 bg-surface-container rounded-xl">
+                          <code className="font-mono text-body-md text-primary break-all">
+                            {session.secret.match(/.{1,4}/g)?.join(" ")}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={handleCopySecret}
+                            className="text-secondary hover:underline text-label-md font-bold shrink-0"
+                          >
+                            {copied ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <form onSubmit={handleVerify} className="space-y-3">
+                    <form onSubmit={handleVerify} className="space-y-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="totp-code">6-digit code</Label>
+                        <Input
+                          id="totp-code"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          pattern="\d{6}"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={code}
+                          onChange={(e) =>
+                            setCode(
+                              e.target.value.replace(/\D/g, "").slice(0, 6)
+                            )
+                          }
+                          autoFocus
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="md"
+                          onClick={() => handleCloseDialog(false)}
+                          disabled={busy !== null}
+                          className="flex-1 justify-center"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          variant="vault"
+                          size="md"
+                          disabled={code.length !== 6 || busy !== null}
+                          className="flex-1 justify-center"
+                        >
+                          {busy === "verifying" ? (
+                            <Spinner size="sm" />
+                          ) : (
+                            "Verify"
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </>
+                ) : (
+                  <div className="py-12 flex justify-center">
+                    <Spinner />
+                  </div>
+                )}
+              </>
+            )}
+
+            {phase === "bind-recovery" && (
+              <>
+                <DialogDescription>
+                  {bindMode === "enrollment"
+                    ? "Authenticator enabled. Optionally bind your recovery phrase so you can disable 2FA if you ever lose your phone."
+                    : "Bind your recovery phrase so you can disable 2FA if you ever lose your phone."}
+                </DialogDescription>
+                <form onSubmit={handleBind} className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="totp-code">6-digit code</Label>
-                    <Input
-                      id="totp-code"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      pattern="\d{6}"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={code}
-                      onChange={(e) =>
-                        setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                      }
-                      autoFocus
+                    <Label htmlFor="recovery-phrase">Recovery phrase</Label>
+                    <Textarea
+                      id="recovery-phrase"
+                      value={phrase}
+                      onChange={(e) => setPhrase(e.target.value)}
+                      placeholder="word1 word2 word3 ..."
+                      rows={4}
+                      autoComplete="off"
+                      spellCheck={false}
                     />
+                    <p className="text-label-md text-on-surface-variant">
+                      The phrase never leaves your device — only a derived
+                      verifier is sent.
+                    </p>
                   </div>
                   <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="md"
-                      onClick={() => handleCloseDialog(false)}
-                      disabled={busy !== null}
-                      className="flex-1 justify-center"
-                    >
-                      Cancel
-                    </Button>
+                    {bindMode === "enrollment" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        onClick={handleSkipBind}
+                        disabled={busy !== null}
+                        className="flex-1 justify-center"
+                      >
+                        Skip
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="md"
+                        onClick={() => handleCloseDialog(false)}
+                        disabled={busy !== null}
+                        className="flex-1 justify-center"
+                      >
+                        Cancel
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       variant="vault"
                       size="md"
-                      disabled={code.length !== 6 || busy !== null}
+                      disabled={phrase.trim().length === 0 || busy !== null}
                       className="flex-1 justify-center"
                     >
-                      {busy === "verifying" ? <Spinner size="sm" /> : "Verify"}
+                      {busy === "binding" ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        "Bind recovery"
+                      )}
                     </Button>
                   </div>
                 </form>
+                {bindMode === "enrollment" && (
+                  <p className="text-label-md text-on-surface-variant">
+                    Skipping is fine. Without binding, losing your phone means
+                    you must contact support to reset 2FA.
+                  </p>
+                )}
               </>
-            ) : (
-              <div className="py-12 flex justify-center">
-                <Spinner />
-              </div>
             )}
           </div>
         </DialogContent>
