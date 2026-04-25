@@ -134,7 +134,7 @@ export function DashboardContent() {
 
       {/* Life Map Canvas */}
       <div
-        className="relative min-h-[700px] bg-surface-container-low rounded-[2rem] overflow-hidden p-8 mb-12"
+        className="relative md:min-h-[700px] bg-surface-container-low rounded-[2rem] overflow-hidden p-4 md:p-8 mb-12 flex flex-col gap-4 md:block"
         style={{
           backgroundImage:
             "radial-gradient(circle, rgba(40, 101, 122, 0.25) 1px, transparent 1px)",
@@ -142,9 +142,9 @@ export function DashboardContent() {
         }}
       >
         {/* Center Node */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div className="self-center md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:z-20">
           <div
-            className="w-48 h-48 bg-primary flex flex-col items-center justify-center text-white shadow-2xl p-6 text-center border-8 border-surface-container-low"
+            className="w-40 h-40 md:w-48 md:h-48 bg-primary flex flex-col items-center justify-center text-white shadow-2xl p-6 text-center border-8 border-surface-container-low"
             style={{ borderRadius: "50%" }}
           >
             <Icon path={ICON_PATHS.fingerprint} className="w-10 h-10 mb-2" />
@@ -161,7 +161,7 @@ export function DashboardContent() {
         <NodeCard
           iconPath={ICON_PATHS.accountBalance}
           title="Assets"
-          position="top-10 left-10 md:left-24"
+          position="md:top-10 md:left-10 lg:left-24"
           status="protected"
           href="/vault"
         >
@@ -176,7 +176,7 @@ export function DashboardContent() {
         <NodeCard
           iconPath={ICON_PATHS.group}
           title="Contacts"
-          position="bottom-10 left-10 md:left-24"
+          position="md:bottom-10 md:left-10 lg:left-24"
           status="protected"
           href="/trusted-contacts"
         >
@@ -219,11 +219,11 @@ export function DashboardContent() {
         </NodeCard>
 
         {/* Directives — top right */}
-        <div className="absolute top-10 right-10 md:right-24">
+        <div className="md:absolute md:top-10 md:right-10 lg:right-24">
           <Link
             href="/vault?section=documents"
             className={cn(
-              "block p-6 w-64 relative shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
+              "block p-6 w-full md:w-64 relative shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
               missingDirectives
                 ? "bg-surface-container border-2 border-error/20"
                 : "bg-surface-container-lowest border border-secondary/10"
@@ -285,10 +285,10 @@ export function DashboardContent() {
         </div>
 
         {/* Documents — bottom right */}
-        <div className="absolute bottom-10 right-10 md:right-24">
+        <div className="md:absolute md:bottom-10 md:right-10 lg:right-24">
           <Link
             href="/vault?section=documents"
-            className="block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
+            className="block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
             style={{ borderRadius: "2rem" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -310,8 +310,8 @@ export function DashboardContent() {
           </Link>
         </div>
 
-        {/* Decorative connection lines */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+        {/* Decorative connection lines (desktop only) */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 hidden md:block">
           <line
             stroke="#041632"
             strokeDasharray="8 8"
@@ -585,11 +585,11 @@ function NodeCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn("absolute", position)}>
+    <div className={cn("md:absolute", position)}>
       <Link
         href={href}
         className={cn(
-          "block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
+          "block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
           status === "protected"
             ? "border border-secondary/10"
             : "border-2 border-error/20"
