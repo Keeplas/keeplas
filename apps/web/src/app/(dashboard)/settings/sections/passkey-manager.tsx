@@ -24,7 +24,7 @@ export function PasskeyManager() {
 
   if (credentials === undefined) {
     return (
-      <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
+      <section className="md:col-span-6 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
         <Loader label="Loading passkeys" />
       </section>
     );
@@ -63,7 +63,7 @@ export function PasskeyManager() {
   const hasPasskeys = credentials.length > 0;
 
   return (
-    <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
+    <section className="md:col-span-6 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-headline-md text-primary">Biometric Access</h2>

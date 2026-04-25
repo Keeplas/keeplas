@@ -8,6 +8,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
 import { PasskeyManager } from "./passkey-manager";
+import { TotpManager } from "./totp-manager";
 
 const ACTION_ICONS: Record<string, string> = {
   vault_item_created: ICON_PATHS.lock,
@@ -192,7 +193,7 @@ export function SecurityCenterSection() {
         </section>
 
         {/* Master Recovery / Shamir */}
-        <section className="md:col-span-7 bg-surface-container p-6 md:p-8 rounded-2xl">
+        <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-2xl">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
             <h2 className="text-headline-md text-primary">
@@ -241,6 +242,7 @@ export function SecurityCenterSection() {
         </section>
 
         <PasskeyManager />
+        <TotpManager />
       </div>
 
       {/* Activity Log */}

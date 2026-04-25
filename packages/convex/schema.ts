@@ -25,7 +25,8 @@ export default defineSchema({
           v.literal("passkey"),
           v.literal("email"),
           v.literal("google"),
-          v.literal("apple")
+          v.literal("apple"),
+          v.literal("totp")
         )
       )
     ),
@@ -87,6 +88,24 @@ export default defineSchema({
   })
     .index("by_challenge", ["challenge"])
     .index("by_expiry", ["expiresAt"]),
+
+  // ═══════════════════════════════════════════════
+  // TOTP (RFC 6238 authenticator-app secrets)
+  // ═══════════════════════════════════════════════
+
+  totp_secrets: defineTable({
+    userId: v.id("users"),
+    // Base32-encoded 20-byte HMAC-SHA1 secret. Stored server-side so we can
+    // verify codes; treated as a high-value credential alongside password
+    // hashes. Must never leave the backend after enrollment.
+    secret: v.string(),
+    label: v.optional(v.string()),
+    // Set when the user has confirmed enrollment by entering a valid code.
+    // Rows without verifiedAt are pending enrollments and may be replaced.
+    verifiedAt: v.optional(v.number()),
+    lastUsedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // VAULTS

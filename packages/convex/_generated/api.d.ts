@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
@@ -31,6 +32,7 @@ import type * as scenario_engine from "../scenario_engine.js";
 import type * as scenarios from "../scenarios.js";
 import type * as shared_types from "../shared_types.js";
 import type * as support from "../support.js";
+import type * as totp from "../totp.js";
 import type * as trusted_contacts from "../trusted_contacts.js";
 import type * as users from "../users.js";
 import type * as validators from "../validators.js";
@@ -45,6 +47,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
   audit: typeof audit;
   auth: typeof auth;
@@ -68,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   scenarios: typeof scenarios;
   shared_types: typeof shared_types;
   support: typeof support;
+  totp: typeof totp;
   trusted_contacts: typeof trusted_contacts;
   users: typeof users;
   validators: typeof validators;

@@ -6,11 +6,15 @@ import { Input, Label, PasswordInput } from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
 
+type Step = "details" | "verify";
+
 export function SignupForm() {
   const { signIn } = useAuthActions();
+  const [step, setStep] = useState<Step>("details");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,10 +28,92 @@ export function SignupForm() {
     setError("");
     try {
       await signIn("password", { name, email, password, flow: "signUp" });
+      setStep("verify");
     } catch {
       setError("Could not create account. Email may already be in use.");
+    } finally {
       setLoading(false);
     }
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await signIn("password", {
+        email,
+        code,
+        flow: "email-verification",
+      });
+    } catch {
+      setError("Invalid or expired code.");
+      setLoading(false);
+    }
+  }
+
+  async function handleResendCode() {
+    setLoading(true);
+    setError("");
+    try {
+      await signIn("password", { email, flow: "email-verification" });
+    } catch {
+      setError("Could not resend the code. Try again in a moment.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (step === "verify") {
+    return (
+      <AuthFormShell
+        badgeLabel="Email Confirmation"
+        heading="Confirm your email"
+        description={`We sent a 6-digit code to ${email}. Enter it below to activate your vault.`}
+        ssoRedirectTo="/onboarding"
+        footer={{
+          prompt: "Wrong email?",
+          label: "Start over",
+          href: "/signup",
+          accent: "secondary",
+        }}
+        loading={loading}
+        error={error}
+        onError={setError}
+        onLoadingChange={setLoading}
+      >
+        <form onSubmit={handleVerifyCode} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="signup-code">Verification Code</Label>
+            <Input
+              id="signup-code"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+              required
+            />
+          </div>
+
+          <AuthSubmitButton disabled={loading || code.length !== 6}>
+            {loading ? "Verifying..." : "Confirm Email"}
+          </AuthSubmitButton>
+
+          <button
+            type="button"
+            onClick={handleResendCode}
+            disabled={loading}
+            className="w-full text-center text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
+          >
+            Resend code
+          </button>
+        </form>
+      </AuthFormShell>
+    );
   }
 
   return (
