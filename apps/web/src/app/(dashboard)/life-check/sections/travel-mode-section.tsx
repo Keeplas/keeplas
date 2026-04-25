@@ -61,7 +61,7 @@ export function TravelModeSection({
         </div>
       ) : (
         <div className="flex items-end gap-3">
-          <div className="flex-1">
+          <div className="flex-1 max-w-xs">
             <label
               htmlFor="travel-until"
               className="text-label-md text-on-surface-variant block mb-1"

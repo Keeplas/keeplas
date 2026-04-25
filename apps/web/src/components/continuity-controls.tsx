@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { ErrorAlert, Switch } from "@keeplas/ui";
+import { ErrorAlert, Loader, Switch } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
-import { TravelModeSection } from "./travel-mode-section";
+import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-mode-section";
 
 /**
- * Page-level header for the Continuity Protocol. Owns the master "Active"
- * toggle and Travel Mode controls — both pause Life Check AND the Scenario
- * Engine in lock-step so the user never has to remember to flip two
- * switches before going off-grid.
+ * Master controls for the Continuity Protocol — pauses both Life Check AND
+ * the Scenario Engine in lock-step. Lives in Settings so the day-to-day
+ * pages stay focused on configuration; a small status badge in the global
+ * sidebar surfaces the current state at all times.
  */
-export function ContinuityHeader() {
+export function ContinuityControls() {
   const config = useQuery(api.life_check.getConfig);
   const scenarioData = useQuery(api.scenarios.getScenario);
   const toggleActive = useMutation(api.life_check.toggleActive);
@@ -31,12 +31,14 @@ export function ContinuityHeader() {
     }
   }, [config?.travelModeUntil]);
 
-  const isConfigured = config !== null && config !== undefined;
+  if (config === undefined || scenarioData === undefined) {
+    return <Loader />;
+  }
+
+  const isConfigured = config !== null;
   const lifeCheckOn = config?.isActive ?? false;
   const scenarioPaused = scenarioData?.scenario?.isSafePauseActive ?? false;
   const travelModeOn = config?.travelModeEnabled ?? false;
-  // Master "Active" = Life Check enabled AND Scenario engine not paused.
-  // Travel Mode forces both halves to pause.
   const masterActive = lifeCheckOn && !scenarioPaused && !travelModeOn;
 
   async function handleMasterToggle(nextActive: boolean) {
@@ -73,49 +75,48 @@ export function ContinuityHeader() {
       ? "Active"
       : "Paused";
 
+  if (!isConfigured) {
+    return (
+      <div className="bg-surface-container-low p-6 rounded-2xl">
+        <p className="text-body-md text-on-surface-variant">
+          Continuity Protocol is not configured yet. Visit{" "}
+          <a href="/life-check" className="underline font-medium">
+            Life Check
+          </a>{" "}
+          to set it up.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 mb-10">
-      <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
-        <div className="max-w-2xl">
-          <h1 className="text-headline-lg text-primary mb-3">
+    <div className="space-y-4">
+      <section className="bg-surface-container-low p-6 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h3 className="text-headline-sm text-primary">
             Continuity Protocol
-          </h1>
-          <p className="text-body-lg text-on-surface-variant">
-            A single protocol in two halves: monitoring checks whether
-            you&apos;re still around, the reaction layer decides what fires
-            when silence is confirmed.
+          </h3>
+          <p className="text-body-md text-on-surface-variant">
+            Pause both halves at once — Life Check stops escalating, the
+            Scenario Engine stops dispatching. Status:{" "}
+            <strong className="text-primary">{statusLabel}</strong>.
           </p>
         </div>
-
-        {isConfigured && (
-          <div className="bg-surface-container-low p-5 rounded-2xl flex items-center gap-5 shrink-0">
-            <div className="flex flex-col text-right">
-              <span className="text-headline-sm text-primary">
-                {statusLabel}
-              </span>
-              <span className="text-label-md text-on-surface-variant">
-                Continuity Protocol
-              </span>
-            </div>
-            <Switch
-              checked={masterActive}
-              disabled={travelModeOn}
-              onCheckedChange={handleMasterToggle}
-            />
-          </div>
-        )}
-      </div>
+        <Switch
+          checked={masterActive}
+          disabled={travelModeOn}
+          onCheckedChange={handleMasterToggle}
+        />
+      </section>
 
       {error && <ErrorAlert message={error} />}
 
-      {isConfigured && (
-        <TravelModeSection
-          enabled={travelModeOn}
-          until={travelUntil}
-          onUntilChange={setTravelUntil}
-          onToggle={handleTravelToggle}
-        />
-      )}
+      <TravelModeSection
+        enabled={travelModeOn}
+        until={travelUntil}
+        onUntilChange={setTravelUntil}
+        onToggle={handleTravelToggle}
+      />
     </div>
   );
 }

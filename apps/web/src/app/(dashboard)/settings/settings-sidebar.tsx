@@ -33,6 +33,11 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     items: [
       { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.shieldCheck },
       { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
+      {
+        label: "Continuity Protocol",
+        href: "/settings/continuity",
+        iconPath: ICON_PATHS.heartbeat,
+      },
     ],
   },
   {

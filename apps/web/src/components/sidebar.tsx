@@ -8,6 +8,7 @@ import { cn, Icon, UserAvatar } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getInitials } from "@/lib/user";
+import { ContinuityStatusBadge } from "./continuity-status-badge";
 import { NotificationsMenu } from "./notifications-menu";
 
 const DASHBOARD_ICON =
@@ -103,6 +104,7 @@ export function Sidebar() {
         </nav>
 
         <div className="mt-4 pt-4 border-t border-outline-variant/15 space-y-2">
+          <ContinuityStatusBadge />
           <NotificationsMenu variant="sidebar" />
           <Link
             href="/settings"

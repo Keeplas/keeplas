@@ -14,7 +14,6 @@ import {
 import { LifeCheckHistory } from "./life-check-history";
 import { ActiveCycleBanner } from "./sections/active-cycle-banner";
 import { ChannelList } from "./sections/channel-list";
-import { ContinuityHeader } from "./sections/continuity-header";
 import { EscalationTimeline } from "./sections/escalation-timeline";
 import { FrequencySelector } from "./sections/frequency-selector";
 import { ScenarioPanel } from "./sections/scenario-panel";
@@ -45,7 +44,23 @@ export default function ContinuityProtocolPage() {
 
   return (
     <div className="max-w-screen-2xl mx-auto">
-      <ContinuityHeader />
+      <header className="mb-10 max-w-2xl">
+        <h1 className="text-headline-lg text-primary mb-3">
+          Continuity Protocol
+        </h1>
+        <p className="text-body-lg text-on-surface-variant">
+          A single protocol in two halves: monitoring checks whether
+          you&apos;re still around, the reaction layer decides what fires
+          when silence is confirmed. Pause everything from{" "}
+          <a
+            href="/settings/continuity"
+            className="underline font-medium text-secondary"
+          >
+            Settings → Continuity Protocol
+          </a>
+          .
+        </p>
+      </header>
 
       <Tabs
         value={tab}
