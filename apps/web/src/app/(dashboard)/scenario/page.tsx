@@ -32,6 +32,19 @@ type ActionType =
   | "unlock_vault"
   | "account_wipe";
 
+type StepCategory =
+  | "primary_outreach"
+  | "incapacity"
+  | "posthumous_release"
+  | "wipe";
+
+const CATEGORY_LABELS: Record<StepCategory, string> = {
+  primary_outreach: "Primary outreach",
+  incapacity: "Incapacity handling",
+  posthumous_release: "Posthumous release",
+  wipe: "Terminal wipe",
+};
+
 const ACTION_META: Record<
   ActionType,
   { label: string; description: string; iconPath: string; chipIconPath: string }
@@ -366,11 +379,14 @@ function AddMilestoneDialog({
   onCreate: (params: {
     triggerValue: number;
     label: string;
+    category: StepCategory;
     actions: Array<{ actionType: ActionType; config: string }>;
   }) => Promise<void>;
 }) {
   const [triggerValue, setTriggerValue] = useState<number>(7);
   const [label, setLabel] = useState("Primary Outreach Phase");
+  const [category, setCategory] =
+    useState<StepCategory>("primary_outreach");
   const [selectedActions, setSelectedActions] = useState<Set<ActionType>>(
     new Set<ActionType>(["send_message"])
   );
@@ -398,6 +414,7 @@ function AddMilestoneDialog({
       await onCreate({
         triggerValue,
         label: label.trim(),
+        category,
         actions: Array.from(selectedActions).map((actionType) => ({
           actionType,
           config: "{}",
@@ -405,6 +422,7 @@ function AddMilestoneDialog({
       });
       onOpenChange(false);
       setLabel("Primary Outreach Phase");
+      setCategory("primary_outreach");
       setSelectedActions(new Set<ActionType>(["send_message"]));
       setTriggerValue(7);
     } catch (err) {
@@ -450,6 +468,21 @@ function AddMilestoneDialog({
           <div className="space-y-2">
             <Label>Milestone label</Label>
             <Input value={label} onChange={(e) => setLabel(e.target.value)} required />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Phase</Label>
+            <Select<string>
+              value={category}
+              onValueChange={(v) => setCategory(v as StepCategory)}
+              placeholder="Phase"
+            >
+              {(Object.keys(CATEGORY_LABELS) as StepCategory[]).map((c) => (
+                <SelectItem key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </SelectItem>
+              ))}
+            </Select>
           </div>
 
           <div className="space-y-2">

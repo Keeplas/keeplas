@@ -15,6 +15,7 @@ import type * as convex__generated_api from "../convex/_generated/api.js";
 import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
+import type * as dispatch from "../dispatch.js";
 import type * as emergency_cards from "../emergency_cards.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
@@ -22,8 +23,11 @@ import type * as life_check from "../life_check.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
+import type * as passive_signals from "../passive_signals.js";
+import type * as push_subscriptions from "../push_subscriptions.js";
 import type * as recipient_groups from "../recipient_groups.js";
 import type * as release from "../release.js";
+import type * as scenario_engine from "../scenario_engine.js";
 import type * as scenarios from "../scenarios.js";
 import type * as shared_types from "../shared_types.js";
 import type * as support from "../support.js";
@@ -32,6 +36,7 @@ import type * as users from "../users.js";
 import type * as validators from "../validators.js";
 import type * as vault_items from "../vault_items.js";
 import type * as vaults from "../vaults.js";
+import type * as webauthn from "../webauthn.js";
 
 import type {
   ApiFromModules,
@@ -47,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   "convex/_generated/server": typeof convex__generated_server;
   crons: typeof crons;
   dashboard: typeof dashboard;
+  dispatch: typeof dispatch;
   emergency_cards: typeof emergency_cards;
   helpers: typeof helpers;
   http: typeof http;
@@ -54,8 +60,11 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   notifications: typeof notifications;
   onboarding: typeof onboarding;
+  passive_signals: typeof passive_signals;
+  push_subscriptions: typeof push_subscriptions;
   recipient_groups: typeof recipient_groups;
   release: typeof release;
+  scenario_engine: typeof scenario_engine;
   scenarios: typeof scenarios;
   shared_types: typeof shared_types;
   support: typeof support;
@@ -64,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   validators: typeof validators;
   vault_items: typeof vault_items;
   vaults: typeof vaults;
+  webauthn: typeof webauthn;
 }>;
 
 /**

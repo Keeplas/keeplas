@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { cn, Icon, Loader, Switch, UserAvatar } from "@keeplas/ui";
+import { cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
+import { PasskeyManager } from "./passkey-manager";
 
 const ACTION_ICONS: Record<string, string> = {
   vault_item_created: ICON_PATHS.lock,
@@ -239,38 +240,7 @@ export function SecurityCenterSection() {
           </div>
         </section>
 
-        {/* Biometrics */}
-        <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
-          <h2 className="text-headline-md text-primary">Biometrics</h2>
-
-          <div className="space-y-5">
-            <BiometricRow
-              icon={ICON_PATHS.face}
-              label="FaceID Access"
-              hint="Fast unlocking on mobile"
-              enabled={(user?.passkeyCredentials?.length ?? 0) > 0}
-            />
-            <BiometricRow
-              icon={ICON_PATHS.fingerprint}
-              label="TouchID Access"
-              hint="Biometric fingerprint auth"
-              enabled={false}
-            />
-          </div>
-
-          <div className="mt-auto pt-5 border-t border-outline-variant/20">
-            <div className="flex items-start space-x-3 bg-error-container/30 p-4 rounded-xl">
-              <Icon
-                path={ICON_PATHS.warning}
-                className="w-5 h-5 text-error shrink-0 mt-0.5"
-              />
-              <p className="text-body-md text-on-error-container">
-                Biometrics are convenient but should never be your{" "}
-                <strong>only</strong> recovery method. Ensure your physical kit is printed.
-              </p>
-            </div>
-          </div>
-        </section>
+        <PasskeyManager />
       </div>
 
       {/* Activity Log */}
@@ -378,31 +348,6 @@ function ShardRow({
           verified ? "text-secondary-fixed-dim" : "text-outline-variant/40"
         )}
       />
-    </div>
-  );
-}
-
-function BiometricRow({
-  icon,
-  label,
-  hint,
-  enabled,
-}: {
-  icon: string;
-  label: string;
-  hint: string;
-  enabled: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <Icon path={icon} className="w-6 h-6 text-primary" />
-        <div>
-          <p className="text-body-md font-bold text-primary">{label}</p>
-          <p className="text-body-md text-on-surface-variant">{hint}</p>
-        </div>
-      </div>
-      <Switch checked={enabled} disabled />
     </div>
   );
 }

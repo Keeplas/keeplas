@@ -1,0 +1,172 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
+import { Button, Icon, Loader, Spinner } from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
+import { formatTimeAgo } from "@/lib/format";
+import {
+  getPasskeyErrorMessage,
+  registerPasskey,
+  usePasskeySupport,
+} from "@/lib/passkey";
+
+export function PasskeyManager() {
+  const credentials = useQuery(api.webauthn.listMyCredentials);
+  const startRegistration = useMutation(api.webauthn.startRegistration);
+  const finishRegistration = useMutation(api.webauthn.finishRegistration);
+  const removeCredential = useMutation(api.webauthn.removeCredential);
+
+  const supported = usePasskeySupport();
+  const [busy, setBusy] = useState<"adding" | string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  if (credentials === undefined) {
+    return (
+      <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
+        <Loader label="Loading passkeys" />
+      </section>
+    );
+  }
+
+  async function handleAdd() {
+    setBusy("adding");
+    setError(null);
+    try {
+      await registerPasskey({
+        startRegistration: (args) => startRegistration(args),
+        finishRegistration: (args) => finishRegistration(args),
+      });
+    } catch (err) {
+      setError(getPasskeyErrorMessage(err, "Could not add passkey."));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleRemove(id: string) {
+    if (!window.confirm("Remove this passkey? You will need another way to sign in.")) {
+      return;
+    }
+    setBusy(id);
+    setError(null);
+    try {
+      await removeCredential({ credentialId: id as never });
+    } catch (err) {
+      setError(getPasskeyErrorMessage(err, "Could not remove passkey."));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const hasPasskeys = credentials.length > 0;
+
+  return (
+    <section className="md:col-span-5 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-headline-md text-primary">Biometric Access</h2>
+          <p className="text-body-md text-on-surface-variant mt-1">
+            Sign in with Face ID, Touch ID, or your device biometrics.
+          </p>
+        </div>
+        <Icon path={ICON_PATHS.face} className="w-7 h-7 text-secondary shrink-0" />
+      </div>
+
+      {!supported && (
+        <div className="bg-error-container/30 p-4 rounded-xl">
+          <p className="text-body-md text-on-error-container">
+            Passkeys are not supported on this browser. Use a recent version of
+            Chrome, Safari, or Edge on a device with a biometric sensor.
+          </p>
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-error-container/40 p-3 rounded-xl">
+          <p className="text-body-md text-on-error-container">{error}</p>
+        </div>
+      )}
+
+      {hasPasskeys ? (
+        <ul className="space-y-3">
+          {credentials.map((c) => {
+            const removing = busy === c._id;
+            return (
+              <li
+                key={c._id}
+                className="flex items-center justify-between gap-3 p-3.5 bg-surface-container-lowest rounded-xl"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                    <Icon path={ICON_PATHS.fingerprint} className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-body-md font-bold text-primary truncate">
+                      {c.deviceName}
+                    </p>
+                    <p className="text-body-md text-on-surface-variant truncate">
+                      Last used {formatTimeAgo(c.lastUsedAt)}
+                      {c.backedUp ? " · Synced" : " · This device only"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemove(c._id)}
+                  disabled={busy !== null}
+                  className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-40 shrink-0"
+                  aria-label={`Remove ${c.deviceName}`}
+                >
+                  {removing ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <Icon path={ICON_PATHS.close} className="w-5 h-5" />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="border-2 border-dashed border-outline-variant/40 rounded-xl p-6 text-center">
+          <Icon
+            path={ICON_PATHS.face}
+            className="w-10 h-10 mx-auto mb-3 text-outline-variant"
+          />
+          <p className="text-body-md text-on-surface-variant">
+            No passkeys registered yet.
+          </p>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="vault"
+        size="md"
+        onClick={handleAdd}
+        disabled={!supported || busy !== null}
+        className="w-full justify-center gap-2"
+      >
+        {busy === "adding" ? (
+          <Spinner size="sm" />
+        ) : (
+          <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
+        )}
+        <span>{hasPasskeys ? "Add another passkey" : "Add a passkey"}</span>
+      </Button>
+
+      <div className="flex items-start gap-3 bg-error-container/30 p-4 rounded-xl mt-auto">
+        <Icon
+          path={ICON_PATHS.warning}
+          className="w-5 h-5 text-error shrink-0 mt-0.5"
+        />
+        <p className="text-body-md text-on-error-container">
+          Biometrics are convenient but should never be your{" "}
+          <strong>only</strong> recovery method. Ensure your physical kit is printed.
+        </p>
+      </div>
+    </section>
+  );
+}

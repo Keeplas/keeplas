@@ -16,6 +16,7 @@
     "@keeplas/backend": "workspace:*",
     "@keeplas/crypto": "workspace:*",
     "@keeplas/ui": "workspace:*",
+    "@simplewebauthn/browser": "^13.3.0",
     "convex": "^1.35.1",
     "next": "16.2.3",
     "qrcode.react": "^4.2.0",

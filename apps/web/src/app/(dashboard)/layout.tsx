@@ -7,6 +7,7 @@ import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
+import { usePassiveSignal } from "@/lib/use-passive-signal";
 import { api } from "@keeplas/backend/_generated/api";
 
 export default function DashboardLayout({
@@ -22,6 +23,9 @@ export default function DashboardLayout({
   );
 
   useRestoreMasterKey();
+  usePassiveSignal(
+    isAuthenticated && onboardingState?.onboardingStep === "complete"
+  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

@@ -20,7 +20,7 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
         <HelpHint content="How long Keeplas waits without hearing from you before kicking off the escalation sequence. Shorter = more frequent confirmations; longer = fewer interruptions but slower release." />
       </h3>
       <p className="text-body-md text-on-surface-variant mb-6">
-        The period of total silence before the verification sequence begins.
+        The period of total silence — no logins, no navigation, no signal — before the verification sequence begins. Any activity resets it to zero.
       </p>
       <div className="grid grid-cols-3 gap-3">
         {FREQUENCIES.map((freq) => {

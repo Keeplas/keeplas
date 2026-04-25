@@ -14,4 +14,16 @@ crons.interval(
   internal.release.processScheduledReleases
 );
 
+/**
+ * Hourly evaluator for the inactivity-driven Life Check trigger. For each
+ * active config, initiates a new cycle when the user has been inactive for
+ * longer than the configured threshold. Skips travel mode and configs that
+ * already have a running/escalating cycle.
+ */
+crons.interval(
+  "life_check_evaluator",
+  { hours: 1 },
+  internal.life_check.evaluateAllConfigs
+);
+
 export default crons;

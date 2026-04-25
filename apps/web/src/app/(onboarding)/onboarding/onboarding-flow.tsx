@@ -5,8 +5,14 @@ import Image from "next/image";
 import { RecoveryPhraseStep } from "./steps/recovery-phrase-step";
 import { VerificationStep } from "./steps/verification-step";
 import { KeyGenerationStep } from "./steps/key-generation-step";
+import { PasskeyStep } from "./steps/passkey-step";
 
-type OnboardingStep = "auth_complete" | "recovery_phrase" | "verification" | "key_generation";
+type OnboardingStep =
+  | "auth_complete"
+  | "recovery_phrase"
+  | "verification"
+  | "key_generation"
+  | "passkey";
 
 interface OnboardingFlowProps {
   initialStep: string;
@@ -35,11 +41,16 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     setStep("key_generation");
   }, []);
 
+  const handleVaultReady = useCallback(() => {
+    setStep("passkey");
+  }, []);
+
   // Step indicator
   const steps = [
     { key: "recovery_phrase", label: "Recovery Words" },
     { key: "verification", label: "Verification" },
     { key: "key_generation", label: "Secure Vault" },
+    { key: "passkey", label: "Biometrics" },
   ];
 
   const currentStepIndex = steps.findIndex(
@@ -97,8 +108,9 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           <VerificationStep phrase={phrase} onVerified={handleVerified} onBack={handleBackToPhrase} />
         )}
         {step === "key_generation" && phrase && (
-          <KeyGenerationStep phrase={phrase} />
+          <KeyGenerationStep phrase={phrase} onComplete={handleVaultReady} />
         )}
+        {step === "passkey" && <PasskeyStep />}
       </main>
     </div>
   );

@@ -11,6 +11,13 @@ const ACTION_TYPE = v.union(
   v.literal("account_wipe")
 );
 
+const STEP_CATEGORY = v.union(
+  v.literal("primary_outreach"),
+  v.literal("incapacity"),
+  v.literal("posthumous_release"),
+  v.literal("wipe")
+);
+
 /**
  * Get the user's scenario (single per user for now) plus its ordered steps.
  */
@@ -120,6 +127,7 @@ export const addStep = mutation({
   args: {
     triggerValue: v.number(),
     label: v.string(),
+    category: v.optional(STEP_CATEGORY),
     actions: v.array(
       v.object({
         actionType: ACTION_TYPE,
@@ -166,6 +174,7 @@ export const addStep = mutation({
       triggerType: "inactivity_days",
       triggerValue: args.triggerValue,
       label: args.label,
+      category: args.category,
       actions: args.actions,
       executionStatus: "pending",
       order: existingSteps.length,

@@ -47,7 +47,7 @@ export default function LifeCheckPage() {
             <span className="text-secondary">Verification Engine</span>
           </h1>
           <p className="text-body-lg text-on-surface-variant max-w-xl">
-            Configure your automated proof-of-life protocol. If you are unresponsive, Keeplas securely executes your legacy directives.
+            Keeplas only reaches out after a real period of silence — opening the app, browsing your vault, or any sign of life resets the timer. If you stay unresponsive past your threshold, your legacy directives execute securely.
           </p>
         </div>
 

@@ -30,18 +30,6 @@ export default defineSchema({
       )
     ),
 
-    passkeyCredentials: v.optional(
-      v.array(
-        v.object({
-          credentialId: v.string(),
-          publicKey: v.string(),
-          deviceName: v.optional(v.string()),
-          createdAt: v.number(),
-          lastUsedAt: v.number(),
-        })
-      )
-    ),
-
     // Crypto fields — populated during onboarding (Phase 2)
     publicKey: v.optional(v.string()),
     encryptedKeyBundle: v.optional(v.string()),
@@ -68,6 +56,37 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_last_seen", ["lastSeenAt"]),
+
+  // ═══════════════════════════════════════════════
+  // PASSKEYS (WebAuthn credentials)
+  // ═══════════════════════════════════════════════
+
+  passkey_credentials: defineTable({
+    userId: v.id("users"),
+    credentialId: v.string(),
+    publicKey: v.string(),
+    counter: v.number(),
+    transports: v.optional(v.array(v.string())),
+    deviceName: v.string(),
+    backedUp: v.optional(v.boolean()),
+    deviceType: v.optional(
+      v.union(v.literal("singleDevice"), v.literal("multiDevice"))
+    ),
+    createdAt: v.number(),
+    lastUsedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_credential_id", ["credentialId"]),
+
+  webauthn_challenges: defineTable({
+    challenge: v.string(),
+    kind: v.union(v.literal("registration"), v.literal("authentication")),
+    userId: v.optional(v.id("users")),
+    email: v.optional(v.string()),
+    expiresAt: v.number(),
+  })
+    .index("by_challenge", ["challenge"])
+    .index("by_expiry", ["expiresAt"]),
 
   // ═══════════════════════════════════════════════
   // VAULTS
@@ -316,6 +335,14 @@ export default defineSchema({
       v.literal("quarterly")
     ),
 
+    // Inactivity-driven trigger model. Derived from `frequency` at write time
+    // (weekly=7, monthly=30, quarterly=90) but stored explicitly so the
+    // evaluator can compare without re-mapping. Optional during rollout.
+    inactivityThresholdDays: v.optional(v.number()),
+    // Last observed user activity (login, navigation). The evaluator only
+    // initiates a cycle once `now - lastActivityAt >= inactivityThresholdDays`.
+    lastActivityAt: v.optional(v.number()),
+
     passiveSignals: v.object({
       appActivity: v.boolean(),
       deviceActivity: v.boolean(),
@@ -355,7 +382,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_next_check", ["nextCheckAt", "isActive"]),
+    .index("by_next_check", ["nextCheckAt", "isActive"])
+    .index("by_active_activity", ["isActive", "lastActivityAt"]),
 
   // ═══════════════════════════════════════════════
   // LIFE CHECK CYCLES
@@ -388,6 +416,10 @@ export default defineSchema({
         response: v.optional(v.string()),
       })
     ),
+
+    // IDs of pending scheduled escalations (Convex scheduler). Cancelled when
+    // the cycle is validated by passive activity or user tap.
+    pendingScheduleIds: v.optional(v.array(v.id("_scheduled_functions"))),
 
     validatedAt: v.optional(v.number()),
     validatedBy: v.optional(v.string()),
@@ -427,6 +459,22 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_type", ["userId", "signalType"])
     .index("by_detected", ["userId", "detectedAt"]),
+
+  // ═══════════════════════════════════════════════
+  // PUSH SUBSCRIPTIONS (Web Push)
+  // ═══════════════════════════════════════════════
+
+  push_subscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+    deviceLabel: v.optional(v.string()),
+    createdAt: v.number(),
+    lastUsedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
 
   // ═══════════════════════════════════════════════
   // ACCESS REQUESTS
@@ -561,6 +609,17 @@ export default defineSchema({
     triggerType: v.literal("inactivity_days"),
     triggerValue: v.number(),
     label: v.string(),
+    // Optional grouping so the UI can render "phases of life" (primary
+    // outreach, incapacity handling, posthumous release, terminal wipe).
+    // The execution engine treats steps in `triggerValue` order regardless.
+    category: v.optional(
+      v.union(
+        v.literal("primary_outreach"),
+        v.literal("incapacity"),
+        v.literal("posthumous_release"),
+        v.literal("wipe")
+      )
+    ),
 
     actions: v.array(
       v.object({

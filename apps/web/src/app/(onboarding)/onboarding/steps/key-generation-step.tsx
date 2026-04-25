@@ -15,6 +15,7 @@ import { Button, Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
   phrase: string[];
+  onComplete?: () => void;
 }
 
 type GenerationPhase =
@@ -43,7 +44,7 @@ const PHASE_PROGRESS: Record<GenerationPhase, number> = {
   error: 0,
 };
 
-export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
+export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps) {
   const router = useRouter();
   const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
@@ -121,9 +122,12 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
 
         setPhase("complete");
 
-        // Redirect to dashboard after brief delay
         setTimeout(() => {
-          router.push("/dashboard");
+          if (onComplete) {
+            onComplete();
+          } else {
+            router.push("/dashboard");
+          }
         }, 1500);
       } catch (err) {
         console.error("Key generation failed:", err);
@@ -133,7 +137,7 @@ export function KeyGenerationStep({ phrase }: KeyGenerationStepProps) {
     }
 
     generateAndStore();
-  }, [phrase, storeKeyBundle, router, setMasterKey]);
+  }, [phrase, storeKeyBundle, router, setMasterKey, onComplete]);
 
   return (
     <div className="w-full max-w-lg mx-auto text-center">
