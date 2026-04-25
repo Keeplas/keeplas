@@ -416,8 +416,8 @@ function AddMilestoneDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-h-[92vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0 static">
           <div>
             <DialogTitle>Add Trigger Milestone</DialogTitle>
             <DialogDescription>
@@ -429,7 +429,7 @@ function AddMilestoneDialog({
           </DialogClose>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-5 flex-1 overflow-y-auto min-h-0">
           <ErrorAlert message={error} />
 
           <div className="space-y-2">

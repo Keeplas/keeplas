@@ -312,3 +312,62 @@ body {
   }
 }
 
+/* ═══════════════════════════════════════════════
+   Tiptap rich-text editor
+   ═══════════════════════════════════════════════ */
+
+.tiptap-content {
+  min-height: 100%;
+}
+
+.tiptap-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-outline-variant);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.tiptap-content p {
+  margin: 0 0 0.5rem 0;
+}
+
+.tiptap-content h1,
+.tiptap-content h2,
+.tiptap-content h3 {
+  font-family: var(--font-headline);
+  color: var(--color-primary);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.tiptap-content h2 { font-size: 1.25rem; }
+.tiptap-content h3 { font-size: 1.125rem; }
+
+.tiptap-content ul,
+.tiptap-content ol {
+  padding-left: 1.5rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.tiptap-content ul { list-style: disc; }
+.tiptap-content ol { list-style: decimal; }
+
+.tiptap-content blockquote {
+  border-left: 3px solid var(--color-secondary);
+  padding-left: 1rem;
+  color: var(--color-on-surface-variant);
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.tiptap-content strong { font-weight: 600; }
+.tiptap-content em { font-style: italic; }
+.tiptap-content code {
+  background: var(--color-surface-container-high);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+

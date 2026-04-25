@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Button,
   cn,
+  DatePicker,
   Dialog,
   DialogClose,
   DialogContent,
@@ -13,13 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
   ErrorAlert,
+  HelpHint,
   Icon,
+  InfoCallout,
   Input,
   Label,
   Loader,
+  RichTextEditor,
   Select,
   SelectItem,
-  Textarea,
   UserAvatar,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
@@ -28,6 +32,8 @@ import { getErrorMessage } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { InviteContactDialog } from "../trusted-contacts/invite-contact-dialog";
+import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 
 type TriggerType =
   | "life_check_failure"
@@ -36,13 +42,51 @@ type TriggerType =
   | "legal_event"
   | "manual";
 
-const TRIGGER_LABELS: Record<TriggerType, string> = {
-  life_check_failure: "Verified Life-Check Failure",
-  time_based: "Time-based Release",
-  age_based: "Recipient Age",
-  legal_event: "Verified Legal Event",
-  manual: "Manual Trigger",
-};
+interface TriggerOption {
+  value: TriggerType;
+  label: string;
+  hint: string;
+  comingSoon?: boolean;
+  hidden?: boolean;
+}
+
+const TRIGGER_OPTIONS: TriggerOption[] = [
+  {
+    value: "life_check_failure",
+    label: "Verified Life-Check Failure",
+    hint: "Released when you stop responding to Life Checks for the chosen number of days.",
+  },
+  {
+    value: "time_based",
+    label: "Time-based Release",
+    hint: "Released on a specific calendar date — useful for birthdays, anniversaries, or coming-of-age letters.",
+  },
+  {
+    value: "manual",
+    label: "Manual Trigger",
+    hint: "Released only when you (or a curator) explicitly approve from the dashboard.",
+  },
+  {
+    value: "legal_event",
+    label: "Verified Legal Event",
+    hint: "Will require a curator-uploaded legal document. Coming soon.",
+    comingSoon: true,
+  },
+  {
+    value: "age_based",
+    label: "Recipient Age",
+    hint: "Replaced by Time-based Release — pick the recipient's birthday + age to compute the date.",
+    hidden: true,
+  },
+];
+
+const TRIGGER_LABELS: Record<TriggerType, string> = TRIGGER_OPTIONS.reduce(
+  (acc, opt) => {
+    acc[opt.value] = opt.label;
+    return acc;
+  },
+  {} as Record<TriggerType, string>
+);
 
 const TRIGGER_ICONS: Record<TriggerType, string> = {
   life_check_failure: ICON_PATHS.heartbeat,
@@ -66,6 +110,13 @@ function formatDate(ts: number) {
     day: "2-digit",
     year: "numeric",
   });
+}
+
+function htmlToPlainText(html: string): string {
+  if (typeof window === "undefined") return html.replace(/<[^>]+>/g, "").trim();
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent ?? "").trim();
 }
 
 export default function ConditionalMessagesPage() {
@@ -107,8 +158,12 @@ export default function ConditionalMessagesPage() {
                 path={ICON_PATHS.vibration}
                 className="w-5 h-5 text-secondary-fixed"
               />
-              <span className="text-label-md">
+              <span className="text-label-md flex items-center gap-1.5">
                 Dead Man Switch Status
+                <HelpHint
+                  iconClassName="text-on-primary-container/70 hover:text-secondary-fixed"
+                  content="Monitors your Life Check responses. If you stop confirming, the switch escalates and ultimately triggers the release of any active conditional message tied to it."
+                />
               </span>
             </div>
             <div className="flex items-center justify-between mb-2">
@@ -230,11 +285,13 @@ export default function ConditionalMessagesPage() {
                 icon={ICON_PATHS.security}
                 title="Curator Check-in Protocol"
                 hint={`${status.curatorsRequired} contacts required to authorize release`}
+                help="Number of trusted contacts who must independently confirm before any sealed message is released."
               />
               <PhilosophyCard
                 icon={ICON_PATHS.timer}
                 title="Heartbeat Interval"
                 hint="Currently set to 14 days"
+                help="How often the system asks you to confirm you're well. Configurable from Life Check settings."
               />
             </div>
           </div>
@@ -352,8 +409,9 @@ function FeaturedMessage({
         </div>
 
         <div>
-          <span className="text-label-md text-on-surface-variant mb-2 block">
+          <span className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
             Encryption
+            <HelpHint content="Zero-knowledge: the message was encrypted on your device before being stored. Keeplas servers can never read the contents." />
           </span>
           <div className="flex items-center gap-2 text-body-md font-semibold text-secondary">
             <Icon path={ICON_PATHS.verifiedFill} className="w-4 h-4" />
@@ -425,10 +483,12 @@ function PhilosophyCard({
   icon,
   title,
   hint,
+  help,
 }: {
   icon: string;
   title: string;
   hint: string;
+  help?: string;
 }) {
   return (
     <div className="bg-white/10 p-6 rounded-2xl backdrop-blur-md border border-white/10">
@@ -440,7 +500,15 @@ function PhilosophyCard({
           <Icon path={icon} className="w-5 h-5 text-secondary-fixed" />
         </div>
         <div>
-          <h4 className="text-headline-sm">{title}</h4>
+          <h4 className="text-headline-sm flex items-center gap-1.5">
+            {title}
+            {help && (
+              <HelpHint
+                content={help}
+                iconClassName="text-on-primary-container/70 hover:text-secondary-fixed"
+              />
+            )}
+          </h4>
           <p className="text-body-md opacity-70">{hint}</p>
         </div>
       </div>
@@ -451,6 +519,9 @@ function PhilosophyCard({
 interface ContactOption {
   _id: Id<"trusted_contacts">;
   name: string;
+  email?: string;
+  role?: string;
+  avatarUrl?: string;
 }
 
 function ComposeMessageDialog({
@@ -468,21 +539,29 @@ function ComposeMessageDialog({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [triggerType, setTriggerType] = useState<TriggerType>("life_check_failure");
-  const [inactivityDays, setInactivityDays] = useState(30);
   const [releaseDate, setReleaseDate] = useState("");
-  const [recipientAge, setRecipientAge] = useState(21);
-  const [legalDesc, setLegalDesc] = useState("");
-  const [recipients, setRecipients] = useState<Set<Id<"trusted_contacts">>>(new Set());
+  const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
+  const [showInvite, setShowInvite] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  function toggleRecipient(id: Id<"trusted_contacts">) {
-    setRecipients((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const recipientOptions = useMemo<MultiSelectOption[]>(
+    () =>
+      contacts.map((c) => ({
+        value: c._id,
+        label: c.name,
+        hint: c.email,
+      })),
+    [contacts]
+  );
+
+  function resetForm() {
+    setTitle("");
+    setContent("");
+    setRecipientSelection([]);
+    setTriggerType("life_check_failure");
+    setReleaseDate("");
+    setError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -491,12 +570,17 @@ function ComposeMessageDialog({
       setError("Encryption key not available. Sign in again.");
       return;
     }
-    if (!title.trim() || !content.trim()) {
+    const plain = htmlToPlainText(content);
+    if (!title.trim() || !plain) {
       setError("Title and content are required.");
       return;
     }
-    if (recipients.size === 0) {
+    if (recipientSelection.length === 0) {
       setError("Select at least one recipient.");
+      return;
+    }
+    if (triggerType === "time_based" && !releaseDate) {
+      setError("Pick a release date.");
       return;
     }
 
@@ -507,30 +591,22 @@ function ComposeMessageDialog({
       const contentHash = await computeHash(content);
 
       const triggerConfig: {
-        inactivityDays?: number;
         releaseDate?: number;
-        recipientAge?: number;
-        legalEventDesc?: string;
       } = {};
-      if (triggerType === "life_check_failure") triggerConfig.inactivityDays = inactivityDays;
-      if (triggerType === "time_based" && releaseDate)
+      if (triggerType === "time_based")
         triggerConfig.releaseDate = new Date(releaseDate).getTime();
-      if (triggerType === "age_based") triggerConfig.recipientAge = recipientAge;
-      if (triggerType === "legal_event") triggerConfig.legalEventDesc = legalDesc.trim();
 
       await create({
         title: title.trim(),
         encryptedContent,
         contentHash,
-        recipients: Array.from(recipients),
+        recipients: recipientSelection as Id<"trusted_contacts">[],
         triggerType,
         triggerConfig,
       });
 
       onOpenChange(false);
-      setTitle("");
-      setContent("");
-      setRecipients(new Set());
+      resetForm();
     } catch (err) {
       setError(getErrorMessage(err, "Failed to encrypt message."));
     } finally {
@@ -538,158 +614,191 @@ function ComposeMessageDialog({
     }
   }
 
+  const visibleTriggers = TRIGGER_OPTIONS.filter((t) => !t.hidden);
+  const selectedTrigger = TRIGGER_OPTIONS.find((t) => t.value === triggerType);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div>
-            <DialogTitle>Compose conditional message</DialogTitle>
-            <DialogDescription>
-              Encrypted with zero-knowledge before leaving your device.
-            </DialogDescription>
-          </div>
-          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
-            <Icon path={ICON_PATHS.close} />
-          </DialogClose>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[92vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="shrink-0 static">
+            <div>
+              <DialogTitle>Compose conditional message</DialogTitle>
+              <DialogDescription>
+                Encrypted with zero-knowledge before leaving your device.
+              </DialogDescription>
+            </div>
+            <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
+              <Icon path={ICON_PATHS.close} />
+            </DialogClose>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <ErrorAlert message={error} />
+          <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-5 flex-1 overflow-y-auto min-h-0">
+            <ErrorAlert message={error} />
 
-          <div className="space-y-2">
-            <Label>Title</Label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Letter to my children"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Message</Label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write the message that will be released..."
-              rows={6}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Trigger</Label>
-            <Select<TriggerType>
-              value={triggerType}
-              onValueChange={(v) => setTriggerType(v)}
-              placeholder="Choose a trigger"
-            >
-              {(Object.keys(TRIGGER_LABELS) as TriggerType[]).map((key) => (
-                <SelectItem key={key} value={key}>
-                  {TRIGGER_LABELS[key]}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-
-          {triggerType === "life_check_failure" && (
             <div className="space-y-2">
-              <Label>Inactivity threshold (days)</Label>
+              <Label>Title</Label>
               <Input
-                type="number"
-                min={1}
-                value={inactivityDays}
-                onChange={(e) => setInactivityDays(Number(e.target.value))}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Letter to my children"
+                required
               />
             </div>
-          )}
 
-          {triggerType === "time_based" && (
             <div className="space-y-2">
-              <Label>Release on</Label>
-              <Input
-                type="date"
-                value={releaseDate}
-                onChange={(e) => setReleaseDate(e.target.value)}
+              <Label>Message</Label>
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Write the message that will be released…"
+                minHeight={280}
               />
             </div>
-          )}
 
-          {triggerType === "age_based" && (
             <div className="space-y-2">
-              <Label>Recipient age</Label>
-              <Input
-                type="number"
-                min={1}
-                value={recipientAge}
-                onChange={(e) => setRecipientAge(Number(e.target.value))}
-              />
-            </div>
-          )}
-
-          {triggerType === "legal_event" && (
-            <div className="space-y-2">
-              <Label>Legal event description</Label>
-              <Input
-                value={legalDesc}
-                onChange={(e) => setLegalDesc(e.target.value)}
-                placeholder="e.g., Death certificate filed"
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Recipients</Label>
-            {contacts.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant">
-                No trusted contacts yet. Add some in Trusted Contacts.
-              </p>
-            ) : (
-              <div className="space-y-1 max-h-40 overflow-y-auto">
-                {contacts.map((contact) => (
-                  <button
-                    key={contact._id}
-                    type="button"
-                    onClick={() => toggleRecipient(contact._id)}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded-xl text-sm flex items-center justify-between transition-colors cursor-pointer",
-                      recipients.has(contact._id)
-                        ? "bg-secondary text-on-secondary"
-                        : "bg-surface-container hover:bg-surface-container-high"
-                    )}
+              <Label className="flex items-center gap-1.5">
+                Trigger
+                <HelpHint content="The condition that releases the message: a verified Life-Check failure, a calendar date, or a manual release you (or a curator) approve." />
+              </Label>
+              <Select<TriggerType>
+                value={triggerType}
+                onValueChange={(v) => setTriggerType(v)}
+                placeholder="Choose a trigger"
+              >
+                {visibleTriggers.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    disabled={opt.comingSoon}
+                    label={opt.label}
+                    description={opt.hint}
                   >
-                    <span>{contact.name}</span>
-                    {recipients.has(contact._id) && (
-                      <Icon path={ICON_PATHS.checkCircle} className="w-4 h-4" />
-                    )}
-                  </button>
+                    <span className="flex items-center justify-between gap-3 w-full">
+                      <span>{opt.label}</span>
+                      {opt.comingSoon && (
+                        <span className="text-[10px] uppercase tracking-wide bg-surface-container-high text-outline px-1.5 py-0.5 rounded">
+                          Soon
+                        </span>
+                      )}
+                    </span>
+                  </SelectItem>
                 ))}
+              </Select>
+              {selectedTrigger && (
+                <p className="text-label-md text-on-surface-variant">
+                  {selectedTrigger.hint}
+                </p>
+              )}
+            </div>
+
+            {triggerType === "life_check_failure" && (
+              <InfoCallout icon={ICON_PATHS.heartbeat}>
+                Uses your global Life Check cadence and escalation. Adjust the
+                inactivity threshold once in{" "}
+                <Link
+                  href="/life-check"
+                  className="text-secondary font-semibold hover:underline"
+                >
+                  Life Check settings
+                </Link>
+                — it applies to every message with this trigger.
+              </InfoCallout>
+            )}
+
+            {triggerType === "time_based" && (
+              <div className="space-y-2">
+                <Label>Release on</Label>
+                <DatePicker
+                  value={releaseDate}
+                  onChange={setReleaseDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  placeholder="Pick a release date"
+                />
               </div>
             )}
-          </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving || !isReady}
-              className="flex-1 cursor-pointer"
-            >
-              {saving ? "Encrypting..." : "Encrypt & Save"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="space-y-2">
+              <Label className="text-label-md text-on-surface-variant flex items-center gap-1.5">
+                Who receives this at trigger?
+                <HelpHint content="Trusted contacts who will receive this message when the trigger fires. Each gets their own wrapped decryption key." />
+              </Label>
+              <MultiSelect
+                options={recipientOptions}
+                selected={recipientSelection}
+                onChange={setRecipientSelection}
+                placeholder="No one selected"
+                searchPlaceholder="Search contacts…"
+                emptyMessage="No contacts match."
+                renderTrigger={(selected) => {
+                  if (selected.length === 0) {
+                    return (
+                      <span className="text-outline-variant">
+                        No one selected
+                      </span>
+                    );
+                  }
+                  const labels = selected
+                    .map(
+                      (v) => recipientOptions.find((o) => o.value === v)?.label
+                    )
+                    .filter(Boolean);
+                  return (
+                    <span className="truncate">{labels.join(", ")}</span>
+                  );
+                }}
+                footer={(close) => (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close();
+                      setShowInvite(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-secondary text-label-md hover:bg-surface-container transition-colors cursor-pointer"
+                  >
+                    <Icon path={ICON_PATHS.userPlus} className="w-4 h-4" />
+                    Add new contact
+                  </button>
+                )}
+              />
+              <p className="text-label-md text-on-surface-variant/70">
+                Each recipient gets their own wrapped decryption key.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                onClick={() => onOpenChange(false)}
+                className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="vault"
+                size="md"
+                disabled={saving || !isReady}
+                className="flex-1 cursor-pointer"
+              >
+                {saving ? "Encrypting..." : "Encrypt & Save"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <InviteContactDialog
+        open={showInvite}
+        onOpenChange={setShowInvite}
+        onContactInvited={(contactId) => {
+          setRecipientSelection((prev) =>
+            prev.includes(contactId) ? prev : [...prev, contactId]
+          );
+        }}
+      />
+    </>
   );
 }

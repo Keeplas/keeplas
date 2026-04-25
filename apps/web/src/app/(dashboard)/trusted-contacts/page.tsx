@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Loader } from "@keeplas/ui";
+import { HelpHint, Loader } from "@keeplas/ui";
 import { ContactCard } from "./contact-card";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
@@ -178,11 +178,12 @@ export default function TrustedContactsPage() {
             <div className="space-y-8">
               <section>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-headline-sm text-primary">
+                  <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
                     Trust Contacts
                     <span className="text-label-md text-on-surface-variant ml-2">
                       ({trustContacts.length}/{MAX_TRUST_CONTACTS})
                     </span>
+                    <HelpHint content="Trust contacts each hold one encrypted shard of your recovery key. They can collectively help you regain vault access. Capped at 5 by design — fewer is fine, more would weaken the security model." />
                   </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -213,11 +214,12 @@ export default function TrustedContactsPage() {
               {(recipientContacts.length > 0 || trustContacts.length >= MAX_TRUST_CONTACTS) && (
                 <section>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-headline-sm text-primary">
+                    <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
                       Recipients Only
                       <span className="text-label-md text-on-surface-variant ml-2">
                         ({recipientContacts.length})
                       </span>
+                      <HelpHint content="People who only receive items when a trigger fires (conditional message, vault release). They don't hold a recovery shard, so there's no cap on how many you can add." />
                     </h2>
                   </div>
                   {recipientContacts.length === 0 ? (

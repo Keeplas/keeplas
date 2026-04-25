@@ -14,6 +14,7 @@ import type * as auth from "../auth.js";
 import type * as conditional_messages from "../conditional_messages.js";
 import type * as convex__generated_api from "../convex/_generated/api.js";
 import type * as convex__generated_server from "../convex/_generated/server.js";
+import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as emergency_cards from "../emergency_cards.js";
 import type * as helpers from "../helpers.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   conditional_messages: typeof conditional_messages;
   "convex/_generated/api": typeof convex__generated_api;
   "convex/_generated/server": typeof convex__generated_server;
+  crons: typeof crons;
   dashboard: typeof dashboard;
   emergency_cards: typeof emergency_cards;
   helpers: typeof helpers;

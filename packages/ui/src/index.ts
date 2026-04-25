@@ -82,4 +82,11 @@ export { Toaster } from "./toaster";
 export { toast, useToast } from "./use-toast";
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip";
 export { UserAvatar, type UserAvatarProps } from "./user-avatar";
+export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
+export { HelpHint, type HelpHintProps } from "./help-hint";
+export {
+  InfoCallout,
+  type InfoCalloutProps,
+  type InfoCalloutTone,
+} from "./info-callout";
 export { cn } from "./lib/utils";

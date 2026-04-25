@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireAuth, getUserVault } from "./helpers";
 import { createAuditLog } from "./audit";
 
@@ -169,6 +170,44 @@ export const setMessageStatus = mutation({
     });
 
     return { success: true };
+  },
+});
+
+/**
+ * Cron entry point: release every active time_based message whose releaseDate
+ * has passed. Idempotent — flips status to "released" so we never re-fire.
+ */
+export const processScheduledReleases = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    const due = await ctx.db
+      .query("conditional_messages")
+      .withIndex("by_trigger", (q) =>
+        q.eq("triggerType", "time_based").eq("status", "active")
+      )
+      .collect();
+
+    let released = 0;
+    for (const msg of due) {
+      const releaseAt = msg.triggerConfig?.releaseDate;
+      if (!releaseAt || releaseAt > now) continue;
+
+      await ctx.runMutation(internal.release.triggerRelease, {
+        userId: msg.userId,
+        reason: `time_based:${msg._id}`,
+      });
+
+      await ctx.db.patch(msg._id, {
+        status: "released",
+        releasedAt: now,
+        updatedAt: now,
+      });
+      released++;
+    }
+
+    return { scanned: due.length, released };
   },
 });
 

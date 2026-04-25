@@ -13,7 +13,7 @@ import {
   Select,
   SelectItem,
 } from "@keeplas/ui";
-import { Button, Input, Label, ErrorAlert, cn } from "@keeplas/ui";
+import { Button, Input, Label, ErrorAlert, HelpHint, cn } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 
 const ROLES = [
@@ -79,8 +79,8 @@ export function InviteContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface max-w-lg">
-        <DialogHeader>
+      <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
             <DialogTitle>
               Invite Trusted Contact
@@ -92,7 +92,7 @@ export function InviteContactDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-6 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0">
           <div className="space-y-2">
             <Label htmlFor="contact-name">Full Name *</Label>
             <Input
@@ -128,7 +128,10 @@ export function InviteContactDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-role">Role</Label>
+            <Label htmlFor="contact-role" className="flex items-center gap-1.5">
+              Role
+              <HelpHint content="Their relationship to you. Used by Keeplas to surface the right contact in scenarios (medical, legal, family) and on dashboards." />
+            </Label>
             <Select<Role>
               id="contact-role"
               value={role}
@@ -144,7 +147,10 @@ export function InviteContactDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Role in Keeplas</Label>
+            <Label className="flex items-center gap-1.5">
+              Role in Keeplas
+              <HelpHint content="Trust contact = holds a recovery shard, counts toward your 5-trust cap, can help recover your account. Recipient only = receives items at trigger but no recovery role and no cap." />
+            </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"

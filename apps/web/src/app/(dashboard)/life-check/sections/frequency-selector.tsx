@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon } from "@keeplas/ui";
+import { HelpHint, Icon } from "@keeplas/ui";
 import { FREQUENCIES, type Frequency } from "./constants";
 
 const CLOCK_ICON =
@@ -17,6 +17,7 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
       <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
         <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
         Inactivity Threshold
+        <HelpHint content="How long Keeplas waits without hearing from you before kicking off the escalation sequence. Shorter = more frequent confirmations; longer = fewer interruptions but slower release." />
       </h3>
       <p className="text-body-md text-on-surface-variant mb-6">
         The period of total silence before the verification sequence begins.

@@ -158,24 +158,29 @@ export interface SelectItemProps {
   children: React.ReactNode;
   className?: string;
   label?: string;
+  /**
+   * Optional secondary line shown under the label inside the dropdown only.
+   * The trigger keeps showing the main label.
+   */
+  description?: React.ReactNode;
 }
 
 export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ value, disabled, children, className, label }, ref) => (
+  ({ value, disabled, children, className, label, description }, ref) => (
     <SelectPrimitives.Item
       ref={ref}
       value={String(value)}
       disabled={disabled}
       textValue={label}
       className={cn(
-        "relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
+        "relative flex items-start gap-2 rounded-lg px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
         "data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary",
         "data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
         "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",
         className
       )}
     >
-      <SelectPrimitives.ItemIndicator className="shrink-0 text-secondary">
+      <SelectPrimitives.ItemIndicator className="shrink-0 text-secondary mt-0.5">
         <svg
           className="w-4 h-4"
           fill="none"
@@ -187,9 +192,16 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
         </svg>
       </SelectPrimitives.ItemIndicator>
-      <SelectPrimitives.ItemText className="flex-1 truncate">
-        {children}
-      </SelectPrimitives.ItemText>
+      <div className="flex-1 min-w-0">
+        <SelectPrimitives.ItemText className="block truncate">
+          {children}
+        </SelectPrimitives.ItemText>
+        {description && (
+          <span className="block text-label-md text-on-surface-variant font-normal leading-snug mt-0.5">
+            {description}
+          </span>
+        )}
+      </div>
     </SelectPrimitives.Item>
   )
 );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { DatePicker, Icon } from "@keeplas/ui";
+import { DatePicker, HelpHint, Icon } from "@keeplas/ui";
 
 const CALENDAR_ICON = "M3.75 9h16.5m-16.5 6.75h16.5M3.75 4.5h16.5M12 4.5v15";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -36,6 +36,7 @@ export function TravelModeSection({
           <h3 className="text-headline-sm text-primary flex items-center gap-2">
             <Icon path={CALENDAR_ICON} className="w-5 h-5 text-secondary" />
             Travel Mode
+            <HelpHint content="Pauses Life Check escalation while you're off-grid. Conditional messages remain encrypted and untriggered. Capped at 90 days for safety." />
           </h3>
           <p className="text-body-md text-on-surface-variant mt-1">
             Suspend Life Check for up to 90 days when traveling.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon, Switch } from "@keeplas/ui";
+import { HelpHint, Icon, Switch } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import type { ChannelConfig, ChannelType } from "./constants";
 
@@ -17,6 +17,7 @@ export function ChannelList({ channels, onToggle }: ChannelListProps) {
       <h3 className="text-headline-sm text-primary mb-5 flex items-center gap-2">
         <Icon path={ICON_PATHS.bell} className="w-5 h-5 text-secondary" />
         Verification Channels
+        <HelpHint content="Channels Keeplas uses to reach you during a Life Check escalation. They fire in order — push first, then email, then heavier methods. Disable any you don't have." />
       </h3>
       <div className="space-y-4">
         {sorted.map((ch) => (

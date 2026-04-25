@@ -75,8 +75,8 @@ export function EditGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface max-w-lg">
-        <DialogHeader>
+      <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
             <DialogTitle>Edit Group</DialogTitle>
             <DialogDescription className="mt-1">
@@ -85,7 +85,7 @@ export function EditGroupDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-6 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0">
           <div className="space-y-2">
             <Label htmlFor="edit-group-name">Group name</Label>
             <Input
