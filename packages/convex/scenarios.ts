@@ -196,6 +196,51 @@ export const addStep = mutation({
 });
 
 /**
+ * Update an existing milestone step. Only the fields the user can edit
+ * from the dialog (trigger window, label, phase, action set) are mutable —
+ * `order`, `executionStatus`, and `triggerType` stay under engine control.
+ */
+export const updateStep = mutation({
+  args: {
+    stepId: v.id("scenario_steps"),
+    triggerValue: v.number(),
+    label: v.string(),
+    category: v.optional(STEP_CATEGORY),
+    actions: v.array(
+      v.object({
+        actionType: ACTION_TYPE,
+        targetContactId: v.optional(v.id("trusted_contacts")),
+        config: v.string(),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const step = await ctx.db.get(args.stepId);
+    if (!step || step.userId !== userId) throw new Error("Step not found");
+
+    await ctx.db.patch(args.stepId, {
+      triggerValue: args.triggerValue,
+      label: args.label,
+      category: args.category,
+      actions: args.actions,
+    });
+
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "user",
+      actorId: userId,
+      action: "scenario_step_updated",
+      resourceType: "scenario_step",
+      resourceId: args.stepId,
+      metadata: JSON.stringify({ triggerValue: args.triggerValue }),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
  * Remove a milestone step.
  */
 export const removeStep = mutation({

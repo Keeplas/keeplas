@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   Button,
   cn,
@@ -102,14 +103,22 @@ function dotTextColor(index: number, total: number) {
   return "text-secondary/70";
 }
 
+type ScenarioStep = Doc<"scenario_steps">;
+
+type DialogState =
+  | { mode: "create" }
+  | { mode: "edit"; step: ScenarioStep }
+  | null;
+
 export default function ScenarioPage() {
   const data = useQuery(api.scenarios.getScenario);
   const getOrCreate = useMutation(api.scenarios.getOrCreateScenario);
   const setSafePause = useMutation(api.scenarios.setSafePause);
   const addStep = useMutation(api.scenarios.addStep);
+  const updateStep = useMutation(api.scenarios.updateStep);
   const removeStep = useMutation(api.scenarios.removeStep);
 
-  const [showAdd, setShowAdd] = useState(false);
+  const [dialog, setDialog] = useState<DialogState>(null);
 
   useEffect(() => {
     if (data === null) {
@@ -177,7 +186,11 @@ export default function ScenarioPage() {
             {steps.length === 0 ? (
               <div className="py-12 text-center text-on-surface-variant">
                 <p className="mb-6">No milestones configured yet.</p>
-                <Button variant="vault" size="md" onClick={() => setShowAdd(true)}>
+                <Button
+                  variant="vault"
+                  size="md"
+                  onClick={() => setDialog({ mode: "create" })}
+                >
                   Add your first milestone
                 </Button>
               </div>
@@ -234,9 +247,11 @@ export default function ScenarioPage() {
                           </div>
                         </div>
                         <button
-                          onClick={() => removeStep({ stepId: step._id })}
-                          className="text-on-surface-variant hover:text-error transition-colors cursor-pointer p-1"
-                          aria-label="Remove milestone"
+                          onClick={() =>
+                            setDialog({ mode: "edit", step })
+                          }
+                          className="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer p-1"
+                          aria-label="Edit milestone"
                         >
                           <Icon path={ICON_PATHS.edit} className="w-5 h-5" />
                         </button>
@@ -250,7 +265,7 @@ export default function ScenarioPage() {
             {steps.length > 0 && (
               <div className="mt-12 pt-10 border-t border-outline-variant/15">
                 <button
-                  onClick={() => setShowAdd(true)}
+                  onClick={() => setDialog({ mode: "create" })}
                   className="flex items-center space-x-2 text-secondary font-bold hover:translate-x-1 transition-transform cursor-pointer"
                 >
                   <Icon path={ICON_PATHS.plusCircle} className="w-5 h-5" />
@@ -305,7 +320,7 @@ export default function ScenarioPage() {
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setShowAdd(true)}
+                    onClick={() => setDialog({ mode: "create" })}
                     className="w-full bg-white p-4 rounded-xl flex items-center justify-between group cursor-pointer hover:bg-secondary/5 transition-colors text-left"
                   >
                     <div className="flex items-center space-x-3">
@@ -358,31 +373,51 @@ export default function ScenarioPage() {
         </aside>
       </div>
 
-      <AddMilestoneDialog
-        open={showAdd}
-        onOpenChange={setShowAdd}
+      <MilestoneDialog
+        state={dialog}
+        onOpenChange={(open) => {
+          if (!open) setDialog(null);
+        }}
         onCreate={async (params) => {
           await addStep(params);
+        }}
+        onUpdate={async (stepId, params) => {
+          await updateStep({ stepId, ...params });
+        }}
+        onDelete={async (stepId) => {
+          await removeStep({ stepId });
         }}
       />
     </div>
   );
 }
 
-function AddMilestoneDialog({
-  open,
+type MilestoneFormValues = {
+  triggerValue: number;
+  label: string;
+  category: StepCategory;
+  actions: Array<{ actionType: ActionType; config: string }>;
+};
+
+function MilestoneDialog({
+  state,
   onOpenChange,
   onCreate,
+  onUpdate,
+  onDelete,
 }: {
-  open: boolean;
+  state: DialogState;
   onOpenChange: (open: boolean) => void;
-  onCreate: (params: {
-    triggerValue: number;
-    label: string;
-    category: StepCategory;
-    actions: Array<{ actionType: ActionType; config: string }>;
-  }) => Promise<void>;
+  onCreate: (params: MilestoneFormValues) => Promise<void>;
+  onUpdate: (
+    stepId: ScenarioStep["_id"],
+    params: MilestoneFormValues
+  ) => Promise<void>;
+  onDelete: (stepId: ScenarioStep["_id"]) => Promise<void>;
 }) {
+  const isEdit = state?.mode === "edit";
+  const editingStep = isEdit ? state.step : null;
+
   const [triggerValue, setTriggerValue] = useState<number>(7);
   const [label, setLabel] = useState("Primary Outreach Phase");
   const [category, setCategory] =
@@ -391,7 +426,30 @@ function AddMilestoneDialog({
     new Set<ActionType>(["send_message"])
   );
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+
+  // Sync form state whenever the dialog opens (or switches mode/step).
+  useEffect(() => {
+    if (!state) return;
+    if (state.mode === "edit") {
+      const step = state.step;
+      setTriggerValue(step.triggerValue);
+      setLabel(step.label);
+      setCategory(
+        (step.category as StepCategory | undefined) ?? "primary_outreach"
+      );
+      setSelectedActions(
+        new Set(step.actions.map((a) => a.actionType as ActionType))
+      );
+    } else {
+      setTriggerValue(7);
+      setLabel("Primary Outreach Phase");
+      setCategory("primary_outreach");
+      setSelectedActions(new Set<ActionType>(["send_message"]));
+    }
+    setError("");
+  }, [state]);
 
   function toggleAction(type: ActionType) {
     setSelectedActions((prev) => {
@@ -410,34 +468,56 @@ function AddMilestoneDialog({
     }
     setSaving(true);
     setError("");
+    const params: MilestoneFormValues = {
+      triggerValue,
+      label: label.trim(),
+      category,
+      actions: Array.from(selectedActions).map((actionType) => ({
+        actionType,
+        config: "{}",
+      })),
+    };
     try {
-      await onCreate({
-        triggerValue,
-        label: label.trim(),
-        category,
-        actions: Array.from(selectedActions).map((actionType) => ({
-          actionType,
-          config: "{}",
-        })),
-      });
+      if (editingStep) {
+        await onUpdate(editingStep._id, params);
+      } else {
+        await onCreate(params);
+      }
       onOpenChange(false);
-      setLabel("Primary Outreach Phase");
-      setCategory("primary_outreach");
-      setSelectedActions(new Set<ActionType>(["send_message"]));
-      setTriggerValue(7);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to add milestone."));
+      setError(
+        getErrorMessage(
+          err,
+          editingStep ? "Failed to update milestone." : "Failed to add milestone."
+        )
+      );
     } finally {
       setSaving(false);
     }
   }
 
+  async function handleDelete() {
+    if (!editingStep) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await onDelete(editingStep._id);
+      onOpenChange(false);
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to delete milestone."));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={state !== null} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div>
-            <DialogTitle>Add Trigger Milestone</DialogTitle>
+            <DialogTitle>
+              {editingStep ? "Edit Trigger Milestone" : "Add Trigger Milestone"}
+            </DialogTitle>
             <DialogDescription>
               Pick when in the inactivity window this milestone fires and which actions execute.
             </DialogDescription>
@@ -514,25 +594,46 @@ function AddMilestoneDialog({
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving}
-              className="flex-1 cursor-pointer"
-            >
-              {saving ? "Adding..." : "Add Milestone"}
-            </Button>
+          <div className="flex flex-col gap-3 pt-2">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="md"
+                onClick={() => onOpenChange(false)}
+                className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="vault"
+                size="md"
+                disabled={saving || deleting}
+                className="flex-1 cursor-pointer"
+              >
+                {editingStep
+                  ? saving
+                    ? "Saving..."
+                    : "Save changes"
+                  : saving
+                    ? "Adding..."
+                    : "Add Milestone"}
+              </Button>
+            </div>
+            {editingStep && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting || saving}
+                className="flex items-center justify-center gap-2 mt-2 text-error hover:bg-error/10 rounded-xl py-2.5 px-4 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Icon path={ICON_PATHS.trash} className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {deleting ? "Deleting..." : "Delete milestone"}
+                </span>
+              </button>
+            )}
           </div>
         </form>
       </DialogContent>
