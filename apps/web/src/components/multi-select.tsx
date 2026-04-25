@@ -33,6 +33,12 @@ interface MultiSelectProps {
   triggerClassName?: string;
   renderTrigger?: (selected: string[], options: MultiSelectOption[]) => ReactNode;
   disabled?: boolean;
+  /**
+   * Optional action rendered at the bottom of the popover (e.g. "Add new…").
+   * Receives a `close` callback so the action can dismiss the popover before
+   * triggering, for example, a nested dialog.
+   */
+  footer?: (close: () => void) => ReactNode;
 }
 
 function groupOptions(options: MultiSelectOption[]) {
@@ -56,6 +62,7 @@ export function MultiSelect({
   triggerClassName,
   renderTrigger,
   disabled,
+  footer,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
 
@@ -103,9 +110,9 @@ export function MultiSelect({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[var(--radix-popover-trigger-width)] p-0"
+        className="w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden"
       >
-        <Command>
+        <Command className="rounded-2xl">
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
@@ -161,6 +168,11 @@ export function MultiSelect({
               </CommandGroup>
             ))}
           </CommandList>
+          {footer && (
+            <div className="border-t border-outline-variant/20 p-1.5">
+              {footer(() => setOpen(false))}
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

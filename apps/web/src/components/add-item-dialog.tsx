@@ -37,6 +37,8 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { MediaRecorderPanel } from "@/components/media-recorder-panel";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
+import { VaultLinkInputList } from "@/components/vault-link-input-list";
+import { serializeLinks, isValidUrl } from "@/lib/link-payload";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
@@ -131,6 +133,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<VaultCategory>(defaultCategory ?? "personal_document");
   const [files, setFiles] = useState<PreparedFile[]>([]);
+  const [linkUrls, setLinkUrls] = useState<string[]>([""]);
   const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
   const [tags, setTags] = useState("");
   const [isCritical, setIsCritical] = useState(false);
@@ -295,6 +298,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setDescription("");
     setCategory(defaultCategory ?? "personal_document");
     setFiles([]);
+    setLinkUrls([""]);
     setRecorderMode(null);
     setTags("");
     setIsCritical(false);
@@ -319,6 +323,13 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     }
     if (!title.trim()) {
       setError("Asset name is required.");
+      return;
+    }
+
+    const cleanUrls = linkUrls.map((u) => u.trim()).filter(Boolean);
+    const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
+    if (invalidUrl) {
+      setError(`Invalid URL: ${invalidUrl}`);
       return;
     }
 
@@ -410,6 +421,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       const textPayload = description.trim();
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const contentHash = await computeHash(textPayload);
+      const encryptedLinks =
+        cleanUrls.length > 0
+          ? await encryptContentWithKey(serializeLinks(cleanUrls), dek)
+          : undefined;
       const tagList = tags
         .split(",")
         .map((t) => t.trim())
@@ -421,6 +436,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         title: title.trim(),
         description: description.trim() || undefined,
         encryptedContent,
+        encryptedLinks,
         contentHash,
         accessLevel: recipientConfig.derivedAccessLevel,
         tags: tagList,
@@ -456,9 +472,9 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-3xl max-h-[92vh] p-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <DialogHeader className="px-8 py-6 items-start">
+        <DialogHeader className="px-8 py-6 items-start shrink-0 static">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-label-md text-secondary">
               <span>Vault</span>
@@ -479,7 +495,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         </DialogHeader>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="px-8 pb-8 pt-6 space-y-6 flex-1 overflow-y-auto min-h-0"
+        >
           <ErrorAlert message={error} />
 
           {/* Section 01 — Asset Identity */}
@@ -651,9 +670,15 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             )}
           </section>
 
-          {/* Section 03 — Transmission Logic */}
+          {/* Section 03 — Linked URLs */}
           <section className="bg-surface-container-low rounded-2xl p-6">
-            <SectionHeading step="03" title="Transmission Logic" />
+            <SectionHeading step="03" title="Linked URLs" />
+            <VaultLinkInputList urls={linkUrls} onChange={setLinkUrls} />
+          </section>
+
+          {/* Section 04 — Transmission Logic */}
+          <section className="bg-surface-container-low rounded-2xl p-6">
+            <SectionHeading step="04" title="Transmission Logic" />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">

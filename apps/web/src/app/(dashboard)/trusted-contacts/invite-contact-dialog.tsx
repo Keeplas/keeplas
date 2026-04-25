@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
   Dialog,
   DialogContent,
@@ -29,11 +30,13 @@ type ContactType = "trust" | "recipient_only";
 interface InviteContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onContactInvited?: (contactId: Id<"trusted_contacts">) => void;
 }
 
 export function InviteContactDialog({
   open,
   onOpenChange,
+  onContactInvited,
 }: InviteContactDialogProps) {
   const inviteContact = useMutation(api.trusted_contacts.inviteContact);
 
@@ -53,7 +56,7 @@ export function InviteContactDialog({
     setError("");
 
     try {
-      await inviteContact({
+      const result = await inviteContact({
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phoneNumber: phone.trim() || undefined,
@@ -66,6 +69,7 @@ export function InviteContactDialog({
       setRole("family");
       setContactType("trust");
       onOpenChange(false);
+      onContactInvited?.(result.contactId);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to send invitation"));
     } finally {

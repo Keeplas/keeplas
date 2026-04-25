@@ -111,6 +111,11 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     encryptedContent: v.string(),
+    // Optional encrypted JSON array of URLs attached to this item. Encrypted
+    // with the same per-item DEK as encryptedContent — payload is a self
+    // contained JSON envelope (ciphertext + iv) just like encryptedContent.
+    // Omitted entirely when the item has no links.
+    encryptedLinks: v.optional(v.string()),
     encryptionType: v.union(
       v.literal("aes_256_gcm"),
       v.literal("zero_knowledge")

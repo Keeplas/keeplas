@@ -9,7 +9,10 @@ import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
+import { VaultLinkList } from "@/components/vault-link-list";
+import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
+import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
@@ -60,6 +63,7 @@ export default function VaultItemPage() {
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
 
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
+  const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
   const [decrypting, setDecrypting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -68,6 +72,7 @@ export default function VaultItemPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editLinkUrls, setEditLinkUrls] = useState<string[]>([""]);
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
@@ -95,13 +100,22 @@ export default function VaultItemPage() {
     return [...groupOpts, ...contactOpts];
   }, [recipientGroups, allContacts]);
 
-  // Decrypt content when item loads
+  // Decrypt content + linked URLs when item loads
   useEffect(() => {
     if (item && isReady && !decryptedContent && !decrypting) {
       setDecrypting(true);
-      decryptContent(item.encryptedContent)
-        .then(setDecryptedContent)
-        .catch(() => setDecryptedContent("[Unable to decrypt]"))
+      Promise.all([
+        decryptContent(item.encryptedContent).catch(() => "[Unable to decrypt]"),
+        item.encryptedLinks
+          ? decryptContent(item.encryptedLinks)
+              .then(parseLinks)
+              .catch(() => [] as string[])
+          : Promise.resolve([] as string[]),
+      ])
+        .then(([content, links]) => {
+          setDecryptedContent(content);
+          setDecryptedLinks(links);
+        })
         .finally(() => setDecrypting(false));
     }
   }, [item, isReady, decryptedContent, decrypting, decryptContent]);
@@ -111,6 +125,7 @@ export default function VaultItemPage() {
     setEditTitle(item.title);
     setEditDescription(item.description ?? "");
     setEditContent(decryptedContent);
+    setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
     setEditIsPublic(item.accessLevel === "public");
     setEditTags(item.tags.join(", "));
@@ -176,6 +191,16 @@ export default function VaultItemPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!isReady || !cryptoReady || !item) return;
+
+    const cleanUrls = editLinkUrls.map((u) => u.trim()).filter(Boolean);
+    const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
+    if (invalidUrl) {
+      setError(`Invalid URL: ${invalidUrl}`);
+      return;
+    }
+    const contentPayload = editContent;
+    const linksPayload = serializeLinks(cleanUrls);
+
     setSaving(true);
     setError("");
 
@@ -213,6 +238,7 @@ export default function VaultItemPage() {
       }
 
       let encryptedContent: string;
+      let encryptedLinks: string;
       let ownerWrappedDek: string | undefined;
       let ownerWrappedDekIv: string | undefined;
       let recipientKeysPayload: Array<{
@@ -227,7 +253,8 @@ export default function VaultItemPage() {
           wrappedDek: item.ownerWrappedDek,
           wrappedDekIv: item.ownerWrappedDekIv,
         });
-        encryptedContent = await encryptContentWithKey(editContent, dek);
+        encryptedContent = await encryptContentWithKey(contentPayload, dek);
+        encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         const wraps = await wrapExistingDek(dek, resolvedRecipients);
         ownerWrappedDek = wraps.ownerWrap.wrappedDek;
         ownerWrappedDekIv = wraps.ownerWrap.wrappedDekIv;
@@ -239,7 +266,8 @@ export default function VaultItemPage() {
       } else if (item.encryptionType === "zero_knowledge") {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
         const fresh = await generateDekAndWrap(resolvedRecipients);
-        encryptedContent = await encryptContentWithKey(editContent, fresh.dek);
+        encryptedContent = await encryptContentWithKey(contentPayload, fresh.dek);
+        encryptedLinks = await encryptContentWithKey(linksPayload, fresh.dek);
         ownerWrappedDek = fresh.ownerWrap.wrappedDek;
         ownerWrappedDekIv = fresh.ownerWrap.wrappedDekIv;
         recipientKeysPayload = fresh.recipientWraps.map((rw) => ({
@@ -251,17 +279,19 @@ export default function VaultItemPage() {
         // Legacy item still encrypted under master key — keep that flow.
         // Recipient release won't work on legacy items until they're re-saved
         // with files re-encrypted. For now, save with master-key content.
-        encryptedContent = await encryptContent(editContent);
+        encryptedContent = await encryptContent(contentPayload);
+        encryptedLinks = await encryptContent(linksPayload);
         nextEncryptionType = "aes_256_gcm";
       }
 
-      const contentHash = await computeHash(editContent);
+      const contentHash = await computeHash(contentPayload);
 
       await updateItem({
         itemId,
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
         encryptedContent,
+        encryptedLinks,
         contentHash,
         category: editCategory,
         accessLevel: config.derivedAccessLevel,
@@ -279,7 +309,8 @@ export default function VaultItemPage() {
           : {}),
       });
 
-      setDecryptedContent(editContent);
+      setDecryptedContent(contentPayload);
+      setDecryptedLinks(cleanUrls);
       setEditing(false);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to update."));
@@ -356,6 +387,10 @@ export default function VaultItemPage() {
           <div className="space-y-2">
             <Label>Secure Content</Label>
             <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} required rows={6} />
+          </div>
+
+          <div className="space-y-2">
+            <VaultLinkInputList urls={editLinkUrls} onChange={setEditLinkUrls} />
           </div>
 
           <div className="space-y-2">
@@ -558,6 +593,18 @@ export default function VaultItemPage() {
                   {decryptedContent}
                 </pre>
               )}
+            </div>
+          )}
+
+          {decryptedLinks.length > 0 && (
+            <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon path={ICON_PATHS.link} className="w-4 h-4 text-secondary" strokeWidth={1.75} />
+                <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
+                  Linked URLs
+                </span>
+              </div>
+              <VaultLinkList urls={decryptedLinks} />
             </div>
           )}
 

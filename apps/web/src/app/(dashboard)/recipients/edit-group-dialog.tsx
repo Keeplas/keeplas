@@ -16,7 +16,7 @@ import {
   Textarea,
   ErrorAlert,
 } from "@keeplas/ui";
-import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
+import { ContactMembersSelect } from "@/components/contact-members-select";
 import { getErrorMessage } from "@/lib/utils";
 
 interface EditGroupDialogProps {
@@ -50,12 +50,6 @@ export function EditGroupDialog({
       setError("");
     }
   }, [open, group]);
-
-  const memberOptions: MultiSelectOption[] = contacts.map((c) => ({
-    value: c._id,
-    label: c.name,
-    hint: c.email,
-  }));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,26 +108,13 @@ export function EditGroupDialog({
 
           <div className="space-y-2">
             <Label>Members</Label>
-            <MultiSelect
-              options={memberOptions}
+            <ContactMembersSelect
+              contacts={contacts}
               selected={members}
               onChange={setMembers}
               placeholder="Add contacts"
-              searchPlaceholder="Search contacts…"
+              emptyPlaceholder="No members selected"
               emptyMessage="No contacts available."
-              renderTrigger={(selected) => {
-                if (selected.length === 0) {
-                  return (
-                    <span className="text-outline-variant">
-                      No members selected
-                    </span>
-                  );
-                }
-                const labels = selected
-                  .map((v) => memberOptions.find((o) => o.value === v)?.label)
-                  .filter(Boolean);
-                return <span className="truncate">{labels.join(", ")}</span>;
-              }}
             />
           </div>
 

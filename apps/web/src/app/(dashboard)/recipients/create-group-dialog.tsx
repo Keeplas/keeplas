@@ -17,7 +17,7 @@ import {
   Switch,
   ErrorAlert,
 } from "@keeplas/ui";
-import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
+import { ContactMembersSelect } from "@/components/contact-members-select";
 import { getErrorMessage } from "@/lib/utils";
 
 interface CreateGroupDialogProps {
@@ -39,12 +39,6 @@ export function CreateGroupDialog({
   const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const memberOptions: MultiSelectOption[] = contacts.map((c) => ({
-    value: c._id,
-    label: c.name,
-    hint: c.email,
-  }));
 
   function reset() {
     setName("");
@@ -118,26 +112,11 @@ export function CreateGroupDialog({
 
           <div className="space-y-2">
             <Label>Members</Label>
-            <MultiSelect
-              options={memberOptions}
+            <ContactMembersSelect
+              contacts={contacts}
               selected={members}
               onChange={setMembers}
               placeholder="Add contacts to this group"
-              searchPlaceholder="Search contacts…"
-              emptyMessage="Invite contacts first to add them here."
-              renderTrigger={(selected) => {
-                if (selected.length === 0) {
-                  return (
-                    <span className="text-outline-variant">
-                      Add contacts to this group
-                    </span>
-                  );
-                }
-                const labels = selected
-                  .map((v) => memberOptions.find((o) => o.value === v)?.label)
-                  .filter(Boolean);
-                return <span className="truncate">{labels.join(", ")}</span>;
-              }}
             />
           </div>
 
