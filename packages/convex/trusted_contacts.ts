@@ -73,10 +73,12 @@ export const inviteContact = mutation({
       v.literal("other")
     ),
     contactType: v.optional(contactTypeValidator),
+    introMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     const contactType = args.contactType ?? "trust";
+    const introMessage = args.introMessage?.trim() || undefined;
 
     const existing = await ctx.db
       .query("trusted_contacts")
@@ -120,6 +122,7 @@ export const inviteContact = mutation({
       invitationStatus: "pending" as const,
       invitationToken,
       invitedAt: now,
+      introMessage,
       createdAt: now,
       updatedAt: now,
     };

@@ -276,6 +276,8 @@ export default defineSchema({
     invitedAt: v.number(),
     acceptedAt: v.optional(v.number()),
 
+    introMessage: v.optional(v.string()),
+
     proactiveAccess: v.optional(
       v.object({
         sections: v.array(v.string()),
