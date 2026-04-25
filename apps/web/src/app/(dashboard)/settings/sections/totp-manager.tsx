@@ -216,12 +216,12 @@ export function TotpManager() {
         <span>{enrolled ? "Authenticator active" : "Set up authenticator"}</span>
       </Button>
 
-      <div className="flex items-start gap-3 bg-tertiary-container/30 p-4 rounded-xl mt-auto">
+      <div className="flex items-start gap-3 bg-surface-container-lowest p-4 rounded-xl mt-auto">
         <Icon
           path={ICON_PATHS.shieldCheck}
-          className="w-5 h-5 text-tertiary shrink-0 mt-0.5"
+          className="w-5 h-5 text-secondary shrink-0 mt-0.5"
         />
-        <p className="text-body-md text-on-tertiary-container">
+        <p className="text-body-md text-on-surface-variant">
           Codes are generated on your device and rotate every 30 seconds. Pair
           this with a printed recovery kit so you keep access if the phone is
           lost.

@@ -46,6 +46,17 @@ export const getDashboardData = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
+    // Strong auth (passkey or TOTP) enrolled?
+    const passkey = await ctx.db
+      .query("passkey_credentials")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const totp = await ctx.db
+      .query("totp_secrets")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const hasStrongAuth = !!passkey || !!(totp && totp.verifiedAt);
+
     // Calculate integrity score
     const categoryScore = Math.min(categoriesPopulated.size / 5, 1) * 40;
     const contactScore = Math.min(contacts.length / 3, 1) * 30;
@@ -84,6 +95,13 @@ export const getDashboardData = query({
     }
     if (!lifeCheckConfig) {
       priorityActions.push({ key: "life_check", label: "Configure Life Check", href: "/life-check" });
+    }
+    if (!hasStrongAuth) {
+      priorityActions.push({
+        key: "two_factor",
+        label: "Activate two-factor authentication",
+        href: "/settings/security",
+      });
     }
     if (categoriesPopulated.size < 5 && items.length > 0) {
       priorityActions.push({ key: "more_categories", label: "Add items in more categories", href: "/vault" });
