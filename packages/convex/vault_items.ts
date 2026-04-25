@@ -175,7 +175,6 @@ export const createItem = mutation({
     contentHash: v.string(),
     accessLevel: accessLevelValidator,
     tags: v.array(v.string()),
-    isCritical: v.boolean(),
     encryptionType: v.optional(
       v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge"))
     ),
@@ -250,7 +249,6 @@ export const createItem = mutation({
       accessLevel: args.accessLevel,
       status: "active",
       tags: args.tags,
-      isCritical: args.isCritical,
       createdAt: now,
       updatedAt: now,
     });
@@ -316,7 +314,6 @@ export const updateItem = mutation({
     category: v.optional(categoryValidator),
     accessLevel: v.optional(accessLevelValidator),
     tags: v.optional(v.array(v.string())),
-    isCritical: v.optional(v.boolean()),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),

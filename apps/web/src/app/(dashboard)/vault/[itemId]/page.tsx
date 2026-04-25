@@ -77,7 +77,6 @@ export default function VaultItemPage() {
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
   const [editTags, setEditTags] = useState("");
-  const [editCritical, setEditCritical] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -129,7 +128,6 @@ export default function VaultItemPage() {
     setEditCategory(item.category);
     setEditIsPublic(item.accessLevel === "public");
     setEditTags(item.tags.join(", "));
-    setEditCritical(item.isCritical);
 
     const initial: string[] = [];
     const mode = item.recipientMode ?? "default";
@@ -296,7 +294,6 @@ export default function VaultItemPage() {
         category: editCategory,
         accessLevel: config.derivedAccessLevel,
         tags: tagList,
-        isCritical: editCritical,
         recipientMode: config.mode,
         sharedWithGroups: config.sharedWithGroups,
         sharedWithContacts: config.sharedWithContacts,
@@ -448,27 +445,6 @@ export default function VaultItemPage() {
             <Input type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} />
           </div>
 
-          <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
-                <Icon path={ICON_PATHS.warning} className="w-5 h-5" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="text-headline-sm text-primary">
-                  Mark as critical
-                </p>
-                <p className="text-body-md text-on-surface-variant mt-0.5">
-                  Critical items are prioritized during emergency access.
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={editCritical}
-              onCheckedChange={setEditCritical}
-              className="mt-1"
-            />
-          </div>
-
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
@@ -503,11 +479,6 @@ export default function VaultItemPage() {
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                   {category.label}
                 </span>
-                {item.isCritical && (
-                  <span className="text-label-md text-on-primary bg-primary-container px-2 py-0.5 rounded-lg">
-                    Critical
-                  </span>
-                )}
               </div>
               <h1 className="text-headline-lg text-primary">
                 {item.title}

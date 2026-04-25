@@ -143,7 +143,6 @@ export default defineSchema({
     ),
 
     tags: v.array(v.string()),
-    isCritical: v.boolean(),
 
     createdAt: v.number(),
     updatedAt: v.number(),

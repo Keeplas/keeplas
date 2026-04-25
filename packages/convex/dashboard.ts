@@ -102,7 +102,6 @@ export const getDashboardData = query({
         _id: item._id,
         title: item.title,
         category: item.category,
-        isCritical: item.isCritical,
         updatedAt: item.updatedAt,
       })),
       priorityActions,

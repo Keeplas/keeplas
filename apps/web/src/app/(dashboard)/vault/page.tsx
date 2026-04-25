@@ -290,10 +290,7 @@ function DocumentCard({ item }: { item: Doc<"vault_items"> }) {
         <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors">
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
-        <Icon
-          path={item.isCritical ? ICON_PATHS.lock : ICON_PATHS.lockOpen}
-          className="w-4 h-4 text-secondary"
-        />
+        <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
       </div>
       <h4 className="text-headline-sm text-primary truncate">
         {item.title}

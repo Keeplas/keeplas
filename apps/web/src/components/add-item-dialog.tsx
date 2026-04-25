@@ -136,7 +136,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
   const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
   const [tags, setTags] = useState("");
-  const [isCritical, setIsCritical] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [recipientsTouched, setRecipientsTouched] = useState(false);
@@ -301,7 +300,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setLinkUrls([""]);
     setRecorderMode(null);
     setTags("");
-    setIsCritical(false);
     setIsPublic(false);
     setRecipientSelection([]);
     setRecipientsTouched(false);
@@ -440,7 +438,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         contentHash,
         accessLevel: recipientConfig.derivedAccessLevel,
         tags: tagList,
-        isCritical,
         encryptionType: "zero_knowledge",
         ownerWrappedDek: ownerWrap.wrappedDek,
         ownerWrappedDekIv: ownerWrap.wrappedDekIv,
@@ -752,26 +749,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                 />
               </div>
 
-              <div className="flex items-start justify-between gap-4 bg-surface rounded-xl p-4 mt-2">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
-                    <Icon path={ICON_PATHS.warning} className="w-5 h-5" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <p className="text-headline-sm text-primary">
-                      Mark as critical
-                    </p>
-                    <p className="text-body-md text-on-surface-variant mt-0.5">
-                      Critical items are prioritized during emergency access.
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={isCritical}
-                  onCheckedChange={setIsCritical}
-                  className="mt-1"
-                />
-              </div>
             </div>
           </section>
 

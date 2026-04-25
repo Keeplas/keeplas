@@ -112,7 +112,6 @@ export const createMessage = mutation({
       accessLevel: "trusted_only",
       status: "active",
       tags: ["conditional_message"],
-      isCritical: true,
       createdAt: now,
       updatedAt: now,
     });

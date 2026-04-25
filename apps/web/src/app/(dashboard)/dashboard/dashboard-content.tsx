@@ -273,11 +273,6 @@ export function DashboardContent() {
                           {cat.label} · {formatTimeAgo(item.updatedAt)}
                         </p>
                       </div>
-                      {item.isCritical && (
-                        <span className="text-[10px] font-label font-bold uppercase tracking-widest text-secondary">
-                          Critical
-                        </span>
-                      )}
                       <Icon
                         path={ICON_PATHS.chevronRight}
                         className="w-4 h-4 text-outline-variant group-hover:text-secondary transition-colors"
