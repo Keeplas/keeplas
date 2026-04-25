@@ -187,15 +187,16 @@ async function alertLegalAuthority(
   userId: Id<"users">,
   targetContactId?: Id<"trusted_contacts">
 ) {
+  const allContacts = await ctx.db
+    .query("trusted_contacts")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+
   let contact = null;
   if (targetContactId) {
     contact = await ctx.db.get(targetContactId);
   } else {
-    const candidates = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-    contact = candidates.find((c) => c.isLegalAuthority === true) ?? null;
+    contact = allContacts.find((c) => c.isLegalAuthority === true) ?? null;
   }
   if (!contact) {
     await createAuditLog(ctx, {
@@ -209,12 +210,28 @@ async function alertLegalAuthority(
     return;
   }
 
+  // Names of contacts who will hold vault access — excludes revoked
+  // contacts and the legal authority being notified.
+  const vaultRecipientNames = allContacts
+    .filter(
+      (c) =>
+        c.invitationStatus !== "revoked" &&
+        !c.isLegalAuthority &&
+        c._id !== contact._id
+    )
+    .map((c) => c.name);
+
+  const recipientsClause =
+    vaultRecipientNames.length > 0
+      ? `The following trusted contacts now hold access to the vault: ${vaultRecipientNames.join(", ")}. `
+      : "No trusted contacts are currently configured to receive vault access. ";
+
   if (contact.contactUserId) {
     await createNotification(ctx, {
       userId: contact.contactUserId,
       type: "security_alert",
       title: "Legal Authority activation",
-      body: "You have been activated as a Legal Authority. Open Keeplas for next steps.",
+      body: `You have been activated as a Legal Authority. ${recipientsClause}Open Keeplas for next steps.`,
       channels: ["push", "email"],
       actionUrl: "/trusted-contacts",
     });
@@ -227,6 +244,9 @@ async function alertLegalAuthority(
     action: "legal_authority_alerted",
     resourceType: "trusted_contact",
     resourceId: contact._id,
+    metadata: JSON.stringify({
+      vaultRecipientCount: vaultRecipientNames.length,
+    }),
   });
 }
 

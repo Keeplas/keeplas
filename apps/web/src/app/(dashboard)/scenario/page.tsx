@@ -133,6 +133,10 @@ export default function ScenarioPage() {
   const lastCheck = scenario?.lastCheckAt ?? scenario?.createdAt ?? null;
   const hasLegalAuthority =
     contacts?.some((c) => c.isLegalAuthority === true) ?? false;
+  const vaultRecipientNames =
+    contacts
+      ?.filter((c) => c.invitationStatus !== "revoked" && !c.isLegalAuthority)
+      .map((c) => c.name) ?? [];
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -386,6 +390,7 @@ export default function ScenarioPage() {
       <MilestoneDialog
         state={dialog}
         hasLegalAuthority={hasLegalAuthority}
+        vaultRecipientNames={vaultRecipientNames}
         onOpenChange={(open) => {
           if (!open) setDialog(null);
         }}
@@ -413,6 +418,7 @@ type MilestoneFormValues = {
 function MilestoneDialog({
   state,
   hasLegalAuthority,
+  vaultRecipientNames,
   onOpenChange,
   onCreate,
   onUpdate,
@@ -420,6 +426,7 @@ function MilestoneDialog({
 }: {
   state: DialogState;
   hasLegalAuthority: boolean;
+  vaultRecipientNames: string[];
   onOpenChange: (open: boolean) => void;
   onCreate: (params: MilestoneFormValues) => Promise<void>;
   onUpdate: (
@@ -625,15 +632,86 @@ function MilestoneDialog({
                 );
               })}
             </div>
-            {selectedActions.has("alert_authority") && !hasLegalAuthority && (
-              <InfoCallout icon={ICON_PATHS.info} tone="warning">
-                No contact is currently marked as <strong>Legal Authority</strong>.
-                This action will be skipped at runtime until you mark one in{" "}
-                <a href="/trusted-contacts" className="underline font-medium">
-                  Trusted Contacts
-                </a>
-                .
-              </InfoCallout>
+            {selectedActions.has("alert_authority") && (
+              <div className="space-y-2">
+                <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      path={ICON_PATHS.mail}
+                      className="w-4 h-4 text-secondary"
+                    />
+                    <span className="text-label-md text-primary uppercase tracking-wide">
+                      Notification preview
+                    </span>
+                  </div>
+                  <div className="rounded-lg bg-surface p-3 border border-outline-variant/30 space-y-2">
+                    <p className="text-sm font-semibold text-primary">
+                      Legal Authority activation
+                    </p>
+                    <p className="text-sm text-on-surface-variant">
+                      You have been activated as a Legal Authority.{" "}
+                      {vaultRecipientNames.length > 0 ? (
+                        <>
+                          The following trusted contacts now hold access to
+                          the vault:{" "}
+                          <span className="font-medium text-on-surface">
+                            {vaultRecipientNames.join(", ")}
+                          </span>
+                          .{" "}
+                        </>
+                      ) : (
+                        <>
+                          No trusted contacts are currently configured to
+                          receive vault access.{" "}
+                        </>
+                      )}
+                      Open Keeplas for next steps.
+                    </p>
+                  </div>
+                  <div className="text-xs text-on-surface-variant space-y-1.5">
+                    <p className="font-semibold text-on-surface">
+                      What this implies
+                    </p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      <li>
+                        Delivered via push and email to every contact you have
+                        marked as <strong>Legal Authority</strong>.
+                      </li>
+                      <li>
+                        Fires <strong>only</strong> after the Life Check
+                        escalation has confirmed your unavailability (J+30) —
+                        not before.
+                      </li>
+                      <li>
+                        Purely administrative: no vault content, decryption
+                        keys, or shards are released by this action.
+                      </li>
+                      <li>
+                        The recipient is expected to take legal next steps
+                        (probate, estate, medical authority) on your behalf.
+                      </li>
+                      <li>
+                        An immutable audit-log entry is written each time the
+                        alert is dispatched.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                {!hasLegalAuthority && (
+                  <InfoCallout icon={ICON_PATHS.info} tone="warning">
+                    No contact is currently marked as{" "}
+                    <strong>Legal Authority</strong>. This action will be
+                    skipped at runtime until you mark one in{" "}
+                    <a
+                      href="/trusted-contacts"
+                      className="underline font-medium"
+                    >
+                      Trusted Contacts
+                    </a>
+                    .
+                  </InfoCallout>
+                )}
+              </div>
             )}
             {selectedActions.has("account_wipe") && (
               <div className="space-y-2">
