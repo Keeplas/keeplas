@@ -1,12 +1,25 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { buttonVariants, Icon, Loader } from "@keeplas/ui";
-import { getCategoryConfig } from "@/lib/vault-categories";
+import { buttonVariants, cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import {
+  CATEGORIES,
+  getCategoryConfig,
+  type VaultCategory,
+} from "@/lib/vault-categories";
+import { getInitials } from "@/lib/user";
 import { formatTimeAgo } from "@/lib/format";
+
+const ASSET_CATEGORIES: VaultCategory[] = ["financial_asset", "digital_asset"];
+const DIRECTIVE_CATEGORIES: VaultCategory[] = ["health_directive", "legal_document"];
+const DOCUMENT_CATEGORIES: VaultCategory[] = [
+  "personal_document",
+  "business_continuity",
+  "credential",
+];
 
 const ACTION_ICONS: Record<string, string> = {
   add_item: ICON_PATHS.archive,
@@ -16,276 +29,684 @@ const ACTION_ICONS: Record<string, string> = {
   more_categories: ICON_PATHS.plus,
 };
 
-const CATEGORY_CARDS = [
-  {
-    key: "personal_document",
-    label: "Personal Records",
-    icon: "M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z",
-  },
-  {
-    key: "financial_asset",
-    label: "Financial Assets",
-    icon: "M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3",
-  },
-  {
-    key: "business_continuity",
-    label: "Business Continuity",
-    icon: "M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h3.75m-3.75 3h3.75m-3.75 3h3.75M3 21h18",
-    highlight: true,
-  },
-  {
-    key: "digital_asset",
-    label: "Digital Assets",
-    icon: "M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125",
-  },
-];
-
 export function DashboardContent() {
-  const user = useQuery(api.users.viewer);
-  const data = useQuery(api.dashboard.getDashboardData);
+  const items = useQuery(api.vault_items.getItems);
+  const contacts = useQuery(api.trusted_contacts.getContacts);
+  const lifeCheck = useQuery(api.life_check.getConfig);
+  const dashboardData = useQuery(api.dashboard.getDashboardData);
 
-  if (data === undefined) {
-    return <Loader />;
+  if (
+    items === undefined ||
+    contacts === undefined ||
+    dashboardData === undefined
+  ) {
+    return <Loader fullscreen label="Loading Hub" />;
   }
 
-  if (data === null) return null;
+  if (dashboardData === null) return null;
 
-  const score = data.integrityScore;
-  const circumference = 2 * Math.PI * 88;
-  const offset = circumference - (score / 100) * circumference;
+  const messages = items.filter((i) => i.triggerType !== undefined);
 
-  const firstName = user?.name?.split(" ")[0] ?? "Curator";
+  const assets = items.filter((i) =>
+    ASSET_CATEGORIES.includes(i.category as VaultCategory)
+  );
+  const directives = items.filter((i) =>
+    DIRECTIVE_CATEGORIES.includes(i.category as VaultCategory)
+  );
+  const documents = items.filter((i) =>
+    DOCUMENT_CATEGORIES.includes(i.category as VaultCategory)
+  );
+
+  const totalCategories = CATEGORIES.length;
+  const coveredCategories = new Set(items.map((i) => i.category)).size;
+  const continuityScore = Math.round(
+    (coveredCategories / totalCategories) * 60 +
+      (contacts.length > 0 ? 20 : 0) +
+      (lifeCheck?.isActive ? 20 : 0)
+  );
+  const scoreLabel =
+    continuityScore >= 75
+      ? "Strong Protection"
+      : continuityScore >= 40
+        ? "Partial Coverage"
+        : "Action Required";
+
+  const missingDirectives = directives.length === 0;
+  const missingMessages = messages.length === 0;
+  const aiPercentage = Math.min(continuityScore + (messages.length > 0 ? 5 : 0), 99);
+
+  const verifiedTrustees = contacts.filter((c) => c.invitationStatus === "accepted").length;
+  const circumference = 2 * Math.PI * 20;
+  const scoreOffset = circumference - (circumference * continuityScore) / 100;
 
   return (
     <div className="max-w-screen-2xl mx-auto">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-headline-lg text-primary mb-2">
-            Welcome back, {firstName}.
+            Hub
           </h1>
-          <p className="text-on-surface-variant text-body-lg max-w-xl">
-            Your legacy is protected and synchronized across all secure nodes.
+          <p className="text-body-lg text-secondary max-w-lg text-balance">
+            Your central command for protected legacy
+            <br />
+            and continuity readiness.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full self-start md:self-end">
-          <svg className="w-4 h-4 text-secondary" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm-1 16-4-4 1.41-1.41L11 14.17l5.59-5.59L18 10l-7 7Z" />
-          </svg>
-          <span className="font-label text-[11px] font-bold uppercase tracking-widest text-primary">
-            Vault Encrypted & Secured
-          </span>
+
+        <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-full px-6">
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
+              <circle
+                className="text-surface-container-high"
+                cx="24"
+                cy="24"
+                fill="none"
+                r="20"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <circle
+                className="text-secondary transition-all duration-700"
+                cx="24"
+                cy="24"
+                fill="none"
+                r="20"
+                stroke="currentColor"
+                strokeDasharray={circumference}
+                strokeDashoffset={scoreOffset}
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="font-headline font-bold text-primary text-body-md">
+              {continuityScore}%
+            </span>
+          </div>
+          <div>
+            <p className="text-label-md text-on-surface-variant">
+              Continuity Score
+            </p>
+            <p className="text-body-md font-bold text-primary">{scoreLabel}</p>
+          </div>
         </div>
       </header>
 
-      {/* Protection Banner */}
-      {data.confirmedContacts === 0 && (
-        <div className="bg-primary-container text-on-primary-container p-6 rounded-2xl mb-10 flex items-start gap-4">
-          <Icon
-            path={ICON_PATHS.warning}
-            className="w-6 h-6 text-secondary-fixed shrink-0 mt-0.5"
-          />
-          <div className="flex-1">
-            <h3 className="text-headline-sm text-on-primary mb-1">
-              Vault not protected in emergency
-            </h3>
-            <p className="text-body-md text-on-primary-container">
-              Without a trusted contact, no one can access your vault if something happens to you.
-            </p>
-          </div>
-          <Link
-            href="/trusted-contacts"
-            className="shrink-0 px-4 py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-xl font-label font-bold text-xs uppercase tracking-widest cursor-pointer"
+      {/* Life Map Canvas */}
+      <div
+        className="relative min-h-[700px] bg-surface-container-low rounded-[2rem] overflow-hidden p-8 mb-12"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(40, 101, 122, 0.25) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      >
+        {/* Center Node */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <div
+            className="w-48 h-48 bg-primary flex flex-col items-center justify-center text-white shadow-2xl p-6 text-center border-8 border-surface-container-low"
+            style={{ borderRadius: "50%" }}
           >
-            Invite now
-          </Link>
-        </div>
-      )}
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Score + Actions */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Score Widget */}
-          <div className="bg-surface-container rounded-full p-8 flex flex-col items-center justify-center text-center aspect-square relative overflow-hidden shadow-sm">
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle at center, color-mix(in srgb, var(--color-secondary) 6%, transparent), transparent 70%)",
-              }}
-            />
-            <div className="relative w-36 h-36 flex items-center justify-center mb-3">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 192 192">
-                <circle
-                  cx="96" cy="96" r="88"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  className="text-surface-variant"
-                />
-                <circle
-                  cx="96" cy="96" r="88"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="12"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  className="text-secondary transition-all duration-1000"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-headline font-black text-primary">{score}%</span>
-                <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
-                  Complete
-                </span>
-              </div>
-            </div>
-            <h3 className="text-headline-sm text-primary">Vault Integrity</h3>
-            <p className="text-body-md text-on-surface-variant mt-2 max-w-[220px]">
-              {data.nudgeMessage}
+            <Icon path={ICON_PATHS.fingerprint} className="w-10 h-10 mb-2" />
+            <p className="text-headline-sm uppercase tracking-wide">
+              Your Legacy
+            </p>
+            <p className="text-label-md text-secondary-fixed mt-1">
+              Central Node
             </p>
           </div>
+        </div>
 
-          {/* Priority Actions */}
-          {data.priorityActions.length > 0 && (
-            <div>
-              <h4 className="text-label-md text-on-surface-variant mb-3 px-1">
-                Priority Actions
-              </h4>
-              <div className="space-y-2">
-                {data.priorityActions.map((action) => (
-                  <Link
-                    key={action.key}
-                    href={action.href}
-                    className="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
+        {/* Assets — top left */}
+        <NodeCard
+          iconPath={ICON_PATHS.accountBalance}
+          title="Assets"
+          position="top-10 left-10 md:left-24"
+          status="protected"
+          href="/vault"
+        >
+          <div className="space-y-3 mt-4">
+            <AssetLine label="Real Estate Portfolio" present={assets.some((a) => a.title.toLowerCase().includes("real") || a.category === "financial_asset")} />
+            <AssetLine label="Retirement Accounts" present={assets.some((a) => a.category === "financial_asset")} />
+            <AssetLine label="Digital Wallets" present={assets.some((a) => a.category === "digital_asset")} />
+          </div>
+        </NodeCard>
+
+        {/* Contacts — bottom left */}
+        <NodeCard
+          iconPath={ICON_PATHS.group}
+          title="Contacts"
+          position="bottom-10 left-10 md:left-24"
+          status="protected"
+          href="/trusted-contacts"
+        >
+          {contacts.length === 0 ? (
+            <p className="text-body-md text-on-surface-variant mt-2">
+              No guardians linked yet.
+            </p>
+          ) : (
+            <>
+              <div className="flex -space-x-3 mt-4 mb-3">
+                {contacts.slice(0, 3).map((c) => (
+                  <div
+                    key={c._id}
+                    className="w-10 h-10 border-2 border-surface shadow-sm overflow-hidden"
+                    style={{ borderRadius: "50%" }}
                   >
-                    <span className="flex items-center gap-3 font-headline font-bold text-sm text-primary">
-                      <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                        <Icon
-                          path={ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item}
-                          className="w-4 h-4 text-primary"
-                        />
-                      </span>
-                      {action.label}
-                    </span>
-                    <Icon
-                      path={ICON_PATHS.chevronRight}
-                      className="w-5 h-5 text-outline-variant group-hover:translate-x-1 transition-transform"
+                    <UserAvatar
+                      size="sm"
+                      imageUrl={c.avatarUrl}
+                      initials={getInitials(c.name)}
+                      alt={c.name}
+                      fallbackClassName="bg-primary text-on-primary"
                     />
-                  </Link>
+                  </div>
+                ))}
+                {contacts.length > 3 && (
+                  <div
+                    className="w-10 h-10 border-2 border-surface bg-surface-container-high flex items-center justify-center text-label-md text-on-surface-variant"
+                    style={{ borderRadius: "50%" }}
+                  >
+                    +{contacts.length - 3}
+                  </div>
+                )}
+              </div>
+              <p className="text-label-md text-on-surface-variant">
+                {contacts.length} Primary Guardian{contacts.length > 1 ? "s" : ""} Linked
+              </p>
+            </>
+          )}
+        </NodeCard>
+
+        {/* Directives — top right */}
+        <div className="absolute top-10 right-10 md:right-24">
+          <Link
+            href="/vault?section=documents"
+            className={cn(
+              "block p-6 w-64 relative shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
+              missingDirectives
+                ? "bg-surface-container border-2 border-error/20"
+                : "bg-surface-container-lowest border border-secondary/10"
+            )}
+            style={{ borderRadius: "2rem" }}
+          >
+            {missingDirectives && (
+              <div className="absolute -top-3 -right-3 bg-error text-white text-label-md px-3 py-1 rounded-full animate-pulse">
+                Action Required
+              </div>
+            )}
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className={cn(
+                  "w-12 h-12 flex items-center justify-center",
+                  missingDirectives
+                    ? "bg-error/10 text-error"
+                    : "bg-secondary-container/30 text-secondary"
+                )}
+                style={{ borderRadius: "1rem" }}
+              >
+                <Icon path={ICON_PATHS.medicalInformation} className="w-6 h-6" />
+              </div>
+              <span
+                className={cn(
+                  "text-label-md px-2 py-1 rounded",
+                  missingDirectives
+                    ? "text-error bg-error/10"
+                    : "text-secondary bg-secondary-container/20"
+                )}
+              >
+                {missingDirectives ? "Unmapped" : "Protected"}
+              </span>
+            </div>
+            <h3 className="text-headline-sm text-primary mb-1">Directives</h3>
+            {missingDirectives ? (
+              <>
+                <p className="text-body-md text-on-surface-variant mt-2">
+                  Medical POA and Advance Directives are currently missing or expired.
+                </p>
+                <span className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center">
+                  Update Now
+                </span>
+              </>
+            ) : (
+              <div className="space-y-3 mt-4">
+                {directives.slice(0, 3).map((d) => (
+                  <div key={d._id} className="flex justify-between items-center text-body-md">
+                    <span className="text-on-surface-variant truncate">{d.title}</span>
+                    <Icon
+                      path={ICON_PATHS.checkCircle}
+                      className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
+                    />
+                  </div>
                 ))}
               </div>
+            )}
+          </Link>
+        </div>
+
+        {/* Documents — bottom right */}
+        <div className="absolute bottom-10 right-10 md:right-24">
+          <Link
+            href="/vault?section=documents"
+            className="block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
+            style={{ borderRadius: "2rem" }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div
+                className="w-12 h-12 bg-secondary-container/30 text-secondary flex items-center justify-center"
+                style={{ borderRadius: "1rem" }}
+              >
+                <Icon path={ICON_PATHS.description} className="w-6 h-6" />
+              </div>
+              <span className="text-label-md text-secondary bg-secondary-container/20 px-2 py-1 rounded">
+                {documents.length > 0 ? "Protected" : "Empty"}
+              </span>
+            </div>
+            <h3 className="font-headline font-bold text-primary mb-1">Documents</h3>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <DocThumbnail icon={ICON_PATHS.home} label="Deeds" />
+              <DocThumbnail icon={ICON_PATHS.historyEdu} label="Will" />
+            </div>
+          </Link>
+        </div>
+
+        {/* Decorative connection lines */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+          <line
+            stroke="#041632"
+            strokeDasharray="8 8"
+            strokeWidth="2"
+            x1="25%"
+            x2="50%"
+            y1="20%"
+            y2="50%"
+          />
+          <line
+            stroke="#041632"
+            strokeDasharray="8 8"
+            strokeWidth="2"
+            x1="25%"
+            x2="50%"
+            y1="80%"
+            y2="50%"
+          />
+          <line
+            stroke={missingDirectives ? "#ba1a1a" : "#041632"}
+            strokeDasharray={missingDirectives ? "4 4" : "8 8"}
+            strokeWidth="2"
+            x1="75%"
+            x2="50%"
+            y1="20%"
+            y2="50%"
+          />
+          <line
+            stroke="#041632"
+            strokeDasharray="8 8"
+            strokeWidth="2"
+            x1="75%"
+            x2="50%"
+            y1="80%"
+            y2="50%"
+          />
+        </svg>
+      </div>
+
+      {/* AI Completeness Analyzer */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div
+          className="md:col-span-2 bg-primary-container text-white p-8 shadow-2xl relative overflow-hidden"
+          style={{ borderRadius: "2rem" }}
+        >
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <Icon
+                path={ICON_PATHS.psychology}
+                className="w-8 h-8 text-secondary-fixed"
+              />
+              <h2 className="text-headline-md">
+                AI Completeness Analyzer
+              </h2>
+            </div>
+            <p className="text-body-lg text-on-primary-container max-w-lg mb-8 italic">
+              &ldquo;You have secured {aiPercentage}% of your vital legacy.{" "}
+              {missingDirectives
+                ? "The missing link is your Digital Life Directive, which prevents executors from accessing your encrypted assets."
+                : missingMessages
+                  ? "Add at least one Conditional Message so your final words reach the people who matter."
+                  : "Keep refreshing critical documents every 90 days to maintain continuity above 90%."}
+              &rdquo;
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/vault"
+                className="bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/20"
+              >
+                {missingDirectives
+                  ? "Generate Digital Directive"
+                  : missingMessages
+                    ? "Compose Message"
+                    : "Review Vault"}
+              </Link>
+              <Link
+                href="/settings/security"
+                className="text-white border border-white/20 hover:bg-white/10 px-6 py-3 rounded-xl transition-all font-headline font-bold"
+              >
+                Review Risks
+              </Link>
+            </div>
+          </div>
+          <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] pointer-events-none" style={{ borderRadius: "50%" }} />
+        </div>
+
+        <div
+          className="bg-surface-container-low p-8 flex flex-col justify-center"
+          style={{ borderRadius: "2rem" }}
+        >
+          <h3 className="text-headline-sm text-primary mb-4">
+            Protected Zones
+          </h3>
+          <ul className="space-y-4">
+            <ZoneLine
+              label="Financial Redundancy"
+              safe={assets.length > 0}
+              href="/vault?section=financial"
+            />
+            <ZoneLine
+              label="Trusted Node Mesh"
+              safe={contacts.length > 0}
+              href="/trusted-contacts"
+            />
+            <ZoneLine
+              label="Real Estate Chain"
+              safe={assets.length > 1}
+              href="/vault?section=financial"
+            />
+            <ZoneLine
+              label={missingDirectives ? "Healthcare Directive Gap" : "Healthcare Directives"}
+              safe={!missingDirectives}
+              href="/vault?section=documents"
+            />
+          </ul>
+        </div>
+      </section>
+
+      {/* Secondary Bento */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <BentoItem
+          iconPath={ICON_PATHS.history}
+          title="Map Activity"
+          href="/life-check"
+          hint={
+            lifeCheck?.lastCheckAt
+              ? `Last verified ${formatTimeAgo(lifeCheck.lastCheckAt)}.`
+              : "No recent verification yet."
+          }
+        />
+        <BentoItem
+          iconPath={ICON_PATHS.cloudSync}
+          title="Vault Sync"
+          href="/vault"
+          hint={`${items.length} item${items.length === 1 ? "" : "s"} mirrored to secure nodes.`}
+        />
+        <BentoItem
+          iconPath={ICON_PATHS.lockReset}
+          title="Key Health"
+          href="/settings/security"
+          hint="Physical keys and backup shards are in optimal storage locations."
+        />
+        <BentoItem
+          iconPath={ICON_PATHS.shareReviews}
+          title="Trustee Access"
+          href="/trusted-contacts"
+          hint={`${verifiedTrustees} of ${contacts.length || 5} Trustees completed life-drill onboarding.`}
+        />
+      </section>
+
+      {/* Priority Actions + Recent Activity (50/50 desktop) */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Priority Actions */}
+        <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+          <h4 className="text-label-md text-on-surface-variant mb-6">
+            Priority Actions
+          </h4>
+          {dashboardData.priorityActions.length === 0 ? (
+            <div className="text-center py-6">
+              <Icon
+                path={ICON_PATHS.checkCircle}
+                className="w-8 h-8 text-secondary mx-auto mb-3"
+              />
+              <p className="text-sm text-on-surface-variant">
+                You&rsquo;re all caught up. No urgent actions.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {dashboardData.priorityActions.map((action) => (
+                <Link
+                  key={action.key}
+                  href={action.href}
+                  className="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
+                >
+                  <span className="flex items-center gap-3 font-headline font-bold text-sm text-primary">
+                    <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm">
+                      <Icon
+                        path={ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item}
+                        className="w-4 h-4 text-primary"
+                      />
+                    </span>
+                    {action.label}
+                  </span>
+                  <Icon
+                    path={ICON_PATHS.chevronRight}
+                    className="w-5 h-5 text-outline-variant group-hover:translate-x-1 transition-transform"
+                  />
+                </Link>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Right: Categories + Recent Activity */}
-        <div className="lg:col-span-8 space-y-8">
-          {/* Category Bento */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {CATEGORY_CARDS.map((cat) => {
-              const count = (data.categoryCounts as Record<string, number>)[cat.key] ?? 0;
-              const isIncomplete = cat.highlight && count === 0;
-              return (
-                <Link
-                  key={cat.key}
-                  href="/vault"
-                  className={
-                    isIncomplete
-                      ? "bg-primary-container p-6 rounded-full flex flex-col justify-between min-h-[180px] relative overflow-hidden group"
-                      : "bg-surface-container-low p-6 rounded-full flex flex-col justify-between min-h-[180px] hover:bg-surface-container transition-all group"
-                  }
-                >
-                  <div className="flex items-start justify-between">
-                    <Icon
-                      path={cat.icon}
-                      className={`w-6 h-6 ${isIncomplete ? "text-on-primary" : "text-primary"}`}
-                    />
-                    <span
-                      className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${
-                        isIncomplete
-                          ? "bg-secondary text-on-secondary"
-                          : "bg-secondary-container text-on-secondary-container"
-                      }`}
-                    >
-                      {isIncomplete ? "Incomplete" : `${count} ${count === 1 ? "Item" : "Items"}`}
-                    </span>
-                  </div>
-                  <div>
-                    <p className={`text-headline-sm ${isIncomplete ? "text-on-primary" : "text-primary"}`}>
-                      {cat.label}
-                    </p>
-                    <p className={`text-label-md mt-1 ${isIncomplete ? "text-on-primary-container" : "text-on-surface-variant"}`}>
-                      {count === 0
-                        ? "Critical: 0 Items Synced"
-                        : `${count} ${count === 1 ? "item" : "items"} secured`}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h4 className="text-label-md text-on-surface-variant">
-                Recent Activity
-              </h4>
-              {data.totalItems > 0 && (
-                <Link href="/vault" className="text-xs text-secondary font-bold cursor-pointer hover:underline">
-                  View all
-                </Link>
-              )}
-            </div>
-            {data.recentItems.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-on-surface-variant mb-4">
-                  No items in your vault yet.
-                </p>
-                <Link
-                  href="/vault"
-                  className={buttonVariants({ variant: "vault", size: "sm" })}
-                >
-                  Add your first item
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {data.recentItems.map((item) => {
-                  const cat = getCategoryConfig(item.category);
-                  return (
-                    <Link
-                      key={item._id}
-                      href={`/vault/${item._id}`}
-                      className="flex items-center gap-4 group cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center shrink-0">
-                        <Icon path={cat.icon} className="w-4 h-4 text-secondary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-primary truncate">
-                          {item.title}
-                        </p>
-                        <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
-                          {cat.label} · {formatTimeAgo(item.updatedAt)}
-                        </p>
-                      </div>
-                      <Icon
-                        path={ICON_PATHS.chevronRight}
-                        className="w-4 h-4 text-outline-variant group-hover:text-secondary transition-colors"
-                      />
-                    </Link>
-                  );
-                })}
-              </div>
+        {/* Recent Activity */}
+        <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="text-label-md text-on-surface-variant">
+              Recent Activity
+            </h4>
+            {dashboardData.totalItems > 0 && (
+              <Link
+                href="/vault"
+                className="text-xs text-secondary font-bold cursor-pointer hover:underline"
+              >
+                View all
+              </Link>
             )}
           </div>
+          {dashboardData.recentItems.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-on-surface-variant mb-4">
+                No items in your vault yet.
+              </p>
+              <Link
+                href="/vault"
+                className={buttonVariants({ variant: "vault", size: "sm" })}
+              >
+                Add your first item
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {dashboardData.recentItems.map((item) => {
+                const cat = getCategoryConfig(item.category);
+                return (
+                  <Link
+                    key={item._id}
+                    href={`/vault/${item._id}`}
+                    className="flex items-center gap-4 group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center shrink-0">
+                      <Icon path={cat.icon} className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-primary truncate">
+                        {item.title}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+                        {cat.label} · {formatTimeAgo(item.updatedAt)}
+                      </p>
+                    </div>
+                    <Icon
+                      path={ICON_PATHS.chevronRight}
+                      className="w-4 h-4 text-outline-variant group-hover:text-secondary transition-colors"
+                    />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
 
+function NodeCard({
+  iconPath,
+  title,
+  position,
+  status,
+  href,
+  children,
+}: {
+  iconPath: string;
+  title: string;
+  position: string;
+  status: "protected" | "unmapped";
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("absolute", position)}>
+      <Link
+        href={href}
+        className={cn(
+          "block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
+          status === "protected"
+            ? "border border-secondary/10"
+            : "border-2 border-error/20"
+        )}
+        style={{ borderRadius: "2rem" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div
+            className="w-12 h-12 bg-secondary-container/30 text-secondary flex items-center justify-center"
+            style={{ borderRadius: "1rem" }}
+          >
+            <Icon path={iconPath} className="w-6 h-6" />
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded">
+            Protected
+          </span>
+        </div>
+        <h3 className="text-headline-sm text-primary mb-1">{title}</h3>
+        {children}
+      </Link>
+    </div>
+  );
+}
+
+function AssetLine({ label, present }: { label: string; present: boolean }) {
+  return (
+    <div className="flex justify-between items-center text-body-md">
+      <span className="text-on-surface-variant">{label}</span>
+      <Icon
+        path={ICON_PATHS.checkCircle}
+        className={cn(
+          "w-3.5 h-3.5",
+          present ? "text-secondary" : "text-outline-variant/40"
+        )}
+      />
+    </div>
+  );
+}
+
+function DocThumbnail({ icon, label }: { icon: string; label: string }) {
+  return (
+    <div className="bg-surface-container p-2 rounded-lg flex flex-col items-center justify-center aspect-square text-center">
+      <Icon path={icon} className="w-5 h-5 text-on-surface-variant" />
+      <span className="text-label-md mt-1 text-on-surface-variant">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function ZoneLine({
+  label,
+  safe,
+  href,
+}: {
+  label: string;
+  safe: boolean;
+  href?: string;
+}) {
+  const content = (
+    <>
+      <span
+        className={cn("w-2 h-2", safe ? "bg-secondary" : "bg-error animate-pulse")}
+        style={{ borderRadius: "50%" }}
+      />
+      <span
+        className={cn(
+          "text-body-md",
+          safe ? "font-medium text-on-surface" : "font-bold text-error"
+        )}
+      >
+        {label}
+      </span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <li>
+        <Link
+          href={href}
+          className="flex items-center gap-3 -mx-2 px-2 py-1 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
+        >
+          {content}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className="flex items-center gap-3">{content}</li>;
+}
+
+function BentoItem({
+  iconPath,
+  title,
+  hint,
+  href,
+}: {
+  iconPath: string;
+  title: string;
+  hint: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="bg-surface-container-lowest p-6 shadow-sm hover:shadow-md hover:bg-surface-container transition-all flex flex-col justify-between cursor-pointer group"
+      style={{ borderRadius: "1.5rem" }}
+    >
+      <div>
+        <Icon
+          path={iconPath}
+          className="w-6 h-6 text-secondary-fixed-dim mb-3 group-hover:text-secondary transition-colors"
+        />
+        <h4 className="text-headline-sm text-primary">{title}</h4>
+      </div>
+      <p className="text-body-md text-on-surface-variant mt-4">{hint}</p>
+    </Link>
+  );
+}

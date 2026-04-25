@@ -93,8 +93,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
 ];
 
 const QUICK_LINKS: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Dashboard", href: "/dashboard", iconPath: ICON_PATHS.shieldCheck },
-  { label: "Life Map", href: "/life-map", iconPath: ICON_PATHS.hub },
+  { label: "Hub", href: "/dashboard", iconPath: ICON_PATHS.hub },
   { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.key },
   { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
   { label: "Subscription", href: "/settings/subscription", iconPath: ICON_PATHS.creditCard },
