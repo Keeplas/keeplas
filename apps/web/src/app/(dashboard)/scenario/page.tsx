@@ -208,13 +208,20 @@ export default function ScenarioPage() {
                       />
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <div
-                            className={cn(
-                              "text-label-md mb-1",
-                              dotTextColor(idx, total)
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span
+                              className={cn(
+                                "text-label-md",
+                                dotTextColor(idx, total)
+                              )}
+                            >
+                              T+ {step.triggerValue} Days Inactivity
+                            </span>
+                            {step.category && (
+                              <span className="px-2 py-0.5 rounded-full bg-surface-container text-label-md text-on-surface-variant uppercase tracking-wide">
+                                {CATEGORY_LABELS[step.category as StepCategory]}
+                              </span>
                             )}
-                          >
-                            T+ {step.triggerValue} Days Inactivity
                           </div>
                           <h3 className="text-headline-sm text-primary">
                             {step.label}
