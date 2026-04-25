@@ -156,6 +156,15 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     }
   }, [open, recipientGroups, recipientsTouched]);
 
+  // Sync category with the caller-provided default each time the dialog
+  // opens, so callers (e.g. "Add Digital Asset" CTA) can land the user
+  // directly in the right category without manual picking.
+  useEffect(() => {
+    if (open) {
+      setCategory(defaultCategory ?? "personal_document");
+    }
+  }, [open, defaultCategory]);
+
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
       value: `${GROUP_PREFIX}${g._id}`,

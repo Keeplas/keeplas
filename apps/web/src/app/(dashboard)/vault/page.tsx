@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, cn, Icon, Loader } from "@keeplas/ui";
@@ -10,6 +11,34 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { formatTimeAgo } from "@/lib/format";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
+
+type VaultSectionKey = "documents" | "financial" | "messages" | "digital";
+const VALID_SECTIONS: ReadonlySet<VaultSectionKey> = new Set([
+  "documents",
+  "financial",
+  "messages",
+  "digital",
+]);
+const SECTION_LABELS: Record<VaultSectionKey, string> = {
+  documents: "Personal Documents",
+  financial: "Financial Assets",
+  messages: "Conditional Messages",
+  digital: "Digital Assets",
+};
+const DOCUMENTS_PREVIEW_LIMIT = 6;
+const MESSAGES_PREVIEW_LIMIT = 3;
+const DIGITAL_PREVIEW_LIMIT = 3;
+
+type GroupedItems = {
+  documents: Doc<"vault_items">[];
+  financial: Doc<"vault_items">[];
+  messages: Doc<"vault_items">[];
+  digital: Doc<"vault_items">[];
+};
+
+function currentSectionCount(grouped: GroupedItems, section: VaultSectionKey) {
+  return grouped[section].length;
+}
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString([], {
@@ -36,12 +65,40 @@ const FINANCIAL_CATEGORIES: VaultCategory[] = ["financial_asset"];
 const MESSAGE_CATEGORIES: VaultCategory[] = ["conditional_message", "personal_message"];
 const DIGITAL_CATEGORIES: VaultCategory[] = ["digital_asset", "credential"];
 
+const SECTION_DEFAULT_CATEGORY: Record<VaultSectionKey, VaultCategory> = {
+  documents: "personal_document",
+  financial: "financial_asset",
+  messages: "conditional_message",
+  digital: "digital_asset",
+};
+
 export default function VaultPage() {
+  return (
+    <Suspense fallback={<Loader fullscreen label="Loading your vault" />}>
+      <VaultPageContent />
+    </Suspense>
+  );
+}
+
+function VaultPageContent() {
+  const searchParams = useSearchParams();
+  const rawSection = searchParams.get("section");
+  const activeSection: VaultSectionKey | null =
+    rawSection && VALID_SECTIONS.has(rawSection as VaultSectionKey)
+      ? (rawSection as VaultSectionKey)
+      : null;
+
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
   const user = useQuery(api.users.viewer);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addDialogCategory, setAddDialogCategory] = useState<VaultCategory | undefined>(undefined);
+
+  function openAddDialog(section?: VaultSectionKey) {
+    setAddDialogCategory(section ? SECTION_DEFAULT_CATEGORY[section] : undefined);
+    setShowAddDialog(true);
+  }
 
   useEffect(() => {
     if (vault === null) {
@@ -86,18 +143,30 @@ export default function VaultPage() {
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-2">
+          {activeSection && (
+            <Link
+              href="/vault"
+              className="inline-flex items-center gap-2 text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            >
+              <Icon path={ICON_PATHS.chevronRight} className="w-4 h-4 rotate-180" />
+              All vault sections
+            </Link>
+          )}
           <h1 className="text-headline-lg text-primary">
-            Digital Vault
+            {activeSection ? SECTION_LABELS[activeSection] : "Digital Vault"}
           </h1>
           <p className="text-body-lg text-on-surface-variant max-w-md">
-            Your life&apos;s core documentation, secured with end-to-end zero-knowledge
-            encryption.
+            {activeSection
+              ? `Showing all ${currentSectionCount(grouped, activeSection)} item${
+                  currentSectionCount(grouped, activeSection) === 1 ? "" : "s"
+                } in this category.`
+              : "Your life's core documentation, secured with end-to-end zero-knowledge encryption."}
           </p>
         </div>
         <Button
           variant="vault"
           size="lg"
-          onClick={() => setShowAddDialog(true)}
+          onClick={() => openAddDialog(activeSection ?? undefined)}
           className="shadow-2xl shadow-primary/20 cursor-pointer"
         >
           <Icon path={ICON_PATHS.plusCircle} className="w-5 h-5" />
@@ -160,63 +229,100 @@ export default function VaultPage() {
 
       {/* Vault Sections */}
       <div className="space-y-12">
-        {/* Personal Documents */}
-        <VaultSection
-          title="Personal Documents"
-          accent="bg-secondary"
-          showViewAll={grouped.documents.length > 3}
-          isEmpty={grouped.documents.length === 0}
-          emptyMessage="No personal documents yet. Add your first."
-          onAdd={() => setShowAddDialog(true)}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {grouped.documents.slice(0, 6).map((item) => (
-              <DocumentCard key={item._id} item={item} />
-            ))}
+        {(!activeSection || activeSection === "documents") && (
+          <VaultSection
+            title="Personal Documents"
+            accent="bg-secondary"
+            viewAllHref={
+              !activeSection && grouped.documents.length > DOCUMENTS_PREVIEW_LIMIT
+                ? "/vault?section=documents"
+                : undefined
+            }
+            isEmpty={grouped.documents.length === 0}
+            emptyMessage="No personal documents yet. Add your first."
+            onAdd={() => openAddDialog("documents")}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(activeSection
+                ? grouped.documents
+                : grouped.documents.slice(0, DOCUMENTS_PREVIEW_LIMIT)
+              ).map((item) => (
+                <DocumentCard key={item._id} item={item} />
+              ))}
+            </div>
+          </VaultSection>
+        )}
+
+        {(!activeSection || activeSection === "financial") && (
+          <VaultSection
+            title="Financial Assets"
+            accent="bg-primary"
+            isEmpty={grouped.financial.length === 0}
+            emptyMessage="No financial assets yet. Add your first."
+            onAdd={() => openAddDialog("financial")}
+          >
+            <FinancialTable items={grouped.financial} />
+          </VaultSection>
+        )}
+
+        {(!activeSection ||
+          activeSection === "messages" ||
+          activeSection === "digital") && (
+          <div
+            className={cn(
+              "grid gap-8",
+              activeSection ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+            )}
+          >
+            {(!activeSection || activeSection === "messages") && (
+              <VaultSection
+                title="Conditional Messages"
+                accent="bg-error"
+                viewAllHref={
+                  !activeSection && grouped.messages.length > MESSAGES_PREVIEW_LIMIT
+                    ? "/vault?section=messages"
+                    : undefined
+                }
+                isEmpty={grouped.messages.length === 0}
+                emptyMessage="No conditional messages yet."
+                onAdd={() => openAddDialog("messages")}
+              >
+                <div className="space-y-4">
+                  {(activeSection
+                    ? grouped.messages
+                    : grouped.messages.slice(0, MESSAGES_PREVIEW_LIMIT)
+                  ).map((item) => (
+                    <MessageCard key={item._id} item={item} />
+                  ))}
+                </div>
+              </VaultSection>
+            )}
+
+            {(!activeSection || activeSection === "digital") && (
+              <VaultSection
+                title="Digital Assets"
+                accent="bg-tertiary"
+                viewAllHref={
+                  !activeSection && grouped.digital.length > DIGITAL_PREVIEW_LIMIT
+                    ? "/vault?section=digital"
+                    : undefined
+                }
+                isEmpty={grouped.digital.length === 0}
+                emptyMessage="No digital assets yet. Add your first."
+                onAdd={() => openAddDialog("digital")}
+              >
+                <div className="space-y-4">
+                  {(activeSection
+                    ? grouped.digital
+                    : grouped.digital.slice(0, DIGITAL_PREVIEW_LIMIT)
+                  ).map((item) => (
+                    <DigitalAssetRow key={item._id} item={item} />
+                  ))}
+                </div>
+              </VaultSection>
+            )}
           </div>
-        </VaultSection>
-
-        {/* Financial Assets */}
-        <VaultSection
-          title="Financial Assets"
-          accent="bg-primary"
-          isEmpty={grouped.financial.length === 0}
-          emptyMessage="No financial assets yet. Add your first."
-          onAdd={() => setShowAddDialog(true)}
-        >
-          <FinancialTable items={grouped.financial} />
-        </VaultSection>
-
-        {/* Conditional Messages + Digital Assets */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <VaultSection
-            title="Conditional Messages"
-            accent="bg-error"
-            isEmpty={grouped.messages.length === 0}
-            emptyMessage="No conditional messages yet."
-            onAdd={() => setShowAddDialog(true)}
-          >
-            <div className="space-y-4">
-              {grouped.messages.slice(0, 3).map((item) => (
-                <MessageCard key={item._id} item={item} />
-              ))}
-            </div>
-          </VaultSection>
-
-          <VaultSection
-            title="Digital Assets"
-            accent="bg-tertiary"
-            isEmpty={grouped.digital.length === 0}
-            emptyMessage="No digital assets yet. Add your first."
-            onAdd={() => setShowAddDialog(true)}
-          >
-            <div className="space-y-4">
-              {grouped.digital.slice(0, 3).map((item) => (
-                <DigitalAssetRow key={item._id} item={item} />
-              ))}
-            </div>
-          </VaultSection>
-        </div>
+        )}
       </div>
 
       {vault && (
@@ -224,6 +330,7 @@ export default function VaultPage() {
           vaultId={vault._id}
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
+          defaultCategory={addDialogCategory}
         />
       )}
     </div>
@@ -234,7 +341,7 @@ function VaultSection({
   title,
   accent,
   children,
-  showViewAll,
+  viewAllHref,
   isEmpty,
   emptyMessage,
   onAdd,
@@ -242,7 +349,7 @@ function VaultSection({
   title: string;
   accent: string;
   children: React.ReactNode;
-  showViewAll?: boolean;
+  viewAllHref?: string;
   isEmpty?: boolean;
   emptyMessage?: string;
   onAdd?: () => void;
@@ -254,10 +361,13 @@ function VaultSection({
           <span className={cn("w-2 h-8 rounded-full", accent)} />
           {title}
         </h2>
-        {showViewAll && (
-          <button className="text-secondary text-body-md font-bold hover:underline cursor-pointer">
+        {viewAllHref && (
+          <Link
+            href={viewAllHref}
+            className="text-secondary text-body-md font-bold hover:underline cursor-pointer"
+          >
             View All
-          </button>
+          </Link>
         )}
       </div>
       {isEmpty ? (

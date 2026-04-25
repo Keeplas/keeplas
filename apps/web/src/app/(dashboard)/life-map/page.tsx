@@ -67,8 +67,10 @@ export default function LifeMapPage() {
           <h1 className="text-headline-lg text-primary mb-2">
             Life Map
           </h1>
-          <p className="text-body-lg text-secondary max-w-lg">
-            A holistic visual overview of your protected legacy and continuity readiness.
+          <p className="text-body-lg text-secondary max-w-lg text-balance">
+            A holistic visual overview of your protected legacy
+            <br />
+            and continuity readiness.
           </p>
         </div>
 
@@ -141,6 +143,7 @@ export default function LifeMapPage() {
           title="Assets"
           position="top-10 left-10 md:left-24"
           status="protected"
+          href="/vault"
         >
           <div className="space-y-3 mt-4">
             <AssetLine label="Real Estate Portfolio" present={assets.some((a) => a.title.toLowerCase().includes("real") || a.category === "financial_asset")} />
@@ -155,6 +158,7 @@ export default function LifeMapPage() {
           title="Contacts"
           position="bottom-10 left-10 md:left-24"
           status="protected"
+          href="/trusted-contacts"
         >
           {contacts.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-2">
@@ -196,9 +200,10 @@ export default function LifeMapPage() {
 
         {/* Directives — top right */}
         <div className="absolute top-10 right-10 md:right-24">
-          <div
+          <Link
+            href="/vault?section=documents"
             className={cn(
-              "p-6 w-64 relative shadow-xl hover:shadow-2xl transition-all duration-500",
+              "block p-6 w-64 relative shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
               missingDirectives
                 ? "bg-surface-container border-2 border-error/20"
                 : "bg-surface-container-lowest border border-secondary/10"
@@ -239,12 +244,9 @@ export default function LifeMapPage() {
                 <p className="text-body-md text-on-surface-variant mt-2">
                   Medical POA and Advance Directives are currently missing or expired.
                 </p>
-                <Link
-                  href="/vault"
-                  className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center"
-                >
+                <span className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center">
                   Update Now
-                </Link>
+                </span>
               </>
             ) : (
               <div className="space-y-3 mt-4">
@@ -259,13 +261,14 @@ export default function LifeMapPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Link>
         </div>
 
         {/* Documents — bottom right */}
         <div className="absolute bottom-10 right-10 md:right-24">
-          <div
-            className="bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl transition-all duration-500 border border-secondary/10"
+          <Link
+            href="/vault?section=documents"
+            className="block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
             style={{ borderRadius: "2rem" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -284,7 +287,7 @@ export default function LifeMapPage() {
               <DocThumbnail icon={ICON_PATHS.home} label="Deeds" />
               <DocThumbnail icon={ICON_PATHS.historyEdu} label="Will" />
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Decorative connection lines */}
@@ -383,12 +386,25 @@ export default function LifeMapPage() {
             Protected Zones
           </h3>
           <ul className="space-y-4">
-            <ZoneLine label="Financial Redundancy" safe={assets.length > 0} />
-            <ZoneLine label="Trusted Node Mesh" safe={contacts.length > 0} />
-            <ZoneLine label="Real Estate Chain" safe={assets.length > 1} />
+            <ZoneLine
+              label="Financial Redundancy"
+              safe={assets.length > 0}
+              href="/vault?section=financial"
+            />
+            <ZoneLine
+              label="Trusted Node Mesh"
+              safe={contacts.length > 0}
+              href="/trusted-contacts"
+            />
+            <ZoneLine
+              label="Real Estate Chain"
+              safe={assets.length > 1}
+              href="/vault?section=financial"
+            />
             <ZoneLine
               label={missingDirectives ? "Healthcare Directive Gap" : "Healthcare Directives"}
               safe={!missingDirectives}
+              href="/vault?section=documents"
             />
           </ul>
         </div>
@@ -399,6 +415,7 @@ export default function LifeMapPage() {
         <BentoItem
           iconPath={ICON_PATHS.history}
           title="Map Activity"
+          href="/life-check"
           hint={
             lifeCheck?.lastCheckAt
               ? `Last verified ${formatTimeAgo(lifeCheck.lastCheckAt)}.`
@@ -408,16 +425,19 @@ export default function LifeMapPage() {
         <BentoItem
           iconPath={ICON_PATHS.cloudSync}
           title="Vault Sync"
+          href="/vault"
           hint={`${items.length} item${items.length === 1 ? "" : "s"} mirrored to secure nodes.`}
         />
         <BentoItem
           iconPath={ICON_PATHS.lockReset}
           title="Key Health"
+          href="/settings/security"
           hint="Physical keys and backup shards are in optimal storage locations."
         />
         <BentoItem
           iconPath={ICON_PATHS.shareReviews}
           title="Trustee Access"
+          href="/trusted-contacts"
           hint={`${verifiedTrustees} of ${contacts.length || 5} Trustees completed life-drill onboarding.`}
         />
       </section>
@@ -430,19 +450,22 @@ function NodeCard({
   title,
   position,
   status,
+  href,
   children,
 }: {
   iconPath: string;
   title: string;
   position: string;
   status: "protected" | "unmapped";
+  href: string;
   children: React.ReactNode;
 }) {
   return (
     <div className={cn("absolute", position)}>
-      <div
+      <Link
+        href={href}
         className={cn(
-          "bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl transition-all duration-500",
+          "block bg-surface-container-lowest p-6 w-64 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer",
           status === "protected"
             ? "border border-secondary/10"
             : "border-2 border-error/20"
@@ -462,7 +485,7 @@ function NodeCard({
         </div>
         <h3 className="text-headline-sm text-primary mb-1">{title}</h3>
         {children}
-      </div>
+      </Link>
     </div>
   );
 }
@@ -493,9 +516,17 @@ function DocThumbnail({ icon, label }: { icon: string; label: string }) {
   );
 }
 
-function ZoneLine({ label, safe }: { label: string; safe: boolean }) {
-  return (
-    <li className="flex items-center gap-3">
+function ZoneLine({
+  label,
+  safe,
+  href,
+}: {
+  label: string;
+  safe: boolean;
+  href?: string;
+}) {
+  const content = (
+    <>
       <span
         className={cn("w-2 h-2", safe ? "bg-secondary" : "bg-error animate-pulse")}
         style={{ borderRadius: "50%" }}
@@ -508,29 +539,50 @@ function ZoneLine({ label, safe }: { label: string; safe: boolean }) {
       >
         {label}
       </span>
-    </li>
+    </>
   );
+
+  if (href) {
+    return (
+      <li>
+        <Link
+          href={href}
+          className="flex items-center gap-3 -mx-2 px-2 py-1 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
+        >
+          {content}
+        </Link>
+      </li>
+    );
+  }
+
+  return <li className="flex items-center gap-3">{content}</li>;
 }
 
 function BentoItem({
   iconPath,
   title,
   hint,
+  href,
 }: {
   iconPath: string;
   title: string;
   hint: string;
+  href: string;
 }) {
   return (
-    <div
-      className="bg-surface-container-lowest p-6 shadow-sm flex flex-col justify-between"
+    <Link
+      href={href}
+      className="bg-surface-container-lowest p-6 shadow-sm hover:shadow-md hover:bg-surface-container transition-all flex flex-col justify-between cursor-pointer group"
       style={{ borderRadius: "1.5rem" }}
     >
       <div>
-        <Icon path={iconPath} className="w-6 h-6 text-secondary-fixed-dim mb-3" />
+        <Icon
+          path={iconPath}
+          className="w-6 h-6 text-secondary-fixed-dim mb-3 group-hover:text-secondary transition-colors"
+        />
         <h4 className="text-headline-sm text-primary">{title}</h4>
       </div>
       <p className="text-body-md text-on-surface-variant mt-4">{hint}</p>
-    </div>
+    </Link>
   );
 }
