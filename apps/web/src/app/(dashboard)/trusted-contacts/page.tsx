@@ -44,7 +44,15 @@ export default function TrustedContactsPage() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
+    "trust"
+  );
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+
+  function openInvite(type: "trust" | "recipient_only") {
+    setInviteType(type);
+    setShowInviteDialog(true);
+  }
 
   if (contacts === undefined || groups === undefined) {
     return <Loader size="md" />;
@@ -133,15 +141,24 @@ export default function TrustedContactsPage() {
                 <p className="text-body-md opacity-80 mb-5">
                   Each contact must verify their identity and accept their role via encrypted invitation.
                 </p>
-                <button
-                  onClick={() => setShowInviteDialog(true)}
-                  className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-                  </svg>
-                  Add New Guardian
-                </button>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => openInvite("trust")}
+                    className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                    </svg>
+                    Add New Guardian
+                  </button>
+                  <button
+                    onClick={() => openInvite("recipient_only")}
+                    className="w-full py-3 bg-on-primary/10 hover:bg-on-primary/20 text-on-primary font-medium text-body-md rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-on-primary/20"
+                  >
+                    <Icon path={ICON_PATHS.userPlus} className="w-4 h-4" strokeWidth={2} />
+                    Add Recipient Only
+                  </button>
+                </div>
               </section>
 
               <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[150px] flex flex-col justify-end">
@@ -186,7 +203,7 @@ export default function TrustedContactsPage() {
 
               {activeContacts.length === 0 ? (
                 <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
-                  onClick={() => setShowInviteDialog(true)}
+                  onClick={() => openInvite("trust")}
                 >
                   <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg className="w-8 h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -218,7 +235,7 @@ export default function TrustedContactsPage() {
                       ))}
                       {canInviteTrust && (
                         <button
-                          onClick={() => setShowInviteDialog(true)}
+                          onClick={() => openInvite("trust")}
                           className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
                           <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -250,7 +267,7 @@ export default function TrustedContactsPage() {
                       </div>
                       {recipientContacts.length === 0 ? (
                         <button
-                          onClick={() => setShowInviteDialog(true)}
+                          onClick={() => openInvite("recipient_only")}
                           className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
                           <p className="text-headline-sm text-primary">
@@ -266,7 +283,7 @@ export default function TrustedContactsPage() {
                             <ContactCard key={contact._id} contact={contact} />
                           ))}
                           <button
-                            onClick={() => setShowInviteDialog(true)}
+                            onClick={() => openInvite("recipient_only")}
                             className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                           >
                             <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -419,6 +436,7 @@ export default function TrustedContactsPage() {
       <InviteContactDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
+        initialContactType={inviteType}
       />
       <CreateGroupDialog
         open={showCreateGroup}
