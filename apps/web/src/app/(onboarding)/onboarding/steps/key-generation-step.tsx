@@ -161,12 +161,12 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
             Securing Vault
           </span>
         </div>
-        <h2 className="text-display-lg text-primary mb-3">
+        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 break-words">
           {phase === "complete"
             ? "Your vault is ready"
             : "Setting up your protection"}
         </h2>
-        <p className="text-body-lg text-on-surface-variant max-w-sm mx-auto">
+        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">
           {phase === "complete"
             ? "Your Secret Key has been generated and secured. You can now start adding items to your vault."
             : "Your Secret Key is being generated and encrypted. This happens entirely on your device."}

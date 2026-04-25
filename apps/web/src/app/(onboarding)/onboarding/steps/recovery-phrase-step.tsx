@@ -54,16 +54,16 @@ export function RecoveryPhraseStep({
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Hero Header */}
-      <section className="mb-10 flex flex-col md:flex-row justify-between items-end gap-6">
+      <section className="mb-8 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
         <div>
-          <span className="text-label-md text-secondary mb-3 block">
+          <span className="text-label-md text-secondary mb-2 md:mb-3 block">
             Cryptographic Foundation
           </span>
-          <h1 className="text-display-lg text-primary">
+          <h1 className="text-headline-lg md:text-display-lg text-primary break-words">
             Master Recovery Words
           </h1>
         </div>
-        <div className="flex gap-3 print:hidden">
+        <div className="flex flex-wrap gap-2 md:gap-3 print:hidden">
           <button
             onClick={handleCopyAll}
             className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
@@ -106,7 +106,7 @@ export function RecoveryPhraseStep({
       </section>
 
       {/* Warning Banner */}
-      <div className="bg-primary-container text-on-primary-container p-8 rounded-2xl mb-10 flex items-start gap-6 relative overflow-hidden">
+      <div className="bg-primary-container text-on-primary-container p-5 md:p-8 rounded-2xl mb-8 md:mb-10 flex items-start gap-4 md:gap-6 relative overflow-hidden">
         <div className="absolute right-0 top-0 opacity-10 translate-x-1/4 -translate-y-1/4">
           <svg
             className="w-48 h-48 text-on-primary-container"
@@ -117,7 +117,7 @@ export function RecoveryPhraseStep({
           </svg>
         </div>
         <svg
-          className="w-10 h-10 text-secondary-fixed shrink-0"
+          className="w-8 h-8 md:w-10 md:h-10 text-secondary-fixed shrink-0"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -130,7 +130,7 @@ export function RecoveryPhraseStep({
           />
         </svg>
         <div className="relative z-10">
-          <h3 className="font-headline text-surface-container-lowest text-xl font-bold mb-2">
+          <h3 className="font-headline text-surface-container-lowest text-lg md:text-xl font-bold mb-2">
             Absolute Recovery Authority
           </h3>
           <p className="font-body text-on-primary-container leading-relaxed max-w-2xl">
@@ -143,8 +143,8 @@ export function RecoveryPhraseStep({
       </div>
 
       {/* Recovery Words Grid */}
-      <div className="bg-surface-container-low p-1 rounded-3xl mb-10">
-        <div className="bg-surface p-8 md:p-10 rounded-[1.25rem] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 print:grid-cols-4">
+      <div className="bg-surface-container-low p-1 rounded-3xl mb-8 md:mb-10">
+        <div className="bg-surface p-4 sm:p-6 md:p-10 rounded-[1.25rem] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 print:grid-cols-4">
           {phrase.map((word, index) => (
             <div
               key={index}
@@ -162,7 +162,7 @@ export function RecoveryPhraseStep({
       </div>
 
       {/* Guidance Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 print:hidden">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10 print:hidden">
         <div className="p-6 bg-surface-container-low rounded-2xl">
           <svg
             className="w-6 h-6 text-secondary mb-3"

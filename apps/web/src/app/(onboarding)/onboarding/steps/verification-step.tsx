@@ -82,7 +82,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
       {/* Back button */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label font-bold mb-8 transition-colors cursor-pointer"
+        className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label font-bold mb-6 md:mb-8 transition-colors cursor-pointer"
       >
         <svg
           className="w-4 h-4"
@@ -101,14 +101,14 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
       </button>
 
       {/* Header */}
-      <div className="mb-10">
-        <span className="text-label-md text-secondary mb-3 block">
+      <div className="mb-8 md:mb-10">
+        <span className="text-label-md text-secondary mb-2 md:mb-3 block">
           Backup Confirmation
         </span>
-        <h2 className="text-display-lg text-primary mb-4">
+        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 md:mb-4 break-words">
           Verify your Recovery Words
         </h2>
-        <p className="text-body-lg text-on-surface-variant max-w-lg">
+        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-lg">
           To make sure you saved your words correctly, enter the 3 words below
           from your Recovery Words. This confirms your backup is complete and
           you will be able to recover your vault if needed.
@@ -116,7 +116,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
       </div>
 
       {/* Why this matters */}
-      <div className="bg-primary-container text-on-primary-container p-6 rounded-2xl mb-8 flex items-start gap-4 relative overflow-hidden">
+      <div className="bg-primary-container text-on-primary-container p-5 md:p-6 rounded-2xl mb-6 md:mb-8 flex items-start gap-3 md:gap-4 relative overflow-hidden">
         <svg
           className="w-8 h-8 text-secondary-fixed shrink-0 mt-0.5"
           fill="none"

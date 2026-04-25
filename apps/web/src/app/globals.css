@@ -253,6 +253,15 @@ body {
   background: var(--color-outline);
 }
 
+/* ── Hide scrollbar while keeping scroll functional ── */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* ── Print Styles ── */
 @media print {
   body {

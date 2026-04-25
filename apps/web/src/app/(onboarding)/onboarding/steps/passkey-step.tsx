@@ -48,10 +48,10 @@ export function PasskeyStep() {
           <Icon path={ICON_PATHS.face} className="w-5 h-5" />
           <span className="text-label-md">Optional · Faster sign in</span>
         </div>
-        <h2 className="text-display-lg text-primary mb-3">
+        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 break-words">
           {done ? "Passkey ready" : "Sign in with your face"}
         </h2>
-        <p className="text-body-lg text-on-surface-variant max-w-sm mx-auto">
+        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">
           {done
             ? "You can now unlock Keeplas with your device biometrics."
             : "Use Face ID, Touch ID, or your device biometrics next time you sign in. Your password still works as a backup."}

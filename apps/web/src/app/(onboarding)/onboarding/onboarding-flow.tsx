@@ -60,32 +60,35 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="px-4 sm:px-6 md:px-8 py-4 md:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 shrink-0">
           <Image
             src="/assets/logo/logo-wordmark.svg"
             alt="Keeplas"
             width={140}
             height={28}
             priority
+            className="h-6 md:h-7 w-auto"
           />
         </div>
-        <div className="hidden md:flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {steps.map((s, i) => (
-            <div key={s.key} className="flex items-center gap-2">
+            <div key={s.key} className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
               <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-label transition-colors ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg font-label transition-colors ${
                   i <= currentStepIndex
                     ? "bg-secondary text-on-secondary font-bold"
                     : "bg-surface-container text-on-surface-variant"
                 }`}
               >
-                <span className="text-xs font-bold">{i + 1}</span>
-                <span className="text-xs tracking-wide">{s.label}</span>
+                <span className="text-[10px] md:text-xs font-bold">{i + 1}</span>
+                <span className="text-[10px] md:text-xs tracking-wide whitespace-nowrap">
+                  {s.label}
+                </span>
               </div>
               {i < steps.length - 1 && (
                 <div
-                  className={`w-8 h-px ${
+                  className={`w-3 sm:w-5 md:w-8 h-px shrink-0 ${
                     i < currentStepIndex ? "bg-secondary" : "bg-outline-variant/30"
                   }`}
                 />
@@ -96,7 +99,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8 md:px-8">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 md:py-8 md:px-8">
         {(step === "auth_complete" || step === "recovery_phrase") && (
           <RecoveryPhraseStep
             phrase={phrase}
