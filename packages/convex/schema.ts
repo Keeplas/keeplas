@@ -57,6 +57,9 @@ export default defineSchema({
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
+
+    // Set by @convex-dev/auth after a successful email OTP verification.
+    emailVerificationTime: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_last_seen", ["lastSeenAt"]),
