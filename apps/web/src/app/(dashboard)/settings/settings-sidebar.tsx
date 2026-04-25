@@ -44,6 +44,11 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     label: "Plans & Billing",
     items: [
       {
+        label: "Usage",
+        href: "/settings/usage",
+        iconPath: ICON_PATHS.cloud,
+      },
+      {
         label: "Subscription",
         href: "/settings/subscription",
         iconPath: ICON_PATHS.creditCard,
