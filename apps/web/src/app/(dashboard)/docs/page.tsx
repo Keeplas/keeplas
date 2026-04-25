@@ -34,7 +34,7 @@ const CORE_FEATURES: Feature[] = [
     description:
       "Compose the chain of autonomous actions that fire when life check thresholds are crossed — T+7, T+30, T+60 inactivity milestones.",
     iconPath: ICON_PATHS.shieldCheck,
-    href: "/scenario",
+    href: "/life-check?tab=reaction",
     accent: "bg-primary/10 text-primary",
   },
   {

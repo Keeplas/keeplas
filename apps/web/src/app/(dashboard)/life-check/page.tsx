@@ -1,33 +1,88 @@
 "use client";
 
-import { Button, ErrorAlert, Loader, Switch } from "@keeplas/ui";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Button,
+  ErrorAlert,
+  Loader,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@keeplas/ui";
 import { LifeCheckHistory } from "./life-check-history";
 import { ActiveCycleBanner } from "./sections/active-cycle-banner";
 import { ChannelList } from "./sections/channel-list";
+import { ContinuityHeader } from "./sections/continuity-header";
 import { EscalationTimeline } from "./sections/escalation-timeline";
 import { FrequencySelector } from "./sections/frequency-selector";
-import { TravelModeSection } from "./sections/travel-mode-section";
+import { ScenarioPanel } from "./sections/scenario-panel";
 import { useLifeCheckConfig } from "./sections/use-life-check-config";
 
-export default function LifeCheckPage() {
+type TabValue = "monitoring" | "reaction";
+
+function isTabValue(value: string | null): value is TabValue {
+  return value === "monitoring" || value === "reaction";
+}
+
+export default function ContinuityProtocolPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab");
+  const [tab, setTab] = useState<TabValue>(
+    isTabValue(initialTab) ? initialTab : "monitoring"
+  );
+
+  useEffect(() => {
+    const current = searchParams.get("tab");
+    if (current !== tab) {
+      const next = new URLSearchParams(searchParams.toString());
+      next.set("tab", tab);
+      router.replace(`/life-check?${next.toString()}`, { scroll: false });
+    }
+  }, [tab, router, searchParams]);
+
+  return (
+    <div className="max-w-screen-2xl mx-auto">
+      <ContinuityHeader />
+
+      <Tabs
+        value={tab}
+        onValueChange={(v) => isTabValue(v) && setTab(v)}
+        className="space-y-8"
+      >
+        <TabsList>
+          <TabsTrigger value="monitoring">Life Check</TabsTrigger>
+          <TabsTrigger value="reaction">Scenario Engine</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="monitoring">
+          <MonitoringPanel />
+        </TabsContent>
+
+        <TabsContent value="reaction">
+          <ScenarioPanel />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function MonitoringPanel() {
   const {
     config,
     activeCycle,
     frequency,
     channels,
-    travelMode,
-    travelUntil,
     saving,
     error,
     saved,
-    setTravelUntil,
     updateFrequency,
     toggleChannel,
     handleSave,
-    handleTravelToggle,
     handleValidate,
     handlePostpone,
-    handleToggleActive,
   } = useLifeCheckConfig();
 
   if (config === undefined) {
@@ -35,43 +90,9 @@ export default function LifeCheckPage() {
   }
 
   const isConfigured = config !== null;
-  const isActive = config?.isActive ?? false;
 
   return (
-    <div className="max-w-screen-2xl mx-auto">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-        <div className="max-w-2xl">
-          <h1 className="text-headline-lg text-primary mb-3">
-            Life Continuity
-            <br />
-            <span className="text-secondary">Verification Engine</span>
-          </h1>
-          <p className="text-body-lg text-on-surface-variant max-w-xl">
-            Keeplas only reaches out after a real period of silence — opening the app, browsing your vault, or any sign of life resets the timer. If you stay unresponsive past your threshold, your legacy directives execute securely.
-          </p>
-        </div>
-
-        {isConfigured && (
-          <div className="bg-surface-container-low p-4 rounded-2xl flex items-center gap-5 shadow-sm shrink-0">
-            <div className="flex flex-col">
-              <span className="text-headline-sm text-primary">
-                {travelMode ? "Travel Mode" : isActive ? "Active" : "Paused"}
-              </span>
-              <span className="text-label-md text-on-surface-variant">
-                Pause Life Check
-              </span>
-            </div>
-            <Switch
-              checked={!isActive || travelMode}
-              onCheckedChange={(checked) => {
-                if (checked && !isActive) return;
-                handleToggleActive(!isActive);
-              }}
-            />
-          </div>
-        )}
-      </header>
-
+    <div className="space-y-8">
       {activeCycle && (
         <ActiveCycleBanner
           status={activeCycle.status}
@@ -85,18 +106,12 @@ export default function LifeCheckPage() {
         <div className="lg:col-span-7 space-y-6">
           <FrequencySelector value={frequency} onChange={updateFrequency} />
           <ChannelList channels={channels} onToggle={toggleChannel} />
-          <TravelModeSection
-            enabled={travelMode}
-            until={travelUntil}
-            onUntilChange={setTravelUntil}
-            onToggle={handleTravelToggle}
-          />
         </div>
 
         <EscalationTimeline />
       </div>
 
-      <div className="mt-8 flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
+      <div className="flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
         <div>
           <h3 className="text-headline-sm text-primary">
             {isConfigured
@@ -130,9 +145,7 @@ export default function LifeCheckPage() {
         </div>
       </div>
 
-      <div className="mt-12">
-        <LifeCheckHistory />
-      </div>
+      <LifeCheckHistory />
     </div>
   );
 }

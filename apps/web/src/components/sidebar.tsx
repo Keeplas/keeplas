@@ -23,8 +23,11 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Life Map", href: "/life-map", iconPath: ICON_PATHS.shieldCheck },
   { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
   { label: "Trusted Circle", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
-  { label: "Life Check", href: "/life-check", iconPath: ICON_PATHS.heartbeat },
-  { label: "Scenario Engine", href: "/scenario", iconPath: ICON_PATHS.warning },
+  {
+    label: "Continuity Protocol",
+    href: "/life-check",
+    iconPath: ICON_PATHS.heartbeat,
+  },
   { label: "Emergency Card", href: "/emergency-card", iconPath: ICON_PATHS.emergencyCard },
 ];
 
