@@ -36,7 +36,7 @@ See `CODEOWNERS` for details.
 
 ## Contributor License Agreement
 
-By submitting a pull request, you agree to the terms of our [CLA](CLA.md). This ensures Keeplas Ltd retains the ability to maintain and evolve the project.
+By submitting a pull request, you agree to the terms of our [CLA](CONTRIBUTOR_LICENSE_AGREEMENT.md). This ensures Keeplas Ltd retains the ability to maintain and evolve the project.
 
 ## Reporting Security Issues
 

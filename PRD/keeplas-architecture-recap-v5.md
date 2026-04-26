@@ -173,7 +173,7 @@ keeplas/
 │   │   └── security_vulnerability.md  ← Redirige vers email privé
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── LICENSE                         ← AGPL v3
-├── CLA.md
+├── CONTRIBUTOR_LICENSE_AGREEMENT.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 └── CODE_OF_CONDUCT.md

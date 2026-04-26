@@ -86,7 +86,7 @@
 | 0.4 | Scaffold `packages/crypto` | Package structure: `aes/`, `shamir/`, `recovery/`, `zk/` with TS config, stub implementations | **DONE** |
 | 0.5 | Scaffold `packages/ui` | ShadCN-style components: Button, Card, Input, Badge, Switch, Progress, Avatar, Label, Separator, DropdownMenu, LegacyCard | **DONE** |
 | 0.6 | CI pipeline | GitHub Actions `ci.yml`: lint, typecheck, test, pnpm audit | **DONE** |
-| 0.7 | Governance files | CODEOWNERS, CONTRIBUTING.md, CLA.md, SECURITY.md, CODE_OF_CONDUCT.md, issue templates, PR template | **DONE** |
+| 0.7 | Governance files | CODEOWNERS, CONTRIBUTING.md, CONTRIBUTOR_LICENSE_AGREEMENT.md, SECURITY.md, CODE_OF_CONDUCT.md, issue templates, PR template | **DONE** |
 | 0.8 | Dev environment | `.env.example` with all documented vars, `.gitignore` | **DONE** |
 
 ### Monorepo Structure to Create
@@ -176,7 +176,7 @@ keeplas-app/
 ├── pnpm-workspace.yaml
 ├── package.json
 ├── LICENSE
-├── CLA.md
+├── CONTRIBUTOR_LICENSE_AGREEMENT.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
 ├── CODE_OF_CONDUCT.md
