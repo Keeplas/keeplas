@@ -29,7 +29,7 @@ const APP_URL = process.env.APP_URL ?? "https://app.keeplas.com";
 
 function otpEmailHtml(code: string) {
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
-<p style="text-align:center;margin:0 0 24px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="140" height="28" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
+<p style="text-align:center;margin:0 0 32px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="220" height="44" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
 <p>Welcome to Keeplas. Use the code below to confirm your email address:</p>
 <p style="font-size:28px;font-weight:700;letter-spacing:0.4em;text-align:center;margin:32px 0;padding:16px;background:#f5f5f7;border-radius:12px">${escapeHtml(code)}</p>
 <p style="color:#666;font-size:13px">This code expires in 15 minutes. If you didn't request it, you can ignore this email.</p>
