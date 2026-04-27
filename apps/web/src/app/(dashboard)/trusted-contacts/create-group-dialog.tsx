@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import {
   Dialog,
@@ -31,7 +31,7 @@ export function CreateGroupDialog({
   onOpenChange,
   contacts,
 }: CreateGroupDialogProps) {
-  const createGroup = useMutation(api.recipient_groups.createGroup);
+  const createGroup = useAuditedMutation(api.recipient_groups.createGroup);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

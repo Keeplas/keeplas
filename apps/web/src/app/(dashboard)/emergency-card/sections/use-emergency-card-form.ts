@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import {
   INITIAL_FORM_DATA,
@@ -13,7 +14,7 @@ import {
 
 export function useEmergencyCardForm() {
   const card = useQuery(api.emergency_cards.getMyCard);
-  const createOrUpdate = useMutation(api.emergency_cards.createOrUpdate);
+  const createOrUpdate = useAuditedMutation(api.emergency_cards.createOrUpdate);
 
   const [formData, setFormData] = useState<CardFormData>(INITIAL_FORM_DATA);
   const [toggles, setToggles] = useState<PrivacyToggles>(INITIAL_TOGGLES);

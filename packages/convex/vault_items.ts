@@ -7,9 +7,9 @@ import {
   getUserVault,
   getActiveItems,
   requireItemOwnership,
-  logVaultAction,
   resolveItemRecipients,
 } from "./helpers";
+import { auditedMutation } from "./audit";
 
 const triggerTypeValidator = v.union(
   v.literal("life_check_failure"),
@@ -151,7 +151,9 @@ export const getItemFileUrl = query({
  * Issue a short-lived signed URL so the client can POST an
  * encrypted blob directly to Convex storage.
  */
-export const generateUploadUrl = mutation({
+export const generateUploadUrl = auditedMutation({
+  action: "vault.upload_url.generated",
+  resourceType: "vault",
   args: {},
   handler: async (ctx) => {
     await requireAuth(ctx);
@@ -176,7 +178,16 @@ const fileKindValidator = v.union(
  * still wraps DEKs to all current trust contacts so the trigger doesn't
  * need user keys.
  */
-export const createItem = mutation({
+export const createItem = auditedMutation({
+  action: "vault_item.created",
+  resourceType: "vault_item",
+  getResourceId: (_args, result) => result as string,
+  getMetadata: (args) => ({
+    category: args.category,
+    accessLevel: args.accessLevel,
+    recipientMode: args.recipientMode ?? "default",
+    fileCount: args.files?.length ?? 0,
+  }),
   args: {
     vaultId: v.id("vaults"),
     category: categoryValidator,
@@ -306,8 +317,6 @@ export const createItem = mutation({
       updatedAt: now,
     });
 
-    await logVaultAction(ctx, userId, "vault_item_created", itemId);
-
     return itemId;
   },
 });
@@ -317,7 +326,16 @@ export const createItem = mutation({
  * configuration changes, pass recipientKeys to re-wrap the DEK for the
  * new recipient set; existing wrapped-DEK rows are replaced.
  */
-export const updateItem = mutation({
+export const updateItem = auditedMutation({
+  action: "vault_item.updated",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  getMetadata: (args) => {
+    const fields = Object.entries(args)
+      .filter(([k, v]) => k !== "itemId" && v !== undefined)
+      .map(([k]) => k);
+    return { changedFields: fields };
+  },
   args: {
     itemId: v.id("vault_items"),
     title: v.optional(v.string()),
@@ -365,8 +383,6 @@ export const updateItem = mutation({
         )
       );
     }
-
-    await logVaultAction(ctx, userId, "vault_item_updated", itemId);
   },
 });
 
@@ -391,7 +407,10 @@ export const resolveRecipientsForItem = query({
  * Soft-delete a vault item (archive it). Attached encrypted files are
  * kept in storage — restoration can undo the archive.
  */
-export const deleteItem = mutation({
+export const deleteItem = auditedMutation({
+  action: "vault_item.archived",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -404,7 +423,6 @@ export const deleteItem = mutation({
       updatedAt: now,
     });
 
-    // Update vault counts
     const vault = await ctx.db.get(item.vaultId);
     if (vault) {
       await ctx.db.patch(item.vaultId, {
@@ -412,8 +430,6 @@ export const deleteItem = mutation({
         updatedAt: now,
       });
     }
-
-    await logVaultAction(ctx, userId, "vault_item_archived", args.itemId);
   },
 });
 

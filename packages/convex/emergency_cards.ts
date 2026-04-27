@@ -1,7 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, optionalAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation } from "./audit";
 
 // ─── Queries ────────────────────────────────────────────
 
@@ -65,7 +65,10 @@ export const getByQrToken = query({
 /**
  * Create or update the user's emergency card (one card per user).
  */
-export const createOrUpdate = mutation({
+export const createOrUpdate = auditedMutation({
+  action: "emergency_card.upserted",
+  resourceType: "emergency_card",
+  getResourceId: (_args, result) => result as string,
   args: {
     fullName: v.optional(v.string()),
     bloodType: v.optional(v.string()),
@@ -99,20 +102,9 @@ export const createOrUpdate = mutation({
         ...args,
         updatedAt: now,
       });
-
-      await createAuditLog(ctx, {
-        userId,
-        actorType: "user",
-        actorId: userId,
-        action: "emergency_card_updated",
-        resourceType: "emergency_card",
-        resourceId: existing._id,
-      });
-
       return existing._id;
     }
 
-    // Generate a unique QR code token
     const qrCodeToken = generateQrToken();
 
     const cardId = await ctx.db.insert("emergency_cards", {
@@ -125,15 +117,6 @@ export const createOrUpdate = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "emergency_card_created",
-      resourceType: "emergency_card",
-      resourceId: cardId,
-    });
-
     return cardId;
   },
 });
@@ -141,7 +124,9 @@ export const createOrUpdate = mutation({
 /**
  * Record that the card was printed.
  */
-export const markPrinted = mutation({
+export const markPrinted = auditedMutation({
+  action: "emergency_card.printed",
+  resourceType: "emergency_card",
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);

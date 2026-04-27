@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn } from "@keeplas/ui";
@@ -69,14 +69,14 @@ export function ContactCard({ contact }: ContactCardProps) {
   const [revoking, setRevoking] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
 
-  const revokeContact = useMutation(api.trusted_contacts.revokeContact);
-  const toggleFirstResponder = useMutation(
+  const revokeContact = useAuditedMutation(api.trusted_contacts.revokeContact);
+  const toggleFirstResponder = useAuditedMutation(
     api.trusted_contacts.toggleFirstResponder
   );
-  const toggleLegalAuthority = useMutation(
+  const toggleLegalAuthority = useAuditedMutation(
     api.trusted_contacts.toggleLegalAuthority
   );
-  const updateAccessModes = useMutation(
+  const updateAccessModes = useAuditedMutation(
     api.trusted_contacts.updateAccessModes
   );
 

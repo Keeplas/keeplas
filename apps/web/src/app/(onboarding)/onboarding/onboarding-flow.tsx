@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import { LegalInfoStep } from "./steps/legal-info-step";
 import { RecoveryPhraseStep } from "./steps/recovery-phrase-step";
 import { VerificationStep } from "./steps/verification-step";
 import { KeyGenerationStep } from "./steps/key-generation-step";
@@ -9,6 +10,7 @@ import { PasskeyStep } from "./steps/passkey-step";
 
 type OnboardingStep =
   | "auth_complete"
+  | "legal_info"
   | "recovery_phrase"
   | "verification"
   | "key_generation"
@@ -24,6 +26,10 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   );
   // The recovery phrase is held in memory only — never persisted to server
   const [phrase, setPhrase] = useState<string[] | null>(null);
+
+  const handleLegalInfoConfirmed = useCallback(() => {
+    setStep("recovery_phrase");
+  }, []);
 
   const handlePhraseGenerated = useCallback((words: string[]) => {
     setPhrase(words);
@@ -47,15 +53,17 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
   // Step indicator
   const steps = [
+    { key: "legal_info", label: "Identity" },
     { key: "recovery_phrase", label: "Recovery Words" },
     { key: "verification", label: "Verification" },
     { key: "key_generation", label: "Secure Vault" },
     { key: "passkey", label: "Biometrics" },
   ];
 
-  const currentStepIndex = steps.findIndex(
-    (s) => s.key === (step === "auth_complete" ? "recovery_phrase" : step)
-  );
+  // `auth_complete` is the post-signup landing state — treat it as the first
+  // legal_info step since the user has not yet confirmed their identity.
+  const visualKey = step === "auth_complete" ? "legal_info" : step;
+  const currentStepIndex = steps.findIndex((s) => s.key === visualKey);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -100,7 +108,10 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
       {/* Content */}
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 md:py-8 md:px-8">
-        {(step === "auth_complete" || step === "recovery_phrase") && (
+        {(step === "auth_complete" || step === "legal_info") && (
+          <LegalInfoStep onComplete={handleLegalInfoConfirmed} />
+        )}
+        {step === "recovery_phrase" && (
           <RecoveryPhraseStep
             phrase={phrase}
             onPhraseGenerated={handlePhraseGenerated}

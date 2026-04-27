@@ -210,6 +210,7 @@ export const advanceOnboardingStep = mutation({
   args: {
     step: v.union(
       v.literal("auth_complete"),
+      v.literal("legal_info"),
       v.literal("recovery_phrase"),
       v.literal("verification"),
       v.literal("key_generation"),

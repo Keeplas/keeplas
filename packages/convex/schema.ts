@@ -52,9 +52,20 @@ export default defineSchema({
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),
 
+    // Legal identity — collected during onboarding for succession admissibility.
+    // birthday: Unix ms of birth date; used for age verification (>=18) and
+    // identification in succession proceedings.
+    birthday: v.optional(v.number()),
+    // country: ISO-3166-1 alpha-2 code of declared residence at signup;
+    // determines applicable inheritance jurisdiction.
+    country: v.optional(v.string()),
+    // Timestamp when the user confirmed their legal info — proof of consent.
+    legalInfoConfirmedAt: v.optional(v.number()),
+
     onboardingStep: v.optional(
       v.union(
         v.literal("auth_complete"),
+        v.literal("legal_info"),
         v.literal("recovery_phrase"),
         v.literal("verification"),
         v.literal("key_generation"),
@@ -753,7 +764,11 @@ export default defineSchema({
     resourceId: v.string(),
 
     metadata: v.optional(v.string()),
+    // Server-attested IP and ISO-3166-1 alpha-2 country at the time of action.
+    // Captured by the Next.js middleware (Vercel geo headers), HMAC-signed,
+    // verified inside `auditedMutation` before being persisted here.
     ipAddress: v.optional(v.string()),
+    country: v.optional(v.string()),
     deviceInfo: v.optional(v.string()),
 
     previousLogHash: v.string(),

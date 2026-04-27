@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { requireAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation } from "./audit";
 
 const ACTION_TYPE = v.union(
   v.literal("grant_access"),
@@ -45,7 +45,10 @@ export const getScenario = query({
 /**
  * Create scenario lazily if missing and return its ID.
  */
-export const getOrCreateScenario = mutation({
+export const getOrCreateScenario = auditedMutation({
+  action: "scenario.created",
+  resourceType: "scenario",
+  getResourceId: (_args, result) => result as string,
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
@@ -71,15 +74,6 @@ export const getOrCreateScenario = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "scenario_created",
-      resourceType: "scenario",
-      resourceId: id,
-    });
-
     return id;
   },
 });
@@ -87,7 +81,10 @@ export const getOrCreateScenario = mutation({
 /**
  * Toggle Safe Pause on the scenario.
  */
-export const setSafePause = mutation({
+export const setSafePause = auditedMutation({
+  action: "scenario.safe_pause_toggled",
+  resourceType: "scenario",
+  getMetadata: (args) => ({ paused: args.paused, until: args.until }),
   args: { paused: v.boolean(), until: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -105,15 +102,6 @@ export const setSafePause = mutation({
       updatedAt: Date.now(),
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: args.paused ? "scenario_paused" : "scenario_armed",
-      resourceType: "scenario",
-      resourceId: scenario._id,
-    });
-
     return { success: true };
   },
 });
@@ -121,7 +109,11 @@ export const setSafePause = mutation({
 /**
  * Add a milestone step (e.g. T+7 days) with one or more actions.
  */
-export const addStep = mutation({
+export const addStep = auditedMutation({
+  action: "scenario.step_added",
+  resourceType: "scenario_step",
+  getResourceId: (_args, result) => result as string,
+  getMetadata: (args) => ({ triggerValue: args.triggerValue }),
   args: {
     triggerValue: v.number(),
     label: v.string(),
@@ -179,16 +171,6 @@ export const addStep = mutation({
       createdAt: Date.now(),
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "scenario_step_added",
-      resourceType: "scenario_step",
-      resourceId: stepId,
-      metadata: JSON.stringify({ triggerValue: args.triggerValue }),
-    });
-
     return stepId;
   },
 });
@@ -198,7 +180,11 @@ export const addStep = mutation({
  * from the dialog (trigger window, label, phase, action set) are mutable —
  * `order`, `executionStatus`, and `triggerType` stay under engine control.
  */
-export const updateStep = mutation({
+export const updateStep = auditedMutation({
+  action: "scenario.step_updated",
+  resourceType: "scenario_step",
+  getResourceId: (args) => args.stepId,
+  getMetadata: (args) => ({ triggerValue: args.triggerValue }),
   args: {
     stepId: v.id("scenario_steps"),
     triggerValue: v.number(),
@@ -224,16 +210,6 @@ export const updateStep = mutation({
       actions: args.actions,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "scenario_step_updated",
-      resourceType: "scenario_step",
-      resourceId: args.stepId,
-      metadata: JSON.stringify({ triggerValue: args.triggerValue }),
-    });
-
     return { success: true };
   },
 });
@@ -241,7 +217,10 @@ export const updateStep = mutation({
 /**
  * Remove a milestone step.
  */
-export const removeStep = mutation({
+export const removeStep = auditedMutation({
+  action: "scenario.step_removed",
+  resourceType: "scenario_step",
+  getResourceId: (args) => args.stepId,
   args: { stepId: v.id("scenario_steps") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -250,15 +229,6 @@ export const removeStep = mutation({
     if (!step || step.userId !== userId) throw new Error("Step not found");
 
     await ctx.db.delete(args.stepId);
-
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "scenario_step_removed",
-      resourceType: "scenario_step",
-      resourceId: args.stepId,
-    });
 
     return { success: true };
   },

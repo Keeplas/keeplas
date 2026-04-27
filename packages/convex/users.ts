@@ -2,7 +2,10 @@ import { v } from "convex/values";
 import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation, createAuditLog } from "./audit";
+
+const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
+const MAX_AGE_MS = 130 * 365.25 * 24 * 60 * 60 * 1000;
 
 export const viewer = query({
   args: {},
@@ -18,7 +21,9 @@ export const viewer = query({
  * Update the user's profile fields (name, phone, avatar).
  * Email is controlled by the auth provider and cannot be changed here.
  */
-export const updateProfile = mutation({
+export const updateProfile = auditedMutation({
+  action: "user.profile.updated",
+  resourceType: "user",
   args: {
     name: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
@@ -39,6 +44,58 @@ export const updateProfile = mutation({
 });
 
 /**
+ * Persist the legal identity collected during the `legal_info` onboarding
+ * step. Birthday is validated server-side (>= 18 years, plausible upper
+ * bound) and the country is normalized to ISO-3166-1 alpha-2. The audit
+ * entry produced here is the user's signed declaration of identity — keep
+ * the entry's metadata stable, it will be the anchor of the chain in any
+ * future succession proceeding.
+ */
+export const completeLegalInfo = auditedMutation({
+  action: "user.legal_info.confirmed",
+  resourceType: "user",
+  args: {
+    birthday: v.number(),
+    country: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+
+    if (!Number.isFinite(args.birthday)) {
+      throw new Error("Invalid birthday");
+    }
+    const ageMs = now - args.birthday;
+    if (ageMs < EIGHTEEN_YEARS_MS) {
+      throw new Error("You must be at least 18 years old to use Keeplas");
+    }
+    if (ageMs > MAX_AGE_MS) {
+      throw new Error("Birthday is implausibly old");
+    }
+
+    const country = args.country.trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(country)) {
+      throw new Error("Country must be a 2-letter ISO-3166-1 code");
+    }
+
+    await ctx.db.patch(userId, {
+      birthday: args.birthday,
+      country,
+      legalInfoConfirmedAt: now,
+      onboardingStep: "recovery_phrase",
+      updatedAt: now,
+    });
+  },
+  getMetadata: (args) => ({
+    country: args.country.toUpperCase(),
+    // Store year-of-birth only (not full timestamp) in metadata to keep the
+    // audit entry's PII surface minimal — the full birthday lives on the
+    // user record itself.
+    birthYear: new Date(args.birthday).getUTCFullYear(),
+  }),
+});
+
+/**
  * Lazily set the user's ML-KEM-768 (post-quantum) keypair used for
  * per-recipient DEK wrapping. The public key is stored in cleartext; the
  * secret key is encrypted client-side under the user's MasterKey and
@@ -49,7 +106,9 @@ export const updateProfile = mutation({
  * different public key is rejected to avoid silently invalidating prior
  * wrapped DEKs.
  */
-export const setPublicKey = mutation({
+export const setPublicKey = auditedMutation({
+  action: "user.public_key.set",
+  resourceType: "user",
   args: {
     publicKey: v.string(),
     encryptedAsymmetricSecretKey: v.string(),
@@ -76,7 +135,9 @@ export const setPublicKey = mutation({
 /**
  * Update the user's platform preferences (language, timezone).
  */
-export const updatePreferences = mutation({
+export const updatePreferences = auditedMutation({
+  action: "user.preferences.updated",
+  resourceType: "user",
   args: {
     language: v.optional(v.string()),
     timezone: v.optional(v.string()),
@@ -161,7 +222,9 @@ export async function wipeUserData(
  * confirmation phrase and that the user has already re-authenticated upstream.
  * `audit_logs` are intentionally preserved (immutable on-chain trail).
  */
-export const deleteAccount = mutation({
+export const deleteAccount = auditedMutation({
+  action: "user.account.deleted",
+  resourceType: "user",
   args: { confirmation: v.string() },
   handler: async (ctx, args) => {
     if (args.confirmation !== "DELETE") {

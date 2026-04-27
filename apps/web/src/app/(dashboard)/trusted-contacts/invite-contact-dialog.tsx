@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
   Dialog,
@@ -45,7 +45,7 @@ export function InviteContactDialog({
   onContactInvited,
   initialContactType = "trust",
 }: InviteContactDialogProps) {
-  const inviteContact = useMutation(api.trusted_contacts.inviteContact);
+  const inviteContact = useAuditedMutation(api.trusted_contacts.inviteContact);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -93,7 +93,7 @@ export function InviteContactDialog({
       setNotifyRecipient(false);
       setIntroMessage(DEFAULT_RECIPIENT_INTRO);
       onOpenChange(false);
-      onContactInvited?.(result.contactId);
+      onContactInvited?.((result as { contactId: Id<"trusted_contacts"> }).contactId);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to send invitation"));
     } finally {

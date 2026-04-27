@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { Button, Input, Label, UserAvatar } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
@@ -14,7 +14,7 @@ interface IdentitySectionProps {
 }
 
 export function IdentitySection({ user, onError }: IdentitySectionProps) {
-  const updateProfile = useMutation(api.users.updateProfile);
+  const updateProfile = useAuditedMutation(api.users.updateProfile);
 
   const [name, setName] = useState(user.name ?? "");
   const [phone, setPhone] = useState(user.phoneNumber ?? "");

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { ErrorAlert, Loader, Switch } from "@keeplas/ui";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-mode-section";
 
@@ -18,7 +19,7 @@ export function ContinuityControls() {
   const scenarioData = useQuery(api.scenarios.getScenario);
   const toggleActive = useMutation(api.life_check.toggleActive);
   const toggleTravelMode = useMutation(api.life_check.toggleTravelMode);
-  const setSafePause = useMutation(api.scenarios.setSafePause);
+  const setSafePause = useAuditedMutation(api.scenarios.setSafePause);
 
   const [travelUntil, setTravelUntil] = useState("");
   const [error, setError] = useState("");

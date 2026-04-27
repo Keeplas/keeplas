@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -144,8 +145,8 @@ function iconForKind(kind: FileKind): string {
 }
 
 export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
-  const createItem = useMutation(api.vault_items.createItem);
-  const generateUploadUrl = useMutation(api.vault_items.generateUploadUrl);
+  const createItem = useAuditedMutation(api.vault_items.createItem);
+  const generateUploadUrl = useAuditedMutation(api.vault_items.generateUploadUrl);
   const {
     encryptContentWithKey,
     encryptBlobWithKey,

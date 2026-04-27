@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
@@ -110,10 +111,10 @@ type DialogState =
 export function ScenarioPanel() {
   const data = useQuery(api.scenarios.getScenario);
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const getOrCreate = useMutation(api.scenarios.getOrCreateScenario);
-  const addStep = useMutation(api.scenarios.addStep);
-  const updateStep = useMutation(api.scenarios.updateStep);
-  const removeStep = useMutation(api.scenarios.removeStep);
+  const getOrCreate = useAuditedMutation(api.scenarios.getOrCreateScenario);
+  const addStep = useAuditedMutation(api.scenarios.addStep);
+  const updateStep = useAuditedMutation(api.scenarios.updateStep);
+  const removeStep = useAuditedMutation(api.scenarios.removeStep);
 
   const [dialog, setDialog] = useState<DialogState>(null);
 

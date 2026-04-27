@@ -1,7 +1,6 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
-import { createAuditLog } from "./audit";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 
@@ -82,25 +81,6 @@ export async function requireItemOwnership(
     throw new Error("Item not found");
   }
   return item;
-}
-
-/**
- * Log a vault item action (create/update/archive).
- */
-export async function logVaultAction(
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  action: string,
-  itemId: Id<"vault_items">
-) {
-  await createAuditLog(ctx, {
-    userId,
-    actorType: "user",
-    actorId: userId,
-    action,
-    resourceType: "vault_item",
-    resourceId: itemId,
-  });
 }
 
 export type NotificationType =

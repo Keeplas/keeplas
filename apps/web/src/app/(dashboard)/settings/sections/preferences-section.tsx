@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { Button, Label, Select, SelectItem, Switch } from "@keeplas/ui";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
@@ -47,7 +47,7 @@ const NOTIFICATION_ITEMS: Array<{
 ];
 
 export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
-  const updatePreferences = useMutation(api.users.updatePreferences);
+  const updatePreferences = useAuditedMutation(api.users.updatePreferences);
 
   const [language, setLanguage] = useState(user.language ?? "en-US");
   const [timezone, setTimezone] = useState(user.timezone ?? "UTC");

@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { requireAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation } from "./audit";
 
 async function assertContactsOwnedByUser(
   ctx: { db: { get: (id: any) => Promise<any> } },
@@ -37,7 +37,11 @@ export const getGroup = query({
   },
 });
 
-export const createGroup = mutation({
+export const createGroup = auditedMutation({
+  action: "recipient_group.created",
+  resourceType: "recipient_group",
+  getResourceId: (_args, result) => result as string,
+  getMetadata: (args) => ({ name: args.name }),
   args: {
     name: v.string(),
     description: v.optional(v.string()),
@@ -79,21 +83,14 @@ export const createGroup = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "recipient_group_created",
-      resourceType: "recipient_group",
-      resourceId: groupId,
-      metadata: JSON.stringify({ name: args.name }),
-    });
-
     return groupId;
   },
 });
 
-export const updateGroup = mutation({
+export const updateGroup = auditedMutation({
+  action: "recipient_group.updated",
+  resourceType: "recipient_group",
+  getResourceId: (args) => args.groupId,
   args: {
     groupId: v.id("recipient_groups"),
     name: v.optional(v.string()),
@@ -127,7 +124,10 @@ export const updateGroup = mutation({
   },
 });
 
-export const setDefaultGroup = mutation({
+export const setDefaultGroup = auditedMutation({
+  action: "recipient_group.set_default",
+  resourceType: "recipient_group",
+  getResourceId: (args) => args.groupId,
   args: { groupId: v.id("recipient_groups") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -155,7 +155,10 @@ export const setDefaultGroup = mutation({
   },
 });
 
-export const deleteGroup = mutation({
+export const deleteGroup = auditedMutation({
+  action: "recipient_group.deleted",
+  resourceType: "recipient_group",
+  getResourceId: (args) => args.groupId,
   args: { groupId: v.id("recipient_groups") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -163,20 +166,14 @@ export const deleteGroup = mutation({
     if (!group || group.userId !== userId) throw new Error("Group not found");
 
     await ctx.db.delete(args.groupId);
-
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "recipient_group_deleted",
-      resourceType: "recipient_group",
-      resourceId: args.groupId,
-      metadata: JSON.stringify({ name: group.name }),
-    });
   },
 });
 
-export const addMember = mutation({
+export const addMember = auditedMutation({
+  action: "recipient_group.member_added",
+  resourceType: "recipient_group",
+  getResourceId: (args) => args.groupId,
+  getMetadata: (args) => ({ contactId: args.contactId }),
   args: {
     groupId: v.id("recipient_groups"),
     contactId: v.id("trusted_contacts"),
@@ -200,7 +197,11 @@ export const addMember = mutation({
   },
 });
 
-export const removeMember = mutation({
+export const removeMember = auditedMutation({
+  action: "recipient_group.member_removed",
+  resourceType: "recipient_group",
+  getResourceId: (args) => args.groupId,
+  getMetadata: (args) => ({ contactId: args.contactId }),
   args: {
     groupId: v.id("recipient_groups"),
     contactId: v.id("trusted_contacts"),

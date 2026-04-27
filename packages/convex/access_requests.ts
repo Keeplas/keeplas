@@ -1,17 +1,31 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { createNotification, requireAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation } from "./audit";
 
 /**
  * Create a Mode B1 access request (on-demand, from trusted contact).
  */
-export const requestAccess = mutation({
+export const requestAccess = auditedMutation({
+  action: "access_request.created",
+  resourceType: "access_request",
   args: {
     contactId: v.id("trusted_contacts"),
     reason: v.string(),
     sectionsRequested: v.array(v.string()),
   },
+  resolveActor: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact) throw new Error("Contact not found");
+    return {
+      chainUserId: contact.userId,
+      actorType: "trusted_contact",
+      actorId: requesterId,
+    };
+  },
+  getResourceId: (_args, result) => (result as { requestId: string }).requestId,
+  getMetadata: (args) => ({ mode: "mode_b1", reason: args.reason }),
   handler: async (ctx, args) => {
     const requesterId = await requireAuth(ctx);
 
@@ -26,7 +40,6 @@ export const requestAccess = mutation({
       throw new Error("You do not have on-demand access permission");
     }
 
-    // Check for existing pending request
     const existingRequest = await ctx.db
       .query("access_requests")
       .withIndex("by_requester", (q) => q.eq("requestedBy", args.contactId))
@@ -38,7 +51,7 @@ export const requestAccess = mutation({
     }
 
     const now = Date.now();
-    const autoResponseAt = now + 24 * 60 * 60 * 1000; // 24h auto-deny
+    const autoResponseAt = now + 24 * 60 * 60 * 1000;
 
     const requestId = await ctx.db.insert("access_requests", {
       vaultUserId: contact.userId,
@@ -52,7 +65,6 @@ export const requestAccess = mutation({
       updatedAt: now,
     });
 
-    // Notify vault owner
     await createNotification(ctx, {
       userId: contact.userId,
       type: "access_request",
@@ -62,19 +74,6 @@ export const requestAccess = mutation({
       channels: ["push", "email"],
       relatedId: requestId,
       relatedType: "access_request",
-    });
-
-    await createAuditLog(ctx, {
-      userId: contact.userId,
-      actorType: "trusted_contact",
-      actorId: requesterId,
-      action: "access_requested",
-      resourceType: "access_request",
-      resourceId: requestId,
-      metadata: JSON.stringify({
-        mode: "mode_b1",
-        reason: args.reason,
-      }),
     });
 
     return { requestId };
@@ -95,7 +94,6 @@ export const getPendingRequests = query({
       )
       .collect();
 
-    // Enrich with contact info
     const enriched = [];
     for (const req of requests) {
       const contact = await ctx.db.get(req.requestedBy);
@@ -138,7 +136,14 @@ export const getAccessRequests = query({
 /**
  * Approve an access request (vault owner action).
  */
-export const approveRequest = mutation({
+export const approveRequest = auditedMutation({
+  action: "access_request.approved",
+  resourceType: "access_request",
+  getResourceId: (args) => args.requestId,
+  getMetadata: (args) => ({
+    accessType: args.accessType,
+    durationHours: args.durationHours,
+  }),
   args: {
     requestId: v.id("access_requests"),
     accessType: v.union(v.literal("read"), v.literal("read_download")),
@@ -168,7 +173,6 @@ export const approveRequest = mutation({
       updatedAt: now,
     });
 
-    // Notify the requesting contact
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
       await createNotification(ctx, {
@@ -183,19 +187,6 @@ export const approveRequest = mutation({
       });
     }
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "access_approved",
-      resourceType: "access_request",
-      resourceId: args.requestId,
-      metadata: JSON.stringify({
-        accessType: args.accessType,
-        durationHours: args.durationHours,
-      }),
-    });
-
     return { success: true };
   },
 });
@@ -203,7 +194,10 @@ export const approveRequest = mutation({
 /**
  * Deny an access request.
  */
-export const denyRequest = mutation({
+export const denyRequest = auditedMutation({
+  action: "access_request.denied",
+  resourceType: "access_request",
+  getResourceId: (args) => args.requestId,
   args: {
     requestId: v.id("access_requests"),
     reason: v.optional(v.string()),
@@ -227,7 +221,6 @@ export const denyRequest = mutation({
       updatedAt: now,
     });
 
-    // Notify the requesting contact
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
       await createNotification(ctx, {
@@ -243,15 +236,6 @@ export const denyRequest = mutation({
       });
     }
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "access_denied",
-      resourceType: "access_request",
-      resourceId: args.requestId,
-    });
-
     return { success: true };
   },
 });
@@ -259,8 +243,21 @@ export const denyRequest = mutation({
 /**
  * Initiate Mode A (post-mortem) access.
  */
-export const initiateEmergencyAccess = mutation({
+export const initiateEmergencyAccess = auditedMutation({
+  action: "access_request.emergency_initiated",
+  resourceType: "access_request",
   args: { contactId: v.id("trusted_contacts") },
+  resolveActor: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact) throw new Error("Contact not found");
+    return {
+      chainUserId: contact.userId,
+      actorType: "trusted_contact",
+      actorId: requesterId,
+    };
+  },
+  getResourceId: (_args, result) => (result as { requestId: string }).requestId,
   handler: async (ctx, args) => {
     const requesterId = await requireAuth(ctx);
 
@@ -274,7 +271,6 @@ export const initiateEmergencyAccess = mutation({
 
     const now = Date.now();
 
-    // Check if there's an existing Mode A request for this vault
     const existingModeA = await ctx.db
       .query("access_requests")
       .withIndex("by_vault_user", (q) => q.eq("vaultUserId", contact.userId))
@@ -290,7 +286,6 @@ export const initiateEmergencyAccess = mutation({
       .first();
 
     if (existingModeA) {
-      // Add this contact to the quorum
       const contactsInitiated = existingModeA.contactsInitiated ?? [];
       if (contactsInitiated.includes(args.contactId)) {
         throw new Error("You have already initiated emergency access");
@@ -309,7 +304,6 @@ export const initiateEmergencyAccess = mutation({
       });
 
       if (quorumReached) {
-        // Notify vault owner about grace period
         await createNotification(ctx, {
           userId: contact.userId,
           type: "security_alert",
@@ -325,7 +319,6 @@ export const initiateEmergencyAccess = mutation({
       return { requestId: existingModeA._id, quorumReached };
     }
 
-    // Create new Mode A request
     const requestId = await ctx.db.insert("access_requests", {
       vaultUserId: contact.userId,
       requestedBy: args.contactId,
@@ -340,15 +333,6 @@ export const initiateEmergencyAccess = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId: contact.userId,
-      actorType: "trusted_contact",
-      actorId: requesterId,
-      action: "emergency_access_initiated",
-      resourceType: "access_request",
-      resourceId: requestId,
-    });
-
     return { requestId, quorumReached: false };
   },
 });
@@ -356,7 +340,10 @@ export const initiateEmergencyAccess = mutation({
 /**
  * Cancel emergency access during grace period (vault owner action).
  */
-export const cancelEmergencyAccess = mutation({
+export const cancelEmergencyAccess = auditedMutation({
+  action: "access_request.emergency_cancelled",
+  resourceType: "access_request",
+  getResourceId: (args) => args.requestId,
   args: { requestId: v.id("access_requests") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -371,10 +358,7 @@ export const cancelEmergencyAccess = mutation({
 
     const now = Date.now();
 
-    if (
-      request.gracePeriodEndsAt &&
-      now > request.gracePeriodEndsAt
-    ) {
+    if (request.gracePeriodEndsAt && now > request.gracePeriodEndsAt) {
       throw new Error("Grace period has expired");
     }
 
@@ -385,7 +369,6 @@ export const cancelEmergencyAccess = mutation({
       updatedAt: now,
     });
 
-    // Notify all contacts who initiated
     if (request.contactsInitiated) {
       for (const contactId of request.contactsInitiated) {
         const contact = await ctx.db.get(contactId);
@@ -402,15 +385,6 @@ export const cancelEmergencyAccess = mutation({
         }
       }
     }
-
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "emergency_access_cancelled",
-      resourceType: "access_request",
-      resourceId: args.requestId,
-    });
 
     return { success: true };
   },

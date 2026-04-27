@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import {
   Button,
   ErrorAlert,
@@ -17,7 +18,7 @@ import { getErrorMessage } from "@/lib/utils";
 
 export default function TerminatePage() {
   const router = useRouter();
-  const deleteAccount = useMutation(api.users.deleteAccount);
+  const deleteAccount = useAuditedMutation(api.users.deleteAccount);
   const { signOut } = useAuthActions();
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);

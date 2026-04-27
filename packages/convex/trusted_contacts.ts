@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 import { createNotification, requireAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation } from "./audit";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -60,7 +60,16 @@ export const getContactCount = query({
  * Invite a new contact. Pass contactType="recipient_only" to skip the
  * social-recovery role (no shard, no 5-cap).
  */
-export const inviteContact = mutation({
+export const inviteContact = auditedMutation({
+  action: "trusted_contact.invited",
+  resourceType: "trusted_contact",
+  getResourceId: (_args, result) =>
+    (result as { contactId: string }).contactId,
+  getMetadata: (args) => ({
+    email: args.email,
+    role: args.role,
+    contactType: args.contactType ?? "trust",
+  }),
   args: {
     name: v.string(),
     email: v.string(),
@@ -168,20 +177,6 @@ export const inviteContact = mutation({
       relatedType: "trusted_contact",
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "contact_invited",
-      resourceType: "trusted_contact",
-      resourceId: contactId,
-      metadata: JSON.stringify({
-        email: args.email,
-        role: args.role,
-        contactType,
-      }),
-    });
-
     return { contactId, invitationToken };
   },
 });
@@ -218,11 +213,30 @@ export const getInvitationByToken = query({
 /**
  * Accept an invitation (called by the invited contact after they create an account).
  */
-export const acceptInvitation = mutation({
+export const acceptInvitation = auditedMutation({
+  action: "trusted_contact.accepted",
+  resourceType: "trusted_contact",
   args: {
     token: v.string(),
     contactPublicKey: v.optional(v.string()),
   },
+  resolveActor: async (ctx, args) => {
+    const contactUserId = await requireAuth(ctx);
+    const contact = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_invitation_token", (q) =>
+        q.eq("invitationToken", args.token)
+      )
+      .first();
+    if (!contact) throw new Error("Invalid invitation token");
+    return {
+      chainUserId: contact.userId,
+      actorType: "trusted_contact",
+      actorId: contactUserId,
+    };
+  },
+  getResourceId: (_args, result) =>
+    (result as { contactRecordId: string }).contactRecordId,
   handler: async (ctx, args) => {
     const contactUserId = await requireAuth(ctx);
 
@@ -238,13 +252,11 @@ export const acceptInvitation = mutation({
       throw new Error("This invitation has already been processed");
     }
 
-    // Check token is not expired (72h)
     const expiresAt = contact.invitedAt + 72 * 60 * 60 * 1000;
     if (Date.now() > expiresAt) {
       throw new Error("This invitation has expired");
     }
 
-    // Prevent self-invitation
     if (contact.userId === contactUserId) {
       throw new Error("You cannot accept your own invitation");
     }
@@ -259,7 +271,6 @@ export const acceptInvitation = mutation({
       updatedAt: now,
     });
 
-    // Notify the vault owner
     await createNotification(ctx, {
       userId: contact.userId,
       type: "contact_confirmed",
@@ -271,26 +282,36 @@ export const acceptInvitation = mutation({
       relatedType: "trusted_contact",
     });
 
-    await createAuditLog(ctx, {
-      userId: contact.userId,
-      actorType: "trusted_contact",
-      actorId: contactUserId,
-      action: "contact_accepted",
-      resourceType: "trusted_contact",
-      resourceId: contact._id,
-    });
-
-    return { success: true };
+    return { success: true, contactRecordId: contact._id };
   },
 });
 
 /**
  * Decline an invitation.
  */
-export const declineInvitation = mutation({
+export const declineInvitation = auditedMutation({
+  action: "trusted_contact.declined",
+  resourceType: "trusted_contact",
   args: { token: v.string() },
-  handler: async (ctx, args) => {
+  resolveActor: async (ctx, args) => {
     const contactUserId = await requireAuth(ctx);
+    const contact = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_invitation_token", (q) =>
+        q.eq("invitationToken", args.token)
+      )
+      .first();
+    if (!contact) throw new Error("Invalid invitation token");
+    return {
+      chainUserId: contact.userId,
+      actorType: "trusted_contact",
+      actorId: contactUserId,
+    };
+  },
+  getResourceId: (_args, result) =>
+    (result as { contactRecordId: string }).contactRecordId,
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
 
     const contact = await ctx.db
       .query("trusted_contacts")
@@ -319,14 +340,17 @@ export const declineInvitation = mutation({
       relatedType: "trusted_contact",
     });
 
-    return { success: true };
+    return { success: true, contactRecordId: contact._id };
   },
 });
 
 /**
  * Store an encrypted shard for a contact (called by the vault owner after contact accepts).
  */
-export const storeEncryptedShard = mutation({
+export const storeEncryptedShard = auditedMutation({
+  action: "trusted_contact.shard_distributed",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: {
     contactId: v.id("trusted_contacts"),
     encryptedShard: v.string(),
@@ -351,15 +375,6 @@ export const storeEncryptedShard = mutation({
       updatedAt: Date.now(),
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "shard_distributed",
-      resourceType: "trusted_contact",
-      resourceId: args.contactId,
-    });
-
     return { success: true };
   },
 });
@@ -367,7 +382,10 @@ export const storeEncryptedShard = mutation({
 /**
  * Toggle first responder designation.
  */
-export const toggleFirstResponder = mutation({
+export const toggleFirstResponder = auditedMutation({
+  action: "trusted_contact.first_responder_toggled",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -406,7 +424,10 @@ export const toggleFirstResponder = mutation({
 /**
  * Toggle medical contact designation.
  */
-export const toggleMedicalContact = mutation({
+export const toggleMedicalContact = auditedMutation({
+  action: "trusted_contact.medical_contact_toggled",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -430,7 +451,10 @@ export const toggleMedicalContact = mutation({
  * `alert_authority` action — only fires after a confirmed Life Check
  * failure. Multiple legal authorities are allowed (no singleton).
  */
-export const toggleLegalAuthority = mutation({
+export const toggleLegalAuthority = auditedMutation({
+  action: "trusted_contact.legal_authority_toggled",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -452,7 +476,11 @@ export const toggleLegalAuthority = mutation({
 /**
  * Update access modes for a contact.
  */
-export const updateAccessModes = mutation({
+export const updateAccessModes = auditedMutation({
+  action: "trusted_contact.access_modes_updated",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
+  getMetadata: (args) => ({ accessModes: args.accessModes }),
   args: {
     contactId: v.id("trusted_contacts"),
     accessModes: v.array(
@@ -485,7 +513,10 @@ export const updateAccessModes = mutation({
 /**
  * Revoke a trusted contact.
  */
-export const revokeContact = mutation({
+export const revokeContact = auditedMutation({
+  action: "trusted_contact.revoked",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -522,16 +553,6 @@ export const revokeContact = mutation({
       });
     }
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "contact_revoked",
-      resourceType: "trusted_contact",
-      resourceId: args.contactId,
-      metadata: JSON.stringify({ contactName: contact.name }),
-    });
-
     return { success: true };
   },
 });
@@ -539,7 +560,10 @@ export const revokeContact = mutation({
 /**
  * Resend invitation to a pending contact.
  */
-export const resendInvitation = mutation({
+export const resendInvitation = auditedMutation({
+  action: "trusted_contact.invitation_resent",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);

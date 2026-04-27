@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   generateRecipientKeyPair,
@@ -13,6 +13,7 @@ import {
 } from "@keeplas/crypto/kem";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import { useMasterKey } from "./master-key-context";
+import { useAuditedMutation } from "./use-audited-mutation";
 
 /**
  * Wrapped DEK envelope. With ML-KEM-768, everything (KEM ciphertext, AES-GCM
@@ -43,7 +44,7 @@ interface RecipientWrap extends WrappedDek {
 export function useRecipientCrypto() {
   const { masterKey } = useMasterKey();
   const viewer = useQuery(api.users.viewer);
-  const setPublicKey = useMutation(api.users.setPublicKey);
+  const setPublicKey = useAuditedMutation(api.users.setPublicKey);
 
   const ownerSecretKeyRef = useRef<Uint8Array | null>(null);
   const ownerPublicKeyB64Ref = useRef<string | null>(null);

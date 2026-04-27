@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Badge, Select, SelectItem } from "@keeplas/ui";
 
@@ -15,9 +16,9 @@ const DURATION_OPTIONS = [
 export function AccessRequestsSection() {
   const pendingRequests = useQuery(api.access_requests.getPendingRequests);
   const allRequests = useQuery(api.access_requests.getAccessRequests);
-  const approveRequest = useMutation(api.access_requests.approveRequest);
-  const denyRequest = useMutation(api.access_requests.denyRequest);
-  const cancelEmergency = useMutation(
+  const approveRequest = useAuditedMutation(api.access_requests.approveRequest);
+  const denyRequest = useAuditedMutation(api.access_requests.denyRequest);
+  const cancelEmergency = useAuditedMutation(
     api.access_requests.cancelEmergencyAccess
   );
 

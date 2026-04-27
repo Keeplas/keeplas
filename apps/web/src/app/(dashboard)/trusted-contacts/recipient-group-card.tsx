@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
@@ -19,8 +19,8 @@ export function RecipientGroupCard({ group, contacts }: RecipientGroupCardProps)
   const [showEdit, setShowEdit] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const setDefaultGroup = useMutation(api.recipient_groups.setDefaultGroup);
-  const deleteGroup = useMutation(api.recipient_groups.deleteGroup);
+  const setDefaultGroup = useAuditedMutation(api.recipient_groups.setDefaultGroup);
+  const deleteGroup = useAuditedMutation(api.recipient_groups.deleteGroup);
 
   const memberContacts = contacts.filter((c) =>
     group.memberContactIds.includes(c._id)

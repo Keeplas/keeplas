@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useState } from "react";
-import { useQuery, useMutation, useConvexAuth } from "convex/react";
+import { useQuery, useConvexAuth } from "convex/react";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,10 +28,10 @@ export default function InvitationPage({
   const invitation = useQuery(api.trusted_contacts.getInvitationByToken, {
     token,
   });
-  const acceptInvitation = useMutation(
+  const acceptInvitation = useAuditedMutation(
     api.trusted_contacts.acceptInvitation
   );
-  const declineInvitation = useMutation(
+  const declineInvitation = useAuditedMutation(
     api.trusted_contacts.declineInvitation
   );
   const { ensureOwnerKeypair, isReady: cryptoReady } = useRecipientCrypto();

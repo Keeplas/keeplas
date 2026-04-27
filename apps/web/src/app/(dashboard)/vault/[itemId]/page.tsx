@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -43,8 +44,8 @@ export default function VaultItemPage() {
   const itemId = params.itemId as Id<"vault_items">;
 
   const item = useQuery(api.vault_items.getItem, { itemId });
-  const updateItem = useMutation(api.vault_items.updateItem);
-  const deleteItem = useMutation(api.vault_items.deleteItem);
+  const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
   const {
     decryptContent,
     encryptContent,
