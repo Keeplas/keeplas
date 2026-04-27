@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
-import { phraseToKey } from "@keeplas/crypto/recovery";
+import { deriveRootKey } from "@keeplas/crypto/kdf";
 import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
@@ -19,36 +19,43 @@ interface KeyGenerationStepProps {
 }
 
 type GenerationPhase =
-  | "deriving_key"
+  | "deriving_root"
   | "splitting_shards"
-  | "encrypting_bundle"
+  | "wrapping_master_key"
   | "storing"
   | "complete"
   | "error";
 
 const PHASE_LABELS: Record<GenerationPhase, string> = {
-  deriving_key: "Deriving your Secret Key...",
+  deriving_root: "Deriving your Root Key from your 24 words...",
   splitting_shards: "Creating recovery fragments...",
-  encrypting_bundle: "Encrypting key bundle...",
+  wrapping_master_key: "Sealing your Master Key...",
   storing: "Securing your vault...",
   complete: "Vault secured!",
   error: "An error occurred",
 };
 
 const PHASE_PROGRESS: Record<GenerationPhase, number> = {
-  deriving_key: 20,
-  splitting_shards: 40,
-  encrypting_bundle: 60,
-  storing: 80,
+  deriving_root: 25,
+  splitting_shards: 50,
+  wrapping_master_key: 75,
+  storing: 90,
   complete: 100,
   error: 0,
 };
+
+const VISIBLE_PHASES = [
+  "deriving_root",
+  "splitting_shards",
+  "wrapping_master_key",
+  "storing",
+] as const;
 
 export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps) {
   const router = useRouter();
   const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
-  const [phase, setPhase] = useState<GenerationPhase>("deriving_key");
+  const [phase, setPhase] = useState<GenerationPhase>("deriving_root");
   const [error, setError] = useState("");
   const startedRef = useRef(false);
 
@@ -58,67 +65,66 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
 
     async function generateAndStore() {
       try {
-        // Phase 1: Derive key from recovery phrase
-        setPhase("deriving_key");
-        const masterKey = await phraseToKey(phrase);
+        // Phase 1: derive RootKey from the 24 words via Argon2id with a
+        // freshly generated user-specific salt. The phrase never leaves the
+        // client; the server stores only the salt.
+        setPhase("deriving_root");
+        const phraseSalt = crypto.getRandomValues(new Uint8Array(16));
+        const rootKey = await deriveRootKey(phrase, phraseSalt, {
+          extractable: false,
+        });
 
-        // Store Master Key in memory for vault operations
-        setMasterKey(masterKey);
-
-        // Phase 2: Export key and split into Shamir shards
-        setPhase("splitting_shards");
-        const rawKey = new Uint8Array(
+        // Phase 2: generate a fresh MasterKey, then Shamir-split it for
+        // trusted-contact recovery. RootKey wraps MasterKey; trusted-contact
+        // shards reconstruct the MasterKey directly without RootKey.
+        const masterKey = await generateMasterKey();
+        const rawMasterKey = new Uint8Array(
           await crypto.subtle.exportKey("raw", masterKey)
         );
-        const shards = await split(rawKey, 5, 3);
 
-        // Phase 3: Encrypt key bundle for storage
-        // For MVP: we use a simple key wrapping approach
-        // The Master Key is encrypted with a random wrapping key stored alongside
-        // (In Phase 2 with Passkey, this will use the Passkey credential)
-        setPhase("encrypting_bundle");
+        setPhase("splitting_shards");
+        const shards = await split(rawMasterKey, 5, 3);
 
-        // Generate a wrapping key for the key bundle
-        const wrappingKey = await generateMasterKey();
+        // Phase 3: wrap MasterKey with RootKey -> bundle stored on the server
+        setPhase("wrapping_master_key");
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        const encryptedKey = await crypto.subtle.encrypt(
+        const wrapped = await crypto.subtle.encrypt(
           { name: "AES-GCM", iv },
-          wrappingKey,
-          rawKey
-        );
-        const wrappingKeyRaw = new Uint8Array(
-          await crypto.subtle.exportKey("raw", wrappingKey)
+          rootKey,
+          rawMasterKey
         );
 
-        // Bundle: wrapping key + IV + encrypted master key
+        const phraseSaltB64 = uint8ToBase64(phraseSalt);
         const bundle = {
-          wrappingKey: uint8ToBase64(wrappingKeyRaw),
+          version: 2,
+          phraseSalt: phraseSaltB64,
           iv: uint8ToBase64(iv),
-          encryptedMasterKey: uint8ToBase64(new Uint8Array(encryptedKey)),
+          encryptedMasterKey: uint8ToBase64(new Uint8Array(wrapped)),
         };
 
-        // Store shard 1 in localStorage (device shard)
+        // Shard 1 stays on this device; shard 5 is the Keeplas custodian
+        // shard. Shards 2–4 are reserved for trusted contacts (later step).
         const shard1Base64 = uint8ToBase64(shards[0]);
         try {
           localStorage.setItem(STORAGE_KEYS.deviceShard, shard1Base64);
         } catch {
-          // localStorage may not be available — continue anyway
+          // localStorage may be unavailable (private mode) — non-fatal.
         }
-
-        // Shard 5 = Keeplas shard (encrypted for Keeplas server)
-        // For MVP: simple base64 encoding (post-MVP: RSA/ZK encryption)
         const keeplasShard = uint8ToBase64(shards[4]);
 
-        // Phase 4: Store in Convex
+        // Phase 4: persist
         setPhase("storing");
         await storeKeyBundle({
           encryptedKeyBundle: JSON.stringify(bundle),
+          phraseSalt: phraseSaltB64,
           keeplasShard,
         });
 
-        // Clear raw key material from memory
-        rawKey.fill(0);
-        wrappingKeyRaw.fill(0);
+        // Keep the live MasterKey for the rest of the session.
+        setMasterKey(masterKey);
+
+        // Wipe sensitive raw bytes from memory.
+        rawMasterKey.fill(0);
 
         setPhase("complete");
 
@@ -168,8 +174,8 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">
           {phase === "complete"
-            ? "Your Secret Key has been generated and secured. You can now start adding items to your vault."
-            : "Your Secret Key is being generated and encrypted. This happens entirely on your device."}
+            ? "Your Master Key is sealed by your 24 words. You can now start adding items to your vault."
+            : "Your keys are derived and sealed entirely on your device. We never see your phrase."}
         </p>
       </div>
 
@@ -188,27 +194,11 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
 
       {/* Phase indicators */}
       <div className="space-y-3 text-left max-w-sm mx-auto">
-        {(
-          [
-            "deriving_key",
-            "splitting_shards",
-            "encrypting_bundle",
-            "storing",
-          ] as const
-        ).map((p) => {
-          const phaseIndex = [
-            "deriving_key",
-            "splitting_shards",
-            "encrypting_bundle",
-            "storing",
-          ].indexOf(p);
-          const currentIndex = [
-            "deriving_key",
-            "splitting_shards",
-            "encrypting_bundle",
-            "storing",
-            "complete",
-          ].indexOf(phase);
+        {VISIBLE_PHASES.map((p) => {
+          const phaseIndex = VISIBLE_PHASES.indexOf(p);
+          const currentIndex = [...VISIBLE_PHASES, "complete" as const].indexOf(
+            phase as (typeof VISIBLE_PHASES)[number] | "complete"
+          );
           const isDone = currentIndex > phaseIndex;
           const isCurrent = phase === p;
 

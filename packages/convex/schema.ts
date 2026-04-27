@@ -24,8 +24,6 @@ export default defineSchema({
         v.union(
           v.literal("passkey"),
           v.literal("email"),
-          v.literal("google"),
-          v.literal("apple"),
           v.literal("totp")
         )
       )
@@ -33,7 +31,13 @@ export default defineSchema({
 
     // Crypto fields — populated during onboarding (Phase 2)
     publicKey: v.optional(v.string()),
+    // JSON envelope { version, phraseSalt, iv, encryptedMasterKey }. The
+    // MasterKey is wrapped client-side by a RootKey derived from the user's
+    // 24-word phrase via Argon2id; the server never sees plaintext keys.
     encryptedKeyBundle: v.optional(v.string()),
+    // Per-user salt for Argon2id derivation of the RootKey. Public — served
+    // alongside the bundle so the client can re-derive the RootKey on login.
+    phraseSalt: v.optional(v.string()),
     recoveryPhraseHash: v.optional(v.string()),
     recoveryVerified: v.optional(v.boolean()),
     zkVerifierKey: v.optional(v.string()),

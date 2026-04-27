@@ -247,12 +247,14 @@ export const storeRecoveryPhraseHash = mutation({
 });
 
 /**
- * Store the encrypted key bundle and Keeplas shard after key generation.
- * These are encrypted client-side — the server never sees plaintext keys.
+ * Store the encrypted key bundle, the Argon2id phrase salt, and the Keeplas
+ * Shamir shard after key generation. All values are produced client-side —
+ * the server never sees plaintext keys nor the recovery phrase.
  */
 export const storeKeyBundle = mutation({
   args: {
     encryptedKeyBundle: v.string(),
+    phraseSalt: v.string(),
     keeplasShard: v.string(),
   },
   handler: async (ctx, args) => {
@@ -260,6 +262,7 @@ export const storeKeyBundle = mutation({
 
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
+      phraseSalt: args.phraseSalt,
       keeplasShard: args.keeplasShard,
       onboardingStep: "complete",
       vaultIntegrityScore: 0,

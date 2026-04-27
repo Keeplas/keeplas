@@ -70,17 +70,13 @@ export function SignupForm() {
         badgeLabel="Email Confirmation"
         heading="Confirm your email"
         description={`We sent a 6-digit code to ${email}. Enter it below to activate your vault.`}
-        ssoRedirectTo="/onboarding"
         footer={{
           prompt: "Wrong email?",
           label: "Start over",
           href: "/signup",
           accent: "secondary",
         }}
-        loading={loading}
         error={error}
-        onError={setError}
-        onLoadingChange={setLoading}
       >
         <form onSubmit={handleVerifyCode} className="space-y-6">
           <div className="space-y-2">
@@ -121,17 +117,13 @@ export function SignupForm() {
       badgeLabel="Zero-Knowledge Encryption"
       heading="Create your sanctuary"
       description="Enter your details to begin your digital legacy."
-      ssoRedirectTo="/onboarding"
       footer={{
         prompt: "Already an owner?",
         label: "Access Vault",
         href: "/login",
         accent: "primary",
       }}
-      loading={loading}
       error={error}
-      onError={setError}
-      onLoadingChange={setLoading}
       sideDecoration={<LegacyCardPreview />}
     >
       <form onSubmit={handlePasswordSignUp} className="space-y-6">
@@ -170,6 +162,10 @@ export function SignupForm() {
               required
               minLength={8}
             />
+            <p className="text-label-md text-on-surface-variant">
+              Your password authenticates you. The next step generates 24
+              recovery words that encrypt your data — that&apos;s the real key.
+            </p>
           </div>
         </div>
 

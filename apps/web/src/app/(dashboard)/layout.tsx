@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
+import { UnlockGate } from "@/components/unlock-gate";
 import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
 import { usePassiveSignal } from "@/lib/use-passive-signal";
 import { api } from "@keeplas/backend/_generated/api";
@@ -66,12 +67,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-      <Sidebar />
-      <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">
-        {children}
-      </main>
-      <FabAddEntry />
-    </div>
+    <UnlockGate>
+      <div className="flex flex-col md:flex-row min-h-screen">
+        <Sidebar />
+        <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">
+          {children}
+        </main>
+        <FabAddEntry />
+      </div>
+    </UnlockGate>
   );
 }

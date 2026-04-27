@@ -135,11 +135,12 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
             Why is this important?
           </h4>
           <p className="text-sm text-on-primary-container leading-relaxed">
-            Keeplas uses zero-knowledge encryption — we never store your
-            Recovery Words. If you lose access to all your devices, these words
-            are the <strong className="text-surface-container-lowest">only way</strong>{" "}
-            to recover your vault. There is no &ldquo;forgot password&rdquo; option. This
-            verification ensures you have a working backup before we proceed.
+            These 24 words are the <strong className="text-surface-container-lowest">only key</strong>{" "}
+            that encrypts your vault — we never see them. Your password just
+            authenticates you and can be reset with these same 24 words. But
+            the words themselves cannot be reset: only your trusted contacts
+            can recover them later via shared shards. Save them somewhere safe
+            now.
           </p>
         </div>
       </div>

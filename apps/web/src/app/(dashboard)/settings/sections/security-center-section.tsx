@@ -7,6 +7,7 @@ import { cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
+import { DeviceUnlockManager } from "./device-unlock-manager";
 import { PasskeyManager } from "./passkey-manager";
 import { TotpManager } from "./totp-manager";
 
@@ -241,6 +242,7 @@ export function SecurityCenterSection() {
           </div>
         </section>
 
+        <DeviceUnlockManager />
         <PasskeyManager />
         <TotpManager />
       </div>

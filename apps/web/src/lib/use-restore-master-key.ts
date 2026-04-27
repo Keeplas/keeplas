@@ -14,12 +14,33 @@ function base64ToUint8(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+type LegacyBundle = {
+  version?: 1;
+  wrappingKey: string;
+  iv: string;
+  encryptedMasterKey: string;
+};
+
+type V2Bundle = {
+  version: 2;
+  phraseSalt: string;
+  iv: string;
+  encryptedMasterKey: string;
+};
+
 /**
- * Restores the Master Key from the encrypted key bundle stored in Convex.
- * Called on dashboard load for returning users who already completed onboarding.
+ * Restores the MasterKey from the encrypted key bundle stored in Convex.
+ * Called on dashboard load for returning users who already completed
+ * onboarding.
  *
- * MVP approach: the bundle contains the wrapping key + IV + encrypted master key.
- * We decrypt the master key using the wrapping key.
+ * V2 bundles (Argon2id-derived RootKey from the 24-word phrase) cannot be
+ * unwrapped without the user-supplied phrase or a device-unlock secret —
+ * Phase 5 will replace this hook with a prompt-driven flow. Until then we
+ * skip silently so the app does not crash; the user will need to re-enter
+ * their 24 words via the upcoming login flow.
+ *
+ * V1 bundles (legacy plaintext-wrappingKey) are still supported here so
+ * any pre-existing dev account keeps working through the migration window.
  */
 export function useRestoreMasterKey() {
   const { masterKey, setMasterKey } = useMasterKey();
@@ -27,19 +48,28 @@ export function useRestoreMasterKey() {
   const restoringRef = useRef(false);
 
   useEffect(() => {
-    if (masterKey) return; // Already have it
-    if (!user?.encryptedKeyBundle) return; // No bundle yet
-    if (restoringRef.current) return; // Already restoring
+    if (masterKey) return;
+    if (!user?.encryptedKeyBundle) return;
+    if (restoringRef.current) return;
     restoringRef.current = true;
 
     async function restore() {
       try {
-        const bundle = JSON.parse(user!.encryptedKeyBundle!);
-        const wrappingKeyRaw = base64ToUint8(bundle.wrappingKey);
-        const iv = base64ToUint8(bundle.iv);
-        const encryptedMasterKey = base64ToUint8(bundle.encryptedMasterKey);
+        const parsed = JSON.parse(user!.encryptedKeyBundle!) as
+          | LegacyBundle
+          | V2Bundle;
 
-        // Import the wrapping key
+        if ("version" in parsed && parsed.version === 2) {
+          // V2 bundle — RootKey required. Will be handled by the upcoming
+          // login + device-unlock flow.
+          return;
+        }
+
+        const legacy = parsed as LegacyBundle;
+        const wrappingKeyRaw = base64ToUint8(legacy.wrappingKey);
+        const iv = base64ToUint8(legacy.iv);
+        const encryptedMasterKey = base64ToUint8(legacy.encryptedMasterKey);
+
         const wrappingKey = await crypto.subtle.importKey(
           "raw",
           wrappingKeyRaw,
@@ -48,14 +78,12 @@ export function useRestoreMasterKey() {
           ["decrypt"]
         );
 
-        // Decrypt the master key
         const masterKeyRaw = await crypto.subtle.decrypt(
           { name: "AES-GCM", iv },
           wrappingKey,
           encryptedMasterKey
         );
 
-        // Import as AES-GCM key
         const restoredKey = await crypto.subtle.importKey(
           "raw",
           masterKeyRaw,

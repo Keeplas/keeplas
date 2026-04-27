@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./aes": "./src/aes/index.ts",
     "./encoding": "./src/encoding.ts",
+    "./kdf": "./src/kdf/index.ts",
     "./recovery": "./src/recovery/index.ts",
     "./rsa": "./src/rsa/index.ts",
     "./shamir": "./src/shamir/index.ts"
@@ -21,5 +22,8 @@
   "devDependencies": {
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"
+  },
+  "dependencies": {
+    "hash-wasm": "^4.12.0"
   }
 }

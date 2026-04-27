@@ -4,8 +4,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ErrorAlert } from "@keeplas/ui";
 import { AuthHeroSection } from "./auth-hero-section";
-import { SSOButtons } from "./sso-buttons";
-import { AuthDivider } from "./auth-divider";
 import { MobileBrand } from "./mobile-brand";
 
 interface FooterLink {
@@ -19,12 +17,8 @@ interface AuthFormShellProps {
   badgeLabel: string;
   heading: string;
   description: string;
-  ssoRedirectTo: string;
   footer: FooterLink;
-  loading: boolean;
   error: string;
-  onError: (message: string) => void;
-  onLoadingChange: (loading: boolean) => void;
   children: ReactNode;
   sideDecoration?: ReactNode;
 }
@@ -33,12 +27,8 @@ export function AuthFormShell({
   badgeLabel,
   heading,
   description,
-  ssoRedirectTo,
   footer,
-  loading,
   error,
-  onError,
-  onLoadingChange,
   children,
   sideDecoration,
 }: AuthFormShellProps) {
@@ -77,15 +67,6 @@ export function AuthFormShell({
           <ErrorAlert message={error} />
 
           {children}
-
-          <AuthDivider />
-
-          <SSOButtons
-            redirectTo={ssoRedirectTo}
-            disabled={loading}
-            onError={onError}
-            setLoading={onLoadingChange}
-          />
 
           <p className="mt-12 text-center text-body-md text-on-surface-variant">
             {footer.prompt}{" "}

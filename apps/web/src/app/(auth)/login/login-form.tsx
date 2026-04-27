@@ -2,6 +2,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Input, Label, PasswordInput } from "@keeplas/ui";
@@ -59,17 +60,13 @@ export function LoginForm() {
       badgeLabel="Identification Required"
       heading="Welcome back, Curator"
       description="Access your encrypted archives by verifying your credentials."
-      ssoRedirectTo="/dashboard"
       footer={{
         prompt: "New Curator?",
         label: "Request Access",
         href: "/signup",
         accent: "secondary",
       }}
-      loading={loading}
       error={error}
-      onError={setError}
-      onLoadingChange={setLoading}
     >
       <form onSubmit={handlePasswordSignIn} className="space-y-6">
         <div className="grid grid-cols-1 gap-5">
@@ -88,12 +85,12 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex justify-between items-end ml-1">
               <Label htmlFor="password">Password</Label>
-              <button
-                type="button"
+              <Link
+                href="/login/recovery"
                 className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
               >
-                Forgot?
-              </button>
+                Reset with 24 words
+              </Link>
             </div>
             <PasswordInput
               id="password"
