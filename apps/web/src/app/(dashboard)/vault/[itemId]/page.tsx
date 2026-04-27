@@ -235,28 +235,23 @@ export default function VaultItemPage() {
       let encryptedContent: string;
       let encryptedLinks: string;
       let ownerWrappedDek: string | undefined;
-      let ownerWrappedDekIv: string | undefined;
       let recipientKeysPayload: Array<{
         contactId: Id<"trusted_contacts">;
         wrappedDek: string;
-        wrappedDekIv: string;
       }> = [];
       let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" = "zero_knowledge";
 
-      if (item.ownerWrappedDek && item.ownerWrappedDekIv !== undefined) {
+      if (item.ownerWrappedDek) {
         const dek = await unwrapOwnerDek({
           wrappedDek: item.ownerWrappedDek,
-          wrappedDekIv: item.ownerWrappedDekIv,
         });
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         const wraps = await wrapExistingDek(dek, resolvedRecipients);
         ownerWrappedDek = wraps.ownerWrap.wrappedDek;
-        ownerWrappedDekIv = wraps.ownerWrap.wrappedDekIv;
         recipientKeysPayload = wraps.recipientWraps.map((rw) => ({
           contactId: rw.contactId as Id<"trusted_contacts">,
           wrappedDek: rw.wrappedDek,
-          wrappedDekIv: rw.wrappedDekIv,
         }));
       } else if (item.encryptionType === "zero_knowledge") {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
@@ -264,11 +259,9 @@ export default function VaultItemPage() {
         encryptedContent = await encryptContentWithKey(contentPayload, fresh.dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, fresh.dek);
         ownerWrappedDek = fresh.ownerWrap.wrappedDek;
-        ownerWrappedDekIv = fresh.ownerWrap.wrappedDekIv;
         recipientKeysPayload = fresh.recipientWraps.map((rw) => ({
           contactId: rw.contactId as Id<"trusted_contacts">,
           wrappedDek: rw.wrappedDek,
-          wrappedDekIv: rw.wrappedDekIv,
         }));
       } else {
         // Legacy item still encrypted under master key — keep that flow.
@@ -296,7 +289,6 @@ export default function VaultItemPage() {
         ...(nextEncryptionType === "zero_knowledge" && ownerWrappedDek
           ? {
               ownerWrappedDek,
-              ownerWrappedDekIv,
               recipientKeys: recipientKeysPayload,
             }
           : {}),

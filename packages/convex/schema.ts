@@ -30,11 +30,17 @@ export default defineSchema({
     ),
 
     // Crypto fields — populated during onboarding (Phase 2)
+    // Base64-serialized ML-KEM-768 public key (FIPS 203). Used by other
+    // users to wrap per-recipient DEKs and shards for this user.
     publicKey: v.optional(v.string()),
     // JSON envelope { version, phraseSalt, iv, encryptedMasterKey }. The
     // MasterKey is wrapped client-side by a RootKey derived from the user's
     // 24-word phrase via Argon2id; the server never sees plaintext keys.
     encryptedKeyBundle: v.optional(v.string()),
+    // JSON { ciphertext, iv } — the user's ML-KEM-768 secret key, AES-GCM
+    // wrapped client-side under their MasterKey. Stored separately from
+    // `encryptedKeyBundle` to avoid overwriting the MasterKey bundle.
+    encryptedAsymmetricSecretKey: v.optional(v.string()),
     // Per-user salt for Argon2id derivation of the RootKey. Public — served
     // alongside the bundle so the client can re-derive the RootKey on login.
     phraseSalt: v.optional(v.string()),
@@ -190,7 +196,9 @@ export default defineSchema({
         v.literal("explicit")
       )
     ),
+    // ML-KEM-768 + AES-GCM envelope (JSON: {v, alg, kem, iv, ct}).
     ownerWrappedDek: v.optional(v.string()),
+    // Deprecated — IV now lives inside the ownerWrappedDek envelope.
     ownerWrappedDekIv: v.optional(v.string()),
     accessLevel: accessLevelValidator,
 
@@ -243,8 +251,10 @@ export default defineSchema({
   vault_item_recipient_keys: defineTable({
     itemId: v.id("vault_items"),
     contactId: v.id("trusted_contacts"),
+    // ML-KEM-768 + AES-GCM envelope (JSON: {v, alg, kem, iv, ct}).
     wrappedDek: v.string(),
-    wrappedDekIv: v.string(),
+    // Deprecated — IV now lives inside the wrappedDek envelope.
+    wrappedDekIv: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_item", ["itemId"])

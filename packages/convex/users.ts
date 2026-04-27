@@ -39,17 +39,20 @@ export const updateProfile = mutation({
 });
 
 /**
- * Lazily set the user's RSA-OAEP keypair used for per-recipient DEK
- * wrapping. The public key is stored in cleartext; the private key is
- * encrypted client-side under the user's master key and stored in
- * `encryptedKeyBundle`. Idempotent: re-running with the same keypair is a
- * no-op; calling with a different public key is rejected to avoid
- * silently invalidating prior wrapped DEKs.
+ * Lazily set the user's ML-KEM-768 (post-quantum) keypair used for
+ * per-recipient DEK wrapping. The public key is stored in cleartext; the
+ * secret key is encrypted client-side under the user's MasterKey and
+ * stored in the dedicated `encryptedAsymmetricSecretKey` field — distinct
+ * from `encryptedKeyBundle` which holds the MasterKey wrap itself.
+ *
+ * Idempotent: re-running with the same keypair is a no-op; calling with a
+ * different public key is rejected to avoid silently invalidating prior
+ * wrapped DEKs.
  */
 export const setPublicKey = mutation({
   args: {
     publicKey: v.string(),
-    encryptedPrivateKey: v.string(),
+    encryptedAsymmetricSecretKey: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -64,7 +67,7 @@ export const setPublicKey = mutation({
 
     await ctx.db.patch(userId, {
       publicKey: args.publicKey,
-      encryptedKeyBundle: args.encryptedPrivateKey,
+      encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       updatedAt: Date.now(),
     });
   },

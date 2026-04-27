@@ -132,12 +132,13 @@ export function SignupForm() {
         className="block mb-6 p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
       >
         <p className="text-label-md text-secondary uppercase tracking-widest mb-2">
-          Before you sign up
+          Before you sign up · Quantum-safe end-to-end
         </p>
         <p className="text-body-md text-on-surface leading-relaxed">
           Your password is just authentication. Your <strong>24 recovery words</strong>{" "}
-          encrypt your data — we never see them. If you lose them, only your
-          trusted contacts can recover.
+          encrypt your data — we never see them. Per-recipient keys are
+          wrapped with <strong>ML-KEM-768</strong> (NIST post-quantum standard),
+          so a future quantum computer can&apos;t retroactively break what we hold.
         </p>
         <span className="inline-flex items-center gap-1 mt-2 text-label-md text-secondary font-bold group-hover:underline">
           Read how it works →

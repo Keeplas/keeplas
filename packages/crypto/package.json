@@ -9,8 +9,8 @@
     "./aes": "./src/aes/index.ts",
     "./encoding": "./src/encoding.ts",
     "./kdf": "./src/kdf/index.ts",
+    "./kem": "./src/kem/index.ts",
     "./recovery": "./src/recovery/index.ts",
-    "./rsa": "./src/rsa/index.ts",
     "./shamir": "./src/shamir/index.ts"
   },
   "scripts": {
@@ -24,6 +24,7 @@
     "vitest": "^3.2.1"
   },
   "dependencies": {
+    "@noble/post-quantum": "^0.6.1",
     "hash-wasm": "^4.12.0"
   }
 }

@@ -105,13 +105,21 @@ export default function SecurityPage() {
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 space-y-12">
         {/* Hero */}
         <header className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full shadow-sm">
-            <Icon
-              path={ICON_PATHS.shieldCheck}
-              className="w-5 h-5 text-secondary"
-            />
-            <span className="text-label-md text-primary">
-              Security & Privacy
+          <div className="inline-flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full shadow-sm">
+              <Icon
+                path={ICON_PATHS.shieldCheck}
+                className="w-5 h-5 text-secondary"
+              />
+              <span className="text-label-md text-primary">
+                Security & Privacy
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full shadow-sm">
+              <Icon path={ICON_PATHS.lock} className="w-5 h-5" />
+              <span className="text-label-md font-bold">
+                Quantum-safe end-to-end
+              </span>
             </span>
           </div>
           <h1 className="text-display-md md:text-display-lg text-primary">
@@ -120,7 +128,9 @@ export default function SecurityPage() {
           <p className="text-body-lg text-on-surface-variant max-w-2xl mx-auto">
             Four pillars: how you sign in, how your data is encrypted, how
             you unlock day-to-day, and what happens if you lose access. We
-            see encrypted bytes — never your data.
+            see encrypted bytes — never your data. Every per-recipient key
+            is wrapped with a NIST post-quantum KEM, so a future quantum
+            computer cannot retroactively break what we hold today.
           </p>
         </header>
 
@@ -150,12 +160,13 @@ export default function SecurityPage() {
           icon={ICON_PATHS.lock}
           badge="Pillar 2"
           title="Zero-Knowledge Encryption"
-          intro="Your vault is encrypted on your device, before anything reaches our servers. The keys are derived from 24 recovery words that you alone hold — we never see them, store them, or transmit them."
+          intro="Your vault is encrypted on your device, before anything reaches our servers. The keys are derived from 24 recovery words that you alone hold — we never see them, store them, or transmit them. Per-recipient sharing uses a NIST post-quantum KEM, so even a future quantum adversary cannot retroactively decrypt what we hold."
           bullets={[
             "24 BIP-39 words generated locally during onboarding.",
             "Argon2id derives a RootKey from your words + a per-user public salt.",
             "RootKey wraps a per-vault MasterKey (AES-256-GCM).",
-            "We see only the encrypted bundle and the public salt. Even if our database leaked, your data stays opaque.",
+            "Per-recipient key wrapping uses ML-KEM-768 (NIST FIPS 203) — quantum-resistant against future quantum computers.",
+            "We see only encrypted envelopes and the public salt. Even if our database leaked, your data stays opaque.",
           ]}
           technical={{
             title: "How it works (technical)",
@@ -163,7 +174,8 @@ export default function SecurityPage() {
               "Phrase → Argon2id(memorySize 19 MiB, iterations 2, parallelism 1, hashLength 32) → RootKey",
               "MasterKey · AES-256-GCM · randomly generated, never shared in cleartext",
               "encryptedKeyBundle · { phraseSalt, iv, encryptedMasterKey }",
-              "Vault items · per-item DEK wrapped by MasterKey · all encryption in WebCrypto API client-side",
+              "Recipient encryption · ML-KEM-768 (NIST FIPS 203, August 2024) · KEM-DEM with AES-256-GCM",
+              "Vault items · per-item DEK wrapped by MasterKey · all encryption in WebCrypto + @noble/post-quantum client-side",
             ],
           }}
         />
@@ -194,18 +206,19 @@ export default function SecurityPage() {
           icon={ICON_PATHS.users}
           badge="Pillar 4"
           title="Recovery"
-          intro="Your 24 words are the only secret without a server-side reset path. If you lose them, only your trusted contacts can help — through Shamir Secret Sharing. We have no master key. No backdoor."
+          intro="Your 24 words are the only secret without a server-side reset path. If you lose them, only your trusted contacts can help — through Shamir Secret Sharing wrapped with a post-quantum KEM. We have no master key. No backdoor."
           bullets={[
             "Lost password → reset with your 24 words. Vault unaffected.",
             "Lost 2FA → reset with your 24 words.",
             "Lost the 24 words → trusted contacts hold encrypted shards. A quorum can reconstruct.",
+            "Trusted-contact shards are wrapped with ML-KEM-768, so even harvest-now-decrypt-later attacks fail decades from now.",
             "Posthumous continuity → trusted contacts gain access via configurable life-check failures.",
           ]}
           technical={{
             title: "How it works (technical)",
             lines: [
               "Shamir Secret Sharing · 5 shards · threshold 3 to reconstruct MasterKey",
-              "Shards · 1 local · 1 Keeplas custodian · 3 distributed to trusted contacts (RSA-OAEP wrapped to each contact's public key)",
+              "Shards · 1 local · 1 Keeplas custodian · 3 distributed to trusted contacts (ML-KEM-768 + AES-256-GCM wrapped to each contact's public key)",
               "Recovery phrase verification · SHA-256(phrase) compared server-side · phrase never sent",
               "No master key, no escrow, no employee or court-ordered access path",
             ],
@@ -240,7 +253,11 @@ export default function SecurityPage() {
             />
             <FaqItem
               question="What encryption algorithms do you use?"
-              answer="Argon2id (OWASP 2024 params) for key derivation, AES-256-GCM for symmetric encryption, RSA-OAEP for wrapping per-recipient keys, SHA-256 for verifiers, and Shamir Secret Sharing over GF(256) for trusted-contact recovery. All cryptography runs client-side via the Web Crypto API."
+              answer="Argon2id (OWASP 2024 params) for key derivation, AES-256-GCM for symmetric encryption, ML-KEM-768 (NIST FIPS 203, the post-quantum KEM standardized in August 2024) for wrapping per-recipient keys, SHA-256 for verifiers, and Shamir Secret Sharing over GF(256) for trusted-contact recovery. Cryptography runs client-side via the Web Crypto API and @noble/post-quantum."
+            />
+            <FaqItem
+              question="Are you quantum-safe?"
+              answer="Yes, end-to-end. Symmetric primitives (AES-256-GCM, Argon2id, SHA-256, Shamir Secret Sharing) are all quantum-resistant by construction. The asymmetric layer — used to wrap per-recipient keys and trusted-contact shards — uses ML-KEM-768, the NIST-standardized post-quantum KEM (FIPS 203, August 2024). This blocks the harvest-now-decrypt-later threat: data we store today stays opaque even to a future adversary running Shor's algorithm on a large quantum computer. Most password managers (Bitwarden, 1Password) have not yet migrated; we built Keeplas post-quantum from day one because vault data must stay confidential for decades."
             />
           </div>
         </section>

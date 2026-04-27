@@ -4,55 +4,66 @@ import { useCallback, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
-  generateRsaKeypair,
-  exportPublicKey,
-  importPublicKey,
-  exportPrivateKeyJwk,
-  importPrivateKeyJwk,
-  wrapDek,
+  generateRecipientKeyPair,
+  parseSecretKey,
+  serializePublicKey,
+  serializeSecretKey,
   unwrapDek,
-  type WrappedDek,
-} from "@keeplas/crypto";
+  wrapDek,
+} from "@keeplas/crypto/kem";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import { useMasterKey } from "./master-key-context";
+
+/**
+ * Wrapped DEK envelope. With ML-KEM-768, everything (KEM ciphertext, AES-GCM
+ * IV, ciphertext) is packed inside a single JSON string — no separate IV
+ * field. The legacy `wrappedDekIv` server field is kept optional for
+ * backward-compat but is no longer written.
+ */
+export interface WrappedDek {
+  wrappedDek: string;
+}
 
 interface RecipientWrap extends WrappedDek {
   contactId: string;
 }
 
 /**
- * Per-recipient DEK wrapping. Lazily generates the user's RSA keypair on
- * first need and persists it (public key cleartext, private key encrypted
- * under the master key). Provides {@link wrapDekForRecipients} which
- * yields a list of `{ contactId, wrappedDek, wrappedDekIv }` rows ready
- * to ship to the `vault_items.createItem` mutation, plus the owner's own
- * wrapped DEK so the owner can decrypt the item later.
+ * Per-recipient DEK wrapping. Lazily generates the user's ML-KEM-768
+ * keypair on first need and persists it (public key cleartext, secret
+ * key encrypted under the master key, in `users.encryptedAsymmetricSecretKey`).
+ *
+ * The wrap envelope embeds:
+ *  - the ML-KEM-768 KEM ciphertext (base64),
+ *  - the AES-GCM IV (base64),
+ *  - the AES-GCM-encrypted DEK (base64),
+ * all under a single JSON string ready to land in `vault_items.ownerWrappedDek`
+ * or `vault_item_recipient_keys.wrappedDek`.
  */
 export function useRecipientCrypto() {
   const { masterKey } = useMasterKey();
   const viewer = useQuery(api.users.viewer);
   const setPublicKey = useMutation(api.users.setPublicKey);
 
-  const ownerPrivateKeyRef = useRef<CryptoKey | null>(null);
-  const ownerPublicKeyRef = useRef<CryptoKey | null>(null);
+  const ownerSecretKeyRef = useRef<Uint8Array | null>(null);
+  const ownerPublicKeyB64Ref = useRef<string | null>(null);
 
   const ensureOwnerKeypair = useCallback(async (): Promise<{
-    publicKey: CryptoKey;
-    privateKey: CryptoKey;
+    publicKeyB64: string;
+    secretKey: Uint8Array;
   }> => {
     if (!masterKey) throw new Error("Master Key not available");
     if (!viewer) throw new Error("Viewer not loaded");
 
-    if (ownerPublicKeyRef.current && ownerPrivateKeyRef.current) {
+    if (ownerPublicKeyB64Ref.current && ownerSecretKeyRef.current) {
       return {
-        publicKey: ownerPublicKeyRef.current,
-        privateKey: ownerPrivateKeyRef.current,
+        publicKeyB64: ownerPublicKeyB64Ref.current,
+        secretKey: ownerSecretKeyRef.current,
       };
     }
 
-    if (viewer.publicKey && viewer.encryptedKeyBundle) {
-      const publicKey = await importPublicKey(viewer.publicKey);
-      const bundle = JSON.parse(viewer.encryptedKeyBundle) as {
+    if (viewer.publicKey && viewer.encryptedAsymmetricSecretKey) {
+      const bundle = JSON.parse(viewer.encryptedAsymmetricSecretKey) as {
         ciphertext: string;
         iv: string;
       };
@@ -61,38 +72,40 @@ export function useRecipientCrypto() {
         masterKey,
         base64ToUint8(bundle.ciphertext)
       );
-      const jwk = JSON.parse(new TextDecoder().decode(plaintext)) as JsonWebKey;
-      const privateKey = await importPrivateKeyJwk(jwk);
+      const secretKeyB64 = new TextDecoder().decode(plaintext);
+      const secretKey = parseSecretKey(secretKeyB64);
 
-      ownerPublicKeyRef.current = publicKey;
-      ownerPrivateKeyRef.current = privateKey;
-      return { publicKey, privateKey };
+      ownerPublicKeyB64Ref.current = viewer.publicKey;
+      ownerSecretKeyRef.current = secretKey;
+      return { publicKeyB64: viewer.publicKey, secretKey };
     }
 
-    const keypair = await generateRsaKeypair();
-    const publicSpki = await exportPublicKey(keypair.publicKey);
-    const jwk = await exportPrivateKeyJwk(keypair.privateKey);
-    const jwkBytes = new TextEncoder().encode(JSON.stringify(jwk));
+    const { publicKey, secretKey } = generateRecipientKeyPair();
+    const publicKeyB64 = serializePublicKey(publicKey);
+    const secretKeyB64 = serializeSecretKey(secretKey);
+    const skBytes = new TextEncoder().encode(secretKeyB64);
 
     const iv = crypto.getRandomValues(new Uint8Array(12));
+    const skBuf = new Uint8Array(skBytes.byteLength);
+    skBuf.set(skBytes);
     const ciphertext = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       masterKey,
-      jwkBytes
+      skBuf
     );
-    const encryptedPrivateKey = JSON.stringify({
+    const encryptedAsymmetricSecretKey = JSON.stringify({
       ciphertext: uint8ToBase64(new Uint8Array(ciphertext)),
       iv: uint8ToBase64(iv),
     });
 
     await setPublicKey({
-      publicKey: publicSpki,
-      encryptedPrivateKey,
+      publicKey: publicKeyB64,
+      encryptedAsymmetricSecretKey,
     });
 
-    ownerPublicKeyRef.current = keypair.publicKey;
-    ownerPrivateKeyRef.current = keypair.privateKey;
-    return { publicKey: keypair.publicKey, privateKey: keypair.privateKey };
+    ownerPublicKeyB64Ref.current = publicKeyB64;
+    ownerSecretKeyRef.current = secretKey;
+    return { publicKeyB64, secretKey };
   }, [masterKey, viewer, setPublicKey]);
 
   /**
@@ -113,7 +126,7 @@ export function useRecipientCrypto() {
       recipientWraps: RecipientWrap[];
       skippedRecipientIds: string[];
     }> => {
-      const { publicKey: ownerPublic } = await ensureOwnerKeypair();
+      const { publicKeyB64: ownerPublicB64 } = await ensureOwnerKeypair();
 
       const dek = await crypto.subtle.generateKey(
         { name: "AES-GCM", length: 256 },
@@ -121,7 +134,8 @@ export function useRecipientCrypto() {
         ["encrypt", "decrypt"]
       );
 
-      const ownerWrap = await wrapDek(dek, ownerPublic);
+      const ownerEnvelope = await wrapDek(dek, ownerPublicB64);
+      const ownerWrap: WrappedDek = { wrappedDek: ownerEnvelope };
 
       const recipientWraps: RecipientWrap[] = [];
       const skippedRecipientIds: string[] = [];
@@ -131,9 +145,11 @@ export function useRecipientCrypto() {
           continue;
         }
         try {
-          const publicKey = await importPublicKey(r.contactPublicKey);
-          const wrap = await wrapDek(dek, publicKey);
-          recipientWraps.push({ contactId: r.contactId, ...wrap });
+          const envelope = await wrapDek(dek, r.contactPublicKey);
+          recipientWraps.push({
+            contactId: r.contactId,
+            wrappedDek: envelope,
+          });
         } catch {
           skippedRecipientIds.push(r.contactId);
         }
@@ -146,18 +162,9 @@ export function useRecipientCrypto() {
 
   const unwrapOwnerDek = useCallback(
     async (wrap: WrappedDek): Promise<CryptoKey> => {
-      const { privateKey } = await ensureOwnerKeypair();
-      // unwrap returns a non-extractable key; we need extractable for
-      // re-wrapping during edits, so re-import as extractable.
-      const unwrapped = await unwrapDek(wrap, privateKey);
-      const raw = await crypto.subtle.exportKey("raw", unwrapped);
-      return await crypto.subtle.importKey(
-        "raw",
-        raw,
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-      );
+      const { secretKey } = await ensureOwnerKeypair();
+      // unwrapDek already returns an extractable key suitable for re-wrap.
+      return unwrapDek(wrap.wrappedDek, secretKey);
     },
     [ensureOwnerKeypair]
   );
@@ -177,8 +184,10 @@ export function useRecipientCrypto() {
       recipientWraps: RecipientWrap[];
       skippedRecipientIds: string[];
     }> => {
-      const { publicKey: ownerPublic } = await ensureOwnerKeypair();
-      const ownerWrap = await wrapDek(dek, ownerPublic);
+      const { publicKeyB64: ownerPublicB64 } = await ensureOwnerKeypair();
+      const ownerWrap: WrappedDek = {
+        wrappedDek: await wrapDek(dek, ownerPublicB64),
+      };
 
       const recipientWraps: RecipientWrap[] = [];
       const skippedRecipientIds: string[] = [];
@@ -188,9 +197,11 @@ export function useRecipientCrypto() {
           continue;
         }
         try {
-          const publicKey = await importPublicKey(r.contactPublicKey);
-          const wrap = await wrapDek(dek, publicKey);
-          recipientWraps.push({ contactId: r.contactId, ...wrap });
+          const envelope = await wrapDek(dek, r.contactPublicKey);
+          recipientWraps.push({
+            contactId: r.contactId,
+            wrappedDek: envelope,
+          });
         } catch {
           skippedRecipientIds.push(r.contactId);
         }

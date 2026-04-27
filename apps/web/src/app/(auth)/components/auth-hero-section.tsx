@@ -45,7 +45,7 @@ export function AuthHeroSection() {
       </div>
 
       {/* Bottom: Stats */}
-      <div className="relative z-10 flex gap-12 items-center">
+      <div className="relative z-10 flex flex-wrap gap-x-10 gap-y-5 items-center">
         <div className="flex flex-col">
           <span className="text-headline-md text-surface-container-lowest">
             AES-256
@@ -60,6 +60,14 @@ export function AuthHeroSection() {
           </span>
           <span className="text-label-md text-on-primary-container">
             Architecture
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-headline-md text-surface-container-lowest">
+            ML-KEM-768
+          </span>
+          <span className="text-label-md text-on-primary-container">
+            Quantum-Safe (FIPS 203)
           </span>
         </div>
       </div>

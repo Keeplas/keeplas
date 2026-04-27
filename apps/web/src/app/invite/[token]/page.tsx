@@ -8,7 +8,6 @@ import Link from "next/link";
 import { Button, buttonVariants, Loader, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
-import { exportPublicKey } from "@keeplas/crypto";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family member",
@@ -137,8 +136,8 @@ export default function InvitationPage({
     try {
       let contactPublicKey: string | undefined;
       if (cryptoReady) {
-        const { publicKey } = await ensureOwnerKeypair();
-        contactPublicKey = await exportPublicKey(publicKey);
+        const { publicKeyB64 } = await ensureOwnerKeypair();
+        contactPublicKey = publicKeyB64;
       }
       await acceptInvitation({ token, contactPublicKey });
       setDone(true);

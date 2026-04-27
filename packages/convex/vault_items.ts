@@ -30,7 +30,9 @@ const recipientModeValidator = v.union(
 const recipientKeyValidator = v.object({
   contactId: v.id("trusted_contacts"),
   wrappedDek: v.string(),
-  wrappedDekIv: v.string(),
+  // Deprecated — kept optional for backward-compat with legacy clients.
+  // ML-KEM envelope carries the IV inside the wrappedDek JSON.
+  wrappedDekIv: v.optional(v.string()),
 });
 
 // ─── Queries ────────────────────────────────────────────
