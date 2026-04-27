@@ -107,6 +107,12 @@ export function LoginForm() {
         </AuthSubmitButton>
       </form>
 
+      <p className="mt-6 text-center text-label-md text-on-surface-variant">
+        <Link href="/security" className="hover:underline">
+          How is your data protected?
+        </Link>
+      </p>
+
       {passkeySupported && (
         <button
           type="button"

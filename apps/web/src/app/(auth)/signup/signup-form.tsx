@@ -2,6 +2,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
+import Link from "next/link";
 import { Input, Label, PasswordInput } from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
@@ -126,6 +127,23 @@ export function SignupForm() {
       error={error}
       sideDecoration={<LegacyCardPreview />}
     >
+      <Link
+        href="/security"
+        className="block mb-6 p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
+      >
+        <p className="text-label-md text-secondary uppercase tracking-widest mb-2">
+          Before you sign up
+        </p>
+        <p className="text-body-md text-on-surface leading-relaxed">
+          Your password is just authentication. Your <strong>24 recovery words</strong>{" "}
+          encrypt your data — we never see them. If you lose them, only your
+          trusted contacts can recover.
+        </p>
+        <span className="inline-flex items-center gap-1 mt-2 text-label-md text-secondary font-bold group-hover:underline">
+          Read how it works →
+        </span>
+      </Link>
+
       <form onSubmit={handlePasswordSignUp} className="space-y-6">
         <div className="grid grid-cols-1 gap-5">
           <div className="space-y-2">
