@@ -217,35 +217,110 @@ export function SignupForm() {
 
 function LegacyCardPreview() {
   return (
-    <div className="absolute bottom-12 right-12 hidden lg:block rotate-3">
-      <div className="bg-primary-container text-on-primary-container p-6 rounded-2xl w-64 shadow-2xl space-y-4">
-        <div className="flex justify-between items-start">
-          <svg
-            className="w-6 h-6 text-secondary-fixed opacity-60"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
-            />
-          </svg>
-          <span className="font-label text-[10px] tracking-widest uppercase opacity-40">
-            Artifact #812
-          </span>
-        </div>
-        <div>
-          <p className="font-headline font-bold text-surface-container-lowest leading-tight">
-            Property Deed: <br />
-            Lake Como Villa
-          </p>
-          <p className="text-xs opacity-50 mt-1">Stored June 2024</p>
-        </div>
-        <div className="h-1 w-full bg-surface-container-highest/20 rounded-full overflow-hidden">
-          <div className="h-full w-2/3 bg-secondary-fixed" />
+    <div className="absolute bottom-12 right-12 hidden lg:block">
+      <div className="relative w-72">
+        {/* Layered cards behind for depth */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 rounded-2xl bg-primary-container/30 translate-x-3 translate-y-3 rotate-6"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 rounded-2xl bg-primary-container/60 translate-x-1.5 translate-y-1.5 rotate-3 ring-1 ring-secondary-fixed/10"
+        />
+
+        {/* Front card */}
+        <div className="relative bg-primary-container text-on-primary-container p-6 rounded-2xl shadow-2xl rotate-3 ring-1 ring-secondary-fixed/20 overflow-hidden">
+          {/* Subtle radial highlight */}
+          <div
+            aria-hidden
+            className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-secondary-fixed/10 blur-2xl pointer-events-none"
+          />
+
+          {/* Header */}
+          <div className="relative flex justify-between items-start mb-5">
+            <div className="flex items-center gap-2">
+              <span className="w-9 h-9 rounded-xl bg-secondary-fixed/15 flex items-center justify-center text-secondary-fixed">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.75}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                  />
+                </svg>
+              </span>
+              <div className="flex flex-col">
+                <span className="font-label text-[10px] tracking-widest uppercase opacity-50">
+                  Artifact · #812
+                </span>
+                <span className="inline-flex items-center gap-1.5 mt-0.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inset-0 rounded-full bg-secondary-fixed animate-ping opacity-70" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-secondary-fixed" />
+                  </span>
+                  <span className="font-label text-[10px] tracking-widest uppercase text-secondary-fixed font-bold">
+                    Sealed
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="relative mb-5">
+            <p className="font-headline font-bold text-surface-container-lowest leading-tight text-base">
+              Property Deed:
+              <br />
+              Lake Como Villa
+            </p>
+            <p className="text-[11px] opacity-55 mt-1.5">
+              Stored June 2024 · 3 recipients
+            </p>
+          </div>
+
+          {/* Encrypted blocks visualisation */}
+          <div className="relative flex gap-1 mb-4" aria-hidden>
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="flex-1 h-1.5 rounded-full bg-secondary-fixed/40"
+                style={{
+                  opacity: 0.25 + ((i * 17) % 75) / 100,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Footer: PQ tag */}
+          <div className="relative flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary-fixed/15 text-secondary-fixed">
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"
+                />
+              </svg>
+              <span className="font-label text-[9px] tracking-widest uppercase font-bold">
+                ML-KEM-768
+              </span>
+            </span>
+            <span className="font-label text-[9px] tracking-widest uppercase opacity-40">
+              Quantum-safe
+            </span>
+          </div>
         </div>
       </div>
     </div>
