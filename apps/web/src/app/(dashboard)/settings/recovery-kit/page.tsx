@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
@@ -50,6 +50,8 @@ const PLACEHOLDER_WORDS = Array.from({ length: 12 }, () => "••••••")
 export default function RecoveryKitPage() {
   const user = useQuery(api.users.viewer);
   const [words, setWords] = useState<string[] | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const printableRef = useRef<HTMLElement>(null);
 
   if (user === undefined) return <Loader fullscreen label="Loading recovery kit" />;
 
@@ -58,6 +60,44 @@ export default function RecoveryKitPage() {
 
   const documentId = buildDocumentId(user?._creationTime, user?._id ?? undefined);
   const generatedAt = formatKitTimestamp(user?._creationTime);
+
+  async function handleExportPdf() {
+    if (!printableRef.current || exporting) return;
+    setExporting(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas-pro"),
+        import("jspdf"),
+      ]);
+      const node = printableRef.current;
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = canvas.width / canvas.height;
+      let renderWidth = pageWidth;
+      let renderHeight = renderWidth / ratio;
+      if (renderHeight > pageHeight) {
+        renderHeight = pageHeight;
+        renderWidth = renderHeight * ratio;
+      }
+      const offsetX = (pageWidth - renderWidth) / 2;
+      const offsetY = (pageHeight - renderHeight) / 2;
+      pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
+      pdf.save(`${documentId}.pdf`);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="max-w-screen-2xl mx-auto flex flex-col gap-10">
@@ -92,18 +132,22 @@ export default function RecoveryKitPage() {
             Print Secure Copy
           </button>
           <button
-            onClick={() => window.print()}
-            disabled={!revealed}
+            onClick={handleExportPdf}
+            disabled={!revealed || exporting}
             className="flex items-center gap-2 px-6 py-3 bg-primary text-white hover:opacity-90 rounded-xl transition-all font-semibold shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Icon path={ICON_PATHS.download} className="w-5 h-5" />
-            Export PDF
+            <Icon
+              path={exporting ? ICON_PATHS.refresh : ICON_PATHS.download}
+              className={cn("w-5 h-5", exporting && "animate-spin")}
+            />
+            {exporting ? "Generating PDF…" : "Download PDF"}
           </button>
         </div>
       </div>
 
       {/* Document */}
       <article
+        ref={printableRef}
         id="recovery-kit-printable"
         className="relative bg-surface-container-lowest overflow-hidden shadow-2xl rounded-2xl flex flex-col md:flex-row min-h-[800px] print:shadow-none print:rounded-none"
       >

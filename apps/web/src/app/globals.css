@@ -264,25 +264,40 @@ body {
 
 /* ── Print Styles ── */
 @media print {
-  body {
-    background: white !important;
+  @page {
     margin: 0;
-    padding: 0;
   }
 
-  /* Hide everything except the designated printable nodes. */
-  body > * {
-    display: none !important;
+  html,
+  body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /*
+   * Use visibility (not display:none) so that ancestors of the printable node
+   * still render. display:none on a layout wrapper would remove the entire
+   * subtree — including any element marked to print inside it.
+   */
+  body * {
+    visibility: hidden !important;
+  }
+
+  #emergency-card-printable,
+  #emergency-card-printable *,
+  #recovery-kit-printable,
+  #recovery-kit-printable * {
+    visibility: visible !important;
   }
 
   /* Emergency Card — wallet-sized business card */
   #emergency-card-printable {
-    display: flex !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 85.6mm;
-    height: 53.98mm;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 85.6mm !important;
+    height: 53.98mm !important;
     border-radius: 3mm !important;
     overflow: hidden;
     box-shadow: none !important;
@@ -293,11 +308,10 @@ body {
 
   /* Recovery Kit — full-page architectural document */
   #recovery-kit-printable {
-    display: flex !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
     min-height: 100vh;
     border-radius: 0 !important;
     box-shadow: none !important;
