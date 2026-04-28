@@ -1,6 +1,11 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 
-export function AuthHeroSection() {
+interface AuthHeroSectionProps {
+  decoration?: ReactNode;
+}
+
+export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
   return (
     <section className="hidden md:flex w-1/2 vault-gradient relative overflow-hidden flex-col justify-between p-16">
       {/* Decorative grain texture */}
@@ -74,6 +79,8 @@ export function AuthHeroSection() {
 
       {/* Background blur */}
       <div className="absolute -bottom-24 -right-24 w-[600px] h-[600px] opacity-10 blur-3xl rounded-full bg-secondary-fixed pointer-events-none" />
+
+      {decoration}
     </section>
   );
 }

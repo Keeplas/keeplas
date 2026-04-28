@@ -125,7 +125,7 @@ export function SignupForm() {
         accent: "primary",
       }}
       error={error}
-      sideDecoration={<LegacyCardPreview />}
+      heroDecoration={<LegacyCardPreview />}
     >
       <Link
         href="/security"
@@ -217,7 +217,7 @@ export function SignupForm() {
 
 function LegacyCardPreview() {
   return (
-    <div className="absolute bottom-12 right-12 hidden lg:block">
+    <div className="pointer-events-none absolute right-8 bottom-44 hidden lg:block z-20">
       <div className="relative w-72">
         {/* Layered cards behind for depth */}
         <div

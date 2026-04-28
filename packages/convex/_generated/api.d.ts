@@ -20,6 +20,7 @@ import type * as dispatch from "../dispatch.js";
 import type * as emergency_cards from "../emergency_cards.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
+import type * as lib_audit_secret from "../lib/audit_secret.js";
 import type * as life_check from "../life_check.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   emergency_cards: typeof emergency_cards;
   helpers: typeof helpers;
   http: typeof http;
+  "lib/audit_secret": typeof lib_audit_secret;
   life_check: typeof life_check;
   migrations: typeof migrations;
   notifications: typeof notifications;

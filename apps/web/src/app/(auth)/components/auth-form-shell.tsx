@@ -20,7 +20,7 @@ interface AuthFormShellProps {
   footer: FooterLink;
   error: string;
   children: ReactNode;
-  sideDecoration?: ReactNode;
+  heroDecoration?: ReactNode;
 }
 
 export function AuthFormShell({
@@ -30,7 +30,7 @@ export function AuthFormShell({
   footer,
   error,
   children,
-  sideDecoration,
+  heroDecoration,
 }: AuthFormShellProps) {
   const accentClass =
     footer.accent === "primary"
@@ -39,7 +39,7 @@ export function AuthFormShell({
 
   return (
     <main className="min-h-screen flex flex-col md:flex-row">
-      <AuthHeroSection />
+      <AuthHeroSection decoration={heroDecoration} />
 
       <section className="flex-1 flex items-center justify-center p-8 md:p-24 relative bg-surface">
         <MobileBrand />
@@ -75,8 +75,6 @@ export function AuthFormShell({
             </Link>
           </p>
         </div>
-
-        {sideDecoration}
       </section>
     </main>
   );

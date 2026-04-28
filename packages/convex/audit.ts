@@ -4,7 +4,7 @@ import type { RegisteredMutation } from "convex/server";
 import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireAuth } from "./helpers";
-import { getAuditSecret } from "./lib/audit-secret";
+import { getAuditSecret } from "./lib/audit_secret";
 
 /**
  * Sealed envelope produced by the Next.js middleware. Carries the
