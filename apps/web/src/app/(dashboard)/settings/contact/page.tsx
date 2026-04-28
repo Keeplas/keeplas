@@ -81,7 +81,7 @@ export default function SettingsContactPage() {
             </h2>
             <p className="text-body-lg text-on-surface-variant">
               Our concierge team will reply at{" "}
-              <strong className="text-primary">{email}</strong> within 48 hours.
+              <strong className="text-primary">{email}</strong> within one hour.
             </p>
           </div>
           <div className="pt-2">
@@ -106,41 +106,18 @@ export default function SettingsContactPage() {
         onSubmit={handleSubmit}
         className="bg-surface-container-lowest ghost-border rounded-2xl p-6 md:p-8 space-y-6"
       >
-        <div className="flex items-start gap-3 bg-secondary-container/40 rounded-xl p-4">
-          <Icon
-            path={ICON_PATHS.shieldCheck}
-            className="w-5 h-5 text-secondary shrink-0 mt-0.5"
-          />
-          <p className="text-body-md text-on-secondary-container">
-            Need help with your vault or a guardian? Our team reads every message. For
-            urgent security issues, mention it in the subject line.
-          </p>
-        </div>
-
         <ErrorAlert message={error} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <Label htmlFor="contact-name">Full name</Label>
-            <Input
-              id="contact-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contact-email">Reply-to email</Label>
-            <Input
-              id="contact-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="contact-email">Reply-to email</Label>
+          <Input
+            id="contact-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+          />
         </div>
 
         <div className="space-y-2">
@@ -177,11 +154,11 @@ export default function SettingsContactPage() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Share as much detail as possible. Do not include your recovery phrase."
             rows={6}
+            minLength={10}
             required
           />
           <p className="text-label-md text-on-surface-variant">
-            {message.length}/10 characters minimum. Never share your seed phrase with anyone,
-            including our team.
+            Never share your seed phrase with anyone, including our team.
           </p>
         </div>
 
@@ -196,7 +173,7 @@ export default function SettingsContactPage() {
             {submitting ? "Sending..." : "Send Message"}
           </Button>
           <p className="text-body-md text-on-surface-variant">
-            Typical response time: under 48 hours.
+            Typical response time: within one hour.
           </p>
         </div>
       </form>

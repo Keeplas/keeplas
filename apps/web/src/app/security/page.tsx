@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { BackButton } from "./back-button";
 
 export const metadata: Metadata = {
   title: "Security & Zero-Knowledge — Keeplas",
@@ -150,6 +151,7 @@ export default function SecurityPage() {
   return (
     <main className="min-h-screen bg-surface">
       <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 space-y-12">
+        <BackButton />
         {/* Hero */}
         <header className="space-y-4 text-center">
           <div className="inline-flex flex-wrap items-center justify-center gap-2">

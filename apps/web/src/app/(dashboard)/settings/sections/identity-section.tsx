@@ -201,16 +201,62 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               declaration is never overwritten.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setResidenceDialogOpen(true)}
-            className="bg-surface-container hover:bg-surface-container-high cursor-pointer"
-          >
-            {user.country ? "Update residence" : "Set residence"}
-          </Button>
+          {user.country && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setResidenceDialogOpen(true)}
+              className="bg-surface-container hover:bg-surface-container-high cursor-pointer"
+            >
+              Update residence
+            </Button>
+          )}
         </div>
+
+        {!user.country && (
+          <div className="rounded-xl border border-error/30 bg-error/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <span
+                aria-hidden
+                className="shrink-0 mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-error/15 text-error"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m0 3.75h.008v.008H12V16.5Zm0-12.75c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9Z"
+                  />
+                </svg>
+              </span>
+              <div className="space-y-1 min-w-0">
+                <p className="text-title-md text-error">
+                  Residence not set
+                </p>
+                <p className="text-body-md text-on-surface-variant">
+                  Inheritance jurisdiction can&apos;t be determined until you
+                  declare your country of residence. Set it now to keep your
+                  succession plan admissible.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="vault"
+              size="md"
+              onClick={() => setResidenceDialogOpen(true)}
+              className="shrink-0 cursor-pointer"
+            >
+              Set residence
+            </Button>
+          </div>
+        )}
 
         <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-body-md">
           <div className="space-y-1">
