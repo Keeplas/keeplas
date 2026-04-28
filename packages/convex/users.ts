@@ -96,6 +96,50 @@ export const completeLegalInfo = auditedMutation({
 });
 
 /**
+ * Update the country of legal residence after the initial onboarding
+ * declaration (e.g. when the user moves jurisdictions). The original
+ * `legalInfoConfirmedAt` timestamp is preserved — it remains the anchor
+ * of the audit chain — and a new `user.legal_info.updated` entry records
+ * the previous and new country so the succession trail stays auditable.
+ *
+ * Birthday is intentionally not editable: it is a fact, not a preference,
+ * and changing it would invalidate the original signed declaration.
+ */
+export const updateLegalResidence = auditedMutation({
+  action: "user.legal_info.updated",
+  resourceType: "user",
+  args: {
+    country: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const country = args.country.trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(country)) {
+      throw new Error("Country must be a 2-letter ISO-3166-1 code");
+    }
+
+    const previousCountry = user.country ?? null;
+    if (previousCountry === country) {
+      throw new Error("New country is the same as the current one");
+    }
+
+    await ctx.db.patch(userId, {
+      country,
+      updatedAt: Date.now(),
+    });
+
+    return { previousCountry, newCountry: country };
+  },
+  getMetadata: (_args, result) => ({
+    previousCountry: result.previousCountry,
+    newCountry: result.newCountry,
+  }),
+});
+
+/**
  * Lazily set the user's ML-KEM-768 (post-quantum) keypair used for
  * per-recipient DEK wrapping. The public key is stored in cleartext; the
  * secret key is encrypted client-side under the user's MasterKey and

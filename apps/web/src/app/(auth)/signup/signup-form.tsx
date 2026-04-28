@@ -135,9 +135,9 @@ export function SignupForm() {
           Before you sign up · Quantum-safe end-to-end
         </p>
         <p className="text-body-sm text-on-surface leading-snug">
-          Your password is just authentication. Your <strong>24 recovery words</strong>{" "}
-          encrypt your data — we never see them. Per-recipient keys are
-          wrapped with <strong>ML-KEM-768</strong> (NIST post-quantum standard).
+          Your password lets you sign in. The{" "}
+          <strong>24 recovery words</strong> generated in the next step are
+          what actually encrypt your vault, we never see them.
         </p>
         <span className="inline-flex items-center gap-1 mt-1.5 text-label-md text-secondary font-bold group-hover:underline">
           Read how it works →
@@ -180,10 +180,6 @@ export function SignupForm() {
               required
               minLength={8}
             />
-            <p className="text-label-md text-on-surface-variant">
-              Your password authenticates you. The next step generates 24
-              recovery words that encrypt your data — that&apos;s the real key.
-            </p>
           </div>
         </div>
 

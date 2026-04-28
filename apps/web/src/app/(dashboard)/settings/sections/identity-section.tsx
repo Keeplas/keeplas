@@ -7,6 +7,8 @@ import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { Button, Input, Label, UserAvatar } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { getInitials } from "@/lib/user";
+import { getCountry } from "@/lib/countries";
+import { UpdateResidenceDialog } from "./update-residence-dialog";
 
 interface IdentitySectionProps {
   user: Doc<"users">;
@@ -21,12 +23,29 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [residenceDialogOpen, setResidenceDialogOpen] = useState(false);
 
   useEffect(() => {
     setName(user.name ?? "");
     setPhone(user.phoneNumber ?? "");
     setAvatarUrl(user.avatarUrl ?? "");
   }, [user]);
+
+  const country = user.country ? getCountry(user.country) : undefined;
+  const birthdayLabel = user.birthday
+    ? new Date(user.birthday).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+  const confirmedAtLabel = user.legalInfoConfirmedAt
+    ? new Date(user.legalInfoConfirmedAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -170,6 +189,84 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           </Button>
         </div>
       </form>
+
+      <div className="mt-10 bg-surface-container-low rounded-2xl p-6 space-y-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="space-y-1">
+            <h3 className="text-title-lg text-primary">Legal identity</h3>
+            <p className="text-body-md text-on-surface-variant max-w-xl">
+              Recorded during onboarding as your signed declaration of identity.
+              Birthday is fixed; residence may change if you move jurisdictions.
+              Every update is appended to the audit chain — your original
+              declaration is never overwritten.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setResidenceDialogOpen(true)}
+            className="bg-surface-container hover:bg-surface-container-high cursor-pointer"
+          >
+            {user.country ? "Update residence" : "Set residence"}
+          </Button>
+        </div>
+
+        <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-body-md">
+          <div className="space-y-1">
+            <dt className="text-label-md text-secondary uppercase tracking-wide">
+              Country of residence
+            </dt>
+            <dd className="text-on-surface flex items-center gap-2">
+              {country ? (
+                <>
+                  <span aria-hidden className="text-base leading-none">
+                    {country.flag}
+                  </span>
+                  <span>{country.name}</span>
+                  <span className="text-label-md text-on-surface-variant uppercase tracking-widest">
+                    {country.code}
+                  </span>
+                </>
+              ) : (
+                <span className="text-on-surface-variant italic">
+                  Not set
+                </span>
+              )}
+            </dd>
+          </div>
+
+          <div className="space-y-1">
+            <dt className="text-label-md text-secondary uppercase tracking-wide">
+              Date of birth
+            </dt>
+            <dd className="text-on-surface">
+              {birthdayLabel ?? (
+                <span className="text-on-surface-variant italic">Not set</span>
+              )}
+            </dd>
+          </div>
+
+          <div className="space-y-1">
+            <dt className="text-label-md text-secondary uppercase tracking-wide">
+              Declared on
+            </dt>
+            <dd className="text-on-surface">
+              {confirmedAtLabel ?? (
+                <span className="text-on-surface-variant italic">
+                  Not declared
+                </span>
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <UpdateResidenceDialog
+        open={residenceDialogOpen}
+        onOpenChange={setResidenceDialogOpen}
+        currentCountry={user.country}
+      />
     </section>
   );
 }
