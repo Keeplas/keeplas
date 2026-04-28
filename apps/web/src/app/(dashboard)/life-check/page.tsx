@@ -123,7 +123,7 @@ function MonitoringPanel() {
           <ChannelList channels={channels} onToggle={toggleChannel} />
         </div>
 
-        <EscalationTimeline />
+        <EscalationTimeline channels={channels} frequency={frequency} />
       </div>
 
       <div className="flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">

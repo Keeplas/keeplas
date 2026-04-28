@@ -6,9 +6,9 @@ import { api } from "@keeplas/backend/_generated/api";
 import { buttonVariants, Icon, Loader, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 
-const STORAGE_QUOTA_BYTES = 100 * 1024 * 1024;
+const STORAGE_QUOTA_BYTES = 20 * 1024 * 1024;
 const CURRENT_PLAN_LABEL = "Free";
-const CURRENT_PLAN_QUOTA_LABEL = "100 MB";
+const CURRENT_PLAN_QUOTA_LABEL = "20 MB";
 
 const CATEGORY_LABELS: Record<string, string> = {
   personal_document: "Personal Documents",
@@ -109,7 +109,7 @@ export default function SettingsUsagePage() {
             <div className="space-y-2 flex-1">
               <p className="text-body-md text-on-error-container">
                 You&rsquo;re close to your storage limit. Upgrade to Keeper for
-                100 GB of encrypted capacity and additional continuity tools.
+                10 GB of encrypted capacity and additional continuity tools.
               </p>
               <Link
                 href="/settings/subscription"
@@ -216,7 +216,7 @@ export default function SettingsUsagePage() {
         <div className="space-y-1">
           <h2 className="text-headline-sm text-primary">Need more capacity?</h2>
           <p className="text-body-md text-on-surface-variant max-w-xl">
-            Keeper unlocks 100 GB of zero-knowledge storage, video legacy
+            Keeper unlocks 10 GB of zero-knowledge storage, video legacy
             messages, and the full scenario engine. Lifetime gets it all
             forever in a single payment.
           </p>
