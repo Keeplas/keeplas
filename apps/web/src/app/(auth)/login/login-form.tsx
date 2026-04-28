@@ -107,7 +107,7 @@ export function LoginForm() {
         </AuthSubmitButton>
       </form>
 
-      <p className="mt-6 text-center text-label-md text-on-surface-variant">
+      <p className="mt-4 text-center text-label-md text-on-surface-variant">
         <Link href="/security" className="hover:underline">
           How is your data protected?
         </Link>
@@ -118,7 +118,7 @@ export function LoginForm() {
           type="button"
           onClick={handlePasskeySignIn}
           disabled={loading}
-          className="mt-4 w-full flex items-center justify-center gap-3 bg-surface-container-low hover:bg-surface-container-high py-4 rounded-xl ghost-border transition-colors disabled:opacity-60"
+          className="mt-3 w-full flex items-center justify-center gap-3 bg-surface-container-low hover:bg-surface-container-high py-3 rounded-xl ghost-border transition-colors disabled:opacity-60"
         >
           <svg
             className="w-5 h-5 text-primary"

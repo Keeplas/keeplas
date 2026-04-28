@@ -129,24 +129,23 @@ export function SignupForm() {
     >
       <Link
         href="/security"
-        className="block mb-6 p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
+        className="block mb-5 p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
       >
-        <p className="text-label-md text-secondary uppercase tracking-widest mb-2">
+        <p className="text-label-md text-secondary uppercase tracking-widest mb-1.5">
           Before you sign up · Quantum-safe end-to-end
         </p>
-        <p className="text-body-md text-on-surface leading-relaxed">
+        <p className="text-body-sm text-on-surface leading-snug">
           Your password is just authentication. Your <strong>24 recovery words</strong>{" "}
           encrypt your data — we never see them. Per-recipient keys are
-          wrapped with <strong>ML-KEM-768</strong> (NIST post-quantum standard),
-          so a future quantum computer can&apos;t retroactively break what we hold.
+          wrapped with <strong>ML-KEM-768</strong> (NIST post-quantum standard).
         </p>
-        <span className="inline-flex items-center gap-1 mt-2 text-label-md text-secondary font-bold group-hover:underline">
+        <span className="inline-flex items-center gap-1 mt-1.5 text-label-md text-secondary font-bold group-hover:underline">
           Read how it works →
         </span>
       </Link>
 
-      <form onSubmit={handlePasswordSignUp} className="space-y-6">
-        <div className="grid grid-cols-1 gap-5">
+      <form onSubmit={handlePasswordSignUp} className="space-y-5">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input

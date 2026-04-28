@@ -38,15 +38,15 @@ export function AuthFormShell({
       : "text-secondary font-bold hover:underline decoration-secondary decoration-2 underline-offset-4";
 
   return (
-    <main className="min-h-screen flex flex-col md:flex-row">
+    <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
       <AuthHeroSection decoration={heroDecoration} />
 
-      <section className="flex-1 flex items-center justify-center p-8 md:p-24 relative bg-surface">
+      <section className="flex-1 flex items-center justify-center p-8 md:p-10 lg:p-12 xl:p-16 relative bg-surface md:overflow-y-auto">
         <MobileBrand />
 
         <div className="w-full max-w-md">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full mb-6 shadow-sm">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
               <svg
                 className="w-5 h-5 text-secondary"
                 fill="currentColor"
@@ -61,14 +61,14 @@ export function AuthFormShell({
             <h3 className="text-headline-md text-primary mb-2">
               {heading}
             </h3>
-            <p className="text-body-lg text-on-surface-variant">{description}</p>
+            <p className="text-body-md text-on-surface-variant">{description}</p>
           </div>
 
           <ErrorAlert message={error} />
 
           {children}
 
-          <p className="mt-12 text-center text-body-md text-on-surface-variant">
+          <p className="mt-8 text-center text-body-md text-on-surface-variant">
             {footer.prompt}{" "}
             <Link href={footer.href} className={accentClass}>
               {footer.label}

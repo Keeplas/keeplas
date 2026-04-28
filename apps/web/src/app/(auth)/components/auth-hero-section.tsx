@@ -7,7 +7,7 @@ interface AuthHeroSectionProps {
 
 export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
   return (
-    <section className="hidden md:flex w-1/2 vault-gradient relative overflow-hidden flex-col justify-between p-16">
+    <section className="hidden md:flex w-1/2 vault-gradient relative overflow-hidden flex-col justify-between p-10 lg:p-12 xl:p-16">
       {/* Decorative grain texture */}
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -20,7 +20,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
 
       {/* Top: Logo */}
       <div className="relative z-10">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3">
           <Image
             src="/assets/logo/logo.svg"
             alt="Keeplas"
@@ -31,19 +31,18 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
             Keeplas
           </h1>
         </div>
-        <div className="mb-12" />
       </div>
 
       {/* Center: Hero text */}
       <div className="relative z-10 max-w-lg">
-        <span className="text-label-md text-secondary-fixed mb-6 block">
+        <span className="text-label-md text-secondary-fixed mb-4 block">
           The Digital Curator
         </span>
-        <h2 className="text-display-lg text-surface-container-lowest mb-8">
+        <h2 className="text-display-md xl:text-display-lg text-surface-container-lowest mb-6">
           Secure Your <br />
           Digital Legacy.
         </h2>
-        <p className="text-body-lg text-on-primary-container font-light">
+        <p className="text-body-md xl:text-body-lg text-on-primary-container font-light">
           A private gallery for your most vital assets. Protected by
           architectural-grade encryption, curated for your next generation.
         </p>
