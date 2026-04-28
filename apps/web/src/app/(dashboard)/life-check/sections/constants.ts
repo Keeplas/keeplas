@@ -28,13 +28,22 @@ const WHATSAPP_ICON_PATH =
 
 export const DEFAULT_CHANNELS: ChannelConfig[] = [
   {
+    type: "whatsapp",
+    label: "WhatsApp Message",
+    description: "Templated message to your verified number",
+    iconPath: WHATSAPP_ICON_PATH,
+    delayHours: 36,
+    isEnabled: true,
+    order: 1,
+  },
+  {
     type: "push",
     label: "App Push Notification",
     description: "Encrypted mobile ping — tap to confirm",
     iconPath: ICON_PATHS.bell,
     delayHours: 24,
     isEnabled: true,
-    order: 1,
+    order: 2,
   },
   {
     type: "email",
@@ -43,15 +52,6 @@ export const DEFAULT_CHANNELS: ChannelConfig[] = [
     iconPath: EMAIL_ICON_PATH,
     delayHours: 48,
     isEnabled: true,
-    order: 2,
-  },
-  {
-    type: "whatsapp",
-    label: "WhatsApp Message",
-    description: "Templated message to your verified number",
-    iconPath: WHATSAPP_ICON_PATH,
-    delayHours: 36,
-    isEnabled: false,
     order: 3,
   },
   {

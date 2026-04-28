@@ -247,3 +247,51 @@ export const migrateScenarioActions = internalMutation({
     return { stepsPatched, stepsCleared };
   },
 });
+
+/**
+ * Backfill the WhatsApp verification channel into every existing
+ * life_check_configs row. WhatsApp is now the primary channel — new users
+ * already get it via DEFAULT_CHANNELS, but rows saved before WhatsApp was
+ * introduced (or saved while it was the disabled 4th option) need the row
+ * inserted at order 1, with the previous channels' order shifted by +1
+ * to preserve their relative ordering.
+ *
+ * Idempotent: rows already containing a "whatsapp" entry are skipped.
+ */
+export const addWhatsAppChannelToLifeCheckConfigs = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let patched = 0;
+    let skipped = 0;
+
+    const configs = await ctx.db.query("life_check_configs").collect();
+    for (const config of configs) {
+      if (config.activeChannels.some((ch) => ch.type === "whatsapp")) {
+        skipped++;
+        continue;
+      }
+
+      const shifted = config.activeChannels.map((ch) => ({
+        ...ch,
+        order: ch.order + 1,
+      }));
+      const next = [
+        {
+          type: "whatsapp" as const,
+          order: 1,
+          isEnabled: true,
+          delayHours: 36,
+        },
+        ...shifted,
+      ];
+
+      await ctx.db.patch(config._id, {
+        activeChannels: next,
+        updatedAt: Date.now(),
+      });
+      patched++;
+    }
+
+    return { patched, skipped };
+  },
+});
