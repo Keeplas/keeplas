@@ -107,13 +107,6 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
           {ageError && (
             <p className="text-body-sm text-error">{ageError}</p>
           )}
-          <p className="text-label-md text-on-surface-variant">
-            You must be at least 18 to use Keeplas.
-            {" "}
-            <span className="text-on-surface-variant/70">
-              (Earliest selectable: {ISO_MIN}, latest: {ISO_MAX_FOR_18}.)
-            </span>
-          </p>
         </div>
 
         <div className="space-y-2">
@@ -132,7 +125,11 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
           disabled={!canSubmit}
           className="w-full justify-center"
         >
-          {submitting ? "Saving…" : "Confirm and continue"}
+          {submitting
+            ? "Saving…"
+            : !requestCtx && !!birthday && !!country && !ageError
+              ? "Securing your session…"
+              : "Confirm and continue"}
         </Button>
       </form>
     </div>

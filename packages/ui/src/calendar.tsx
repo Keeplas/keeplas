@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "./lib/utils";
+import { Select, SelectItem } from "./select";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 const MONTHS = [
@@ -18,24 +19,6 @@ const MONTHS = [
   "November",
   "December",
 ] as const;
-const MONTHS_SHORT = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
-
-const YEAR_PAGE_SIZE = 12;
-
-type View = "days" | "months" | "years";
 
 function startOfDay(d: Date): Date {
   const x = new Date(d);
@@ -59,17 +42,6 @@ function buildMonthGrid(year: number, month: number): Date[] {
     );
   }
   return cells;
-}
-
-function yearPageStart(year: number): number {
-  return Math.floor(year / YEAR_PAGE_SIZE) * YEAR_PAGE_SIZE;
-}
-
-function clampYear(year: number, min?: Date, max?: Date): number {
-  let y = year;
-  if (min && y < min.getFullYear()) y = min.getFullYear();
-  if (max && y > max.getFullYear()) y = max.getFullYear();
-  return y;
 }
 
 function clampMonth(
@@ -96,10 +68,12 @@ export interface CalendarProps {
 export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
   ({ value, onChange, min, max, className, showFooter = true }, ref) => {
     const today = React.useMemo(() => startOfDay(new Date()), []);
-    const [viewDate, setViewDate] = React.useState<Date>(() =>
-      value ? new Date(value.getFullYear(), value.getMonth(), 1) : today
-    );
-    const [view, setView] = React.useState<View>("days");
+
+    const [viewDate, setViewDate] = React.useState<Date>(() => {
+      if (value) return new Date(value.getFullYear(), value.getMonth(), 1);
+      if (max) return new Date(max.getFullYear(), max.getMonth(), 1);
+      return today;
+    });
 
     React.useEffect(() => {
       if (value) {
@@ -110,6 +84,15 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
 
+    const minYear = min ? min.getFullYear() : today.getFullYear() - 130;
+    const maxYear = max ? max.getFullYear() : today.getFullYear() + 10;
+
+    const years = React.useMemo(() => {
+      const out: number[] = [];
+      for (let y = maxYear; y >= minYear; y--) out.push(y);
+      return out;
+    }, [minYear, maxYear]);
+
     function isDayDisabled(d: Date): boolean {
       if (min && startOfDay(d).getTime() < startOfDay(min).getTime())
         return true;
@@ -119,95 +102,39 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
     }
 
     function isMonthDisabled(y: number, m: number): boolean {
-      const lastOfMonth = new Date(y, m + 1, 0);
       const firstOfMonth = new Date(y, m, 1);
+      const lastOfMonth = new Date(y, m + 1, 0);
       if (max && firstOfMonth.getTime() > startOfDay(max).getTime()) return true;
       if (min && lastOfMonth.getTime() < startOfDay(min).getTime()) return true;
       return false;
     }
 
-    function isYearDisabled(y: number): boolean {
-      if (min && y < min.getFullYear()) return true;
-      if (max && y > max.getFullYear()) return true;
-      return false;
+    function goPrevMonth() {
+      setViewDate(new Date(year, month - 1, 1));
     }
 
-    function goPrev() {
-      if (view === "days") {
-        setViewDate(new Date(year, month - 1, 1));
-      } else if (view === "months") {
-        setViewDate(new Date(year - 1, month, 1));
-      } else {
-        setViewDate(new Date(year - YEAR_PAGE_SIZE, month, 1));
-      }
+    function goNextMonth() {
+      setViewDate(new Date(year, month + 1, 1));
     }
 
-    function goNext() {
-      if (view === "days") {
-        setViewDate(new Date(year, month + 1, 1));
-      } else if (view === "months") {
-        setViewDate(new Date(year + 1, month, 1));
-      } else {
-        setViewDate(new Date(year + YEAR_PAGE_SIZE, month, 1));
-      }
+    function onYearChange(nextYear: number) {
+      const safeMonth = clampMonth(nextYear, month, min, max);
+      setViewDate(new Date(nextYear, safeMonth, 1));
     }
 
-    function onHeaderClick() {
-      if (view === "days") setView("months");
-      else if (view === "months") setView("years");
-      else setView("days");
-    }
-
-    function selectYear(y: number) {
-      const safeYear = clampYear(y, min, max);
-      const safeMonth = clampMonth(safeYear, month, min, max);
-      setViewDate(new Date(safeYear, safeMonth, 1));
-      setView("months");
-    }
-
-    function selectMonth(m: number) {
-      setViewDate(new Date(year, m, 1));
-      setView("days");
+    function onMonthChange(nextMonth: number) {
+      setViewDate(new Date(year, nextMonth, 1));
     }
 
     const prevDisabled = (() => {
       if (!min) return false;
-      if (view === "days") {
-        return new Date(year, month, 0).getTime() < startOfDay(min).getTime();
-      }
-      if (view === "months") {
-        return year - 1 < min.getFullYear();
-      }
-      return year - YEAR_PAGE_SIZE < min.getFullYear();
+      return new Date(year, month, 0).getTime() < startOfDay(min).getTime();
     })();
 
     const nextDisabled = (() => {
       if (!max) return false;
-      if (view === "days") {
-        return new Date(year, month + 1, 1).getTime() > startOfDay(max).getTime();
-      }
-      if (view === "months") {
-        return year + 1 > max.getFullYear();
-      }
-      return year + YEAR_PAGE_SIZE > max.getFullYear();
+      return new Date(year, month + 1, 1).getTime() > startOfDay(max).getTime();
     })();
-
-    const headerLabel =
-      view === "days"
-        ? `${MONTHS[month]} ${year}`
-        : view === "months"
-          ? `${year}`
-          : (() => {
-              const start = yearPageStart(year);
-              return `${start} – ${start + YEAR_PAGE_SIZE - 1}`;
-            })();
-
-    const headerAriaLabel =
-      view === "days"
-        ? "Switch to month view"
-        : view === "months"
-          ? "Switch to year view"
-          : "Switch to day view";
 
     return (
       <div
@@ -217,21 +144,54 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
           className
         )}
       >
-        <div className="flex items-center justify-between mb-4">
-          <button
-            type="button"
-            onClick={onHeaderClick}
-            aria-label={headerAriaLabel}
-            className="font-headline font-extrabold text-primary text-sm tracking-tight px-2 py-1 -mx-2 rounded-lg hover:bg-surface-container-high focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer"
-          >
-            {headerLabel}
-          </button>
-          <div className="flex gap-1">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Select<number>
+              value={month}
+              onValueChange={onMonthChange}
+              renderValue={(v) => (
+                <span className="font-headline font-extrabold text-primary text-sm tracking-tight">
+                  {MONTHS[v]}
+                </span>
+              )}
+              triggerClassName="w-auto px-2.5 py-1.5 rounded-lg bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
+              align="start"
+            >
+              {MONTHS.map((label, m) => (
+                <SelectItem
+                  key={m}
+                  value={m}
+                  disabled={isMonthDisabled(year, m)}
+                  label={label}
+                >
+                  {label}
+                </SelectItem>
+              ))}
+            </Select>
+            <Select<number>
+              value={year}
+              onValueChange={onYearChange}
+              renderValue={(v) => (
+                <span className="font-headline font-extrabold text-primary text-sm tracking-tight">
+                  {v}
+                </span>
+              )}
+              triggerClassName="w-auto px-2.5 py-1.5 rounded-lg bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
+              align="start"
+            >
+              {years.map((y) => (
+                <SelectItem key={y} value={y} label={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
+          <div className="flex gap-1 shrink-0">
             <button
               type="button"
-              onClick={goPrev}
+              onClick={goPrevMonth}
               disabled={prevDisabled}
-              aria-label="Previous"
+              aria-label="Previous month"
               className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
             >
               <svg
@@ -250,9 +210,9 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
             </button>
             <button
               type="button"
-              onClick={goNext}
+              onClick={goNextMonth}
               disabled={nextDisabled}
-              aria-label="Next"
+              aria-label="Next month"
               className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
             >
               <svg
@@ -272,156 +232,64 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
           </div>
         </div>
 
-        {view === "days" && (
-          <>
+        <div
+          className="grid grid-cols-7 gap-1 mb-1"
+          role="row"
+          aria-hidden="true"
+        >
+          {WEEKDAYS.map((wd, i) => (
             <div
-              className="grid grid-cols-7 gap-1 mb-1"
-              role="row"
-              aria-hidden="true"
+              key={i}
+              className="text-center font-headline text-[10px] uppercase tracking-widest font-bold text-on-surface-variant py-1.5"
             >
-              {WEEKDAYS.map((wd, i) => (
-                <div
-                  key={i}
-                  className="text-center font-headline text-[10px] uppercase tracking-widest font-bold text-on-surface-variant py-1.5"
-                >
-                  {wd}
-                </div>
-              ))}
+              {wd}
             </div>
+          ))}
+        </div>
 
-            <div className="grid grid-cols-7 gap-1" role="grid">
-              {buildMonthGrid(year, month).map((d, i) => {
-                const inMonth = d.getMonth() === month;
-                const isSelected = value ? sameDay(d, value) : false;
-                const isToday = sameDay(d, today);
-                const disabled = isDayDisabled(d);
+        <div className="grid grid-cols-7 gap-1" role="grid">
+          {buildMonthGrid(year, month).map((d, i) => {
+            const inMonth = d.getMonth() === month;
+            const isSelected = value ? sameDay(d, value) : false;
+            const isToday = sameDay(d, today);
+            const disabled = isDayDisabled(d);
 
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    role="gridcell"
-                    aria-selected={isSelected}
-                    aria-disabled={disabled}
-                    disabled={disabled}
-                    onClick={() => onChange?.(d)}
-                    className={cn(
-                      "aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
-                      !inMonth && "text-outline-variant/70",
-                      inMonth &&
-                        !isSelected &&
-                        !disabled &&
-                        "text-on-surface hover:bg-surface-container-high",
-                      isSelected &&
-                        "bg-secondary text-on-secondary font-bold shadow-sm",
-                      !isSelected &&
-                        isToday &&
-                        inMonth &&
-                        "ring-1 ring-secondary/50 text-secondary font-bold",
-                      disabled && "opacity-30 cursor-not-allowed"
-                    )}
-                  >
-                    {d.getDate()}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-        {view === "months" && (
-          <div className="grid grid-cols-3 gap-2" role="grid">
-            {MONTHS_SHORT.map((label, m) => {
-              const isSelected =
-                value !== null &&
-                value !== undefined &&
-                value.getFullYear() === year &&
-                value.getMonth() === m;
-              const isCurrent =
-                today.getFullYear() === year && today.getMonth() === m;
-              const disabled = isMonthDisabled(year, m);
-
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="gridcell"
-                  aria-selected={isSelected}
-                  aria-disabled={disabled}
-                  disabled={disabled}
-                  onClick={() => selectMonth(m)}
-                  className={cn(
-                    "py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+            return (
+              <button
+                key={i}
+                type="button"
+                role="gridcell"
+                aria-selected={isSelected}
+                aria-disabled={disabled}
+                disabled={disabled}
+                onClick={() => onChange?.(d)}
+                className={cn(
+                  "aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  !inMonth && "text-outline-variant/70",
+                  inMonth &&
                     !isSelected &&
-                      !disabled &&
-                      "text-on-surface hover:bg-surface-container-high",
-                    isSelected &&
-                      "bg-secondary text-on-secondary font-bold shadow-sm",
-                    !isSelected &&
-                      isCurrent &&
-                      "ring-1 ring-secondary/50 text-secondary font-bold",
-                    disabled && "opacity-30 cursor-not-allowed"
-                  )}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {view === "years" && (
-          <div className="grid grid-cols-3 gap-2" role="grid">
-            {(() => {
-              const start = yearPageStart(year);
-              const years: number[] = [];
-              for (let i = 0; i < YEAR_PAGE_SIZE; i++) years.push(start + i);
-              return years.map((y) => {
-                const isSelected =
-                  value !== null &&
-                  value !== undefined &&
-                  value.getFullYear() === y;
-                const isCurrent = today.getFullYear() === y;
-                const disabled = isYearDisabled(y);
-
-                return (
-                  <button
-                    key={y}
-                    type="button"
-                    role="gridcell"
-                    aria-selected={isSelected}
-                    aria-disabled={disabled}
-                    disabled={disabled}
-                    onClick={() => selectYear(y)}
-                    className={cn(
-                      "py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
-                      !isSelected &&
-                        !disabled &&
-                        "text-on-surface hover:bg-surface-container-high",
-                      isSelected &&
-                        "bg-secondary text-on-secondary font-bold shadow-sm",
-                      !isSelected &&
-                        isCurrent &&
-                        "ring-1 ring-secondary/50 text-secondary font-bold",
-                      disabled && "opacity-30 cursor-not-allowed"
-                    )}
-                  >
-                    {y}
-                  </button>
-                );
-              });
-            })()}
-          </div>
-        )}
+                    !disabled &&
+                    "text-on-surface hover:bg-surface-container-high",
+                  isSelected &&
+                    "bg-secondary text-on-secondary font-bold shadow-sm",
+                  !isSelected &&
+                    isToday &&
+                    inMonth &&
+                    "ring-1 ring-secondary/50 text-secondary font-bold",
+                  disabled && "opacity-30 cursor-not-allowed"
+                )}
+              >
+                {d.getDate()}
+              </button>
+            );
+          })}
+        </div>
 
         {showFooter && (
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/20">
             <button
               type="button"
-              onClick={() => {
-                setView("days");
-                onChange?.(null);
-              }}
+              onClick={() => onChange?.(null)}
               className="text-[11px] font-headline font-bold uppercase tracking-widest text-on-surface-variant hover:text-error focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-md px-1 py-0.5 transition-colors cursor-pointer"
             >
               Clear
@@ -430,7 +298,6 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
               type="button"
               onClick={() => {
                 setViewDate(new Date(today.getFullYear(), today.getMonth(), 1));
-                setView("days");
                 onChange?.(today);
               }}
               className="text-[11px] font-headline font-bold uppercase tracking-widest text-secondary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-md px-1 py-0.5 transition-colors cursor-pointer"
