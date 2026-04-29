@@ -16,6 +16,7 @@ import {
 } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
+import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -36,10 +37,7 @@ export default function PasswordRecoveryPage() {
     e.preventDefault();
     if (busy) return;
 
-    const words = phrase
-      .trim()
-      .split(/\s+/)
-      .map((w) => w.toLowerCase());
+    const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
       setError("Please enter all 24 words of your recovery phrase.");
       return;
@@ -144,6 +142,10 @@ export default function PasswordRecoveryPage() {
               autoComplete="off"
               spellCheck={false}
             />
+            <p className="text-label-md text-on-surface-variant">
+              Paste all 24 words. Case, spacing, numbers and punctuation are
+              ignored — you can paste directly from the PDF.
+            </p>
             <p className="text-label-md text-on-surface-variant">
               Words never leave this device — only a SHA-256 verifier is sent.
             </p>

@@ -12,6 +12,7 @@ import {
   Textarea,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { QRCodeSVG } from "../../emergency-card/qr-code-svg";
 
 const GRAIN_DATA_URL =
@@ -306,7 +307,7 @@ function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void })
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = input.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const parsed = parseRecoveryPhrase(input);
     if (parsed.length !== 12 && parsed.length !== 24) {
       setError("Your recovery phrase must be exactly 12 or 24 words.");
       return;
@@ -347,6 +348,12 @@ function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void })
           autoComplete="off"
           spellCheck={false}
         />
+
+        <p className="text-label-md text-on-surface-variant">
+          Paste all 24 words (or 12 if your phrase is 12-word). Case, spacing,
+          numbers and punctuation are ignored — you can paste directly from the
+          PDF.
+        </p>
 
         <Button type="submit" variant="vault" size="md" className="w-full">
           Reveal Recovery Kit

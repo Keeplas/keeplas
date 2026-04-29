@@ -80,6 +80,23 @@ export function RecoveryPhraseStep({
         pdf.text(word, x + 10, y);
       });
 
+      const gridRows = Math.ceil(phrase.length / colCount);
+      cursorY += gridRows * rowHeight + 10;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(10);
+      pdf.setTextColor(90);
+      pdf.text("Copy-paste line", marginX, cursorY);
+      cursorY += 5;
+      pdf.setFont("courier", "normal");
+      pdf.setFontSize(9);
+      pdf.setTextColor(60);
+      const copyPasteWrapped = pdf.splitTextToSize(
+        phrase.join(" "),
+        pageWidth - marginX * 2
+      );
+      pdf.text(copyPasteWrapped, marginX, cursorY);
+
       pdf.save("keeplas-recovery-words.pdf");
     } finally {
       setExporting(false);

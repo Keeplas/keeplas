@@ -15,6 +15,7 @@ import {
 } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
+import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
 import { EnrollDeviceUnlockDialog } from "./enroll-device-unlock-dialog";
 
@@ -115,7 +116,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
   async function handlePhraseUnlock(e: React.FormEvent) {
     e.preventDefault();
     if (!bundle || !bundle.phraseSalt) return;
-    const words = phrase.trim().split(/\s+/);
+    const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
       setError("Please enter all 24 words");
       return;
@@ -261,6 +262,10 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
                   required
                 />
+                <p className="text-label-md text-on-surface-variant">
+                  Paste all 24 words. Case, spacing, numbers and punctuation
+                  are ignored — you can paste directly from the PDF.
+                </p>
               </div>
               <Button
                 type="submit"
