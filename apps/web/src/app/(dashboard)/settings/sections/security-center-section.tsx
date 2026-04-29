@@ -66,7 +66,8 @@ export function SecurityCenterSection() {
   const hasRecoveryHash = !!user?.recoveryPhraseHash;
 
   const lastAccessTs = user?.lastSeenAt ?? user?._creationTime ?? null;
-  const lastAccessLog = logs.find((l) => l.country || l.deviceInfo) ?? null;
+  const lastAccessLog =
+    logs.find((l) => (l.country && l.country !== "XX") || l.deviceInfo) ?? null;
 
   return (
     <div className="space-y-10">
@@ -395,7 +396,7 @@ function LastAccessPanel({
     : `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "2-digit" })} · ${time}`;
 
   const subtitleParts = [
-    country ? `from ${country}` : null,
+    country && country !== "XX" ? `from ${country}` : null,
     deviceInfo,
   ].filter(Boolean) as string[];
   const subtitle =
