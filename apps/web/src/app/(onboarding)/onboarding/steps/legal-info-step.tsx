@@ -8,8 +8,6 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRequestContext } from "@/lib/use-request-context";
 import { isValidCountryCode } from "@/lib/countries";
 
-const ISO_TODAY = () => new Date().toISOString().slice(0, 10);
-
 const ISO_MIN = (() => {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 130);
@@ -82,8 +80,8 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
             Step 1 · Legal identity
           </span>
         </div>
-        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 break-words">
-          Confirm who you are
+        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 text-balance">
+          Confirm who you&nbsp;are
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">
           Your age determines legal capacity, and your country sets the
@@ -125,17 +123,7 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
             value={country}
             onChange={setCountry}
           />
-          <p className="text-label-md text-on-surface-variant">
-            Pre-filled from your IP — change it if you actually live somewhere
-            else. Determines applicable inheritance law.
-          </p>
         </div>
-
-        {!requestCtx && (
-          <p className="text-label-md text-on-surface-variant text-center">
-            Verifying secure context… this should take a moment.
-          </p>
-        )}
 
         <Button
           type="submit"
@@ -146,11 +134,6 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
         >
           {submitting ? "Saving…" : "Confirm and continue"}
         </Button>
-
-        <p className="text-label-md text-on-surface-variant text-center">
-          Keep today&apos;s date handy: <strong>{ISO_TODAY()}</strong> is
-          recorded as the moment you confirmed this information.
-        </p>
       </form>
     </div>
   );
