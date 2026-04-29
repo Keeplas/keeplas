@@ -19,6 +19,7 @@ export function RecoveryPhraseStep({
 }: RecoveryPhraseStepProps) {
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const advanceStep = useMutation(api.onboarding.advanceOnboardingStep);
 
   useEffect(() => {
@@ -37,8 +38,52 @@ export function RecoveryPhraseStep({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handlePrint() {
-    window.print();
+  async function handleDownload() {
+    if (!phrase || exporting) return;
+    setExporting(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const marginX = 20;
+      let cursorY = 24;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.text("Keeplas — Master Recovery Words", marginX, cursorY);
+
+      cursorY += 10;
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(90);
+      const warning =
+        "These 24 words are the only way to recover your vault. Keep this document offline and in a secure, fireproof location. Anyone with these words has full authority over your digital legacy.";
+      const wrapped = pdf.splitTextToSize(warning, pageWidth - marginX * 2);
+      pdf.text(wrapped, marginX, cursorY);
+      cursorY += wrapped.length * 5 + 8;
+
+      pdf.setTextColor(20);
+      pdf.setFontSize(12);
+      const colCount = 2;
+      const colWidth = (pageWidth - marginX * 2) / colCount;
+      const rowHeight = 9;
+      phrase.forEach((word, index) => {
+        const col = index % colCount;
+        const row = Math.floor(index / colCount);
+        const x = marginX + col * colWidth;
+        const y = cursorY + row * rowHeight;
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(150);
+        pdf.text(`${String(index + 1).padStart(2, "0")}.`, x, y);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(20);
+        pdf.text(word, x + 10, y);
+      });
+
+      pdf.save("keeplas-recovery-words.pdf");
+    } finally {
+      setExporting(false);
+    }
   }
 
   function handleContinue() {
@@ -59,14 +104,14 @@ export function RecoveryPhraseStep({
           <span className="text-label-md text-secondary mb-2 md:mb-3 block">
             Cryptographic Foundation
           </span>
-          <h1 className="text-headline-lg md:text-display-lg text-primary break-words">
+          <h1 className="text-headline-lg text-primary break-words">
             Master Recovery Words
           </h1>
         </div>
-        <div className="flex flex-wrap gap-2 md:gap-3 print:hidden">
+        <div className="flex flex-row flex-nowrap gap-2 md:gap-3 print:hidden">
           <button
             onClick={handleCopyAll}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
           >
             <svg
               className="w-5 h-5"
@@ -84,8 +129,9 @@ export function RecoveryPhraseStep({
             {copied ? "Copied!" : "Copy all"}
           </button>
           <button
-            onClick={handlePrint}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            onClick={handleDownload}
+            disabled={exporting}
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
               className="w-5 h-5"
@@ -97,10 +143,10 @@ export function RecoveryPhraseStep({
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18.75 7.104A48.536 48.536 0 0 0 12 6.937m0 0a48.536 48.536 0 0 0-6.75.167"
+                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
               />
             </svg>
-            Print
+            {exporting ? "Generating PDF…" : "Download"}
           </button>
         </div>
       </section>

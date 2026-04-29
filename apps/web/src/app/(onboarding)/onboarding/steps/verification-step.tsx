@@ -105,7 +105,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
         <span className="text-label-md text-secondary mb-2 md:mb-3 block">
           Backup Confirmation
         </span>
-        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 md:mb-4 break-words">
+        <h2 className="text-headline-lg text-primary mb-3 md:mb-4 break-words">
           Verify your Recovery Words
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-lg">

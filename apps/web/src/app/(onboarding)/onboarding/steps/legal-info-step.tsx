@@ -80,7 +80,7 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
             Step 1 · Legal identity
           </span>
         </div>
-        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 text-balance">
+        <h2 className="text-headline-lg text-primary mb-3 text-balance">
           Confirm who you&nbsp;are
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">

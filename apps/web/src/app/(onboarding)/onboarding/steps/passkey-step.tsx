@@ -48,7 +48,7 @@ export function PasskeyStep() {
           <Icon path={ICON_PATHS.face} className="w-5 h-5" />
           <span className="text-label-md">Optional · Faster sign in</span>
         </div>
-        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 break-words">
+        <h2 className="text-headline-lg text-primary mb-3 break-words">
           {done ? "Passkey ready" : "Sign in with your face"}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">

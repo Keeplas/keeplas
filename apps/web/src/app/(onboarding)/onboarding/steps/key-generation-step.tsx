@@ -167,7 +167,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
             Securing Vault
           </span>
         </div>
-        <h2 className="text-headline-lg md:text-display-lg text-primary mb-3 break-words">
+        <h2 className="text-headline-lg text-primary mb-3 break-words">
           {phase === "complete"
             ? "Your vault is ready"
             : "Setting up your protection"}
