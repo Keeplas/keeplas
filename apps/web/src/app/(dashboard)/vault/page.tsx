@@ -9,7 +9,6 @@ import { Button, cn, Icon, Loader } from "@keeplas/ui";
 import { AddItemDialog } from "@/components/add-item-dialog";
 import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
-import { formatTimeAgo } from "@/lib/format";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 type VaultSectionKey = "documents" | "financial" | "messages" | "digital";
@@ -48,13 +47,6 @@ function formatDate(ts: number): string {
   });
 }
 
-function formatTimeShort(ts: number): string {
-  return new Date(ts).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 const DOCUMENT_CATEGORIES: VaultCategory[] = [
   "personal_document",
   "health_directive",
@@ -90,7 +82,6 @@ function VaultPageContent() {
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
-  const user = useQuery(api.users.viewer);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [addDialogCategory, setAddDialogCategory] = useState<VaultCategory | undefined>(undefined);
@@ -128,16 +119,6 @@ function VaultPageContent() {
     return <Loader fullscreen label="Loading your vault" />;
   }
 
-  const totalItems = items.length;
-  const secureNodes = Math.max(vault?.secureNodesCount ?? 0, 1);
-  const integrityBaseline = totalItems === 0 ? 0 : Math.min(100, 80 + totalItems * 2);
-  const integrityScore = vault?.integrityScore
-    ? Math.round(vault.integrityScore)
-    : integrityBaseline;
-  const encryptedBlocks = Math.max(totalItems * 8, totalItems);
-  const lastVerifiedTs = vault?.lastVerifiedAt ?? vault?.updatedAt ?? null;
-  const lastAccessTs = user?.lastSeenAt ?? user?._creationTime ?? null;
-
   return (
     <div className="max-w-screen-2xl mx-auto space-y-10">
       {/* Header */}
@@ -174,64 +155,12 @@ function VaultPageContent() {
         </Button>
       </header>
 
-      {/* Integrity Summary & Last Access */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-primary text-white p-8 rounded-full flex flex-col justify-between relative overflow-hidden min-h-[220px]">
-          <div className="relative z-10">
-            <span className="inline-block bg-secondary px-3 py-1 rounded-full text-label-md">
-              Status: Active
-            </span>
-            <h3 className="text-headline-md mt-4">
-              Vault Integrity: {integrityScore}%
-            </h3>
-            <p className="text-body-md text-on-primary-container mt-2 max-w-sm">
-              {totalItems === 0
-                ? "Empty vault. Add your first encrypted block to establish integrity."
-                : `System last verified ${lastVerifiedTs ? formatTimeAgo(lastVerifiedTs) : "recently"}. No vulnerabilities detected in ${encryptedBlocks.toLocaleString()} encrypted blocks.`}
-            </p>
-          </div>
-
-          <div className="flex mt-8 gap-4 relative z-10">
-            <div className="bg-primary-container p-4 rounded-xl flex-1">
-              <p className="text-label-md text-on-primary-container">
-                Encrypted Items
-              </p>
-              <p className="text-headline-md">{totalItems}</p>
-            </div>
-            <div className="bg-primary-container p-4 rounded-xl flex-1">
-              <p className="text-label-md text-on-primary-container">
-                Secure Nodes
-              </p>
-              <p className="text-headline-md">{secureNodes}</p>
-            </div>
-          </div>
-
-          <div className="absolute right-[-20px] bottom-[-20px] opacity-10 pointer-events-none">
-            <Icon path={ICON_PATHS.verifiedUser} className="w-48 h-48" />
-          </div>
-        </div>
-
-        <div className="bg-surface-container-low p-8 rounded-full ghost-border flex flex-col items-center justify-center text-center">
-          <Icon path={ICON_PATHS.history} className="w-10 h-10 text-secondary mb-4" />
-          <p className="text-label-md text-on-surface-variant">
-            Last Access
-          </p>
-          <p className="text-headline-sm text-primary mt-1">
-            {lastAccessTs
-              ? `Today, ${formatTimeShort(lastAccessTs)}`
-              : "No access recorded"}
-          </p>
-          <p className="text-body-md text-on-surface-variant mt-2">
-            Verified Device · Zero-Knowledge Session
-          </p>
-        </div>
-      </section>
-
       {/* Vault Sections */}
       <div className="space-y-12">
         {(!activeSection || activeSection === "documents") && (
           <VaultSection
             title="Personal Documents"
+            count={grouped.documents.length}
             accent="bg-secondary"
             viewAllHref={
               !activeSection && grouped.documents.length > DOCUMENTS_PREVIEW_LIMIT
@@ -256,6 +185,7 @@ function VaultPageContent() {
         {(!activeSection || activeSection === "financial") && (
           <VaultSection
             title="Financial Assets"
+            count={grouped.financial.length}
             accent="bg-primary"
             isEmpty={grouped.financial.length === 0}
             emptyMessage="No financial assets yet. Add your first."
@@ -277,6 +207,7 @@ function VaultPageContent() {
             {(!activeSection || activeSection === "messages") && (
               <VaultSection
                 title="Conditional Messages"
+                count={grouped.messages.length}
                 accent="bg-error"
                 viewAllHref={
                   !activeSection && grouped.messages.length > MESSAGES_PREVIEW_LIMIT
@@ -301,6 +232,7 @@ function VaultPageContent() {
             {(!activeSection || activeSection === "digital") && (
               <VaultSection
                 title="Digital Assets"
+                count={grouped.digital.length}
                 accent="bg-tertiary"
                 viewAllHref={
                   !activeSection && grouped.digital.length > DIGITAL_PREVIEW_LIMIT
@@ -339,6 +271,7 @@ function VaultPageContent() {
 
 function VaultSection({
   title,
+  count,
   accent,
   children,
   viewAllHref,
@@ -347,6 +280,7 @@ function VaultSection({
   onAdd,
 }: {
   title: string;
+  count?: number;
   accent: string;
   children: React.ReactNode;
   viewAllHref?: string;
@@ -360,6 +294,9 @@ function VaultSection({
         <h2 className="text-headline-md flex items-center gap-3 text-primary">
           <span className={cn("w-2 h-8 rounded-full", accent)} />
           {title}
+          {count !== undefined && count > 0 && (
+            <span className="text-on-surface-variant">({count})</span>
+          )}
         </h2>
         {viewAllHref && (
           <Link

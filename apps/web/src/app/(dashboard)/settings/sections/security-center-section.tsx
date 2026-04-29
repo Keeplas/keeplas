@@ -65,8 +65,17 @@ export function SecurityCenterSection() {
   const hasKeeplasShard = !!user?.keeplasShard;
   const hasRecoveryHash = !!user?.recoveryPhraseHash;
 
+  const lastAccessTs = user?.lastSeenAt ?? user?._creationTime ?? null;
+  const lastAccessLog = logs.find((l) => l.country || l.deviceInfo) ?? null;
+
   return (
     <div className="space-y-10">
+      <LastAccessPanel
+        lastSeenAt={lastAccessTs}
+        country={lastAccessLog?.country ?? null}
+        deviceInfo={lastAccessLog?.deviceInfo ?? null}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Social Recovery */}
         <section className="md:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border flex flex-col justify-between">
@@ -364,5 +373,48 @@ function SummaryStat({ label, value }: { label: string; value: string | number }
       </p>
       <p className="text-headline-sm text-primary mt-1">{value}</p>
     </div>
+  );
+}
+
+function LastAccessPanel({
+  lastSeenAt,
+  country,
+  deviceInfo,
+}: {
+  lastSeenAt: number | null;
+  country: string | null;
+  deviceInfo: string | null;
+}) {
+  if (!lastSeenAt) return null;
+
+  const date = new Date(lastSeenAt);
+  const isToday = new Date().toDateString() === date.toDateString();
+  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const headline = isToday
+    ? `Today, ${time}`
+    : `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "2-digit" })} · ${time}`;
+
+  const subtitleParts = [
+    country ? `from ${country}` : null,
+    deviceInfo,
+  ].filter(Boolean) as string[];
+  const subtitle =
+    subtitleParts.length > 0
+      ? subtitleParts.join(" · ")
+      : "Verified device · Zero-Knowledge session";
+
+  return (
+    <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border flex items-center gap-4">
+      <div className="bg-secondary/15 text-secondary w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
+        <Icon path={ICON_PATHS.history} className="w-5 h-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-label-md text-on-surface-variant">Last access</p>
+        <p className="text-headline-sm text-primary">{headline}</p>
+        <p className="text-body-md text-on-surface-variant mt-0.5 truncate">
+          {subtitle}
+        </p>
+      </div>
+    </section>
   );
 }
