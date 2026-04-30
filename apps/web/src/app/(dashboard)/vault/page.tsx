@@ -351,12 +351,7 @@ function VaultItemCard({
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
         <span
-          className={cn(
-            "text-label-md px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%] truncate",
-            transmission.tone === "private"
-              ? "text-on-surface-variant bg-surface-container-high"
-              : "text-on-tertiary-container bg-tertiary-fixed"
-          )}
+          className="text-label-md text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%]"
           title={transmission.label}
         >
           <Icon
