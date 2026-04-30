@@ -48,6 +48,7 @@ export default function VaultItemPage() {
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
   const {
     decryptContent,
+    decryptContentWithKey,
     encryptContent,
     encryptContentWithKey,
     computeHash,
@@ -66,8 +67,13 @@ export default function VaultItemPage() {
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
   const [decrypting, setDecrypting] = useState(false);
+  // Per-item DEK (ZK items only). `null` = still unwrapping, `undefined` = not
+  // a ZK item (use master key), `CryptoKey` = ready.
+  const [itemDek, setItemDek] = useState<CryptoKey | null | undefined>(undefined);
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Edit form state
   const [editTitle, setEditTitle] = useState("");
@@ -98,25 +104,61 @@ export default function VaultItemPage() {
     return [...groupOpts, ...contactOpts];
   }, [recipientGroups, allContacts]);
 
-  // Decrypt content + linked URLs when item loads
+  // Decrypt content + linked URLs when item loads. ZK items unwrap the
+  // owner-wrapped DEK first (cached for attachments + future re-encrypt);
+  // legacy aes_256_gcm items fall back to the master key.
   useEffect(() => {
-    if (item && isReady && !decryptedContent && !decrypting) {
-      setDecrypting(true);
-      Promise.all([
-        decryptContent(item.encryptedContent).catch(() => "[Unable to decrypt]"),
-        item.encryptedLinks
-          ? decryptContent(item.encryptedLinks)
-              .then(parseLinks)
-              .catch(() => [] as string[])
-          : Promise.resolve([] as string[]),
-      ])
-        .then(([content, links]) => {
-          setDecryptedContent(content);
-          setDecryptedLinks(links);
-        })
-        .finally(() => setDecrypting(false));
-    }
-  }, [item, isReady, decryptedContent, decrypting, decryptContent]);
+    if (!item || !isReady || decryptedContent || decrypting) return;
+    const isZk = item.encryptionType === "zero_knowledge";
+    if (isZk && !cryptoReady) return;
+
+    setDecrypting(true);
+    if (isZk) setItemDek(null);
+
+    (async () => {
+      let dek: CryptoKey | undefined;
+      try {
+        if (isZk) {
+          if (!item.ownerWrappedDek) {
+            throw new Error("Missing owner wrap on zero-knowledge item");
+          }
+          dek = await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek });
+          setItemDek(dek);
+        } else {
+          setItemDek(undefined);
+        }
+
+        const decryptOne = (payload: string) =>
+          dek ? decryptContentWithKey(payload, dek) : decryptContent(payload);
+
+        const [content, links] = await Promise.all([
+          decryptOne(item.encryptedContent).catch(() => "[Unable to decrypt]"),
+          item.encryptedLinks
+            ? decryptOne(item.encryptedLinks)
+                .then(parseLinks)
+                .catch(() => [] as string[])
+            : Promise.resolve([] as string[]),
+        ]);
+        setDecryptedContent(content);
+        setDecryptedLinks(links);
+      } catch {
+        setDecryptedContent("[Unable to decrypt]");
+        setDecryptedLinks([]);
+        if (isZk) setItemDek(undefined);
+      } finally {
+        setDecrypting(false);
+      }
+    })();
+  }, [
+    item,
+    isReady,
+    cryptoReady,
+    decryptedContent,
+    decrypting,
+    decryptContent,
+    decryptContentWithKey,
+    unwrapOwnerDek,
+  ]);
 
   function startEditing() {
     if (!item || decryptedContent === null) return;
@@ -241,9 +283,9 @@ export default function VaultItemPage() {
       let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" = "zero_knowledge";
 
       if (item.ownerWrappedDek) {
-        const dek = await unwrapOwnerDek({
-          wrappedDek: item.ownerWrappedDek,
-        });
+        const dek =
+          itemDek ??
+          (await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek }));
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         const wraps = await wrapExistingDek(dek, resolvedRecipients);
@@ -302,9 +344,28 @@ export default function VaultItemPage() {
     }
   }
 
+  const DELETE_CONFIRM_TOKEN = "DELETE";
+  const canConfirmDelete = deleteConfirmInput.trim() === DELETE_CONFIRM_TOKEN;
+
+  function openDeleteDialog() {
+    setDeleteConfirmInput("");
+    setShowDeleteConfirm(true);
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    setShowDeleteConfirm(open);
+    if (!open) setDeleteConfirmInput("");
+  }
+
   async function handleDelete() {
-    await deleteItem({ itemId });
-    router.push("/vault");
+    if (!canConfirmDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteItem({ itemId });
+      router.push("/vault");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (item === undefined) {
@@ -467,8 +528,8 @@ export default function VaultItemPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                 </svg>
               </button>
-              <button onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer" title="Archive">
+              <button onClick={openDeleteDialog}
+                className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer" title="Delete permanently">
                 <svg className="w-5 h-5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m5.25 0V5.625c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V7.5m-9 0h13.5" />
                 </svg>
@@ -549,7 +610,7 @@ export default function VaultItemPage() {
 
           {/* Secure Attachments */}
           <div className="mb-6">
-            <VaultItemAttachments itemId={itemId} />
+            <VaultItemAttachments itemId={itemId} itemDek={itemDek} />
           </div>
 
           {/* Timestamp */}
@@ -557,21 +618,50 @@ export default function VaultItemPage() {
             Created {new Date(item.createdAt).toLocaleDateString()} · Updated {new Date(item.updatedAt).toLocaleDateString()}
           </p>
 
-          {/* Delete Confirmation */}
-          <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-            <DialogContent className="max-w-sm p-8 text-center">
-              <DialogTitle className="mb-2">Archive this item?</DialogTitle>
-              <DialogDescription className="mb-6">
-                This item will be archived and removed from your active vault. You can restore it later.
+          {/* Delete Confirmation — irreversible */}
+          <Dialog open={showDeleteConfirm} onOpenChange={handleDeleteDialogChange}>
+            <DialogContent className="max-w-sm p-8 text-left">
+              <DialogTitle className="mb-2 text-error">
+                Delete this item permanently?
+              </DialogTitle>
+              <DialogDescription className="mb-4">
+                This will erase the item, every secure attachment, and all
+                wrapped recipient keys. The action cannot be undone — there is
+                no archive, no trash, and no recovery, even with your recovery
+                phrase.
               </DialogDescription>
+              <div className="space-y-2 mb-6">
+                <Label htmlFor="delete-confirm-input">
+                  Type{" "}
+                  <span className="font-mono font-bold text-error">
+                    {DELETE_CONFIRM_TOKEN}
+                  </span>{" "}
+                  to confirm
+                </Label>
+                <Input
+                  id="delete-confirm-input"
+                  type="text"
+                  autoComplete="off"
+                  value={deleteConfirmInput}
+                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                  placeholder={DELETE_CONFIRM_TOKEN}
+                />
+              </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDialogChange(false)}
+                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button onClick={handleDelete}
-                  className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer">
-                  Archive
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={!canConfirmDelete || deleting}
+                  className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Deleting…" : "Delete forever"}
                 </button>
               </div>
             </DialogContent>

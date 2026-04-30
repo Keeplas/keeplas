@@ -349,6 +349,9 @@ export const updateItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
+    // Re-keying a ZK item replaces its owner wrap; mirror createItem.
+    ownerWrappedDek: v.optional(v.string()),
+    ownerWrappedDekIv: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -404,11 +407,13 @@ export const resolveRecipientsForItem = query({
 });
 
 /**
- * Soft-delete a vault item (archive it). Attached encrypted files are
- * kept in storage — restoration can undo the archive.
+ * Permanently delete a vault item. Removes the document, all per-recipient
+ * wrapped DEK rows, every attached file row, and the underlying ciphertext
+ * blobs from Convex storage. There is no recovery path — callers must show
+ * an explicit confirmation in the UI before invoking this.
  */
 export const deleteItem = auditedMutation({
-  action: "vault_item.archived",
+  action: "vault_item.deleted",
   resourceType: "vault_item",
   getResourceId: (args) => args.itemId,
   args: { itemId: v.id("vault_items") },
@@ -418,10 +423,24 @@ export const deleteItem = auditedMutation({
 
     const now = Date.now();
 
-    await ctx.db.patch(args.itemId, {
-      status: "archived",
-      updatedAt: now,
-    });
+    const recipientKeys = await ctx.db
+      .query("vault_item_recipient_keys")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .collect();
+    await Promise.all(recipientKeys.map((row) => ctx.db.delete(row._id)));
+
+    const files = await ctx.db
+      .query("vault_item_files")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .collect();
+    await Promise.all(
+      files.map(async (file) => {
+        await ctx.storage.delete(file.storageId);
+        await ctx.db.delete(file._id);
+      })
+    );
+
+    await ctx.db.delete(args.itemId);
 
     const vault = await ctx.db.get(item.vaultId);
     if (vault) {

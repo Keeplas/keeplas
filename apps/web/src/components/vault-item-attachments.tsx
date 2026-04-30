@@ -40,8 +40,12 @@ function iconForKind(kind: AttachmentFile["kind"]): string {
 
 export function VaultItemAttachments({
   itemId,
+  itemDek,
 }: {
   itemId: Id<"vault_items">;
+  // For ZK items, the unwrapped per-item DEK; legacy items leave this undefined
+  // and fall back to the master key.
+  itemDek?: CryptoKey | null;
 }) {
   const files = useQuery(api.vault_items.getItemFiles, { itemId });
 
@@ -66,18 +70,24 @@ export function VaultItemAttachments({
       </div>
       <div className="grid grid-cols-1 gap-4">
         {files.map((file) => (
-          <AttachmentCard key={file._id} file={file} />
+          <AttachmentCard key={file._id} file={file} itemDek={itemDek} />
         ))}
       </div>
     </section>
   );
 }
 
-function AttachmentCard({ file }: { file: AttachmentFile }) {
+function AttachmentCard({
+  file,
+  itemDek,
+}: {
+  file: AttachmentFile;
+  itemDek?: CryptoKey | null;
+}) {
   const signedUrl = useQuery(api.vault_items.getItemFileUrl, {
     fileId: file._id,
   });
-  const { decryptBlob, isReady } = useVaultCrypto();
+  const { decryptBlob, decryptBlobWithKey, isReady } = useVaultCrypto();
 
   const [plainUrl, setPlainUrl] = useState<string | null>(null);
   const [decrypting, setDecrypting] = useState(false);
@@ -88,14 +98,19 @@ function AttachmentCard({ file }: { file: AttachmentFile }) {
     let createdUrl: string | null = null;
 
     async function run() {
-      if (!signedUrl || !isReady || plainUrl || decrypting) return;
+      // ZK items must wait for the unwrapped DEK; legacy items use the master key.
+      const dekStillLoading = itemDek === null;
+      if (!signedUrl || !isReady || dekStillLoading || plainUrl || decrypting)
+        return;
       setDecrypting(true);
       setError("");
       try {
         const res = await fetch(signedUrl);
         if (!res.ok) throw new Error(`Download failed (${res.status})`);
         const cipherBlob = await res.blob();
-        const plainBlob = await decryptBlob(cipherBlob, file.iv);
+        const plainBlob = itemDek
+          ? await decryptBlobWithKey(cipherBlob, file.iv, itemDek)
+          : await decryptBlob(cipherBlob, file.iv);
         const typedBlob = new Blob([plainBlob], {
           type: file.mimeType || plainBlob.type || "application/octet-stream",
         });
@@ -117,7 +132,7 @@ function AttachmentCard({ file }: { file: AttachmentFile }) {
       if (createdUrl) URL.revokeObjectURL(createdUrl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedUrl, isReady, file._id, file.iv, file.mimeType]);
+  }, [signedUrl, isReady, itemDek, file._id, file.iv, file.mimeType]);
 
   const duration = formatDuration(file.durationSec);
   const meta = useMemo(() => {
