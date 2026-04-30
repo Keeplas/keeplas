@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -14,7 +14,7 @@ import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
-import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
   Button,
@@ -38,6 +38,47 @@ import { ICON_PATHS } from "@/lib/icons";
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
 
+const ATTACHMENT_ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
+const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024;
+
+type AttachmentKind = "document" | "audio" | "video" | "image";
+
+interface StagedAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  blob: Blob;
+  kind: AttachmentKind;
+  durationSec?: number;
+}
+
+function inferAttachmentKind(mimeType: string): AttachmentKind {
+  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType.startsWith("image/")) return "image";
+  return "document";
+}
+
+function attachmentIcon(kind: AttachmentKind): string {
+  switch (kind) {
+    case "audio":
+      return ICON_PATHS.mic;
+    case "video":
+      return ICON_PATHS.videocam;
+    case "image":
+      return ICON_PATHS.image;
+    default:
+      return ICON_PATHS.pictureAsPdf;
+  }
+}
+
+function formatAttachmentSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 // Legacy items were stored as plain text; new items are TipTap HTML. Wrap
 // plain text into a paragraph so newlines survive a round-trip through the
 // rich-text editor instead of collapsing into a single line.
@@ -57,13 +98,19 @@ export default function VaultItemPage() {
   const itemId = params.itemId as Id<"vault_items">;
 
   const item = useQuery(api.vault_items.getItem, { itemId });
+  const itemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
+  const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
+  const generateUploadUrl = useAuditedMutation(api.vault_items.generateUploadUrl);
   const {
     decryptContent,
     decryptContentWithKey,
     encryptContent,
     encryptContentWithKey,
+    encryptBlob,
+    encryptBlobWithKey,
     computeHash,
     isReady,
   } = useVaultCrypto();
@@ -95,8 +142,14 @@ export default function VaultItemPage() {
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
+  const [removedFileIds, setRemovedFileIds] = useState<Set<Id<"vault_item_files">>>(
+    new Set()
+  );
+  const [stagedFiles, setStagedFiles] = useState<StagedAttachment[]>([]);
   const [saving, setSaving] = useState(false);
+  const [savingProgress, setSavingProgress] = useState("");
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
@@ -198,7 +251,70 @@ export default function VaultItemPage() {
     }
     setEditRecipientSelection(initial);
 
+    setRemovedFileIds(new Set());
+    setStagedFiles([]);
+    setError("");
+
     setEditing(true);
+  }
+
+  function cancelEditing() {
+    setRemovedFileIds(new Set());
+    setStagedFiles([]);
+    setError("");
+    setEditing(false);
+  }
+
+  function ingestAttachments(list: FileList | File[]) {
+    const accepted: StagedAttachment[] = [];
+    const allowed = ATTACHMENT_ACCEPTED_TYPES.split(",");
+    for (const file of Array.from(list)) {
+      if (!allowed.includes(file.type)) {
+        setError(`${file.name} — unsupported file type. PDF, JPG or PNG only.`);
+        continue;
+      }
+      if (file.size > ATTACHMENT_MAX_BYTES) {
+        setError(`${file.name} — exceeds 50 MB limit.`);
+        continue;
+      }
+      accepted.push({
+        id: `${file.name}-${file.size}-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 7)}`,
+        name: file.name,
+        mimeType: file.type,
+        size: file.size,
+        blob: file,
+        kind: inferAttachmentKind(file.type),
+      });
+    }
+    if (accepted.length > 0) {
+      setError("");
+      setStagedFiles((prev) => [...prev, ...accepted]);
+    }
+  }
+
+  function handleAttachmentPick(e: ChangeEvent<HTMLInputElement>) {
+    if (e.target.files) {
+      ingestAttachments(e.target.files);
+      e.target.value = "";
+    }
+  }
+
+  function toggleRemoveExisting(fileId: Id<"vault_item_files">) {
+    setRemovedFileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(fileId)) {
+        next.delete(fileId);
+      } else {
+        next.add(fileId);
+      }
+      return next;
+    });
+  }
+
+  function removeStaged(stagedId: string) {
+    setStagedFiles((prev) => prev.filter((f) => f.id !== stagedId));
   }
 
   function resolveEditRecipientConfig(): {
@@ -252,6 +368,7 @@ export default function VaultItemPage() {
     const linksPayload = serializeLinks(cleanUrls);
 
     setSaving(true);
+    setSavingProgress("");
     setError("");
 
     try {
@@ -294,11 +411,16 @@ export default function VaultItemPage() {
         wrappedDek: string;
       }> = [];
       let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" = "zero_knowledge";
+      // The DEK we should use to encrypt newly-added attachments under,
+      // matching whatever the item currently lives under.
+      let attachmentDek: CryptoKey | undefined;
 
+      setSavingProgress("Encrypting content…");
       if (item.ownerWrappedDek) {
         const dek =
           itemDek ??
           (await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek }));
+        attachmentDek = dek;
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         const wraps = await wrapExistingDek(dek, resolvedRecipients);
@@ -310,6 +432,7 @@ export default function VaultItemPage() {
       } else if (item.encryptionType === "zero_knowledge") {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
         const fresh = await generateDekAndWrap(resolvedRecipients);
+        attachmentDek = fresh.dek;
         encryptedContent = await encryptContentWithKey(contentPayload, fresh.dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, fresh.dek);
         ownerWrappedDek = fresh.ownerWrap.wrappedDek;
@@ -347,13 +470,75 @@ export default function VaultItemPage() {
           : {}),
       });
 
+      // Attachment removals — independent of metadata update.
+      if (removedFileIds.size > 0) {
+        setSavingProgress("Removing attachments…");
+        for (const fileId of removedFileIds) {
+          await removeItemFile({ itemId, fileId });
+        }
+      }
+
+      // Attachment additions — encrypt under the same key as the item, then
+      // upload the ciphertext blob and register the row.
+      if (stagedFiles.length > 0) {
+        const uploaded: Array<{
+          storageId: Id<"_storage">;
+          name: string;
+          mimeType: string;
+          size: number;
+          iv: string;
+          kind: AttachmentKind;
+          durationSec?: number;
+        }> = [];
+        for (let index = 0; index < stagedFiles.length; index++) {
+          const file = stagedFiles[index];
+          setSavingProgress(
+            `Encrypting attachment ${index + 1}/${stagedFiles.length} — ${file.name}`
+          );
+          const { cipherBlob, iv } = attachmentDek
+            ? await encryptBlobWithKey(file.blob, attachmentDek)
+            : await encryptBlob(file.blob);
+
+          setSavingProgress(
+            `Uploading attachment ${index + 1}/${stagedFiles.length} — ${file.name}`
+          );
+          const uploadUrl = await generateUploadUrl();
+          const res = await fetch(uploadUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": file.mimeType || "application/octet-stream",
+            },
+            body: cipherBlob,
+          });
+          if (!res.ok) {
+            throw new Error(`Upload failed (${res.status}) for ${file.name}`);
+          }
+          const { storageId } = (await res.json()) as {
+            storageId: Id<"_storage">;
+          };
+          uploaded.push({
+            storageId,
+            name: file.name,
+            mimeType: file.mimeType,
+            size: cipherBlob.size,
+            iv,
+            kind: file.kind,
+            durationSec: file.durationSec,
+          });
+        }
+        await addItemFiles({ itemId, files: uploaded });
+      }
+
       setDecryptedContent(contentPayload);
       setDecryptedLinks(cleanUrls);
+      setRemovedFileIds(new Set());
+      setStagedFiles([]);
       setEditing(false);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to update."));
     } finally {
       setSaving(false);
+      setSavingProgress("");
     }
   }
 
@@ -451,6 +636,59 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
+            <Label>Secure Attachments</Label>
+            <div className="space-y-2">
+              {(itemFiles ?? []).map((file) => {
+                const removed = removedFileIds.has(file._id);
+                return (
+                  <ExistingAttachmentRow
+                    key={file._id}
+                    file={file}
+                    removed={removed}
+                    onToggle={() => toggleRemoveExisting(file._id)}
+                  />
+                );
+              })}
+              {stagedFiles.map((file) => (
+                <StagedAttachmentRow
+                  key={file.id}
+                  file={file}
+                  onRemove={() => removeStaged(file.id)}
+                />
+              ))}
+              {(itemFiles?.length ?? 0) === 0 && stagedFiles.length === 0 && (
+                <p className="text-label-md text-on-surface-variant/70">
+                  No attachments yet.
+                </p>
+              )}
+            </div>
+            <div className="pt-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ATTACHMENT_ACCEPTED_TYPES}
+                onChange={handleAttachmentPick}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
+              >
+                <Icon path={ICON_PATHS.plus} className="w-4 h-4 mr-2" />
+                Add file
+              </Button>
+              <p className="text-label-md text-on-surface-variant/70 mt-2">
+                PDF, JPG or PNG up to 50 MB. Files are encrypted client-side
+                before upload.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label>Who receives this at trigger?</Label>
             <MultiSelect
               options={recipientOptions}
@@ -505,7 +743,8 @@ export default function VaultItemPage() {
               type="button"
               variant="ghost"
               size="md"
-              onClick={() => setEditing(false)}
+              onClick={cancelEditing}
+              disabled={saving}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
               Cancel
@@ -517,7 +756,9 @@ export default function VaultItemPage() {
               disabled={saving}
               className="flex-1 text-sm cursor-pointer"
             >
-              {saving ? "Encrypting..." : "Save Changes"}
+              {saving
+                ? savingProgress || "Encrypting…"
+                : "Save Changes"}
             </Button>
           </div>
         </form>
@@ -687,6 +928,77 @@ export default function VaultItemPage() {
           </Dialog>
         </>
       )}
+    </div>
+  );
+}
+
+function ExistingAttachmentRow({
+  file,
+  removed,
+  onToggle,
+}: {
+  file: Doc<"vault_item_files">;
+  removed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 ${
+        removed ? "opacity-50" : ""
+      }`}
+    >
+      <div className="w-9 h-9 bg-surface-container-high rounded-lg flex items-center justify-center shrink-0 text-primary">
+        <Icon path={attachmentIcon(file.kind)} className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`text-headline-sm text-primary truncate ${
+            removed ? "line-through" : ""
+          }`}
+        >
+          {file.name}
+        </p>
+        <p className="text-label-md text-on-surface-variant mt-0.5">
+          {formatAttachmentSize(file.size)} · Encrypted
+          {removed ? " · Will be deleted" : ""}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
+      >
+        {removed ? "Undo" : "Remove"}
+      </button>
+    </div>
+  );
+}
+
+function StagedAttachmentRow({
+  file,
+  onRemove,
+}: {
+  file: StagedAttachment;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 bg-secondary/5 border border-secondary/20 rounded-xl px-4 py-3">
+      <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center shrink-0 text-secondary">
+        <Icon path={attachmentIcon(file.kind)} className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-headline-sm text-primary truncate">{file.name}</p>
+        <p className="text-label-md text-on-surface-variant mt-0.5">
+          {formatAttachmentSize(file.size)} · Will be encrypted on save
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
+      >
+        Remove
+      </button>
     </div>
   );
 }

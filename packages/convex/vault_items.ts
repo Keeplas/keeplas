@@ -168,6 +168,16 @@ const fileKindValidator = v.union(
   v.literal("image")
 );
 
+const newFileValidator = v.object({
+  storageId: v.id("_storage"),
+  name: v.string(),
+  mimeType: v.string(),
+  size: v.number(),
+  iv: v.string(),
+  kind: fileKindValidator,
+  durationSec: v.optional(v.number()),
+});
+
 /**
  * Create a new encrypted vault item, optionally attaching pre-uploaded
  * encrypted blobs stored in Convex storage.
@@ -386,6 +396,83 @@ export const updateItem = auditedMutation({
         )
       );
     }
+  },
+});
+
+/**
+ * Attach already-uploaded encrypted blobs to an existing vault item. The
+ * client must encrypt each blob under the item's existing DEK (unwrapped
+ * via `ownerWrappedDek`) before calling this — the server only links the
+ * storage rows.
+ */
+export const addItemFiles = auditedMutation({
+  action: "vault_item.files_added",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  getMetadata: (args) => ({ count: args.files.length }),
+  args: {
+    itemId: v.id("vault_items"),
+    files: v.array(newFileValidator),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    await requireItemOwnership(ctx, args.itemId, userId);
+    if (args.files.length === 0) return;
+
+    const existing = await ctx.db
+      .query("vault_item_files")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .collect();
+    let nextOrder =
+      existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
+
+    const now = Date.now();
+    await Promise.all(
+      args.files.map((file) =>
+        ctx.db.insert("vault_item_files", {
+          itemId: args.itemId,
+          userId,
+          storageId: file.storageId,
+          name: file.name,
+          mimeType: file.mimeType,
+          size: file.size,
+          iv: file.iv,
+          kind: file.kind,
+          durationSec: file.durationSec,
+          order: nextOrder++,
+          createdAt: now,
+        })
+      )
+    );
+
+    await ctx.db.patch(args.itemId, { updatedAt: now });
+  },
+});
+
+/**
+ * Detach a single attachment from a vault item: deletes the storage blob
+ * and the row. Ownership is verified on both the item and the file.
+ */
+export const removeItemFile = auditedMutation({
+  action: "vault_item.file_removed",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  args: {
+    itemId: v.id("vault_items"),
+    fileId: v.id("vault_item_files"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    await requireItemOwnership(ctx, args.itemId, userId);
+
+    const file = await ctx.db.get(args.fileId);
+    if (!file || file.itemId !== args.itemId || file.userId !== userId) {
+      throw new Error("File not found");
+    }
+
+    await ctx.storage.delete(file.storageId);
+    await ctx.db.delete(args.fileId);
+    await ctx.db.patch(args.itemId, { updatedAt: Date.now() });
   },
 });
 
