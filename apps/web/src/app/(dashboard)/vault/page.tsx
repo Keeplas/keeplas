@@ -351,7 +351,7 @@ function VaultItemCard({
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
         <span
-          className="text-label-md text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%]"
+          className="text-label-md normal-case tracking-normal text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%]"
           title={transmission.label}
         >
           <Icon
@@ -368,11 +368,11 @@ function VaultItemCard({
       <h4 className="text-headline-sm text-primary truncate">
         {item.title}
       </h4>
-      <p className="text-label-md text-on-surface-variant mt-1">
+      <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>
       {onEmergencyCard && (
-        <span className="mt-3 inline-flex items-center gap-1.5 text-label-md text-on-secondary-container bg-secondary-container px-3 py-1 rounded-full">
+        <span className="mt-3 inline-flex items-center gap-1.5 text-label-md normal-case tracking-normal text-on-secondary-container bg-secondary-container px-3 py-1 rounded-full">
           <Icon path={ICON_PATHS.emergencyCard} className="w-3 h-3" />
           On Emergency Card
         </span>
