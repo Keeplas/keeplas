@@ -160,7 +160,9 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  // Holds the rich-text body. Always encrypted into `encryptedContent` before
+  // upload — never sent to the server in plaintext (zero-knowledge).
+  const [body, setBody] = useState("");
   const [category, setCategory] = useState<VaultCategory>(defaultCategory ?? "personal_document");
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
@@ -336,7 +338,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
   function resetDialog() {
     setTitle("");
-    setDescription("");
+    setBody("");
     setCategory(defaultCategory ?? "personal_document");
     setFiles([]);
     setLinkUrls([""]);
@@ -464,7 +466,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       }
 
       setProgress("Sealing vault entry…");
-      const textPayload = description.trim();
+      const textPayload = body.trim();
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const contentHash = await computeHash(textPayload);
       const encryptedLinks =
@@ -486,7 +488,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         vaultId,
         category,
         title: title.trim(),
-        description: description.trim() || undefined,
         encryptedContent,
         encryptedLinks,
         contentHash,
@@ -592,8 +593,8 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   )}
                 </Label>
                 <RichTextEditor
-                  value={description}
-                  onChange={setDescription}
+                  value={body}
+                  onChange={setBody}
                   placeholder={
                     isLetter
                       ? "Write the message that will be released…"

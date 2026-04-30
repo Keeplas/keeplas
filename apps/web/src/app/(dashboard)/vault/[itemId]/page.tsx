@@ -71,7 +71,6 @@ export default function VaultItemPage() {
 
   // Edit form state
   const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editLinkUrls, setEditLinkUrls] = useState<string[]>([""]);
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
@@ -122,7 +121,6 @@ export default function VaultItemPage() {
   function startEditing() {
     if (!item || decryptedContent === null) return;
     setEditTitle(item.title);
-    setEditDescription(item.description ?? "");
     setEditContent(decryptedContent);
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
@@ -278,7 +276,6 @@ export default function VaultItemPage() {
       await updateItem({
         itemId,
         title: editTitle.trim(),
-        description: editDescription.trim() || undefined,
         encryptedContent,
         encryptedLinks,
         contentHash,
@@ -363,11 +360,6 @@ export default function VaultItemPage() {
                 <SelectItem key={cat.key} value={cat.key}>{cat.label}</SelectItem>
               ))}
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Input type="text" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
           </div>
 
           <div className="space-y-2">
@@ -467,9 +459,6 @@ export default function VaultItemPage() {
               <h1 className="text-headline-lg text-primary">
                 {item.title}
               </h1>
-              {item.description && (
-                <p className="text-body-lg text-on-surface-variant mt-1">{item.description}</p>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <button onClick={startEditing}

@@ -249,6 +249,33 @@ export const migrateScenarioActions = internalMutation({
 });
 
 /**
+ * Scrub the deprecated plaintext `description` field from every vault_items
+ * row. Earlier the Add-to-Vault dialog mistakenly sent the rich-text body in
+ * plaintext as `description` while ALSO encrypting it into `encryptedContent`
+ * — breaking the zero-knowledge guarantee. The dialog and edit form no
+ * longer write to `description`; this migration clears any leaked plaintext
+ * left in storage. After it runs and the field stays undefined on every row,
+ * `description` can be removed from the schema entirely.
+ */
+export const dropVaultItemDescriptions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let cleared = 0;
+    const items = await ctx.db.query("vault_items").collect();
+    for (const item of items) {
+      if (item.description !== undefined) {
+        await ctx.db.patch(item._id, {
+          description: undefined,
+          updatedAt: Date.now(),
+        });
+        cleared++;
+      }
+    }
+    return { cleared };
+  },
+});
+
+/**
  * Backfill the WhatsApp verification channel into every existing
  * life_check_configs row. WhatsApp is now the primary channel — new users
  * already get it via DEFAULT_CHANNELS, but rows saved before WhatsApp was

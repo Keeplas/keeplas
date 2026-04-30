@@ -11,33 +11,84 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
-type VaultSectionKey = "documents" | "financial" | "messages" | "digital";
-const VALID_SECTIONS: ReadonlySet<VaultSectionKey> = new Set([
-  "documents",
-  "financial",
-  "messages",
-  "digital",
-]);
-const SECTION_LABELS: Record<VaultSectionKey, string> = {
-  documents: "Personal Documents",
-  financial: "Financial Assets",
-  messages: "Conditional Messages",
-  digital: "Digital Assets",
-};
-const DOCUMENTS_PREVIEW_LIMIT = 6;
-const MESSAGES_PREVIEW_LIMIT = 3;
-const DIGITAL_PREVIEW_LIMIT = 3;
-
-type GroupedItems = {
-  documents: Doc<"vault_items">[];
-  financial: Doc<"vault_items">[];
-  messages: Doc<"vault_items">[];
-  digital: Doc<"vault_items">[];
-};
-
-function currentSectionCount(grouped: GroupedItems, section: VaultSectionKey) {
-  return grouped[section].length;
+interface SectionConfig {
+  key: string;
+  label: string;
+  category: VaultCategory;
+  accent: string;
+  emptyMessage: string;
 }
+
+// One section per category. Health Directives, Legal Documents, and Business
+// Continuity are top-level here so they don't collapse into "Personal
+// Documents" — each category has its own intent and own UI affordances.
+const SECTIONS: SectionConfig[] = [
+  {
+    key: "documents",
+    label: "Personal Documents",
+    category: "personal_document",
+    accent: "bg-secondary",
+    emptyMessage: "No personal documents yet. Add your first.",
+  },
+  {
+    key: "health",
+    label: "Health Directives",
+    category: "health_directive",
+    accent: "bg-error",
+    emptyMessage: "No health directives yet. Add your first.",
+  },
+  {
+    key: "legal",
+    label: "Legal Documents",
+    category: "legal_document",
+    accent: "bg-primary",
+    emptyMessage: "No legal documents yet. Add your first.",
+  },
+  {
+    key: "business",
+    label: "Business Continuity",
+    category: "business_continuity",
+    accent: "bg-tertiary",
+    emptyMessage: "No business continuity plans yet. Add your first.",
+  },
+  {
+    key: "financial",
+    label: "Financial Assets",
+    category: "financial_asset",
+    accent: "bg-secondary",
+    emptyMessage: "No financial assets yet. Add your first.",
+  },
+  {
+    key: "credentials",
+    label: "Credentials",
+    category: "credential",
+    accent: "bg-primary",
+    emptyMessage: "No credentials yet. Add your first.",
+  },
+  {
+    key: "digital",
+    label: "Digital Assets",
+    category: "digital_asset",
+    accent: "bg-tertiary",
+    emptyMessage: "No digital assets yet. Add your first.",
+  },
+  {
+    key: "messages",
+    label: "Conditional Messages",
+    category: "conditional_message",
+    accent: "bg-error",
+    emptyMessage: "No conditional messages yet.",
+  },
+];
+
+const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
+const PREVIEW_LIMIT = 6;
+
+const TRIGGER_LABELS: Record<string, string> = {
+  life_check_failure: "Dead Man's Switch",
+  time_based: "Scheduled Release",
+  manual: "Manual Trigger",
+};
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString([], {
@@ -46,23 +97,6 @@ function formatDate(ts: number): string {
     year: "numeric",
   });
 }
-
-const DOCUMENT_CATEGORIES: VaultCategory[] = [
-  "personal_document",
-  "health_directive",
-  "legal_document",
-  "business_continuity",
-];
-const FINANCIAL_CATEGORIES: VaultCategory[] = ["financial_asset"];
-const MESSAGE_CATEGORIES: VaultCategory[] = ["conditional_message"];
-const DIGITAL_CATEGORIES: VaultCategory[] = ["digital_asset", "credential"];
-
-const SECTION_DEFAULT_CATEGORY: Record<VaultSectionKey, VaultCategory> = {
-  documents: "personal_document",
-  financial: "financial_asset",
-  messages: "conditional_message",
-  digital: "digital_asset",
-};
 
 export default function VaultPage() {
   return (
@@ -75,10 +109,7 @@ export default function VaultPage() {
 function VaultPageContent() {
   const searchParams = useSearchParams();
   const rawSection = searchParams.get("section");
-  const activeSection: VaultSectionKey | null =
-    rawSection && VALID_SECTIONS.has(rawSection as VaultSectionKey)
-      ? (rawSection as VaultSectionKey)
-      : null;
+  const activeSection = rawSection ? SECTION_BY_KEY.get(rawSection) ?? null : null;
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
@@ -86,8 +117,8 @@ function VaultPageContent() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [addDialogCategory, setAddDialogCategory] = useState<VaultCategory | undefined>(undefined);
 
-  function openAddDialog(section?: VaultSectionKey) {
-    setAddDialogCategory(section ? SECTION_DEFAULT_CATEGORY[section] : undefined);
+  function openAddDialog(section?: SectionConfig) {
+    setAddDialogCategory(section?.category);
     setShowAddDialog(true);
   }
 
@@ -97,27 +128,26 @@ function VaultPageContent() {
     }
   }, [vault, getOrCreateVault]);
 
-  const grouped = useMemo(() => {
-    const list = items ?? [];
-    return {
-      documents: list.filter((i) =>
-        DOCUMENT_CATEGORIES.includes(i.category as VaultCategory)
-      ),
-      financial: list.filter((i) =>
-        FINANCIAL_CATEGORIES.includes(i.category as VaultCategory)
-      ),
-      messages: list.filter((i) =>
-        MESSAGE_CATEGORIES.includes(i.category as VaultCategory)
-      ),
-      digital: list.filter((i) =>
-        DIGITAL_CATEGORIES.includes(i.category as VaultCategory)
-      ),
-    };
+  const itemsByCategory = useMemo(() => {
+    const map = new Map<VaultCategory, Doc<"vault_items">[]>();
+    for (const section of SECTIONS) {
+      map.set(section.category, []);
+    }
+    for (const item of items ?? []) {
+      const list = map.get(item.category as VaultCategory);
+      if (list) list.push(item);
+    }
+    return map;
   }, [items]);
 
   if (items === undefined || vault === undefined) {
     return <Loader fullscreen label="Loading your vault" />;
   }
+
+  const sectionsToRender = activeSection ? [activeSection] : SECTIONS;
+  const activeCount = activeSection
+    ? itemsByCategory.get(activeSection.category)?.length ?? 0
+    : 0;
 
   return (
     <div className="max-w-screen-2xl mx-auto space-y-10">
@@ -134,13 +164,11 @@ function VaultPageContent() {
             </Link>
           )}
           <h1 className="text-headline-lg text-primary">
-            {activeSection ? SECTION_LABELS[activeSection] : "Digital Vault"}
+            {activeSection ? activeSection.label : "Digital Vault"}
           </h1>
           <p className="text-body-lg text-on-surface-variant max-w-md">
             {activeSection
-              ? `Showing all ${currentSectionCount(grouped, activeSection)} item${
-                  currentSectionCount(grouped, activeSection) === 1 ? "" : "s"
-                } in this category.`
+              ? `Showing all ${activeCount} item${activeCount === 1 ? "" : "s"} in this category.`
               : "Your life's core documentation, secured with end-to-end zero-knowledge encryption."}
           </p>
         </div>
@@ -157,104 +185,34 @@ function VaultPageContent() {
 
       {/* Vault Sections */}
       <div className="space-y-12">
-        {(!activeSection || activeSection === "documents") && (
-          <VaultSection
-            title="Personal Documents"
-            count={grouped.documents.length}
-            accent="bg-secondary"
-            viewAllHref={
-              !activeSection && grouped.documents.length > DOCUMENTS_PREVIEW_LIMIT
-                ? "/vault?section=documents"
-                : undefined
-            }
-            isEmpty={grouped.documents.length === 0}
-            emptyMessage="No personal documents yet. Add your first."
-            onAdd={() => openAddDialog("documents")}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(activeSection
-                ? grouped.documents
-                : grouped.documents.slice(0, DOCUMENTS_PREVIEW_LIMIT)
-              ).map((item) => (
-                <DocumentCard key={item._id} item={item} />
-              ))}
-            </div>
-          </VaultSection>
-        )}
-
-        {(!activeSection || activeSection === "financial") && (
-          <VaultSection
-            title="Financial Assets"
-            count={grouped.financial.length}
-            accent="bg-primary"
-            isEmpty={grouped.financial.length === 0}
-            emptyMessage="No financial assets yet. Add your first."
-            onAdd={() => openAddDialog("financial")}
-          >
-            <FinancialTable items={grouped.financial} />
-          </VaultSection>
-        )}
-
-        {(!activeSection ||
-          activeSection === "messages" ||
-          activeSection === "digital") && (
-          <div
-            className={cn(
-              "grid gap-8",
-              activeSection ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-            )}
-          >
-            {(!activeSection || activeSection === "messages") && (
-              <VaultSection
-                title="Conditional Messages"
-                count={grouped.messages.length}
-                accent="bg-error"
-                viewAllHref={
-                  !activeSection && grouped.messages.length > MESSAGES_PREVIEW_LIMIT
-                    ? "/vault?section=messages"
-                    : undefined
-                }
-                isEmpty={grouped.messages.length === 0}
-                emptyMessage="No conditional messages yet."
-                onAdd={() => openAddDialog("messages")}
-              >
-                <div className="space-y-4">
-                  {(activeSection
-                    ? grouped.messages
-                    : grouped.messages.slice(0, MESSAGES_PREVIEW_LIMIT)
-                  ).map((item) => (
-                    <MessageCard key={item._id} item={item} />
-                  ))}
-                </div>
-              </VaultSection>
-            )}
-
-            {(!activeSection || activeSection === "digital") && (
-              <VaultSection
-                title="Digital Assets"
-                count={grouped.digital.length}
-                accent="bg-tertiary"
-                viewAllHref={
-                  !activeSection && grouped.digital.length > DIGITAL_PREVIEW_LIMIT
-                    ? "/vault?section=digital"
-                    : undefined
-                }
-                isEmpty={grouped.digital.length === 0}
-                emptyMessage="No digital assets yet. Add your first."
-                onAdd={() => openAddDialog("digital")}
-              >
-                <div className="space-y-4">
-                  {(activeSection
-                    ? grouped.digital
-                    : grouped.digital.slice(0, DIGITAL_PREVIEW_LIMIT)
-                  ).map((item) => (
-                    <DigitalAssetRow key={item._id} item={item} />
-                  ))}
-                </div>
-              </VaultSection>
-            )}
-          </div>
-        )}
+        {sectionsToRender.map((section) => {
+          const sectionItems = itemsByCategory.get(section.category) ?? [];
+          const visibleItems = activeSection
+            ? sectionItems
+            : sectionItems.slice(0, PREVIEW_LIMIT);
+          return (
+            <VaultSection
+              key={section.key}
+              title={section.label}
+              count={sectionItems.length}
+              accent={section.accent}
+              viewAllHref={
+                !activeSection && sectionItems.length > PREVIEW_LIMIT
+                  ? `/vault?section=${section.key}`
+                  : undefined
+              }
+              isEmpty={sectionItems.length === 0}
+              emptyMessage={section.emptyMessage}
+              onAdd={() => openAddDialog(section)}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {visibleItems.map((item) => (
+                  <VaultItemCard key={item._id} item={item} />
+                ))}
+              </div>
+            </VaultSection>
+          );
+        })}
       </div>
 
       {vault && (
@@ -326,8 +284,18 @@ function VaultSection({
   );
 }
 
-function DocumentCard({ item }: { item: Doc<"vault_items"> }) {
+// Single card used for every category. The badge is context-aware:
+//   - Conditional messages → trigger label (Dead Man's Switch / Scheduled
+//     Release / Manual Trigger) so the user can tell at a glance how the
+//     letter is gated.
+//   - Items shared with contacts → "Shared · N" so the privacy posture is
+//     visible without opening the item.
+//   - Otherwise → a lock indicator confirming zero-knowledge encryption.
+function VaultItemCard({ item }: { item: Doc<"vault_items"> }) {
   const category = getCategoryConfig(item.category as VaultCategory);
+  const trigger = item.triggerType ? TRIGGER_LABELS[item.triggerType] : null;
+  const sharedCount = item.sharedWithContacts?.length ?? 0;
+
   return (
     <Link
       href={`/vault/${item._id}`}
@@ -337,7 +305,18 @@ function DocumentCard({ item }: { item: Doc<"vault_items"> }) {
         <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors">
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
-        <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
+        {trigger ? (
+          <span className="text-label-md text-error bg-error-container px-3 py-1 rounded-full">
+            {trigger}
+          </span>
+        ) : sharedCount > 0 ? (
+          <span className="text-label-md text-on-tertiary-container bg-tertiary-fixed px-3 py-1 rounded-full inline-flex items-center gap-1">
+            <Icon path={ICON_PATHS.users} className="w-3 h-3" />
+            {sharedCount}
+          </span>
+        ) : (
+          <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
+        )}
       </div>
       <h4 className="text-headline-sm text-primary truncate">
         {item.title}
@@ -345,127 +324,6 @@ function DocumentCard({ item }: { item: Doc<"vault_items"> }) {
       <p className="text-label-md text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>
-    </Link>
-  );
-}
-
-function financialIconPath(title: string) {
-  const t = title.toLowerCase();
-  if (t.includes("crypto") || t.includes("bitcoin") || t.includes("wallet"))
-    return ICON_PATHS.currencyBitcoin;
-  return ICON_PATHS.accountBalance;
-}
-
-function FinancialTable({ items }: { items: Doc<"vault_items">[] }) {
-  return (
-    <div className="bg-surface-container-low rounded-full overflow-hidden">
-      <table className="w-full text-left border-collapse">
-        <thead className="border-b border-outline-variant/10">
-          <tr>
-            <th className="px-8 py-5 text-label-md text-on-surface-variant">
-              Asset Name
-            </th>
-            <th className="px-8 py-5 text-label-md text-on-surface-variant">
-              Encryption Status
-            </th>
-            <th className="px-8 py-5 text-label-md text-on-surface-variant">
-              Last Updated
-            </th>
-            <th className="px-8 py-5 text-label-md text-on-surface-variant text-right">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr
-              key={item._id}
-              className="hover:bg-surface-container transition-colors group border-t border-outline-variant/5 first:border-t-0"
-            >
-              <td className="px-8 py-6">
-                <div className="flex items-center gap-4">
-                  <Icon
-                    path={financialIconPath(item.title)}
-                    className="w-5 h-5 text-secondary"
-                  />
-                  <span className="font-bold text-primary">{item.title}</span>
-                </div>
-              </td>
-              <td className="px-8 py-6">
-                <span className="inline-flex items-center gap-2 text-label-md text-on-tertiary-container bg-tertiary-fixed px-3 py-1 rounded-full">
-                  <Icon path={ICON_PATHS.verifiedFill} className="w-3.5 h-3.5" />
-                  Zero-Knowledge
-                </span>
-              </td>
-              <td className="px-8 py-6 text-body-md text-on-surface-variant">
-                {formatDate(item.updatedAt)}
-              </td>
-              <td className="px-8 py-6 text-right">
-                <Link
-                  href={`/vault/${item._id}`}
-                  className="inline-flex text-primary hover:text-secondary p-2 transition-colors rounded-lg"
-                  aria-label="Item options"
-                >
-                  <Icon path={ICON_PATHS.moreHoriz} className="w-5 h-5" />
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function MessageCard({ item }: { item: Doc<"vault_items"> }) {
-  return (
-    <Link
-      href={`/vault/${item._id}`}
-      className="block bg-white p-6 rounded-full shadow-sm hover:shadow-md transition-shadow ghost-border"
-    >
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-label-md text-error bg-error-container px-3 py-1 rounded-full">
-          Dead Man&apos;s Switch
-        </span>
-        <Icon path={ICON_PATHS.mail} className="w-5 h-5 text-on-surface-variant" />
-      </div>
-      <h4 className="text-headline-sm text-primary">{item.title}</h4>
-      <p className="text-body-md text-on-surface-variant mt-2 line-clamp-2">
-        {item.description ??
-          "This message will be released when your life check protocol triggers."}
-      </p>
-    </Link>
-  );
-}
-
-function DigitalAssetRow({ item }: { item: Doc<"vault_items"> }) {
-  const sharedCount = item.sharedWithContacts?.length ?? 0;
-  const iconPath =
-    item.category === "credential" ? ICON_PATHS.key : ICON_PATHS.cloud;
-  return (
-    <Link
-      href={`/vault/${item._id}`}
-      className="bg-surface-container-highest p-6 rounded-full flex items-center justify-between group cursor-pointer hover:bg-surface-dim transition-colors"
-    >
-      <div className="flex items-center gap-4 min-w-0">
-        <div className="bg-white p-3 rounded-xl shrink-0">
-          <Icon path={iconPath} className="w-5 h-5 text-primary" />
-        </div>
-        <div className="min-w-0">
-          <h4 className="text-headline-sm text-primary truncate">
-            {item.title}
-          </h4>
-          <p className="text-label-md text-on-surface-variant truncate">
-            {sharedCount > 0
-              ? `Shared with ${sharedCount} Contact${sharedCount === 1 ? "" : "s"}`
-              : "Private"}
-          </p>
-        </div>
-      </div>
-      <Icon
-        path={ICON_PATHS.chevronRight}
-        className="w-4 h-4 text-on-surface-variant shrink-0 group-hover:translate-x-1 transition-transform"
-      />
     </Link>
   );
 }
