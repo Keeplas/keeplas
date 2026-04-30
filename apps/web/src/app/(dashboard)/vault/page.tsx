@@ -82,7 +82,7 @@ const SECTIONS: SectionConfig[] = [
 ];
 
 const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
-const PREVIEW_LIMIT = 6;
+const PREVIEW_LIMIT = 3;
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString([], {
@@ -249,18 +249,18 @@ function VaultSection({
 }) {
   return (
     <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-headline-md flex items-center gap-3 text-primary">
-          <span className={cn("w-2 h-8 rounded-full", accent)} />
-          {title}
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-headline-md flex items-center gap-3 text-primary min-w-0">
+          <span className={cn("w-2 h-8 rounded-full shrink-0", accent)} />
+          <span className="truncate">{title}</span>
           {count !== undefined && count > 0 && (
-            <span className="text-on-surface-variant">({count})</span>
+            <span className="text-on-surface-variant shrink-0">({count})</span>
           )}
         </h2>
         {viewAllHref && (
           <Link
             href={viewAllHref}
-            className="text-secondary text-body-md font-bold hover:underline cursor-pointer"
+            className="shrink-0 text-secondary text-body-md font-bold hover:underline cursor-pointer"
           >
             View All
           </Link>
@@ -279,7 +279,18 @@ function VaultSection({
           )}
         </div>
       ) : (
-        children
+        <>
+          {children}
+          {viewAllHref && (
+            <Link
+              href={viewAllHref}
+              className="md:hidden flex items-center justify-center gap-2 mt-4 py-3 px-4 rounded-full bg-surface-container-low hover:bg-surface-container-high text-secondary font-label font-bold text-body-md transition-colors cursor-pointer"
+            >
+              View all {count} items
+              <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />
+            </Link>
+          )}
+        </>
       )}
     </section>
   );
