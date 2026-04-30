@@ -35,8 +35,8 @@ const VIDEO_MIME_CANDIDATES = [
 ];
 
 const MAX_DURATION_SEC: Record<RecorderMode, number> = {
-  audio: 15 * 60,
-  video: 3 * 60,
+  audio: 30 * 60,
+  video: 30 * 60,
 };
 
 const WAVEFORM_BARS = 40;

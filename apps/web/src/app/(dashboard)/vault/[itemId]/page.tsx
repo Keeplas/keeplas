@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
+import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
@@ -14,6 +15,7 @@ import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
+import { useUploadQueue } from "@/lib/upload-queue";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
@@ -101,19 +103,17 @@ export default function VaultItemPage() {
   const itemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
-  const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
-  const generateUploadUrl = useAuditedMutation(api.vault_items.generateUploadUrl);
   const {
     decryptContent,
     decryptContentWithKey,
     encryptContent,
     encryptContentWithKey,
-    encryptBlob,
-    encryptBlobWithKey,
     computeHash,
     isReady,
   } = useVaultCrypto();
+  const { enqueueAttachments } = useUploadQueue();
+  const { masterKey } = useMasterKey();
   const {
     generateDekAndWrap,
     wrapExistingDek,
@@ -478,58 +478,28 @@ export default function VaultItemPage() {
         }
       }
 
-      // Attachment additions — encrypt under the same key as the item, then
-      // upload the ciphertext blob and register the row.
+      // Hand attachment additions to the background queue so the editor
+      // can close immediately. The queue encrypts under the same key as
+      // the item (or master key for legacy items), uploads with progress,
+      // and calls addItemFiles per file as it completes — the page
+      // subscribes reactively, so attachments appear progressively.
       if (stagedFiles.length > 0) {
-        const uploaded: Array<{
-          storageId: Id<"_storage">;
-          name: string;
-          mimeType: string;
-          size: number;
-          iv: string;
-          kind: AttachmentKind;
-          durationSec?: number;
-        }> = [];
-        for (let index = 0; index < stagedFiles.length; index++) {
-          const file = stagedFiles[index];
-          setSavingProgress(
-            `Encrypting attachment ${index + 1}/${stagedFiles.length} — ${file.name}`
-          );
-          const { cipherBlob, iv } = attachmentDek
-            ? await encryptBlobWithKey(file.blob, attachmentDek)
-            : await encryptBlob(file.blob);
-
-          setSavingProgress(
-            `Uploading attachment ${index + 1}/${stagedFiles.length} — ${file.name}`
-          );
-          const uploadUrl = await generateUploadUrl();
-          // The body is ciphertext — always upload as octet-stream. The
-          // original MIME type lives in the row and is reapplied on download.
-          // Sending the source MIME (e.g. `video/webm;codecs=vp9,opus`)
-          // breaks the Content-Type header because the unquoted comma in
-          // `codecs=…` is not a valid token character (RFC 9110) → 400.
-          const res = await fetch(uploadUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/octet-stream" },
-            body: cipherBlob,
-          });
-          if (!res.ok) {
-            throw new Error(`Upload failed (${res.status}) for ${file.name}`);
-          }
-          const { storageId } = (await res.json()) as {
-            storageId: Id<"_storage">;
-          };
-          uploaded.push({
-            storageId,
-            name: file.name,
-            mimeType: file.mimeType,
-            size: cipherBlob.size,
-            iv,
-            kind: file.kind,
-            durationSec: file.durationSec,
-          });
+        const dekForFiles = attachmentDek ?? masterKey;
+        if (!dekForFiles) {
+          throw new Error("Encryption key unavailable for new attachments.");
         }
-        await addItemFiles({ itemId, files: uploaded });
+        enqueueAttachments({
+          itemId,
+          label: editTitle.trim(),
+          dek: dekForFiles,
+          files: stagedFiles.map((f) => ({
+            blob: f.blob,
+            name: f.name,
+            mimeType: f.mimeType,
+            kind: f.kind,
+            durationSec: f.durationSec,
+          })),
+        });
       }
 
       setDecryptedContent(contentPayload);

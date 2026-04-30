@@ -6,9 +6,9 @@ import { api } from "@keeplas/backend/_generated/api";
 import { buttonVariants, Icon, Loader, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 
-const STORAGE_QUOTA_BYTES = 20 * 1024 * 1024;
+const STORAGE_QUOTA_BYTES = 100 * 1024 * 1024;
 const CURRENT_PLAN_LABEL = "Free";
-const CURRENT_PLAN_QUOTA_LABEL = "20 MB";
+const CURRENT_PLAN_QUOTA_LABEL = "100 MB";
 
 const CATEGORY_LABELS: Record<string, string> = {
   personal_document: "Personal Documents",

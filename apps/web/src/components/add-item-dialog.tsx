@@ -43,6 +43,7 @@ import { MediaRecorderPanel } from "@/components/media-recorder-panel";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { serializeLinks, isValidUrl } from "@/lib/link-payload";
+import { useUploadQueue } from "@/lib/upload-queue";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
@@ -146,14 +147,13 @@ function iconForKind(kind: FileKind): string {
 
 export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
   const createItem = useAuditedMutation(api.vault_items.createItem);
-  const generateUploadUrl = useAuditedMutation(api.vault_items.generateUploadUrl);
   const {
     encryptContentWithKey,
-    encryptBlobWithKey,
     computeHash,
     isReady,
   } = useVaultCrypto();
   const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
+  const { enqueueAttachments } = useUploadQueue();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
@@ -428,51 +428,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       const { dek, ownerWrap, recipientWraps, skippedRecipientIds } =
         await generateDekAndWrap(resolvedRecipients);
 
-      const uploadedFiles: Array<{
-        storageId: Id<"_storage">;
-        name: string;
-        mimeType: string;
-        size: number;
-        iv: string;
-        kind: FileKind;
-        durationSec?: number;
-      }> = [];
-
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        setProgress(`Encrypting ${index + 1}/${files.length} — ${file.name}`);
-        const { cipherBlob, iv } = await encryptBlobWithKey(file.blob, dek);
-
-        setProgress(`Uploading ${index + 1}/${files.length} — ${file.name}`);
-        const uploadUrl = await generateUploadUrl();
-        // The body is ciphertext — always upload as octet-stream. The original
-        // MIME type is preserved in the database row and reapplied on download.
-        // Sending the source MIME (e.g. `video/webm;codecs=vp9,opus`) breaks
-        // the Content-Type header because the unquoted comma in `codecs=…`
-        // is not a valid token character (RFC 9110), causing a 400.
-        const res = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/octet-stream" },
-          body: cipherBlob,
-        });
-        if (!res.ok) {
-          throw new Error(`Upload failed (${res.status}) for ${file.name}`);
-        }
-        const { storageId } = (await res.json()) as {
-          storageId: Id<"_storage">;
-        };
-
-        uploadedFiles.push({
-          storageId,
-          name: file.name,
-          mimeType: file.mimeType,
-          size: cipherBlob.size,
-          iv,
-          kind: file.kind,
-          durationSec: file.durationSec,
-        });
-      }
-
       setProgress("Sealing vault entry…");
       const textPayload = body.trim();
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
@@ -492,7 +447,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           }
         : {};
 
-      await createItem({
+      // Create the item without attachments first, then hand the files to
+      // the background upload queue so the dialog can close immediately.
+      // The vault page subscribes reactively and shows attachments as the
+      // queue calls addItemFiles for each completed upload.
+      const itemId = (await createItem({
         vaultId,
         category,
         title: title.trim(),
@@ -509,9 +468,24 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
           contactId: rw.contactId as Id<"trusted_contacts">,
           wrappedDek: rw.wrappedDek,
         })),
-        files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+        files: undefined,
         ...triggerArgs,
-      });
+      })) as Id<"vault_items">;
+
+      if (files.length > 0) {
+        enqueueAttachments({
+          itemId,
+          label: title.trim(),
+          dek,
+          files: files.map((f) => ({
+            blob: f.blob,
+            name: f.name,
+            mimeType: f.mimeType,
+            kind: f.kind,
+            durationSec: f.durationSec,
+          })),
+        });
+      }
 
       if (skippedRecipientIds.length > 0) {
         const skippedCount = skippedRecipientIds.length;

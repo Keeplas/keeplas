@@ -34,7 +34,7 @@ const PLANS: Plan[] = [
     priceMonthly: "$0",
     priceSuffix: "/forever",
     features: [
-      { label: "20 MB Zero-Knowledge Vault", included: true },
+      { label: "100 MB Zero-Knowledge Vault", included: true },
       { label: "Basic Life Check (Monthly)", included: true },
       { label: "1 Emergency Contact", included: true },
       { label: "Emergency Card (Digital)", included: true },
@@ -71,7 +71,7 @@ const PLANS: Plan[] = [
     priceOneTime: "$199",
     priceSuffix: "one-time",
     features: [
-      { label: "5 GB Secure Storage", included: true },
+      { label: "10 GB Secure Storage", included: true },
       { label: "More Storage Available as Add-on", included: true },
       { label: "All Keeper Features, Forever", included: true },
       { label: "Early Adopter Badge", included: true },
