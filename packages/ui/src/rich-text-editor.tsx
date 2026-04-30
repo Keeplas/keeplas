@@ -23,7 +23,7 @@ const TOOLBAR_ICONS = {
 
 export interface RichTextEditorProps {
   value: string;
-  onChange: (html: string) => void;
+  onChange?: (html: string) => void;
   onPlainTextChange?: (text: string) => void;
   placeholder?: string;
   className?: string;
@@ -31,6 +31,11 @@ export interface RichTextEditorProps {
   minHeight?: number;
   disabled?: boolean;
   autoFocus?: boolean;
+  // Display-only mode: hides the toolbar, disables editing, and routes
+  // arbitrary HTML through TipTap's parser so unknown tags / scripts are
+  // dropped before render. Use this to safely show decrypted rich-text
+  // content authored elsewhere.
+  readOnly?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -127,7 +132,10 @@ export function RichTextEditor({
   minHeight = 240,
   disabled,
   autoFocus,
+  readOnly,
 }: RichTextEditorProps) {
+  const editable = !readOnly && !disabled;
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -138,18 +146,20 @@ export function RichTextEditor({
       }),
     ],
     content: value,
-    editable: !disabled,
+    editable,
     immediatelyRender: false,
-    autofocus: autoFocus,
+    autofocus: !readOnly && autoFocus,
     onUpdate: ({ editor }) => {
+      if (readOnly) return;
       const html = editor.getHTML();
-      onChange(html);
+      onChange?.(html);
       onPlainTextChange?.(editor.getText());
     },
     editorProps: {
       attributes: {
         class: cn(
-          "tiptap-content prose prose-sm max-w-none focus:outline-none px-4 py-3 text-on-surface",
+          "tiptap-content prose prose-sm max-w-none focus:outline-none text-on-surface",
+          readOnly ? "px-0 py-0" : "px-4 py-3",
           editorClassName
         ),
         "data-placeholder": placeholder ?? "",
@@ -164,18 +174,28 @@ export function RichTextEditor({
   }, [value, editor]);
 
   React.useEffect(() => {
-    editor?.setEditable(!disabled);
-  }, [disabled, editor]);
+    editor?.setEditable(editable);
+  }, [editable, editor]);
 
   if (!editor) {
     return (
       <div
         className={cn(
-          "w-full bg-surface-container-low border border-outline-variant rounded-xl",
+          readOnly
+            ? "w-full"
+            : "w-full bg-surface-container-low border border-outline-variant rounded-xl",
           className
         )}
-        style={{ minHeight: minHeight + 50 }}
+        style={readOnly ? { minHeight } : { minHeight: minHeight + 50 }}
       />
+    );
+  }
+
+  if (readOnly) {
+    return (
+      <div className={cn("w-full", className)}>
+        <EditorContent editor={editor} />
+      </div>
     );
   }
 

@@ -22,10 +22,10 @@ import {
   Input,
   Label,
   ErrorAlert,
+  RichTextEditor,
   Select,
   SelectItem,
   Switch,
-  Textarea,
   Spinner,
   Loader,
   Dialog,
@@ -37,6 +37,19 @@ import { ICON_PATHS } from "@/lib/icons";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
+
+// Legacy items were stored as plain text; new items are TipTap HTML. Wrap
+// plain text into a paragraph so newlines survive a round-trip through the
+// rich-text editor instead of collapsing into a single line.
+function normalizeContentForRichText(content: string): string {
+  if (/^\s*<[a-z!/]/i.test(content)) return content;
+  const escaped = content
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+  return `<p>${escaped}</p>`;
+}
 
 export default function VaultItemPage() {
   const params = useParams();
@@ -163,7 +176,7 @@ export default function VaultItemPage() {
   function startEditing() {
     if (!item || decryptedContent === null) return;
     setEditTitle(item.title);
-    setEditContent(decryptedContent);
+    setEditContent(normalizeContentForRichText(decryptedContent));
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
     setEditIsPublic(item.accessLevel === "public");
@@ -425,7 +438,12 @@ export default function VaultItemPage() {
 
           <div className="space-y-2">
             <Label>Secure Content</Label>
-            <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} required rows={6} />
+            <RichTextEditor
+              value={editContent}
+              onChange={setEditContent}
+              placeholder="Write the secure content for this item…"
+              minHeight={200}
+            />
           </div>
 
           <div className="space-y-2">
@@ -589,9 +607,10 @@ export default function VaultItemPage() {
                   Decrypting...
                 </div>
               ) : (
-                <pre className="whitespace-pre-wrap text-sm text-on-surface font-body leading-relaxed">
-                  {decryptedContent}
-                </pre>
+                <RichTextEditor
+                  readOnly
+                  value={normalizeContentForRichText(decryptedContent ?? "")}
+                />
               )}
             </div>
           )}
