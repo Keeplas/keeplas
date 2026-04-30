@@ -225,9 +225,9 @@ export function MediaRecorderPanel({
         : {
             audio: true,
             video: {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              frameRate: { ideal: 30 },
+              width: { ideal: 854 },
+              height: { ideal: 480 },
+              frameRate: { ideal: 24 },
             },
           };
     return await navigator.mediaDevices.getUserMedia(constraints);
