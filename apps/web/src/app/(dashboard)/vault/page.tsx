@@ -344,7 +344,7 @@ function VaultItemCard({
   return (
     <Link
       href={`/vault/${item._id}`}
-      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-[2rem] transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
+      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-full transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
     >
       <div className="flex justify-between items-start gap-3 mb-4">
         <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
