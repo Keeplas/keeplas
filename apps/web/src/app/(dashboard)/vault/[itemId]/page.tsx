@@ -503,11 +503,14 @@ export default function VaultItemPage() {
             `Uploading attachment ${index + 1}/${stagedFiles.length} — ${file.name}`
           );
           const uploadUrl = await generateUploadUrl();
+          // The body is ciphertext — always upload as octet-stream. The
+          // original MIME type lives in the row and is reapplied on download.
+          // Sending the source MIME (e.g. `video/webm;codecs=vp9,opus`)
+          // breaks the Content-Type header because the unquoted comma in
+          // `codecs=…` is not a valid token character (RFC 9110) → 400.
           const res = await fetch(uploadUrl, {
             method: "POST",
-            headers: {
-              "Content-Type": file.mimeType || "application/octet-stream",
-            },
+            headers: { "Content-Type": "application/octet-stream" },
             body: cipherBlob,
           });
           if (!res.ok) {

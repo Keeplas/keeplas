@@ -316,7 +316,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     if (!recorderMode) return;
     const isVideo = recorderMode === "video";
     const ext = meta.mimeType.includes("mp4") ? "mp4" : "webm";
-    const stamp = new Date().toLocaleString();
+    // Filesystem-safe timestamp: YYYY-MM-DD_HH-mm-ss (local time).
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
     setFiles((prev) => [
       ...prev,
       {
@@ -442,9 +445,14 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
         setProgress(`Uploading ${index + 1}/${files.length} — ${file.name}`);
         const uploadUrl = await generateUploadUrl();
+        // The body is ciphertext — always upload as octet-stream. The original
+        // MIME type is preserved in the database row and reapplied on download.
+        // Sending the source MIME (e.g. `video/webm;codecs=vp9,opus`) breaks
+        // the Content-Type header because the unquoted comma in `codecs=…`
+        // is not a valid token character (RFC 9110), causing a 400.
         const res = await fetch(uploadUrl, {
           method: "POST",
-          headers: { "Content-Type": file.mimeType || "application/octet-stream" },
+          headers: { "Content-Type": "application/octet-stream" },
           body: cipherBlob,
         });
         if (!res.ok) {
