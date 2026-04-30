@@ -84,12 +84,6 @@ const SECTIONS: SectionConfig[] = [
 const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
 const PREVIEW_LIMIT = 6;
 
-const TRIGGER_LABELS: Record<string, string> = {
-  life_check_failure: "Dead Man's Switch",
-  time_based: "Scheduled Release",
-  manual: "Manual Trigger",
-};
-
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleDateString([], {
     month: "short",
@@ -113,6 +107,8 @@ function VaultPageContent() {
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
+  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
+  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [addDialogCategory, setAddDialogCategory] = useState<VaultCategory | undefined>(undefined);
@@ -207,7 +203,12 @@ function VaultPageContent() {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleItems.map((item) => (
-                  <VaultItemCard key={item._id} item={item} />
+                  <VaultItemCard
+                    key={item._id}
+                    item={item}
+                    groups={recipientGroups}
+                    contacts={allContacts}
+                  />
                 ))}
               </div>
             </VaultSection>
@@ -284,39 +285,90 @@ function VaultSection({
   );
 }
 
-// Single card used for every category. The badge is context-aware:
-//   - Conditional messages → trigger label (Dead Man's Switch / Scheduled
-//     Release / Manual Trigger) so the user can tell at a glance how the
-//     letter is gated.
-//   - Items shared with contacts → "Shared · N" so the privacy posture is
-//     visible without opening the item.
-//   - Otherwise → a lock indicator confirming zero-knowledge encryption.
-function VaultItemCard({ item }: { item: Doc<"vault_items"> }) {
+// Resolve the "Transmission Logic" summary for the card. Mirrors the
+// dialog's recipient picker: a private item shows "Private", an item
+// shared with the default group of trust contacts collapses to "All trust
+// contacts", and explicit picks are listed by name (or counted when too
+// many to fit on a card).
+function transmissionSummary(
+  item: Doc<"vault_items">,
+  groups: Doc<"recipient_groups">[],
+  contacts: Doc<"trusted_contacts">[]
+): { label: string; tone: "private" | "shared" } {
+  if (item.accessLevel === "private") {
+    return { label: "Private", tone: "private" };
+  }
+
+  const mode = item.recipientMode ?? "default";
+  if (mode === "explicit") {
+    const names = (item.sharedWithContacts ?? [])
+      .map((id) => contacts.find((c) => c._id === id)?.name)
+      .filter((n): n is string => Boolean(n));
+    if (names.length === 0) return { label: "Private", tone: "private" };
+    if (names.length === 1) return { label: names[0], tone: "shared" };
+    if (names.length === 2) return { label: names.join(" & "), tone: "shared" };
+    return { label: `${names[0]} +${names.length - 1}`, tone: "shared" };
+  }
+
+  if (mode === "groups") {
+    const names = (item.sharedWithGroups ?? [])
+      .map((id) => groups.find((g) => g._id === id)?.name)
+      .filter((n): n is string => Boolean(n));
+    if (names.length === 0) return { label: "Private", tone: "private" };
+    if (names.length === 1) return { label: names[0], tone: "shared" };
+    return { label: `${names.length} groups`, tone: "shared" };
+  }
+
+  // mode === "default" with non-private accessLevel: legacy "all trust
+  // contacts" semantics.
+  return { label: "All trust contacts", tone: "shared" };
+}
+
+// Single card used for every category. Top-right pill shows the
+// transmission target (Private / contact / group / "All trust contacts").
+// An "On Emergency Card" badge appears under the metadata when the item
+// is published to the public emergency card.
+function VaultItemCard({
+  item,
+  groups,
+  contacts,
+}: {
+  item: Doc<"vault_items">;
+  groups: Doc<"recipient_groups">[];
+  contacts: Doc<"trusted_contacts">[];
+}) {
   const category = getCategoryConfig(item.category as VaultCategory);
-  const trigger = item.triggerType ? TRIGGER_LABELS[item.triggerType] : null;
-  const sharedCount = item.sharedWithContacts?.length ?? 0;
+  const transmission = transmissionSummary(item, groups, contacts);
+  const onEmergencyCard = item.accessLevel === "public";
 
   return (
     <Link
       href={`/vault/${item._id}`}
-      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-full transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
+      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-[2rem] transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
     >
-      <div className="flex justify-between items-start mb-4">
-        <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors">
+      <div className="flex justify-between items-start gap-3 mb-4">
+        <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
-        {trigger ? (
-          <span className="text-label-md text-error bg-error-container px-3 py-1 rounded-full">
-            {trigger}
-          </span>
-        ) : sharedCount > 0 ? (
-          <span className="text-label-md text-on-tertiary-container bg-tertiary-fixed px-3 py-1 rounded-full inline-flex items-center gap-1">
-            <Icon path={ICON_PATHS.users} className="w-3 h-3" />
-            {sharedCount}
-          </span>
-        ) : (
-          <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
-        )}
+        <span
+          className={cn(
+            "text-label-md px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%] truncate",
+            transmission.tone === "private"
+              ? "text-on-surface-variant bg-surface-container-high"
+              : "text-on-tertiary-container bg-tertiary-fixed"
+          )}
+          title={transmission.label}
+        >
+          <Icon
+            path={
+              transmission.tone === "private"
+                ? ICON_PATHS.lock
+                : ICON_PATHS.users
+            }
+            className="w-3 h-3 shrink-0"
+          />
+          <span className="truncate">{transmission.label}</span>
+        </span>
       </div>
       <h4 className="text-headline-sm text-primary truncate">
         {item.title}
@@ -324,6 +376,12 @@ function VaultItemCard({ item }: { item: Doc<"vault_items"> }) {
       <p className="text-label-md text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>
+      {onEmergencyCard && (
+        <span className="mt-3 inline-flex items-center gap-1.5 text-label-md text-on-secondary-container bg-secondary-container px-3 py-1 rounded-full">
+          <Icon path={ICON_PATHS.emergencyCard} className="w-3 h-3" />
+          On Emergency Card
+        </span>
+      )}
     </Link>
   );
 }
