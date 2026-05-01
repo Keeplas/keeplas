@@ -7,7 +7,17 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"]
+      "outputs": [".next/**", "dist/**"],
+      "env": [
+        "NEXT_PUBLIC_*",
+        "APP_URL",
+        "CONVEX_DEPLOYMENT",
+        "CONVEX_MODE",
+        "CONVEX_SITE_URL",
+        "KEEPLAS_CTX_SECRET",
+        "RESEND_API_KEY",
+        "RESEND_FROM_EMAIL"
+      ]
     },
     "lint": {
       "dependsOn": ["^build"]
