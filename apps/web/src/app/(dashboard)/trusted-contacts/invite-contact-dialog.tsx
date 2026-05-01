@@ -15,7 +15,16 @@ import {
   Switch,
   Textarea,
 } from "@keeplas/ui";
-import { Button, Input, Label, ErrorAlert, HelpHint, cn } from "@keeplas/ui";
+import {
+  Button,
+  Input,
+  Label,
+  ErrorAlert,
+  HelpHint,
+  PhoneInput,
+  isValidPhone,
+  cn,
+} from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 
 const ROLES = [
@@ -49,7 +58,7 @@ export function InviteContactDialog({
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState<string | undefined>(undefined);
   const [role, setRole] = useState<Role>("family");
   const [contactType, setContactType] = useState<ContactType>(initialContactType);
   const [notifyRecipient, setNotifyRecipient] = useState(false);
@@ -68,6 +77,10 @@ export function InviteContactDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
+    if (phone && !isValidPhone(phone)) {
+      setError("Please enter a valid phone number");
+      return;
+    }
 
     setSaving(true);
     setError("");
@@ -80,14 +93,14 @@ export function InviteContactDialog({
       const result = await inviteContact({
         name: name.trim(),
         email: email.trim().toLowerCase(),
-        phoneNumber: phone.trim() || undefined,
+        phoneNumber: phone || undefined,
         role,
         contactType,
         introMessage: shouldSendIntro ? introMessage.trim() : undefined,
       });
       setName("");
       setEmail("");
-      setPhone("");
+      setPhone(undefined);
       setRole("family");
       setContactType(initialContactType);
       setNotifyRecipient(false);
@@ -143,12 +156,10 @@ export function InviteContactDialog({
 
           <div className="space-y-2">
             <Label htmlFor="contact-phone">Phone (optional)</Label>
-            <Input
+            <PhoneInput
               id="contact-phone"
-              type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              onChange={setPhone}
             />
           </div>
 

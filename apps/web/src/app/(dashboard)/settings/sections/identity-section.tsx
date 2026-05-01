@@ -4,7 +4,15 @@ import { useEffect, useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Button, Input, Label, UserAvatar } from "@keeplas/ui";
+import {
+  Button,
+  Input,
+  Label,
+  PhoneInput,
+  UserAvatar,
+  isValidPhone,
+  type CountryCode,
+} from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { getInitials } from "@/lib/user";
 import { getCountry } from "@/lib/countries";
@@ -19,7 +27,9 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const updateProfile = useAuditedMutation(api.users.updateProfile);
 
   const [name, setName] = useState(user.name ?? "");
-  const [phone, setPhone] = useState(user.phoneNumber ?? "");
+  const [phone, setPhone] = useState<string | undefined>(
+    user.phoneNumber || undefined
+  );
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -27,7 +37,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
   useEffect(() => {
     setName(user.name ?? "");
-    setPhone(user.phoneNumber ?? "");
+    setPhone(user.phoneNumber || undefined);
     setAvatarUrl(user.avatarUrl ?? "");
   }, [user]);
 
@@ -49,6 +59,10 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (phone && !isValidPhone(phone)) {
+      onError("Please enter a valid phone number");
+      return;
+    }
     setSaving(true);
     onError("");
     setSaved(false);
@@ -148,12 +162,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           >
             Phone Number
           </Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+1 (555) 000-0000"
+            onChange={setPhone}
+            defaultCountry={user.country as CountryCode | undefined}
           />
         </div>
 

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { createNotification, requireAuth } from "./helpers";
 import { auditedMutation } from "./audit";
+import { normalizeE164 } from "./lib/phone";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -123,7 +124,7 @@ export const inviteContact = auditedMutation({
       userId,
       name: args.name,
       email: args.email,
-      phoneNumber: args.phoneNumber,
+      phoneNumber: normalizeE164(args.phoneNumber),
       role: args.role,
       contactType,
       isFirstResponder: false,

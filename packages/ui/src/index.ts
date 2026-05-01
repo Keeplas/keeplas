@@ -52,6 +52,13 @@ export { Input } from "./input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
 export { PasswordInput } from "./password-input";
+export {
+  PhoneInput,
+  type PhoneInputProps,
+  type CountryCode,
+  normalizePhone,
+  isValidPhone,
+} from "./phone-input";
 export { Progress } from "./progress";
 export {
   Select,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { isValidPhone } from "@keeplas/ui";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import {
@@ -61,6 +62,13 @@ export function useEmergencyCardForm() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (
+      formData.emergencyContactPhone &&
+      !isValidPhone(formData.emergencyContactPhone)
+    ) {
+      setError("Please enter a valid phone number");
+      return;
+    }
     setSaving(true);
     setError("");
     setSaved(false);

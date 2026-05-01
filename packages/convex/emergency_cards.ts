@@ -2,6 +2,7 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, optionalAuth } from "./helpers";
 import { auditedMutation } from "./audit";
+import { normalizeE164 } from "./lib/phone";
 
 // ─── Queries ────────────────────────────────────────────
 
@@ -92,6 +93,11 @@ export const createOrUpdate = auditedMutation({
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
+    const normalizedArgs = {
+      ...args,
+      emergencyContactPhone: normalizeE164(args.emergencyContactPhone),
+    };
+
     const existing = await ctx.db
       .query("emergency_cards")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -99,7 +105,7 @@ export const createOrUpdate = auditedMutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, {
-        ...args,
+        ...normalizedArgs,
         updatedAt: now,
       });
       return existing._id;
@@ -109,7 +115,7 @@ export const createOrUpdate = auditedMutation({
 
     const cardId = await ctx.db.insert("emergency_cards", {
       userId,
-      ...args,
+      ...normalizedArgs,
       qrCodeToken,
       qrCodeUrl: `/emergency/${qrCodeToken}`,
       isActive: true,

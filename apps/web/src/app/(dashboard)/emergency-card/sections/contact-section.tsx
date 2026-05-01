@@ -1,6 +1,6 @@
 "use client";
 
-import { Input, Label } from "@keeplas/ui";
+import { Input, Label, PhoneInput } from "@keeplas/ui";
 import type { CardFormData } from "./constants";
 
 interface ContactSectionProps {
@@ -27,12 +27,10 @@ export function ContactSection({ formData, onUpdate }: ContactSectionProps) {
 
       <div className="space-y-2">
         <Label htmlFor="emergencyContactPhone">Phone Number</Label>
-        <Input
+        <PhoneInput
           id="emergencyContactPhone"
-          type="tel"
-          value={formData.emergencyContactPhone}
-          onChange={(e) => onUpdate("emergencyContactPhone", e.target.value)}
-          placeholder="+1 (555) 000-0000"
+          value={formData.emergencyContactPhone || undefined}
+          onChange={(v) => onUpdate("emergencyContactPhone", v ?? "")}
         />
       </div>
 

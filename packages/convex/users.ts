@@ -3,6 +3,7 @@ import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
+import { normalizeE164 } from "./lib/phone";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 130 * 365.25 * 24 * 60 * 60 * 1000;
@@ -35,7 +36,7 @@ export const updateProfile = auditedMutation({
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (args.name !== undefined) patch.name = args.name.trim() || undefined;
     if (args.phoneNumber !== undefined)
-      patch.phoneNumber = args.phoneNumber.trim() || undefined;
+      patch.phoneNumber = normalizeE164(args.phoneNumber);
     if (args.avatarUrl !== undefined)
       patch.avatarUrl = args.avatarUrl.trim() || undefined;
 
