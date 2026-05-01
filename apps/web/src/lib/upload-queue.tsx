@@ -10,6 +10,7 @@ import {
 import { toast, ToastAction } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { useVaultCrypto } from "./use-vault-crypto";
 
@@ -52,7 +53,7 @@ function uploadWithProgress(
   url: string,
   body: Blob,
   onProgress: (loaded: number) => void
-): Promise<Id<"_storage">> {
+): Promise<StorageRef> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
@@ -64,7 +65,7 @@ function uploadWithProgress(
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const parsed = JSON.parse(xhr.responseText) as {
-            storageId: Id<"_storage">;
+            storageId: StorageRef;
           };
           resolve(parsed.storageId);
         } catch (err) {

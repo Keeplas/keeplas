@@ -10,6 +10,12 @@ import {
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
+import {
+  generateBlobUploadUrl,
+  getBlobDownloadUrl,
+  deleteBlob,
+  storageRefValidator,
+} from "./lib/storage";
 
 const triggerTypeValidator = v.union(
   v.literal("life_check_failure"),
@@ -141,7 +147,7 @@ export const getItemFileUrl = query({
     const file = await ctx.db.get(args.fileId);
     if (!file || file.userId !== userId) return null;
 
-    return await ctx.storage.getUrl(file.storageId);
+    return await getBlobDownloadUrl(ctx, file.storageId);
   },
 });
 
@@ -157,7 +163,7 @@ export const generateUploadUrl = auditedMutation({
   args: {},
   handler: async (ctx) => {
     await requireAuth(ctx);
-    return await ctx.storage.generateUploadUrl();
+    return await generateBlobUploadUrl(ctx);
   },
 });
 
@@ -169,7 +175,7 @@ const fileKindValidator = v.union(
 );
 
 const newFileValidator = v.object({
-  storageId: v.id("_storage"),
+  storageId: storageRefValidator,
   name: v.string(),
   mimeType: v.string(),
   size: v.number(),
@@ -216,19 +222,7 @@ export const createItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
-    files: v.optional(
-      v.array(
-        v.object({
-          storageId: v.id("_storage"),
-          name: v.string(),
-          mimeType: v.string(),
-          size: v.number(),
-          iv: v.string(),
-          kind: fileKindValidator,
-          durationSec: v.optional(v.number()),
-        })
-      )
-    ),
+    files: v.optional(v.array(newFileValidator)),
     triggerType: v.optional(triggerTypeValidator),
     triggerConfig: v.optional(triggerConfigValidator),
   },
@@ -470,7 +464,7 @@ export const removeItemFile = auditedMutation({
       throw new Error("File not found");
     }
 
-    await ctx.storage.delete(file.storageId);
+    await deleteBlob(ctx, file.storageId);
     await ctx.db.delete(args.fileId);
     await ctx.db.patch(args.itemId, { updatedAt: Date.now() });
   },
@@ -522,7 +516,7 @@ export const deleteItem = auditedMutation({
       .collect();
     await Promise.all(
       files.map(async (file) => {
-        await ctx.storage.delete(file.storageId);
+        await deleteBlob(ctx, file.storageId);
         await ctx.db.delete(file._id);
       })
     );
