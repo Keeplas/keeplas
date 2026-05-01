@@ -312,11 +312,19 @@ function UnlockMethodButton({
 }) {
   const [available, setAvailable] = useState(true);
   useEffect(() => {
-    if (entry.method === "biometric") {
-      isPlatformAuthenticatorAvailable().then(setAvailable);
-    } else if (entry.method === "hardware-key") {
-      setAvailable(isWebAuthnSupported());
-    }
+    let cancelled = false;
+    const probe =
+      entry.method === "biometric"
+        ? isPlatformAuthenticatorAvailable()
+        : entry.method === "hardware-key"
+          ? Promise.resolve(isWebAuthnSupported())
+          : Promise.resolve(true);
+    probe.then((value) => {
+      if (!cancelled) setAvailable(value);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [entry.method]);
 
   if (!available) {

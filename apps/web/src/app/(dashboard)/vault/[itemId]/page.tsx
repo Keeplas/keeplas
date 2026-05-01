@@ -121,8 +121,10 @@ export default function VaultItemPage() {
     isReady: cryptoReady,
   } = useRecipientCrypto();
 
-  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
-  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
+  const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
+  const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
+  const recipientGroups = useMemo(() => recipientGroupsRaw ?? [], [recipientGroupsRaw]);
+  const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);

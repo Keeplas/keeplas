@@ -26,6 +26,7 @@ export function ContinuityControls() {
 
   useEffect(() => {
     if (config?.travelModeUntil) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing controlled date input to async server config; no clean derived alternative without changing the input contract.
       setTravelUntil(
         new Date(config.travelModeUntil).toISOString().split("T")[0]
       );

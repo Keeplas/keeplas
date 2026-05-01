@@ -156,8 +156,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const { enqueueAttachments } = useUploadQueue();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
-  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
+  const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
+  const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
+  const recipientGroups = useMemo(() => recipientGroupsRaw ?? [], [recipientGroupsRaw]);
+  const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
   const [title, setTitle] = useState("");
   // Holds the rich-text body. Always encrypted into `encryptedContent` before
@@ -187,6 +189,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     if (recipientGroups.length === 0) return;
     const defaultGroup = recipientGroups.find((g) => g.isDefault);
     if (defaultGroup) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-fills selection from async query data once per open; the `recipientsTouched` guard keeps the override-then-edit semantics simple.
       setRecipientSelection([`${GROUP_PREFIX}${defaultGroup._id}`]);
     }
   }, [open, recipientGroups, recipientsTouched]);
@@ -196,6 +199,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   // directly in the right category without manual picking.
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets category to caller-provided default on each (re)open; a `key`-based remount would lose all draft state.
       setCategory(defaultCategory ?? "personal_document");
     }
   }, [open, defaultCategory]);

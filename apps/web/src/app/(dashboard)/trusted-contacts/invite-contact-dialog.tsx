@@ -234,7 +234,7 @@ export function InviteContactDialog({
                     <HelpHint content="Off by default. Recipients are passive until trigger — but you can send a courtesy heads-up now if you'd like them to know they're on your list." />
                   </p>
                   <p className="text-body-md text-on-surface-variant mt-0.5">
-                    Let {name.trim() || "them"} know they've been added. They have nothing to do until trigger.
+                    Let {name.trim() || "them"} know they&apos;ve been added. They have nothing to do until trigger.
                   </p>
                 </div>
                 <Switch

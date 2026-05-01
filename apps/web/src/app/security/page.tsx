@@ -459,7 +459,7 @@ export default function SecurityPage() {
                   <ExternalLink href="https://csrc.nist.gov/pubs/fips/203/final">ML-KEM-768</ExternalLink>
                   , the NIST-standardized post-quantum KEM (FIPS 203, August 2024). This blocks the{" "}
                   <ExternalLink href="https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later">harvest-now-decrypt-later</ExternalLink>
-                  {" "}threat: data we store today stays opaque even to a future adversary running Shor's algorithm on a large quantum computer. Most password managers (Bitwarden, 1Password) have not yet migrated; we built Keeplas post-quantum from day one because vault data must stay confidential for decades.
+                  {" "}threat: data we store today stays opaque even to a future adversary running Shor&apos;s algorithm on a large quantum computer. Most password managers (Bitwarden, 1Password) have not yet migrated; we built Keeplas post-quantum from day one because vault data must stay confidential for decades.
                 </>
               }
             />
