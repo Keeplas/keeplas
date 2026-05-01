@@ -6,8 +6,10 @@ import {
   parsePhoneNumber,
   getCountries,
   getCountryCallingCode,
+  getExampleNumber,
   type CountryCode,
 } from "libphonenumber-js";
+import examples from "libphonenumber-js/mobile/examples";
 
 export type { CountryCode };
 import { Popover, PopoverTrigger, PopoverContent } from "./popover";
@@ -112,10 +114,50 @@ export function isValidPhone(value: string | undefined): boolean {
   return safeParse(value)?.isValid() ?? false;
 }
 
-function buildE164(country: CountryCode, national: string): string | undefined {
-  const digits = national.replace(/\D+/g, "");
-  if (!digits) return undefined;
-  return `+${getCountryCallingCode(country)}${digits}`;
+/**
+ * Strip non-digits and any leading trunk prefix (the "0" used in many
+ * countries for national dialing). E.164 is always trunk-less, so we
+ * prefer to show / collect the significant national number directly.
+ */
+function stripToSignificantDigits(raw: string): string {
+  return raw.replace(/\D+/g, "").replace(/^0+/, "");
+}
+
+/**
+ * Format `digits` (already stripped of trunk prefix) for live display in
+ * the input — the same grouping as the international format minus the
+ * leading "+<dial> " prefix. Falls back to raw digits if formatting fails.
+ */
+function formatNationalNoTrunk(country: CountryCode, digits: string): {
+  display: string;
+  e164: string | undefined;
+} {
+  if (!digits) return { display: "", e164: undefined };
+  const callingCode = getCountryCallingCode(country);
+  const formatter = new AsYouType();
+  const intl = formatter.input(`+${callingCode}${digits}`);
+  const prefix = `+${callingCode} `;
+  const display = intl.startsWith(prefix) ? intl.slice(prefix.length) : digits;
+  const e164 = formatter.getNumber()?.number ?? `+${callingCode}${digits}`;
+  return { display, e164 };
+}
+
+function stripDialPrefix(value: string, callingCode: string): string {
+  const prefix = `+${callingCode} `;
+  return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+function examplePlaceholder(country: CountryCode): string {
+  try {
+    const example = getExampleNumber(country, examples);
+    if (!example) return "";
+    return stripDialPrefix(
+      example.formatInternational(),
+      getCountryCallingCode(country)
+    );
+  } catch {
+    return "";
+  }
 }
 
 export interface PhoneInputProps {
@@ -161,7 +203,12 @@ export function PhoneInput({
       const parsed = safeParse(value);
       if (parsed && parsed.country && isKnownCountry(parsed.country)) {
         setCountry(parsed.country);
-        setNationalDisplay(parsed.formatNational());
+        setNationalDisplay(
+          stripDialPrefix(
+            parsed.formatInternational(),
+            parsed.countryCallingCode
+          )
+        );
         setInternalInvalid(!parsed.isValid());
         return;
       }
@@ -191,30 +238,37 @@ export function PhoneInput({
       return;
     }
 
-    // If user typed a "+" prefix, let AsYouType detect the country.
-    if (raw.startsWith("+")) {
+    // If user pasted/typed a "+" prefix, let AsYouType detect the country.
+    if (raw.trim().startsWith("+")) {
       const formatter = new AsYouType();
-      const formatted = formatter.input(raw);
+      formatter.input(raw.trim());
       const detected = formatter.getCountry();
       if (detected && isKnownCountry(detected)) {
         setCountry(detected);
-        const national = formatter.getNumber()?.formatNational() ?? formatted;
-        setNationalDisplay(national);
+        const callingCode = getCountryCallingCode(detected);
+        const intl =
+          formatter.getNumber()?.formatInternational() ?? raw.trim();
+        setNationalDisplay(stripDialPrefix(intl, callingCode));
         const number = formatter.getNumber()?.number;
         setInternalInvalid(!formatter.getNumber()?.isValid());
-        emit(number ?? buildE164(detected, formatted));
+        emit(number ?? raw.trim());
         return;
       }
-      setNationalDisplay(formatted);
+      setNationalDisplay(raw.trim());
       setInternalInvalid(true);
-      emit(raw);
+      emit(raw.trim());
       return;
     }
 
-    const formatter = new AsYouType(country);
-    const formatted = formatter.input(raw);
-    setNationalDisplay(formatted);
-    const e164 = formatter.getNumber()?.number ?? buildE164(country, raw);
+    const digits = stripToSignificantDigits(raw);
+    if (!digits) {
+      setNationalDisplay("");
+      setInternalInvalid(false);
+      emit(undefined);
+      return;
+    }
+    const { display, e164 } = formatNationalNoTrunk(country, digits);
+    setNationalDisplay(display);
     setInternalInvalid(false);
     emit(e164);
   }
@@ -222,14 +276,14 @@ export function PhoneInput({
   function handleCountrySelect(next: CountryCode) {
     setCountry(next);
     setOpen(false);
-    if (!nationalDisplay) {
+    const digits = stripToSignificantDigits(nationalDisplay);
+    if (!digits) {
+      setNationalDisplay("");
       emit(undefined);
       return;
     }
-    const formatter = new AsYouType(next);
-    const formatted = formatter.input(nationalDisplay);
-    setNationalDisplay(formatted);
-    const e164 = formatter.getNumber()?.number ?? buildE164(next, nationalDisplay);
+    const { display, e164 } = formatNationalNoTrunk(next, digits);
+    setNationalDisplay(display);
     emit(e164);
   }
 
@@ -317,7 +371,7 @@ export function PhoneInput({
         value={nationalDisplay}
         onChange={(e) => handleNationalChange(e.target.value)}
         onBlur={handleBlur}
-        placeholder={placeholder ?? "Phone number"}
+        placeholder={placeholder ?? examplePlaceholder(country)}
         disabled={disabled}
         aria-invalid={showInvalid || undefined}
         className={cn(
