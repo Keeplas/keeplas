@@ -111,7 +111,16 @@ export const createOrUpdate = auditedMutation({
       .first();
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
+      // Use replace (not patch) so any orphan fields from previous schema
+      // versions are dropped — patch leaves unknown keys behind, which then
+      // fail strict schema validation on the merged document.
+      await ctx.db.replace(existing._id, {
+        userId: existing.userId,
+        qrCodeToken: existing.qrCodeToken,
+        qrCodeUrl: existing.qrCodeUrl,
+        isActive: existing.isActive,
+        createdAt: existing.createdAt,
+        lastPrintedAt: existing.lastPrintedAt,
         ...args,
         updatedAt: now,
       });

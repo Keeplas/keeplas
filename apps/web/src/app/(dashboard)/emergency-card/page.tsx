@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Button,
   Dialog,
   DialogClose,
   DialogContent,
@@ -12,6 +11,7 @@ import {
   ErrorAlert,
   Icon,
   InfoCallout,
+  Spinner,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { EmergencyCardPreview } from "./emergency-card-preview";
@@ -19,7 +19,10 @@ import { CardActions } from "./sections/card-actions";
 import { ContactSection } from "./sections/contact-section";
 import { NotesSection } from "./sections/notes-section";
 import { PersonalInfoSection } from "./sections/personal-info-section";
-import { useEmergencyCardForm } from "./sections/use-emergency-card-form";
+import {
+  useEmergencyCardForm,
+  type SaveStatus,
+} from "./sections/use-emergency-card-form";
 
 export default function EmergencyCardPage() {
   const {
@@ -27,12 +30,10 @@ export default function EmergencyCardPage() {
     formData,
     toggles,
     selectedContact,
-    saving,
+    status,
     error,
-    saved,
     updateField,
     updateToggle,
-    handleSave,
   } = useEmergencyCardForm();
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -54,52 +55,34 @@ export default function EmergencyCardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <section className="lg:col-span-5 space-y-6">
-          <form onSubmit={handleSave} className="space-y-6">
-            <InfoCallout icon={ICON_PATHS.info} tone="info">
-              All fields are hidden by default. Toggle each one to include it on your card.
-            </InfoCallout>
+          <div className="flex justify-end min-h-[20px]">
+            <SaveStatusIndicator status={status} />
+          </div>
 
-            <PersonalInfoSection
-              formData={formData}
-              toggles={toggles}
-              onUpdate={updateField}
-              onToggle={updateToggle}
-            />
-            <ContactSection
-              formData={formData}
-              showEmergencyContact={toggles.showEmergencyContact}
-              onUpdate={updateField}
-              onToggleEmergencyContact={() => updateToggle("showEmergencyContact")}
-            />
-            <NotesSection
-              value={formData.additionalNotes}
-              showAdditionalNotes={toggles.showAdditionalNotes}
-              onChange={(v) => updateField("additionalNotes", v)}
-              onToggleAdditionalNotes={() => updateToggle("showAdditionalNotes")}
-            />
+          <InfoCallout icon={ICON_PATHS.info} tone="info">
+            All fields are hidden by default. Toggle each one to include it on your card.
+          </InfoCallout>
 
-            {error && <ErrorAlert message={error} />}
+          <PersonalInfoSection
+            formData={formData}
+            toggles={toggles}
+            onUpdate={updateField}
+            onToggle={updateToggle}
+          />
+          <ContactSection
+            formData={formData}
+            showEmergencyContact={toggles.showEmergencyContact}
+            onUpdate={updateField}
+            onToggleEmergencyContact={() => updateToggle("showEmergencyContact")}
+          />
+          <NotesSection
+            value={formData.additionalNotes}
+            showAdditionalNotes={toggles.showAdditionalNotes}
+            onChange={(v) => updateField("additionalNotes", v)}
+            onToggleAdditionalNotes={() => updateToggle("showAdditionalNotes")}
+          />
 
-            {saved && (
-              <div className="bg-secondary/10 text-secondary rounded-xl p-4 text-body-md font-medium">
-                Emergency card saved successfully.
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              variant="vault"
-              size="xl"
-              disabled={saving}
-              className="w-full tracking-wide cursor-pointer"
-            >
-              {saving
-                ? "Saving..."
-                : card
-                  ? "Update Digital Card"
-                  : "Create Digital Card"}
-            </Button>
-          </form>
+          {error && <ErrorAlert message={error} />}
         </section>
 
         <section className="hidden lg:col-span-7 lg:flex lg:sticky lg:top-6 lg:self-start flex-col items-end lg:pr-8 xl:pr-16">
@@ -152,4 +135,24 @@ export default function EmergencyCardPage() {
       </Dialog>
     </div>
   );
+}
+
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === "saving") {
+    return (
+      <span className="flex items-center gap-2 text-label-md text-on-surface-variant">
+        <Spinner className="w-3.5 h-3.5" />
+        Saving…
+      </span>
+    );
+  }
+  if (status === "saved") {
+    return (
+      <span className="flex items-center gap-1.5 text-label-md text-secondary">
+        <Icon path={ICON_PATHS.checkCircle} className="w-4 h-4" />
+        Saved
+      </span>
+    );
+  }
+  return null;
 }
