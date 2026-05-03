@@ -564,6 +564,57 @@ export const resendInvitation = auditedMutation({
 });
 
 /**
+ * Replace the user's keeplas-side shard. Used during shard redistribution
+ * (when the vault threshold changes, or when shards are first distributed
+ * to a freshly-invited contact and the master key has to be re-split).
+ */
+export const updateKeeplasShard = auditedMutation({
+  action: "user.keeplas_shard_updated",
+  resourceType: "user",
+  getResourceId: () => "self",
+  args: { keeplasShard: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    await ctx.db.patch(userId, {
+      keeplasShard: args.keeplasShard,
+      updatedAt: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+/**
+ * Get all accepted trust contacts of the calling user with their public
+ * keys — used by the Distribute Shards flow to know who to wrap shards for.
+ */
+export const getDistributionTargets = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const contacts = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+      .collect();
+
+    return contacts
+      .filter((c) => (c.contactType ?? "trust") === "trust")
+      .filter(
+        (c) =>
+          typeof c.shardIndex === "number" &&
+          typeof c.contactPublicKey === "string"
+      )
+      .map((c) => ({
+        contactId: c._id,
+        name: c.name,
+        shardIndex: c.shardIndex as number,
+        contactPublicKey: c.contactPublicKey as string,
+        shardConfirmed: c.shardConfirmed ?? false,
+      }));
+  },
+});
+
+/**
  * Re-publish the calling user's ML-KEM public key on every trusted_contacts
  * row where they are the contact (contactUserId === me). Used to backfill
  * rows accepted before the contact's crypto was ready, so the vault owner

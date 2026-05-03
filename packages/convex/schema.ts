@@ -558,6 +558,37 @@ export default defineSchema({
     .index("by_status", ["vaultUserId", "status"]),
 
   // ═══════════════════════════════════════════════
+  // RECOVERY SHARD SUBMISSIONS (post-mortem reconstruction)
+  // ═══════════════════════════════════════════════
+  //
+  // When an access_request reaches its quorum and the 72h grace window
+  // expires, each participating trust contact submits their stored shard.
+  // To preserve zero-knowledge, the raw shard is never sent to the server:
+  // each submitter wraps a copy of their shard to every OTHER trust contact's
+  // ML-KEM public key, then uploads the resulting fan-out as one row per
+  // (submitter, recipient) pair.
+  //
+  // Any contact who is one of the submitters can later fetch the rows where
+  // they are `recipientContactId`, unwrap them with their own private key,
+  // and combine those raw shards with their own to reconstruct the master
+  // key — entirely on-device.
+
+  recovery_shard_submissions: defineTable({
+    accessRequestId: v.id("access_requests"),
+    vaultUserId: v.id("users"),
+    submitterContactId: v.id("trusted_contacts"),
+    recipientContactId: v.id("trusted_contacts"),
+    // ML-KEM-768 + AES-GCM envelope wrapping the submitter's raw Shamir share.
+    // Only `recipientContactId` (the holder of the matching private key) can
+    // decrypt this row.
+    wrappedShard: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_request", ["accessRequestId"])
+    .index("by_request_recipient", ["accessRequestId", "recipientContactId"])
+    .index("by_request_submitter", ["accessRequestId", "submitterContactId"]),
+
+  // ═══════════════════════════════════════════════
   // CONDITIONAL MESSAGES
   // ═══════════════════════════════════════════════
 

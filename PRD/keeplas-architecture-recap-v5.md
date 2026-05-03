@@ -1,5 +1,7 @@
 # Keeplas — Architecture, Sécurité & Décisions Produit
-> Document récapitulatif complet — Avril 2026 — v5
+> Document récapitulatif complet — Mai 2026 — v5.1
+>
+> **Changements v5 → v5.1** : modèle d'accès simplifié (suppression des modes B1–B4 et du rôle First Responder, fusion Medical Contact / Legal Authority dans le `role` standard), threshold Shamir configurable (2-of-5 par défaut, 5 max), flux de distribution + soumission peer-to-peer ML-KEM décrits.
 
 ---
 
@@ -145,7 +147,7 @@ keeplas/
 │   ├── crypto/                     ← Zone RESTRICTED ⚠️
 │   │   ├── zk/                     ← Circuits Noir/Barretenberg
 │   │   ├── aes/                    ← AES-256-GCM (Web Crypto API)
-│   │   ├── shamir/                 ← Secret Sharing 3-of-5
+│   │   ├── shamir/                 ← Secret Sharing threshold-of-5 (configurable, 2 par défaut)
 │   │   └── __tests__/              ← Tests unitaires isolés
 │   ├── convex/                     ← Schema + Functions Convex
 │   └── ui/                         ← Composants ShadCN partagés
@@ -235,7 +237,8 @@ Toute PR touchant `/crypto` ne peut pas être mergée sans approbation explicite
 |---|---|---|
 | Zero-Knowledge Proofs | Noir + Barretenberg | Preuves ZK côté client — auditables |
 | Chiffrement symétrique | AES-256-GCM (Web Crypto API) | Chiffrement vault côté client |
-| Secret Sharing | Shamir 3-of-5 | Distribution et recovery des clés |
+| Secret Sharing | Shamir threshold-of-5 (configurable) | Distribution et recovery des clés. Threshold choisi à l'onboarding (2-5) ; défaut 2-of-5. |
+| ML-KEM-768 (FIPS 203) | @noble/post-quantum | Wrap des shards et DEKs vers les clés publiques recipient (post-quantum, remplace RSA-OAEP) |
 
 ### Principe d'isolation
 
@@ -253,7 +256,7 @@ Le package `packages/crypto/` est entièrement isolé pour que :
 | ZK Proof | Preuve d'identité sécurisée |
 | Master Key | Clé secrète personnelle |
 | AES-256-GCM | Chiffrement de bout en bout |
-| Quorum 3-of-5 | 3 contacts sur 5 requis |
+| Quorum threshold-of-5 | "X contacts sur 5 requis" (X dépend du choix utilisateur) |
 
 ---
 
@@ -346,10 +349,9 @@ Le user définit son ordre d'escalade parmi ces canaux :
 □ Email
 □ WhatsApp / SMS
 □ Appel automatisé (IVR)
-□ Appel par un Trusted Contact désigné "First Responder"
 ```
 
-Le drag & drop dans l'interface permet de réordonner les canaux librement.
+Le drag & drop dans l'interface permet de réordonner les canaux librement. La validation humaine en dernier recours est désormais portée par **tous** les trust contacts via leur action `Mark as unreachable` (voir section 11) — il n'existe plus de rôle "First Responder" séparé.
 
 ### Workflow Mensuel (Standard)
 
@@ -374,22 +376,23 @@ Jour J — 09:00
 │
 │   ← Pas de réponse
 │
-├── Jour J+4 — Canal 5 : First Responder (Trusted Contact désigné)
-│   Notification au contact : "Pouvez-vous joindre [user] ?"
-│   Le contact confirme ou infirme via l'app Keeplas
+├── Jour J+4 — cycle.status = "escalating"
+│   Tous les trust contacts notifiés.
+│   ≥threshold contacts cliquent "Mark as unreachable"
+│   pour confirmer l'injoignabilité humaine.
 │
-│   ← Contact confirme que le user ne répond pas
+│   ← Quorum atteint
 │
-└── Jour J+5 → Déclenchement protocole accès d'urgence
+└── Jour J+5 → Déclenchement protocole accès d'urgence (grace 72h)
 ```
 
 ### Workflow Hebdomadaire (Accéléré)
 
 ```
-Jour J     Canal 1           → 12h sans réponse
-Jour J+0.5 Canal 2+3         → 24h sans réponse
-Jour J+1.5 Canal 4 (IVR)    → 36h sans réponse
-Jour J+2   Canal 5 (FR)      → confirmation humaine
+Jour J     Canal 1                  → 12h sans réponse
+Jour J+0.5 Canal 2+3                → 24h sans réponse
+Jour J+1.5 Canal 4 (IVR)            → 36h sans réponse
+Jour J+2   Escalating (contacts)    → quorum humain
 Jour J+2.5 → Déclenchement
 ```
 
@@ -452,8 +455,8 @@ La vérification passive est la première ligne de défense. Le user n'est solli
 Niveau 0 — Signaux passifs automatiques    ← Zéro action du user
 Niveau 1 — Confirmation légère (un tap)    ← Seulement si niveau 0 échoue
 Niveau 2 — Canaux actifs (email, SMS...)   ← Seulement si niveau 1 échoue
-Niveau 3 — First Responder humain          ← Dernier recours
-Niveau 4 — Déclenchement accès d'urgence
+Niveau 3 — Trust contacts confirment       ← Action humaine collective
+Niveau 4 — Déclenchement accès d'urgence (grace 72h puis quorum Shamir)
 ```
 
 ---
@@ -548,12 +551,14 @@ Jour J — Vérification due
 │   Chaque canal : délai configurable
 │   Pas de réponse → Niveau 3
 │
-├── NIVEAU 3 : First Responder humain (J+4)
-│   Notification au contact désigné
-│   Confirmation ou infirmation humaine
-│   Pas de confirmation → Niveau 4
+├── NIVEAU 3 : Trust contacts confirment (J+4)
+│   Tous les trust contacts notifiés "We can't reach [user]"
+│   ≥threshold cliquent "Mark as unreachable" depuis leur dashboard
+│   Pas de quorum → cycle reste pending sans déclenchement
 │
 └── NIVEAU 4 : Déclenchement accès d'urgence (J+5)
+    Grace 72h démarre. À expiration : phase Shamir (soumission shards
+    + reconstruction MasterKey côté contact, jamais côté serveur).
 ```
 
 ---
@@ -660,7 +665,7 @@ Chaque check indique précisément comment il a été validé :
 | 👆 | Manuel | Confirmation par tap |
 | 📧 | Manuel | Confirmation par email |
 | 📞 | Manuel | Confirmation par appel |
-| 👤 | Manuel | Confirmé par First Responder |
+| 👤 | Manuel | Confirmé par quorum de trust contacts |
 
 ---
 
@@ -705,154 +710,115 @@ Prochain check : Dans 27 jours
 
 ## 11. Accès des Trusted Contacts
 
-### Vue d'ensemble des modes
+### Modèle simplifié — un seul flux, deux rôles
+
+Le modèle a été délibérément simplifié pour aligner promesse zero-knowledge et UX. **Trusted Contact** est l'unique rôle actif (validation + détention de shard + ouverture du vault). **Recipient** est le rôle passif (réception de contenu pré-assigné après ouverture). Plus de modes B1/B2/B3/B4, plus de First Responder, plus de Medical Contact ni Legal Authority comme rôles distincts.
 
 ```
-Mode A  →  Accès post-mortem après Life Check échoué
-Mode B1 →  Trusted Contact demande l'accès (user vivant)
-Mode B2 →  User accorde un accès proactif permanent
-Mode B3 →  Urgence médicale (user inconscient mais vivant)
-Mode B4 →  Accès progressif conditionnel (règle temporelle)
-```
+TRUSTED CONTACT (actif) — détient 1 shard Shamir
+  ① Confirme l'injoignabilité du user (validation humaine)
+  ② Soumet son shard une fois la grâce expirée
+  ③ Participe au quorum cryptographique (threshold-of-5)
 
----
-
-### Mode A — Accès Post-Mortem
-
-Déclenché uniquement après échec complet du Life Check sur tous les canaux.
-
-```
-Minimum 2 Trusted Contacts initient la demande
-        ↓
-Keeplas vérifie :
-  ✓ Life Check échoué sur TOUS les canaux configurés
-  ✓ Délai de grâce 72h entièrement écoulé
-  ✓ Au moins 2 contacts ont initié la demande
-        ↓
-Notification immédiate à TOUS les trusted contacts
-        ↓
-Chaque contact soumet son shard via sa Recovery Phrase
-        ↓
-Quorum 3-of-5 atteint → vault déchiffré
-        ↓
-Accès en lecture seule par défaut
-Log immuable : qui / quand / quelle section
-```
-
-**Garde-fous Mode A :**
-- Jamais un seul contact peut initier seul (minimum 2)
-- 72h de grâce après déclenchement (user peut encore annuler)
-- Tous les contacts notifiés simultanément
-- Log immuable de chaque accès (auditable)
-- Accès en lecture seule sauf configuration contraire du user
-
----
-
-### Mode B1 — Trusted Contact demande l'accès (user vivant)
-
-```
-Contact initie une demande d'accès depuis l'app
-        ↓
-Notification immédiate au user :
-"[Nom] demande accès à votre vault"
-        ↓
-┌─────────────────────────────────────────┐
-│  [Autoriser]                            │
-│  [Autoriser 24h uniquement]             │
-│  [Autoriser cette section seulement]    │
-│  [Refuser]                              │
-└─────────────────────────────────────────┘
-        ↓
-Pas de réponse du user dans le délai configuré
-→ Refus automatique (le silence = non, toujours)
-
-Délai de refus automatique : configurable par le user
-Options : 12h / 24h / 48h
+RECIPIENT (passif) — pas de shard, pas de validation
+  Reçoit son contenu pré-assigné après ouverture du vault
 ```
 
 ---
 
-### Mode B2 — Accès proactif permanent
+### Threshold configurable
 
-Le user configure depuis son vault un accès permanent pour un contact spécifique.
+Le user choisit son threshold à l'onboarding (entre 2 et 5). Stocké dans `users.vaultThreshold`. Le défaut **2-of-5** maximise la facilité de récupération ; un threshold plus élevé renforce la résistance à la collusion mais demande plus de contacts joignables au moment de la recovery. Changer le threshold après distribution implique une re-distribution complète des shards.
 
-**Granularité par section :**
-```
-□ Emergency Card uniquement    (public de toute façon)
-□ Directives médicales
-□ Documents légaux
-□ Assets financiers
-□ Vault complet
-```
+| Threshold | Trade-off |
+|---|---|
+| **2-of-5** (défaut) | Recovery facile. 2 contacts suffisent. Moins résistant à la collusion d'une paire. |
+| **3-of-5** | Résiste à une paire compromise. |
+| **4-of-5** | Forte sécurité. Recovery peut bloquer si ≥2 contacts indisponibles. |
+| **5-of-5** | Aucune collusion possible. Un seul contact manquant = vault verrouillé. |
 
-**Type d'accès :**
-```
-○ Lecture seule
-○ Lecture + téléchargement
-```
+---
 
-**Durée :**
+### Flux d'accès post-mortem (unique)
+
 ```
-○ Permanent (révocable à tout moment par le user)
-○ Temporaire (date de fin définie)
+1. DÉTECTION
+   Life Check passif KO (signaux insuffisants)
+       ↓
+   Canaux actifs (push → email → WhatsApp → SMS → IVR) tentent
+   de joindre le user. Tous échouent → cycle.status = "escalating"
+
+2. NOTIFICATION
+   Tous les trusted contacts notifiés :
+   "Nous n'arrivons pas à joindre [user]"
+
+3. CONFIRMATION SOCIALE
+   ≥threshold contacts cliquent "Mark as unreachable" depuis
+   /shared-with-me (bouton visible uniquement quand le cycle
+   du owner est en escalating).
+       ↓
+   access_request.contactsInitiated.length atteint le quorum
+       ↓
+   Notification au user + démarrage du compte à rebours 72h
+
+4. GRACE PERIOD 72H
+   Le user a une dernière fenêtre pour réapparaître. Sign-in +
+   "I am well" → cycle annulé, request fermée, contacts notifiés.
+   Aucun contenu ne quitte jamais le vault dans ce scénario.
+
+5. SOUMISSION CRYPTOGRAPHIQUE
+   Après les 72h, chaque trust contact peut soumettre son shard.
+   Le shard brut est lu depuis IndexedDB local, puis wrappé en
+   ML-KEM-768 vers la clé publique de chaque autre trust contact
+   (fan-out wrap). Le serveur stocke uniquement les enveloppes.
+
+6. RECONSTRUCTION CLIENT-SIDE
+   Quand ≥threshold contacts ont soumis leur shard, n'importe
+   quel submitter peut :
+     - fetch les enveloppes adressées à lui
+     - les unwrap avec sa clé privée ML-KEM
+     - combiner avec son propre shard local
+     - reconstruire la MasterKey via Shamir (côté client uniquement)
+
+7. DISTRIBUTION
+   Avec la MasterKey, le contact ouvre le vault en mode lecture
+   "memorial". Les recipients reçoivent le contenu pré-assigné
+   selon les recipient_groups + sharedWithContacts définis par
+   le user de son vivant.
 ```
 
 ---
 
-### Mode B3 — Urgence médicale (user inconscient, vivant)
+### Garde-fous
 
-Réservé au Trusted Contact désigné comme "Medical Contact".
-
-```
-Medical Contact déclenche "Medical Emergency Access"
-        ↓
-Accès automatiquement limité à :
-  ✓ Health Directives
-  ✓ Emergency Card
-  ✗ Assets financiers  (bloqué)
-  ✗ Documents légaux   (bloqué)
-  ✗ Vault complet      (bloqué)
-        ↓
-Notification immédiate à tous les autres trusted contacts
-        ↓
-Log complet horodaté de l'accès
-        ↓
-À son réveil, le user voit :
-"Accès médical d'urgence utilisé le [date] par [contact]"
-[Révoquer rétroactivement]  [Confirmer et garder le log]
-```
+- **Fail-closed sur la validation** : si aucun trust contact ne confirme l'injoignabilité, le vault reste fermé indéfiniment. Pas de timeout automatique côté serveur qui ouvrirait le vault sans intervention humaine.
+- **72h de grâce** : le user peut toujours annuler tant que la fenêtre n'est pas écoulée. La cancellation notifie tous les contacts.
+- **Zero-knowledge strict** : le serveur ne voit jamais un shard en clair. Distribution = wrap ML-KEM ; soumission = wrap ML-KEM peer-to-peer (fan-out) ; reconstruction = client-side uniquement.
+- **Trade-off de collusion** : avec threshold = 2, deux contacts complices peuvent à la fois confirmer l'injoignabilité ET ouvrir le vault. Le Life Check (échec sur tous les canaux) + les 72h de grâce restent les seuls garde-fous additionnels. Le user peut élever le threshold s'il anticipe ce risque.
+- **Audit immuable** : chaque action (mark unreachable, submit shard, reconstruction) est tracée dans `audit_logs` avec hash-chaining tamper-evident.
 
 ---
 
-### Mode B4 — Accès progressif conditionnel
+### Ce qui a été supprimé du modèle initial
 
-Intermédiaire entre B2 et Mode A. Utile pour les professionnels (avocat, notaire, médecin traitant).
-
-```
-User configure une règle conditionnelle :
-"Si je ne réponds pas pendant [X jours],
- [Contact] peut accéder à [section Y]
- sans attendre le déclenchement complet du Life Check"
-
-Exemple :
-"Si je ne réponds pas 7 jours → mon avocat accède
- aux documents légaux"
-
-"Si je ne réponds pas 3 jours → mon médecin accède
- aux directives médicales"
-```
+| Concept supprimé | Raison |
+|---|---|
+| **Modes B1/B2/B3/B4** | Dispersion produit. La promesse Keeplas v1 est la succession numérique, pas une plateforme de partage généraliste. |
+| **First Responder** | Doublonnait la confirmation sociale par les trust contacts. La fonction (validation humaine) est conservée mais portée par tous les trust contacts via `markUserUnreachable`. |
+| **Medical Contact / Legal Authority** | Rôles distincts inutiles. Le `role` de chaque contact (lawyer, doctor, family, friend, other) suffit pour la sémantique métier ; aucun privilège crypto associé. |
+| **Recovery du vivant via demande on-demand** | Le user vivant utilise sa phrase 24 mots (path A). En cas de perte de la phrase, il peut déclencher manuellement une recovery via les contacts (path B), qui suit exactement le même flux Shamir post-mortem. |
 
 ---
 
-### Tableau récapitulatif des modes d'accès
+### Récupération du vivant
 
-| Mode | Déclencheur | Sections accessibles | Garde-fous |
-|---|---|---|---|
-| **A** | Life Check échoué complet | Configuré par user | 2 contacts min, 72h grâce |
-| **B1** | Demande du contact | Autorisé par user en temps réel | Silence = refus |
-| **B2** | Permanent (pré-configuré) | Granulaire par section | Révocable à tout moment |
-| **B3** | Urgence médicale | Health + Emergency Card uniquement | Medical Contact désigné |
-| **B4** | Délai sans réponse | Section définie par rule | Délai configurable |
+Si le user perd l'accès à son device mais possède toujours sa phrase 24 mots :
+- Argon2id(24 mots, phraseSalt) → RootKey → unwrap(encryptedKeyBundle) → MasterKey. Aucun contact impliqué.
+
+Si le user perd la phrase 24 mots :
+- Les trust contacts peuvent collaborer (≥threshold) pour reconstruire la MasterKey, exactement comme en post-mortem. Le user peut ensuite générer une nouvelle phrase et re-wrapper la MasterKey sous une nouvelle RootKey. Le vault reste inchangé ; seule la phrase d'accès change.
+
+Les 24 mots eux-mêmes ne sont jamais récupérables — c'est une dérivation à sens unique. Aucune entité (Keeplas, contacts, autre device) ne peut les reproduire.
 
 ---
 
@@ -1450,8 +1416,9 @@ Canal chiffré : clé PGP disponible sur le site
 
 | Sujet | Décision | Raison |
 |---|---|---|
-| Recovery | Social (2 contacts min) + Recovery Phrase | Double sécurité sans dépendance serveur |
-| Shards | Shamir 3-of-5 | Équilibre sécurité / accessibilité |
+| Recovery | Social (≥threshold contacts) + Recovery Phrase | Double sécurité sans dépendance serveur |
+| Shards | Shamir threshold-of-5 (configurable, 2 par défaut) | User choisit son curseur sécurité ↔ accessibilité à l'onboarding |
+| Distribution shards | ML-KEM-768 wrap par contact, fan-out à la soumission | Zero-knowledge strict — serveur ne voit jamais un shard en clair |
 | Life Check | Passive First, Active Only If Needed | Zéro friction pour le user vivant |
 | Signaux passifs | Score ≥ 50 pts = validation silencieuse | Multi-sources pour éviter faux positifs |
 | Signaux passifs | Opt-in uniquement, traitement local | Vie privée et transparence |
@@ -1459,8 +1426,9 @@ Canal chiffré : clé PGP disponible sur le site
 | Trimestriel | Tous les canaux actifs obligatoires | Anti-faux-positifs maximal |
 | Dernier check | Affiché avec type de signal | Transparence totale pour le user |
 | Vue contacts | Statut sans détail du signal | Vie privée du user préservée |
-| Accès contacts | 5 modes (A, B1, B2, B3, B4) | Couverture complète des cas |
-| Silence = | Refus automatique (Mode B1) | Le consentement doit être explicite |
+| Rôles contacts | Trust (actif, holds shard) + Recipient (passif) | Modèle simplifié — supprimé B1/B2/B3/B4 et First Responder |
+| Validation | ≥threshold trust contacts confirment "unreachable" | Fail-closed — sans confirmation humaine, vault reste fermé |
+| Grace period | 72h après quorum atteint | User peut encore annuler s'il réapparaît |
 | Onboarding | Discover as You Go | Pas de tunnel — score + nudges + assistant |
 | Banner ⚠️ | Persistant jusqu'au 1er contact | Seule vraie friction acceptée |
 | Explain on Demand | Tooltips ℹ️ partout | Doc intégrée, jamais imposée |

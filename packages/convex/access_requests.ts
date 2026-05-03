@@ -156,6 +156,230 @@ export const markUserUnreachable = auditedMutation({
 });
 
 /**
+ * Get the active access request for a vault from the perspective of a trust
+ * contact. Returns null when no quorum-reached request exists for the owner.
+ * Used by the contact UI to decide whether to surface "Submit my shard".
+ */
+export const getActiveAccessRequestForContact = query({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.contactUserId !== requesterId) return null;
+
+    const request = await ctx.db
+      .query("access_requests")
+      .withIndex("by_vault_user", (q) =>
+        q.eq("vaultUserId", contact.userId)
+      )
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .first();
+
+    if (!request) return null;
+    return request;
+  },
+});
+
+/**
+ * List the OTHER trust contacts of a vault (excluding the caller). The
+ * caller must themselves be one of the vault's trust contacts. Returns each
+ * peer's public key so the caller can fan-out wrap their submitted shard
+ * to every other participant in the recovery quorum.
+ */
+export const getRecoveryPeers = query({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+    const myRow = await ctx.db.get(args.contactId);
+    if (!myRow || myRow.contactUserId !== requesterId) {
+      throw new Error("Not authorized");
+    }
+    if ((myRow.contactType ?? "trust") !== "trust") {
+      throw new Error("Caller is not a trust contact");
+    }
+
+    const peers = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", myRow.userId))
+      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+      .collect();
+
+    return peers
+      .filter((p) => p._id !== args.contactId)
+      .filter((p) => (p.contactType ?? "trust") === "trust")
+      .filter((p) => typeof p.contactPublicKey === "string")
+      .map((p) => ({
+        contactId: p._id,
+        name: p.name,
+        contactPublicKey: p.contactPublicKey as string,
+      }));
+  },
+});
+
+/**
+ * Submit the calling contact's shard for recovery, fanned out to every
+ * other trust contact's public key. The server stores the wrapped envelopes
+ * but never sees the raw shard (true zero-knowledge).
+ *
+ * The caller is responsible for wrapping a copy for each peer. The server
+ * verifies the (submitter, recipient) pair is valid for the access request,
+ * then inserts a row per submission.
+ */
+export const submitRecoveryShards = auditedMutation({
+  action: "access_request.shards_submitted",
+  resourceType: "access_request",
+  args: {
+    accessRequestId: v.id("access_requests"),
+    submitterContactId: v.id("trusted_contacts"),
+    submissions: v.array(
+      v.object({
+        recipientContactId: v.id("trusted_contacts"),
+        wrappedShard: v.string(),
+      })
+    ),
+  },
+  resolveActor: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+    const contact = await ctx.db.get(args.submitterContactId);
+    if (!contact) throw new Error("Contact not found");
+    return {
+      chainUserId: contact.userId,
+      actorType: "trusted_contact",
+      actorId: requesterId,
+    };
+  },
+  getResourceId: (args) => args.accessRequestId,
+  handler: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+
+    const submitter = await ctx.db.get(args.submitterContactId);
+    if (!submitter || submitter.contactUserId !== requesterId) {
+      throw new Error("Not authorized");
+    }
+    if ((submitter.contactType ?? "trust") !== "trust") {
+      throw new Error("Only trust contacts can submit recovery shards");
+    }
+
+    const request = await ctx.db.get(args.accessRequestId);
+    if (!request || request.vaultUserId !== submitter.userId) {
+      throw new Error("Access request mismatch");
+    }
+    if (!request.quorumReached) {
+      throw new Error(
+        "Cannot submit shards before unreachability quorum is reached"
+      );
+    }
+    if (
+      request.gracePeriodEndsAt &&
+      Date.now() < request.gracePeriodEndsAt
+    ) {
+      throw new Error("Grace period not yet expired");
+    }
+    if (request.cancelledDuringGrace) {
+      throw new Error("Access request was cancelled during grace");
+    }
+
+    const existing = await ctx.db
+      .query("recovery_shard_submissions")
+      .withIndex("by_request_submitter", (q) =>
+        q
+          .eq("accessRequestId", args.accessRequestId)
+          .eq("submitterContactId", args.submitterContactId)
+      )
+      .collect();
+    if (existing.length > 0) {
+      throw new Error("You already submitted your shard");
+    }
+
+    const now = Date.now();
+    let inserted = 0;
+    for (const sub of args.submissions) {
+      const recipient = await ctx.db.get(sub.recipientContactId);
+      if (!recipient || recipient.userId !== submitter.userId) continue;
+      if ((recipient.contactType ?? "trust") !== "trust") continue;
+      if (recipient._id === submitter._id) continue;
+
+      await ctx.db.insert("recovery_shard_submissions", {
+        accessRequestId: args.accessRequestId,
+        vaultUserId: submitter.userId,
+        submitterContactId: args.submitterContactId,
+        recipientContactId: sub.recipientContactId,
+        wrappedShard: sub.wrappedShard,
+        createdAt: now,
+      });
+      inserted++;
+    }
+
+    return { submitted: inserted };
+  },
+});
+
+/**
+ * Fetch the wrapped-for-me shards for a recovery: every row where the
+ * caller's contactId is the recipient. Used by the contact's client to
+ * unwrap peer shards and reconstruct the master key on-device.
+ */
+export const getRecoveryShardsForMe = query({
+  args: {
+    accessRequestId: v.id("access_requests"),
+    contactId: v.id("trusted_contacts"),
+  },
+  handler: async (ctx, args) => {
+    const requesterId = await requireAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.contactUserId !== requesterId) return [];
+
+    const rows = await ctx.db
+      .query("recovery_shard_submissions")
+      .withIndex("by_request_recipient", (q) =>
+        q
+          .eq("accessRequestId", args.accessRequestId)
+          .eq("recipientContactId", args.contactId)
+      )
+      .collect();
+
+    return rows.map((r) => ({
+      submitterContactId: r.submitterContactId,
+      wrappedShard: r.wrappedShard,
+    }));
+  },
+});
+
+/**
+ * Count distinct submitters for an access request. Useful for the contact
+ * UI to show "X of Y submissions received" without exposing which peers.
+ */
+export const getRecoverySubmissionCount = query({
+  args: { accessRequestId: v.id("access_requests") },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const request = await ctx.db.get(args.accessRequestId);
+    if (!request) return 0;
+
+    const isOwner = request.vaultUserId === userId;
+    const callerContact = isOwner
+      ? null
+      : await ctx.db
+          .query("trusted_contacts")
+          .withIndex("by_contact_user", (q) => q.eq("contactUserId", userId))
+          .filter((q) => q.eq(q.field("userId"), request.vaultUserId))
+          .first();
+    if (!isOwner && !callerContact) return 0;
+
+    const rows = await ctx.db
+      .query("recovery_shard_submissions")
+      .withIndex("by_request", (q) =>
+        q.eq("accessRequestId", args.accessRequestId)
+      )
+      .collect();
+
+    const submitters = new Set(rows.map((r) => r.submitterContactId));
+    return submitters.size;
+  },
+});
+
+/**
  * Cancel emergency access during the 72h grace period (vault owner action).
  * Effectively a "I'm alive" signal — closes the request and resets state.
  */

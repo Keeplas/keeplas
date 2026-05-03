@@ -18,6 +18,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { ContactCard } from "./contact-card";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
+import { DistributeShardsSection } from "./distribute-shards-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { useBackfillVerificationEnvelopes } from "./use-backfill-verification-envelopes";
@@ -202,6 +203,8 @@ export default function TrustedContactsPage() {
                   </p>
                 </div>
               )}
+
+              <DistributeShardsSection />
 
               {activeContacts.length === 0 ? (
                 <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"

@@ -171,6 +171,7 @@ export const getOnboardingState = query({
       onboardingStep: user.onboardingStep ?? "auth_complete",
       recoveryVerified: user.recoveryVerified ?? false,
       hasEncryptedKeyBundle: !!user.encryptedKeyBundle,
+      vaultThreshold: user.vaultThreshold ?? null,
     };
   },
 });

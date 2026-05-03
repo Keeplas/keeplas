@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
 import { cn, HelpHint } from "@keeplas/ui";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { useVerifyShard } from "./use-verify-shard";
+import { useRecoveryFlow } from "./use-recovery-flow";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family",
@@ -53,6 +55,18 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const markUnreachable = useAuditedMutation(
     api.access_requests.markUserUnreachable
   );
+  const activeRequest = useQuery(
+    api.access_requests.getActiveAccessRequestForContact,
+    vault.invitationStatus === "accepted"
+      ? { contactId: vault._id as Id<"trusted_contacts"> }
+      : "skip"
+  );
+
+  const recovery = useRecoveryFlow({
+    contactId: vault._id as Id<"trusted_contacts">,
+    ownerUserId: vault.userId as unknown as string,
+    accessRequestId: activeRequest?._id ?? null,
+  });
 
   const [unreachableState, setUnreachableState] = useState<
     "idle" | "confirming" | "running" | "done" | "error"
@@ -69,6 +83,19 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   // hidden — contacts shouldn't be able to fire it speculatively.
   const isOwnerEscalating = vault.ownerCycleStatus === "escalating";
   const canMarkUnreachable = !isRecipientOnly && isAccepted && isOwnerEscalating;
+
+  // Recovery section is surfaced once the unreachability quorum has been
+  // reached AND the 72h grace window has expired without cancellation.
+  const now = Date.now();
+  const graceExpired =
+    !!activeRequest?.gracePeriodEndsAt &&
+    now > activeRequest.gracePeriodEndsAt;
+  const showRecovery =
+    !isRecipientOnly &&
+    isAccepted &&
+    !!activeRequest?.quorumReached &&
+    !activeRequest?.cancelledDuringGrace &&
+    graceExpired;
   const initials = vault.ownerName
     .split(" ")
     .map((n) => n[0])
@@ -237,6 +264,81 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           )}
           {unreachableState === "error" && unreachableError && (
             <p className="text-label-md text-error">{unreachableError}</p>
+          )}
+        </div>
+      )}
+
+      {showRecovery && (
+        <div className="pt-5 mt-5 border-t border-outline-variant/15 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-label-md font-bold uppercase tracking-wide text-error inline-flex items-center gap-2">
+              Recovery in progress
+              <HelpHint content="The 72h grace window passed without the vault owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards." />
+            </h4>
+            <span className="text-label-md text-on-surface-variant">
+              {recovery.submissionCount} submission
+              {recovery.submissionCount === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          {recovery.submitStatus !== "ok" &&
+          recovery.submitStatus !== "already_submitted" ? (
+            <button
+              onClick={() => void recovery.submitShard()}
+              disabled={recovery.submitStatus === "running"}
+              className="w-full text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+            >
+              {recovery.submitStatus === "running"
+                ? "Sealing your shard for peers…"
+                : "Submit my shard"}
+            </button>
+          ) : (
+            <p className="text-label-md text-secondary font-medium">
+              Your shard was submitted to {recovery.peerCount} peer
+              {recovery.peerCount === 1 ? "" : "s"}.
+            </p>
+          )}
+
+          {recovery.submitStatus === "error" && recovery.submitError && (
+            <p className="text-label-md text-error">{recovery.submitError}</p>
+          )}
+          {recovery.submitStatus === "no_local_shard" && (
+            <p className="text-label-md text-error">
+              {recovery.submitError}
+            </p>
+          )}
+
+          {(recovery.submitStatus === "ok" ||
+            recovery.submitStatus === "already_submitted") && (
+            <div className="pt-2">
+              {recovery.reconstructStatus === "ok" ? (
+                <p className="text-label-md text-secondary font-medium">
+                  Master key reconstructed on this device. Memorial vault
+                  access available.
+                </p>
+              ) : (
+                <button
+                  onClick={() => void recovery.reconstructMasterKey()}
+                  disabled={
+                    recovery.reconstructStatus === "running" ||
+                    recovery.wrappedForMeCount === 0
+                  }
+                  className="w-full text-sm px-3 py-2 rounded-lg bg-primary text-on-primary font-medium cursor-pointer disabled:opacity-60"
+                >
+                  {recovery.reconstructStatus === "running"
+                    ? "Reconstructing…"
+                    : recovery.wrappedForMeCount === 0
+                      ? "Awaiting peer submissions…"
+                      : "Reconstruct master key"}
+                </button>
+              )}
+              {recovery.reconstructStatus === "error" &&
+                recovery.reconstructError && (
+                  <p className="text-label-md text-error mt-2">
+                    {recovery.reconstructError}
+                  </p>
+                )}
+            </div>
           )}
         </div>
       )}
