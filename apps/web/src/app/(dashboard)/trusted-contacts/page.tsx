@@ -19,6 +19,7 @@ import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
+import { useBackfillVerificationEnvelopes } from "./use-backfill-verification-envelopes";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -43,6 +44,7 @@ const GUARDIAN_ROLES = [
 export default function TrustedContactsPage() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
+  useBackfillVerificationEnvelopes(contacts);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
     "trust"

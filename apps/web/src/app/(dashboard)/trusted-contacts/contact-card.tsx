@@ -64,6 +64,46 @@ interface ContactCardProps {
   contact: Doc<"trusted_contacts">;
 }
 
+const STALE_VERIFICATION_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
+
+function formatRelative(ts: number): string {
+  const diff = Date.now() - ts;
+  const sec = Math.round(diff / 1000);
+  if (sec < 60) return "just now";
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  const month = Math.round(day / 30);
+  if (month < 12) return `${month}mo ago`;
+  const year = Math.round(month / 12);
+  return `${year}y ago`;
+}
+
+function computeVerificationBadge(
+  contact: Doc<"trusted_contacts">
+): { label: string; className: string } | null {
+  if (contact.invitationStatus !== "accepted") return null;
+  if ((contact.contactType ?? "trust") === "recipient_only") return null;
+
+  if (contact.lastVerifiedAt === undefined) {
+    return {
+      label: "Not yet verified",
+      className: "bg-surface-container-high text-on-surface-variant",
+    };
+  }
+  const isStale =
+    Date.now() - contact.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS;
+  return {
+    label: `Verified ${formatRelative(contact.lastVerifiedAt)}`,
+    className: isStale
+      ? "bg-tertiary-container text-on-tertiary-container"
+      : "bg-secondary-container text-on-secondary-container",
+  };
+}
+
 export function ContactCard({ contact }: ContactCardProps) {
   const [showActions, setShowActions] = useState(false);
   const [revoking, setRevoking] = useState(false);
@@ -137,6 +177,8 @@ export function ContactCard({ contact }: ContactCardProps) {
   }
 
   const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
+
+  const verificationBadge = computeVerificationBadge(contact);
 
   const roleBadges: Array<{ icon: string; label: string }> = [];
   if (contact.isFirstResponder) {
@@ -227,6 +269,16 @@ export function ContactCard({ contact }: ContactCardProps) {
         {contact.shardConfirmed && (
           <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
             Fragment Assigned
+          </span>
+        )}
+        {verificationBadge && (
+          <span
+            className={cn(
+              "text-label-md px-3 py-1.5 rounded-lg",
+              verificationBadge.className
+            )}
+          >
+            {verificationBadge.label}
           </span>
         )}
       </div>

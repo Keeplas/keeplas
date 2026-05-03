@@ -344,6 +344,13 @@ export default defineSchema({
     shardConfirmed: v.optional(v.boolean()),
     shardConfirmedAt: v.optional(v.number()),
 
+    // Round-trip verification: the owner's client wraps a known plaintext to
+    // the contact's ML-KEM public key once they accept. The contact can then
+    // unwrap it on-device to prove their keypair is functional, without
+    // exposing any vault content. `lastVerifiedAt` is stamped on success.
+    verificationEnvelope: v.optional(v.string()),
+    lastVerifiedAt: v.optional(v.number()),
+
     contactRecoveryHash: v.optional(v.string()),
     contactPublicKey: v.optional(v.string()),
 
