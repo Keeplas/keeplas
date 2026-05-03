@@ -175,15 +175,10 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       </p>
 
       <div className="flex items-center gap-2 flex-wrap mb-5">
-        {!isRecipientOnly && typeof vault.shardIndex === "number" && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-primary/5 text-primary inline-flex items-center gap-1.5">
-            Shard {vault.shardIndex} of 5
-            <HelpHint content="Your slot in the vault owner's 5-share Shamir scheme. The reconstruction threshold (2 to 5, set by the owner) decides how many of you must collaborate to reopen the vault. You alone cannot — by design." />
-          </span>
-        )}
         {vault.shardConfirmed && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
+          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center gap-1.5">
             Fragment Held
+            <HelpHint content="An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. Together with the other trust contacts (recovery threshold set by the owner), you can help reopen the vault — alone you cannot." />
           </span>
         )}
       </div>

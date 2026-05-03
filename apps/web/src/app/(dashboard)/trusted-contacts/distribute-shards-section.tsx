@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react";
 import { Button, HelpHint } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
-import { useDistributeShards } from "./use-distribute-shards";
+import { useDistributeShards } from "@/lib/use-distribute-shards";
 
 /**
  * Owner-side action card surfaced when at least one trust contact has

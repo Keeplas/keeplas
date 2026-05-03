@@ -695,10 +695,15 @@ export const getVaultsWhereIAmContact = query({
         .order("desc")
         .first();
 
+      const trimmedName = owner?.name?.trim() || "";
+      const email = owner?.email ?? "";
+      const localPart = email.split("@")[0] ?? "";
+      const displayName = trimmedName || localPart || "Keeplas user";
+
       result.push({
         ...contact,
-        ownerName: owner?.name ?? "Unknown",
-        ownerEmail: owner?.email ?? "",
+        ownerName: displayName,
+        ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
         ownerCycleEscalatedAt: activeCycle?.levelReachedAt ?? null,
       });

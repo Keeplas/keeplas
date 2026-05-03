@@ -10,6 +10,7 @@ import { getInitials } from "@/lib/user";
 import { DeviceUnlockManager } from "./device-unlock-manager";
 import { PasskeyManager } from "./passkey-manager";
 import { TotpManager } from "./totp-manager";
+import { RedistributeShardsCard } from "./redistribute-shards-card";
 
 const ACTION_ICONS: Record<string, string> = {
   vault_item_created: ICON_PATHS.lock,
@@ -213,9 +214,12 @@ export function SecurityCenterSection() {
           </div>
           <p className="text-body-md text-on-surface-variant mb-6">
             Your master key is split into{" "}
-            <strong className="text-primary">7 cryptographic shards</strong> using
-            Shamir&apos;s Secret Sharing. You need{" "}
-            <strong className="text-primary">4 shards</strong> to reconstruct the vault.
+            <strong className="text-primary">5 cryptographic shards</strong> using
+            Shamir&apos;s Secret Sharing. You chose a threshold of{" "}
+            <strong className="text-primary">{user?.vaultThreshold ?? 2}</strong>{" "}
+            shards to reconstruct the vault. Any combination meeting that
+            threshold works — your contacts collaborate on-device, never on
+            the server.
           </p>
 
           <div className="space-y-3">
@@ -251,6 +255,10 @@ export function SecurityCenterSection() {
             </Link>
           </div>
         </section>
+
+        <div className="md:col-span-12">
+          <RedistributeShardsCard />
+        </div>
 
         <DeviceUnlockManager />
         <PasskeyManager />
