@@ -366,7 +366,11 @@ export const declineInvitation = auditedMutation({
 });
 
 /**
- * Store an encrypted shard for a contact (called by the vault owner after contact accepts).
+ * Store an encrypted shard for a contact (called by the vault owner after
+ * contact accepts). Sends an in-app notification to the contact on the
+ * first distribution; subsequent re-distributions (e.g., threshold change)
+ * are silent — the contact's /shared-with-me page picks up the new envelope
+ * automatically via useReceiveShard.
  */
 export const storeEncryptedShard = auditedMutation({
   action: "trusted_contact.shard_distributed",
@@ -388,6 +392,8 @@ export const storeEncryptedShard = auditedMutation({
       throw new Error("Contact must accept the invitation first");
     }
 
+    const isFirstDistribution = !contact.shardConfirmed;
+
     await ctx.db.patch(args.contactId, {
       encryptedShard: args.encryptedShard,
       shardPublicKeyUsed: args.shardPublicKeyUsed,
@@ -395,6 +401,21 @@ export const storeEncryptedShard = auditedMutation({
       shardConfirmedAt: Date.now(),
       updatedAt: Date.now(),
     });
+
+    if (isFirstDistribution && contact.contactUserId) {
+      const owner = await ctx.db.get(userId);
+      const ownerName = owner?.name?.trim() || "A Keeplas user";
+      await createNotification(ctx, {
+        userId: contact.contactUserId,
+        type: "vault_update",
+        title: "You now safeguard a recovery shard",
+        body: `${ownerName} has distributed your encrypted recovery shard. It will be used together with the other trust contacts' shards if their vault ever needs to be reconstructed.`,
+        actionUrl: "/shared-with-me",
+        channels: ["push", "email"],
+        relatedId: contact._id,
+        relatedType: "trusted_contact",
+      });
+    }
 
     return { success: true };
   },

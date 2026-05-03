@@ -88,8 +88,8 @@ export default function TrustedContactsDocPage() {
           />
           <Step
             value="02"
-            title="Receives their shard"
-            body="Once accepted, your client wraps their share of the Shamir-split master key to their public key and stores the ciphertext on the server. Their device unwraps and persists it locally — Keeplas servers never see the raw shard."
+            title="Receives their shard (silently)"
+            body="When you click Distribute now, your client wraps their Shamir share to their public key and stores the ciphertext on the server. The next time they open /shared-with-me, their browser unwraps it on-device, persists the raw bytes in their IndexedDB, and stamps lastVerifiedAt as cryptographic proof that the unwrap worked. No manual click, no copy-paste — and Keeplas servers never see the raw shard."
           />
           <Step
             value="03"
@@ -99,7 +99,7 @@ export default function TrustedContactsDocPage() {
           <Step
             value="04"
             title="Submits their shard at recovery"
-            body="After the grace window expires, contacts submit their stored shard. Once the threshold is reached, the master key is reconstructed entirely on-device — never on the server. The vault opens in read-only memorial mode and pre-assigned items reach their recipients."
+            body="After the grace window expires (or you manually trigger social recovery), contacts open /shared-with-me and click Submit my shard. Their browser pulls their shard from IndexedDB, wraps a copy for every peer's public key, and uploads the envelopes — the contact never sees, types, or exports the raw bytes. Once the threshold is reached, any submitter can click Reconstruct master key: their device fetches the wrapped-for-them envelopes, unwraps them, combines with its own raw shard, and rebuilds the master key entirely on-device. Servers see only ciphertext throughout."
           />
         </ol>
       </section>

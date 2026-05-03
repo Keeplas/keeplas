@@ -184,6 +184,178 @@ export default function RecoveryDocPage() {
         </ol>
       </section>
 
+      {/* Zero-knowledge guarantees */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-8 bg-primary rounded-full" />
+          <h2 className="text-headline-md text-primary">
+            Why this stays zero-knowledge
+          </h2>
+        </div>
+
+        <div className="space-y-4 text-body-md text-on-surface-variant">
+          <p>
+            Throughout the entire lifecycle — distribution, reception,
+            verification, recovery — Keeplas servers never see a raw shard
+            and never see your master key. They store only ciphertext blobs
+            wrapped to specific public keys, plus public metadata
+            (timestamps, audit logs, threshold values).
+          </p>
+
+          <ul className="space-y-2 pl-4 list-disc">
+            <li>
+              <strong className="text-primary">Distribution</strong>: each
+              shard is wrapped to its target contact&apos;s ML-KEM public key
+              before it leaves your device. The server stores only the
+              envelope.
+            </li>
+            <li>
+              <strong className="text-primary">Reception</strong>: the
+              contact&apos;s browser unwraps the envelope using its locally
+              held private key and persists the raw shard in IndexedDB.
+              Nothing about the raw bytes is ever sent back.
+            </li>
+            <li>
+              <strong className="text-primary">Verification</strong>:
+              successfully unwrapping the shard automatically stamps
+              <code className="text-secondary mx-1">lastVerifiedAt</code> on
+              the contact&apos;s row. That timestamp is just an attestation;
+              the server can&apos;t and doesn&apos;t inspect the shard.
+            </li>
+            <li>
+              <strong className="text-primary">Recovery submission</strong>:
+              when contacts submit their shard, each one wraps a copy for
+              every peer&apos;s public key (fan-out). The server stores the
+              fan-out envelopes — still ciphertext only.
+            </li>
+            <li>
+              <strong className="text-primary">Reconstruction</strong>: the
+              Shamir interpolation that rebuilds the master key happens
+              entirely in the contact&apos;s browser. The master key never
+              touches a server, by construction.
+            </li>
+          </ul>
+
+          <div className="bg-primary/5 rounded-xl p-4 border-l-4 border-primary">
+            <p className="text-body-md text-on-surface font-medium">
+              Trade-off worth knowing: with threshold = 2, two colluding
+              contacts can both confirm unreachability AND open the vault.
+              The Life Check escalation + the 72h grace window are the only
+              extra safeguards. If you anticipate that risk (e.g. all your
+              contacts share a household), raise your threshold at
+              onboarding.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* How a contact actually uses their shard */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <h2 className="text-headline-md text-primary">
+            How a contact uses their shard
+          </h2>
+        </div>
+
+        <p className="text-body-md text-on-surface-variant">
+          Trust contacts never have to type, copy, export or back up their
+          shard. The browser handles the bytes invisibly. Here&apos;s what a
+          contact actually sees and does:
+        </p>
+
+        <ol className="relative pl-8 border-l-2 border-secondary/20 space-y-6">
+          <Step
+            stage="Day 0"
+            title="They accept your invitation"
+            body="They sign in to Keeplas, generate their own ML-KEM keypair on-device, and the public half is uploaded so you can wrap shards to it."
+            accent="bg-secondary/40"
+          />
+          <Step
+            stage="Distribution"
+            title="They visit /shared-with-me once"
+            body="Their browser auto-unwraps the encrypted shard you distributed and stores the raw bytes in their IndexedDB. The card shows Hash verified [just now]. No button to click."
+            accent="bg-secondary"
+          />
+          <Step
+            stage="Recovery time"
+            title="They click Submit my shard"
+            body="Either after the post-mortem grace window expires, or after you trigger a social recovery while alive. Their browser reads the local shard, wraps a copy for each peer, uploads the fan-out envelopes."
+            accent="bg-tertiary"
+          />
+          <Step
+            stage="Reconstruction"
+            title="They click Reconstruct master key"
+            body="Once the threshold has submitted, their browser fetches the envelopes addressed to them, unwraps them with their private key, combines with its own raw shard, and rebuilds the master key locally. From there the vault can be decrypted in memorial read-only mode."
+            accent="bg-error"
+          />
+        </ol>
+      </section>
+
+      {/* Cross-device behaviour */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <span className="w-2 h-8 bg-tertiary rounded-full" />
+          <h2 className="text-headline-md text-primary">
+            What happens if a contact changes device
+          </h2>
+        </div>
+
+        <p className="text-body-md text-on-surface-variant">
+          A trust contact who switches phones, factory-resets their device,
+          opens an incognito window, or signs in on a new laptop does
+          not lose their shard. The architecture handles this without any
+          manual export, copy-paste or special action.
+        </p>
+
+        <div className="space-y-4 text-body-md text-on-surface-variant">
+          <p>
+            <strong className="text-primary">
+              The contact&apos;s ML-KEM keypair is portable.
+            </strong>{" "}
+            Their secret key is stored on the server, AES-GCM-encrypted under
+            their own master key. As soon as they unlock their vault on the
+            new device — with their 24-word phrase or via Device Unlock — the
+            secret key is decrypted in their browser, ready to use.
+          </p>
+          <p>
+            <strong className="text-primary">
+              The encrypted shard is still on the server.
+            </strong>{" "}
+            Your client wrapped it to their public key during distribution;
+            the ciphertext lives in your{" "}
+            <code className="text-secondary">trusted_contacts</code> row. It
+            never depended on a specific device.
+          </p>
+          <p>
+            <strong className="text-primary">
+              Auto-restoration runs on the next visit.
+            </strong>{" "}
+            When the contact opens /shared-with-me on the new device, a brief
+            “Restoring your shards…” banner appears while the browser
+            unwraps the server envelope and persists the raw bytes in the
+            new device&apos;s IndexedDB. From there, every recovery action
+            works exactly like before.
+          </p>
+        </div>
+
+        <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
+          <p className="text-body-md text-on-surface font-medium mb-2">
+            The only failure mode: a contact loses BOTH their device AND
+            their 24-word phrase.
+          </p>
+          <p className="text-body-md text-on-surface-variant">
+            Without the phrase, they can&apos;t unlock their master key —
+            so they can&apos;t decrypt their ML-KEM secret key — so they
+            can&apos;t unwrap their shard. Their slot is effectively
+            permanent dead weight. As the vault owner, you should revoke
+            them, invite a replacement, then click{" "}
+            <strong>Distribute now</strong> to issue fresh shards to all
+            current trust contacts.
+          </p>
+        </div>
+      </section>
+
       {/* Quick links */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
