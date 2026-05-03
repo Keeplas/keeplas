@@ -22,10 +22,10 @@ export function DistributeShardsSection() {
   if (pending.length === 0 && status !== "ok") return null;
 
   return (
-    <section className="bg-tertiary-container/40 rounded-2xl p-6 border-l-4 border-tertiary">
+    <section className="bg-surface-container-low rounded-2xl p-6 border-l-4 border-tertiary">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div>
-          <h3 className="text-headline-sm text-on-tertiary-container inline-flex items-center gap-2">
+          <h3 className="text-headline-sm text-primary inline-flex items-center gap-2">
             Distribute shards
             <HelpHint content="Splits your master key into 5 Shamir shares with your chosen threshold and seals each share to a trust contact's public key. Re-running this re-splits and invalidates any previously distributed shard — by design." />
           </h3>
