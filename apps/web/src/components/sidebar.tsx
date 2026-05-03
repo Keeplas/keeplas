@@ -169,7 +169,7 @@ export function Sidebar() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <NotificationsMenu variant="icon" align="end" />
+          <NotificationsMenu variant="icon" />
           <Link
             href="/settings"
             aria-label="Open settings"
