@@ -722,8 +722,7 @@ export default defineSchema({
     allergies: v.optional(v.string()),
     medicalConditions: v.optional(v.string()),
     medications: v.optional(v.string()),
-    emergencyContactName: v.optional(v.string()),
-    emergencyContactPhone: v.optional(v.string()),
+    emergencyContactId: v.optional(v.id("trusted_contacts")),
     emergencyContactRelation: v.optional(v.string()),
     additionalNotes: v.optional(v.string()),
 

@@ -3,7 +3,8 @@
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useParams } from "next/navigation";
-import { Loader } from "@keeplas/ui";
+import { Loader, RichTextEditor } from "@keeplas/ui";
+import { isRichTextEmpty } from "@/app/(dashboard)/emergency-card/sections/constants";
 
 export default function PublicEmergencyPage() {
   const params = useParams<{ token: string }>();
@@ -36,11 +37,11 @@ export default function PublicEmergencyPage() {
   const hasAnyInfo =
     card.fullName ||
     card.bloodType ||
-    card.allergies ||
-    card.medicalConditions ||
-    card.medications ||
+    !isRichTextEmpty(card.allergies) ||
+    !isRichTextEmpty(card.medicalConditions) ||
+    !isRichTextEmpty(card.medications) ||
     card.emergencyContactName ||
-    card.additionalNotes;
+    !isRichTextEmpty(card.additionalNotes);
 
   return (
     <div className="min-h-screen bg-surface">
@@ -90,40 +91,43 @@ export default function PublicEmergencyPage() {
                     </p>
                   </div>
                 )}
-                {card.allergies && (
+                {!isRichTextEmpty(card.allergies) && (
                   <div className="bg-surface-container-low rounded-xl p-6">
                     <span className="text-label-md text-on-surface-variant block mb-2">
                       Allergies
                     </span>
-                    <p className="text-headline-sm text-primary whitespace-pre-line">
-                      {card.allergies}
-                    </p>
+                    <div className="text-headline-sm text-primary">
+                      <RichTextEditor readOnly value={card.allergies ?? ""} />
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
             {/* Medical Conditions */}
-            {card.medicalConditions && (
+            {!isRichTextEmpty(card.medicalConditions) && (
               <div className="bg-surface-container-low rounded-xl p-6">
                 <span className="text-label-md text-on-surface-variant block mb-2">
                   Medical Conditions
                 </span>
-                <p className="text-headline-sm text-primary whitespace-pre-line">
-                  {card.medicalConditions}
-                </p>
+                <div className="text-headline-sm text-primary">
+                  <RichTextEditor
+                    readOnly
+                    value={card.medicalConditions ?? ""}
+                  />
+                </div>
               </div>
             )}
 
             {/* Medications */}
-            {card.medications && (
+            {!isRichTextEmpty(card.medications) && (
               <div className="bg-surface-container-low rounded-xl p-6">
                 <span className="text-label-md text-on-surface-variant block mb-2">
                   Current Medications
                 </span>
-                <p className="text-headline-sm text-primary whitespace-pre-line">
-                  {card.medications}
-                </p>
+                <div className="text-headline-sm text-primary">
+                  <RichTextEditor readOnly value={card.medications ?? ""} />
+                </div>
               </div>
             )}
 
@@ -153,14 +157,17 @@ export default function PublicEmergencyPage() {
             )}
 
             {/* Additional Notes */}
-            {card.additionalNotes && (
+            {!isRichTextEmpty(card.additionalNotes) && (
               <div className="bg-surface-container-low rounded-xl p-6">
                 <span className="text-label-md text-on-surface-variant block mb-2">
                   Additional Notes
                 </span>
-                <p className="text-body-lg text-on-surface whitespace-pre-line">
-                  {card.additionalNotes}
-                </p>
+                <div className="text-body-lg text-on-surface">
+                  <RichTextEditor
+                    readOnly
+                    value={card.additionalNotes ?? ""}
+                  />
+                </div>
               </div>
             )}
           </div>

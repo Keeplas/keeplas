@@ -1,6 +1,13 @@
 "use client";
 
-import { Input, Label, Select, SelectItem, Switch, Textarea } from "@keeplas/ui";
+import {
+  Input,
+  Label,
+  RichTextEditor,
+  Select,
+  SelectItem,
+  Switch,
+} from "@keeplas/ui";
 import { BLOOD_TYPES, type CardFormData, type PrivacyToggles } from "./constants";
 
 interface PersonalInfoSectionProps {
@@ -71,12 +78,11 @@ export function PersonalInfoSection({
             aria-label="Show Allergies on public card"
           />
         </div>
-        <Textarea
-          id="allergies"
+        <RichTextEditor
           value={formData.allergies}
-          onChange={(e) => onUpdate("allergies", e.target.value)}
+          onChange={(html) => onUpdate("allergies", html)}
           placeholder="List any known allergies..."
-          rows={3}
+          minHeight={120}
         />
       </div>
 
@@ -89,12 +95,11 @@ export function PersonalInfoSection({
             aria-label="Show Medical Conditions on public card"
           />
         </div>
-        <Textarea
-          id="medicalConditions"
+        <RichTextEditor
           value={formData.medicalConditions}
-          onChange={(e) => onUpdate("medicalConditions", e.target.value)}
+          onChange={(html) => onUpdate("medicalConditions", html)}
           placeholder="Any ongoing medical conditions..."
-          rows={3}
+          minHeight={120}
         />
       </div>
 
@@ -107,12 +112,11 @@ export function PersonalInfoSection({
             aria-label="Show Current Medications on public card"
           />
         </div>
-        <Textarea
-          id="medications"
+        <RichTextEditor
           value={formData.medications}
-          onChange={(e) => onUpdate("medications", e.target.value)}
+          onChange={(html) => onUpdate("medications", html)}
           placeholder="List current medications..."
-          rows={3}
+          minHeight={120}
         />
       </div>
     </div>

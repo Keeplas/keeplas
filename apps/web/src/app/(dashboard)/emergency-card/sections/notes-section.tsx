@@ -1,6 +1,6 @@
 "use client";
 
-import { Switch, Textarea } from "@keeplas/ui";
+import { RichTextEditor, Switch } from "@keeplas/ui";
 
 interface NotesSectionProps {
   value: string;
@@ -27,12 +27,11 @@ export function NotesSection({
           aria-label="Show Additional Notes on public card"
         />
       </div>
-      <Textarea
-        id="additionalNotes"
+      <RichTextEditor
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         placeholder="Any other information responders should know..."
-        rows={4}
+        minHeight={160}
       />
     </div>
   );

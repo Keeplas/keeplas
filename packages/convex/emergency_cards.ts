@@ -2,7 +2,6 @@ import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, optionalAuth } from "./helpers";
 import { auditedMutation } from "./audit";
-import { normalizeE164 } from "./lib/phone";
 
 // ─── Queries ────────────────────────────────────────────
 
@@ -24,6 +23,8 @@ export const getMyCard = query({
 
 /**
  * Get an emergency card by its QR code token (public, no auth required).
+ * Resolves the linked trusted contact server-side so the public payload
+ * stays a flat snapshot — readers never see the contact reference.
  */
 export const getByQrToken = query({
   args: { token: v.string() },
@@ -35,7 +36,16 @@ export const getByQrToken = query({
 
     if (!card || !card.isActive) return null;
 
-    // Return only toggled-on fields
+    let emergencyContactName: string | undefined;
+    let emergencyContactPhone: string | undefined;
+    if (card.showEmergencyContact && card.emergencyContactId) {
+      const contact = await ctx.db.get(card.emergencyContactId);
+      if (contact && contact.userId === card.userId && contact.invitationStatus !== "revoked") {
+        emergencyContactName = contact.name;
+        emergencyContactPhone = contact.phoneNumber;
+      }
+    }
+
     return {
       fullName: card.showFullName ? card.fullName : undefined,
       bloodType: card.showBloodType ? card.bloodType : undefined,
@@ -44,12 +54,8 @@ export const getByQrToken = query({
         ? card.medicalConditions
         : undefined,
       medications: card.showMedications ? card.medications : undefined,
-      emergencyContactName: card.showEmergencyContact
-        ? card.emergencyContactName
-        : undefined,
-      emergencyContactPhone: card.showEmergencyContact
-        ? card.emergencyContactPhone
-        : undefined,
+      emergencyContactName,
+      emergencyContactPhone,
       emergencyContactRelation: card.showEmergencyContact
         ? card.emergencyContactRelation
         : undefined,
@@ -76,8 +82,7 @@ export const createOrUpdate = auditedMutation({
     allergies: v.optional(v.string()),
     medicalConditions: v.optional(v.string()),
     medications: v.optional(v.string()),
-    emergencyContactName: v.optional(v.string()),
-    emergencyContactPhone: v.optional(v.string()),
+    emergencyContactId: v.optional(v.id("trusted_contacts")),
     emergencyContactRelation: v.optional(v.string()),
     additionalNotes: v.optional(v.string()),
 
@@ -93,10 +98,12 @@ export const createOrUpdate = auditedMutation({
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
-    const normalizedArgs = {
-      ...args,
-      emergencyContactPhone: normalizeE164(args.emergencyContactPhone),
-    };
+    if (args.emergencyContactId) {
+      const contact = await ctx.db.get(args.emergencyContactId);
+      if (!contact || contact.userId !== userId) {
+        throw new Error("Trusted contact not found");
+      }
+    }
 
     const existing = await ctx.db
       .query("emergency_cards")
@@ -105,7 +112,7 @@ export const createOrUpdate = auditedMutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, {
-        ...normalizedArgs,
+        ...args,
         updatedAt: now,
       });
       return existing._id;
@@ -115,7 +122,7 @@ export const createOrUpdate = auditedMutation({
 
     const cardId = await ctx.db.insert("emergency_cards", {
       userId,
-      ...normalizedArgs,
+      ...args,
       qrCodeToken,
       qrCodeUrl: `/emergency/${qrCodeToken}`,
       isActive: true,

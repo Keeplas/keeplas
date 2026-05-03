@@ -26,6 +26,7 @@ export default function EmergencyCardPage() {
     card,
     formData,
     toggles,
+    selectedContact,
     saving,
     error,
     saved,
@@ -106,6 +107,7 @@ export default function EmergencyCardPage() {
             <EmergencyCardPreview
               formData={formData}
               toggles={toggles}
+              selectedContact={selectedContact}
               qrUrl={qrUrl}
             />
 
@@ -141,6 +143,7 @@ export default function EmergencyCardPage() {
             <EmergencyCardPreview
               formData={formData}
               toggles={toggles}
+              selectedContact={selectedContact}
               qrUrl={qrUrl}
             />
             {card && <CardActions qrUrl={qrUrl} />}

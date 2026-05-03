@@ -3,15 +3,19 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { isValidPhone } from "@keeplas/ui";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import {
   INITIAL_FORM_DATA,
   INITIAL_TOGGLES,
+  isRichTextEmpty,
   type CardFormData,
   type PrivacyToggles,
 } from "./constants";
+
+function normalizeRichText(html: string): string | undefined {
+  return isRichTextEmpty(html) ? undefined : html;
+}
 
 export function useEmergencyCardForm() {
   const card = useQuery(api.emergency_cards.getMyCard);
@@ -23,6 +27,13 @@ export function useEmergencyCardForm() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
+  const selectedContact = useQuery(
+    api.trusted_contacts.getContact,
+    formData.emergencyContactId
+      ? { contactId: formData.emergencyContactId }
+      : "skip"
+  );
+
   useEffect(() => {
     if (!card) return;
     setFormData({
@@ -31,8 +42,7 @@ export function useEmergencyCardForm() {
       allergies: card.allergies ?? "",
       medicalConditions: card.medicalConditions ?? "",
       medications: card.medications ?? "",
-      emergencyContactName: card.emergencyContactName ?? "",
-      emergencyContactPhone: card.emergencyContactPhone ?? "",
+      emergencyContactId: card.emergencyContactId ?? null,
       emergencyContactRelation: card.emergencyContactRelation ?? "",
       additionalNotes: card.additionalNotes ?? "",
     });
@@ -62,13 +72,6 @@ export function useEmergencyCardForm() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (
-      formData.emergencyContactPhone &&
-      !isValidPhone(formData.emergencyContactPhone)
-    ) {
-      setError("Please enter a valid phone number");
-      return;
-    }
     setSaving(true);
     setError("");
     setSaved(false);
@@ -77,14 +80,13 @@ export function useEmergencyCardForm() {
       await createOrUpdate({
         fullName: formData.fullName || undefined,
         bloodType: formData.bloodType || undefined,
-        allergies: formData.allergies || undefined,
-        medicalConditions: formData.medicalConditions || undefined,
-        medications: formData.medications || undefined,
-        emergencyContactName: formData.emergencyContactName || undefined,
-        emergencyContactPhone: formData.emergencyContactPhone || undefined,
+        allergies: normalizeRichText(formData.allergies),
+        medicalConditions: normalizeRichText(formData.medicalConditions),
+        medications: normalizeRichText(formData.medications),
+        emergencyContactId: formData.emergencyContactId ?? undefined,
         emergencyContactRelation:
           formData.emergencyContactRelation || undefined,
-        additionalNotes: formData.additionalNotes || undefined,
+        additionalNotes: normalizeRichText(formData.additionalNotes),
         ...toggles,
       });
       setSaved(true);
@@ -99,6 +101,7 @@ export function useEmergencyCardForm() {
     card,
     formData,
     toggles,
+    selectedContact: selectedContact ?? null,
     saving,
     error,
     saved,

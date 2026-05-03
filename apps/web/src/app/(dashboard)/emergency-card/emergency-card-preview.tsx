@@ -1,15 +1,31 @@
 "use client";
 
-import type { CardFormData, PrivacyToggles } from "./sections/constants";
+import { RichTextEditor } from "@keeplas/ui";
+import {
+  isRichTextEmpty,
+  type CardFormData,
+  type PrivacyToggles,
+} from "./sections/constants";
 import { QRCodeSVG } from "./qr-code-svg";
+
+interface EmergencyContactPreview {
+  name: string;
+  phoneNumber?: string;
+}
 
 interface EmergencyCardPreviewProps {
   formData: CardFormData;
   toggles: PrivacyToggles;
+  selectedContact: EmergencyContactPreview | null;
   qrUrl: string | null;
 }
 
-export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCardPreviewProps) {
+export function EmergencyCardPreview({
+  formData,
+  toggles,
+  selectedContact,
+  qrUrl,
+}: EmergencyCardPreviewProps) {
   const hasAnyVisible = Object.values(toggles).some(Boolean);
 
   return (
@@ -67,9 +83,15 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                       <span className="text-label-md text-on-surface-variant block mb-1">
                         Allergies
                       </span>
-                      <p className="text-headline-sm text-primary">
-                        {formData.allergies || "None Recorded"}
-                      </p>
+                      {isRichTextEmpty(formData.allergies) ? (
+                        <p className="text-headline-sm text-primary">
+                          None Recorded
+                        </p>
+                      ) : (
+                        <div className="text-on-surface">
+                          <RichTextEditor readOnly value={formData.allergies} />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -81,9 +103,18 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                   <span className="text-label-md text-on-surface-variant block mb-1">
                     Medical Conditions
                   </span>
-                  <p className="text-headline-sm text-primary">
-                    {formData.medicalConditions || "None Recorded"}
-                  </p>
+                  {isRichTextEmpty(formData.medicalConditions) ? (
+                    <p className="text-headline-sm text-primary">
+                      None Recorded
+                    </p>
+                  ) : (
+                    <div className="text-on-surface">
+                      <RichTextEditor
+                        readOnly
+                        value={formData.medicalConditions}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -93,9 +124,13 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                   <span className="text-label-md text-on-surface-variant block mb-1">
                     Current Medications
                   </span>
-                  <p className="text-headline-sm text-primary">
-                    {formData.medications || "None"}
-                  </p>
+                  {isRichTextEmpty(formData.medications) ? (
+                    <p className="text-headline-sm text-primary">None</p>
+                  ) : (
+                    <div className="text-on-surface">
+                      <RichTextEditor readOnly value={formData.medications} />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -106,29 +141,33 @@ export function EmergencyCardPreview({ formData, toggles, qrUrl }: EmergencyCard
                     Emergency Contact
                   </span>
                   <p className="text-headline-sm text-primary">
-                    {formData.emergencyContactName
-                      ? `${formData.emergencyContactName}${formData.emergencyContactRelation ? ` (${formData.emergencyContactRelation})` : ""}`
+                    {selectedContact
+                      ? `${selectedContact.name}${formData.emergencyContactRelation ? ` (${formData.emergencyContactRelation})` : ""}`
                       : "Not Set"}
                   </p>
-                  {formData.emergencyContactPhone && (
+                  {selectedContact?.phoneNumber && (
                     <p className="text-body-md text-secondary font-medium">
-                      {formData.emergencyContactPhone}
+                      {selectedContact.phoneNumber}
                     </p>
                   )}
                 </div>
               )}
 
               {/* Additional Notes */}
-              {toggles.showAdditionalNotes && formData.additionalNotes && (
-                <div>
-                  <span className="text-label-md text-on-surface-variant block mb-1">
-                    Notes
-                  </span>
-                  <p className="text-body-md text-on-surface">
-                    {formData.additionalNotes}
-                  </p>
-                </div>
-              )}
+              {toggles.showAdditionalNotes &&
+                !isRichTextEmpty(formData.additionalNotes) && (
+                  <div>
+                    <span className="text-label-md text-on-surface-variant block mb-1">
+                      Notes
+                    </span>
+                    <div className="text-body-md text-on-surface">
+                      <RichTextEditor
+                        readOnly
+                        value={formData.additionalNotes}
+                      />
+                    </div>
+                  </div>
+                )}
             </div>
           ) : (
             <div className="text-center py-8 text-on-surface-variant">
