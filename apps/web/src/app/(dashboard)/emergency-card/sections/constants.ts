@@ -1,5 +1,3 @@
-import { ICON_PATHS } from "@/lib/icons";
-
 export const BLOOD_TYPES = [
   "A+",
   "A-",
@@ -55,32 +53,3 @@ export const INITIAL_TOGGLES: PrivacyToggles = {
   showAdditionalNotes: false,
 };
 
-export const PRIVACY_FIELDS: Array<{
-  key: keyof PrivacyToggles;
-  label: string;
-  iconPath: string;
-}> = [
-  { key: "showFullName", label: "Full Name", iconPath: ICON_PATHS.user },
-  { key: "showBloodType", label: "Blood Type", iconPath: ICON_PATHS.bloodDrop },
-  { key: "showAllergies", label: "Allergies", iconPath: ICON_PATHS.warning },
-  {
-    key: "showMedicalConditions",
-    label: "Medical Conditions",
-    iconPath: ICON_PATHS.doctor,
-  },
-  {
-    key: "showMedications",
-    label: "Medications",
-    iconPath: ICON_PATHS.pill,
-  },
-  {
-    key: "showEmergencyContact",
-    label: "Emergency Contact",
-    iconPath: ICON_PATHS.phone,
-  },
-  {
-    key: "showAdditionalNotes",
-    label: "Additional Notes",
-    iconPath: ICON_PATHS.notes,
-  },
-];

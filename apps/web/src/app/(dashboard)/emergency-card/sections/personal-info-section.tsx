@@ -1,16 +1,20 @@
 "use client";
 
-import { Input, Label, Select, SelectItem, Textarea } from "@keeplas/ui";
-import { BLOOD_TYPES, type CardFormData } from "./constants";
+import { Input, Label, Select, SelectItem, Switch, Textarea } from "@keeplas/ui";
+import { BLOOD_TYPES, type CardFormData, type PrivacyToggles } from "./constants";
 
 interface PersonalInfoSectionProps {
   formData: CardFormData;
+  toggles: PrivacyToggles;
   onUpdate: <K extends keyof CardFormData>(key: K, value: CardFormData[K]) => void;
+  onToggle: (key: keyof PrivacyToggles) => void;
 }
 
 export function PersonalInfoSection({
   formData,
+  toggles,
   onUpdate,
+  onToggle,
 }: PersonalInfoSectionProps) {
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
@@ -19,7 +23,14 @@ export function PersonalInfoSection({
       </h3>
 
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="fullName">Full Name</Label>
+          <Switch
+            checked={toggles.showFullName}
+            onCheckedChange={() => onToggle("showFullName")}
+            aria-label="Show Full Name on public card"
+          />
+        </div>
         <Input
           id="fullName"
           value={formData.fullName}
@@ -29,7 +40,14 @@ export function PersonalInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="bloodType">Blood Type</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="bloodType">Blood Type</Label>
+          <Switch
+            checked={toggles.showBloodType}
+            onCheckedChange={() => onToggle("showBloodType")}
+            aria-label="Show Blood Type on public card"
+          />
+        </div>
         <Select
           id="bloodType"
           value={formData.bloodType}
@@ -45,7 +63,14 @@ export function PersonalInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="allergies">Allergies</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="allergies">Allergies</Label>
+          <Switch
+            checked={toggles.showAllergies}
+            onCheckedChange={() => onToggle("showAllergies")}
+            aria-label="Show Allergies on public card"
+          />
+        </div>
         <Textarea
           id="allergies"
           value={formData.allergies}
@@ -56,7 +81,14 @@ export function PersonalInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="medicalConditions">Medical Conditions</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="medicalConditions">Medical Conditions</Label>
+          <Switch
+            checked={toggles.showMedicalConditions}
+            onCheckedChange={() => onToggle("showMedicalConditions")}
+            aria-label="Show Medical Conditions on public card"
+          />
+        </div>
         <Textarea
           id="medicalConditions"
           value={formData.medicalConditions}
@@ -67,7 +99,14 @@ export function PersonalInfoSection({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="medications">Current Medications</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="medications">Current Medications</Label>
+          <Switch
+            checked={toggles.showMedications}
+            onCheckedChange={() => onToggle("showMedications")}
+            aria-label="Show Current Medications on public card"
+          />
+        </div>
         <Textarea
           id="medications"
           value={formData.medications}

@@ -11,6 +11,7 @@ import {
   DialogTitle,
   ErrorAlert,
   Icon,
+  InfoCallout,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { EmergencyCardPreview } from "./emergency-card-preview";
@@ -18,7 +19,6 @@ import { CardActions } from "./sections/card-actions";
 import { ContactSection } from "./sections/contact-section";
 import { NotesSection } from "./sections/notes-section";
 import { PersonalInfoSection } from "./sections/personal-info-section";
-import { PrivacyControls } from "./sections/privacy-controls";
 import { useEmergencyCardForm } from "./sections/use-emergency-card-form";
 
 export default function EmergencyCardPage() {
@@ -54,13 +54,28 @@ export default function EmergencyCardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         <section className="lg:col-span-5 space-y-6">
           <form onSubmit={handleSave} className="space-y-6">
-            <PersonalInfoSection formData={formData} onUpdate={updateField} />
-            <ContactSection formData={formData} onUpdate={updateField} />
+            <InfoCallout icon={ICON_PATHS.info} tone="info">
+              All fields are hidden by default. Toggle each one to include it on your card.
+            </InfoCallout>
+
+            <PersonalInfoSection
+              formData={formData}
+              toggles={toggles}
+              onUpdate={updateField}
+              onToggle={updateToggle}
+            />
+            <ContactSection
+              formData={formData}
+              showEmergencyContact={toggles.showEmergencyContact}
+              onUpdate={updateField}
+              onToggleEmergencyContact={() => updateToggle("showEmergencyContact")}
+            />
             <NotesSection
               value={formData.additionalNotes}
+              showAdditionalNotes={toggles.showAdditionalNotes}
               onChange={(v) => updateField("additionalNotes", v)}
+              onToggleAdditionalNotes={() => updateToggle("showAdditionalNotes")}
             />
-            <PrivacyControls toggles={toggles} onToggle={updateToggle} />
 
             {error && <ErrorAlert message={error} />}
 

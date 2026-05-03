@@ -1,19 +1,33 @@
 "use client";
 
-import { Input, Label, PhoneInput } from "@keeplas/ui";
+import { Input, Label, PhoneInput, Switch } from "@keeplas/ui";
 import type { CardFormData } from "./constants";
 
 interface ContactSectionProps {
   formData: CardFormData;
+  showEmergencyContact: boolean;
   onUpdate: <K extends keyof CardFormData>(key: K, value: CardFormData[K]) => void;
+  onToggleEmergencyContact: () => void;
 }
 
-export function ContactSection({ formData, onUpdate }: ContactSectionProps) {
+export function ContactSection({
+  formData,
+  showEmergencyContact,
+  onUpdate,
+  onToggleEmergencyContact,
+}: ContactSectionProps) {
   return (
     <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
-      <h3 className="text-headline-sm text-primary">
-        Emergency Contact
-      </h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-headline-sm text-primary">
+          Emergency Contact
+        </h3>
+        <Switch
+          checked={showEmergencyContact}
+          onCheckedChange={onToggleEmergencyContact}
+          aria-label="Show Emergency Contact on public card"
+        />
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="emergencyContactName">Contact Name</Label>
