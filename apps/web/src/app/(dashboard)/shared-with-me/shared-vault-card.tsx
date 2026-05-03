@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@keeplas/ui";
+import { cn, HelpHint } from "@keeplas/ui";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
@@ -149,8 +149,9 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
 
       <div className="flex items-center gap-2 flex-wrap mb-5">
         {!isRecipientOnly && typeof vault.shardIndex === "number" && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-primary/5 text-primary">
+          <span className="text-label-md px-3 py-1.5 rounded-lg bg-primary/5 text-primary inline-flex items-center gap-1.5">
             Shard {vault.shardIndex} of 5
+            <HelpHint content="Your slot in the vault owner's 5-share Shamir scheme. The reconstruction threshold (2 to 5, set by the owner) decides how many of you must collaborate to reopen the vault. You alone cannot — by design." />
           </span>
         )}
         {vault.shardConfirmed && (

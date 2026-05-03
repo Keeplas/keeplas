@@ -56,10 +56,18 @@ const CORE_FEATURES: Feature[] = [
   {
     title: "Trusted Contacts",
     description:
-      "Five guardians with granular roles — Recovery Partner, Medical Proxy, Legal Legacy. Each holds an encrypted shard of your master key.",
+      "Up to five trust contacts hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately.",
     iconPath: ICON_PATHS.users,
-    href: "/trusted-contacts",
+    href: "/docs/trusted-contacts",
     accent: "bg-primary/10 text-primary",
+  },
+  {
+    title: "Recovery & Inheritance",
+    description:
+      "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. Configurable threshold (2-of-5 default).",
+    iconPath: ICON_PATHS.key,
+    href: "/docs/recovery",
+    accent: "bg-tertiary/15 text-tertiary",
   },
 ];
 
@@ -77,7 +85,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
   },
   {
     title: "Shamir secret sharing",
-    body: "Your master key is split into 7 cryptographic shards. Any 4 shards can reconstruct the vault — distributed across guardians, cloud backups and your recovery kit.",
+    body: "Your master key is split into 5 cryptographic shards. You choose the threshold at onboarding (2 to 5) — lower means easier recovery, higher means stronger collusion resistance. Reconstruction always happens on your contacts' devices, never on Keeplas servers.",
     iconPath: ICON_PATHS.hub,
   },
   {
@@ -87,7 +95,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
   },
   {
     title: "Recovery kit on paper",
-    body: "Export a printable document with QR + 12-word seed phrase. Cold-storage only — Keeplas does not keep a copy of your phrase, only its hash.",
+    body: "Export a printable document with your 24-word phrase. Cold-storage only — Keeplas does not store the phrase nor any hash of it. The phrase derives your Root Key locally via Argon2id.",
     iconPath: ICON_PATHS.print,
   },
 ];
@@ -229,30 +237,45 @@ export default function DocsPage() {
         </div>
         <ol className="relative pl-8 border-l-2 border-secondary/20 space-y-8">
           <LifecycleStep
-            value="T+0"
-            title="Heartbeat missed"
-            body="Life Check notices no passive signals plus no active response. A cycle opens and push + email nudges begin."
+            value="Detection"
+            title="Passive signals fail"
+            body="Confidence score drops below 50: no app activity, no device unlock, no third-party signal of life. A Life Check cycle opens."
             accent="bg-secondary"
           />
           <LifecycleStep
-            value="T+7"
-            title="Primary outreach"
-            body="Guardians in the 'Recovery Partner' role are notified. If you respond, the cycle cancels. Otherwise it escalates."
+            value="Outreach"
+            title="Active channels fire"
+            body="Push, email, WhatsApp, SMS, IVR — your configured channels notify you in order, with the delays you set. Each non-response moves the cycle to escalating."
             accent="bg-secondary/60"
           />
           <LifecycleStep
-            value="T+30"
-            title="Asset transfer"
-            body="Scenario Engine fires the T+30 milestone: selected vault sections unlock for trusted contacts and conditional messages are released."
+            value="Confirmation"
+            title="Trust contacts mark you unreachable"
+            body="All your trust contacts can confirm unreachability from their dashboard. The threshold number of confirmations opens the 72-hour grace window."
             accent="bg-tertiary"
           />
           <LifecycleStep
-            value="T+60"
-            title="Legal legacy protocol"
-            body="Final verification by third-party legal counsel. Public emergency card becomes discoverable via QR."
+            value="Grace 72h"
+            title="Last chance to come back"
+            body="If you sign in and click I am well, the cycle is cancelled. Nothing leaves the vault."
+            accent="bg-warning"
+          />
+          <LifecycleStep
+            value="Reconstruction"
+            title="Vault opens for inheritance"
+            body="Contacts submit their shards. Threshold reached → master key reconstructed on their device → vault opens read-only → recipients receive their pre-assigned items."
             accent="bg-error"
           />
         </ol>
+        <div className="pt-4">
+          <Link
+            href="/docs/recovery"
+            className="inline-flex items-center gap-2 text-secondary font-bold text-body-md hover:underline"
+          >
+            Read the full recovery & inheritance flow
+            <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
+          </Link>
+        </div>
       </section>
 
       {/* Quick links */}

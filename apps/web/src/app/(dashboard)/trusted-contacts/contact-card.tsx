@@ -199,8 +199,9 @@ export function ContactCard({ contact }: ContactCardProps) {
           <span className="text-label-md text-primary">{roleLabel}</span>
         </span>
         {contact.shardConfirmed && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
+          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center gap-1.5">
             Fragment Assigned
+            <HelpHint content="An encrypted Shamir share of your master key has been wrapped to this contact's public key and stored. They will need to submit it together with the recovery threshold for the vault to be reconstructible." />
           </span>
         )}
         {verificationBadge && (

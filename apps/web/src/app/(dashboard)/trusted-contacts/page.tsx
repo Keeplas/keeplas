@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
@@ -93,6 +94,13 @@ export default function TrustedContactsPage() {
           which vault items at trigger. Manage guardians and recipient-only
           contacts here, then bundle them into release groups.
         </p>
+        <Link
+          href="/docs/trusted-contacts"
+          className="inline-flex items-center gap-2 text-secondary font-bold text-body-md hover:underline mt-3"
+        >
+          How trust contacts work
+          <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
+        </Link>
       </header>
 
       <Tabs defaultValue="contacts" className="space-y-8">

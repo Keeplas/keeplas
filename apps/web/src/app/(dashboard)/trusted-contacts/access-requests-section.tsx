@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { Badge } from "@keeplas/ui";
+import { Badge, HelpHint } from "@keeplas/ui";
 
 export function AccessRequestsSection() {
   const pendingRequests = useQuery(api.access_requests.getPendingRequests);
@@ -56,7 +56,10 @@ export function AccessRequestsSection() {
 
   return (
     <section className="space-y-6">
-      <h2 className="text-headline-md text-primary">Emergency Access</h2>
+      <h2 className="text-headline-md text-primary inline-flex items-center gap-2">
+        Emergency Access
+        <HelpHint content="Trust contacts open this request when Life Check has exhausted every channel and you can no longer be reached. Once the quorum confirms your unavailability, a 72-hour grace window opens — sign in and click I am well to cancel. After the window, contacts submit their shards and the vault opens in read-only memorial mode." />
+      </h2>
 
       {/* Pending emergency requests */}
       {pendingRequests && pendingRequests.length > 0 && (
