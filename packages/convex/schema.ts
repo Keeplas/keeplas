@@ -324,20 +324,6 @@ export default defineSchema({
       v.union(v.literal("trust"), v.literal("recipient_only"))
     ),
 
-    isFirstResponder: v.boolean(),
-    isMedicalContact: v.boolean(),
-    isLegalAuthority: v.optional(v.boolean()),
-
-    accessModes: v.array(
-      v.union(
-        v.literal("mode_a"),
-        v.literal("mode_b1"),
-        v.literal("mode_b2"),
-        v.literal("mode_b3"),
-        v.literal("mode_b4")
-      )
-    ),
-
     shardIndex: v.optional(v.number()),
     encryptedShard: v.optional(v.string()),
     shardPublicKeyUsed: v.optional(v.string()),
@@ -366,29 +352,12 @@ export default defineSchema({
 
     introMessage: v.optional(v.string()),
 
-    proactiveAccess: v.optional(
-      v.object({
-        sections: v.array(v.string()),
-        accessType: v.union(v.literal("read"), v.literal("read_download")),
-        expiresAt: v.optional(v.number()),
-        isPermanent: v.boolean(),
-      })
-    ),
-
-    conditionalAccess: v.optional(
-      v.object({
-        inactivityDays: v.number(),
-        sections: v.array(v.string()),
-      })
-    ),
-
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
     .index("by_contact_user", ["contactUserId"])
     .index("by_shard_index", ["userId", "shardIndex"])
-    .index("by_first_responder", ["userId", "isFirstResponder"])
     .index("by_invitation_token", ["invitationToken"]),
 
   // ═══════════════════════════════════════════════
@@ -429,8 +398,7 @@ export default defineSchema({
           v.literal("email"),
           v.literal("whatsapp"),
           v.literal("sms"),
-          v.literal("ivr_call"),
-          v.literal("first_responder")
+          v.literal("ivr_call")
         ),
         order: v.number(),
         isEnabled: v.boolean(),
@@ -552,14 +520,6 @@ export default defineSchema({
   access_requests: defineTable({
     vaultUserId: v.id("users"),
     requestedBy: v.id("trusted_contacts"),
-
-    accessMode: v.union(
-      v.literal("mode_a"),
-      v.literal("mode_b1"),
-      v.literal("mode_b2"),
-      v.literal("mode_b3"),
-      v.literal("mode_b4")
-    ),
 
     sectionsRequested: v.array(v.string()),
 

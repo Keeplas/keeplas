@@ -30,7 +30,6 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 const METHOD_LABELS: Record<string, string> = {
   tap: "App confirmation",
   email_link: "Email confirmation",
-  first_responder: "First Responder confirmation",
   auto: "Auto-validated",
 };
 

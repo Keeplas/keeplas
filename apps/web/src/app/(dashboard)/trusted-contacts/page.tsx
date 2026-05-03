@@ -26,18 +26,18 @@ const MAX_TRUST_CONTACTS = 5;
 const GUARDIAN_ROLES = [
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    title: "Recovery Partner",
-    description: "Empowered to initiate account recovery and verify identity in case of lost access.",
+    title: "Holds a recovery shard",
+    description: "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault.",
   },
   {
-    icon: "M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75",
-    title: "Medical Proxy",
-    description: "Grants instant access to health directives and medical history during emergencies.",
+    icon: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
+    title: "Confirms you are unreachable",
+    description: "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window.",
   },
   {
-    icon: "M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Z",
-    title: "Legal Legacy",
-    description: "Notified to manage digital assets and final wishes according to your protocol.",
+    icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
+    title: "Releases vault & recipients",
+    description: "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items.",
   },
 ];
 
@@ -70,9 +70,8 @@ export default function TrustedContactsPage() {
     (c) => c.contactType === "recipient_only"
   );
   const canInviteTrust = trustContacts.length < MAX_TRUST_CONTACTS;
-  const hasFirstResponder = trustContacts.some((c) => c.isFirstResponder);
-  const modeAContacts = trustContacts.filter((c) =>
-    c.accessModes.includes("mode_a")
+  const acceptedTrustContacts = trustContacts.filter(
+    (c) => c.invitationStatus === "accepted"
   );
   const trustPct = Math.min(
     100,
@@ -186,19 +185,12 @@ export default function TrustedContactsPage() {
             </aside>
 
             <div className="lg:col-span-8 space-y-6">
-              {activeContacts.length > 0 && !hasFirstResponder && (
-                <div className="p-4 bg-secondary-fixed/20 rounded-xl border-l-4 border-secondary">
-                  <p className="text-body-md text-on-surface font-medium">
-                    No First Responder designated. Assign one contact as your First
-                    Responder for Life Check escalation.
-                  </p>
-                </div>
-              )}
-              {modeAContacts.length === 1 && (
+              {acceptedTrustContacts.length === 1 && (
                 <div className="p-4 bg-error-container/30 rounded-xl border-l-4 border-error">
                   <p className="text-body-md text-on-surface font-medium">
-                    Post-mortem access requires at least 2 contacts. Only{" "}
-                    {modeAContacts[0].name} is currently assigned.
+                    Post-mortem access requires at least 2 trust contacts to confirm
+                    you are unreachable. Only {acceptedTrustContacts[0].name} is
+                    accepted so far — invite at least one more.
                   </p>
                 </div>
               )}

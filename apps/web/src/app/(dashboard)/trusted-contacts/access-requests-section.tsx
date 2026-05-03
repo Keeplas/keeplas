@@ -5,50 +5,18 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { Badge, Select, SelectItem } from "@keeplas/ui";
-
-const DURATION_OPTIONS = [
-  { value: 24, label: "24 hours" },
-  { value: 48, label: "48 hours" },
-  { value: 168, label: "7 days" },
-] as const;
+import { Badge } from "@keeplas/ui";
 
 export function AccessRequestsSection() {
   const pendingRequests = useQuery(api.access_requests.getPendingRequests);
   const allRequests = useQuery(api.access_requests.getAccessRequests);
-  const approveRequest = useAuditedMutation(api.access_requests.approveRequest);
-  const denyRequest = useAuditedMutation(api.access_requests.denyRequest);
   const cancelEmergency = useAuditedMutation(
     api.access_requests.cancelEmergencyAccess
   );
 
-  const [selectedDuration, setSelectedDuration] = useState(24);
   const [processing, setProcessing] = useState<string | null>(null);
 
   if (!pendingRequests?.length && !allRequests?.length) return null;
-
-  async function handleApprove(requestId: Id<"access_requests">) {
-    setProcessing(requestId);
-    try {
-      await approveRequest({
-        requestId,
-        accessType: "read",
-        durationHours: selectedDuration,
-        sectionsApproved: ["all"],
-      });
-    } finally {
-      setProcessing(null);
-    }
-  }
-
-  async function handleDeny(requestId: Id<"access_requests">) {
-    setProcessing(requestId);
-    try {
-      await denyRequest({ requestId });
-    } finally {
-      setProcessing(null);
-    }
-  }
 
   async function handleCancelEmergency(requestId: Id<"access_requests">) {
     setProcessing(requestId);
@@ -88,110 +56,72 @@ export function AccessRequestsSection() {
 
   return (
     <section className="space-y-6">
-      <h2 className="text-headline-md text-primary">
-        Access Requests
-      </h2>
+      <h2 className="text-headline-md text-primary">Emergency Access</h2>
 
-      {/* Pending Requests */}
+      {/* Pending emergency requests */}
       {pendingRequests && pendingRequests.length > 0 && (
         <div className="space-y-3">
-          {pendingRequests.map((req) => (
-            <div
-              key={req._id}
-              className="bg-surface-container-low rounded-xl p-5"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h4 className="text-headline-sm text-on-surface">
-                    {req.contactName}
-                  </h4>
-                  <p className="text-body-md text-on-surface-variant">
-                    {req.accessMode === "mode_a"
-                      ? "Emergency Access (Post-mortem)"
-                      : "On-demand Access"}
-                  </p>
-                </div>
-                <Badge className="bg-warning-container text-on-warning-container">
-                  Pending
-                </Badge>
-              </div>
-
-              {req.reason && (
-                <p className="text-sm text-on-surface-variant mb-3 bg-surface-container-lowest rounded-lg p-3">
-                  &ldquo;{req.reason}&rdquo;
-                </p>
-              )}
-
-              {req.accessMode === "mode_a" && req.quorumReached && (
-                <div className="mb-3 p-3 bg-error/5 rounded-lg">
-                  <p className="text-sm text-error font-medium">
-                    Emergency access quorum reached. Grace period active.
-                  </p>
-                  {req.gracePeriodEndsAt && (
-                    <p className="text-xs text-error/80 mt-1">
-                      Expires:{" "}
-                      {new Date(req.gracePeriodEndsAt).toLocaleString()}
+          {pendingRequests.map((req) => {
+            const confirmations = req.contactsInitiated?.length ?? 0;
+            const quorumRequired = req.quorumRequired ?? 2;
+            return (
+              <div
+                key={req._id}
+                className="bg-surface-container-low rounded-xl p-5"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="text-headline-sm text-on-surface">
+                      Emergency Access initiated
+                    </h4>
+                    <p className="text-body-md text-on-surface-variant">
+                      {confirmations} of {quorumRequired} contacts have
+                      confirmed you are unreachable.
                     </p>
-                  )}
-                  <button
-                    onClick={() => handleCancelEmergency(req._id)}
-                    disabled={processing === req._id}
-                    className="mt-2 text-sm px-4 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
-                  >
-                    {processing === req._id
-                      ? "Cancelling..."
-                      : "Cancel Emergency Access"}
-                  </button>
+                  </div>
+                  <Badge className="bg-warning-container text-on-warning-container">
+                    {req.quorumReached ? "Quorum reached" : "Pending"}
+                  </Badge>
                 </div>
-              )}
 
-              {req.accessMode === "mode_b1" && (
-                <div className="flex items-center gap-3">
-                  <Select<number>
-                    value={selectedDuration}
-                    onValueChange={setSelectedDuration}
-                    triggerClassName="w-auto min-w-[140px] px-3 py-2 text-sm bg-surface-container-lowest"
-                  >
-                    {DURATION_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <button
-                    onClick={() => handleApprove(req._id)}
-                    disabled={processing === req._id}
-                    className="px-4 py-2 rounded-lg bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
-                  >
-                    Approve
-                  </button>
-
-                  <button
-                    onClick={() => handleDeny(req._id)}
-                    disabled={processing === req._id}
-                    className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm font-medium cursor-pointer disabled:opacity-60"
-                  >
-                    Deny
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                {req.quorumReached && (
+                  <div className="mb-3 p-3 bg-error/5 rounded-lg">
+                    <p className="text-sm text-error font-medium">
+                      Vault unlock window is open. Cancel now if you are well.
+                    </p>
+                    {req.gracePeriodEndsAt && (
+                      <p className="text-xs text-error/80 mt-1">
+                        Grace period ends:{" "}
+                        {new Date(req.gracePeriodEndsAt).toLocaleString()}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => handleCancelEmergency(req._id)}
+                      disabled={processing === req._id}
+                      className="mt-2 text-sm px-4 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                    >
+                      {processing === req._id
+                        ? "Cancelling..."
+                        : "I am well — cancel emergency access"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Request History */}
       {allRequests && allRequests.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-label-md text-on-surface-variant">
-            History
-          </h3>
+          <h3 className="text-label-md text-on-surface-variant">History</h3>
           {allRequests
             .filter((r) => r.status !== "pending")
             .slice(0, 10)
             .map((req) => {
-              const statusConfig = STATUS_LABELS[req.status] ?? STATUS_LABELS.pending;
+              const statusConfig =
+                STATUS_LABELS[req.status] ?? STATUS_LABELS.pending;
               return (
                 <div
                   key={req._id}

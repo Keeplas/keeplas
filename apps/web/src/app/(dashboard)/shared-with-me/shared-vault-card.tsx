@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@keeplas/ui";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { useVerifyShard } from "./use-verify-shard";
 
@@ -10,11 +13,6 @@ const ROLE_LABELS: Record<string, string> = {
   lawyer: "Legal",
   doctor: "Medical",
   other: "Other",
-};
-
-const ACCESS_MODE_LABELS: Record<string, string> = {
-  mode_a: "Post-mortem",
-  mode_b1: "On-demand",
 };
 
 interface SharedVault extends Doc<"trusted_contacts"> {
@@ -44,11 +42,21 @@ function formatRelative(ts: number): string {
 
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const { verify, status, error } = useVerifyShard();
+  const markUnreachable = useAuditedMutation(
+    api.access_requests.markUserUnreachable
+  );
+
+  const [unreachableState, setUnreachableState] = useState<
+    "idle" | "confirming" | "running" | "done" | "error"
+  >("idle");
+  const [unreachableError, setUnreachableError] = useState<string | null>(null);
 
   const isRecipientOnly = (vault.contactType ?? "trust") === "recipient_only";
+  const isAccepted = vault.invitationStatus === "accepted";
   const hasEnvelope = !!vault.verificationEnvelope;
   const hasKey = !!vault.contactPublicKey;
   const canVerify = hasEnvelope && hasKey && status !== "running";
+  const canMarkUnreachable = !isRecipientOnly && isAccepted;
   const initials = vault.ownerName
     .split(" ")
     .map((n) => n[0])
@@ -61,6 +69,22 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       contactId: vault._id as Id<"trusted_contacts">,
       verificationEnvelope: vault.verificationEnvelope,
     });
+  }
+
+  async function handleMarkUnreachable() {
+    if (unreachableState !== "confirming") {
+      setUnreachableState("confirming");
+      return;
+    }
+    setUnreachableState("running");
+    setUnreachableError(null);
+    try {
+      await markUnreachable({ contactId: vault._id as Id<"trusted_contacts"> });
+      setUnreachableState("done");
+    } catch (err) {
+      setUnreachableError(err instanceof Error ? err.message : String(err));
+      setUnreachableState("error");
+    }
   }
 
   const lastVerifiedLabel =
@@ -124,19 +148,6 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         )}
       </div>
 
-      {vault.accessModes.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-5">
-          {vault.accessModes.map((mode) => (
-            <span
-              key={mode}
-              className="text-label-md px-2 py-0.5 rounded bg-surface-container text-on-surface-variant"
-            >
-              {ACCESS_MODE_LABELS[mode] ?? mode}
-            </span>
-          ))}
-        </div>
-      )}
-
       {!isRecipientOnly && (
         <div className="pt-5 border-t border-outline-variant/15 space-y-3">
           <div className="flex items-center justify-between">
@@ -168,8 +179,51 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           )}
           {hasKey && !hasEnvelope && (
             <p className="text-label-md text-on-surface-variant">
-              The vault owner hasn't enabled verification on their side yet.
+              The vault owner hasn&apos;t enabled verification on their side yet.
             </p>
+          )}
+        </div>
+      )}
+
+      {canMarkUnreachable && (
+        <div className="pt-5 mt-5 border-t border-outline-variant/15 space-y-2">
+          <p className="text-label-md text-on-surface-variant">
+            If you genuinely cannot reach {vault.ownerName} and Life Check has
+            already escalated, you can confirm they are unreachable. Two trust
+            contacts must confirm before the 72h grace window opens.
+          </p>
+          {unreachableState === "confirming" ? (
+            <div className="flex gap-2">
+              <button
+                onClick={handleMarkUnreachable}
+                className="flex-1 text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer"
+              >
+                Confirm — they are unreachable
+              </button>
+              <button
+                onClick={() => setUnreachableState("idle")}
+                className="flex-1 text-sm px-3 py-2 rounded-lg bg-surface-container-high text-on-surface cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : unreachableState === "done" ? (
+            <p className="text-label-md text-secondary font-medium">
+              Confirmation recorded. Other trust contacts will be notified.
+            </p>
+          ) : (
+            <button
+              onClick={handleMarkUnreachable}
+              disabled={unreachableState === "running"}
+              className="w-full text-sm px-3 py-2 rounded-lg bg-error/10 hover:bg-error/15 text-error font-medium transition-colors cursor-pointer disabled:opacity-60"
+            >
+              {unreachableState === "running"
+                ? "Submitting..."
+                : "Mark as unreachable"}
+            </button>
+          )}
+          {unreachableState === "error" && unreachableError && (
+            <p className="text-label-md text-error">{unreachableError}</p>
           )}
         </div>
       )}

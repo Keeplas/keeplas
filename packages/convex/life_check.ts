@@ -61,8 +61,7 @@ export const saveConfig = mutation({
           v.literal("email"),
           v.literal("whatsapp"),
           v.literal("sms"),
-          v.literal("ivr_call"),
-          v.literal("first_responder")
+          v.literal("ivr_call")
         ),
         order: v.number(),
         isEnabled: v.boolean(),
@@ -193,11 +192,7 @@ export const toggleTravelMode = mutation({
  */
 export const validateCycle = mutation({
   args: {
-    method: v.union(
-      v.literal("tap"),
-      v.literal("email_link"),
-      v.literal("first_responder")
-    ),
+    method: v.union(v.literal("tap"), v.literal("email_link")),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -377,13 +372,7 @@ export const getActiveCycle = query({
 });
 
 type ChannelEntry = {
-  type:
-    | "push"
-    | "email"
-    | "whatsapp"
-    | "sms"
-    | "ivr_call"
-    | "first_responder";
+  type: "push" | "email" | "whatsapp" | "sms" | "ivr_call";
   order: number;
   isEnabled: boolean;
   delayHours: number;

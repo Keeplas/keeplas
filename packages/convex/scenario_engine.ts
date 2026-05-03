@@ -196,7 +196,7 @@ async function alertLegalAuthority(
   if (targetContactId) {
     contact = await ctx.db.get(targetContactId);
   } else {
-    contact = allContacts.find((c) => c.isLegalAuthority === true) ?? null;
+    contact = allContacts.find((c) => c.role === "lawyer") ?? null;
   }
   if (!contact) {
     await createAuditLog(ctx, {
@@ -211,12 +211,12 @@ async function alertLegalAuthority(
   }
 
   // Names of contacts who will hold vault access — excludes revoked
-  // contacts and the legal authority being notified.
+  // contacts and the lawyer being notified.
   const vaultRecipientNames = allContacts
     .filter(
       (c) =>
         c.invitationStatus !== "revoked" &&
-        !c.isLegalAuthority &&
+        c.role !== "lawyer" &&
         c._id !== contact._id
     )
     .map((c) => c.name);

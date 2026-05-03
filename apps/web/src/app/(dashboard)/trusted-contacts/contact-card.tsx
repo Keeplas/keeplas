@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { cn } from "@keeplas/ui";
-
-type AccessMode = "mode_a" | "mode_b1" | "mode_b2" | "mode_b3" | "mode_b4";
+import { cn, HelpHint } from "@keeplas/ui";
 
 const ROLE_BADGE_ICONS: Record<string, string> = {
   family:
@@ -55,11 +53,6 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const ACCESS_MODE_LABELS: Record<string, string> = {
-  mode_a: "Post-mortem",
-  mode_b1: "On-demand",
-};
-
 interface ContactCardProps {
   contact: Doc<"trusted_contacts">;
 }
@@ -90,14 +83,14 @@ function computeVerificationBadge(
 
   if (contact.lastVerifiedAt === undefined) {
     return {
-      label: "Not yet verified",
+      label: "Hash not yet verified",
       className: "bg-surface-container-high text-on-surface-variant",
     };
   }
   const isStale =
     Date.now() - contact.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS;
   return {
-    label: `Verified ${formatRelative(contact.lastVerifiedAt)}`,
+    label: `Hash verified ${formatRelative(contact.lastVerifiedAt)}`,
     className: isStale
       ? "bg-tertiary-container text-on-tertiary-container"
       : "bg-secondary-container text-on-secondary-container",
@@ -114,15 +107,6 @@ export function ContactCard({ contact }: ContactCardProps) {
   const revokeContact = useAuditedMutation(api.trusted_contacts.revokeContact);
   const resendInvitation = useAuditedMutation(
     api.trusted_contacts.resendInvitation
-  );
-  const toggleFirstResponder = useAuditedMutation(
-    api.trusted_contacts.toggleFirstResponder
-  );
-  const toggleLegalAuthority = useAuditedMutation(
-    api.trusted_contacts.toggleLegalAuthority
-  );
-  const updateAccessModes = useAuditedMutation(
-    api.trusted_contacts.updateAccessModes
   );
 
   const statusConfig = STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
@@ -158,60 +142,15 @@ export function ContactCard({ contact }: ContactCardProps) {
     }
   }
 
-  async function handleToggleFirstResponder() {
-    await toggleFirstResponder({ contactId: contact._id });
-  }
-
-  async function handleToggleLegalAuthority() {
-    await toggleLegalAuthority({ contactId: contact._id });
-  }
-
-  async function handleToggleMode(mode: Extract<AccessMode, "mode_a" | "mode_b1">) {
-    const newModes = contact.accessModes.includes(mode)
-      ? contact.accessModes.filter((m) => m !== mode)
-      : [...contact.accessModes, mode];
-    await updateAccessModes({
-      contactId: contact._id,
-      accessModes: newModes,
-    });
-  }
-
   const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
 
   const verificationBadge = computeVerificationBadge(contact);
 
-  const roleBadges: Array<{ icon: string; label: string }> = [];
-  if (contact.isFirstResponder) {
-    roleBadges.push({
-      icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-      label: "First Responder",
-    });
-  }
-  if (contact.isMedicalContact) {
-    roleBadges.push({
-      icon: ROLE_BADGE_ICONS.doctor,
-      label: "Medical",
-    });
-  }
-  if (contact.isLegalAuthority) {
-    roleBadges.push({
-      icon: ROLE_BADGE_ICONS.lawyer,
-      label: "Legal Authority",
-    });
-  }
   const roleIcon = ROLE_BADGE_ICONS[contact.role] ?? ROLE_BADGE_ICONS.other;
   const roleLabel = ROLE_LABELS[contact.role] ?? "Contact";
-  if (roleBadges.length === 0) {
-    roleBadges.push({ icon: roleIcon, label: roleLabel });
-  }
 
   return (
-    <div
-      className={cn(
-        "bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all",
-        contact.isFirstResponder && "ring-1 ring-secondary/40"
-      )}
-    >
+    <div className="bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div className={cn("w-12 h-12 rounded-full border-2 p-0.5", statusConfig.avatarBorder)}>
@@ -251,21 +190,14 @@ export function ContactCard({ contact }: ContactCardProps) {
         {contact.email}
       </p>
 
-      {/* Role Badges */}
+      {/* Role + verification badges */}
       <div className="flex items-center gap-2 flex-wrap mb-6">
-        {roleBadges.map((badge) => (
-          <span
-            key={badge.label}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-lg"
-          >
-            <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={badge.icon} />
-            </svg>
-            <span className="text-label-md text-primary">
-              {badge.label}
-            </span>
-          </span>
-        ))}
+        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-lg">
+          <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={roleIcon} />
+          </svg>
+          <span className="text-label-md text-primary">{roleLabel}</span>
+        </span>
         {contact.shardConfirmed && (
           <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
             Fragment Assigned
@@ -274,28 +206,15 @@ export function ContactCard({ contact }: ContactCardProps) {
         {verificationBadge && (
           <span
             className={cn(
-              "text-label-md px-3 py-1.5 rounded-lg",
+              "text-label-md px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5",
               verificationBadge.className
             )}
           >
             {verificationBadge.label}
+            <HelpHint content="Round-trip cryptographic check that the contact's keypair is functional. The owner wraps a known plaintext to the contact's public key, and the contact unwraps it on-device — proving they hold the matching private key without exposing any vault content." />
           </span>
         )}
       </div>
-
-      {/* Access Modes */}
-      {contact.invitationStatus === "accepted" && contact.accessModes.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-6">
-          {contact.accessModes.map((mode) => (
-            <span
-              key={mode}
-              className="text-label-md px-2 py-0.5 rounded bg-surface-container text-on-surface-variant"
-            >
-              {ACCESS_MODE_LABELS[mode] ?? mode}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Footer */}
       <div className="flex justify-between items-center pt-5 border-t border-outline-variant/15">
@@ -304,7 +223,7 @@ export function ContactCard({ contact }: ContactCardProps) {
             onClick={() => setShowActions(!showActions)}
             className="text-body-md font-bold text-secondary hover:underline cursor-pointer"
           >
-            {showActions ? "Hide access" : "Manage Access"}
+            {showActions ? "Hide actions" : "Manage"}
           </button>
         ) : contact.invitationStatus === "pending" ? (
           <button
@@ -339,43 +258,6 @@ export function ContactCard({ contact }: ContactCardProps) {
       {/* Actions panel */}
       {showActions && (
         <div className="mt-4 space-y-2 pt-4 border-t border-outline-variant/15">
-          {contact.invitationStatus === "accepted" && !isRecipientOnly && (
-            <>
-              <button
-                onClick={handleToggleFirstResponder}
-                className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface"
-              >
-                {contact.isFirstResponder
-                  ? "Remove as First Responder"
-                  : "Set as First Responder"}
-              </button>
-              <button
-                onClick={handleToggleLegalAuthority}
-                className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface"
-              >
-                {contact.isLegalAuthority
-                  ? "Remove as Legal Authority"
-                  : "Set as Legal Authority"}
-              </button>
-              <button
-                onClick={() => handleToggleMode("mode_a")}
-                className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface"
-              >
-                {contact.accessModes.includes("mode_a")
-                  ? "Remove Post-mortem access"
-                  : "Grant Post-mortem access"}
-              </button>
-              <button
-                onClick={() => handleToggleMode("mode_b1")}
-                className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface"
-              >
-                {contact.accessModes.includes("mode_b1")
-                  ? "Remove On-demand access"
-                  : "Grant On-demand access"}
-              </button>
-            </>
-          )}
-
           {confirmRevoke ? (
             <div className="flex gap-2">
               <button

@@ -9,12 +9,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_ACTIVE_CHANNELS = [
   { type: "push" as const, order: 1, isEnabled: true, delayHours: 24 },
   { type: "email" as const, order: 2, isEnabled: true, delayHours: 48 },
-  {
-    type: "first_responder" as const,
-    order: 3,
-    isEnabled: true,
-    delayHours: 24,
-  },
 ];
 
 const DEFAULT_PASSIVE_SIGNALS = {

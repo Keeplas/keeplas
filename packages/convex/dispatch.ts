@@ -10,8 +10,7 @@ const CHANNEL_TYPE = v.union(
   v.literal("email"),
   v.literal("whatsapp"),
   v.literal("sms"),
-  v.literal("ivr_call"),
-  v.literal("first_responder")
+  v.literal("ivr_call")
 );
 
 const APP_URL = process.env.APP_URL ?? "https://app.keeplas.com";

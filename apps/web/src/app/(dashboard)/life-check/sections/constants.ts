@@ -8,7 +8,7 @@ export const FREQUENCIES = [
 
 export type Frequency = (typeof FREQUENCIES)[number]["value"];
 
-export type ChannelType = "push" | "email" | "whatsapp" | "first_responder";
+export type ChannelType = "push" | "email" | "whatsapp";
 
 export interface ChannelConfig {
   type: ChannelType;
@@ -53,14 +53,5 @@ export const DEFAULT_CHANNELS: ChannelConfig[] = [
     delayHours: 48,
     isEnabled: true,
     order: 3,
-  },
-  {
-    type: "first_responder",
-    label: "First Responder Alert",
-    description: "Your designated First Responder is notified",
-    iconPath: ICON_PATHS.users,
-    delayHours: 24,
-    isEnabled: true,
-    order: 4,
   },
 ];

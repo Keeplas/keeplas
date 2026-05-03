@@ -128,8 +128,6 @@ export const inviteContact = auditedMutation({
       phoneNumber: normalizeE164(args.phoneNumber),
       role: args.role,
       contactType,
-      isFirstResponder: false,
-      isMedicalContact: false,
       invitationStatus: "pending" as const,
       invitationToken,
       invitedAt: now,
@@ -153,17 +151,13 @@ export const inviteContact = auditedMutation({
 
       contactId = await ctx.db.insert("trusted_contacts", {
         ...baseFields,
-        accessModes: ["mode_a"],
         shardIndex,
         encryptedShard: "",
         shardPublicKeyUsed: "",
         shardConfirmed: false,
       });
     } else {
-      contactId = await ctx.db.insert("trusted_contacts", {
-        ...baseFields,
-        accessModes: [],
-      });
+      contactId = await ctx.db.insert("trusted_contacts", baseFields);
     }
 
     await createNotification(ctx, {
@@ -484,137 +478,6 @@ export const confirmShardVerified = auditedMutation({
 });
 
 /**
- * Toggle first responder designation.
- */
-export const toggleFirstResponder = auditedMutation({
-  action: "trusted_contact.first_responder_toggled",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  args: { contactId: v.id("trusted_contacts") },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-
-    if (!contact.isFirstResponder) {
-      // Unset any existing first responder
-      const currentFirstResponder = await ctx.db
-        .query("trusted_contacts")
-        .withIndex("by_first_responder", (q) =>
-          q.eq("userId", userId).eq("isFirstResponder", true)
-        )
-        .first();
-
-      if (currentFirstResponder) {
-        await ctx.db.patch(currentFirstResponder._id, {
-          isFirstResponder: false,
-          updatedAt: Date.now(),
-        });
-      }
-    }
-
-    await ctx.db.patch(args.contactId, {
-      isFirstResponder: !contact.isFirstResponder,
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
- * Toggle medical contact designation.
- */
-export const toggleMedicalContact = auditedMutation({
-  action: "trusted_contact.medical_contact_toggled",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  args: { contactId: v.id("trusted_contacts") },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-
-    await ctx.db.patch(args.contactId, {
-      isMedicalContact: !contact.isMedicalContact,
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
- * Toggle legal authority designation. Used by the scenario engine's
- * `alert_authority` action — only fires after a confirmed Life Check
- * failure. Multiple legal authorities are allowed (no singleton).
- */
-export const toggleLegalAuthority = auditedMutation({
-  action: "trusted_contact.legal_authority_toggled",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  args: { contactId: v.id("trusted_contacts") },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-
-    await ctx.db.patch(args.contactId, {
-      isLegalAuthority: !(contact.isLegalAuthority ?? false),
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
- * Update access modes for a contact.
- */
-export const updateAccessModes = auditedMutation({
-  action: "trusted_contact.access_modes_updated",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  getMetadata: (args) => ({ accessModes: args.accessModes }),
-  args: {
-    contactId: v.id("trusted_contacts"),
-    accessModes: v.array(
-      v.union(
-        v.literal("mode_a"),
-        v.literal("mode_b1"),
-        v.literal("mode_b2"),
-        v.literal("mode_b3"),
-        v.literal("mode_b4")
-      )
-    ),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-
-    await ctx.db.patch(args.contactId, {
-      accessModes: args.accessModes,
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
  * Revoke a trusted contact.
  */
 export const revokeContact = auditedMutation({
@@ -638,9 +501,6 @@ export const revokeContact = auditedMutation({
       invitationStatus: "revoked",
       encryptedShard: "",
       shardConfirmed: false,
-      isFirstResponder: false,
-      isMedicalContact: false,
-      isLegalAuthority: false,
       updatedAt: Date.now(),
     });
 

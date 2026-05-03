@@ -132,10 +132,10 @@ export function ScenarioPanel() {
   const steps = data?.steps ?? [];
   const lastCheck = scenario?.lastCheckAt ?? scenario?.createdAt ?? null;
   const hasLegalAuthority =
-    contacts?.some((c) => c.isLegalAuthority === true) ?? false;
+    contacts?.some((c) => c.role === "lawyer") ?? false;
   const vaultRecipientNames =
     contacts
-      ?.filter((c) => c.invitationStatus !== "revoked" && !c.isLegalAuthority)
+      ?.filter((c) => c.invitationStatus !== "revoked" && c.role !== "lawyer")
       .map((c) => c.name) ?? [];
 
   return (

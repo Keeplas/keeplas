@@ -17,6 +17,8 @@ import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
+import { AuthHeroSection } from "@/app/(auth)/components/auth-hero-section";
+import { MobileBrand } from "@/app/(auth)/components/mobile-brand";
 import { EnrollDeviceUnlockDialog } from "./enroll-device-unlock-dialog";
 
 interface UnlockGateProps {
@@ -163,133 +165,139 @@ export function UnlockGate({ children }: UnlockGateProps) {
 
   return (
     <>
-      <main className="min-h-screen flex items-center justify-center p-6 bg-surface">
-        <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
-            <h1 className="text-headline-md text-primary mb-2">Unlock vault</h1>
-            <p className="text-body-md text-on-surface-variant">
-              Your vault is encrypted on this device. Choose how to unlock.
-            </p>
-          </div>
+      <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
+        <AuthHeroSection />
 
-          {error ? (
-            <div className="mb-4 p-3 bg-error-container rounded-xl text-sm text-on-error-container">
-              {error}
+        <section className="flex-1 flex items-center justify-center p-8 md:p-10 lg:p-12 xl:p-16 relative bg-surface md:overflow-y-auto">
+          <MobileBrand />
+
+          <div className="w-full max-w-md">
+            <div className="mb-8 text-center">
+              <h1 className="text-headline-md text-primary mb-2">Unlock vault</h1>
+              <p className="text-body-md text-on-surface-variant">
+                Your vault is encrypted on this device. Choose how to unlock.
+              </p>
             </div>
-          ) : null}
 
-          {mode === "list" ? (
-            <div className="space-y-3">
-              {entries.length === 0 ? (
-                <p className="text-body-md text-on-surface-variant text-center py-4">
-                  No device unlock set up yet on this device.
-                </p>
-              ) : null}
-              {entries.map((entry) => (
-                <UnlockMethodButton
-                  key={entry.id}
-                  entry={entry}
+            {error ? (
+              <div className="mb-4 p-3 bg-error-container rounded-xl text-sm text-on-error-container">
+                {error}
+              </div>
+            ) : null}
+
+            {mode === "list" ? (
+              <div className="space-y-3">
+                {entries.length === 0 ? (
+                  <p className="text-body-md text-on-surface-variant text-center py-4">
+                    No device unlock set up yet on this device.
+                  </p>
+                ) : null}
+                {entries.map((entry) => (
+                  <UnlockMethodButton
+                    key={entry.id}
+                    entry={entry}
+                    disabled={busy}
+                    onClick={() => {
+                      if (entry.method === "pin") {
+                        setSelectedEntry(entry);
+                        setMode("pin");
+                      } else {
+                        handleWebAuthnUnlock(entry);
+                      }
+                    }}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setMode("phrase")}
                   disabled={busy}
+                  className="w-full p-4 rounded-xl border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
+                >
+                  Use 24 recovery words
+                </button>
+              </div>
+            ) : null}
+
+            {mode === "pin" && selectedEntry ? (
+              <form onSubmit={handlePinUnlock} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="unlock-pin">{selectedEntry.label}</Label>
+                  <Input
+                    id="unlock-pin"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                    placeholder={`At least ${PIN_MIN_LENGTH} digits`}
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="vault"
+                  size="md"
+                  disabled={busy || pin.length < PIN_MIN_LENGTH}
+                  className="w-full"
+                >
+                  {busy ? <Spinner size="sm" /> : "Unlock"}
+                </Button>
+                <button
+                  type="button"
                   onClick={() => {
-                    if (entry.method === "pin") {
-                      setSelectedEntry(entry);
-                      setMode("pin");
-                    } else {
-                      handleWebAuthnUnlock(entry);
-                    }
+                    setMode("list");
+                    setPin("");
                   }}
-                />
-              ))}
-              <button
-                type="button"
-                onClick={() => setMode("phrase")}
-                disabled={busy}
-                className="w-full p-4 rounded-xl border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
-              >
-                Use 24 recovery words
-              </button>
-            </div>
-          ) : null}
+                  disabled={busy}
+                  className="w-full text-sm text-on-surface-variant hover:underline"
+                >
+                  Back
+                </button>
+              </form>
+            ) : null}
 
-          {mode === "pin" && selectedEntry ? (
-            <form onSubmit={handlePinUnlock} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="unlock-pin">{selectedEntry.label}</Label>
-                <Input
-                  id="unlock-pin"
-                  type="password"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="off"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                  placeholder={`At least ${PIN_MIN_LENGTH} digits`}
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                variant="vault"
-                size="md"
-                disabled={busy || pin.length < PIN_MIN_LENGTH}
-                className="w-full"
-              >
-                {busy ? <Spinner size="sm" /> : "Unlock"}
-              </Button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("list");
-                  setPin("");
-                }}
-                disabled={busy}
-                className="w-full text-sm text-on-surface-variant hover:underline"
-              >
-                Back
-              </button>
-            </form>
-          ) : null}
-
-          {mode === "phrase" ? (
-            <form onSubmit={handlePhraseUnlock} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="unlock-phrase">Enter your 24 words</Label>
-                <textarea
-                  id="unlock-phrase"
-                  value={phrase}
-                  onChange={(e) => setPhrase(e.target.value)}
-                  placeholder="word1 word2 word3 ..."
-                  className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
-                  required
-                />
-                <p className="text-label-md text-on-surface-variant">
-                  Paste all 24 words. Case, spacing, numbers and punctuation
-                  are ignored — you can paste directly from the PDF.
-                </p>
-              </div>
-              <Button
-                type="submit"
-                variant="vault"
-                size="md"
-                disabled={busy || !phrase.trim()}
-                className="w-full"
-              >
-                {busy ? <Spinner size="sm" /> : "Unlock with recovery words"}
-              </Button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("list");
-                  setPhrase("");
-                }}
-                disabled={busy}
-                className="w-full text-sm text-on-surface-variant hover:underline"
-              >
-                Back
-              </button>
-            </form>
-          ) : null}
-        </div>
+            {mode === "phrase" ? (
+              <form onSubmit={handlePhraseUnlock} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="unlock-phrase">Enter your 24 words</Label>
+                  <textarea
+                    id="unlock-phrase"
+                    value={phrase}
+                    onChange={(e) => setPhrase(e.target.value)}
+                    placeholder="word1 word2 word3 ..."
+                    className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
+                    required
+                  />
+                  <p className="text-label-md text-on-surface-variant">
+                    Paste all 24 words. Case, spacing, numbers and punctuation
+                    are ignored — you can paste directly from the PDF.
+                  </p>
+                </div>
+                <Button
+                  type="submit"
+                  variant="vault"
+                  size="md"
+                  disabled={busy || !phrase.trim()}
+                  className="w-full"
+                >
+                  {busy ? <Spinner size="sm" /> : "Unlock with recovery words"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("list");
+                    setPhrase("");
+                  }}
+                  disabled={busy}
+                  className="w-full text-sm text-on-surface-variant hover:underline"
+                >
+                  Back
+                </button>
+              </form>
+            ) : null}
+          </div>
+        </section>
       </main>
       {enrollOpen && userEmail ? (
         <EnrollDeviceUnlockDialog
