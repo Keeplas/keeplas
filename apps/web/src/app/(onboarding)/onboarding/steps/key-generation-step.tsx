@@ -51,17 +51,24 @@ const VISIBLE_PHASES = [
   "storing",
 ] as const;
 
+const MIN_THRESHOLD = 2;
+const MAX_THRESHOLD = 5;
+const DEFAULT_THRESHOLD = 2;
+
 export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps) {
   const router = useRouter();
   const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const [phase, setPhase] = useState<GenerationPhase>("deriving_root");
   const [error, setError] = useState("");
+  const [threshold, setThreshold] = useState<number | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
+    if (threshold === null) return;
     startedRef.current = true;
+    const chosenThreshold = threshold;
 
     async function generateAndStore() {
       try {
@@ -76,14 +83,16 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
 
         // Phase 2: generate a fresh MasterKey, then Shamir-split it for
         // trusted-contact recovery. RootKey wraps MasterKey; trusted-contact
-        // shards reconstruct the MasterKey directly without RootKey.
+        // shards reconstruct the MasterKey directly without RootKey. The
+        // threshold (chosen by the user) controls how many shares are needed
+        // to reconstruct.
         const masterKey = await generateMasterKey();
         const rawMasterKey = new Uint8Array(
           await crypto.subtle.exportKey("raw", masterKey)
         );
 
         setPhase("splitting_shards");
-        const shards = await split(rawMasterKey, 5, 3);
+        const shards = await split(rawMasterKey, 5, chosenThreshold);
 
         // Phase 3: wrap MasterKey with RootKey -> bundle stored on the server
         setPhase("wrapping_master_key");
@@ -118,6 +127,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
           encryptedKeyBundle: JSON.stringify(bundle),
           phraseSalt: phraseSaltB64,
           keeplasShard,
+          vaultThreshold: chosenThreshold,
         });
 
         // Keep the live MasterKey for the rest of the session.
@@ -143,7 +153,16 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
     }
 
     generateAndStore();
-  }, [phrase, storeKeyBundle, router, setMasterKey, onComplete]);
+  }, [phrase, storeKeyBundle, router, setMasterKey, onComplete, threshold]);
+
+  if (threshold === null) {
+    return (
+      <ThresholdPicker
+        onSelect={setThreshold}
+        defaultValue={DEFAULT_THRESHOLD}
+      />
+    );
+  }
 
   return (
     <div className="w-full max-w-lg mx-auto text-center">
@@ -273,6 +292,98 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ThresholdPickerProps {
+  onSelect: (threshold: number) => void;
+  defaultValue: number;
+}
+
+function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
+  const [value, setValue] = useState(defaultValue);
+
+  return (
+    <div className="w-full max-w-lg mx-auto">
+      <div className="mb-8 text-center">
+        <h2 className="text-headline-lg text-primary mb-3 break-words">
+          Recovery threshold
+        </h2>
+        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">
+          How many trusted contacts must agree to reconstruct your vault when
+          you become unreachable. Lower = easier recovery, higher = stronger
+          against collusion.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {Array.from(
+          { length: MAX_THRESHOLD - MIN_THRESHOLD + 1 },
+          (_, i) => i + MIN_THRESHOLD
+        ).map((n) => {
+          const selected = value === n;
+          return (
+            <button
+              key={n}
+              onClick={() => setValue(n)}
+              className={`p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${
+                selected
+                  ? "border-secondary bg-secondary-container/40"
+                  : "border-outline-variant/30 hover:border-outline-variant/60 bg-surface-container-low"
+              }`}
+            >
+              <div className="text-headline-md text-primary font-bold">
+                {n}
+              </div>
+              <div className="text-label-md text-on-surface-variant">
+                of 5
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="p-4 bg-surface-container-low rounded-xl mb-6">
+        <p className="text-body-md text-on-surface-variant">
+          {value === 2 && (
+            <>
+              <strong className="text-primary">Easiest recovery.</strong> Any
+              two contacts can collaborate. Recommended unless your contacts
+              face a high collusion risk.
+            </>
+          )}
+          {value === 3 && (
+            <>
+              <strong className="text-primary">Balanced.</strong> Any three
+              contacts must collaborate. Resistant to single-pair collusion.
+            </>
+          )}
+          {value === 4 && (
+            <>
+              <strong className="text-primary">Strict.</strong> Four out of
+              five contacts must agree. Very strong, but recovery may be hard
+              if some contacts are unavailable.
+            </>
+          )}
+          {value === 5 && (
+            <>
+              <strong className="text-primary">Maximum.</strong> All five
+              contacts must agree. No collusion possible, but a single
+              unreachable contact blocks recovery permanently.
+            </>
+          )}
+        </p>
+      </div>
+
+      <Button
+        variant="vault"
+        size="lg"
+        onClick={() => onSelect(value)}
+        className="w-full cursor-pointer"
+      >
+        Continue with {value}-of-5
+      </Button>
     </div>
   );
 }

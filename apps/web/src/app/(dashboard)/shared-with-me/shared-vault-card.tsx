@@ -18,6 +18,14 @@ const ROLE_LABELS: Record<string, string> = {
 interface SharedVault extends Doc<"trusted_contacts"> {
   ownerName: string;
   ownerEmail: string;
+  ownerCycleStatus:
+    | "running"
+    | "validated"
+    | "escalating"
+    | "triggered"
+    | "cancelled"
+    | null;
+  ownerCycleEscalatedAt: number | null;
 }
 
 interface SharedVaultCardProps {
@@ -56,7 +64,11 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const hasEnvelope = !!vault.verificationEnvelope;
   const hasKey = !!vault.contactPublicKey;
   const canVerify = hasEnvelope && hasKey && status !== "running";
-  const canMarkUnreachable = !isRecipientOnly && isAccepted;
+  // Mark-as-unreachable only surfaces once the owner's Life Check has actually
+  // escalated past the inactivity threshold. Outside escalation the action is
+  // hidden — contacts shouldn't be able to fire it speculatively.
+  const isOwnerEscalating = vault.ownerCycleStatus === "escalating";
+  const canMarkUnreachable = !isRecipientOnly && isAccepted && isOwnerEscalating;
   const initials = vault.ownerName
     .split(" ")
     .map((n) => n[0])

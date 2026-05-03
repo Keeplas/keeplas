@@ -251,14 +251,19 @@ export const storeKeyBundle = mutation({
     encryptedKeyBundle: v.string(),
     phraseSalt: v.string(),
     keeplasShard: v.string(),
+    vaultThreshold: v.number(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
+    if (args.vaultThreshold < 2 || args.vaultThreshold > 5) {
+      throw new Error("vaultThreshold must be between 2 and 5");
+    }
 
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       phraseSalt: args.phraseSalt,
       keeplasShard: args.keeplasShard,
+      vaultThreshold: args.vaultThreshold,
       onboardingStep: "complete",
       vaultIntegrityScore: 0,
       updatedAt: Date.now(),

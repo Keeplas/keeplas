@@ -4,9 +4,11 @@ import { useQuery } from "convex/react";
 import { Loader } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { SharedVaultCard } from "./shared-vault-card";
+import { useBackfillContactPublicKey } from "./use-backfill-contact-public-key";
 
 export function SharedVaultList() {
   const vaults = useQuery(api.trusted_contacts.getVaultsWhereIAmContact);
+  useBackfillContactPublicKey(vaults);
 
   if (vaults === undefined) {
     return <Loader size="md" />;

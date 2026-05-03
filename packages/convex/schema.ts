@@ -48,6 +48,10 @@ export default defineSchema({
     recoveryVerified: v.optional(v.boolean()),
     zkVerifierKey: v.optional(v.string()),
     keeplasShard: v.optional(v.string()),
+    // Shamir threshold chosen at onboarding: how many trusted contacts must
+    // collaborate to reconstruct the MasterKey. Min 2, max 5. Once shards are
+    // distributed, changing this requires a full re-split + re-distribution.
+    vaultThreshold: v.optional(v.number()),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),

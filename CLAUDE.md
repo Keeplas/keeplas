@@ -7,12 +7,30 @@ This file is loaded by Claude Code (and similar AI assistants) on every session 
 - Reference and update `.env.example` when adding new credentials or environment variables. Never commit secrets.
 
 ## Engineering principles
-- Respect SOLID, DRY, YAGNI, KISS. Never duplicate logic — extract abstractions only when they earn their keep (no premature generalization).
-- Before coding a bug fix or refactor, turn the request into a verifiable success criterion:
-  - Bug → write a failing test that reproduces it, then make it pass.
-  - Refactor → tests green before AND after; the diff should change only what was asked.
-  - Multi-step task → list `[step] → verify: [check]` upfront, then execute step by step.
-- Don't ship parallel pages for overlapping features — favor variants/categories when the data model overlaps.
+
+### SOLID, DRY, YAGNI, KISS — verifiable checks
+Apply these on every diff. If a check fails, fix it before submitting.
+
+- **DRY** — Before adding a component / hook / util, grep for an existing one with the same shape. Tolerate 2 near-duplicates; on the 3rd occurrence, extract. When extracting, the abstraction must serve ≥2 real call sites today (not hypothetical).
+- **KISS** — No wrapper that only forwards props. No prop / option with a single call site. Prefer inline over abstraction when used in 1–2 places. A clear 10-line block beats a clever 3-line one-liner.
+- **YAGNI** — No "future-proofing": no feature flags, options, or code paths for needs that don't exist today. No backwards-compat shims when a full refactor is cheaper. No error handling for impossible scenarios (trust internal callers; validate only at system boundaries).
+- **SOLID (S + D)** — One reason to change per component. Pass behavior via props / callbacks / slots, not via internal `if (variant === ...)` branching. Depend on interfaces (Convex query/mutation types, Radix primitives), not concrete implementations.
+
+### Pre-submit checklist
+Before sending a diff, mentally run:
+1. "If I delete this line / file / prop, what breaks?" — if nothing, delete it.
+2. "Is this abstraction used in ≥2 places today?" — if no, inline it.
+3. "Does this duplicate something that already exists?" — grep first, extract second.
+4. "Did I add anything the task didn't ask for?" — remove it.
+
+### Verifiable success criterion (bug fix / refactor / multi-step)
+Before coding, turn the request into a check:
+- **Bug** → write a failing test that reproduces it, then make it pass.
+- **Refactor** → tests green before AND after; the diff changes only what was asked.
+- **Multi-step task** → list `[step] → verify: [check]` upfront, then execute step by step.
+
+### Feature scoping
+Don't ship parallel pages for overlapping features — favor variants / categories when the data model overlaps.
 
 ## Monorepo & tooling
 - Turborepo + pnpm. Apps: `apps/web` (Next.js App Router). Packages: `packages/crypto` (RESTRICTED — founders only via CODEOWNERS), `packages/convex`, `packages/ui`.

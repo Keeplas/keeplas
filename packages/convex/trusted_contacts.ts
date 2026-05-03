@@ -564,6 +564,41 @@ export const resendInvitation = auditedMutation({
 });
 
 /**
+ * Re-publish the calling user's ML-KEM public key on every trusted_contacts
+ * row where they are the contact (contactUserId === me). Used to backfill
+ * rows accepted before the contact's crypto was ready, so the vault owner
+ * can later wrap a verification envelope to them.
+ *
+ * Only patches rows whose contactPublicKey is missing or different from the
+ * provided value — idempotent and safe to call repeatedly.
+ */
+export const republishContactPublicKey = auditedMutation({
+  action: "trusted_contact.public_key_republished",
+  resourceType: "trusted_contact",
+  getResourceId: () => "self",
+  args: { contactPublicKey: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const rows = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_contact_user", (q) => q.eq("contactUserId", userId))
+      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+      .collect();
+
+    let patched = 0;
+    for (const row of rows) {
+      if (row.contactPublicKey === args.contactPublicKey) continue;
+      await ctx.db.patch(row._id, {
+        contactPublicKey: args.contactPublicKey,
+        updatedAt: Date.now(),
+      });
+      patched++;
+    }
+    return { patched };
+  },
+});
+
+/**
  * Get contacts where the current user is the invited contact (for contact's dashboard).
  */
 export const getVaultsWhereIAmContact = query({
@@ -576,14 +611,24 @@ export const getVaultsWhereIAmContact = query({
       .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
       .collect();
 
-    // Enrich with vault owner info
+    // Enrich with vault owner info + most recent active life-check cycle
+    // status, so the contact UI can gate "Mark as unreachable" on escalation.
     const result = [];
     for (const contact of contacts) {
       const owner = await ctx.db.get(contact.userId);
+
+      const activeCycle = await ctx.db
+        .query("life_check_cycles")
+        .withIndex("by_user", (q) => q.eq("userId", contact.userId))
+        .order("desc")
+        .first();
+
       result.push({
         ...contact,
         ownerName: owner?.name ?? "Unknown",
         ownerEmail: owner?.email ?? "",
+        ownerCycleStatus: activeCycle?.status ?? null,
+        ownerCycleEscalatedAt: activeCycle?.levelReachedAt ?? null,
       });
     }
     return result;
