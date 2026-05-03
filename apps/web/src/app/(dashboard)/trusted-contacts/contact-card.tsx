@@ -68,8 +68,13 @@ export function ContactCard({ contact }: ContactCardProps) {
   const [showActions, setShowActions] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resentAt, setResentAt] = useState<number | null>(null);
 
   const revokeContact = useAuditedMutation(api.trusted_contacts.revokeContact);
+  const resendInvitation = useAuditedMutation(
+    api.trusted_contacts.resendInvitation
+  );
   const toggleFirstResponder = useAuditedMutation(
     api.trusted_contacts.toggleFirstResponder
   );
@@ -99,6 +104,17 @@ export function ContactCard({ contact }: ContactCardProps) {
     } finally {
       setRevoking(false);
       setConfirmRevoke(false);
+    }
+  }
+
+  async function handleResend() {
+    if (resending) return;
+    setResending(true);
+    try {
+      await resendInvitation({ contactId: contact._id });
+      setResentAt(Date.now());
+    } finally {
+      setResending(false);
     }
   }
 
@@ -238,9 +254,21 @@ export function ContactCard({ contact }: ContactCardProps) {
           >
             {showActions ? "Hide access" : "Manage Access"}
           </button>
+        ) : contact.invitationStatus === "pending" ? (
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="text-body-md font-bold text-secondary hover:underline cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {resending
+              ? "Resending..."
+              : resentAt
+                ? "Invitation resent ✓"
+                : "Resend invitation"}
+          </button>
         ) : (
           <span className="text-body-md font-bold text-primary/40">
-            Awaiting Verification
+            {statusConfig.label}
           </span>
         )}
         <button

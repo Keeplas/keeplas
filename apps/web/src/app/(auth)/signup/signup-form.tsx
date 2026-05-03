@@ -1,16 +1,38 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
 import { Input, Label, PasswordInput } from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
 
 type Step = "details" | "verify";
 
+const INVITE_PATH_RE = /^\/invite\/([^/?#]+)/;
+
 export function SignupForm() {
   const { signIn } = useAuthActions();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "";
+  const inviteToken = redirect.match(INVITE_PATH_RE)?.[1];
+
+  const invitation = useQuery(
+    api.trusted_contacts.getInvitationByToken,
+    inviteToken ? { token: inviteToken } : "skip"
+  );
+  const lockedEmail =
+    invitation && invitation.invitationStatus === "pending"
+      ? invitation.email
+      : undefined;
+  const suggestedName =
+    invitation && invitation.invitationStatus === "pending"
+      ? invitation.name
+      : undefined;
+
   const [step, setStep] = useState<Step>("details");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,6 +40,14 @@ export function SignupForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (lockedEmail) setEmail(lockedEmail);
+  }, [lockedEmail]);
+
+  useEffect(() => {
+    if (suggestedName && !name) setName(suggestedName);
+  }, [suggestedName, name]);
 
   async function handlePasswordSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -166,8 +196,16 @@ export function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="curator@keeplas.vault"
+              disabled={!!lockedEmail}
+              readOnly={!!lockedEmail}
               required
             />
+            {lockedEmail && (
+              <p className="text-label-md text-on-surface-variant">
+                Locked — this is the email your inviter used to send you the
+                invitation.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

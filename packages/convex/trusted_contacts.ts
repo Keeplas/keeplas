@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { internalAction, internalQuery, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { createNotification, requireAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
@@ -178,6 +179,19 @@ export const inviteContact = auditedMutation({
       relatedType: "trusted_contact",
     });
 
+    // Trust contacts always get an email with the acceptance link.
+    // Recipient-only contacts only get one when the inviter opted into the
+    // courtesy intro (introMessage carries that intent).
+    const shouldEmail =
+      contactType === "trust" || (contactType === "recipient_only" && !!introMessage);
+    if (shouldEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.trusted_contacts.sendInvitationEmail,
+        { contactId }
+      );
+    }
+
     return { contactId, invitationToken };
   },
 });
@@ -203,13 +217,25 @@ export const getInvitationByToken = query({
     return {
       _id: contact._id,
       name: contact.name,
+      email: contact.email,
       role: contact.role,
       invitationStatus: contact.invitationStatus,
       invitedAt: contact.invitedAt,
-      inviterName: inviter?.name ?? "Unknown",
+      inviterName: resolveInviterName(inviter),
+      inviterEmail: inviter?.email ?? null,
     };
   },
 });
+
+function resolveInviterName(
+  inviter: { name?: string; email?: string } | null
+): string {
+  const name = inviter?.name?.trim();
+  if (name) return name;
+  const localPart = inviter?.email?.split("@")[0]?.trim();
+  if (localPart) return localPart;
+  return "A Keeplas user";
+}
 
 /**
  * Accept an invitation (called by the invited contact after they create an account).
@@ -590,6 +616,12 @@ export const resendInvitation = auditedMutation({
       updatedAt: Date.now(),
     });
 
+    await ctx.scheduler.runAfter(
+      0,
+      internal.trusted_contacts.sendInvitationEmail,
+      { contactId: args.contactId }
+    );
+
     return { invitationToken };
   },
 });
@@ -620,3 +652,139 @@ export const getVaultsWhereIAmContact = query({
     return result;
   },
 });
+
+const APP_URL = process.env.APP_URL ?? "https://app.keeplas.com";
+
+/**
+ * Send the invitation email to a freshly invited (or re-invited) contact.
+ * Trust contacts receive an acceptance link; recipient-only contacts that
+ * opted into the courtesy intro receive the inviter's intro message.
+ *
+ * No-ops gracefully when Resend credentials are missing so dev environments
+ * without external integrations still work.
+ */
+export const sendInvitationEmail = internalAction({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) return "resend_not_configured";
+
+    const data = await ctx.runQuery(
+      internal.trusted_contacts.getInvitationEmailContext,
+      { contactId: args.contactId }
+    );
+    if (!data) return "contact_not_found";
+    if (data.invitationStatus !== "pending") return "not_pending";
+
+    const from =
+      process.env.RESEND_FROM_EMAIL ?? "Keeplas <noreply@keeplas.com>";
+    const acceptUrl = `${APP_URL}/invite/${data.invitationToken}`;
+    const inviterName = data.inviterName?.trim() || "A Keeplas user";
+
+    const isTrust = (data.contactType ?? "trust") === "trust";
+    const subject = isTrust
+      ? `${inviterName} invited you as a trusted contact on Keeplas`
+      : `${inviterName} added you as a recipient on Keeplas`;
+
+    const html = isTrust
+      ? trustInvitationHtml({
+          recipientName: data.name,
+          inviterName,
+          acceptUrl,
+        })
+      : recipientIntroHtml({
+          recipientName: data.name,
+          inviterName,
+          introMessage: data.introMessage ?? "",
+        });
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [data.email],
+        subject,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`resend ${res.status}: ${text.slice(0, 160)}`);
+    }
+    return "sent";
+  },
+});
+
+/**
+ * Internal-only data fetch used by `sendInvitationEmail`. Returns the
+ * minimal shape needed to render the invitation email.
+ */
+export const getInvitationEmailContext = internalQuery({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact) return null;
+    const inviter = await ctx.db.get(contact.userId);
+    return {
+      name: contact.name,
+      email: contact.email,
+      contactType: contact.contactType,
+      invitationStatus: contact.invitationStatus,
+      invitationToken: contact.invitationToken,
+      introMessage: contact.introMessage,
+      inviterName: inviter?.name ?? null,
+    };
+  },
+});
+
+function trustInvitationHtml(opts: {
+  recipientName: string;
+  inviterName: string;
+  acceptUrl: string;
+}) {
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
+<p style="text-align:center;margin:0 0 24px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
+<p>Hi ${escapeHtml(opts.recipientName)},</p>
+<p><strong>${escapeHtml(opts.inviterName)}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.</p>
+<p>As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.</p>
+<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Accept invitation</a></p>
+<p style="color:#666;font-size:13px">This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${opts.acceptUrl}" style="color:#041632;word-break:break-all">${opts.acceptUrl}</a></p>
+<p style="color:#666;font-size:13px;margin-top:24px">If you weren't expecting this invitation, you can ignore this email.</p>
+</body></html>`;
+}
+
+function recipientIntroHtml(opts: {
+  recipientName: string;
+  inviterName: string;
+  introMessage: string;
+}) {
+  const message = opts.introMessage
+    ? `<div style="white-space:pre-wrap;background:#f6f6f6;border-radius:10px;padding:16px;margin:24px 0">${escapeHtml(opts.introMessage)}</div>`
+    : "";
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
+<p style="text-align:center;margin:0 0 24px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
+<p>Hi ${escapeHtml(opts.recipientName)},</p>
+<p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas. You don't need to do anything right now — Keeplas will only contact you if a specific event they have set up is triggered.</p>
+${message}
+<p style="color:#666;font-size:13px;margin-top:24px">If this email reached you by mistake, you can ignore it.</p>
+</body></html>`;
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    c === "&"
+      ? "&amp;"
+      : c === "<"
+        ? "&lt;"
+        : c === ">"
+          ? "&gt;"
+          : c === '"'
+            ? "&quot;"
+            : "&#39;"
+  );
+}

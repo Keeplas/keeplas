@@ -1,14 +1,15 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, type ReactNode } from "react";
 import { useQuery, useConvexAuth } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
-import Image from "next/image";
 import Link from "next/link";
 import { Button, buttonVariants, Loader, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
+import { AuthHeroSection } from "../../(auth)/components/auth-hero-section";
+import { MobileBrand } from "../../(auth)/components/mobile-brand";
 
 const ROLE_LABELS: Record<string, string> = {
   family: "Family member",
@@ -17,6 +18,46 @@ const ROLE_LABELS: Record<string, string> = {
   doctor: "Doctor",
   other: "Trusted contact",
 };
+
+interface InvitationShellProps {
+  badgeLabel: string;
+  heading: string;
+  description: ReactNode;
+  children: ReactNode;
+}
+
+function InvitationShell({
+  badgeLabel,
+  heading,
+  description,
+  children,
+}: InvitationShellProps) {
+  return (
+    <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
+      <AuthHeroSection />
+      <section className="flex-1 flex items-center justify-center p-8 md:p-10 lg:p-12 xl:p-16 relative bg-surface md:overflow-y-auto">
+        <MobileBrand />
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
+              <svg
+                className="w-5 h-5 text-secondary"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+              </svg>
+              <span className="text-label-md text-primary">{badgeLabel}</span>
+            </div>
+            <h3 className="text-headline-md text-primary mb-2">{heading}</h3>
+            <p className="text-body-md text-on-surface-variant">{description}</p>
+          </div>
+          {children}
+        </div>
+      </section>
+    </main>
+  );
+}
 
 export default function InvitationPage({
   params,
@@ -47,86 +88,76 @@ export default function InvitationPage({
 
   if (invitation === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface px-6">
-        <div className="text-center max-w-md">
-          <h1 className="text-display-lg text-primary mb-4">
-            Invalid Invitation
-          </h1>
-          <p className="text-on-surface-variant mb-6">
-            This invitation link is invalid or has expired. Please ask the vault
-            owner to send a new invitation.
-          </p>
-          <Link
-            href="/login"
-            className={buttonVariants({ variant: "vault", size: "md" })}
-          >
-            Go to Keeplas
-          </Link>
-        </div>
-      </div>
+      <InvitationShell
+        badgeLabel="Invitation Link"
+        heading="Invalid invitation"
+        description="This invitation link is invalid or has expired. Ask the vault owner to send you a new one."
+      >
+        <Link
+          href="/login"
+          className={buttonVariants({
+            variant: "vault",
+            size: "md",
+            className: "w-full",
+          })}
+        >
+          Go to Keeplas
+        </Link>
+      </InvitationShell>
     );
   }
 
   if (invitation.invitationStatus !== "pending") {
+    const wasAccepted = invitation.invitationStatus === "accepted";
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface px-6">
-        <div className="text-center max-w-md">
-          <h1 className="text-display-lg text-primary mb-4">
-            Invitation Already Processed
-          </h1>
-          <p className="text-on-surface-variant mb-6">
-            This invitation has already been{" "}
-            {invitation.invitationStatus === "accepted"
-              ? "accepted"
-              : "declined"}
-            .
-          </p>
-          <Link
-            href="/dashboard"
-            className={buttonVariants({ variant: "vault", size: "md" })}
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-      </div>
+      <InvitationShell
+        badgeLabel="Invitation Status"
+        heading="Invitation already processed"
+        description={
+          wasAccepted
+            ? "You have already accepted this invitation."
+            : "You have already declined this invitation."
+        }
+      >
+        <Link
+          href="/dashboard"
+          className={buttonVariants({
+            variant: "vault",
+            size: "md",
+            className: "w-full",
+          })}
+        >
+          Go to Dashboard
+        </Link>
+      </InvitationShell>
     );
   }
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface px-6">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-6">
-            <svg
-              className="w-8 h-8 text-secondary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m4.5 12.75 6 6 9-13.5"
-              />
-            </svg>
-          </div>
-          <h1 className="text-display-lg text-primary mb-4">
-            You&apos;re now a Trusted Contact
-          </h1>
-          <p className="text-on-surface-variant mb-6">
-            You are now part of {invitation.inviterName}&apos;s recovery
-            network. You may receive a recovery fragment to help protect their
-            vault.
-          </p>
-          <Link
-            href="/dashboard"
-            className={buttonVariants({ variant: "vault", size: "md" })}
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-      </div>
+      <InvitationShell
+        badgeLabel="Confirmed"
+        heading="You're now a Trusted Contact"
+        description={
+          <>
+            You are now part of{" "}
+            <strong className="text-primary">{invitation.inviterName}</strong>
+            &apos;s recovery network. You may receive a recovery fragment to
+            help protect their vault.
+          </>
+        }
+      >
+        <Link
+          href="/dashboard"
+          className={buttonVariants({
+            variant: "vault",
+            size: "md",
+            className: "w-full",
+          })}
+        >
+          Go to Dashboard
+        </Link>
+      </InvitationShell>
     );
   }
 
@@ -163,112 +194,85 @@ export default function InvitationPage({
     }
   }
 
+  const roleLabel = ROLE_LABELS[invitation.role] ?? "trusted contact";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface px-6">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="flex items-center gap-3 justify-center mb-10">
-          <Image
-            src="/assets/logo/logo.svg"
-            alt="Keeplas"
-            width={36}
-            height={36}
-          />
-          <span className="text-headline-md text-primary">
-            Keeplas
-          </span>
-        </div>
-
-        {/* Card */}
-        <div className="bg-surface-container-low rounded-2xl p-8 text-center">
-          <div className="w-14 h-14 rounded-xl bg-primary-container flex items-center justify-center mx-auto mb-6">
-            <svg
-              className="w-7 h-7 text-on-primary-container"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-              />
-            </svg>
-          </div>
-
-          <h1 className="text-headline-md text-primary mb-2">
-            Trusted Contact Invitation
-          </h1>
-
-          <p className="text-body-lg text-on-surface-variant mb-6">
-            <strong>{invitation.inviterName}</strong> has designated you as a{" "}
-            <strong>
-              {ROLE_LABELS[invitation.role] ?? "trusted contact"}
-            </strong>{" "}
-            in their Keeplas vault.
-          </p>
-
-          <div className="bg-surface-container-lowest rounded-xl p-4 mb-6 text-left space-y-2">
-            <p className="text-sm text-on-surface">
-              <strong>What this means:</strong>
-            </p>
-            <ul className="text-sm text-on-surface-variant space-y-1.5 list-disc list-inside">
-              <li>You will receive a recovery fragment</li>
-              <li>
-                You may be asked to help recover the vault in an emergency
-              </li>
-              <li>You will never see vault contents unless access is granted</li>
-            </ul>
-          </div>
-
-          {!isAuthenticated ? (
-            <div className="space-y-3">
-              <p className="text-sm text-on-surface-variant mb-4">
-                You need a Keeplas account to accept this invitation.
-              </p>
-              <Link
-                href={`/signup?redirect=/invite/${token}`}
-                className={buttonVariants({
-                  variant: "vault",
-                  size: "md",
-                  className: "w-full",
-                })}
-              >
-                Create Account
-              </Link>
-              <Link
-                href={`/login?redirect=/invite/${token}`}
-                className="bg-surface-container text-primary w-full py-3 rounded-xl font-headline font-bold block hover:bg-surface-container-high transition-colors"
-              >
-                Sign In
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {error && <ErrorAlert message={error} />}
-
-              <Button
-                variant="vault"
-                size="md"
-                className="w-full cursor-pointer"
-                onClick={handleAccept}
-                disabled={accepting || declining}
-              >
-                {accepting ? "Accepting..." : "Accept Invitation"}
-              </Button>
-
-              <button
-                onClick={handleDecline}
-                disabled={accepting || declining}
-                className="bg-surface-container text-on-surface-variant w-full py-3 rounded-xl font-headline font-bold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-60"
-              >
-                {declining ? "Declining..." : "Decline"}
-              </button>
-            </div>
-          )}
-        </div>
+    <InvitationShell
+      badgeLabel="Trusted Contact Invitation"
+      heading={`${invitation.inviterName} invited you`}
+      description={
+        <>
+          You have been designated as a{" "}
+          <strong className="text-primary">{roleLabel}</strong> in{" "}
+          {invitation.inviterName}&apos;s Keeplas vault.
+        </>
+      }
+    >
+      <div className="bg-surface-container-low rounded-2xl p-5 mb-6 space-y-3">
+        <p className="text-label-md text-secondary uppercase tracking-widest font-bold">
+          What this means
+        </p>
+        <ul className="text-body-md text-on-surface-variant space-y-2">
+          <li className="flex gap-2">
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            You will receive an encrypted recovery fragment.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            You may be asked to help recover the vault in an emergency.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            You will never see vault contents unless access is explicitly
+            granted.
+          </li>
+        </ul>
       </div>
-    </div>
+
+      <ErrorAlert message={error} />
+
+      {!isAuthenticated ? (
+        <div className="space-y-3">
+          <p className="text-body-md text-on-surface-variant text-center">
+            You need a Keeplas account to accept this invitation.
+          </p>
+          <Link
+            href={`/signup?redirect=/invite/${token}`}
+            className={buttonVariants({
+              variant: "vault",
+              size: "md",
+              className: "w-full",
+            })}
+          >
+            Create Account
+          </Link>
+          <Link
+            href={`/login?redirect=/invite/${token}`}
+            className="bg-surface-container text-primary w-full py-3 rounded-xl font-headline font-bold block text-center hover:bg-surface-container-high transition-colors"
+          >
+            Sign In
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <Button
+            variant="vault"
+            size="md"
+            className="w-full cursor-pointer"
+            onClick={handleAccept}
+            disabled={accepting || declining}
+          >
+            {accepting ? "Accepting..." : "Accept Invitation"}
+          </Button>
+          <button
+            onClick={handleDecline}
+            disabled={accepting || declining}
+            className="bg-surface-container text-on-surface-variant w-full py-3 rounded-xl font-headline font-bold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-60"
+          >
+            {declining ? "Declining..." : "Decline"}
+          </button>
+        </div>
+      )}
+    </InvitationShell>
   );
 }

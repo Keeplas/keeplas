@@ -1,7 +1,7 @@
 "use client";
 
 import { useConvexAuth } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Loader } from "@keeplas/ui";
 
@@ -12,12 +12,19 @@ export default function AuthLayout({
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/dashboard");
+      const redirect = searchParams.get("redirect");
+      // Only honor relative paths to prevent open-redirect.
+      const target =
+        redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+          ? redirect
+          : "/dashboard";
+      router.push(target);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, searchParams]);
 
   if (isLoading) {
     return <Loader fullscreen />;
