@@ -27,7 +27,6 @@ import {
   RichTextEditor,
   Select,
   SelectItem,
-  Switch,
   Spinner,
   Loader,
   Dialog,
@@ -142,7 +141,6 @@ export default function VaultItemPage() {
   const [editContent, setEditContent] = useState("");
   const [editLinkUrls, setEditLinkUrls] = useState<string[]>([""]);
   const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
-  const [editIsPublic, setEditIsPublic] = useState(false);
   const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
   const [removedFileIds, setRemovedFileIds] = useState<Set<Id<"vault_item_files">>>(
     new Set()
@@ -234,7 +232,6 @@ export default function VaultItemPage() {
     setEditContent(normalizeContentForRichText(decryptedContent));
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
-    setEditIsPublic(item.accessLevel === "public");
 
     const initial: string[] = [];
     const mode = item.recipientMode ?? "default";
@@ -337,7 +334,7 @@ export default function VaultItemPage() {
         mode: "default",
         sharedWithGroups: [],
         sharedWithContacts: [],
-        derivedAccessLevel: editIsPublic ? "public" : "private",
+        derivedAccessLevel: "private",
       };
     }
     if (contactIds.length > 0 && groupIds.length === 0) {
@@ -345,14 +342,14 @@ export default function VaultItemPage() {
         mode: "explicit",
         sharedWithGroups: [],
         sharedWithContacts: contactIds,
-        derivedAccessLevel: editIsPublic ? "public" : "trusted_only",
+        derivedAccessLevel: "trusted_only",
       };
     }
     return {
       mode: "groups",
       sharedWithGroups: groupIds,
       sharedWithContacts: contactIds,
-      derivedAccessLevel: editIsPublic ? "public" : "trusted_only",
+      derivedAccessLevel: "trusted_only",
     };
   }
 
@@ -692,27 +689,6 @@ export default function VaultItemPage() {
             </p>
           </div>
 
-          <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
-                <Icon path={ICON_PATHS.emergencyCard} className="w-5 h-5" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="text-headline-sm text-primary">
-                  Show on Emergency Card
-                </p>
-                <p className="text-body-md text-on-surface-variant mt-0.5">
-                  Anyone scanning your QR card will see this item.
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={editIsPublic}
-              onCheckedChange={setEditIsPublic}
-              className="mt-1"
-            />
-          </div>
-
           <div className="flex gap-3 pt-2">
             <Button
               type="button"
@@ -799,11 +775,6 @@ export default function VaultItemPage() {
                 </span>
               );
             })()}
-            {item.accessLevel === "public" && (
-              <span className="text-[11px] font-label font-bold text-on-secondary-container bg-secondary-container px-3 py-1 rounded-lg">
-                On Emergency Card
-              </span>
-            )}
           </div>
 
           {/* Decrypted Content */}

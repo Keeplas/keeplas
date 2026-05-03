@@ -46,11 +46,11 @@ const CORE_FEATURES: Feature[] = [
     accent: "bg-tertiary/15 text-tertiary",
   },
   {
-    title: "Emergency Card",
+    title: "Acute emergencies",
     description:
-      "Public safety profile with blood type, allergies, medications and a QR code. Accessible even when the vault is locked.",
-    iconPath: ICON_PATHS.emergencyCard,
-    href: "/emergency-card",
+      "For accidents and sudden illness, your phone's native Medical ID is on the lock screen, recognized by paramedics, and works offline. Here is how to set it up.",
+    iconPath: ICON_PATHS.medicalInformation,
+    href: "/docs/emergency-info",
     accent: "bg-secondary/10 text-secondary",
   },
   {

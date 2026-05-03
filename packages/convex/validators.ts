@@ -11,6 +11,9 @@ export const categoryValidator = v.union(
   v.literal("credential")
 );
 
+// TEMPORARY: "public" and "emergency_only" are kept here only so the schema
+// can accept legacy rows during the one-shot migrateAccessLevels run. Narrow
+// back to ("private" | "trusted_only") once the migration has executed.
 export const accessLevelValidator = v.union(
   v.literal("private"),
   v.literal("trusted_only"),

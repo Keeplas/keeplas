@@ -40,12 +40,6 @@ export const getDashboardData = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    // Emergency card created?
-    const emergencyCard = await ctx.db
-      .query("emergency_cards")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
     // Strong auth (passkey or TOTP) enrolled?
     const passkey = await ctx.db
       .query("passkey_credentials")
@@ -58,12 +52,11 @@ export const getDashboardData = query({
     const hasStrongAuth = !!passkey || !!(totp && totp.verifiedAt);
 
     // Calculate integrity score
-    const categoryScore = Math.min(categoriesPopulated.size / 5, 1) * 40;
+    const categoryScore = Math.min(categoriesPopulated.size / 5, 1) * 50;
     const contactScore = Math.min(contacts.length / 3, 1) * 30;
     const lifeCheckScore = lifeCheckConfig?.isActive ? 20 : 0;
-    const emergencyScore = emergencyCard?.isActive ? 10 : 0;
     const integrityScore = Math.round(
-      categoryScore + contactScore + lifeCheckScore + emergencyScore
+      categoryScore + contactScore + lifeCheckScore
     );
 
     // Nudge message
@@ -90,9 +83,6 @@ export const getDashboardData = query({
     if (contacts.length === 0) {
       priorityActions.push({ key: "invite_contact", label: "Invite a trusted contact", href: "/trusted-contacts" });
     }
-    if (!emergencyCard) {
-      priorityActions.push({ key: "emergency_card", label: "Create your Emergency Card", href: "/emergency-card" });
-    }
     if (!lifeCheckConfig) {
       priorityActions.push({ key: "life_check", label: "Configure Life Check", href: "/life-check" });
     }
@@ -115,7 +105,6 @@ export const getDashboardData = query({
       categoriesPopulated: categoriesPopulated.size,
       confirmedContacts: contacts.length,
       lifeCheckConfigured: !!lifeCheckConfig?.isActive,
-      emergencyCardCreated: !!emergencyCard?.isActive,
       recentItems: recentItems.map((item) => ({
         _id: item._id,
         title: item.title,

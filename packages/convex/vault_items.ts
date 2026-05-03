@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { categoryValidator, accessLevelValidator } from "./validators";
 import {
@@ -530,6 +530,33 @@ export const deleteItem = auditedMutation({
         updatedAt: now,
       });
     }
+  },
+});
+
+/**
+ * One-shot migration: collapses legacy "public" and "emergency_only" access
+ * levels onto "trusted_only". Run once via the Convex dashboard (Functions
+ * tab → vault_items:migrateAccessLevels → Run), then this mutation and the
+ * matching widening of accessLevelValidator can be deleted together.
+ */
+export const migrateAccessLevels = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("vault_items").collect();
+    let migrated = 0;
+    for (const item of all) {
+      if (
+        item.accessLevel === "public" ||
+        item.accessLevel === "emergency_only"
+      ) {
+        await ctx.db.patch(item._id, {
+          accessLevel: "trusted_only",
+          updatedAt: Date.now(),
+        });
+        migrated++;
+      }
+    }
+    return { scanned: all.length, migrated };
   },
 });
 

@@ -24,7 +24,6 @@ const DOCUMENT_CATEGORIES: VaultCategory[] = [
 const ACTION_ICONS: Record<string, string> = {
   add_item: ICON_PATHS.archive,
   invite_contact: ICON_PATHS.userPlus,
-  emergency_card: ICON_PATHS.emergencyCard,
   life_check: ICON_PATHS.heartbeat,
   more_categories: ICON_PATHS.plus,
 };

@@ -228,7 +228,6 @@ export async function wipeUserData(
     "passive_signals",
     "scenarios",
     "conditional_messages",
-    "emergency_cards",
     "notifications",
     "vaults",
   ] as const;

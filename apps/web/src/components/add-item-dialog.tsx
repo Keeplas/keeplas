@@ -21,7 +21,6 @@ import {
   RichTextEditor,
   Select,
   SelectItem,
-  Switch,
   ErrorAlert,
   Dialog,
   DialogContent,
@@ -31,13 +30,9 @@ import {
   DialogClose,
   cn,
 } from "@keeplas/ui";
-// AccessLevel is now derived from recipient selection + isPublic switch
-// instead of being chosen directly. Mapping:
-//   isPublic on              → "public"
+// AccessLevel is derived from recipient selection:
 //   no recipients selected   → "private"
 //   recipients selected      → "trusted_only"
-// "emergency_only" was redundant with "trusted_only" (both released at trigger)
-// and has been collapsed into "trusted_only".
 import { ICON_PATHS } from "@/lib/icons";
 import { MediaRecorderPanel } from "@/components/media-recorder-panel";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
@@ -169,7 +164,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
   const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
-  const [isPublic, setIsPublic] = useState(false);
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [recipientsTouched, setRecipientsTouched] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -236,12 +230,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       .filter((v) => v.startsWith(CONTACT_PREFIX))
       .map((v) => v.slice(CONTACT_PREFIX.length) as Id<"trusted_contacts">);
 
-    if (isPublic) {
-      // Items on the emergency card go to "public" regardless of which
-      // groups are picked. We still record the recipient config so the
-      // owner can also release the item to specific people at trigger.
-    }
-
     if (groupIds.length === 0 && contactIds.length === 0) {
       // Empty selection = private. Mode "default" means "all trust contacts"
       // in the resolver, but private items are skipped at release time so
@@ -250,7 +238,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         mode: "default",
         sharedWithGroups: [],
         sharedWithContacts: [],
-        derivedAccessLevel: isPublic ? "public" : "private",
+        derivedAccessLevel: "private",
       };
     }
 
@@ -259,7 +247,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
         mode: "explicit",
         sharedWithGroups: [],
         sharedWithContacts: contactIds,
-        derivedAccessLevel: isPublic ? "public" : "trusted_only",
+        derivedAccessLevel: "trusted_only",
       };
     }
 
@@ -267,7 +255,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       mode: "groups",
       sharedWithGroups: groupIds,
       sharedWithContacts: contactIds,
-      derivedAccessLevel: isPublic ? "public" : "trusted_only",
+      derivedAccessLevel: "trusted_only",
     };
   }
 
@@ -350,7 +338,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
     setFiles([]);
     setLinkUrls([""]);
     setRecorderMode(null);
-    setIsPublic(false);
     setRecipientSelection([]);
     setRecipientsTouched(false);
     setTriggerType("life_check_failure");
@@ -816,27 +803,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   Pick one or more groups (your trust contacts are already a
                   group), or specific people. Empty = the item stays private.
                 </p>
-              </div>
-
-              <div className="flex items-start justify-between gap-4 bg-surface rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center shrink-0 text-primary">
-                    <Icon path={ICON_PATHS.emergencyCard} className="w-5 h-5" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <p className="text-headline-sm text-primary">
-                      Show on Emergency Card
-                    </p>
-                    <p className="text-body-md text-on-surface-variant mt-0.5">
-                      Anyone scanning your QR card will see this item.
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                  className="mt-1"
-                />
               </div>
 
             </div>

@@ -8,6 +8,7 @@ import {
   Button,
   HelpHint,
   Icon,
+  InfoCallout,
   Loader,
   Tabs,
   TabsContent,
@@ -102,6 +103,20 @@ export default function TrustedContactsPage() {
           How trust contacts work
           <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
         </Link>
+        <InfoCallout
+          icon={ICON_PATHS.medicalInformation}
+          tone="info"
+          className="mt-6"
+        >
+          For acute emergencies (accident, sudden illness), set up your
+          phone&rsquo;s built-in Medical ID — paramedics check it first.{" "}
+          <Link
+            href="/docs/emergency-info"
+            className="font-bold text-secondary hover:underline"
+          >
+            Learn how →
+          </Link>
+        </InfoCallout>
       </header>
 
       <Tabs defaultValue="contacts" className="space-y-8">

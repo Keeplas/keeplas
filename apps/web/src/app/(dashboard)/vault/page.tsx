@@ -337,8 +337,6 @@ function transmissionSummary(
 
 // Single card used for every category. Top-right pill shows the
 // transmission target (Private / contact / group / "All trust contacts").
-// An "On Emergency Card" badge appears under the metadata when the item
-// is published to the public emergency card.
 function VaultItemCard({
   item,
   groups,
@@ -350,7 +348,6 @@ function VaultItemCard({
 }) {
   const category = getCategoryConfig(item.category as VaultCategory);
   const transmission = transmissionSummary(item, groups, contacts);
-  const onEmergencyCard = item.accessLevel === "public";
 
   return (
     <Link
@@ -382,12 +379,6 @@ function VaultItemCard({
       <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>
-      {onEmergencyCard && (
-        <span className="mt-3 inline-flex items-center gap-1.5 text-label-md normal-case tracking-normal text-on-secondary-container bg-secondary-container px-3 py-1 rounded-full">
-          <Icon path={ICON_PATHS.emergencyCard} className="w-3 h-3" />
-          On Emergency Card
-        </span>
-      )}
     </Link>
   );
 }

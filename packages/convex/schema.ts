@@ -711,41 +711,6 @@ export default defineSchema({
     .index("by_trigger", ["scenarioId", "triggerValue"]),
 
   // ═══════════════════════════════════════════════
-  // EMERGENCY CARDS
-  // ═══════════════════════════════════════════════
-
-  emergency_cards: defineTable({
-    userId: v.id("users"),
-
-    fullName: v.optional(v.string()),
-    bloodType: v.optional(v.string()),
-    allergies: v.optional(v.string()),
-    medicalConditions: v.optional(v.string()),
-    medications: v.optional(v.string()),
-    emergencyContactId: v.optional(v.id("trusted_contacts")),
-    emergencyContactRelation: v.optional(v.string()),
-    additionalNotes: v.optional(v.string()),
-
-    showFullName: v.boolean(),
-    showBloodType: v.boolean(),
-    showAllergies: v.boolean(),
-    showEmergencyContact: v.boolean(),
-    showMedicalConditions: v.boolean(),
-    showMedications: v.boolean(),
-    showAdditionalNotes: v.boolean(),
-
-    qrCodeToken: v.string(),
-    qrCodeUrl: v.string(),
-
-    isActive: v.boolean(),
-    lastPrintedAt: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_qr_token", ["qrCodeToken"]),
-
-  // ═══════════════════════════════════════════════
   // AUDIT LOGS — IMMUTABLE
   // ═══════════════════════════════════════════════
 

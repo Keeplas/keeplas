@@ -25,7 +25,6 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
     href: "/life-check",
     iconPath: ICON_PATHS.heartbeat,
   },
-  { label: "Emergency Card", href: "/emergency-card", iconPath: ICON_PATHS.emergencyCard },
   { label: "Shared with me", href: "/shared-with-me", iconPath: ICON_PATHS.share },
 ];
 

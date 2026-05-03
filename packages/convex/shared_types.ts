@@ -8,8 +8,4 @@ export type VaultCategory =
   | "conditional_message"
   | "credential";
 
-export type AccessLevel =
-  | "private"
-  | "trusted_only"
-  | "emergency_only"
-  | "public";
+export type AccessLevel = "private" | "trusted_only";

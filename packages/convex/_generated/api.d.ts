@@ -17,7 +17,6 @@ import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as dispatch from "../dispatch.js";
-import type * as emergency_cards from "../emergency_cards.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as lib_audit_secret from "../lib/audit_secret.js";
@@ -60,7 +59,6 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboard: typeof dashboard;
   dispatch: typeof dispatch;
-  emergency_cards: typeof emergency_cards;
   helpers: typeof helpers;
   http: typeof http;
   "lib/audit_secret": typeof lib_audit_secret;
