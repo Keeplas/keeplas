@@ -69,7 +69,12 @@ function PriceDisplay({ plan }: { plan: Plan }) {
 
   return (
     <div className="flex items-baseline gap-2">
-      <span className={cn("text-headline-lg", plan.dark ? "text-white" : "text-on-surface")}>
+      <span
+        className={cn(
+          "text-display-lg font-bold tracking-tight",
+          plan.dark ? "text-white" : "text-on-surface"
+        )}
+      >
         {display}
       </span>
       <span className={cn("text-body-md", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
