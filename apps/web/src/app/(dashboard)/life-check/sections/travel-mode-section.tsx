@@ -17,7 +17,7 @@ function computeDateBounds() {
   const now = Date.now();
   return {
     today: new Date(now).toISOString().split("T")[0],
-    maxDate: new Date(now + 90 * MS_PER_DAY).toISOString().split("T")[0],
+    maxDate: new Date(now + 180 * MS_PER_DAY).toISOString().split("T")[0],
   };
 }
 
@@ -36,10 +36,10 @@ export function TravelModeSection({
           <h3 className="text-headline-sm text-primary flex items-center gap-2">
             <Icon path={CALENDAR_ICON} className="w-5 h-5 text-secondary" />
             Travel Mode
-            <HelpHint content="Pauses Life Check escalation while you're off-grid. Conditional messages remain encrypted and untriggered. Capped at 90 days for safety." />
+            <HelpHint content="Pauses Life Check escalation while you're off-grid. Conditional messages remain encrypted and untriggered. Capped at 180 days for safety." />
           </h3>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Suspend Life Check for up to 90 days when traveling.
+            Suspend Life Check for up to 180 days when traveling.
           </p>
         </div>
       </div>

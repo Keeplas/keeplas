@@ -69,6 +69,14 @@ const CORE_FEATURES: Feature[] = [
     href: "/docs/recovery",
     accent: "bg-tertiary/15 text-tertiary",
   },
+  {
+    title: "Reflect & Prepare",
+    description:
+      "Nine honest cases — reflective questions, real pain points, emergency essentials, and the cryptographic foundations behind Keeplas. ~10 minutes to read.",
+    iconPath: ICON_PATHS.psychology,
+    href: "/docs/insights",
+    accent: "bg-secondary/10 text-secondary",
+  },
 ];
 
 interface SecurityPoint {

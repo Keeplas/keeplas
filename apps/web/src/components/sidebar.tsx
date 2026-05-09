@@ -60,7 +60,11 @@ export function Sidebar() {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-surface-container-low p-6">
-        <div className="flex items-center gap-3 mb-8">
+        <Link
+          href="/hub"
+          aria-label="Go to Hub"
+          className="flex items-center gap-3 mb-8 outline-none rounded-xl"
+        >
           <Image
             src="/assets/logo/logo.svg"
             alt="Keeplas"
@@ -71,7 +75,7 @@ export function Sidebar() {
           <span className="text-headline-md text-primary">
             Keeplas
           </span>
-        </div>
+        </Link>
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden">
           <ul className="flex flex-col space-y-2">
@@ -157,7 +161,11 @@ export function Sidebar() {
 
       {/* Mobile top strip */}
       <header className="md:hidden sticky top-0 z-40 bg-surface/80 backdrop-blur-xl flex items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-2">
+        <Link
+          href="/hub"
+          aria-label="Go to Hub"
+          className="flex items-center gap-2 outline-none rounded-xl"
+        >
           <Image
             src="/assets/logo/logo.svg"
             alt="Keeplas"
@@ -167,7 +175,7 @@ export function Sidebar() {
           <span className="text-headline-sm text-primary">
             Keeplas
           </span>
-        </div>
+        </Link>
         <div className="flex items-center gap-2">
           <NotificationsMenu variant="icon" />
           <Link

@@ -158,11 +158,11 @@ export const toggleTravelMode = mutation({
 
     if (!config) throw new Error("Life Check not configured");
 
-    // Max 90 days
+    // Max 180 days
     if (args.enabled && args.until) {
-      const maxUntil = Date.now() + 90 * 24 * 60 * 60 * 1000;
+      const maxUntil = Date.now() + 180 * 24 * 60 * 60 * 1000;
       if (args.until > maxUntil) {
-        throw new Error("Travel mode maximum is 90 days");
+        throw new Error("Travel mode maximum is 180 days");
       }
     }
 
