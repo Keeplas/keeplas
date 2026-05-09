@@ -104,9 +104,6 @@ export default function TrustedContactsPage() {
         : acceptedCount === threshold
           ? "quorumMet"
           : "resilient";
-  const reachableContacts = activeContacts.filter(
-    (c) => c.invitationStatus === "accepted",
-  ).length;
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -470,17 +467,7 @@ export default function TrustedContactsPage() {
                   </li>
                 </ul>
               </section>
-
-              <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[150px] flex flex-col justify-end">
-                <p className="text-headline-md font-black mb-1.5 text-on-primary">
-                  {groups.length}
-                </p>
-                <p className="text-label-md text-on-primary-container">
-                  groups defined · {reachableContacts} reachable contacts
-                </p>
-              </section>
             </aside>
-
             <div className="lg:col-span-8 space-y-6">
               {groups.length === 0 ? (
                 <div
