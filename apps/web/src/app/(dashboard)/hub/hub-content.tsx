@@ -353,7 +353,7 @@ export function HubContent() {
                   "flex items-center justify-between p-4 transition-colors rounded-xl group cursor-pointer",
                   action.done
                     ? "bg-surface-container-low/50 hover:bg-surface-container-low"
-                    : "bg-surface-container-low hover:bg-surface-container"
+                    : "bg-error/10 hover:bg-error/15"
                 )}
               >
                 <span
@@ -361,7 +361,7 @@ export function HubContent() {
                     "flex items-center gap-3 font-headline font-bold text-sm",
                     action.done
                       ? "text-on-surface-variant line-through decoration-on-surface-variant/40"
-                      : "text-primary"
+                      : "text-error"
                   )}
                 >
                   <span
@@ -380,7 +380,7 @@ export function HubContent() {
                       }
                       className={cn(
                         "w-4 h-4",
-                        action.done ? "text-secondary" : "text-primary"
+                        action.done ? "text-secondary" : "text-error"
                       )}
                     />
                   </span>
