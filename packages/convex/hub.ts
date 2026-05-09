@@ -2,7 +2,7 @@ import { query } from "./_generated/server";
 import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
 
 /**
- * Get all hub data in one query: integrity score, category counts,
+ * Get all hub data in one query: continuity score, category counts,
  * recent items, contact count, feature status.
  */
 export const getHubData = query({
@@ -22,10 +22,11 @@ export const getHubData = query({
       categoriesPopulated.add(item.category);
     }
 
-    // Recent items (last 3)
+    // Recent items (last 6) — kept in sync with the Priority Actions count so
+    // the Hub bottom row stays visually balanced.
     const recentItems = [...items]
       .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 3);
+      .slice(0, 6);
 
     // Confirmed contacts
     const contacts = await ctx.db
@@ -51,55 +52,74 @@ export const getHubData = query({
       .first();
     const hasStrongAuth = !!passkey || !!(totp && totp.verifiedAt);
 
-    // Calculate integrity score
-    const categoryScore = Math.min(categoriesPopulated.size / 5, 1) * 50;
-    const contactScore = Math.min(contacts.length / 3, 1) * 30;
-    const lifeCheckScore = lifeCheckConfig?.isActive ? 20 : 0;
-    const integrityScore = Math.round(
-      categoryScore + contactScore + lifeCheckScore
+    // WhatsApp number verified? Used by Life Check escalations and OTP-style
+    // notifications, so it counts as a setup axis.
+    const user = await ctx.db.get(userId);
+    const phoneVerified = !!user?.phoneNumberVerifiedAt;
+
+    // Continuity score: 6 axes equipondérés, identiques aux conditions des Priority Actions.
+    // Garantit l'invariant: priorityActions.length === 0 ⇔ continuityScore === 100.
+    const axes = [
+      items.length > 0,
+      contacts.length > 0,
+      !!lifeCheckConfig,
+      hasStrongAuth,
+      phoneVerified,
+      categoriesPopulated.size >= 5 && items.length > 0,
+    ];
+    const continuityScore = Math.round(
+      (axes.filter(Boolean).length / axes.length) * 100
     );
 
-    // Nudge message
-    let nudgeMessage = "";
-    if (integrityScore === 0) {
-      nudgeMessage = "Your vault is empty. Start by adding a document.";
-    } else if (integrityScore <= 25) {
-      nudgeMessage = "Good start! Add health directives next.";
-    } else if (integrityScore <= 55) {
-      nudgeMessage = "Halfway there. Invite trusted contacts for emergency access.";
-    } else if (integrityScore <= 70) {
-      nudgeMessage = "Almost secure. Configure Life Check for complete protection.";
-    } else if (integrityScore <= 88) {
-      nudgeMessage = "Strong protection! Add digital assets for premium recovery.";
-    } else {
-      nudgeMessage = "Near perfect! Simulate an emergency to test your workflow.";
-    }
-
-    // Priority actions
-    const priorityActions: Array<{ key: string; label: string; href: string }> = [];
-    if (items.length === 0) {
-      priorityActions.push({ key: "add_item", label: "Add your first vault item", href: "/vault" });
-    }
-    if (contacts.length === 0) {
-      priorityActions.push({ key: "invite_contact", label: "Invite a trusted contact", href: "/trusted-contacts" });
-    }
-    if (!lifeCheckConfig) {
-      priorityActions.push({ key: "life_check", label: "Configure Life Check", href: "/life-check" });
-    }
-    if (!hasStrongAuth) {
-      priorityActions.push({
+    // Priority actions: always emit all six with their done flag, so the UI
+    // can render the completed ones in a muted state ("trophée" feel).
+    // Pending actions are listed first, completed ones at the bottom.
+    const priorityActions: Array<{
+      key: string;
+      label: string;
+      href: string;
+      done: boolean;
+    }> = [
+      {
+        key: "add_item",
+        label: "Add your first vault item",
+        href: "/vault",
+        done: items.length > 0,
+      },
+      {
+        key: "invite_contact",
+        label: "Invite a trusted contact",
+        href: "/trusted-contacts",
+        done: contacts.length > 0,
+      },
+      {
+        key: "life_check",
+        label: "Configure Life Check",
+        href: "/life-check",
+        done: !!lifeCheckConfig,
+      },
+      {
         key: "two_factor",
         label: "Activate two-factor authentication",
         href: "/settings/security",
-      });
-    }
-    if (categoriesPopulated.size < 5 && items.length > 0) {
-      priorityActions.push({ key: "more_categories", label: "Add items in more categories", href: "/vault" });
-    }
+        done: hasStrongAuth,
+      },
+      {
+        key: "verify_whatsapp",
+        label: "Verify your WhatsApp number",
+        href: "/settings?verify=whatsapp",
+        done: phoneVerified,
+      },
+      {
+        key: "more_categories",
+        label: "Add items in more categories",
+        href: "/vault",
+        done: categoriesPopulated.size >= 5 && items.length > 0,
+      },
+    ].sort((a, b) => Number(a.done) - Number(b.done));
 
     return {
-      integrityScore,
-      nudgeMessage,
+      continuityScore,
       totalItems: items.length,
       categoryCounts,
       categoriesPopulated: categoriesPopulated.size,

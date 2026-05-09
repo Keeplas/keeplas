@@ -35,8 +35,15 @@ export const updateProfile = auditedMutation({
 
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (args.name !== undefined) patch.name = args.name.trim() || undefined;
-    if (args.phoneNumber !== undefined)
-      patch.phoneNumber = normalizeE164(args.phoneNumber);
+    if (args.phoneNumber !== undefined) {
+      const next = normalizeE164(args.phoneNumber);
+      patch.phoneNumber = next;
+      // Changing the phone invalidates any previous verification.
+      const current = await ctx.db.get(userId);
+      if (current?.phoneNumber !== next) {
+        patch.phoneNumberVerifiedAt = undefined;
+      }
+    }
     if (args.avatarUrl !== undefined)
       patch.avatarUrl = args.avatarUrl.trim() || undefined;
 

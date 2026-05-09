@@ -85,9 +85,31 @@ export default defineSchema({
 
     // Set by @convex-dev/auth after a successful email OTP verification.
     emailVerificationTime: v.optional(v.number()),
+
+    // Timestamp (ms) at which the user verified ownership of their WhatsApp
+    // number via a 6-digit OTP delivered through the WhatsApp Business API.
+    // Cleared if the phone number is changed afterward.
+    phoneNumberVerifiedAt: v.optional(v.number()),
   })
     .index("email", ["email"])
     .index("by_last_seen", ["lastSeenAt"]),
+
+  // ═══════════════════════════════════════════════
+  // PHONE VERIFICATION (WhatsApp OTP)
+  // ═══════════════════════════════════════════════
+
+  phone_verification_codes: defineTable({
+    userId: v.id("users"),
+    // E.164 snapshot at time of issuance — invalidates the code if the user
+    // changes phone before submitting it.
+    phoneNumber: v.string(),
+    // SHA-256 hex of the 6-digit OTP. Plaintext is never stored.
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_expires", ["userId", "expiresAt"]),
 
   // ═══════════════════════════════════════════════
   // PASSKEYS (WebAuthn credentials)

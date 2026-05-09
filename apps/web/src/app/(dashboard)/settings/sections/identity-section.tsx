@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   Button,
+  Icon,
   Input,
   Label,
   PhoneInput,
@@ -13,10 +16,12 @@ import {
   isValidPhone,
   type CountryCode,
 } from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { getInitials } from "@/lib/user";
 import { getCountry } from "@/lib/countries";
 import { UpdateResidenceDialog } from "./update-residence-dialog";
+import { PhoneVerificationDialog } from "@/components/phone-verification-dialog";
 
 interface IdentitySectionProps {
   user: Doc<"users">;
@@ -34,12 +39,22 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [residenceDialogOpen, setResidenceDialogOpen] = useState(false);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+
+  const phoneStatus = useQuery(api.phone_verification.getMyStatus);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setName(user.name ?? "");
     setPhone(user.phoneNumber || undefined);
     setAvatarUrl(user.avatarUrl ?? "");
   }, [user]);
+
+  useEffect(() => {
+    if (searchParams.get("verify") === "whatsapp") {
+      setVerifyDialogOpen(true);
+    }
+  }, [searchParams]);
 
   const country = user.country ? getCountry(user.country) : undefined;
   const birthdayLabel = user.birthday
@@ -156,18 +171,39 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
-          <Label
-            htmlFor="phone"
-            className="text-label-md text-secondary"
-          >
-            Phone Number
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label
+              htmlFor="phone"
+              className="text-label-md text-secondary"
+            >
+              WhatsApp Number
+            </Label>
+            {phoneStatus?.verifiedAt ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
+                Verified
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setVerifyDialogOpen(true)}
+                disabled={!phone || !isValidPhone(phone)}
+              >
+                Verify
+              </Button>
+            )}
+          </div>
           <PhoneInput
             id="phone"
             value={phone}
             onChange={setPhone}
             defaultCountry={user.country as CountryCode | undefined}
           />
+          <p className="text-label-md text-on-surface-variant">
+            Used for Life Check escalations and important notifications.
+          </p>
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
@@ -325,6 +361,13 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         open={residenceDialogOpen}
         onOpenChange={setResidenceDialogOpen}
         currentCountry={user.country}
+      />
+
+      <PhoneVerificationDialog
+        open={verifyDialogOpen}
+        onOpenChange={setVerifyDialogOpen}
+        initialPhone={phone}
+        defaultCountry={user.country as CountryCode | undefined}
       />
     </section>
   );

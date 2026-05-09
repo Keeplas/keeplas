@@ -183,6 +183,64 @@ async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
   return "sent";
 }
 
+/**
+ * Out-of-band delivery of a 6-digit OTP via WhatsApp Business API. Uses an
+ * authentication-category template (configurable via WHATSAPP_OTP_TEMPLATE_NAME)
+ * with the code as a body parameter. Falls back to a console log in dev when
+ * credentials are missing so manual testing remains possible.
+ */
+export const sendWhatsAppOtp = internalAction({
+  args: {
+    phoneNumber: v.string(),
+    code: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const phoneId = process.env.WHATSAPP_PHONE_ID;
+    const token = process.env.WHATSAPP_TOKEN;
+    if (!phoneId || !token) {
+      console.warn(
+        `[whatsapp_otp] credentials missing; OTP for ${args.phoneNumber} = ${args.code}`
+      );
+      return "whatsapp_not_configured";
+    }
+    const templateName =
+      process.env.WHATSAPP_OTP_TEMPLATE_NAME ?? "keeplas_otp";
+    const lang = process.env.WHATSAPP_OTP_TEMPLATE_LANG ?? "en";
+
+    const res = await fetch(
+      `https://graph.facebook.com/v17.0/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: args.phoneNumber.replace(/^\+/, ""),
+          type: "template",
+          template: {
+            name: templateName,
+            language: { code: lang },
+            components: [
+              {
+                type: "body",
+                parameters: [{ type: "text", text: args.code }],
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`whatsapp_otp ${res.status}: ${text.slice(0, 120)}`);
+    }
+    return "sent";
+  },
+});
+
 function lifeCheckEmailHtml(name: string | undefined, url: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">

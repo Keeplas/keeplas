@@ -28,6 +28,7 @@ import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
 import type * as passive_signals from "../passive_signals.js";
 import type * as passwordReset from "../passwordReset.js";
+import type * as phone_verification from "../phone_verification.js";
 import type * as push_subscriptions from "../push_subscriptions.js";
 import type * as recipient_groups from "../recipient_groups.js";
 import type * as release from "../release.js";
@@ -70,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   onboarding: typeof onboarding;
   passive_signals: typeof passive_signals;
   passwordReset: typeof passwordReset;
+  phone_verification: typeof phone_verification;
   push_subscriptions: typeof push_subscriptions;
   recipient_groups: typeof recipient_groups;
   release: typeof release;

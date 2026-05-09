@@ -6,7 +6,6 @@ import { api } from "@keeplas/backend/_generated/api";
 import { buttonVariants, cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import {
-  CATEGORIES,
   getCategoryConfig,
   type VaultCategory,
 } from "@/lib/vault-categories";
@@ -25,13 +24,14 @@ const ACTION_ICONS: Record<string, string> = {
   add_item: ICON_PATHS.archive,
   invite_contact: ICON_PATHS.userPlus,
   life_check: ICON_PATHS.heartbeat,
+  two_factor: ICON_PATHS.key,
+  verify_whatsapp: ICON_PATHS.phone,
   more_categories: ICON_PATHS.plus,
 };
 
 export function HubContent() {
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const lifeCheck = useQuery(api.life_check.getConfig);
   const hubData = useQuery(api.hub.getHubData);
 
   if (
@@ -44,8 +44,6 @@ export function HubContent() {
 
   if (hubData === null) return null;
 
-  const messages = items.filter((i) => i.triggerType !== undefined);
-
   const assets = items.filter((i) =>
     ASSET_CATEGORIES.includes(i.category as VaultCategory)
   );
@@ -56,13 +54,7 @@ export function HubContent() {
     DOCUMENT_CATEGORIES.includes(i.category as VaultCategory)
   );
 
-  const totalCategories = CATEGORIES.length;
-  const coveredCategories = new Set(items.map((i) => i.category)).size;
-  const continuityScore = Math.round(
-    (coveredCategories / totalCategories) * 60 +
-      (contacts.length > 0 ? 20 : 0) +
-      (lifeCheck?.isActive ? 20 : 0)
-  );
+  const { continuityScore } = hubData;
   const scoreLabel =
     continuityScore >= 75
       ? "Strong Protection"
@@ -71,12 +63,6 @@ export function HubContent() {
         : "Action Required";
 
   const missingDirectives = directives.length === 0;
-  const missingMessages = messages.length === 0;
-  const aiPercentage = Math.min(continuityScore + (messages.length > 0 ? 5 : 0), 99);
-
-  const verifiedTrustees = contacts.filter((c) => c.invitationStatus === "accepted").length;
-  const circumference = 2 * Math.PI * 20;
-  const scoreOffset = circumference - (circumference * continuityScore) / 100;
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -93,42 +79,13 @@ export function HubContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-full px-6">
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
-              <circle
-                className="text-surface-container-high"
-                cx="24"
-                cy="24"
-                fill="none"
-                r="20"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <circle
-                className="text-secondary transition-all duration-700"
-                cx="24"
-                cy="24"
-                fill="none"
-                r="20"
-                stroke="currentColor"
-                strokeDasharray={circumference}
-                strokeDashoffset={scoreOffset}
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className="font-headline font-bold text-primary text-body-md">
-              {continuityScore}%
-            </span>
-          </div>
-          <div>
-            <p className="text-label-md text-on-surface-variant">
-              Continuity Score
-            </p>
-            <p className="text-body-md font-bold text-primary">{scoreLabel}</p>
-          </div>
-        </div>
+        <a
+          href="#priority-actions"
+          className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+          aria-label="Jump to priority actions"
+        >
+          <ContinuityScoreBadge score={continuityScore} label={scoreLabel} />
+        </a>
       </header>
 
       {/* Life Map Canvas */}
@@ -164,11 +121,23 @@ export function HubContent() {
           status="protected"
           href="/vault"
         >
-          <div className="space-y-3 mt-4">
-            <AssetLine label="Real Estate Portfolio" present={assets.some((a) => a.title.toLowerCase().includes("real") || a.category === "financial_asset")} />
-            <AssetLine label="Retirement Accounts" present={assets.some((a) => a.category === "financial_asset")} />
-            <AssetLine label="Digital Wallets" present={assets.some((a) => a.category === "digital_asset")} />
-          </div>
+          {assets.length === 0 ? (
+            <p className="text-body-md text-on-surface-variant mt-2">
+              No assets recorded yet.
+            </p>
+          ) : (
+            <div className="space-y-3 mt-4">
+              {assets.slice(0, 3).map((a) => (
+                <div key={a._id} className="flex justify-between items-center text-body-md">
+                  <span className="text-on-surface-variant truncate">{a.title}</span>
+                  <Icon
+                    path={ICON_PATHS.checkCircle}
+                    className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </NodeCard>
 
         {/* Contacts — bottom left */}
@@ -302,10 +271,23 @@ export function HubContent() {
               </span>
             </div>
             <h3 className="font-headline font-bold text-primary mb-1">Documents</h3>
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <DocThumbnail icon={ICON_PATHS.home} label="Deeds" />
-              <DocThumbnail icon={ICON_PATHS.historyEdu} label="Will" />
-            </div>
+            {documents.length === 0 ? (
+              <p className="text-body-md text-on-surface-variant mt-2">
+                No documents stored yet.
+              </p>
+            ) : (
+              <div className="space-y-3 mt-4">
+                {documents.slice(0, 3).map((d) => (
+                  <div key={d._id} className="flex justify-between items-center text-body-md">
+                    <span className="text-on-surface-variant truncate">{d.title}</span>
+                    <Icon
+                      path={ICON_PATHS.checkCircle}
+                      className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </Link>
         </div>
 
@@ -350,159 +332,70 @@ export function HubContent() {
         </svg>
       </div>
 
-      {/* AI Completeness Analyzer */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div
-          className="md:col-span-2 bg-primary-container text-white p-8 shadow-2xl relative overflow-hidden"
-          style={{ borderRadius: "2rem" }}
-        >
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <Icon
-                path={ICON_PATHS.psychology}
-                className="w-8 h-8 text-secondary-fixed"
-              />
-              <h2 className="text-headline-md">
-                AI Completeness Analyzer
-              </h2>
-            </div>
-            <p className="text-body-lg text-on-primary-container max-w-lg mb-8 italic">
-              &ldquo;You have secured {aiPercentage}% of your vital legacy.{" "}
-              {missingDirectives
-                ? "The missing link is your Digital Life Directive, which prevents executors from accessing your encrypted assets."
-                : missingMessages
-                  ? "Add at least one Conditional Message so your final words reach the people who matter."
-                  : "Keep refreshing critical documents every 90 days to maintain continuity above 90%."}
-              &rdquo;
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/vault"
-                className="bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-black/20"
-              >
-                {missingDirectives
-                  ? "Generate Digital Directive"
-                  : missingMessages
-                    ? "Compose Message"
-                    : "Review Vault"}
-              </Link>
-              <Link
-                href="/settings/security"
-                className="text-white border border-white/20 hover:bg-white/10 px-6 py-3 rounded-xl transition-all font-headline font-bold"
-              >
-                Review Risks
-              </Link>
-            </div>
-          </div>
-          <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] pointer-events-none" style={{ borderRadius: "50%" }} />
-        </div>
-
-        <div
-          className="bg-surface-container-low p-8 flex flex-col justify-center"
-          style={{ borderRadius: "2rem" }}
-        >
-          <h3 className="text-headline-sm text-primary mb-4">
-            Protected Zones
-          </h3>
-          <ul className="space-y-4">
-            <ZoneLine
-              label="Financial Redundancy"
-              safe={assets.length > 0}
-              href="/vault?section=financial"
-            />
-            <ZoneLine
-              label="Trusted Node Mesh"
-              safe={contacts.length > 0}
-              href="/trusted-contacts"
-            />
-            <ZoneLine
-              label="Real Estate Chain"
-              safe={assets.length > 1}
-              href="/vault?section=financial"
-            />
-            <ZoneLine
-              label={missingDirectives ? "Healthcare Directive Gap" : "Healthcare Directives"}
-              safe={!missingDirectives}
-              href="/vault?section=documents"
-            />
-          </ul>
-        </div>
-      </section>
-
-      {/* Secondary Bento */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <BentoItem
-          iconPath={ICON_PATHS.history}
-          title="Map Activity"
-          href="/life-check"
-          hint={
-            lifeCheck?.lastCheckAt
-              ? `Last verified ${formatTimeAgo(lifeCheck.lastCheckAt)}.`
-              : "No recent verification yet."
-          }
-        />
-        <BentoItem
-          iconPath={ICON_PATHS.cloudSync}
-          title="Vault Sync"
-          href="/vault"
-          hint={`${items.length} item${items.length === 1 ? "" : "s"} mirrored to secure nodes.`}
-        />
-        <BentoItem
-          iconPath={ICON_PATHS.lockReset}
-          title="Key Health"
-          href="/settings/security"
-          hint="Physical keys and backup shards are in optimal storage locations."
-        />
-        <BentoItem
-          iconPath={ICON_PATHS.shareReviews}
-          title="Trustee Access"
-          href="/trusted-contacts"
-          hint={`${verifiedTrustees} of ${contacts.length || 5} Trustees completed life-drill onboarding.`}
-        />
-      </section>
-
       {/* Priority Actions + Recent Activity (50/50 desktop) */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Priority Actions */}
-        <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+        <div
+          id="priority-actions"
+          className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm scroll-mt-24"
+        >
           <h4 className="text-label-md text-on-surface-variant mb-6">
             Priority Actions
           </h4>
-          {hubData.priorityActions.length === 0 ? (
-            <div className="text-center py-6">
-              <Icon
-                path={ICON_PATHS.checkCircle}
-                className="w-8 h-8 text-secondary mx-auto mb-3"
-              />
-              <p className="text-sm text-on-surface-variant">
-                You&rsquo;re all caught up. No urgent actions.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {hubData.priorityActions.map((action) => (
-                <Link
-                  key={action.key}
-                  href={action.href}
-                  className="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
+          <div className="space-y-2">
+            {hubData.priorityActions.map((action) => (
+              <Link
+                key={action.key}
+                href={action.href}
+                className={cn(
+                  "flex items-center justify-between p-4 transition-colors rounded-xl group cursor-pointer",
+                  action.done
+                    ? "bg-surface-container-low/50 hover:bg-surface-container-low"
+                    : "bg-surface-container-low hover:bg-surface-container"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex items-center gap-3 font-headline font-bold text-sm",
+                    action.done
+                      ? "text-on-surface-variant line-through decoration-on-surface-variant/40"
+                      : "text-primary"
+                  )}
                 >
-                  <span className="flex items-center gap-3 font-headline font-bold text-sm text-primary">
-                    <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm">
-                      <Icon
-                        path={ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item}
-                        className="w-4 h-4 text-primary"
-                      />
-                    </span>
-                    {action.label}
+                  <span
+                    className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center shadow-sm",
+                      action.done
+                        ? "bg-secondary-container/30"
+                        : "bg-surface-container-lowest"
+                    )}
+                  >
+                    <Icon
+                      path={
+                        action.done
+                          ? ICON_PATHS.checkCircle
+                          : ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item
+                      }
+                      className={cn(
+                        "w-4 h-4",
+                        action.done ? "text-secondary" : "text-primary"
+                      )}
+                    />
                   </span>
-                  <Icon
-                    path={ICON_PATHS.chevronRight}
-                    className="w-5 h-5 text-outline-variant group-hover:translate-x-1 transition-transform"
-                  />
-                </Link>
-              ))}
-            </div>
-          )}
+                  {action.label}
+                </span>
+                <Icon
+                  path={ICON_PATHS.chevronRight}
+                  className={cn(
+                    "w-5 h-5 transition-transform",
+                    action.done
+                      ? "text-outline-variant/40"
+                      : "text-outline-variant group-hover:translate-x-1"
+                  )}
+                />
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Recent Activity */}
@@ -533,20 +426,20 @@ export function HubContent() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-2">
               {hubData.recentItems.map((item) => {
                 const cat = getCategoryConfig(item.category);
                 return (
                   <Link
                     key={item._id}
                     href={`/vault/${item._id}`}
-                    className="flex items-center gap-4 group cursor-pointer"
+                    className="flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center shrink-0">
+                    <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm shrink-0">
                       <Icon path={cat.icon} className="w-4 h-4 text-secondary" />
-                    </div>
+                    </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-primary truncate">
+                      <p className="text-sm font-headline font-bold text-primary truncate">
                         {item.title}
                       </p>
                       <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
@@ -555,7 +448,7 @@ export function HubContent() {
                     </div>
                     <Icon
                       path={ICON_PATHS.chevronRight}
-                      className="w-4 h-4 text-outline-variant group-hover:text-secondary transition-colors"
+                      className="w-5 h-5 text-outline-variant group-hover:translate-x-1 transition-transform"
                     />
                   </Link>
                 );
@@ -613,99 +506,51 @@ function NodeCard({
   );
 }
 
-function AssetLine({ label, present }: { label: string; present: boolean }) {
-  return (
-    <div className="flex justify-between items-center text-body-md">
-      <span className="text-on-surface-variant">{label}</span>
-      <Icon
-        path={ICON_PATHS.checkCircle}
-        className={cn(
-          "w-3.5 h-3.5",
-          present ? "text-secondary" : "text-outline-variant/40"
-        )}
-      />
-    </div>
-  );
-}
-
-function DocThumbnail({ icon, label }: { icon: string; label: string }) {
-  return (
-    <div className="bg-surface-container p-2 rounded-lg flex flex-col items-center justify-center aspect-square text-center">
-      <Icon path={icon} className="w-5 h-5 text-on-surface-variant" />
-      <span className="text-label-md mt-1 text-on-surface-variant">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function ZoneLine({
+function ContinuityScoreBadge({
+  score,
   label,
-  safe,
-  href,
 }: {
+  score: number;
   label: string;
-  safe: boolean;
-  href?: string;
 }) {
-  const content = (
-    <>
-      <span
-        className={cn("w-2 h-2", safe ? "bg-secondary" : "bg-error animate-pulse")}
-        style={{ borderRadius: "50%" }}
-      />
-      <span
-        className={cn(
-          "text-body-md",
-          safe ? "font-medium text-on-surface" : "font-bold text-error"
-        )}
-      >
-        {label}
-      </span>
-    </>
-  );
-
-  if (href) {
-    return (
-      <li>
-        <Link
-          href={href}
-          className="flex items-center gap-3 -mx-2 px-2 py-1 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
-        >
-          {content}
-        </Link>
-      </li>
-    );
-  }
-
-  return <li className="flex items-center gap-3">{content}</li>;
-}
-
-function BentoItem({
-  iconPath,
-  title,
-  hint,
-  href,
-}: {
-  iconPath: string;
-  title: string;
-  hint: string;
-  href: string;
-}) {
+  const circumference = 2 * Math.PI * 20;
+  const scoreOffset = circumference - (circumference * score) / 100;
   return (
-    <Link
-      href={href}
-      className="bg-surface-container-lowest p-6 shadow-sm hover:shadow-md hover:bg-surface-container transition-all flex flex-col justify-between cursor-pointer group"
-      style={{ borderRadius: "1.5rem" }}
-    >
-      <div>
-        <Icon
-          path={iconPath}
-          className="w-6 h-6 text-secondary-fixed-dim mb-3 group-hover:text-secondary transition-colors"
-        />
-        <h4 className="text-headline-sm text-primary">{title}</h4>
+    <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-full px-6">
+      <div className="relative w-12 h-12 flex items-center justify-center">
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
+          <circle
+            className="text-surface-container-high"
+            cx="24"
+            cy="24"
+            fill="none"
+            r="20"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <circle
+            className="text-secondary transition-all duration-700"
+            cx="24"
+            cy="24"
+            fill="none"
+            r="20"
+            stroke="currentColor"
+            strokeDasharray={circumference}
+            strokeDashoffset={scoreOffset}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className="font-headline font-bold text-primary text-body-md">
+          {score}%
+        </span>
       </div>
-      <p className="text-body-md text-on-surface-variant mt-4">{hint}</p>
-    </Link>
+      <div>
+        <p className="text-label-md text-on-surface-variant">
+          Continuity Score
+        </p>
+        <p className="text-body-md font-bold text-primary">{label}</p>
+      </div>
+    </div>
   );
 }
