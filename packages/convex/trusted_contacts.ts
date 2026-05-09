@@ -10,7 +10,7 @@ const MAX_TRUST_CONTACTS = 5;
 
 const contactTypeValidator = v.union(
   v.literal("trust"),
-  v.literal("recipient_only")
+  v.literal("recipient_only"),
 );
 
 /**
@@ -66,8 +66,7 @@ export const getContactCount = query({
 export const inviteContact = auditedMutation({
   action: "trusted_contact.invited",
   resourceType: "trusted_contact",
-  getResourceId: (_args, result) =>
-    (result as { contactId: string }).contactId,
+  getResourceId: (_args, result) => (result as { contactId: string }).contactId,
   getMetadata: (args) => ({
     email: args.email,
     role: args.role,
@@ -82,7 +81,7 @@ export const inviteContact = auditedMutation({
       v.literal("friend"),
       v.literal("lawyer"),
       v.literal("doctor"),
-      v.literal("other")
+      v.literal("other"),
     ),
     contactType: v.optional(contactTypeValidator),
     introMessage: v.optional(v.string()),
@@ -100,7 +99,7 @@ export const inviteContact = auditedMutation({
 
     if (contactType === "trust") {
       const trustCount = existing.filter(
-        (c) => (c.contactType ?? "trust") === "trust"
+        (c) => (c.contactType ?? "trust") === "trust",
       ).length;
       if (trustCount >= MAX_TRUST_CONTACTS) {
         throw new Error("Maximum of 5 trusted contacts reached");
@@ -108,7 +107,7 @@ export const inviteContact = auditedMutation({
     }
 
     const duplicate = existing.find(
-      (c) => c.email.toLowerCase() === args.email.toLowerCase()
+      (c) => c.email.toLowerCase() === args.email.toLowerCase(),
     );
     if (duplicate) {
       throw new Error("A contact with this email already exists");
@@ -143,7 +142,7 @@ export const inviteContact = auditedMutation({
         existing
           .filter((c) => (c.contactType ?? "trust") === "trust")
           .map((c) => c.shardIndex)
-          .filter((i): i is number => typeof i === "number")
+          .filter((i): i is number => typeof i === "number"),
       );
       let shardIndex = 2;
       while (usedIndices.has(shardIndex) && shardIndex <= 4) {
@@ -178,12 +177,13 @@ export const inviteContact = auditedMutation({
     // Recipient-only contacts only get one when the inviter opted into the
     // courtesy intro (introMessage carries that intent).
     const shouldEmail =
-      contactType === "trust" || (contactType === "recipient_only" && !!introMessage);
+      contactType === "trust" ||
+      (contactType === "recipient_only" && !!introMessage);
     if (shouldEmail) {
       await ctx.scheduler.runAfter(
         0,
         internal.trusted_contacts.sendInvitationEmail,
-        { contactId }
+        { contactId },
       );
     }
 
@@ -200,7 +200,7 @@ export const getInvitationByToken = query({
     const contact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token)
+        q.eq("invitationToken", args.token),
       )
       .first();
 
@@ -223,7 +223,7 @@ export const getInvitationByToken = query({
 });
 
 function resolveInviterName(
-  inviter: { name?: string; email?: string } | null
+  inviter: { name?: string; email?: string } | null,
 ): string {
   const name = inviter?.name?.trim();
   if (name) return name;
@@ -247,7 +247,7 @@ export const acceptInvitation = auditedMutation({
     const contact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token)
+        q.eq("invitationToken", args.token),
       )
       .first();
     if (!contact) throw new Error("Invalid invitation token");
@@ -265,7 +265,7 @@ export const acceptInvitation = auditedMutation({
     const contact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token)
+        q.eq("invitationToken", args.token),
       )
       .first();
 
@@ -320,7 +320,7 @@ export const declineInvitation = auditedMutation({
     const contact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token)
+        q.eq("invitationToken", args.token),
       )
       .first();
     if (!contact) throw new Error("Invalid invitation token");
@@ -338,7 +338,7 @@ export const declineInvitation = auditedMutation({
     const contact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_invitation_token", (q) =>
-        q.eq("invitationToken", args.token)
+        q.eq("invitationToken", args.token),
       )
       .first();
 
@@ -578,7 +578,7 @@ export const resendInvitation = auditedMutation({
     await ctx.scheduler.runAfter(
       0,
       internal.trusted_contacts.sendInvitationEmail,
-      { contactId: args.contactId }
+      { contactId: args.contactId },
     );
 
     return { invitationToken };
@@ -624,7 +624,7 @@ export const getDistributionTargets = query({
       .filter(
         (c) =>
           typeof c.shardIndex === "number" &&
-          typeof c.contactPublicKey === "string"
+          typeof c.contactPublicKey === "string",
       )
       .map((c) => ({
         contactId: c._id,
@@ -729,7 +729,7 @@ export const sendInvitationEmail = internalAction({
 
     const data = await ctx.runQuery(
       internal.trusted_contacts.getInvitationEmailContext,
-      { contactId: args.contactId }
+      { contactId: args.contactId },
     );
     if (!data) return "contact_not_found";
     if (data.invitationStatus !== "pending") return "not_pending";
@@ -847,6 +847,6 @@ function escapeHtml(s: string) {
           ? "&gt;"
           : c === '"'
             ? "&quot;"
-            : "&#39;"
+            : "&#39;",
   );
 }

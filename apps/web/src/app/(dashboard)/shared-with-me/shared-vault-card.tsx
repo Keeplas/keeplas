@@ -50,6 +50,11 @@ function formatRelative(ts: number): string {
   return `${year}y ago`;
 }
 
+function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
+  if (!gracePeriodEndsAt) return false;
+  return Date.now() > gracePeriodEndsAt;
+}
+
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const { verify, status, error } = useVerifyShard();
   const markUnreachable = useAuditedMutation(
@@ -86,10 +91,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
 
   // Recovery section is surfaced once the unreachability quorum has been
   // reached AND the 72h grace window has expired without cancellation.
-  const now = Date.now();
-  const graceExpired =
-    !!activeRequest?.gracePeriodEndsAt &&
-    now > activeRequest.gracePeriodEndsAt;
+  const graceExpired = isGraceExpired(activeRequest?.gracePeriodEndsAt);
   const showRecovery =
     !isRecipientOnly &&
     isAccepted &&

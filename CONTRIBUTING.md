@@ -21,14 +21,17 @@ The project ships a `docker-compose.yml` that pins Node 22 and pnpm 10.8.1, so y
    This symlinks `apps/web/.env.local` and `packages/convex/.env.local` to the root `.env.local`. From now on you only edit the root file.
 5. Push your secrets to your Convex deployment:
    `docker compose run --rm app pnpm sync:convex-env`
-6. Start the stack:
+   This reads from both `.env.local` and `.env.convex.local` (backend-only vars).
+6. Start the stack (`predev` runs `check:env` and `check:convex-env` automatically):
    `docker compose up`
 7. Open http://localhost:3000
 
 **Useful commands**
+
 - `docker compose exec app pnpm test` — run tests
 - `docker compose exec app pnpm lint && docker compose exec app pnpm typecheck` — lint & types
 - `docker compose exec app pnpm check:env` — validate `.env.local` is complete
+- `docker compose exec app pnpm check:convex-env` — validate the Convex deployment has every required server-side var
 - `docker compose down -v` — full reset (drops the `node_modules` volumes — next `up` re-installs)
 
 ## Getting Started (native, fallback)
@@ -40,8 +43,8 @@ If you prefer to run on the host without Docker:
 3. `cp .env.example .env.local` and set `KEEPLAS_CTX_SECRET` (`openssl rand -base64 32`).
 4. `npx convex dev --once --configure=new` — provisions your Convex deployment.
 5. `pnpm link:env` — symlinks `apps/web/.env.local` and `packages/convex/.env.local` to the root `.env.local` (single source of truth).
-6. `pnpm sync:convex-env` — pushes secrets to Convex.
-7. `pnpm dev`
+6. `pnpm sync:convex-env` — pushes secrets to Convex (reads from `.env.local` + `.env.convex.local`).
+7. `pnpm dev` — `predev` runs `check:env` and `check:convex-env` first, failing fast if anything is missing on either side.
 
 ## Development Workflow
 

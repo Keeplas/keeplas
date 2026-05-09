@@ -38,7 +38,7 @@ async function persistChallenge(
   challenge: string,
   kind: "registration" | "authentication",
   userId: Id<"users"> | undefined,
-  email: string | undefined
+  email: string | undefined,
 ) {
   await ctx.db.insert("webauthn_challenges", {
     challenge,
@@ -52,7 +52,7 @@ async function persistChallenge(
 async function consumeChallenge(
   ctx: MutationCtx,
   challenge: string,
-  kind: "registration" | "authentication"
+  kind: "registration" | "authentication",
 ): Promise<Doc<"webauthn_challenges">> {
   const row = await ctx.db
     .query("webauthn_challenges")
@@ -103,7 +103,7 @@ export const startRegistration = mutation({
       options.challenge,
       "registration",
       userId,
-      user.email
+      user.email,
     );
     return options;
   },
@@ -172,7 +172,10 @@ export const finishRegistration = mutation({
 export const startAuthentication = mutation({
   args: { email: v.optional(v.string()) },
   handler: async (ctx, { email }) => {
-    let allowCredentials: { id: string; transports?: AuthenticatorTransportFuture[] }[] = [];
+    let allowCredentials: {
+      id: string;
+      transports?: AuthenticatorTransportFuture[];
+    }[] = [];
     let resolvedUserId: Id<"users"> | undefined;
     const trimmed = email?.trim().toLowerCase();
 
@@ -189,7 +192,9 @@ export const startAuthentication = mutation({
           .collect();
         allowCredentials = credentials.map((c) => ({
           id: c.credentialId,
-          transports: c.transports as AuthenticatorTransportFuture[] | undefined,
+          transports: c.transports as
+            | AuthenticatorTransportFuture[]
+            | undefined,
         }));
       }
     }
@@ -197,7 +202,8 @@ export const startAuthentication = mutation({
     const options = await generateAuthenticationOptions({
       rpID: getRpId(),
       userVerification: "preferred",
-      allowCredentials: allowCredentials.length > 0 ? allowCredentials : undefined,
+      allowCredentials:
+        allowCredentials.length > 0 ? allowCredentials : undefined,
     });
 
     await persistChallenge(
@@ -205,7 +211,7 @@ export const startAuthentication = mutation({
       options.challenge,
       "authentication",
       resolvedUserId,
-      trimmed
+      trimmed,
     );
     return options;
   },
@@ -247,19 +253,19 @@ export async function verifyAssertionAndGetUserId(
     runMutation: <T>(name: any, args: any) => Promise<T>;
     runQuery: <T>(name: any, args: any) => Promise<T>;
   },
-  response: any
+  response: any,
 ): Promise<Id<"users">> {
   const challenge = extractChallenge(response?.response?.clientDataJSON);
   if (!challenge) throw new Error("Missing challenge in response");
 
   const stored = await ctx.runMutation<Doc<"webauthn_challenges">>(
     internal.webauthn.consumeAuthenticationChallenge,
-    { challenge }
+    { challenge },
   );
 
   const credential = await ctx.runQuery<Doc<"passkey_credentials"> | null>(
     internal.webauthn.findCredentialById,
-    { credentialId: response.id }
+    { credentialId: response.id },
   );
   if (!credential) throw new Error("Unknown passkey");
 
@@ -274,7 +280,9 @@ export async function verifyAssertionAndGetUserId(
     expectedRPID: getRpId(),
     credential: {
       id: credential.credentialId,
-      publicKey: base64UrlToBuf(credential.publicKey) as Uint8Array<ArrayBuffer>,
+      publicKey: base64UrlToBuf(
+        credential.publicKey,
+      ) as Uint8Array<ArrayBuffer>,
       counter: credential.counter,
       transports: credential.transports as
         | AuthenticatorTransportFuture[]
@@ -344,11 +352,13 @@ export const removeCredential = mutation({
   },
 });
 
-function extractChallenge(clientDataJSON: string | undefined): string | undefined {
+function extractChallenge(
+  clientDataJSON: string | undefined,
+): string | undefined {
   if (!clientDataJSON) return undefined;
   try {
     const json = JSON.parse(
-      new TextDecoder().decode(base64UrlToBuf(clientDataJSON))
+      new TextDecoder().decode(base64UrlToBuf(clientDataJSON)),
     ) as { challenge?: string };
     return json.challenge;
   } catch {
@@ -363,7 +373,8 @@ function bufToBase64Url(buf: Uint8Array): string {
 }
 
 function base64UrlToBuf(s: string): Uint8Array {
-  const padded = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
+  const padded =
+    s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
   const bin = atob(padded);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);

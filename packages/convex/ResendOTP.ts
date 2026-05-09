@@ -22,7 +22,7 @@ function escapeHtml(value: string): string {
           ? "&gt;"
           : c === '"'
             ? "&quot;"
-            : "&#39;"
+            : "&#39;",
   );
 }
 

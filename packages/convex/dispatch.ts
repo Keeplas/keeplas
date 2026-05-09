@@ -11,7 +11,7 @@ const CHANNEL_TYPE = v.union(
   v.literal("email"),
   v.literal("whatsapp"),
   v.literal("sms"),
-  v.literal("ivr_call")
+  v.literal("ivr_call"),
 );
 
 interface DispatchContext {
@@ -34,7 +34,7 @@ export const sendChannel = internalAction({
   handler: async (ctx, args) => {
     const dispatch: DispatchContext | null = await ctx.runQuery(
       internal.life_check.getDispatchContext,
-      { cycleId: args.cycleId }
+      { cycleId: args.cycleId },
     );
     if (!dispatch) return;
 
@@ -87,7 +87,7 @@ async function sendPush({
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT ?? "mailto:noreply@keeplas.com",
     vapidPublic,
-    vapidPrivate
+    vapidPrivate,
   );
 
   const payload = JSON.stringify({
@@ -104,7 +104,7 @@ async function sendPush({
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
-        payload
+        payload,
       );
       delivered++;
     } catch {
@@ -171,7 +171,7 @@ async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
           language: { code: lang },
         },
       }),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -197,7 +197,7 @@ export const sendWhatsAppOtp = internalAction({
     const token = process.env.WHATSAPP_TOKEN;
     if (!phoneId || !token) {
       console.warn(
-        `[whatsapp_otp] credentials missing; OTP for ${args.phoneNumber} = ${args.code}`
+        `[whatsapp_otp] credentials missing; OTP for ${args.phoneNumber} = ${args.code}`,
       );
       return "whatsapp_not_configured";
     }
@@ -228,7 +228,7 @@ export const sendWhatsAppOtp = internalAction({
             ],
           },
         }),
-      }
+      },
     );
 
     if (!res.ok) {
@@ -259,6 +259,6 @@ function escapeHtml(s: string) {
           ? "&gt;"
           : c === '"'
             ? "&quot;"
-            : "&#39;"
+            : "&#39;",
   );
 }

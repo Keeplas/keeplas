@@ -117,14 +117,21 @@ docker compose down -v                       # nuke node_modules + caches (named
 All required variables are documented in [`.env.example`](./.env.example). High-level groups:
 
 - **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`, `NODE_ENV`
-- **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`
+- **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`, `SITE_URL`
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
-- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; must be set in both web env and Convex env)
-- **Email — Resend (optional)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SUPPORT_INBOX_EMAIL` — Life Check email channel, OTP email auth, contact form
+- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex-env` enforces this)
+- **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Web Push — VAPID (optional)** — `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Life Check push channel
 - **WhatsApp Cloud API (optional)** — `WHATSAPP_*` — Life Check WhatsApp channel and WhatsApp OTP verification
 
-Generate the audit secret with `openssl rand -base64 32`. Push web-side secrets to Convex with `pnpm sync:convex-env`. Validate your local env at any time with `pnpm check:env`.
+Two env files cover the split:
+
+- `.env.local` — loaded by Next.js at runtime (web-side keys + shared secrets)
+- `.env.convex.local` — backend-only values that should NOT be loaded into the Next.js process (e.g. `SITE_URL`)
+
+Both are read by `pnpm sync:convex-env` and pushed to the Convex deployment.
+
+Generate the audit secret with `openssl rand -base64 32`. Validate the web env with `pnpm check:env` and the Convex deployment with `pnpm check:convex-env` — both run automatically before `pnpm dev` and `pnpm build`.
 
 ## Pricing
 
@@ -139,18 +146,19 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 ## Scripts
 
-| Command                | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `pnpm dev`             | Run all dev servers (Next.js, Convex) via Turborepo                     |
-| `pnpm build`           | Production build for every workspace                                    |
-| `pnpm lint`            | ESLint across the monorepo                                              |
-| `pnpm typecheck`       | TypeScript `--noEmit` across all packages                               |
-| `pnpm test`            | Run test suites (Vitest in `packages/crypto/`)                          |
-| `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                    |
-| `pnpm clean`           | Remove build artifacts (`dist`, `.next`, `.turbo`)                      |
-| `pnpm check:env`       | Validate that all required env vars are set (runs before `dev`/`build`) |
-| `pnpm sync:convex-env` | Push web-side secrets to the Convex deployment                          |
-| `pnpm link:env`        | Symlink `.env` files across workspaces                                  |
+| Command                 | Description                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `pnpm dev`              | Run all dev servers (Next.js, Convex) via Turborepo                                     |
+| `pnpm build`            | Production build for every workspace                                                    |
+| `pnpm lint`             | ESLint across the monorepo                                                              |
+| `pnpm typecheck`        | TypeScript `--noEmit` across all packages                                               |
+| `pnpm test`             | Run test suites (Vitest in `packages/crypto/`)                                          |
+| `pnpm format`           | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                    |
+| `pnpm clean`            | Remove build artifacts (`dist`, `.next`, `.turbo`)                                      |
+| `pnpm check:env`        | Validate that the web env (`.env.local`) is complete (runs before `dev`/`build`)        |
+| `pnpm check:convex-env` | Validate that the Convex deployment has every required server-side var (runs in predev) |
+| `pnpm sync:convex-env`  | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment           |
+| `pnpm link:env`         | Symlink `.env` files across workspaces                                                  |
 
 ## Security model
 

@@ -11,7 +11,7 @@ const TOPIC = v.union(
   v.literal("billing"),
   v.literal("recovery"),
   v.literal("feature_request"),
-  v.literal("other")
+  v.literal("other"),
 );
 
 const TOPIC_LABELS: Record<string, string> = {
@@ -161,6 +161,6 @@ function escapeHtml(s: string) {
           ? "&gt;"
           : c === '"'
             ? "&quot;"
-            : "&#39;"
+            : "&#39;",
   );
 }
