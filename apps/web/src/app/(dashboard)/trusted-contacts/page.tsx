@@ -30,27 +30,31 @@ const GUARDIAN_ROLES = [
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
     title: "Holds a recovery shard",
-    description: "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault.",
+    description:
+      "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault.",
   },
   {
     icon: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
     title: "Confirms you are unreachable",
-    description: "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window.",
+    description:
+      "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window.",
   },
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
     title: "Releases vault & recipients",
-    description: "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items.",
+    description:
+      "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items.",
   },
 ];
 
 export default function TrustedContactsPage() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
+  const me = useQuery(api.onboarding.getOnboardingState);
   useBackfillVerificationEnvelopes(contacts);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
-    "trust"
+    "trust",
   );
   const [showCreateGroup, setShowCreateGroup] = useState(false);
 
@@ -64,24 +68,44 @@ export default function TrustedContactsPage() {
   }
 
   const activeContacts = contacts.filter(
-    (c) => c.invitationStatus !== "revoked"
+    (c) => c.invitationStatus !== "revoked",
   );
   const trustContacts = activeContacts.filter(
-    (c) => (c.contactType ?? "trust") === "trust"
+    (c) => (c.contactType ?? "trust") === "trust",
   );
   const recipientContacts = activeContacts.filter(
-    (c) => c.contactType === "recipient_only"
+    (c) => c.contactType === "recipient_only",
   );
   const canInviteTrust = trustContacts.length < MAX_TRUST_CONTACTS;
   const acceptedTrustContacts = trustContacts.filter(
-    (c) => c.invitationStatus === "accepted"
+    (c) => c.invitationStatus === "accepted",
   );
-  const trustPct = Math.min(
+  const pendingTrustCount = trustContacts.filter(
+    (c) => c.invitationStatus === "pending",
+  ).length;
+  const shardsConfirmedCount = acceptedTrustContacts.filter(
+    (c) => c.shardConfirmed,
+  ).length;
+  const threshold = me?.vaultThreshold ?? 2;
+  const acceptedCount = acceptedTrustContacts.length;
+  const quorumPct = Math.min(
     100,
-    Math.round((trustContacts.length / MAX_TRUST_CONTACTS) * 100)
+    (Math.min(acceptedCount, threshold) / MAX_TRUST_CONTACTS) * 100,
   );
+  const bufferPct = Math.max(
+    0,
+    ((acceptedCount - threshold) / MAX_TRUST_CONTACTS) * 100,
+  );
+  const networkState: "unprotected" | "atRisk" | "quorumMet" | "resilient" =
+    acceptedCount === 0
+      ? "unprotected"
+      : acceptedCount < threshold
+        ? "atRisk"
+        : acceptedCount === threshold
+          ? "quorumMet"
+          : "resilient";
   const reachableContacts = activeContacts.filter(
-    (c) => c.invitationStatus === "accepted"
+    (c) => c.invitationStatus === "accepted",
   ).length;
 
   return (
@@ -144,8 +168,18 @@ export default function TrustedContactsPage() {
                   {GUARDIAN_ROLES.map((role) => (
                     <div key={role.title} className="flex gap-4">
                       <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center shrink-0">
-                        <svg className="w-5 h-5 text-secondary-fixed" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d={role.icon} />
+                        <svg
+                          className="w-5 h-5 text-secondary-fixed"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d={role.icon}
+                          />
                         </svg>
                       </div>
                       <div>
@@ -161,50 +195,86 @@ export default function TrustedContactsPage() {
                 </div>
               </section>
 
-              <section className="relative overflow-hidden rounded-2xl vault-gradient p-6 text-on-primary shadow-xl">
-                <h3 className="text-headline-sm mb-2">Secure Invitation</h3>
-                <p className="text-body-md opacity-80 mb-5">
-                  Each contact must verify their identity and accept their role via encrypted invitation.
-                </p>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => openInvite("trust")}
-                    className="w-full py-3 bg-secondary text-on-secondary font-bold text-body-md rounded-xl hover:bg-on-secondary-container transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-                    </svg>
-                    Add New Guardian
-                  </button>
-                  <button
-                    onClick={() => openInvite("recipient_only")}
-                    className="w-full py-3 bg-on-primary/10 hover:bg-on-primary/20 text-on-primary font-medium text-body-md rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-on-primary/20"
-                  >
-                    <Icon path={ICON_PATHS.userPlus} className="w-4 h-4" strokeWidth={2} />
-                    Add Recipient Only
-                  </button>
-                </div>
-              </section>
-
-              <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[150px] flex flex-col justify-end">
+              <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden">
                 <svg
                   className="absolute top-3 right-3 w-16 h-16 opacity-10 text-on-primary"
-                  fill="currentColor" viewBox="0 0 24 24"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Z" />
                 </svg>
-                <p className="text-headline-md font-black mb-1.5 text-on-primary">
-                  {trustContacts.length} / {MAX_TRUST_CONTACTS}
+
+                <p className="text-label-md uppercase tracking-wider text-on-primary-container/70 mb-2 inline-flex items-center gap-1.5">
+                  Recovery Network
+                  <HelpHint
+                    content={`Tracks whether your social recovery is operational. The big number is how many guardians have accepted out of the ${threshold} needed to unlock the vault (your quorum, set during onboarding). Below quorum, recovery is impossible. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer. Pending invites and shard distribution are shown so you know exactly what's left to do.`}
+                  />
                 </p>
-                <p className="text-label-md text-on-primary-container">
-                  Network Strength: {trustContacts.length >= 3 ? "Stable" : trustContacts.length >= 1 ? "Developing" : "Unprotected"}
+
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-[2.75rem] font-bold leading-none text-on-primary">
+                    {acceptedCount}
+                  </span>
+                  <span className="text-headline-sm text-on-primary-container/70">
+                    / {threshold}
+                  </span>
+                  <span className="text-label-md text-on-primary-container/60 ml-1">
+                    quorum
+                  </span>
+                </div>
+
+                <p className="text-label-md font-bold text-on-primary mb-4">
+                  {networkState === "unprotected" &&
+                    "Unprotected — invite your first guardian"}
+                  {networkState === "atRisk" &&
+                    `At risk — ${threshold - acceptedCount} more to reach quorum`}
+                  {networkState === "quorumMet" &&
+                    "Quorum met — add more for redundancy"}
+                  {networkState === "resilient" &&
+                    `Resilient — ${acceptedCount - threshold} guardian${
+                      acceptedCount - threshold === 1 ? "" : "s"
+                    } of buffer`}
                 </p>
-                <div className="mt-3 h-1.5 w-full bg-primary rounded-full overflow-hidden">
+
+                <div className="h-1.5 w-full bg-primary rounded-full overflow-hidden flex mb-4">
                   <div
-                    className="h-full bg-secondary-fixed rounded-full transition-all"
-                    style={{ width: `${trustPct}%` }}
+                    className="h-full bg-secondary-fixed transition-all"
+                    style={{ width: `${quorumPct}%` }}
+                  />
+                  <div
+                    className="h-full bg-secondary-fixed/30 transition-all"
+                    style={{ width: `${bufferPct}%` }}
                   />
                 </div>
+
+                <ul className="space-y-1 text-label-md text-on-primary-container/80">
+                  <li className="flex justify-between">
+                    <span>Accepted</span>
+                    <span className="font-bold text-on-primary">
+                      {acceptedCount}
+                    </span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Pending invites</span>
+                    <span className="font-bold text-on-primary">
+                      {pendingTrustCount}
+                    </span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Shards distributed</span>
+                    <span className="font-bold text-on-primary">
+                      {shardsConfirmedCount} / {acceptedCount}
+                    </span>
+                  </li>
+                  <li className="flex justify-between pt-1 border-t border-on-primary/10 mt-1">
+                    <span className="text-on-primary-container/60">
+                      Max guardians
+                    </span>
+                    <span className="text-on-primary-container/60">
+                      {MAX_TRUST_CONTACTS}
+                    </span>
+                  </li>
+                </ul>
               </section>
             </aside>
 
@@ -212,9 +282,10 @@ export default function TrustedContactsPage() {
               {acceptedTrustContacts.length === 1 && (
                 <div className="p-4 bg-error-container/30 rounded-xl border-l-4 border-error">
                   <p className="text-body-md text-on-surface font-medium">
-                    Post-mortem access requires at least 2 trust contacts to confirm
-                    you are unreachable. Only {acceptedTrustContacts[0].name} is
-                    accepted so far — invite at least one more.
+                    Post-mortem access requires at least 2 trust contacts to
+                    confirm you are unreachable. Only{" "}
+                    {acceptedTrustContacts[0].name} is accepted so far — invite
+                    at least one more.
                   </p>
                 </div>
               )}
@@ -222,19 +293,31 @@ export default function TrustedContactsPage() {
               <DistributeShardsSection />
 
               {activeContacts.length === 0 ? (
-                <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                <div
+                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                   onClick={() => openInvite("trust")}
                 >
                   <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg className="w-8 h-8 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    <svg
+                      className="w-8 h-8 text-secondary"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
                     </svg>
                   </div>
                   <h3 className="text-headline-sm text-primary">
                     Invite Your First Guardian
                   </h3>
                   <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    Up to {MAX_TRUST_CONTACTS} trusted guardians can receive recovery fragments. Recipient-only contacts have no cap.
+                    Up to {MAX_TRUST_CONTACTS} trusted guardians can receive
+                    recovery fragments. Recipient-only contacts have no cap.
                   </p>
                 </div>
               ) : (
@@ -259,22 +342,34 @@ export default function TrustedContactsPage() {
                           className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
                           <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            <svg
+                              className="w-6 h-6 text-secondary"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 4.5v15m7.5-7.5h-15"
+                              />
                             </svg>
                           </div>
                           <p className="text-headline-sm text-primary">
                             Invite Next Trust Contact
                           </p>
                           <p className="text-label-md text-on-surface-variant mt-1">
-                            {MAX_TRUST_CONTACTS - trustContacts.length} slots remaining
+                            {MAX_TRUST_CONTACTS - trustContacts.length} slots
+                            remaining
                           </p>
                         </button>
                       )}
                     </div>
                   </section>
 
-                  {(recipientContacts.length > 0 || trustContacts.length >= MAX_TRUST_CONTACTS) && (
+                  {(recipientContacts.length > 0 ||
+                    trustContacts.length >= MAX_TRUST_CONTACTS) && (
                     <section>
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
@@ -294,7 +389,8 @@ export default function TrustedContactsPage() {
                             Add a Recipient
                           </p>
                           <p className="text-label-md text-on-surface-variant mt-1 text-center max-w-md">
-                            People who only receive items at trigger — no recovery role, no shard, no cap.
+                            People who only receive items at trigger — no
+                            recovery role, no shard, no cap.
                           </p>
                         </button>
                       ) : (
@@ -307,8 +403,18 @@ export default function TrustedContactsPage() {
                             className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                           >
                             <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                              <svg className="w-6 h-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                              <svg
+                                className="w-6 h-6 text-secondary"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={1.5}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 4.5v15m7.5-7.5h-15"
+                                />
                               </svg>
                             </div>
                             <p className="text-headline-sm text-primary">
@@ -352,7 +458,9 @@ export default function TrustedContactsPage() {
                     <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       2
                     </span>
-                    <span>Add trust contacts and recipient-only people to groups</span>
+                    <span>
+                      Add trust contacts and recipient-only people to groups
+                    </span>
                   </li>
                   <li className="flex gap-3">
                     <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
@@ -361,23 +469,6 @@ export default function TrustedContactsPage() {
                     <span>Pick groups when sealing items in the vault</span>
                   </li>
                 </ul>
-              </section>
-
-              <section className="relative overflow-hidden rounded-2xl vault-gradient p-6 text-on-primary shadow-xl">
-                <h3 className="text-headline-sm mb-2">New release group</h3>
-                <p className="text-body-md opacity-80 mb-5">
-                  Group recipients by purpose. Assign a default group so most items
-                  flow there automatically.
-                </p>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => setShowCreateGroup(true)}
-                  className="w-full gap-2 cursor-pointer"
-                >
-                  <Icon path={ICON_PATHS.plus} className="w-4 h-4" strokeWidth={2} />
-                  Create Group
-                </Button>
               </section>
 
               <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden min-h-[150px] flex flex-col justify-end">
@@ -415,8 +506,8 @@ export default function TrustedContactsPage() {
                     No groups yet
                   </h3>
                   <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    Create your first group to start routing vault items to specific
-                    recipients at trigger time.
+                    Create your first group to start routing vault items to
+                    specific recipients at trigger time.
                   </p>
                 </div>
               ) : (
@@ -439,9 +530,7 @@ export default function TrustedContactsPage() {
                         strokeWidth={1.5}
                       />
                     </div>
-                    <p className="text-headline-sm text-primary">
-                      New Group
-                    </p>
+                    <p className="text-headline-sm text-primary">New Group</p>
                     <p className="text-label-md text-on-surface-variant mt-1">
                       Add another release context
                     </p>
