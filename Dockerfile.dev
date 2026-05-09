@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1.7
+# Development image for the Keeplas monorepo.
+# Pinned to match CI (Node 22) and the repo's packageManager field (pnpm 10.8.1).
+# Source code and node_modules live in volumes mounted by docker-compose,
+# so this image stays small and rarely needs rebuilding.
+
+FROM node:22-bookworm-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+       git \
+       ca-certificates \
+       openssl \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN corepack enable \
+  && corepack prepare pnpm@10.8.1 --activate
+
+WORKDIR /app
+
+EXPOSE 3000
+
+CMD ["pnpm", "dev"]

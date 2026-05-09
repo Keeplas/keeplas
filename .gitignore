@@ -13,6 +13,7 @@ out/
 .env.local
 .env.production
 .env.*.local
+.env.local.backup-*
 
 # IDE
 .vscode/

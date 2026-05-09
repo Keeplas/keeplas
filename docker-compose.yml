@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    # `.env` is loaded directly by Next.js, Convex CLI, and our scripts (via --env-file).
+    # No env_file: directive here so `docker compose config` doesn't fail before the
+    # contributor has created their .env from .env.example.
+    tty: true
+    stdin_open: true
+    working_dir: /app
+    volumes:
+      - .:/app
+      - keeplas_node_modules:/app/node_modules
+      - keeplas_web_node_modules:/app/apps/web/node_modules
+      - keeplas_convex_node_modules:/app/packages/convex/node_modules
+      - keeplas_ui_node_modules:/app/packages/ui/node_modules
+      - keeplas_crypto_node_modules:/app/packages/crypto/node_modules
+      - keeplas_next:/app/apps/web/.next
+      - keeplas_turbo:/app/.turbo
+      - keeplas_convex_state:/app/.convex
+      - keeplas_convex_auth:/root/.convex
+    command: sh -c "pnpm install --frozen-lockfile && pnpm dev"
+
+volumes:
+  keeplas_node_modules:
+  keeplas_web_node_modules:
+  keeplas_convex_node_modules:
+  keeplas_ui_node_modules:
+  keeplas_crypto_node_modules:
+  keeplas_next:
+  keeplas_turbo:
+  keeplas_convex_state:
+  keeplas_convex_auth:

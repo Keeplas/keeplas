@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build artifacts
+.next
+**/.next
+.turbo
+**/.turbo
+dist
+**/dist
+coverage
+**/coverage
+
+# Convex local state
+.convex
+**/.convex
+
+# VCS
+.git
+.gitignore
+
+# Local env (never bake secrets into image)
+.env
+.env.local
+.env.*.local
+
+# IDE / tooling
+.vscode
+.idea
+.cursor
+.claude
+
+# Non-runtime docs / assets
+PRD
+security
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
