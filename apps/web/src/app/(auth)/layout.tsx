@@ -21,7 +21,7 @@ export default function AuthLayout({
       const target =
         redirect && redirect.startsWith("/") && !redirect.startsWith("//")
           ? redirect
-          : "/dashboard";
+          : "/hub";
       router.push(target);
     }
   }, [isAuthenticated, isLoading, router, searchParams]);

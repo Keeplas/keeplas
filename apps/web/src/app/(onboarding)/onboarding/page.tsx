@@ -15,9 +15,9 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (onboardingState === undefined || onboardingState === null) return;
 
-    // If onboarding is complete, redirect to dashboard
+    // If onboarding is complete, redirect to hub
     if (onboardingState.onboardingStep === "complete") {
-      router.push("/dashboard");
+      router.push("/hub");
       return;
     }
 

@@ -94,7 +94,7 @@ export default function TrustedContactsDocPage() {
           <Step
             value="03"
             title="Confirms unreachability (if needed)"
-            body="If your Life Check escalates and you stop responding, all your trust contacts are notified. Each can mark you as unreachable from their dashboard. Once the threshold is reached, a 72-hour grace window opens — during which you can still cancel by signing in."
+            body="If your Life Check escalates and you stop responding, all your trust contacts are notified. Each can mark you as unreachable from their hub. Once the threshold is reached, a 72-hour grace window opens — during which you can still cancel by signing in."
           />
           <Step
             value="04"

@@ -166,7 +166,7 @@ export function InviteContactDialog({
           <div className="space-y-2">
             <Label htmlFor="contact-role" className="flex items-center gap-1.5">
               Role
-              <HelpHint content="Their relationship to you. Used by Keeplas to surface the right contact in scenarios (medical, legal, family) and on dashboards." />
+              <HelpHint content="Their relationship to you. Used by Keeplas to surface the right contact in scenarios (medical, legal, family) and on hubs." />
             </Label>
             <Select<Role>
               id="contact-role"

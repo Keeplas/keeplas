@@ -160,7 +160,7 @@ export default function RecoveryDocPage() {
           <Step
             stage="Confirmation"
             title="Trust contacts mark you unreachable"
-            body="All your trust contacts receive a notification asking whether they can reach you. From their dashboard they see a Mark as unreachable button (only visible while the cycle is escalating). The threshold number of confirmations opens the 72h grace window."
+            body="All your trust contacts receive a notification asking whether they can reach you. From their hub they see a Mark as unreachable button (only visible while the cycle is escalating). The threshold number of confirmations opens the 72h grace window."
             accent="bg-tertiary"
           />
           <Step

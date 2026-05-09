@@ -101,7 +101,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
 ];
 
 const QUICK_LINKS: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Hub", href: "/dashboard", iconPath: ICON_PATHS.hub },
+  { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
   { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.key },
   { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
   { label: "Subscription", href: "/settings/subscription", iconPath: ICON_PATHS.creditCard },
@@ -251,7 +251,7 @@ export default function DocsPage() {
           <LifecycleStep
             value="Confirmation"
             title="Trust contacts mark you unreachable"
-            body="All your trust contacts can confirm unreachability from their dashboard. The threshold number of confirmations opens the 72-hour grace window."
+            body="All your trust contacts can confirm unreachability from their hub. The threshold number of confirmations opens the 72-hour grace window."
             accent="bg-tertiary"
           />
           <LifecycleStep

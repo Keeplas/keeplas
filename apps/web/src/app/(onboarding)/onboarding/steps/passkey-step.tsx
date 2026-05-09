@@ -30,7 +30,7 @@ export function PasskeyStep() {
         finishRegistration: (args) => finishRegistration(args),
       });
       setDone(true);
-      setTimeout(() => router.push("/dashboard"), 900);
+      setTimeout(() => router.push("/hub"), 900);
     } catch (err) {
       setError(getPasskeyErrorMessage(err, "Could not register your passkey."));
       setBusy(false);
@@ -38,7 +38,7 @@ export function PasskeyStep() {
   }
 
   function handleSkip() {
-    router.push("/dashboard");
+    router.push("/hub");
   }
 
   return (

@@ -120,14 +120,14 @@ export default function InvitationPage({
         }
       >
         <Link
-          href="/dashboard"
+          href="/hub"
           className={buttonVariants({
             variant: "vault",
             size: "md",
             className: "w-full",
           })}
         >
-          Go to Dashboard
+          Go to Hub
         </Link>
       </InvitationShell>
     );
@@ -148,14 +148,14 @@ export default function InvitationPage({
         }
       >
         <Link
-          href="/dashboard"
+          href="/hub"
           className={buttonVariants({
             variant: "vault",
             size: "md",
             className: "w-full",
           })}
         >
-          Go to Dashboard
+          Go to Hub
         </Link>
       </InvitationShell>
     );

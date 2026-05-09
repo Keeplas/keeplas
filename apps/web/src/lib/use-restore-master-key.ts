@@ -30,7 +30,7 @@ type V2Bundle = {
 
 /**
  * Restores the MasterKey from the encrypted key bundle stored in Convex.
- * Called on dashboard load for returning users who already completed
+ * Called on hub load for returning users who already completed
  * onboarding.
  *
  * V2 bundles (Argon2id-derived RootKey from the 24-word phrase) cannot be

@@ -17,7 +17,7 @@ const SETTINGS_INNER = "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z";
 const CHEVRON_EXPAND = "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9";
 
 const navItems: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Hub", href: "/dashboard", iconPath: ICON_PATHS.hub },
+  { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
   { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
   { label: "Trusted Circle", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
   {
@@ -29,7 +29,7 @@ const navItems: Array<{ label: string; href: string; iconPath: string }> = [
 ];
 
 const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Hub", href: "/dashboard", iconPath: ICON_PATHS.hub },
+  { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
   { label: "Vault", href: "/vault", iconPath: ICON_PATHS.lock },
   { label: "Trust", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
 ];

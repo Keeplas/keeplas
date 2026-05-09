@@ -671,7 +671,7 @@ export const republishContactPublicKey = auditedMutation({
 });
 
 /**
- * Get contacts where the current user is the invited contact (for contact's dashboard).
+ * Get contacts where the current user is the invited contact (for contact's hub).
  */
 export const getVaultsWhereIAmContact = query({
   args: {},

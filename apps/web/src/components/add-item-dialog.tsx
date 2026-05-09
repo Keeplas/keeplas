@@ -67,7 +67,7 @@ const TRIGGER_OPTIONS: TriggerOption[] = [
   {
     value: "manual",
     label: "Manual Trigger",
-    hint: "Released only when you (or a curator) explicitly approve from the dashboard.",
+    hint: "Released only when you (or a curator) explicitly approve from the hub.",
   },
 ];
 

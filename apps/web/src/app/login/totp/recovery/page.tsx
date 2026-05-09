@@ -29,7 +29,7 @@ export default function TotpRecoveryPage() {
 
   useEffect(() => {
     if (gate && !gate.required && gate.authenticated) {
-      router.push("/dashboard");
+      router.push("/hub");
     }
   }, [gate, router]);
 
@@ -78,7 +78,7 @@ export default function TotpRecoveryPage() {
     try {
       const verifierHash = await phraseToTotpResetVerifier(words);
       await submitRecovery({ verifierHash });
-      router.push("/dashboard");
+      router.push("/hub");
     } catch (err) {
       setError(getErrorMessage(err, "Recovery failed."));
     } finally {

@@ -28,21 +28,21 @@ const ACTION_ICONS: Record<string, string> = {
   more_categories: ICON_PATHS.plus,
 };
 
-export function DashboardContent() {
+export function HubContent() {
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const lifeCheck = useQuery(api.life_check.getConfig);
-  const dashboardData = useQuery(api.dashboard.getDashboardData);
+  const hubData = useQuery(api.hub.getHubData);
 
   if (
     items === undefined ||
     contacts === undefined ||
-    dashboardData === undefined
+    hubData === undefined
   ) {
     return <Loader fullscreen label="Loading Hub" />;
   }
 
-  if (dashboardData === null) return null;
+  if (hubData === null) return null;
 
   const messages = items.filter((i) => i.triggerType !== undefined);
 
@@ -468,7 +468,7 @@ export function DashboardContent() {
           <h4 className="text-label-md text-on-surface-variant mb-6">
             Priority Actions
           </h4>
-          {dashboardData.priorityActions.length === 0 ? (
+          {hubData.priorityActions.length === 0 ? (
             <div className="text-center py-6">
               <Icon
                 path={ICON_PATHS.checkCircle}
@@ -480,7 +480,7 @@ export function DashboardContent() {
             </div>
           ) : (
             <div className="space-y-2">
-              {dashboardData.priorityActions.map((action) => (
+              {hubData.priorityActions.map((action) => (
                 <Link
                   key={action.key}
                   href={action.href}
@@ -511,7 +511,7 @@ export function DashboardContent() {
             <h4 className="text-label-md text-on-surface-variant">
               Recent Activity
             </h4>
-            {dashboardData.totalItems > 0 && (
+            {hubData.totalItems > 0 && (
               <Link
                 href="/vault"
                 className="text-xs text-secondary font-bold cursor-pointer hover:underline"
@@ -520,7 +520,7 @@ export function DashboardContent() {
               </Link>
             )}
           </div>
-          {dashboardData.recentItems.length === 0 ? (
+          {hubData.recentItems.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm text-on-surface-variant mb-4">
                 No items in your vault yet.
@@ -534,7 +534,7 @@ export function DashboardContent() {
             </div>
           ) : (
             <div className="space-y-6">
-              {dashboardData.recentItems.map((item) => {
+              {hubData.recentItems.map((item) => {
                 const cat = getCategoryConfig(item.category);
                 return (
                   <Link

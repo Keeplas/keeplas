@@ -142,7 +142,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
           if (onComplete) {
             onComplete();
           } else {
-            router.push("/dashboard");
+            router.push("/hub");
           }
         }, 1500);
       } catch (err) {
@@ -271,7 +271,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
       {phase === "complete" && (
         <div className="mt-8 p-4 bg-secondary-container/30 rounded-xl">
           <p className="text-sm text-on-secondary-container font-body">
-            Redirecting to your dashboard...
+            Redirecting to your hub...
           </p>
         </div>
       )}

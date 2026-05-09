@@ -29,7 +29,7 @@ export default function TotpLoginPage() {
 
   useEffect(() => {
     if (gate && !gate.required && gate.authenticated) {
-      router.push("/dashboard");
+      router.push("/hub");
     }
   }, [gate, router]);
 
@@ -46,7 +46,7 @@ export default function TotpLoginPage() {
     setError(null);
     try {
       await submit({ code: code.trim() });
-      router.push("/dashboard");
+      router.push("/hub");
     } catch (err) {
       setError(getErrorMessage(err, "Verification failed."));
     } finally {

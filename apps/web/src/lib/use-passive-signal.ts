@@ -11,7 +11,7 @@ const FRONTEND_THROTTLE_MS = 60 * 60 * 1000;
  * Pings the backend with an `app_activity` passive signal once per session
  * window (1h). Server-side throttling is the source of truth — this client
  * throttle only avoids unnecessary network calls. Any successful navigation
- * inside the dashboard counts as activity and resets the inactivity clock.
+ * inside the hub counts as activity and resets the inactivity clock.
  */
 export function usePassiveSignal(enabled: boolean) {
   const recordSignal = useMutation(api.passive_signals.recordSignal);

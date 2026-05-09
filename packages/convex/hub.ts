@@ -2,10 +2,10 @@ import { query } from "./_generated/server";
 import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
 
 /**
- * Get all dashboard data in one query: integrity score, category counts,
+ * Get all hub data in one query: integrity score, category counts,
  * recent items, contact count, feature status.
  */
-export const getDashboardData = query({
+export const getHubData = query({
   args: {},
   handler: async (ctx) => {
     const userId = await optionalAuth(ctx);
