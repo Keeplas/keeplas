@@ -14,13 +14,37 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 ## Stack
 
-- **Next.js 16 (App Router)** — web-first, PWA-ready
-- **Convex** — realtime backend & DB (cloud or self-hosted)
-- **Convex Auth + WebAuthn (Passkey)** — phishing-resistant, biometric-local auth
-- **shadcn/ui + Radix + Tailwind v4** — design system
-- **Post-quantum crypto** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and shards
-- **Argon2id + AES-GCM + Shamir Secret Sharing** — key derivation and recovery
-- **Turborepo + pnpm** — monorepo tooling
+**Frontend**
+
+- **Next.js 16 (App Router) + React 19** — web-first, PWA-ready, Turbopack dev server
+- **Tailwind CSS v4** + **shadcn/ui** + **Radix UI** primitives — design system (Tooltip and DatePicker still on `@base-ui/react`, migrated when touched)
+- **Tiptap 3** — rich text editor for vault content
+- **lucide-react** — icon set
+- **cmdk** — command palette
+- **libphonenumber-js** — phone number parsing for WhatsApp OTP
+- **qrcode.react**, **html2canvas-pro**, **jspdf** — Emergency Card rendering & PDF export
+
+**Backend**
+
+- **Convex** (`^1.35.1`) — realtime backend & DB, cloud or self-hosted (`CONVEX_MODE=selfhosted`)
+- **Convex Auth** + **`@auth/core`** — auth foundation
+- **`@simplewebauthn/{browser,server}`** — WebAuthn (Passkey) — phishing-resistant, biometric-local auth
+- **WhatsApp Cloud API** — OTP secondary verification channel
+- **`web-push`** — Web Push (VAPID) for the Life Check push channel
+- **Resend** — transactional email (Life Check, OTP, contact form)
+
+**Cryptography** (gated by CODEOWNERS in `packages/crypto/`)
+
+- **`@noble/post-quantum`** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and Shamir shards
+- **`hash-wasm`** — Argon2id KDF for the 24-word root phrase
+- **AES-GCM** (WebCrypto) + **Shamir Secret Sharing** — content encryption and social recovery
+- **Vitest** — unit tests for the crypto primitives
+
+**Tooling**
+
+- **Turborepo + pnpm** monorepo
+- **TypeScript 5**, **ESLint 9**, **Prettier**
+- **Docker** (`Dockerfile.dev` + `docker-compose.yml`) for an optional containerized dev environment
 
 ## Monorepo layout
 
@@ -33,7 +57,7 @@ packages/
   ui/                   Shared UI components built on Radix / shadcn pattern
 PRD/                    Product specs, architecture recap, design wireframes
 security/               Security policy and audit material
-scripts/                Maintenance scripts
+scripts/                Maintenance scripts (env check, Convex env sync, env linking)
 ```
 
 `packages/crypto/` is gated by **CODEOWNERS** — only founders can merge changes there.
@@ -56,7 +80,7 @@ cp .env.example .env.local
 # 3. Provision Convex (creates a deployment, syncs schema)
 npx convex dev
 
-# 4. Run the dev server
+# 4. Run the dev server (predev hook validates your env automatically)
 pnpm dev
 ```
 
@@ -64,31 +88,69 @@ The web app runs at <http://localhost:3000>.
 
 > Whenever you change anything under `packages/convex/`, run `npx convex dev` again to regenerate types and sync the deployment.
 
+### Docker (optional, dev only)
+
+A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, and uses named volumes for `node_modules`, `.next`, `.turbo`, and Convex local state — host files mount in via bind mount, so edits hot-reload as usual.
+
+```bash
+# 1. Create your env file (loaded by Next.js, Convex CLI, and the env-check scripts)
+cp .env.example .env.local
+
+# 2. Build and start the dev container (installs deps, then runs `pnpm dev`)
+docker compose up
+
+# 3. App available at http://localhost:3000
+```
+
+Useful follow-ups:
+
+```bash
+docker compose exec app pnpm typecheck       # run any pnpm script inside the container
+docker compose exec app npx convex dev       # provision/regenerate Convex types
+docker compose down -v                       # nuke node_modules + caches (named volumes)
+```
+
+> The image is **not production-ready** — it's `Dockerfile.dev` for contributors. No production Dockerfile is shipped yet; deployments target Vercel for the web app and Convex Cloud for the backend.
+
 ## Environment variables
 
 All required variables are documented in [`.env.example`](./.env.example). High-level groups:
 
-- **App** — `NEXT_PUBLIC_APP_URL`, `NODE_ENV`
-- **Convex** — `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`
+- **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`, `NODE_ENV`
+- **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
-- **Audit context** — `KEEPLAS_CTX_SECRET` (HMAC; must be set in both web env and Convex env)
-- **Email / Resend** — transactional email for Life Check & invitations
-- **Web Push (VAPID)** & **WhatsApp Cloud API** — Life Check channels
-- **Stripe** — payments
+- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; must be set in both web env and Convex env)
+- **Email — Resend (optional)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SUPPORT_INBOX_EMAIL` — Life Check email channel, OTP email auth, contact form
+- **Web Push — VAPID (optional)** — `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Life Check push channel
+- **WhatsApp Cloud API (optional)** — `WHATSAPP_*` — Life Check WhatsApp channel and WhatsApp OTP verification
 
-Generate the audit secret with `openssl rand -base64 32`. Set Convex-side variables with `npx convex env set <NAME> <VALUE>`.
+Generate the audit secret with `openssl rand -base64 32`. Push web-side secrets to Convex with `pnpm sync:convex-env`. Validate your local env at any time with `pnpm check:env`.
+
+## Pricing
+
+Keeplas ships with a deliberately simple two-tier model — **no monthly subscription**:
+
+| Plan         | Price           | Storage | Highlights                                                                                                                                                                        |
+| ------------ | --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Free**     | $0 / forever    | 100 MB  | Zero-knowledge vault, monthly Life Check, 1 emergency contact, digital Emergency Card                                                                                             |
+| **Lifetime** | $199 / one-time | 10 GB   | Full Scenario Engine, 5 emergency contacts, priority Social Recovery, physical Emergency Card, video legacy messages, weekly Life Check, priority support, more storage as add-on |
+
+Both tiers run the same zero-knowledge encryption — only the surface area changes. Switching plans never deletes your vault.
 
 ## Scripts
 
-| Command           | Description                                        |
-| ----------------- | -------------------------------------------------- |
-| `pnpm dev`        | Run all dev servers (Next.js, Convex) via Turborepo |
-| `pnpm build`      | Production build for every workspace               |
-| `pnpm lint`       | ESLint across the monorepo                         |
-| `pnpm typecheck`  | TypeScript `--noEmit` across all packages          |
-| `pnpm test`       | Run test suites (Vitest in `packages/crypto/`)     |
-| `pnpm format`     | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}` |
-| `pnpm clean`      | Remove build artifacts (`dist`, `.next`, `.turbo`) |
+| Command                | Description                                                             |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `pnpm dev`             | Run all dev servers (Next.js, Convex) via Turborepo                     |
+| `pnpm build`           | Production build for every workspace                                    |
+| `pnpm lint`            | ESLint across the monorepo                                              |
+| `pnpm typecheck`       | TypeScript `--noEmit` across all packages                               |
+| `pnpm test`            | Run test suites (Vitest in `packages/crypto/`)                          |
+| `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                    |
+| `pnpm clean`           | Remove build artifacts (`dist`, `.next`, `.turbo`)                      |
+| `pnpm check:env`       | Validate that all required env vars are set (runs before `dev`/`build`) |
+| `pnpm sync:convex-env` | Push web-side secrets to the Convex deployment                          |
+| `pnpm link:env`        | Symlink `.env` files across workspaces                                  |
 
 ## Security model
 

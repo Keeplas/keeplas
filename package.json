@@ -20,10 +20,24 @@
     "clean": "turbo run clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "check:env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-env.mjs",
+    "check:zk": "node scripts/check-zk.mjs",
     "sync:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/sync-convex-env.mjs",
-    "link:env": "node scripts/link-env.mjs"
+    "link:env": "node scripts/link-env.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.0",
+    "@commitlint/config-conventional": "^21.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.3",
     "prettier": "^3.5.3",
     "turbo": "^2.9.6",
     "typescript": "^5.8.3"

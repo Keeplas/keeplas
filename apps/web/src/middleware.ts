@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 const COOKIE_NAME = "__keeplas_ctx";
 const COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60;
+const REQUEST_ID_HEADER = "x-request-id";
 
 const FALLBACK_IP = "0.0.0.0";
 const FALLBACK_COUNTRY = "XX";
@@ -24,9 +25,20 @@ interface SealedContext {
  * `KEEPLAS_CTX_SECRET`. Convex mutations re-verify the seal before
  * persisting these values into the audit log — this is what prevents a
  * client from forging its own location.
+ *
+ * Also stamps an `x-request-id` on every request/response pair so logs from
+ * the client, the Next.js server, and Convex can be correlated when a user
+ * reports an issue. We honour an inbound `x-request-id` (e.g. from a CDN or
+ * a tracing client) when present.
  */
 export async function middleware(request: NextRequest): Promise<NextResponse> {
-  const response = NextResponse.next();
+  const requestId =
+    request.headers.get(REQUEST_ID_HEADER) ?? crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(REQUEST_ID_HEADER, requestId);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set(REQUEST_ID_HEADER, requestId);
 
   const secret = process.env.KEEPLAS_CTX_SECRET;
   if (!secret) {
@@ -94,12 +106,12 @@ async function sign(payload: string, secret: string): Promise<string> {
     enc.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const sig = await crypto.subtle.sign(
     "HMAC",
     key,
-    enc.encode(payload) as BufferSource
+    enc.encode(payload) as BufferSource,
   );
   return bytesToBase64(new Uint8Array(sig));
 }
