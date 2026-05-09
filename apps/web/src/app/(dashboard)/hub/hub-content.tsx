@@ -154,27 +154,21 @@ export function HubContent() {
             </p>
           ) : (
             <>
-              <div className="flex -space-x-3 mt-4 mb-3">
+              <div className="flex -space-x-2 mt-4 mb-3">
                 {contacts.slice(0, 3).map((c) => (
-                  <div
+                  <UserAvatar
                     key={c._id}
-                    className="w-10 h-10 border-2 border-surface shadow-sm overflow-hidden"
-                    style={{ borderRadius: "50%" }}
-                  >
-                    <UserAvatar
-                      size="sm"
-                      imageUrl={c.avatarUrl}
-                      initials={getInitials(c.name)}
-                      alt={c.name}
-                      fallbackClassName="bg-primary text-on-primary"
-                    />
-                  </div>
+                    size="md"
+                    imageUrl={c.avatarUrl}
+                    initials={getInitials(c.name)}
+                    alt={c.name}
+                    className="ring-2 ring-surface"
+                    imageClassName="ring-2 ring-surface"
+                    fallbackClassName="bg-secondary-container text-on-secondary-container"
+                  />
                 ))}
                 {contacts.length > 3 && (
-                  <div
-                    className="w-10 h-10 border-2 border-surface bg-surface-container-high flex items-center justify-center text-label-md text-on-surface-variant"
-                    style={{ borderRadius: "50%" }}
-                  >
+                  <div className="w-10 h-10 rounded-full ring-2 ring-surface bg-surface-container-high flex items-center justify-center font-headline font-bold text-sm text-on-surface-variant">
                     +{contacts.length - 3}
                   </div>
                 )}
