@@ -108,8 +108,9 @@ export default function SettingsUsagePage() {
             />
             <div className="space-y-2 flex-1">
               <p className="text-body-md text-on-error-container">
-                You&rsquo;re close to your storage limit. Upgrade to Keeper for
-                10 GB of encrypted capacity and additional continuity tools.
+                You&rsquo;re close to your storage limit. Upgrade to Lifetime
+                for 10 GB of encrypted capacity and additional continuity
+                tools.
               </p>
               <Link
                 href="/settings/subscription"
@@ -216,9 +217,9 @@ export default function SettingsUsagePage() {
         <div className="space-y-1">
           <h2 className="text-headline-sm text-primary">Need more capacity?</h2>
           <p className="text-body-md text-on-surface-variant max-w-xl">
-            Keeper unlocks 10 GB of zero-knowledge storage, video legacy
-            messages, and the full scenario engine. Lifetime gets it all
-            forever in a single payment.
+            Lifetime unlocks 10 GB of zero-knowledge storage, video legacy
+            messages, and the full scenario engine — forever, in a single
+            payment.
           </p>
         </div>
         <Link
