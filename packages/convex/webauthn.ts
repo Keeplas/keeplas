@@ -16,20 +16,20 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
+import { requireEnv } from "./lib/require_env";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
 function getRpId(): string {
-  return process.env.WEBAUTHN_RP_ID ?? "localhost";
+  return requireEnv("WEBAUTHN_RP_ID");
 }
 
 function getRpName(): string {
-  return process.env.WEBAUTHN_RP_NAME ?? "Keeplas";
+  return requireEnv("WEBAUTHN_RP_NAME");
 }
 
 function getExpectedOrigin(): string | string[] {
-  const raw = process.env.WEBAUTHN_ORIGIN;
-  if (!raw) return "http://localhost:3000";
+  const raw = requireEnv("WEBAUTHN_ORIGIN");
   return raw.includes(",") ? raw.split(",").map((s) => s.trim()) : raw;
 }
 

@@ -9,7 +9,8 @@ export function getAuditSecret(): string {
   const secret = process.env.KEEPLAS_CTX_SECRET;
   if (!secret || secret.length < 16) {
     throw new Error(
-      "KEEPLAS_CTX_SECRET is not configured (need >= 16 chars)."
+      "Convex env `KEEPLAS_CTX_SECRET` is missing or too short (need >= 16 chars). " +
+        "Run `pnpm sync:convex-env` from the repo root to push it from your local `.env.local`."
     );
   }
   return secret;

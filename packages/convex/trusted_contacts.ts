@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { createNotification, requireAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
+import { requireEnv } from "./lib/require_env";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -712,8 +713,6 @@ export const getVaultsWhereIAmContact = query({
   },
 });
 
-const APP_URL = process.env.APP_URL ?? "https://app.keeplas.com";
-
 /**
  * Send the invitation email to a freshly invited (or re-invited) contact.
  * Trust contacts receive an acceptance link; recipient-only contacts that
@@ -735,9 +734,9 @@ export const sendInvitationEmail = internalAction({
     if (!data) return "contact_not_found";
     if (data.invitationStatus !== "pending") return "not_pending";
 
-    const from =
-      process.env.RESEND_FROM_EMAIL ?? "Keeplas <noreply@keeplas.com>";
-    const acceptUrl = `${APP_URL}/invite/${data.invitationToken}`;
+    const from = requireEnv("RESEND_FROM_EMAIL");
+    const appUrl = requireEnv("APP_URL");
+    const acceptUrl = `${appUrl}/invite/${data.invitationToken}`;
     const inviterName = data.inviterName?.trim() || "A Keeplas user";
 
     const isTrust = (data.contactType ?? "trust") === "trust";
@@ -747,11 +746,13 @@ export const sendInvitationEmail = internalAction({
 
     const html = isTrust
       ? trustInvitationHtml({
+          appUrl,
           recipientName: data.name,
           inviterName,
           acceptUrl,
         })
       : recipientIntroHtml({
+          appUrl,
           recipientName: data.name,
           inviterName,
           introMessage: data.introMessage ?? "",
@@ -802,12 +803,13 @@ export const getInvitationEmailContext = internalQuery({
 });
 
 function trustInvitationHtml(opts: {
+  appUrl: string;
   recipientName: string;
   inviterName: string;
   acceptUrl: string;
 }) {
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
-<p style="text-align:center;margin:0 0 24px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
+<p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
 <p>Hi ${escapeHtml(opts.recipientName)},</p>
 <p><strong>${escapeHtml(opts.inviterName)}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.</p>
 <p>As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.</p>
@@ -818,6 +820,7 @@ function trustInvitationHtml(opts: {
 }
 
 function recipientIntroHtml(opts: {
+  appUrl: string;
   recipientName: string;
   inviterName: string;
   introMessage: string;
@@ -826,7 +829,7 @@ function recipientIntroHtml(opts: {
     ? `<div style="white-space:pre-wrap;background:#f6f6f6;border-radius:10px;padding:16px;margin:24px 0">${escapeHtml(opts.introMessage)}</div>`
     : "";
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
-<p style="text-align:center;margin:0 0 24px"><img src="${APP_URL}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
+<p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
 <p>Hi ${escapeHtml(opts.recipientName)},</p>
 <p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas. You don't need to do anything right now — Keeplas will only contact you if a specific event they have set up is triggered.</p>
 ${message}

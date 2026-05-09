@@ -21,6 +21,7 @@ import type * as http from "../http.js";
 import type * as hub from "../hub.js";
 import type * as lib_audit_secret from "../lib/audit_secret.js";
 import type * as lib_phone from "../lib/phone.js";
+import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_storage from "../lib/storage.js";
 import type * as life_check from "../life_check.js";
 import type * as migrations from "../migrations.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   hub: typeof hub;
   "lib/audit_secret": typeof lib_audit_secret;
   "lib/phone": typeof lib_phone;
+  "lib/require_env": typeof lib_require_env;
   "lib/storage": typeof lib_storage;
   life_check: typeof life_check;
   migrations: typeof migrations;

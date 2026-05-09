@@ -12,6 +12,8 @@ const REQUEST_ID_HEADER = "x-request-id";
 const FALLBACK_IP = "0.0.0.0";
 const FALLBACK_COUNTRY = "XX";
 
+let warnedAboutMissingSecret = false;
+
 interface SealedContext {
   ip: string;
   country: string;
@@ -42,10 +44,17 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const secret = process.env.KEEPLAS_CTX_SECRET;
   if (!secret) {
-    // No secret configured — skip silently. Mutations will fail closed when
-    // they try to verify a missing/invalid context, which is the correct
-    // behavior in production. Local dev without the var degrades to "no
-    // audited mutations succeed" until the operator sets it.
+    // No secret configured — skip cookie issuance. Mutations will fail closed
+    // when they try to verify a missing/invalid context, which is the correct
+    // behavior in production. `pnpm check:env` is the real gate; this warning
+    // is the safety net for "secret unset while dev server is running".
+    if (!warnedAboutMissingSecret) {
+      warnedAboutMissingSecret = true;
+      console.error(
+        "[middleware] KEEPLAS_CTX_SECRET is not set — audited mutations will fail. " +
+          "Add it to .env.local and restart the dev server.",
+      );
+    }
     return response;
   }
 

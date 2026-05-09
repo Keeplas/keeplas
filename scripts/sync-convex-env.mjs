@@ -1,15 +1,24 @@
 #!/usr/bin/env node
-// Pushes Convex-side env vars from `.env` to the contributor's Convex deployment.
-// Run via: node --env-file-if-exists=.env scripts/sync-convex-env.mjs
+// Pushes Convex-side env vars from local env files to the contributor's
+// Convex deployment. Run via:
+//   node --env-file-if-exists=.env --env-file-if-exists=.env.local \
+//        --env-file-if-exists=.env.convex.local \
+//        scripts/sync-convex-env.mjs
+//
+// `.env.convex.local` exists so backend-only secrets (e.g. SITE_URL) can live
+// outside `.env.local` (which Next.js auto-loads).
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-
-const RED = "\x1b[31m";
-const YELLOW = "\x1b[33m";
-const GREEN = "\x1b[32m";
-const RESET = "\x1b[0m";
+import {
+  RED,
+  YELLOW,
+  GREEN,
+  RESET,
+  CONVEX_SYNC_KEYS,
+  CONVEX_SYNC_REQUIRED_KEYS,
+} from "./_env-keys.mjs";
 
 const envLocalPath = resolve(process.cwd(), ".env.local");
 const envPath = resolve(process.cwd(), ".env");
@@ -21,31 +30,26 @@ if (!existsSync(envLocalPath) && !existsSync(envPath)) {
   process.exit(1);
 }
 
-// Keys that must exist on the Convex deployment (server-side actions, audit verification).
-// Web-only keys (NEXT_PUBLIC_*, NODE_ENV, CONVEX_MODE, CONVEX_DEPLOYMENT) are intentionally excluded.
-const CONVEX_KEYS = [
-  "KEEPLAS_CTX_SECRET",
-  "WEBAUTHN_RP_ID",
-  "WEBAUTHN_RP_NAME",
-  "WEBAUTHN_ORIGIN",
-  "APP_URL",
-  "RESEND_API_KEY",
-  "RESEND_FROM_EMAIL",
-  "SUPPORT_INBOX_EMAIL",
-  "VAPID_PUBLIC_KEY",
-  "VAPID_PRIVATE_KEY",
-  "VAPID_SUBJECT",
-  "WHATSAPP_PHONE_ID",
-  "WHATSAPP_TOKEN",
-  "WHATSAPP_TEMPLATE_NAME",
-  "WHATSAPP_TEMPLATE_LANG",
-];
+const missingRequired = CONVEX_SYNC_REQUIRED_KEYS.filter(
+  (key) => !process.env[key],
+);
+
+if (missingRequired.length) {
+  console.error(
+    `\n${RED}Cannot sync — required keys are empty in your local env files:${RESET}`,
+  );
+  for (const key of missingRequired) console.error(`  - ${key}`);
+  console.error(
+    `\nFill them in \`.env.local\` (web-shared) or \`.env.convex.local\` (Convex-only) and re-run.\n`,
+  );
+  process.exit(1);
+}
 
 let pushed = 0;
 let skipped = 0;
 const failures = [];
 
-for (const key of CONVEX_KEYS) {
+for (const key of CONVEX_SYNC_KEYS) {
   const value = process.env[key];
   if (!value) {
     skipped++;
@@ -63,7 +67,9 @@ for (const key of CONVEX_KEYS) {
   pushed++;
 }
 
-console.log(`\nPushed ${pushed} / ${CONVEX_KEYS.length} keys to Convex (${skipped} skipped — empty in .env).`);
+console.log(
+  `\nPushed ${pushed} / ${CONVEX_SYNC_KEYS.length} keys to Convex (${skipped} skipped — empty in env, all optional).`,
+);
 
 if (failures.length) {
   console.error(`\n${RED}Failures:${RESET}`);

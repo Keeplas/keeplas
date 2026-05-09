@@ -3,6 +3,7 @@ import { internalAction, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { optionalAuth } from "./helpers";
 import { createAuditLog } from "./audit";
+import { requireEnv } from "./lib/require_env";
 
 const TOPIC = v.union(
   v.literal("general"),
@@ -106,8 +107,7 @@ export const notifySupportInbox = internalAction({
     const inbox = process.env.SUPPORT_INBOX_EMAIL;
     if (!apiKey || !inbox) return "support_inbox_not_configured";
 
-    const from =
-      process.env.RESEND_FROM_EMAIL ?? "Keeplas <noreply@keeplas.com>";
+    const from = requireEnv("RESEND_FROM_EMAIL");
     const topicLabel = TOPIC_LABELS[args.topic] ?? args.topic;
 
     const res = await fetch("https://api.resend.com/emails", {

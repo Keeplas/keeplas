@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc } from "./_generated/dataModel";
+import { requireEnv } from "./lib/require_env";
 
 const CHANNEL_TYPE = v.union(
   v.literal("push"),
@@ -12,8 +13,6 @@ const CHANNEL_TYPE = v.union(
   v.literal("sms"),
   v.literal("ivr_call")
 );
-
-const APP_URL = process.env.APP_URL ?? "https://app.keeplas.com";
 
 interface DispatchContext {
   cycle: Doc<"life_check_cycles">;
@@ -94,7 +93,7 @@ async function sendPush({
   const payload = JSON.stringify({
     title: "Keeplas Life Check",
     body: `${user.name ?? "Hi"}, please confirm you are well.`,
-    actionUrl: `${APP_URL}/life-check`,
+    actionUrl: `${requireEnv("APP_URL")}/life-check`,
   });
 
   let delivered = 0;
@@ -121,9 +120,8 @@ async function sendEmail({ user }: DispatchContext): Promise<string> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return "resend_not_configured";
 
-  const from =
-    process.env.RESEND_FROM_EMAIL ?? "Keeplas <noreply@keeplas.com>";
-  const verifyUrl = `${APP_URL}/life-check`;
+  const from = requireEnv("RESEND_FROM_EMAIL");
+  const verifyUrl = `${requireEnv("APP_URL")}/life-check`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
