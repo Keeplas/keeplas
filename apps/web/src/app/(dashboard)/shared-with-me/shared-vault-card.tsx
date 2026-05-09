@@ -58,13 +58,13 @@ function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const { verify, status, error } = useVerifyShard();
   const markUnreachable = useAuditedMutation(
-    api.access_requests.markUserUnreachable
+    api.access_requests.markUserUnreachable,
   );
   const activeRequest = useQuery(
     api.access_requests.getActiveAccessRequestForContact,
     vault.invitationStatus === "accepted"
       ? { contactId: vault._id as Id<"trusted_contacts"> }
-      : "skip"
+      : "skip",
   );
 
   const recovery = useRecoveryFlow({
@@ -87,7 +87,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   // escalated past the inactivity threshold. Outside escalation the action is
   // hidden — contacts shouldn't be able to fire it speculatively.
   const isOwnerEscalating = vault.ownerCycleStatus === "escalating";
-  const canMarkUnreachable = !isRecipientOnly && isAccepted && isOwnerEscalating;
+  const canMarkUnreachable =
+    !isRecipientOnly && isAccepted && isOwnerEscalating;
 
   // Recovery section is surfaced once the unreachability quorum has been
   // reached AND the 72h grace window has expired without cancellation.
@@ -160,7 +161,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
               "px-3 py-1 text-label-md rounded-full",
               isRecipientOnly
                 ? "bg-surface-container-high text-on-surface-variant"
-                : "bg-primary/10 text-primary"
+                : "bg-primary/10 text-primary",
             )}
           >
             {isRecipientOnly ? "Recipient" : "Trust"}
@@ -216,7 +217,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           )}
           {hasKey && !hasEnvelope && (
             <p className="text-label-md text-on-surface-variant">
-              The vault owner hasn&apos;t enabled verification on their side yet.
+              The vault owner hasn&apos;t enabled verification on their side
+              yet.
             </p>
           )}
         </div>
@@ -300,9 +302,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
             <p className="text-label-md text-error">{recovery.submitError}</p>
           )}
           {recovery.submitStatus === "no_local_shard" && (
-            <p className="text-label-md text-error">
-              {recovery.submitError}
-            </p>
+            <p className="text-label-md text-error">{recovery.submitError}</p>
           )}
 
           {(recovery.submitStatus === "ok" ||
@@ -310,8 +310,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
             <div className="pt-2">
               {recovery.reconstructStatus === "ok" ? (
                 <p className="text-label-md text-secondary font-medium">
-                  Master key reconstructed on this device. Memorial vault
-                  access available.
+                  Master key reconstructed on this device. Memorial vault access
+                  available.
                 </p>
               ) : (
                 <button
