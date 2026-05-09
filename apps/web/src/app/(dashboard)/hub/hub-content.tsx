@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { buttonVariants, cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
+import {
+  buttonVariants,
+  cn,
+  Icon,
+  InfoCallout,
+  type InfoCalloutTone,
+  Loader,
+  UserAvatar,
+} from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import {
   getCategoryConfig,
@@ -28,6 +36,68 @@ const ACTION_ICONS: Record<string, string> = {
   verify_whatsapp: ICON_PATHS.phone,
   more_categories: ICON_PATHS.plus,
 };
+
+const LEGACY_TIPS: ReadonlyArray<{
+  iconKey: keyof typeof ICON_PATHS;
+  tone: InfoCalloutTone;
+  title: string;
+  body: string;
+}> = [
+  {
+    iconKey: "helpCircle",
+    tone: "warning",
+    title: "If you died today, who would access what?",
+    body: "Photos, password manager, business email, crypto wallets, the file with your kids' birth certificates. Most people don't know. Map it now — while the choice is still yours.",
+  },
+  {
+    iconKey: "cloudOff",
+    tone: "warning",
+    title: "Don't let your secrets die with you",
+    body: "iCloud accounts get frozen. Crypto wallets become tombs. Photos vanish behind a forgotten password. A single trusted contact and a recovery phrase prevent every one of these.",
+  },
+  {
+    iconKey: "lockClock",
+    tone: "warning",
+    title: "Probate moves in months. Families need days.",
+    body: "Mortgage payments, subscriptions, insurance claims — they don't pause for grief. Without a plan, loved ones can wait 6–18 months for legal access. Documenting essentials now keeps them out of court.",
+  },
+  {
+    iconKey: "medicalInformation",
+    tone: "success",
+    title: "Set up your phone's Medical ID today",
+    body: "Paramedics check the lock screen first. iOS: Health → Medical ID. Android: Settings → Safety & emergency. Add allergies, conditions, and emergency contacts — accessible without unlocking your phone.",
+  },
+  {
+    iconKey: "contactPage",
+    tone: "success",
+    title: "Carry an Emergency Card",
+    body: "First responders need allergies, blood type, and a trusted contact in seconds — not your whole vault. Keeplas can generate a printable card with the bare minimum, leaving the rest sealed.",
+  },
+  {
+    iconKey: "key",
+    tone: "info",
+    title: "Your 24 words are the root key",
+    body: "They derive every encryption key on your account. Write them on paper, store them offline. Lose them and no one — not even Keeplas — can recover your vault.",
+  },
+  {
+    iconKey: "shieldCheck",
+    tone: "info",
+    title: "Zero-knowledge by design",
+    body: "Your vault is encrypted on your device before it ever reaches our servers. We can't read your data, and neither can anyone we'd be compelled to share it with.",
+  },
+  {
+    iconKey: "group",
+    tone: "info",
+    title: "Trusted contacts unlock continuity",
+    body: "Add at least 3 trusted contacts. They can collectively recover your access if you lose your phrase, using cryptographic shards — never the phrase itself.",
+  },
+  {
+    iconKey: "fingerprint",
+    tone: "info",
+    title: "Quantum-safe encryption",
+    body: "We wrap your encryption keys with ML-KEM-768 (NIST FIPS 203), a post-quantum algorithm — your secrets stay safe even against future quantum computers.",
+  },
+];
 
 export function HubContent() {
   const items = useQuery(api.vault_items.getItems);
@@ -449,6 +519,32 @@ export function HubContent() {
               })}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Reflect & Prepare — reflection, pain points, emergency advice, education */}
+      <section className="mt-12">
+        <header className="mb-6">
+          <h4 className="text-label-md text-on-surface-variant">
+            Reflect & Prepare
+          </h4>
+          <p className="text-body-md text-on-surface-variant/80 mt-1">
+            A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond.
+          </p>
+        </header>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {LEGACY_TIPS.map((tip) => (
+            <InfoCallout
+              key={tip.title}
+              icon={ICON_PATHS[tip.iconKey]}
+              tone={tip.tone}
+            >
+              <strong className="block text-primary mb-1 font-headline">
+                {tip.title}
+              </strong>
+              <span>{tip.body}</span>
+            </InfoCallout>
+          ))}
         </div>
       </section>
     </div>
