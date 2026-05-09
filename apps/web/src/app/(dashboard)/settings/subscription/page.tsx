@@ -65,19 +65,25 @@ const PLANS: Plan[] = [
 ];
 
 function PriceDisplay({ plan }: { plan: Plan }) {
-  const display = plan.id === "lifetime" ? plan.priceOneTime : plan.priceMonthly;
+  const display =
+    plan.id === "lifetime" ? plan.priceOneTime : plan.priceMonthly;
 
   return (
     <div className="flex items-baseline gap-2">
       <span
         className={cn(
-          "text-display-lg font-bold tracking-tight",
-          plan.dark ? "text-white" : "text-on-surface"
+          "text-[2.5rem] font-bold tracking-tight leading-none",
+          plan.dark ? "text-white" : "text-on-surface",
         )}
       >
         {display}
       </span>
-      <span className={cn("text-body-md", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
+      <span
+        className={cn(
+          "text-body-md",
+          plan.dark ? "text-white/70" : "text-on-surface-variant",
+        )}
+      >
         {plan.priceSuffix}
       </span>
     </div>
@@ -92,8 +98,9 @@ export default function SubscriptionPage() {
           Legacy Architecture. Secured Forever.
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
-          Choose the protection level that fits your continuity plan. Both tiers run the same
-          zero-knowledge encryption — only the surface area changes.
+          Choose the protection level that fits your continuity plan. Both tiers
+          run the same zero-knowledge encryption — only the surface area
+          changes.
         </p>
       </header>
 
@@ -105,7 +112,7 @@ export default function SubscriptionPage() {
               "relative rounded-3xl p-8 flex flex-col justify-between",
               plan.dark
                 ? "bg-primary text-white shadow-2xl shadow-primary/30"
-                : "bg-surface-container-low"
+                : "bg-surface-container-low",
             )}
           >
             {plan.popular && (
@@ -119,12 +126,17 @@ export default function SubscriptionPage() {
                 <h2
                   className={cn(
                     "text-headline-md",
-                    plan.dark ? "text-white" : "text-primary"
+                    plan.dark ? "text-white" : "text-primary",
                   )}
                 >
                   {plan.name}
                 </h2>
-                <p className={cn("text-body-md mt-1", plan.dark ? "text-white/70" : "text-on-surface-variant")}>
+                <p
+                  className={cn(
+                    "text-body-md mt-1",
+                    plan.dark ? "text-white/70" : "text-on-surface-variant",
+                  )}
+                >
                   {plan.tagline}
                 </p>
               </div>
@@ -143,11 +155,14 @@ export default function SubscriptionPage() {
                             : "bg-secondary/15 text-secondary"
                           : plan.dark
                             ? "bg-white/5 text-white/30"
-                            : "bg-surface-container-high text-outline-variant"
+                            : "bg-surface-container-high text-outline-variant",
                       )}
                     >
                       {feature.included ? (
-                        <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
+                        <Icon
+                          path={ICON_PATHS.checkCircle}
+                          className="w-3.5 h-3.5"
+                        />
                       ) : (
                         <span className="block w-2 h-0.5 bg-current rounded-full" />
                       )}
@@ -161,7 +176,7 @@ export default function SubscriptionPage() {
                             : "text-on-surface"
                           : plan.dark
                             ? "text-white/40"
-                            : "text-on-surface-variant/60"
+                            : "text-on-surface-variant/60",
                       )}
                     >
                       {feature.label}
@@ -179,7 +194,7 @@ export default function SubscriptionPage() {
                   "w-full",
                   plan.dark
                     ? "bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90"
-                    : ""
+                    : "",
                 )}
               >
                 {plan.cta}
