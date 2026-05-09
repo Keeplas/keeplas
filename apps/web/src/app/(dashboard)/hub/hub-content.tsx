@@ -13,15 +13,15 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
-import {
-  getCategoryConfig,
-  type VaultCategory,
-} from "@/lib/vault-categories";
+import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { getInitials } from "@/lib/user";
 import { formatTimeAgo } from "@/lib/format";
 
 const ASSET_CATEGORIES: VaultCategory[] = ["financial_asset", "digital_asset"];
-const DIRECTIVE_CATEGORIES: VaultCategory[] = ["health_directive", "legal_document"];
+const DIRECTIVE_CATEGORIES: VaultCategory[] = [
+  "health_directive",
+  "legal_document",
+];
 const DOCUMENT_CATEGORIES: VaultCategory[] = [
   "personal_document",
   "business_continuity",
@@ -42,24 +42,20 @@ export function HubContent() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const hubData = useQuery(api.hub.getHubData);
 
-  if (
-    items === undefined ||
-    contacts === undefined ||
-    hubData === undefined
-  ) {
+  if (items === undefined || contacts === undefined || hubData === undefined) {
     return <Loader fullscreen label="Loading Hub" />;
   }
 
   if (hubData === null) return null;
 
   const assets = items.filter((i) =>
-    ASSET_CATEGORIES.includes(i.category as VaultCategory)
+    ASSET_CATEGORIES.includes(i.category as VaultCategory),
   );
   const directives = items.filter((i) =>
-    DIRECTIVE_CATEGORIES.includes(i.category as VaultCategory)
+    DIRECTIVE_CATEGORIES.includes(i.category as VaultCategory),
   );
   const documents = items.filter((i) =>
-    DOCUMENT_CATEGORIES.includes(i.category as VaultCategory)
+    DOCUMENT_CATEGORIES.includes(i.category as VaultCategory),
   );
 
   const { continuityScore } = hubData;
@@ -77,9 +73,7 @@ export function HubContent() {
       {/* Header */}
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-headline-lg text-primary mb-2">
-            Hub
-          </h1>
+          <h1 className="text-headline-lg text-primary mb-2">Hub</h1>
           <p className="text-body-lg text-secondary max-w-lg text-balance">
             Your central command for protected legacy
             <br />
@@ -136,8 +130,13 @@ export function HubContent() {
           ) : (
             <div className="space-y-3 mt-4">
               {assets.slice(0, 3).map((a) => (
-                <div key={a._id} className="flex justify-between items-center text-body-md">
-                  <span className="text-on-surface-variant truncate">{a.title}</span>
+                <div
+                  key={a._id}
+                  className="flex justify-between items-center text-body-md"
+                >
+                  <span className="text-on-surface-variant truncate">
+                    {a.title}
+                  </span>
                   <Icon
                     path={ICON_PATHS.checkCircle}
                     className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
@@ -182,7 +181,8 @@ export function HubContent() {
                 )}
               </div>
               <p className="text-label-md text-on-surface-variant">
-                {contacts.length} Primary Guardian{contacts.length > 1 ? "s" : ""} Linked
+                {contacts.length} Primary Guardian
+                {contacts.length > 1 ? "s" : ""} Linked
               </p>
             </>
           )}
@@ -196,7 +196,7 @@ export function HubContent() {
               "block p-6 w-full md:w-64 relative shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
               missingDirectives
                 ? "bg-surface-container border-2 border-error/20"
-                : "bg-surface-container-lowest border border-secondary/10"
+                : "bg-surface-container-lowest border border-secondary/10",
             )}
             style={{ borderRadius: "2rem" }}
           >
@@ -211,18 +211,21 @@ export function HubContent() {
                   "w-12 h-12 flex items-center justify-center",
                   missingDirectives
                     ? "bg-error/10 text-error"
-                    : "bg-secondary-container/30 text-secondary"
+                    : "bg-secondary-container/30 text-secondary",
                 )}
                 style={{ borderRadius: "1rem" }}
               >
-                <Icon path={ICON_PATHS.medicalInformation} className="w-6 h-6" />
+                <Icon
+                  path={ICON_PATHS.medicalInformation}
+                  className="w-6 h-6"
+                />
               </div>
               <span
                 className={cn(
                   "text-label-md px-2 py-1 rounded",
                   missingDirectives
                     ? "text-error bg-error/10"
-                    : "text-secondary bg-secondary-container/20"
+                    : "text-secondary bg-secondary-container/20",
                 )}
               >
                 {missingDirectives ? "Unmapped" : "Protected"}
@@ -232,7 +235,8 @@ export function HubContent() {
             {missingDirectives ? (
               <>
                 <p className="text-body-md text-on-surface-variant mt-2">
-                  Medical POA and Advance Directives are currently missing or expired.
+                  Medical POA and Advance Directives are currently missing or
+                  expired.
                 </p>
                 <span className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center">
                   Update Now
@@ -241,8 +245,13 @@ export function HubContent() {
             ) : (
               <div className="space-y-3 mt-4">
                 {directives.slice(0, 3).map((d) => (
-                  <div key={d._id} className="flex justify-between items-center text-body-md">
-                    <span className="text-on-surface-variant truncate">{d.title}</span>
+                  <div
+                    key={d._id}
+                    className="flex justify-between items-center text-body-md"
+                  >
+                    <span className="text-on-surface-variant truncate">
+                      {d.title}
+                    </span>
                     <Icon
                       path={ICON_PATHS.checkCircle}
                       className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
@@ -272,7 +281,9 @@ export function HubContent() {
                 {documents.length > 0 ? "Protected" : "Empty"}
               </span>
             </div>
-            <h3 className="font-headline font-bold text-primary mb-1">Documents</h3>
+            <h3 className="font-headline font-bold text-primary mb-1">
+              Documents
+            </h3>
             {documents.length === 0 ? (
               <p className="text-body-md text-on-surface-variant mt-2">
                 No documents stored yet.
@@ -280,8 +291,13 @@ export function HubContent() {
             ) : (
               <div className="space-y-3 mt-4">
                 {documents.slice(0, 3).map((d) => (
-                  <div key={d._id} className="flex justify-between items-center text-body-md">
-                    <span className="text-on-surface-variant truncate">{d.title}</span>
+                  <div
+                    key={d._id}
+                    className="flex justify-between items-center text-body-md"
+                  >
+                    <span className="text-on-surface-variant truncate">
+                      {d.title}
+                    </span>
                     <Icon
                       path={ICON_PATHS.checkCircle}
                       className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
@@ -353,7 +369,7 @@ export function HubContent() {
                   "flex items-center justify-between p-4 transition-colors rounded-xl group cursor-pointer",
                   action.done
                     ? "bg-surface-container-low/50 hover:bg-surface-container-low"
-                    : "bg-error/10 hover:bg-error/15"
+                    : "bg-error/10 hover:bg-error/15",
                 )}
               >
                 <span
@@ -361,7 +377,7 @@ export function HubContent() {
                     "flex items-center gap-3 font-headline font-bold text-sm",
                     action.done
                       ? "text-on-surface-variant line-through decoration-on-surface-variant/40"
-                      : "text-error"
+                      : "text-error",
                   )}
                 >
                   <span
@@ -369,18 +385,18 @@ export function HubContent() {
                       "w-9 h-9 rounded-lg flex items-center justify-center shadow-sm",
                       action.done
                         ? "bg-secondary-container/30"
-                        : "bg-surface-container-lowest"
+                        : "bg-surface-container-lowest",
                     )}
                   >
                     <Icon
                       path={
                         action.done
                           ? ICON_PATHS.checkCircle
-                          : ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item
+                          : (ACTION_ICONS[action.key] ?? ACTION_ICONS.add_item)
                       }
                       className={cn(
                         "w-4 h-4",
-                        action.done ? "text-secondary" : "text-error"
+                        action.done ? "text-secondary" : "text-error",
                       )}
                     />
                   </span>
@@ -392,7 +408,7 @@ export function HubContent() {
                     "w-5 h-5 transition-transform",
                     action.done
                       ? "text-outline-variant/40"
-                      : "text-outline-variant group-hover:translate-x-1"
+                      : "text-outline-variant group-hover:translate-x-1",
                   )}
                 />
               </Link>
@@ -438,7 +454,10 @@ export function HubContent() {
                     className="flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
                   >
                     <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm shrink-0">
-                      <Icon path={cat.icon} className="w-4 h-4 text-secondary" />
+                      <Icon
+                        path={cat.icon}
+                        className="w-4 h-4 text-secondary"
+                      />
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-headline font-bold text-primary truncate">
@@ -467,7 +486,8 @@ export function HubContent() {
             Reflect & Prepare
           </h4>
           <p className="text-body-md text-on-surface-variant/80 mt-1">
-            A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond.
+            A few honest questions, real pain points, and practical steps for
+            continuity — inside Keeplas and beyond.
           </p>
         </header>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -522,7 +542,7 @@ function NodeCard({
           "block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
           status === "protected"
             ? "border border-secondary/10"
-            : "border-2 border-error/20"
+            : "border-2 border-error/20",
         )}
         style={{ borderRadius: "2rem" }}
       >
@@ -556,7 +576,10 @@ function ContinuityScoreBadge({
   return (
     <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-full px-6">
       <div className="relative w-12 h-12 flex items-center justify-center">
-        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
+        <svg
+          className="absolute inset-0 w-full h-full -rotate-90"
+          viewBox="0 0 48 48"
+        >
           <circle
             className="text-surface-container-high"
             cx="24"
