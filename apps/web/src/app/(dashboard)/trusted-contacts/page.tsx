@@ -220,6 +220,10 @@ export default function TrustedContactsPage() {
                   </span>
                 </div>
 
+                <p className="text-label-md text-on-primary-container/60 mb-3">
+                  Step 2 · Shamir shards needed to unlock the vault
+                </p>
+
                 <p className="text-label-md font-bold text-on-primary mb-4">
                   {networkState === "unprotected" &&
                     "Unprotected — invite your first guardian"}
@@ -277,10 +281,13 @@ export default function TrustedContactsPage() {
 
             <div className="lg:col-span-8 space-y-6">
               {acceptedTrustContacts.length === 1 && (
-                <div className="p-4 bg-error-container/30 rounded-xl border-l-4 border-error">
+                <div className="p-4 bg-error-container/30 rounded-xl">
+                  <p className="text-label-md uppercase tracking-wider text-error mb-1">
+                    Step 1 · Unreachability confirmation
+                  </p>
                   <p className="text-body-md text-on-surface font-medium">
-                    Post-mortem access requires at least 2 trust contacts to
-                    confirm you are unreachable. Only{" "}
+                    Before recovery can start, at least 2 trust contacts must
+                    vote that you are unreachable. Only{" "}
                     {acceptedTrustContacts[0].name} is accepted so far — invite
                     at least one more.
                   </p>
