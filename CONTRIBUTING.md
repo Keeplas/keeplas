@@ -1,74 +1,71 @@
 # Contributing to Keeplas
 
-Thank you for your interest in contributing to Keeplas! This guide will help you get started.
+Thank you for your interest in contributing! For the system overview, read [`ARCHITECTURE.md`](./ARCHITECTURE.md) first.
 
-## Getting Started (Docker — recommended)
+## First-time setup
 
-The project ships a `docker-compose.yml` that pins Node 22 and pnpm 10.8.1, so you don't need to install anything locally except Docker.
+The fast path is **native** with `pnpm setup`. Docker is supported as an alternative.
 
-**Prerequisite:** Docker Desktop (or Docker Engine + Compose v2).
+### Native (recommended)
 
-1. Fork the repository and clone your fork:
+**Prerequisites:** Node 22 (see [`.nvmrc`](./.nvmrc)) and pnpm ≥ 10.8.1 (`corepack enable`).
+
+1. Fork and clone:
    `git clone https://github.com/YOUR_USERNAME/keeplas.git && cd keeplas`
-2. Copy the env template and fill the audit secret:
-   `cp .env.example .env.local`
-   Then set `KEEPLAS_CTX_SECRET` to the output of `openssl rand -base64 32`.
-3. **First time only** — create your personal Convex deployment (interactive, opens a browser):
-   `docker compose run --rm app npx convex dev --once --configure=new`
-   This populates `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` in the root `.env.local`.
-4. Consolidate the env files into a single source of truth:
-   `docker compose run --rm app pnpm link:env`
-   This symlinks `apps/web/.env.local` and `packages/convex/.env.local` to the root `.env.local`. From now on you only edit the root file.
-5. Push your secrets to your Convex deployment:
-   `docker compose run --rm app pnpm sync:convex-env`
-   This reads from both `.env.local` and `.env.convex.local` (backend-only vars).
-6. Start the stack (`predev` runs `check:env` and `check:convex-env` automatically):
-   `docker compose up`
-7. Open http://localhost:3000
+2. **One-command bootstrap:**
+   `pnpm setup`
+   Copies `.env.local.example` → `.env.local`, installs, links per-package envs, prints the next steps.
+3. Open `.env.local` and paste a freshly generated audit secret in `KEEPLAS_CTX_SECRET`:
+   `openssl rand -base64 32`
+4. Provision your personal Convex deployment (interactive — opens a browser):
+   `npx convex dev --once --configure=new`
+   This writes `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` into `.env.local`.
+5. Bootstrap the auth keys (chicken-and-egg — Better Auth writes JWT keys on first sign-in):
+   - `pnpm dev` to boot the app.
+   - Open <http://localhost:3000>, sign in once — this triggers JWT key generation on Convex.
+   - In another terminal: `pnpm sync:convex-env` — pushes the rest of your local env (audit secret, WebAuthn config, Resend keys) to Convex.
+6. From now on, just `pnpm dev`. The Convex env check runs in the background and warns on drift without blocking boot. Pre-push, run `pnpm check:convex` for a hard check.
 
-**Useful commands**
+> **Windows:** `pnpm link:env` uses POSIX symlinks. Enable Windows Developer Mode (Settings → Privacy → For developers) or run your shell as administrator the first time — afterward, the symlinks persist.
 
-- `docker compose exec app pnpm test` — run tests
-- `docker compose exec app pnpm lint && docker compose exec app pnpm typecheck` — lint & types
-- `docker compose exec app pnpm check:env` — validate `.env.local` is complete
-- `docker compose exec app pnpm check:convex-env` — validate the Convex deployment has every required server-side var
-- `docker compose down -v` — full reset (drops the `node_modules` volumes — next `up` re-installs)
+### Docker (alternative)
 
-## Getting Started (native, fallback)
+`docker-compose.yml` pins Node 22 and pnpm 10.8.1. Steps mirror the native path: prefix everything with `docker compose run --rm app …`. Start the stack with `docker compose up`. Full reset with `docker compose down -v`.
 
-If you prefer to run on the host without Docker:
+## Development workflow
 
-1. Install Node 22 (see `.nvmrc`) and pnpm 10.8.1 (`corepack enable`).
-2. `pnpm install`
-3. `cp .env.example .env.local` and set `KEEPLAS_CTX_SECRET` (`openssl rand -base64 32`).
-4. `npx convex dev --once --configure=new` — provisions your Convex deployment.
-5. `pnpm link:env` — symlinks `apps/web/.env.local` and `packages/convex/.env.local` to the root `.env.local` (single source of truth).
-6. `pnpm sync:convex-env` — pushes secrets to Convex (reads from `.env.local` + `.env.convex.local`).
-7. `pnpm dev` — `predev` runs `check:env` and `check:convex-env` first, failing fast if anything is missing on either side.
+1. Branch from `main`: `git checkout -b feature/your-feature` (or `fix/…`, `docs/…`, `chore/…`).
+2. Make changes. Commit often, with clear messages — see [keep-a-changelog categories](./CHANGELOG.md) for the verbs we use.
+3. Run checks locally: `pnpm lint && pnpm typecheck && pnpm test`.
+4. Push and open a PR. CI runs the same checks plus `pnpm audit`.
 
-## Development Workflow
+## Issue labels
 
-1. Create a branch from `main`: `git checkout -b feature/your-feature`
-2. Make your changes
-3. Run checks: `pnpm lint && pnpm typecheck && pnpm test`
-4. Commit with a clear message
-5. Push and open a Pull Request
+We use a flat label scheme so newcomers can find work fast:
 
-## Code Style
+- `good-first-issue` — small, well-scoped, no domain context required.
+- `help-wanted` — open contributions welcomed.
+- `area:web` — `apps/web/` (Next.js, UI, hooks, middleware).
+- `area:convex` — `packages/convex/` (schema, queries, mutations, actions).
+- `area:crypto` — `packages/crypto/` (**founder-approved only** — see Restricted Areas).
+- `area:ui` — `packages/ui/` design system.
+- `area:docs` — README, CONTRIBUTING, ARCHITECTURE, inline docs.
 
-- TypeScript strict mode
-- ESLint + Prettier for formatting
-- No `any` types — use proper typing
-- Comments in English
+## Code style
 
-## Restricted Areas
+- TypeScript strict mode. No `any` — use `unknown` + narrowing.
+- ESLint + Prettier enforce style. Pre-commit hook runs `lint-staged`.
+- Comments in English, only when the _why_ is non-obvious.
+- Don't pre-abstract — three similar lines beats an abstraction with one caller.
 
-The following directories require founder approval and cannot be modified by community contributors:
+## Restricted areas
 
-- `packages/crypto/` — Zero-knowledge and encryption code (security-critical)
-- `security/` — Audit reports
+The following directories require founder approval (CODEOWNERS):
 
-See `CODEOWNERS` for details.
+- `packages/crypto/` — zero-knowledge primitives.
+- `security/` — audit reports and threat models.
+
+PRs touching these will be tagged `needs-founder-review`.
 
 ## Contributor License Agreement
 
