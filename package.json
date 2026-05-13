@@ -10,7 +10,7 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "setup": "node scripts/setup.mjs",
+    "bootstrap": "node scripts/setup.mjs",
     "predev": "pnpm check:env",
     "dev": "node scripts/dev-with-convex-check.mjs",
     "prebuild": "pnpm check:env",

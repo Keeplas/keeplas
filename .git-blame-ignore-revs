@@ -1,0 +1,9 @@
+# Commits to skip when running `git blame`. Apply locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub honors this file automatically.
+
+# chore: apply prettier across the workspace (PR #1)
+4d834af563c2a037b7fa2c307ab4cd96cda40f4b
+
+# chore: apply prettier formatting to hub-content
+e49b6e640c0f69e62e5548b14b4cffc97feb145f
