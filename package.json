@@ -11,6 +11,7 @@
   },
   "scripts": {
     "bootstrap": "node scripts/setup.mjs",
+    "reset": "node scripts/reset.mjs",
     "predev": "pnpm check:env",
     "dev": "node scripts/dev-with-convex-check.mjs",
     "prebuild": "pnpm check:env",

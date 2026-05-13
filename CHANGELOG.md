@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 - `CHANGELOG.md` (this file) and `docs/RELEASE_PROCESS.md`.
 - `docs/CONVEX.md` — end-to-end Convex workflow (provisioning, schema changes, env sync, JWT bootstrap, gotchas, CLI reference).
 - `docs/DOCKER.md` — full Docker workflow (first-time setup, daily commands, `compose exec` vs `compose run`, host ↔ container file flow, when to use Docker vs native).
+- `pnpm reset` script — nuclear cleanup that wipes every `node_modules`, `.next`, and `.turbo` then reinstalls from the lockfile. Useful when pnpm's store has stale versions after a dep bump (the symptom is a runtime error referencing an old version of a dep).
+- CONTRIBUTING.md gains a "Troubleshooting" section covering the stale-module error, the `pnpm setup` collision, and the JWT chicken-and-egg.
 
 ### Changed
 
