@@ -31,13 +31,17 @@ export function UnlockGate({ children }: UnlockGateProps) {
   const { masterKey, setMasterKey } = useMasterKey();
   const user = useQuery(api.users.viewer);
   const userEmail = user?.email ?? null;
-  const { entries, loading: entriesLoading, unlock } = useDeviceUnlock({
+  const {
+    entries,
+    loading: entriesLoading,
+    unlock,
+  } = useDeviceUnlock({
     userEmail,
   });
 
   const [mode, setMode] = useState<Mode>("list");
   const [selectedEntry, setSelectedEntry] = useState<DeviceUnlockEntry | null>(
-    null
+    null,
   );
   const [pin, setPin] = useState("");
   const [phrase, setPhrase] = useState("");
@@ -52,15 +56,26 @@ export function UnlockGate({ children }: UnlockGateProps) {
       return JSON.parse(bundleString) as {
         version?: number;
         phraseSalt?: string;
-        iv: string;
-        encryptedMasterKey: string;
+        wrappingKey?: string;
+        iv?: string;
+        encryptedMasterKey?: string;
       };
     } catch {
       return null;
     }
   }, [bundleString]);
 
-  const isV2 = bundle?.version === 2;
+  // Treat any bundle that carries phrase-derived material (phraseSalt + iv +
+  // encryptedMasterKey, with no plaintext wrappingKey) as needing the V2
+  // unlock flow — even if the explicit `version` field is missing or stored
+  // differently. The strict `version === 2` check lets V2-shaped bundles slip
+  // through and leaves the user with a disabled vault.
+  const isV2 = !!(
+    bundle?.phraseSalt &&
+    bundle.iv &&
+    bundle.encryptedMasterKey &&
+    !("wrappingKey" in (bundle ?? {}))
+  );
 
   // Reset error when switching modes
   useEffect(() => {
@@ -117,7 +132,13 @@ export function UnlockGate({ children }: UnlockGateProps) {
 
   async function handlePhraseUnlock(e: React.FormEvent) {
     e.preventDefault();
-    if (!bundle || !bundle.phraseSalt) return;
+    if (
+      !bundle ||
+      !bundle.phraseSalt ||
+      !bundle.iv ||
+      !bundle.encryptedMasterKey
+    )
+      return;
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
       setError("Please enter all 24 words");
@@ -133,14 +154,14 @@ export function UnlockGate({ children }: UnlockGateProps) {
       const rawMaster = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv },
         rootKey,
-        ct
+        ct,
       );
       const master = await crypto.subtle.importKey(
         "raw",
         new Uint8Array(rawMaster),
         { name: "AES-GCM", length: 256 },
         true,
-        ["encrypt", "decrypt"]
+        ["encrypt", "decrypt"],
       );
       setMasterKey(master);
       setPhrase("");
@@ -152,7 +173,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
       setError(
         err instanceof Error && err.name === "OperationError"
           ? "Wrong recovery phrase — vault could not be decrypted"
-          : getErrorMessage(err, "Recovery phrase could not unlock the vault")
+          : getErrorMessage(err, "Recovery phrase could not unlock the vault"),
       );
     } finally {
       setBusy(false);
@@ -173,7 +194,9 @@ export function UnlockGate({ children }: UnlockGateProps) {
 
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
-              <h1 className="text-headline-md text-primary mb-2">Unlock vault</h1>
+              <h1 className="text-headline-md text-primary mb-2">
+                Unlock vault
+              </h1>
               <p className="text-body-md text-on-surface-variant">
                 Your vault is encrypted on this device. Choose how to unlock.
               </p>

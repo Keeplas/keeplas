@@ -21,13 +21,6 @@ type LegacyBundle = {
   encryptedMasterKey: string;
 };
 
-type V2Bundle = {
-  version: 2;
-  phraseSalt: string;
-  iv: string;
-  encryptedMasterKey: string;
-};
-
 /**
  * Restores the MasterKey from the encrypted key bundle stored in Convex.
  * Called on hub load for returning users who already completed
@@ -55,17 +48,36 @@ export function useRestoreMasterKey() {
 
     async function restore() {
       try {
-        const parsed = JSON.parse(user!.encryptedKeyBundle!) as
-          | LegacyBundle
-          | V2Bundle;
+        const parsed = JSON.parse(user!.encryptedKeyBundle!) as Record<
+          string,
+          unknown
+        >;
 
-        if ("version" in parsed && parsed.version === 2) {
-          // V2 bundle — RootKey required. Will be handled by the upcoming
-          // login + device-unlock flow.
+        // Anything carrying V2 material (phraseSalt) must go through
+        // UnlockGate — even if a stale `wrappingKey` is also present.
+        if (typeof parsed.phraseSalt === "string" && parsed.phraseSalt) {
           return;
         }
 
-        const legacy = parsed as LegacyBundle;
+        // Explicit non-V1 version: bail. Only `version: 1` or no version
+        // is treated as the legacy plaintext-wrappingKey shape.
+        if (typeof parsed.version === "number" && parsed.version !== 1) {
+          return;
+        }
+
+        // Legacy V1: must have a usable wrappingKey, iv and encryptedMasterKey.
+        if (
+          typeof parsed.wrappingKey !== "string" ||
+          !parsed.wrappingKey ||
+          typeof parsed.iv !== "string" ||
+          !parsed.iv ||
+          typeof parsed.encryptedMasterKey !== "string" ||
+          !parsed.encryptedMasterKey
+        ) {
+          return;
+        }
+
+        const legacy = parsed as unknown as LegacyBundle;
         const wrappingKeyRaw = base64ToUint8(legacy.wrappingKey);
         const iv = base64ToUint8(legacy.iv);
         const encryptedMasterKey = base64ToUint8(legacy.encryptedMasterKey);
@@ -75,13 +87,13 @@ export function useRestoreMasterKey() {
           wrappingKeyRaw,
           { name: "AES-GCM", length: 256 },
           false,
-          ["decrypt"]
+          ["decrypt"],
         );
 
         const masterKeyRaw = await crypto.subtle.decrypt(
           { name: "AES-GCM", iv },
           wrappingKey,
-          encryptedMasterKey
+          encryptedMasterKey,
         );
 
         const restoredKey = await crypto.subtle.importKey(
@@ -89,7 +101,7 @@ export function useRestoreMasterKey() {
           masterKeyRaw,
           { name: "AES-GCM", length: 256 },
           true,
-          ["encrypt", "decrypt"]
+          ["encrypt", "decrypt"],
         );
 
         setMasterKey(restoredKey);
