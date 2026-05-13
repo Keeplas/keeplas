@@ -68,27 +68,26 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 - pnpm **>= 10** (`corepack enable` recommended)
 - A Convex deployment (cloud or self-hosted) — see [Convex docs](https://docs.convex.dev)
 
-## Quick start
+## Quick start (native)
 
 ```bash
-# 1. Install dependencies
-pnpm install
+# 1. One-command bootstrap: copies .env.local, installs, links per-package envs
+pnpm setup
 
-# 2. Copy env template and fill values
-cp .env.example .env.local
+# 2. Provision your Convex deployment (one-time, opens a browser)
+npx convex dev --once --configure=new
 
-# 3. Provision Convex (creates a deployment, syncs schema)
-npx convex dev
-
-# 4. Run the dev server (predev hook validates your env automatically)
+# 3. Boot the app — Convex env check runs in the background, never blocks
 pnpm dev
 ```
 
-The web app runs at <http://localhost:3000>.
+Open <http://localhost:3000>, sign in once to trigger Better Auth's JWT key generation, then `pnpm sync:convex-env` to push your local secrets to the deployment. After that, `pnpm dev` is your normal workflow.
 
-> Whenever you change anything under `packages/convex/`, run `npx convex dev` again to regenerate types and sync the deployment.
+> Whenever you edit anything under `packages/convex/`, run `npx convex dev` again to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
 
-### Docker (optional, dev only)
+For the full bootstrap including the auth-key chicken-and-egg dance, see [`CONTRIBUTING.md`](./CONTRIBUTING.md#first-time-setup). For the system overview, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+
+## Try it (Docker)
 
 A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, and uses named volumes for `node_modules`, `.next`, `.turbo`, and Convex local state — host files mount in via bind mount, so edits hot-reload as usual.
 
@@ -119,7 +118,7 @@ All required variables are documented in [`.env.example`](./.env.example). High-
 - **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`, `NODE_ENV`
 - **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`, `SITE_URL`
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
-- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex-env` enforces this)
+- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this)
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Web Push — VAPID (optional)** — `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Life Check push channel
 - **WhatsApp Cloud API (optional)** — `WHATSAPP_*` — Life Check WhatsApp channel and WhatsApp OTP verification
@@ -131,7 +130,7 @@ Two env files cover the split:
 
 Both are read by `pnpm sync:convex-env` and pushed to the Convex deployment.
 
-Generate the audit secret with `openssl rand -base64 32`. Validate the web env with `pnpm check:env` and the Convex deployment with `pnpm check:convex-env` — both run automatically before `pnpm dev` and `pnpm build`.
+Generate the audit secret with `openssl rand -base64 32`. `pnpm check:env` runs automatically before `pnpm dev` and `pnpm build` (fast, local). The slower `pnpm check:convex` (round-trips to the deployment) is manual — also fires in the background during `pnpm dev` and warns on drift without blocking.
 
 ## Pricing
 
@@ -146,19 +145,20 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 ## Scripts
 
-| Command                 | Description                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------- |
-| `pnpm dev`              | Run all dev servers (Next.js, Convex) via Turborepo                                     |
-| `pnpm build`            | Production build for every workspace                                                    |
-| `pnpm lint`             | ESLint across the monorepo                                                              |
-| `pnpm typecheck`        | TypeScript `--noEmit` across all packages                                               |
-| `pnpm test`             | Run test suites (Vitest in `packages/crypto/`)                                          |
-| `pnpm format`           | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                    |
-| `pnpm clean`            | Remove build artifacts (`dist`, `.next`, `.turbo`)                                      |
-| `pnpm check:env`        | Validate that the web env (`.env.local`) is complete (runs before `dev`/`build`)        |
-| `pnpm check:convex-env` | Validate that the Convex deployment has every required server-side var (runs in predev) |
-| `pnpm sync:convex-env`  | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment           |
-| `pnpm link:env`         | Symlink `.env` files across workspaces                                                  |
+| Command                | Description                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `pnpm setup`           | One-command bootstrap (`.env.local`, install, link envs, prints next steps)                                   |
+| `pnpm dev`             | Run all dev servers via Turborepo. Convex env check runs in the background — never blocks boot                |
+| `pnpm build`           | Production build for every workspace                                                                          |
+| `pnpm lint`            | ESLint across the monorepo                                                                                    |
+| `pnpm typecheck`       | TypeScript `--noEmit` across all packages                                                                     |
+| `pnpm test`            | Run test suites (Vitest in `packages/crypto/`)                                                                |
+| `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                                          |
+| `pnpm clean`           | Remove build artifacts (`dist`, `.next`, `.turbo`)                                                            |
+| `pnpm check:env`       | Validate `.env.local` is complete (runs as predev/prebuild — fast, local-only)                                |
+| `pnpm check:convex`    | Validate that the Convex deployment has every required server-side var (manual, pre-push — `~30s round-trip`) |
+| `pnpm sync:convex-env` | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment                                 |
+| `pnpm link:env`        | Symlink `.env` files across workspaces                                                                        |
 
 ## Security model
 
