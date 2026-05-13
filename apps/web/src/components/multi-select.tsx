@@ -31,7 +31,10 @@ interface MultiSelectProps {
   emptyMessage?: string;
   searchPlaceholder?: string;
   triggerClassName?: string;
-  renderTrigger?: (selected: string[], options: MultiSelectOption[]) => ReactNode;
+  renderTrigger?: (
+    selected: string[],
+    options: MultiSelectOption[],
+  ) => ReactNode;
   disabled?: boolean;
   /**
    * Optional action rendered at the bottom of the popover (e.g. "Add new…").
@@ -88,7 +91,7 @@ export function MultiSelect({
           "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           "data-[state=open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
-          triggerClassName
+          triggerClassName,
         )}
       >
         <div className="flex-1 min-w-0">
@@ -97,9 +100,7 @@ export function MultiSelect({
           ) : selected.length === 0 ? (
             <span className="text-outline-variant">{placeholder}</span>
           ) : (
-            <span className="truncate">
-              {selected.length} selected
-            </span>
+            <span className="truncate">{selected.length} selected</span>
           )}
         </div>
         <Icon
@@ -134,7 +135,7 @@ export function MultiSelect({
                           "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
                           isSelected
                             ? "bg-secondary border-secondary text-on-secondary"
-                            : "border-outline-variant"
+                            : "border-outline-variant",
                         )}
                       >
                         {isSelected && (

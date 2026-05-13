@@ -50,9 +50,8 @@ export default function TotpRecoveryPage() {
             Recovery not configured
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            This account never bound the recovery phrase to its
-            authenticator. Contact support if you cannot access your
-            authenticator app.
+            This account never bound the recovery phrase to its authenticator.
+            Contact support if you cannot access your authenticator app.
           </p>
           <Link
             href="/login/totp"

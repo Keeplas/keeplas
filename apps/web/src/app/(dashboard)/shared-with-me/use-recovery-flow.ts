@@ -53,19 +53,19 @@ export function useRecoveryFlow({
 }: UseRecoveryFlowArgs) {
   const peers = useQuery(
     api.access_requests.getRecoveryPeers,
-    accessRequestId ? { contactId } : "skip"
+    accessRequestId ? { contactId } : "skip",
   );
   const wrappedForMe = useQuery(
     api.access_requests.getRecoveryShardsForMe,
-    accessRequestId ? { accessRequestId, contactId } : "skip"
+    accessRequestId ? { accessRequestId, contactId } : "skip",
   );
   const submissionCount = useQuery(
     api.access_requests.getRecoverySubmissionCount,
-    accessRequestId ? { accessRequestId } : "skip"
+    accessRequestId ? { accessRequestId } : "skip",
   );
 
   const submitMutation = useAuditedMutation(
-    api.access_requests.submitRecoveryShards
+    api.access_requests.submitRecoveryShards,
   );
   const { ensureOwnerKeypair } = useRecipientCrypto();
 
@@ -89,14 +89,14 @@ export function useRecoveryFlow({
     if (!stored) {
       setSubmitStatus("no_local_shard");
       setSubmitError(
-        "No raw shard stored for this vault yet — open this page once while online to receive it."
+        "No raw shard stored for this vault yet — open this page once while online to receive it.",
       );
       return;
     }
     if (!peers || peers.length === 0) {
       setSubmitStatus("no_peers");
       setSubmitError(
-        "No other trust contact has published a public key — recovery cannot proceed."
+        "No other trust contact has published a public key — recovery cannot proceed.",
       );
       return;
     }
@@ -107,7 +107,7 @@ export function useRecoveryFlow({
         peers.map(async (peer) => ({
           recipientContactId: peer.contactId,
           wrappedShard: await wrapBytes(stored.rawShard, peer.contactPublicKey),
-        }))
+        })),
       );
 
       await submitMutation({
@@ -134,14 +134,14 @@ export function useRecoveryFlow({
     if (!stored) {
       setReconstructStatus("no_local_shard");
       setReconstructError(
-        "No local shard for this vault — cannot reconstruct."
+        "No local shard for this vault — cannot reconstruct.",
       );
       return null;
     }
     if (!wrappedForMe || wrappedForMe.length === 0) {
       setReconstructStatus("missing_shards");
       setReconstructError(
-        "No peer submissions addressed to you yet. Wait for more contacts to submit."
+        "No peer submissions addressed to you yet. Wait for more contacts to submit.",
       );
       return null;
     }

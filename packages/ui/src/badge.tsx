@@ -7,22 +7,20 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-secondary-container text-on-secondary-container",
-        outline:
-          "bg-transparent text-on-surface-variant",
-        destructive:
-          "bg-error text-on-error",
+        default: "bg-secondary-container text-on-secondary-container",
+        outline: "bg-transparent text-on-surface-variant",
+        destructive: "bg-error text-on-error",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {

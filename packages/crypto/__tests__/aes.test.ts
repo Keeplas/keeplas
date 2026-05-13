@@ -33,7 +33,11 @@ describe("AES-256-GCM", () => {
 
   it("encrypts and decrypts JSON roundtrip", async () => {
     const key = await generateMasterKey();
-    const data = { name: "Test Vault Item", secret: "password123", amount: 42000 };
+    const data = {
+      name: "Test Vault Item",
+      secret: "password123",
+      amount: 42000,
+    };
     const plaintext = new TextEncoder().encode(JSON.stringify(data));
 
     const { ciphertext, iv } = await encrypt(plaintext, key);
@@ -72,7 +76,7 @@ describe("AES-256-GCM", () => {
     const result2 = await encrypt(plaintext, key);
 
     expect(new Uint8Array(result1.ciphertext)).not.toEqual(
-      new Uint8Array(result2.ciphertext)
+      new Uint8Array(result2.ciphertext),
     );
   });
 
@@ -111,7 +115,10 @@ describe("AES-256-GCM", () => {
     const plaintext = new Uint8Array(1024 * 100); // 100KB
     // getRandomValues limited to 65536 bytes, fill in chunks
     for (let i = 0; i < plaintext.length; i += 65536) {
-      const chunk = plaintext.subarray(i, Math.min(i + 65536, plaintext.length));
+      const chunk = plaintext.subarray(
+        i,
+        Math.min(i + 65536, plaintext.length),
+      );
       crypto.getRandomValues(chunk);
     }
 

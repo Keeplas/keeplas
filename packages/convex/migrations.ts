@@ -20,7 +20,10 @@ export const migrateRecipients = internalMutation({
     const contacts = await ctx.db.query("trusted_contacts").collect();
     for (const c of contacts) {
       if (c.contactType === undefined) {
-        await ctx.db.patch(c._id, { contactType: "trust", updatedAt: Date.now() });
+        await ctx.db.patch(c._id, {
+          contactType: "trust",
+          updatedAt: Date.now(),
+        });
         contactsPatched++;
       }
     }
@@ -42,7 +45,7 @@ export const migrateRecipients = internalMutation({
       const existingDefault = await ctx.db
         .query("recipient_groups")
         .withIndex("by_user_default", (q) =>
-          q.eq("userId", user._id).eq("isDefault", true)
+          q.eq("userId", user._id).eq("isDefault", true),
         )
         .first();
       if (existingDefault) continue;

@@ -24,7 +24,9 @@ export async function generatePhrase(): Promise<string[]> {
  * Convert raw entropy bytes to a BIP-39 mnemonic phrase.
  * Exported for testing with deterministic entropy.
  */
-export async function entropyToPhrase(entropy: Uint8Array<ArrayBuffer>): Promise<string[]> {
+export async function entropyToPhrase(
+  entropy: Uint8Array<ArrayBuffer>,
+): Promise<string[]> {
   if (entropy.length !== 32) {
     throw new Error("Entropy must be exactly 32 bytes (256 bits)");
   }
@@ -89,7 +91,7 @@ export async function phraseToKey(words: string[]): Promise<CryptoKey> {
     encoder.encode(passphrase),
     "PBKDF2",
     false,
-    ["deriveKey"]
+    ["deriveKey"],
   );
 
   // Derive AES-256-GCM key
@@ -103,7 +105,7 @@ export async function phraseToKey(words: string[]): Promise<CryptoKey> {
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     true, // extractable — needed for Shamir splitting
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -117,7 +119,9 @@ export async function phraseToKey(words: string[]): Promise<CryptoKey> {
  * The verifier proves possession of the recovery phrase without coupling
  * the TOTP-reset path with vault-key derivation or `phraseToHash`.
  */
-export async function phraseToTotpResetVerifier(words: string[]): Promise<string> {
+export async function phraseToTotpResetVerifier(
+  words: string[],
+): Promise<string> {
   if (words.length !== 24) {
     throw new Error("Recovery phrase must be exactly 24 words");
   }
@@ -130,7 +134,7 @@ export async function phraseToTotpResetVerifier(words: string[]): Promise<string
     encoder.encode(passphrase),
     "PBKDF2",
     false,
-    ["deriveBits"]
+    ["deriveBits"],
   );
 
   const derivedBits = await crypto.subtle.deriveBits(
@@ -141,7 +145,7 @@ export async function phraseToTotpResetVerifier(words: string[]): Promise<string
       hash: "SHA-256",
     },
     keyMaterial,
-    256
+    256,
   );
 
   const hashBuffer = await crypto.subtle.digest("SHA-256", derivedBits);
@@ -166,7 +170,7 @@ export async function phraseToHash(words: string[]): Promise<string> {
   const encoder = new TextEncoder();
   const hashBuffer = await crypto.subtle.digest(
     "SHA-256",
-    encoder.encode(normalized)
+    encoder.encode(normalized),
   );
 
   // Convert to hex string

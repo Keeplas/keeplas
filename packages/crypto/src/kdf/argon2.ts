@@ -28,7 +28,7 @@ function normalizePhrase(phraseOrWords: string | string[]): string {
 
 async function importAesKey(
   raw: Uint8Array,
-  extractable: boolean
+  extractable: boolean,
 ): Promise<CryptoKey> {
   // Copy into a fresh ArrayBuffer-backed buffer so importKey's strict
   // BufferSource overload accepts it under noUncheckedIndexedAccess.
@@ -39,13 +39,13 @@ async function importAesKey(
     buf,
     { name: "AES-GCM", length: 256 },
     extractable,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
 async function runArgon2id(
   password: string,
-  salt: Uint8Array
+  salt: Uint8Array,
 ): Promise<Uint8Array> {
   const result = await argon2id({
     password,
@@ -68,7 +68,7 @@ async function runArgon2id(
 export async function deriveRootKey(
   phrase: string | string[],
   userSalt: Uint8Array,
-  options: { extractable?: boolean } = {}
+  options: { extractable?: boolean } = {},
 ): Promise<CryptoKey> {
   if (userSalt.length < MIN_SALT_BYTES) {
     throw new Error(`userSalt must be at least ${MIN_SALT_BYTES} bytes`);
@@ -87,7 +87,7 @@ export async function deriveRootKey(
  */
 export async function deriveDeviceWrapKey(
   secret: string,
-  deviceSalt: Uint8Array
+  deviceSalt: Uint8Array,
 ): Promise<CryptoKey> {
   if (deviceSalt.length < MIN_SALT_BYTES) {
     throw new Error(`deviceSalt must be at least ${MIN_SALT_BYTES} bytes`);

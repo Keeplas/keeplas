@@ -29,7 +29,7 @@ export function Loader({
     <div
       className={cn(
         "flex min-h-[70vh] w-full flex-col items-center justify-center gap-4",
-        className
+        className,
       )}
       role="status"
       aria-live="polite"

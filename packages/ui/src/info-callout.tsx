@@ -21,14 +21,12 @@ const TONE_STYLES: Record<
     icon: "text-secondary",
   },
   success: {
-    container:
-      "bg-secondary/10 border-secondary/30 text-on-surface",
+    container: "bg-secondary/10 border-secondary/30 text-on-surface",
     icon: "text-secondary",
   },
 };
 
-export interface InfoCalloutProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface InfoCalloutProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Heroicons-style SVG path data passed to the inline icon. */
   icon: string;
   tone?: InfoCalloutTone;
@@ -54,14 +52,11 @@ export function InfoCallout({
       className={cn(
         "flex items-start gap-3 p-3 rounded-xl border",
         tones.container,
-        className
+        className,
       )}
       {...props}
     >
-      <Icon
-        path={icon}
-        className={cn("w-4 h-4 mt-0.5 shrink-0", tones.icon)}
-      />
+      <Icon path={icon} className={cn("w-4 h-4 mt-0.5 shrink-0", tones.icon)} />
       <div className="text-label-md leading-relaxed">{children}</div>
     </div>
   );

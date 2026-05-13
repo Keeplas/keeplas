@@ -11,7 +11,7 @@ interface MediaRecorderPanelProps {
   mode: RecorderMode;
   onRecorded: (
     blob: Blob,
-    meta: { mimeType: string; durationSec: number }
+    meta: { mimeType: string; durationSec: number },
   ) => void;
   onCancel: () => void;
 }
@@ -197,8 +197,11 @@ export function MediaRecorderPanel({
         const Ctor =
           typeof AudioContext !== "undefined"
             ? AudioContext
-            : (window as unknown as { webkitAudioContext?: typeof AudioContext })
-                .webkitAudioContext;
+            : (
+                window as unknown as {
+                  webkitAudioContext?: typeof AudioContext;
+                }
+              ).webkitAudioContext;
         if (!Ctor) return;
         const audioCtx = new Ctor();
         const source = audioCtx.createMediaStreamSource(stream);
@@ -215,7 +218,7 @@ export function MediaRecorderPanel({
         // Waveform is optional — silent failure keeps recording functional.
       }
     },
-    [drawWaveform]
+    [drawWaveform],
   );
 
   const requestStream = useCallback(async (): Promise<MediaStream> => {
@@ -346,7 +349,7 @@ export function MediaRecorderPanel({
       const blob = new Blob(chunksRef.current, { type: finalMime });
       const durationSec = Math.max(
         1,
-        Math.round((Date.now() - startedAtRef.current) / 1000)
+        Math.round((Date.now() - startedAtRef.current) / 1000),
       );
       setRecordedBlob(blob);
       setRecordedMime(finalMime);
@@ -414,7 +417,8 @@ export function MediaRecorderPanel({
       return "Capture unavailable. Adjust permissions and retry.";
     if (phase === "recording")
       return `Recording — ${formatDuration(elapsed)} / max ${formatDuration(MAX_DURATION_SEC[mode])}`;
-    if (phase === "stopped") return `Preview — ${formatDuration(recordedDuration)}`;
+    if (phase === "stopped")
+      return `Preview — ${formatDuration(recordedDuration)}`;
     return `Encrypted on your device. Max ${formatDuration(MAX_DURATION_SEC[mode])}.`;
   })();
 
@@ -427,7 +431,7 @@ export function MediaRecorderPanel({
               "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
               mode === "audio"
                 ? "bg-secondary/10 text-secondary"
-                : "bg-primary/10 text-primary"
+                : "bg-primary/10 text-primary",
             )}
           >
             <Icon
@@ -439,7 +443,9 @@ export function MediaRecorderPanel({
             <p className="text-headline-sm text-primary">
               {mode === "audio" ? "Voice recording" : "Video recording"}
             </p>
-            <p className="text-label-md text-on-surface-variant">{subheadline}</p>
+            <p className="text-label-md text-on-surface-variant">
+              {subheadline}
+            </p>
           </div>
         </div>
         <button
@@ -495,7 +501,9 @@ export function MediaRecorderPanel({
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  phase === "recording" ? "bg-error animate-pulse" : "bg-secondary"
+                  phase === "recording"
+                    ? "bg-error animate-pulse"
+                    : "bg-secondary",
                 )}
               />
               {phase === "recording" ? "Recording" : "Live preview"}
@@ -506,11 +514,7 @@ export function MediaRecorderPanel({
 
       {mode === "audio" && phase !== "stopped" && (
         <div className="relative w-full h-28 rounded-xl bg-surface overflow-hidden flex items-center justify-center">
-          <canvas
-            ref={canvasRef}
-            className="w-full h-full"
-            aria-hidden
-          />
+          <canvas ref={canvasRef} className="w-full h-full" aria-hidden />
           {phase === "warming" && (
             <div className="absolute inset-0 flex items-center justify-center gap-2 text-body-md text-on-surface-variant bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
@@ -525,7 +529,9 @@ export function MediaRecorderPanel({
               <span
                 className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  phase === "recording" ? "bg-error animate-pulse" : "bg-secondary"
+                  phase === "recording"
+                    ? "bg-error animate-pulse"
+                    : "bg-secondary",
                 )}
               />
               {phase === "recording" ? "Recording" : "Mic live"}

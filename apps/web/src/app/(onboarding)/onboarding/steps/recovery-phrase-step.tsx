@@ -43,7 +43,11 @@ export function RecoveryPhraseStep({
     setExporting(true);
     try {
       const { jsPDF } = await import("jspdf");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const marginX = 20;
       let cursorY = 24;
@@ -93,7 +97,7 @@ export function RecoveryPhraseStep({
       pdf.setTextColor(60);
       const copyPasteWrapped = pdf.splitTextToSize(
         phrase.join(" "),
-        pageWidth - marginX * 2
+        pageWidth - marginX * 2,
       );
       pdf.text(copyPasteWrapped, marginX, cursorY);
 
@@ -108,9 +112,7 @@ export function RecoveryPhraseStep({
   }
 
   if (!phrase) {
-    return (
-      <Loader label="Generating your Recovery Words" />
-    );
+    return <Loader label="Generating your Recovery Words" />;
   }
 
   return (
@@ -197,10 +199,10 @@ export function RecoveryPhraseStep({
             Absolute Recovery Authority
           </h3>
           <p className="font-body text-on-primary-container leading-relaxed max-w-2xl">
-            These words are the only way to recover your vault. Keep them offline
-            and safe. Anyone with access to these words possesses full authority
-            over your digital legacy. We recommend writing them on paper and
-            storing in a secure, fireproof location.
+            These words are the only way to recover your vault. Keep them
+            offline and safe. Anyone with access to these words possesses full
+            authority over your digital legacy. We recommend writing them on
+            paper and storing in a secure, fireproof location.
           </p>
         </div>
       </div>
@@ -305,8 +307,8 @@ export function RecoveryPhraseStep({
           />
           <span className="text-sm text-on-surface font-body">
             I have written down my 24 Recovery Words and stored them in a safe
-            place. I understand that losing these words means I cannot recover my
-            vault.
+            place. I understand that losing these words means I cannot recover
+            my vault.
           </span>
         </label>
 

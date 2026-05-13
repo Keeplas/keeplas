@@ -19,7 +19,7 @@ interface VerifyArgs {
 export function useVerifyShard() {
   const { ensureOwnerKeypair, isReady } = useRecipientCrypto();
   const confirmShardVerified = useAuditedMutation(
-    api.trusted_contacts.confirmShardVerified
+    api.trusted_contacts.confirmShardVerified,
   );
 
   const [status, setStatus] = useState<VerifyStatus>("idle");
@@ -32,7 +32,7 @@ export function useVerifyShard() {
       try {
         if (!verificationEnvelope) {
           throw new Error(
-            "Owner hasn't enabled verification yet — try again later."
+            "Owner hasn't enabled verification yet — try again later.",
           );
         }
         const { secretKey } = await ensureOwnerKeypair();
@@ -40,7 +40,7 @@ export function useVerifyShard() {
         const decoded = new TextDecoder().decode(plaintext);
         if (decoded !== VERIFICATION_PLAINTEXT) {
           throw new Error(
-            "Verification failed — please contact the vault owner."
+            "Verification failed — please contact the vault owner.",
           );
         }
         await confirmShardVerified({ contactId });
@@ -54,7 +54,7 @@ export function useVerifyShard() {
         setStatus("error");
       }
     },
-    [ensureOwnerKeypair, confirmShardVerified]
+    [ensureOwnerKeypair, confirmShardVerified],
   );
 
   return { verify, status, error, isReady };

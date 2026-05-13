@@ -14,10 +14,10 @@ import { VERIFICATION_PLAINTEXT } from "../shared-with-me/use-verify-shard";
  * verification feature and stays a no-op on subsequent renders.
  */
 export function useBackfillVerificationEnvelopes(
-  contacts: Doc<"trusted_contacts">[] | undefined
+  contacts: Doc<"trusted_contacts">[] | undefined,
 ) {
   const setVerificationEnvelope = useAuditedMutation(
-    api.trusted_contacts.setVerificationEnvelope
+    api.trusted_contacts.setVerificationEnvelope,
   );
   const inFlight = useRef<Set<string>>(new Set());
 
@@ -29,7 +29,7 @@ export function useBackfillVerificationEnvelopes(
         c.invitationStatus === "accepted" &&
         !!c.contactPublicKey &&
         !c.verificationEnvelope &&
-        !inFlight.current.has(c._id)
+        !inFlight.current.has(c._id),
     );
     if (candidates.length === 0) return;
 

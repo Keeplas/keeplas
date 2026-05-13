@@ -110,9 +110,21 @@ const SECURITY_POINTS: SecurityPoint[] = [
 
 const QUICK_LINKS: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
-  { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.key },
-  { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
-  { label: "Subscription", href: "/settings/subscription", iconPath: ICON_PATHS.creditCard },
+  {
+    label: "Security Center",
+    href: "/settings/security",
+    iconPath: ICON_PATHS.key,
+  },
+  {
+    label: "Recovery Kit",
+    href: "/settings/recovery-kit",
+    iconPath: ICON_PATHS.key,
+  },
+  {
+    label: "Subscription",
+    href: "/settings/subscription",
+    iconPath: ICON_PATHS.creditCard,
+  },
 ];
 
 export default function DocsPage() {
@@ -120,16 +132,15 @@ export default function DocsPage() {
     <div className="max-w-screen-2xl mx-auto space-y-16">
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-label-md text-secondary">
-          Documentation
-        </span>
+        <span className="text-label-md text-secondary">Documentation</span>
         <h1 className="text-headline-lg text-primary">
           How Keeplas protects your legacy.
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
-          Keeplas is a life-continuity platform. We combine a zero-knowledge vault, a
-          multi-channel life check, an autonomous scenario engine and a social recovery
-          network so your digital legacy outlives you — on your terms.
+          Keeplas is a life-continuity platform. We combine a zero-knowledge
+          vault, a multi-channel life check, an autonomous scenario engine and a
+          social recovery network so your digital legacy outlives you — on your
+          terms.
         </p>
       </header>
 
@@ -144,9 +155,10 @@ export default function DocsPage() {
             Your key never leaves your device.
           </h2>
           <p className="text-body-lg text-on-primary-container">
-            The master key that unlocks your vault is generated and stored only on your
-            devices. Keeplas servers hold encrypted blobs plus the public metadata needed
-            to orchestrate life checks — nothing more. Even we cannot read your vault.
+            The master key that unlocks your vault is generated and stored only
+            on your devices. Keeplas servers hold encrypted blobs plus the
+            public metadata needed to orchestrate life checks — nothing more.
+            Even we cannot read your vault.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
@@ -169,9 +181,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-secondary rounded-full" />
-          <h2 className="text-headline-md text-primary">
-            Core Features
-          </h2>
+          <h2 className="text-headline-md text-primary">Core Features</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {CORE_FEATURES.map((feature) => (
@@ -209,9 +219,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-primary rounded-full" />
-          <h2 className="text-headline-md text-primary">
-            Security Model
-          </h2>
+          <h2 className="text-headline-md text-primary">Security Model</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {SECURITY_POINTS.map((point) => (
@@ -223,9 +231,7 @@ export default function DocsPage() {
                 <Icon path={point.iconPath} className="w-5 h-5" />
               </span>
               <div className="space-y-1">
-                <h3 className="text-headline-sm text-primary">
-                  {point.title}
-                </h3>
+                <h3 className="text-headline-sm text-primary">{point.title}</h3>
                 <p className="text-body-md text-on-surface-variant">
                   {point.body}
                 </p>
@@ -290,12 +296,10 @@ export default function DocsPage() {
       <section className="bg-surface-container-low rounded-2xl p-8 ghost-border">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
           <div>
-            <h2 className="text-headline-sm text-primary">
-              Jump to a feature
-            </h2>
+            <h2 className="text-headline-sm text-primary">Jump to a feature</h2>
             <p className="text-body-md text-on-surface-variant mt-1">
-              All documentation is inline with the product — each screen has its own
-              guided empty state and tooltips.
+              All documentation is inline with the product — each screen has its
+              own guided empty state and tooltips.
             </p>
           </div>
         </div>
@@ -306,7 +310,10 @@ export default function DocsPage() {
                 href={link.href}
                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container transition-colors text-body-md font-medium text-primary"
               >
-                <Icon path={link.iconPath} className="w-4 h-4 text-secondary shrink-0" />
+                <Icon
+                  path={link.iconPath}
+                  className="w-4 h-4 text-secondary shrink-0"
+                />
                 <span className="truncate">{link.label}</span>
               </Link>
             </li>

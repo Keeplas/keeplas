@@ -27,9 +27,5 @@ export default function OnboardingLayout({
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-surface">
-      {children}
-    </div>
-  );
+  return <div className="min-h-screen bg-surface">{children}</div>;
 }

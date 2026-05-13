@@ -152,7 +152,8 @@ function AttachmentCard({
               file.kind === "audio" && "bg-secondary/10 text-secondary",
               file.kind === "video" && "bg-primary/10 text-primary",
               file.kind === "image" && "bg-tertiary/10 text-tertiary",
-              file.kind === "document" && "bg-surface-container-high text-primary"
+              file.kind === "document" &&
+                "bg-surface-container-high text-primary",
             )}
           >
             <Icon path={iconForKind(file.kind)} className="w-5 h-5" />
@@ -161,7 +162,9 @@ function AttachmentCard({
             <p className="text-headline-sm text-primary truncate">
               {file.name}
             </p>
-            <p className="text-label-md text-on-surface-variant mt-0.5">{meta}</p>
+            <p className="text-label-md text-on-surface-variant mt-0.5">
+              {meta}
+            </p>
           </div>
         </div>
         {plainUrl && (
@@ -214,7 +217,10 @@ function AttachmentCard({
 
       {plainUrl && file.kind === "document" && (
         <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3 text-body-md text-on-surface-variant">
-          <Icon path={ICON_PATHS.pictureAsPdf} className="w-4 h-4 text-secondary" />
+          <Icon
+            path={ICON_PATHS.pictureAsPdf}
+            className="w-4 h-4 text-secondary"
+          />
           Document ready — open or download to view.
           <a
             href={plainUrl}

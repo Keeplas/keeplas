@@ -33,7 +33,7 @@ function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];
   const exponent = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1
+    units.length - 1,
   );
   const value = bytes / Math.pow(1024, exponent);
   const decimals = exponent === 0 || value >= 100 ? 0 : value >= 10 ? 1 : 2;
@@ -48,13 +48,13 @@ export default function SettingsUsagePage() {
 
   const usedPercent = Math.min(
     100,
-    Math.round((stats.storageBytes / STORAGE_QUOTA_BYTES) * 100)
+    Math.round((stats.storageBytes / STORAGE_QUOTA_BYTES) * 100),
   );
   const isNearLimit = usedPercent >= 80;
   const remainingBytes = Math.max(0, STORAGE_QUOTA_BYTES - stats.storageBytes);
 
   const categoryEntries = Object.entries(stats.categoryCounts).sort(
-    (a, b) => b[1] - a[1]
+    (a, b) => b[1] - a[1],
   );
 
   return (
@@ -109,8 +109,7 @@ export default function SettingsUsagePage() {
             <div className="space-y-2 flex-1">
               <p className="text-body-md text-on-error-container">
                 You&rsquo;re close to your storage limit. Upgrade to Lifetime
-                for 10 GB of encrypted capacity and additional continuity
-                tools.
+                for 10 GB of encrypted capacity and additional continuity tools.
               </p>
               <Link
                 href="/settings/subscription"

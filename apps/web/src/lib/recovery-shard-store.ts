@@ -47,7 +47,7 @@ function openDb(): Promise<IDBDatabase> {
 
 function tx<T>(
   mode: IDBTransactionMode,
-  fn: (store: IDBObjectStore) => IDBRequest<T> | T
+  fn: (store: IDBObjectStore) => IDBRequest<T> | T,
 ): Promise<T> {
   return openDb().then(
     (db) =>
@@ -67,12 +67,12 @@ function tx<T>(
         }
         transaction.oncomplete = () => resolve(result as T);
         transaction.onerror = () => reject(transaction.error);
-      })
+      }),
   );
 }
 
 export async function getStoredShard(
-  ownerUserId: string
+  ownerUserId: string,
 ): Promise<StoredShard | null> {
   const result = await tx("readonly", (store) => store.get(ownerUserId));
   return (result as StoredShard | undefined) ?? null;

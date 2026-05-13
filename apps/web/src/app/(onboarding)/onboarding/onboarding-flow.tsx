@@ -22,7 +22,7 @@ interface OnboardingFlowProps {
 
 export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>(
-    (initialStep as OnboardingStep) || "auth_complete"
+    (initialStep as OnboardingStep) || "auth_complete",
   );
   // The recovery phrase is held in memory only — never persisted to server
   const [phrase, setPhrase] = useState<string[] | null>(null);
@@ -81,7 +81,10 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {steps.map((s, i) => (
-            <div key={s.key} className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
+            <div
+              key={s.key}
+              className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0"
+            >
               <div
                 className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg font-label transition-colors ${
                   i <= currentStepIndex
@@ -89,7 +92,9 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                     : "bg-surface-container text-on-surface-variant"
                 }`}
               >
-                <span className="text-[10px] md:text-xs font-bold">{i + 1}</span>
+                <span className="text-[10px] md:text-xs font-bold">
+                  {i + 1}
+                </span>
                 <span className="text-[10px] md:text-xs tracking-wide whitespace-nowrap">
                   {s.label}
                 </span>
@@ -97,7 +102,9 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
               {i < steps.length - 1 && (
                 <div
                   className={`w-3 sm:w-5 md:w-8 h-px shrink-0 ${
-                    i < currentStepIndex ? "bg-secondary" : "bg-outline-variant/30"
+                    i < currentStepIndex
+                      ? "bg-secondary"
+                      : "bg-outline-variant/30"
                   }`}
                 />
               )}
@@ -119,7 +126,11 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           />
         )}
         {step === "verification" && phrase && (
-          <VerificationStep phrase={phrase} onVerified={handleVerified} onBack={handleBackToPhrase} />
+          <VerificationStep
+            phrase={phrase}
+            onVerified={handleVerified}
+            onBack={handleBackToPhrase}
+          />
         )}
         {step === "key_generation" && phrase && (
           <KeyGenerationStep phrase={phrase} onComplete={handleVaultReady} />

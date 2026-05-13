@@ -71,7 +71,7 @@ export function useRecipientCrypto() {
       const plaintext = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: base64ToUint8(bundle.iv) },
         masterKey,
-        base64ToUint8(bundle.ciphertext)
+        base64ToUint8(bundle.ciphertext),
       );
       const secretKeyB64 = new TextDecoder().decode(plaintext);
       const secretKey = parseSecretKey(secretKeyB64);
@@ -92,7 +92,7 @@ export function useRecipientCrypto() {
     const ciphertext = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       masterKey,
-      skBuf
+      skBuf,
     );
     const encryptedAsymmetricSecretKey = JSON.stringify({
       ciphertext: uint8ToBase64(new Uint8Array(ciphertext)),
@@ -120,7 +120,7 @@ export function useRecipientCrypto() {
    */
   const generateDekAndWrap = useCallback(
     async (
-      recipients: Array<{ contactId: string; contactPublicKey?: string }>
+      recipients: Array<{ contactId: string; contactPublicKey?: string }>,
     ): Promise<{
       dek: CryptoKey;
       ownerWrap: WrappedDek;
@@ -132,7 +132,7 @@ export function useRecipientCrypto() {
       const dek = await crypto.subtle.generateKey(
         { name: "AES-GCM", length: 256 },
         true,
-        ["encrypt", "decrypt"]
+        ["encrypt", "decrypt"],
       );
 
       const ownerEnvelope = await wrapDek(dek, ownerPublicB64);
@@ -158,7 +158,7 @@ export function useRecipientCrypto() {
 
       return { dek, ownerWrap, recipientWraps, skippedRecipientIds };
     },
-    [ensureOwnerKeypair]
+    [ensureOwnerKeypair],
   );
 
   const unwrapOwnerDek = useCallback(
@@ -167,7 +167,7 @@ export function useRecipientCrypto() {
       // unwrapDek already returns an extractable key suitable for re-wrap.
       return unwrapDek(wrap.wrappedDek, secretKey);
     },
-    [ensureOwnerKeypair]
+    [ensureOwnerKeypair],
   );
 
   /**
@@ -179,7 +179,7 @@ export function useRecipientCrypto() {
   const wrapExistingDek = useCallback(
     async (
       dek: CryptoKey,
-      recipients: Array<{ contactId: string; contactPublicKey?: string }>
+      recipients: Array<{ contactId: string; contactPublicKey?: string }>,
     ): Promise<{
       ownerWrap: WrappedDek;
       recipientWraps: RecipientWrap[];
@@ -210,7 +210,7 @@ export function useRecipientCrypto() {
 
       return { ownerWrap, recipientWraps, skippedRecipientIds };
     },
-    [ensureOwnerKeypair]
+    [ensureOwnerKeypair],
   );
 
   return {

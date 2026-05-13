@@ -32,7 +32,9 @@ export function ChannelList({ channels, onToggle }: ChannelListProps) {
                 <Icon path={ch.iconPath} className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="text-body-md font-bold text-primary">{ch.label}</p>
+                <p className="text-body-md font-bold text-primary">
+                  {ch.label}
+                </p>
                 <p className="text-body-md text-on-surface-variant">
                   {ch.description}
                 </p>

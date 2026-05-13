@@ -10,9 +10,7 @@ function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") {
-      reject(
-        new DeviceUnlockError("IndexedDB not available", "unsupported")
-      );
+      reject(new DeviceUnlockError("IndexedDB not available", "unsupported"));
       return;
     }
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -28,7 +26,7 @@ function openDb(): Promise<IDBDatabase> {
       reject(
         new DeviceUnlockError("Failed to open device-unlock DB", "io", {
           cause: req.error,
-        })
+        }),
       );
   });
   return dbPromise;
@@ -36,7 +34,7 @@ function openDb(): Promise<IDBDatabase> {
 
 function tx<T>(
   mode: IDBTransactionMode,
-  fn: (store: IDBObjectStore) => IDBRequest<T> | Promise<T>
+  fn: (store: IDBObjectStore) => IDBRequest<T> | Promise<T>,
 ): Promise<T> {
   return openDb().then(
     (db) =>
@@ -52,7 +50,11 @@ function tx<T>(
                 result = req.result;
               };
               req.onerror = () =>
-                reject(new DeviceUnlockError("DB op failed", "io", { cause: req.error }));
+                reject(
+                  new DeviceUnlockError("DB op failed", "io", {
+                    cause: req.error,
+                  }),
+                );
             } else {
               result = r as T;
             }
@@ -63,14 +65,14 @@ function tx<T>(
           reject(
             new DeviceUnlockError("DB tx failed", "io", {
               cause: transaction.error,
-            })
+            }),
           );
-      })
+      }),
   );
 }
 
 export async function listEntriesForUser(
-  userEmail: string
+  userEmail: string,
 ): Promise<DeviceUnlockEntry[]> {
   return tx("readonly", (store) => {
     const idx = store.index("by_user");

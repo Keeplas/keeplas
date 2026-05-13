@@ -30,7 +30,7 @@ export default function ContinuityProtocolPage() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab");
   const [tab, setTab] = useState<TabValue>(
-    isTabValue(initialTab) ? initialTab : "monitoring"
+    isTabValue(initialTab) ? initialTab : "monitoring",
   );
 
   useEffect(() => {
@@ -49,9 +49,9 @@ export default function ContinuityProtocolPage() {
           Continuity Protocol
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          A single protocol in two halves: monitoring checks whether
-          you&apos;re still around, the reaction layer decides what fires
-          when silence is confirmed. Pause everything from{" "}
+          A single protocol in two halves: monitoring checks whether you&apos;re
+          still around, the reaction layer decides what fires when silence is
+          confirmed. Pause everything from{" "}
           <a
             href="/settings/continuity"
             className="underline font-medium text-secondary"

@@ -1,5 +1,10 @@
 import { mutation, query } from "./_generated/server";
-import { requireAuth, optionalAuth, getUserVault, getActiveItems } from "./helpers";
+import {
+  requireAuth,
+  optionalAuth,
+  getUserVault,
+  getActiveItems,
+} from "./helpers";
 
 /**
  * Get or create the user's vault.

@@ -18,7 +18,7 @@ import { createNotification } from "./helpers";
 async function fanOutRelease(
   ctx: any,
   userId: Id<"users">,
-  reason: string
+  reason: string,
 ): Promise<{
   recipientsReached: number;
   itemsDistributed: number;
@@ -30,8 +30,8 @@ async function fanOutRelease(
     .filter((q: any) =>
       q.and(
         q.neq(q.field("status"), "archived"),
-        q.neq(q.field("accessLevel"), "private")
-      )
+        q.neq(q.field("accessLevel"), "private"),
+      ),
     )
     .collect();
 
@@ -56,8 +56,8 @@ async function fanOutRelease(
       .filter((q: any) =>
         q.and(
           q.eq(q.field("status"), "approved"),
-          q.eq(q.field("accessMode"), "mode_a")
-        )
+          q.eq(q.field("accessMode"), "mode_a"),
+        ),
       )
       .first();
 
@@ -149,7 +149,7 @@ export const processScheduledReleases = internalMutation({
     const due = await ctx.db
       .query("vault_items")
       .withIndex("by_trigger", (q) =>
-        q.eq("triggerType", "time_based").eq("status", "active")
+        q.eq("triggerType", "time_based").eq("status", "active"),
       )
       .collect();
 

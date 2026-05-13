@@ -56,8 +56,12 @@ export function SecurityCenterSection() {
     return <Loader label="Loading Security Center" />;
   }
 
-  const accepted = (contacts ?? []).filter((c) => c.invitationStatus === "accepted");
-  const pending = (contacts ?? []).filter((c) => c.invitationStatus === "pending");
+  const accepted = (contacts ?? []).filter(
+    (c) => c.invitationStatus === "accepted",
+  );
+  const pending = (contacts ?? []).filter(
+    (c) => c.invitationStatus === "pending",
+  );
   const guardianSlots = Array.from({ length: TOTAL_GUARDIAN_SLOTS }, (_, i) => {
     const real = contacts?.[i];
     return real ?? null;
@@ -107,7 +111,7 @@ export function SecurityCenterSection() {
                       key={contact._id}
                       className={cn(
                         "flex flex-col items-center space-y-3",
-                        !verified && "opacity-60"
+                        !verified && "opacity-60",
                       )}
                     >
                       <div
@@ -115,7 +119,7 @@ export function SecurityCenterSection() {
                           "w-14 h-14 flex items-center justify-center border-4 overflow-hidden",
                           verified
                             ? "bg-primary border-secondary-fixed"
-                            : "bg-surface-container-high border-outline-variant"
+                            : "bg-surface-container-high border-outline-variant",
                         )}
                         style={{ borderRadius: "50%" }}
                       >
@@ -134,7 +138,7 @@ export function SecurityCenterSection() {
                       <span
                         className={cn(
                           "text-label-md text-center truncate max-w-[80px]",
-                          verified ? "text-primary" : "text-outline"
+                          verified ? "text-primary" : "text-outline",
                         )}
                       >
                         {contact.name.split(" ")[0]}
@@ -154,9 +158,14 @@ export function SecurityCenterSection() {
                       className="w-14 h-14 bg-surface-dim flex items-center justify-center border-4 border-outline-variant"
                       style={{ borderRadius: "50%" }}
                     >
-                      <Icon path={ICON_PATHS.person} className="w-6 h-6 text-outline" />
+                      <Icon
+                        path={ICON_PATHS.person}
+                        className="w-6 h-6 text-outline"
+                      />
                     </div>
-                    <span className="text-label-md text-outline">Pending...</span>
+                    <span className="text-label-md text-outline">
+                      Pending...
+                    </span>
                   </div>
                 );
               })}
@@ -169,7 +178,9 @@ export function SecurityCenterSection() {
               className="bg-surface-container-highest hover:bg-surface-variant text-primary px-5 py-2.5 rounded-xl text-body-md font-bold transition-all flex items-center justify-center space-x-2"
             >
               <Icon path={ICON_PATHS.mail} className="w-4 h-4" />
-              <span>{pending.length > 0 ? "Resend Invites" : "Invite Guardian"}</span>
+              <span>
+                {pending.length > 0 ? "Resend Invites" : "Invite Guardian"}
+              </span>
             </Link>
             <Link
               href="/trusted-contacts"
@@ -187,12 +198,10 @@ export function SecurityCenterSection() {
               path={ICON_PATHS.description}
               className="w-10 h-10 mb-5 text-secondary-fixed"
             />
-            <h2 className="text-headline-md text-white mb-3">
-              Recovery Kit
-            </h2>
+            <h2 className="text-headline-md text-white mb-3">Recovery Kit</h2>
             <p className="text-body-md text-on-primary-container mb-6">
-              Generate a physical, offline recovery sheet containing encrypted metadata
-              shards for your vault.
+              Generate a physical, offline recovery sheet containing encrypted
+              metadata shards for your vault.
             </p>
           </div>
           <Link
@@ -208,32 +217,36 @@ export function SecurityCenterSection() {
         <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-2xl">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
-            <h2 className="text-headline-md text-primary">
-              Master Recovery
-            </h2>
+            <h2 className="text-headline-md text-primary">Master Recovery</h2>
           </div>
           <p className="text-body-md text-on-surface-variant mb-6">
             Your master key is split into{" "}
-            <strong className="text-primary">5 cryptographic shards</strong> using
-            Shamir&apos;s Secret Sharing. You chose a threshold of{" "}
-            <strong className="text-primary">{user?.vaultThreshold ?? 2}</strong>{" "}
+            <strong className="text-primary">5 cryptographic shards</strong>{" "}
+            using Shamir&apos;s Secret Sharing. You chose a threshold of{" "}
+            <strong className="text-primary">
+              {user?.vaultThreshold ?? 2}
+            </strong>{" "}
             shards to reconstruct the vault. Any combination meeting that
-            threshold works — your contacts collaborate on-device, never on
-            the server.
+            threshold works — your contacts collaborate on-device, never on the
+            server.
           </p>
 
           <div className="space-y-3">
             <ShardRow
               icon={ICON_PATHS.key}
               label="Recovery phrase"
-              hint={hasRecoveryHash ? "Hashed and verified" : "Not generated yet"}
+              hint={
+                hasRecoveryHash ? "Hashed and verified" : "Not generated yet"
+              }
               verified={hasRecoveryHash}
             />
             <ShardRow
               icon={ICON_PATHS.cloud}
               label="Keeplas backup shard"
               hint={
-                hasKeeplasShard ? "Encrypted in trusted cloud" : "Awaiting key generation"
+                hasKeeplasShard
+                  ? "Encrypted in trusted cloud"
+                  : "Awaiting key generation"
               }
               verified={hasKeeplasShard}
             />
@@ -251,7 +264,9 @@ export function SecurityCenterSection() {
               className="w-full p-3.5 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center space-x-2 text-on-surface-variant hover:bg-surface-container-low transition-colors"
             >
               <Icon path={ICON_PATHS.plus} className="w-5 h-5" />
-              <span className="text-body-md font-bold">Configure Additional Shard</span>
+              <span className="text-body-md font-bold">
+                Configure Additional Shard
+              </span>
             </Link>
           </div>
         </section>
@@ -269,7 +284,10 @@ export function SecurityCenterSection() {
       <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border">
         <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
           <div className="flex items-center space-x-3">
-            <Icon path={ICON_PATHS.shieldCheck} className="w-6 h-6 text-secondary" />
+            <Icon
+              path={ICON_PATHS.shieldCheck}
+              className="w-6 h-6 text-secondary"
+            />
             <h2 className="text-headline-md text-primary">Activity Log</h2>
           </div>
           <span className="text-label-md text-on-surface-variant">
@@ -281,7 +299,9 @@ export function SecurityCenterSection() {
           <SummaryStat label="Total events" value={summary?.totalEvents ?? 0} />
           <SummaryStat
             label="Last activity"
-            value={summary?.lastEventAt ? formatTimeAgo(summary.lastEventAt) : "—"}
+            value={
+              summary?.lastEventAt ? formatTimeAgo(summary.lastEventAt) : "—"
+            }
           />
           <SummaryStat
             label="Pending access"
@@ -300,7 +320,8 @@ export function SecurityCenterSection() {
         ) : (
           <ul className="divide-y divide-outline-variant/15 max-h-96 overflow-y-auto">
             {logs.map((log) => {
-              const iconPath = ACTION_ICONS[log.action] ?? ICON_PATHS.shieldCheck;
+              const iconPath =
+                ACTION_ICONS[log.action] ?? ICON_PATHS.shieldCheck;
               return (
                 <li key={log._id} className="py-3 flex items-start gap-3">
                   <span
@@ -310,7 +331,7 @@ export function SecurityCenterSection() {
                         ? "bg-tertiary/15 text-tertiary"
                         : log.actorType === "trusted_contact"
                           ? "bg-primary/15 text-primary"
-                          : "bg-secondary/15 text-secondary"
+                          : "bg-secondary/15 text-secondary",
                     )}
                   >
                     <Icon path={iconPath} className="w-4 h-4" />
@@ -367,19 +388,23 @@ function ShardRow({
         path={ICON_PATHS.checkCircle}
         className={cn(
           "w-5 h-5",
-          verified ? "text-secondary-fixed-dim" : "text-outline-variant/40"
+          verified ? "text-secondary-fixed-dim" : "text-outline-variant/40",
         )}
       />
     </div>
   );
 }
 
-function SummaryStat({ label, value }: { label: string; value: string | number }) {
+function SummaryStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="bg-surface-container rounded-xl p-3.5">
-      <p className="text-label-md text-on-surface-variant">
-        {label}
-      </p>
+      <p className="text-label-md text-on-surface-variant">{label}</p>
       <p className="text-headline-sm text-primary mt-1">{value}</p>
     </div>
   );
@@ -398,7 +423,10 @@ function LastAccessPanel({
 
   const date = new Date(lastSeenAt);
   const isToday = new Date().toDateString() === date.toDateString();
-  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const time = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const headline = isToday
     ? `Today, ${time}`
     : `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "2-digit" })} · ${time}`;

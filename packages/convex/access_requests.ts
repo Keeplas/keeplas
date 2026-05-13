@@ -13,7 +13,7 @@ export const getPendingRequests = query({
     const requests = await ctx.db
       .query("access_requests")
       .withIndex("by_status", (q) =>
-        q.eq("vaultUserId", userId).eq("status", "pending")
+        q.eq("vaultUserId", userId).eq("status", "pending"),
       )
       .collect();
 
@@ -99,8 +99,8 @@ export const markUserUnreachable = auditedMutation({
       .filter((q) =>
         q.or(
           q.eq(q.field("status"), "pending"),
-          q.eq(q.field("status"), "approved")
-        )
+          q.eq(q.field("status"), "approved"),
+        ),
       )
       .first();
 
@@ -170,9 +170,7 @@ export const getActiveAccessRequestForContact = query({
 
     const request = await ctx.db
       .query("access_requests")
-      .withIndex("by_vault_user", (q) =>
-        q.eq("vaultUserId", contact.userId)
-      )
+      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", contact.userId))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .first();
 
@@ -236,7 +234,7 @@ export const submitRecoveryShards = auditedMutation({
       v.object({
         recipientContactId: v.id("trusted_contacts"),
         wrappedShard: v.string(),
-      })
+      }),
     ),
   },
   resolveActor: async (ctx, args) => {
@@ -267,13 +265,10 @@ export const submitRecoveryShards = auditedMutation({
     }
     if (!request.quorumReached) {
       throw new Error(
-        "Cannot submit shards before unreachability quorum is reached"
+        "Cannot submit shards before unreachability quorum is reached",
       );
     }
-    if (
-      request.gracePeriodEndsAt &&
-      Date.now() < request.gracePeriodEndsAt
-    ) {
+    if (request.gracePeriodEndsAt && Date.now() < request.gracePeriodEndsAt) {
       throw new Error("Grace period not yet expired");
     }
     if (request.cancelledDuringGrace) {
@@ -285,7 +280,7 @@ export const submitRecoveryShards = auditedMutation({
       .withIndex("by_request_submitter", (q) =>
         q
           .eq("accessRequestId", args.accessRequestId)
-          .eq("submitterContactId", args.submitterContactId)
+          .eq("submitterContactId", args.submitterContactId),
       )
       .collect();
     if (existing.length > 0) {
@@ -335,7 +330,7 @@ export const getRecoveryShardsForMe = query({
       .withIndex("by_request_recipient", (q) =>
         q
           .eq("accessRequestId", args.accessRequestId)
-          .eq("recipientContactId", args.contactId)
+          .eq("recipientContactId", args.contactId),
       )
       .collect();
 
@@ -370,7 +365,7 @@ export const getRecoverySubmissionCount = query({
     const rows = await ctx.db
       .query("recovery_shard_submissions")
       .withIndex("by_request", (q) =>
-        q.eq("accessRequestId", args.accessRequestId)
+        q.eq("accessRequestId", args.accessRequestId),
       )
       .collect();
 

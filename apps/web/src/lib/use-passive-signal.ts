@@ -20,7 +20,7 @@ export function usePassiveSignal(enabled: boolean) {
     if (!enabled || typeof window === "undefined") return;
 
     const lastRaw = window.localStorage.getItem(
-      STORAGE_KEYS.passiveSignalLastSentAt
+      STORAGE_KEYS.passiveSignalLastSentAt,
     );
     const lastSent = lastRaw ? Number(lastRaw) : 0;
     if (Date.now() - lastSent < FRONTEND_THROTTLE_MS) return;
@@ -29,7 +29,7 @@ export function usePassiveSignal(enabled: boolean) {
       .then(() => {
         window.localStorage.setItem(
           STORAGE_KEYS.passiveSignalLastSentAt,
-          String(Date.now())
+          String(Date.now()),
         );
       })
       .catch(() => {

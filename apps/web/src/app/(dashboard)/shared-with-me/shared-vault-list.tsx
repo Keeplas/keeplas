@@ -36,8 +36,8 @@ export function SharedVaultList() {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-low text-on-surface-variant">
           <Spinner size="sm" />
           <p className="text-body-md">
-            Restoring your shards on this device — your encrypted fragments
-            are being unwrapped locally and never leave your browser.
+            Restoring your shards on this device — your encrypted fragments are
+            being unwrapped locally and never leave your browser.
           </p>
         </div>
       )}

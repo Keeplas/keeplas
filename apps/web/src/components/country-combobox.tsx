@@ -46,7 +46,7 @@ export function CountryCombobox({
           "data-[state=open]:bg-surface-container-high",
           "disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",
           selected ? "text-on-surface" : "text-outline-variant",
-          className
+          className,
         )}
       >
         <span className="flex items-center gap-2 truncate">

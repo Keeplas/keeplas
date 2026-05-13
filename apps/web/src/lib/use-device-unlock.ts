@@ -35,7 +35,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
         setError(err);
       } else {
         setError(
-          new DeviceUnlockError("Failed to list methods", "io", { cause: err })
+          new DeviceUnlockError("Failed to list methods", "io", { cause: err }),
         );
       }
     } finally {
@@ -57,7 +57,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
       await refresh();
       return entry;
     },
-    [userEmail, refresh]
+    [userEmail, refresh],
   );
 
   const unlock = useCallback(
@@ -66,7 +66,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
       await refresh();
       return key;
     },
-    [refresh]
+    [refresh],
   );
 
   const remove = useCallback(
@@ -74,7 +74,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
       await deleteMethodImpl(entryId);
       await refresh();
     },
-    [refresh]
+    [refresh],
   );
 
   return {

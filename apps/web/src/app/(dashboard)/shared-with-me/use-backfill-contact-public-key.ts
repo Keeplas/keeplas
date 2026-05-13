@@ -19,11 +19,11 @@ interface VaultWithKey {
  * which idempotently patches all matching rows.
  */
 export function useBackfillContactPublicKey(
-  vaults: ReadonlyArray<VaultWithKey> | undefined
+  vaults: ReadonlyArray<VaultWithKey> | undefined,
 ) {
   const { ensureOwnerKeypair, isReady } = useRecipientCrypto();
   const republish = useAuditedMutation(
-    api.trusted_contacts.republishContactPublicKey
+    api.trusted_contacts.republishContactPublicKey,
   );
   const ranRef = useRef(false);
 

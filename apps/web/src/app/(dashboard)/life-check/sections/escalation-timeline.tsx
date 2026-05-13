@@ -31,9 +31,7 @@ interface PhaseStep {
 }
 
 function frequencyDays(frequency: Frequency): number {
-  return Number(
-    FREQUENCIES.find((f) => f.value === frequency)?.label ?? 30
-  );
+  return Number(FREQUENCIES.find((f) => f.value === frequency)?.label ?? 30);
 }
 
 function dayLabel(thresholdDays: number, ratio: number): string {
@@ -52,13 +50,16 @@ function joinChannelLabels(channels: ChannelConfig[]): string {
   if (channels.length === 1) return channels[0].label;
   if (channels.length === 2)
     return `${channels[0].label} & ${channels[1].label}`;
-  const head = channels.slice(0, -1).map((c) => c.label).join(", ");
+  const head = channels
+    .slice(0, -1)
+    .map((c) => c.label)
+    .join(", ");
   return `${head} & ${channels[channels.length - 1].label}`;
 }
 
 function buildSteps(
   channels: ChannelConfig[],
-  frequency: Frequency
+  frequency: Frequency,
 ): PhaseStep[] {
   const enabled = channels
     .filter((c) => c.isEnabled)
@@ -165,9 +166,7 @@ export function EscalationTimeline({
                 />
                 {step.isFinal ? (
                   <div className="bg-on-primary/5 p-4 rounded-xl backdrop-blur-sm">
-                    <p
-                      className={`text-headline-sm mb-1.5 ${step.titleClass}`}
-                    >
+                    <p className={`text-headline-sm mb-1.5 ${step.titleClass}`}>
                       {step.dayLabel}: {step.title}
                     </p>
                     <p className="text-body-md text-on-primary-container mb-3">

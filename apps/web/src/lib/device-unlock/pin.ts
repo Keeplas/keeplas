@@ -39,7 +39,7 @@ export function validatePin(pin: string): void {
   if (pin.length < PIN_MIN_LENGTH) {
     throw new DeviceUnlockError(
       `PIN must be at least ${PIN_MIN_LENGTH} digits`,
-      "wrong-secret"
+      "wrong-secret",
     );
   }
 }
@@ -48,7 +48,7 @@ export async function enrollPin(
   userEmail: string,
   masterKey: CryptoKey,
   pin: string,
-  label?: string
+  label?: string,
 ): Promise<DeviceUnlockEntry> {
   validatePin(pin);
   const deviceSalt = crypto.getRandomValues(new Uint8Array(16));
@@ -85,7 +85,7 @@ function isLocked(data: PinEntryData): number {
 
 export async function unlockWithPin(
   entry: DeviceUnlockEntry,
-  pin: string
+  pin: string,
 ): Promise<CryptoKey> {
   if (entry.data.kind !== "pin") {
     throw new DeviceUnlockError("Entry is not a PIN entry", "io");
@@ -95,14 +95,14 @@ export async function unlockWithPin(
   if (lockMs > 0) {
     throw new DeviceUnlockError(
       `Locked for ${Math.ceil(lockMs / 1000)}s`,
-      "locked"
+      "locked",
     );
   }
 
   validatePin(pin);
   const deviceSaltB64 = data.deviceSalt;
   const deviceSalt = Uint8Array.from(atob(deviceSaltB64), (c) =>
-    c.charCodeAt(0)
+    c.charCodeAt(0),
   );
   const wrapKey = await deriveDeviceWrapKey(pin, deviceSalt);
 
@@ -130,11 +130,13 @@ export async function unlockWithPin(
       throw new DeviceUnlockError(
         "Too many wrong attempts — PIN entry wiped, please re-enroll with your 24 words",
         "wiped",
-        { cause: err }
+        { cause: err },
       );
     }
     const lockedUntil =
-      newFail >= PIN_LOCKOUT_THRESHOLD ? Date.now() + PIN_LOCKOUT_MS : undefined;
+      newFail >= PIN_LOCKOUT_THRESHOLD
+        ? Date.now() + PIN_LOCKOUT_MS
+        : undefined;
     const updated: DeviceUnlockEntry = {
       ...entry,
       data: { ...data, failCount: newFail, lockedUntil },
@@ -144,13 +146,13 @@ export async function unlockWithPin(
       throw new DeviceUnlockError(
         `Wrong PIN. Locked for ${PIN_LOCKOUT_MS / 1000}s`,
         "locked",
-        { cause: err }
+        { cause: err },
       );
     }
     throw new DeviceUnlockError(
       `Wrong PIN (${newFail}/${PIN_WIPE_THRESHOLD})`,
       "wrong-secret",
-      { cause: err }
+      { cause: err },
     );
   }
 }

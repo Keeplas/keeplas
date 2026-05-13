@@ -3,8 +3,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Button, cn } from "@keeplas/ui";
 
-interface AuthSubmitButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface AuthSubmitButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 

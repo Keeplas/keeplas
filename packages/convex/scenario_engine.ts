@@ -68,7 +68,7 @@ export const dispatchScenario = internalMutation({
       await ctx.scheduler.runAfter(
         delay,
         internal.scenario_engine.executeStep,
-        { stepId: step._id, cycleId: args.cycleId }
+        { stepId: step._id, cycleId: args.cycleId },
       );
       scheduled++;
     }
@@ -152,7 +152,7 @@ type ScenarioActionInput = {
 async function dispatchAction(
   ctx: MutationCtx,
   userId: Id<"users">,
-  action: ScenarioActionInput
+  action: ScenarioActionInput,
 ) {
   switch (action.actionType) {
     case "alert_authority":
@@ -185,7 +185,7 @@ async function dispatchAction(
 async function alertLegalAuthority(
   ctx: MutationCtx,
   userId: Id<"users">,
-  targetContactId?: Id<"trusted_contacts">
+  targetContactId?: Id<"trusted_contacts">,
 ) {
   const allContacts = await ctx.db
     .query("trusted_contacts")
@@ -217,7 +217,7 @@ async function alertLegalAuthority(
       (c) =>
         c.invitationStatus !== "revoked" &&
         c.role !== "lawyer" &&
-        c._id !== contact._id
+        c._id !== contact._id,
     )
     .map((c) => c.name);
 
@@ -249,4 +249,3 @@ async function alertLegalAuthority(
     }),
   });
 }
-

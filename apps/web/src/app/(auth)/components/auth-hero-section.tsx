@@ -12,8 +12,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
-          backgroundImage:
-            "radial-gradient(#ffffff 0.5px, transparent 0.5px)",
+          backgroundImage: "radial-gradient(#ffffff 0.5px, transparent 0.5px)",
           backgroundSize: "24px 24px",
         }}
       />

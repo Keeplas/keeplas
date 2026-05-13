@@ -68,7 +68,7 @@ export const getHubData = query({
       categoriesPopulated.size >= 5 && items.length > 0,
     ];
     const continuityScore = Math.round(
-      (axes.filter(Boolean).length / axes.length) * 100
+      (axes.filter(Boolean).length / axes.length) * 100,
     );
 
     // Priority actions: always emit all six with their done flag, so the UI

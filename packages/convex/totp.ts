@@ -63,10 +63,14 @@ async function hotp(secretBytes: Uint8Array, counter: number): Promise<string> {
     secretBytes as BufferSource,
     { name: "HMAC", hash: "SHA-1" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const sig = new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, counterToBytes(counter) as BufferSource)
+    await crypto.subtle.sign(
+      "HMAC",
+      key,
+      counterToBytes(counter) as BufferSource,
+    ),
   );
   const offset = sig[sig.length - 1] & 0x0f;
   const code =
@@ -80,13 +84,17 @@ async function hotp(secretBytes: Uint8Array, counter: number): Promise<string> {
 async function verifyTotp(
   secretBase32: string,
   code: string,
-  now: number
+  now: number,
 ): Promise<boolean> {
   const cleaned = code.replace(/\s/g, "");
   if (!/^\d{6}$/.test(cleaned)) return false;
   const secret = base32ToBytes(secretBase32);
   const counter = Math.floor(now / 1000 / STEP_SECONDS);
-  for (let drift = -VERIFICATION_WINDOW; drift <= VERIFICATION_WINDOW; drift++) {
+  for (
+    let drift = -VERIFICATION_WINDOW;
+    drift <= VERIFICATION_WINDOW;
+    drift++
+  ) {
     const candidate = await hotp(secret, counter + drift);
     if (timingSafeEquals(candidate, cleaned)) return true;
   }
@@ -108,9 +116,15 @@ function generateSecretBase32(): string {
   return bytesToBase32(bytes);
 }
 
-function buildOtpAuthUri(secret: string, account: string, label?: string): string {
+function buildOtpAuthUri(
+  secret: string,
+  account: string,
+  label?: string,
+): string {
   const issuer = encodeURIComponent(ISSUER);
-  const account_ = encodeURIComponent(label ? `${account} (${label})` : account);
+  const account_ = encodeURIComponent(
+    label ? `${account} (${label})` : account,
+  );
   const params = new URLSearchParams({
     secret,
     issuer: ISSUER,
@@ -198,7 +212,7 @@ export const startEnrollment = mutation({
       .first();
     if (existing?.verifiedAt) {
       throw new Error(
-        "An authenticator is already enrolled. Disable it before enrolling a new device."
+        "An authenticator is already enrolled. Disable it before enrolling a new device.",
       );
     }
     if (existing) {

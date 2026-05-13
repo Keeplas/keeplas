@@ -76,9 +76,7 @@ export default function SettingsContactPage() {
             <Icon path={ICON_PATHS.checkCircle} className="w-7 h-7" />
           </span>
           <div className="space-y-2">
-            <h2 className="text-headline-md text-primary">
-              Message sent
-            </h2>
+            <h2 className="text-headline-md text-primary">Message sent</h2>
             <p className="text-body-lg text-on-surface-variant">
               Our concierge team will reply at{" "}
               <strong className="text-primary">{email}</strong> within one hour.

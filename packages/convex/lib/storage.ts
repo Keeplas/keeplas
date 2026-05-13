@@ -25,14 +25,14 @@ export async function generateBlobUploadUrl(ctx: MutationCtx): Promise<string> {
 
 export async function getBlobDownloadUrl(
   ctx: QueryCtx | MutationCtx,
-  ref: StorageRef
+  ref: StorageRef,
 ): Promise<string | null> {
   return ctx.storage.getUrl(ref);
 }
 
 export async function deleteBlob(
   ctx: MutationCtx,
-  ref: StorageRef
+  ref: StorageRef,
 ): Promise<void> {
   await ctx.storage.delete(ref);
 }

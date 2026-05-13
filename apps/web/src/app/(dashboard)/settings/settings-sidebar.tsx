@@ -25,14 +25,26 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     label: "Account",
     items: [
       { label: "Identity", href: "/settings", iconPath: ICON_PATHS.person },
-      { label: "Preferences", href: "/settings/preferences", iconPath: ICON_PATHS.bell },
+      {
+        label: "Preferences",
+        href: "/settings/preferences",
+        iconPath: ICON_PATHS.bell,
+      },
     ],
   },
   {
     label: "Security",
     items: [
-      { label: "Security Center", href: "/settings/security", iconPath: ICON_PATHS.shieldCheck },
-      { label: "Recovery Kit", href: "/settings/recovery-kit", iconPath: ICON_PATHS.key },
+      {
+        label: "Security Center",
+        href: "/settings/security",
+        iconPath: ICON_PATHS.shieldCheck,
+      },
+      {
+        label: "Recovery Kit",
+        href: "/settings/recovery-kit",
+        iconPath: ICON_PATHS.key,
+      },
       {
         label: "Continuity Protocol",
         href: "/settings/continuity",
@@ -84,7 +96,7 @@ export function SettingsSidebar({
           "lg:hidden absolute inset-0 bg-primary/20 z-10 transition-opacity",
           mobileOpen
             ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
+            : "opacity-0 pointer-events-none",
         )}
       />
 
@@ -95,7 +107,7 @@ export function SettingsSidebar({
           "lg:relative lg:w-72 lg:translate-x-0",
           // Mobile/tablet: absolute drawer
           "absolute inset-y-0 left-0 z-20 w-72 max-w-[85%]",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         {/* Profile block + mobile close */}
@@ -146,10 +158,13 @@ export function SettingsSidebar({
                           "flex items-center gap-3 px-3 py-2 rounded-lg text-body-md transition-colors",
                           active
                             ? "ghost-border bg-surface-container-lowest text-primary font-bold"
-                            : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                            : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface",
                         )}
                       >
-                        <Icon path={item.iconPath} className="w-4 h-4 shrink-0" />
+                        <Icon
+                          path={item.iconPath}
+                          className="w-4 h-4 shrink-0"
+                        />
                         <span className="truncate">{item.label}</span>
                       </Link>
                     </li>
@@ -186,7 +201,7 @@ export function SettingsSidebar({
               "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md transition-colors",
               isItemActive(pathname, "/settings/contact")
                 ? "ghost-border bg-surface-container-lowest text-primary font-bold"
-                : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+                : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface",
             )}
           >
             <Icon path={ICON_PATHS.mail} className="w-4 h-4 shrink-0" />

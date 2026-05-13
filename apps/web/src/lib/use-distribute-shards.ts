@@ -43,10 +43,10 @@ export function useDistributeShards(): {
   const me = useQuery(api.onboarding.getOnboardingState);
   const targets = useQuery(api.trusted_contacts.getDistributionTargets);
   const updateKeeplasShard = useAuditedMutation(
-    api.trusted_contacts.updateKeeplasShard
+    api.trusted_contacts.updateKeeplasShard,
   );
   const storeEncryptedShard = useAuditedMutation(
-    api.trusted_contacts.storeEncryptedShard
+    api.trusted_contacts.storeEncryptedShard,
   );
 
   const [status, setStatus] = useState<DistributeStatus>("idle");
@@ -63,7 +63,7 @@ export function useDistributeShards(): {
     if (!targets || targets.length === 0) {
       setStatus("no_targets");
       setError(
-        "No trust contact is ready yet. Each contact must accept the invitation and publish their key first."
+        "No trust contact is ready yet. Each contact must accept the invitation and publish their key first.",
       );
       return null;
     }
@@ -74,7 +74,7 @@ export function useDistributeShards(): {
     try {
       const threshold = me?.vaultThreshold ?? 2;
       rawMasterKey = new Uint8Array(
-        await crypto.subtle.exportKey("raw", masterKey)
+        await crypto.subtle.exportKey("raw", masterKey),
       );
 
       // Re-split: 5 total shares, current threshold. Slots:
@@ -86,7 +86,7 @@ export function useDistributeShards(): {
       try {
         localStorage.setItem(
           STORAGE_KEYS.deviceShard,
-          uint8ToBase64(shards[0])
+          uint8ToBase64(shards[0]),
         );
       } catch {
         // Private mode etc — non-fatal; the contact + keeplas shards still

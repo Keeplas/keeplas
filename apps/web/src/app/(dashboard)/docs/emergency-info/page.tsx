@@ -18,9 +18,7 @@ export default function EmergencyInfoDocPage() {
 
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-label-md text-secondary">
-          Acute emergencies
-        </span>
+        <span className="text-label-md text-secondary">Acute emergencies</span>
         <h1 className="text-headline-lg text-primary">
           Use your phone&rsquo;s built-in Medical ID.
         </h1>
@@ -28,8 +26,8 @@ export default function EmergencyInfoDocPage() {
           Keeplas focuses on long-term continuity — inheritance, life check,
           shard-based recovery. For accidents and sudden illness, the fastest
           and most reliable tool is already on your phone&rsquo;s lock screen,
-          works offline, and is recognized by trained paramedics. Two minutes
-          to set up.
+          works offline, and is recognized by trained paramedics. Two minutes to
+          set up.
         </p>
       </header>
 
@@ -40,9 +38,8 @@ export default function EmergencyInfoDocPage() {
           A QR card with your medical info would have to be readable without a
           key — meaning unencrypted on our servers. That contradicts our
           zero-knowledge promise. Apple and Google already solved this on the
-          device itself: the data lives on your phone, accessible from the
-          lock screen without unlocking, and never reaches a third-party
-          server.
+          device itself: the data lives on your phone, accessible from the lock
+          screen without unlocking, and never reaches a third-party server.
         </p>
       </section>
 
@@ -50,9 +47,7 @@ export default function EmergencyInfoDocPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-secondary rounded-full" />
-          <h2 className="text-headline-md text-primary">
-            iPhone — Medical ID
-          </h2>
+          <h2 className="text-headline-md text-primary">iPhone — Medical ID</h2>
         </div>
         <ol className="relative pl-8 border-l-2 border-secondary/20 space-y-6">
           <Step
@@ -82,8 +77,8 @@ export default function EmergencyInfoDocPage() {
           />
         </ol>
         <p className="text-body-md text-on-surface-variant">
-          To verify: lock your phone, then on the lock screen press and hold
-          the side button + a volume button. You should see an{" "}
+          To verify: lock your phone, then on the lock screen press and hold the
+          side button + a volume button. You should see an{" "}
           <span className="font-medium text-primary">Emergency</span> slider —
           slide it, then tap{" "}
           <span className="font-medium text-primary">Medical ID</span> at the
@@ -100,8 +95,8 @@ export default function EmergencyInfoDocPage() {
           </h2>
         </div>
         <p className="text-body-md text-on-surface-variant">
-          Wording varies slightly by manufacturer (Samsung, Pixel, Xiaomi…),
-          but the location is consistent.
+          Wording varies slightly by manufacturer (Samsung, Pixel, Xiaomi…), but
+          the location is consistent.
         </p>
         <ol className="relative pl-8 border-l-2 border-primary/20 space-y-6">
           <Step
@@ -133,9 +128,9 @@ export default function EmergencyInfoDocPage() {
         <p className="text-body-md text-on-surface-variant">
           To verify: lock your phone, then on the PIN/pattern screen tap{" "}
           <span className="font-medium text-primary">Emergency</span> (or{" "}
-          <span className="font-medium text-primary">Emergency call</span>)
-          at the bottom. You should see View emergency info or Medical info
-          without entering your PIN.
+          <span className="font-medium text-primary">Emergency call</span>) at
+          the bottom. You should see View emergency info or Medical info without
+          entering your PIN.
         </p>
       </section>
 
@@ -155,10 +150,7 @@ export default function EmergencyInfoDocPage() {
             href="/trusted-contacts"
             className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
           >
-            <Icon
-              path={ICON_PATHS.users}
-              className="w-5 h-5 text-secondary"
-            />
+            <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
             <span className="text-body-md font-medium text-primary">
               Set up trusted contacts
             </span>

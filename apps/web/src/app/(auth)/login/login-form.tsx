@@ -45,11 +45,14 @@ export function LoginForm() {
           signInWithPasskey: (response) =>
             signIn("passkey", { response: response as never }),
         },
-        email || undefined
+        email || undefined,
       );
     } catch (err) {
       setError(
-        getPasskeyErrorMessage(err, "Could not authenticate with your passkey.")
+        getPasskeyErrorMessage(
+          err,
+          "Could not authenticate with your passkey.",
+        ),
       );
       setLoading(false);
     }

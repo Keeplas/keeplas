@@ -87,7 +87,10 @@ export function CreateGroupDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
+        >
           <div className="space-y-2">
             <Label htmlFor="group-name">Group name *</Label>
             <Input
@@ -122,9 +125,7 @@ export function CreateGroupDialog({
 
           <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
             <div>
-              <p className="text-headline-sm text-primary">
-                Default group
-              </p>
+              <p className="text-headline-sm text-primary">Default group</p>
               <p className="text-body-md text-on-surface-variant mt-0.5">
                 New vault items without explicit recipients will route here.
               </p>

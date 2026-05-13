@@ -28,7 +28,7 @@ export function ContinuityControls() {
     if (config?.travelModeUntil) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing controlled date input to async server config; no clean derived alternative without changing the input contract.
       setTravelUntil(
-        new Date(config.travelModeUntil).toISOString().split("T")[0]
+        new Date(config.travelModeUntil).toISOString().split("T")[0],
       );
     }
   }, [config?.travelModeUntil]);
@@ -95,9 +95,7 @@ export function ContinuityControls() {
     <div className="space-y-4">
       <section className="bg-surface-container-low p-6 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h3 className="text-headline-sm text-primary">
-            Continuity Protocol
-          </h3>
+          <h3 className="text-headline-sm text-primary">Continuity Protocol</h3>
           <p className="text-body-md text-on-surface-variant">
             Pause both halves at once — Life Check stops escalating, the
             Scenario Engine stops dispatching. Status:{" "}

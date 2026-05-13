@@ -41,7 +41,7 @@ export function PhoneVerificationDialog({
 }: PhoneVerificationDialogProps) {
   const status = useQuery(api.phone_verification.getMyStatus);
   const requestVerification = useMutation(
-    api.phone_verification.requestVerification
+    api.phone_verification.requestVerification,
   );
   const verifyCode = useMutation(api.phone_verification.verifyCode);
 
@@ -142,76 +142,76 @@ export function PhoneVerificationDialog({
 
           {step === "phone" ? (
             <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="verify-phone">WhatsApp number</Label>
-              <PhoneInput
-                id="verify-phone"
-                value={phone}
-                onChange={setPhone}
-                defaultCountry={defaultCountry}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={busy}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSendCode}
-                disabled={busy || !phone || !isValidPhone(phone)}
-              >
-                {busy ? "Sending…" : "Send code"}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="verify-code">6-digit code</Label>
-              <Input
-                id="verify-code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="\d{6}"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                placeholder="123456"
-                autoFocus
-              />
-              <p className="text-label-md text-on-surface-variant">
-                Sent to {phone}. The code expires in 10 minutes.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleResend}
-                disabled={busy}
-              >
-                Resend code
-              </Button>
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="verify-phone">WhatsApp number</Label>
+                <PhoneInput
+                  id="verify-phone"
+                  value={phone}
+                  onChange={setPhone}
+                  defaultCountry={defaultCountry}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
                 <Button
-                  type="button"
                   variant="ghost"
-                  onClick={() => setStep("phone")}
+                  onClick={() => onOpenChange(false)}
                   disabled={busy}
                 >
-                  Change number
+                  Cancel
                 </Button>
-                <Button type="submit" disabled={busy || code.length !== 6}>
-                  {busy ? "Verifying…" : "Verify"}
+                <Button
+                  onClick={handleSendCode}
+                  disabled={busy || !phone || !isValidPhone(phone)}
+                >
+                  {busy ? "Sending…" : "Send code"}
                 </Button>
               </div>
             </div>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleVerify} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="verify-code">6-digit code</Label>
+                <Input
+                  id="verify-code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  autoFocus
+                />
+                <p className="text-label-md text-on-surface-variant">
+                  Sent to {phone}. The code expires in 10 minutes.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResend}
+                  disabled={busy}
+                >
+                  Resend code
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setStep("phone")}
+                    disabled={busy}
+                  >
+                    Change number
+                  </Button>
+                  <Button type="submit" disabled={busy || code.length !== 6}>
+                    {busy ? "Verifying…" : "Verify"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
         </div>
       </DialogContent>
     </Dialog>

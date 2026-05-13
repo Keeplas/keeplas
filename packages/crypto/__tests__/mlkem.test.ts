@@ -13,11 +13,10 @@ import {
 } from "../src/kem";
 
 async function generateTestDek(): Promise<CryptoKey> {
-  return crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["encrypt", "decrypt"]
-  );
+  return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
+    "encrypt",
+    "decrypt",
+  ]);
 }
 
 async function exportRaw(key: CryptoKey): Promise<Uint8Array> {
@@ -116,18 +115,20 @@ describe("ML-KEM-768 (post-quantum)", () => {
       const envelopeStr = await wrapDek(dek, serializePublicKey(publicKey));
       const envelope = JSON.parse(envelopeStr);
       // Flip a byte in the AES ciphertext
-      const ctBytes = Uint8Array.from(atob(envelope.ct), (c) => c.charCodeAt(0));
+      const ctBytes = Uint8Array.from(atob(envelope.ct), (c) =>
+        c.charCodeAt(0),
+      );
       ctBytes[0] ^= 0xff;
       envelope.ct = btoa(String.fromCharCode(...ctBytes));
       await expect(
-        unwrapDek(JSON.stringify(envelope), secretKey)
+        unwrapDek(JSON.stringify(envelope), secretKey),
       ).rejects.toThrow();
     });
 
     it("rejects malformed envelopes (not JSON)", async () => {
       const { secretKey } = generateRecipientKeyPair();
       await expect(unwrapDek("not-json", secretKey)).rejects.toThrow(
-        /Invalid envelope/
+        /Invalid envelope/,
       );
     });
 
@@ -141,7 +142,7 @@ describe("ML-KEM-768 (post-quantum)", () => {
         ct: "AAAA",
       });
       await expect(unwrapDek(bogus, secretKey)).rejects.toThrow(
-        /unsupported version/
+        /unsupported version/,
       );
     });
   });
@@ -150,10 +151,7 @@ describe("ML-KEM-768 (post-quantum)", () => {
     it("round-trips arbitrary bytes", async () => {
       const { publicKey, secretKey } = generateRecipientKeyPair();
       const payload = crypto.getRandomValues(new Uint8Array(64));
-      const envelope = await wrapBytes(
-        payload,
-        serializePublicKey(publicKey)
-      );
+      const envelope = await wrapBytes(payload, serializePublicKey(publicKey));
       const restored = await unwrapBytes(envelope, secretKey);
       expect(restored).toEqual(payload);
     });

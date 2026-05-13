@@ -46,7 +46,13 @@ interface ToolbarButtonProps {
   icon: string;
 }
 
-function ToolbarButton({ onClick, active, disabled, label, icon }: ToolbarButtonProps) {
+function ToolbarButton({
+  onClick,
+  active,
+  disabled,
+  label,
+  icon,
+}: ToolbarButtonProps) {
   return (
     <button
       type="button"
@@ -57,7 +63,7 @@ function ToolbarButton({ onClick, active, disabled, label, icon }: ToolbarButton
       disabled={disabled}
       className={cn(
         "p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-        active && "bg-secondary/15 text-secondary"
+        active && "bg-secondary/15 text-secondary",
       )}
     >
       <Icon path={icon} className="w-4 h-4" />
@@ -160,7 +166,7 @@ export function RichTextEditor({
         class: cn(
           "tiptap-content prose prose-sm max-w-none focus:outline-none text-on-surface",
           readOnly ? "px-0 py-0" : "px-4 py-3",
-          editorClassName
+          editorClassName,
         ),
         "data-placeholder": placeholder ?? "",
       },
@@ -184,7 +190,7 @@ export function RichTextEditor({
           readOnly
             ? "w-full"
             : "w-full bg-surface-container-low border border-outline-variant rounded-xl",
-          className
+          className,
         )}
         style={readOnly ? { minHeight } : { minHeight: minHeight + 50 }}
       />
@@ -204,7 +210,7 @@ export function RichTextEditor({
       className={cn(
         "w-full bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden focus-within:border-secondary/40 focus-within:bg-surface-container-high transition-all",
         disabled && "opacity-60",
-        className
+        className,
       )}
     >
       <Toolbar editor={editor} />

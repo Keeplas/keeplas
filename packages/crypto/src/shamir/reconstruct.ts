@@ -9,10 +9,9 @@ import { gfInterpolate } from "./gf256";
  *
  * Uses Lagrange interpolation over GF(256).
  */
-export async function reconstruct(
-  shares: Uint8Array[]
-): Promise<Uint8Array> {
-  if (shares.length < 2) throw new Error("Need at least 2 shares to reconstruct");
+export async function reconstruct(shares: Uint8Array[]): Promise<Uint8Array> {
+  if (shares.length < 2)
+    throw new Error("Need at least 2 shares to reconstruct");
 
   // All shares must have the same length
   const shareLen = shares[0].length;
@@ -35,8 +34,8 @@ export async function reconstruct(
   // For each byte position, perform Lagrange interpolation at x=0
   for (let byteIdx = 0; byteIdx < secretLen; byteIdx++) {
     const points: Array<[number, number]> = shares.map((share) => [
-      share[0],              // x-coordinate
-      share[1 + byteIdx],   // y-value for this byte
+      share[0], // x-coordinate
+      share[1 + byteIdx], // y-value for this byte
     ]);
     secret[byteIdx] = gfInterpolate(points);
   }

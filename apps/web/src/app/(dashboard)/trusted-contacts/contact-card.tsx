@@ -76,7 +76,7 @@ function formatRelative(ts: number): string {
 }
 
 function computeVerificationBadge(
-  contact: Doc<"trusted_contacts">
+  contact: Doc<"trusted_contacts">,
 ): { label: string; className: string } | null {
   if (contact.invitationStatus !== "accepted") return null;
   if ((contact.contactType ?? "trust") === "recipient_only") return null;
@@ -106,10 +106,11 @@ export function ContactCard({ contact }: ContactCardProps) {
 
   const revokeContact = useAuditedMutation(api.trusted_contacts.revokeContact);
   const resendInvitation = useAuditedMutation(
-    api.trusted_contacts.resendInvitation
+    api.trusted_contacts.resendInvitation,
   );
 
-  const statusConfig = STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
+  const statusConfig =
+    STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
   const initials = contact.name
     .split(" ")
     .map((n) => n[0])
@@ -153,7 +154,12 @@ export function ContactCard({ contact }: ContactCardProps) {
     <div className="bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
-        <div className={cn("w-12 h-12 rounded-full border-2 p-0.5", statusConfig.avatarBorder)}>
+        <div
+          className={cn(
+            "w-12 h-12 rounded-full border-2 p-0.5",
+            statusConfig.avatarBorder,
+          )}
+        >
           <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
             <span className="text-label-md text-on-primary-container">
               {initials}
@@ -166,7 +172,7 @@ export function ContactCard({ contact }: ContactCardProps) {
               "px-3 py-1 text-label-md rounded-full",
               isRecipientOnly
                 ? "bg-surface-container-high text-on-surface-variant"
-                : "bg-primary/10 text-primary"
+                : "bg-primary/10 text-primary",
             )}
           >
             {isRecipientOnly ? "Recipient" : "Trust"}
@@ -174,7 +180,7 @@ export function ContactCard({ contact }: ContactCardProps) {
           <span
             className={cn(
               "px-3 py-1 text-label-md rounded-full",
-              statusConfig.className
+              statusConfig.className,
             )}
           >
             {statusConfig.label}
@@ -183,9 +189,7 @@ export function ContactCard({ contact }: ContactCardProps) {
       </div>
 
       {/* Name + Email */}
-      <h3 className="text-headline-sm text-primary">
-        {contact.name}
-      </h3>
+      <h3 className="text-headline-sm text-primary">{contact.name}</h3>
       <p className="text-body-md text-on-surface-variant mb-5 truncate">
         {contact.email}
       </p>
@@ -193,7 +197,13 @@ export function ContactCard({ contact }: ContactCardProps) {
       {/* Role + verification badges */}
       <div className="flex items-center gap-2 flex-wrap mb-6">
         <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-lg">
-          <svg className="w-3.5 h-3.5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <svg
+            className="w-3.5 h-3.5 text-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d={roleIcon} />
           </svg>
           <span className="text-label-md text-primary">{roleLabel}</span>
@@ -208,7 +218,7 @@ export function ContactCard({ contact }: ContactCardProps) {
           <span
             className={cn(
               "text-label-md px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5",
-              verificationBadge.className
+              verificationBadge.className,
             )}
           >
             {verificationBadge.label}

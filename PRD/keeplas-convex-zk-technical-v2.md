@@ -1,4 +1,5 @@
 # Keeplas — Architecture Technique : Convex, ZK & Recovery
+
 > Document technique — Avril 2026 — v1
 
 ---
@@ -24,6 +25,7 @@
 > **Ce qui est secret ne touche jamais le serveur Convex.**
 
 Convex est un serveur de coordination et de stockage. Il ne connaît jamais :
+
 - Le Master Key
 - La Recovery Phrase
 - Les shards Shamir en clair
@@ -59,21 +61,21 @@ convex/              ← Stockage et coordination
 
 ### Ce que Convex stocke vs ce qu'il ne voit jamais
 
-| Donnée | Client uniquement | Convex stocke |
-|---|---|---|
-| Master Key | ✅ Généré localement | ❌ Jamais |
-| Recovery Phrase (24 mots) | ✅ Affiché une fois | ❌ Jamais |
-| Shards Shamir en clair | ✅ Reconstruction locale | ❌ Jamais |
-| Déchiffrement vault | ✅ Côté navigateur | ❌ Jamais |
-| ZK Proof computation | ✅ Noir/Barretenberg | ❌ Jamais |
-| Hash Recovery Phrase | — | ✅ sha256 uniquement |
-| Shards chiffrés | — | ✅ Illisible sans clé privée |
-| Vault items chiffrés | — | ✅ Illisible sans Master Key |
-| Public Key user | — | ✅ Pas secrète |
-| Métadonnées (titre, date) | — | ✅ En clair |
-| ZK Proof vérification | — | ✅ Vérifier ≠ connaître |
-| Logs d'audit | — | ✅ Immuables |
-| Config Life Check | — | ✅ En clair |
+| Donnée                    | Client uniquement        | Convex stocke                |
+| ------------------------- | ------------------------ | ---------------------------- |
+| Master Key                | ✅ Généré localement     | ❌ Jamais                    |
+| Recovery Phrase (24 mots) | ✅ Affiché une fois      | ❌ Jamais                    |
+| Shards Shamir en clair    | ✅ Reconstruction locale | ❌ Jamais                    |
+| Déchiffrement vault       | ✅ Côté navigateur       | ❌ Jamais                    |
+| ZK Proof computation      | ✅ Noir/Barretenberg     | ❌ Jamais                    |
+| Hash Recovery Phrase      | —                        | ✅ sha256 uniquement         |
+| Shards chiffrés           | —                        | ✅ Illisible sans clé privée |
+| Vault items chiffrés      | —                        | ✅ Illisible sans Master Key |
+| Public Key user           | —                        | ✅ Pas secrète               |
+| Métadonnées (titre, date) | —                        | ✅ En clair                  |
+| ZK Proof vérification     | —                        | ✅ Vérifier ≠ connaître      |
+| Logs d'audit              | —                        | ✅ Immuables                 |
+| Config Life Check         | —                        | ✅ En clair                  |
 
 ### Ce que Convex voit réellement dans chaque table
 
@@ -115,639 +117,648 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-
   // ═══════════════════════════════════════════════
   // USERS
   // ═══════════════════════════════════════════════
 
   users: defineTable({
     // Identité
-    email:                v.optional(v.string()),      // Optionnel si Passkey uniquement
-    name:                 v.optional(v.string()),
-    avatarUrl:            v.optional(v.string()),
-    phoneNumber:          v.optional(v.string()),
-    timezone:             v.optional(v.string()),
-    language:             v.optional(v.string()),      // "fr" | "en" | "sw"
+    email: v.optional(v.string()), // Optionnel si Passkey uniquement
+    name: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    language: v.optional(v.string()), // "fr" | "en" | "sw"
 
     // Auth — array pour supporter plusieurs méthodes simultanées
-    authProviders:        v.array(v.union(
-                            v.literal("passkey"),      // ← Recommandé en premier
-                            v.literal("email"),
-                            v.literal("google"),
-                            v.literal("apple")
-                          )),
+    authProviders: v.array(
+      v.union(
+        v.literal("passkey"), // ← Recommandé en premier
+        v.literal("email"),
+        v.literal("google"),
+        v.literal("apple"),
+      ),
+    ),
 
     // Passkey / WebAuthn — plusieurs appareils possibles
-    passkeyCredentials:   v.optional(v.array(v.object({
-      credentialId:       v.string(),                  // ID unique du Passkey
-      publicKey:          v.string(),                  // Clé publique WebAuthn
-      deviceName:         v.optional(v.string()),      // "iPhone de Prince"
-      createdAt:          v.number(),
-      lastUsedAt:         v.number(),
-    }))),
+    passkeyCredentials: v.optional(
+      v.array(
+        v.object({
+          credentialId: v.string(), // ID unique du Passkey
+          publicKey: v.string(), // Clé publique WebAuthn
+          deviceName: v.optional(v.string()), // "iPhone de Prince"
+          createdAt: v.number(),
+          lastUsedAt: v.number(),
+        }),
+      ),
+    ),
 
     // ZK — clés publiques uniquement côté serveur
-    publicKey:            v.string(),                  // Clé publique EC
-    encryptedKeyBundle:   v.string(),                  // Master Key chiffré biométrie/passkey
-    recoveryPhraseHash:   v.string(),                  // sha256(phrase) — vérification
-    recoveryVerified:     v.boolean(),
-    zkVerifierKey:        v.string(),                  // Clé publique circuit Noir
+    publicKey: v.string(), // Clé publique EC
+    encryptedKeyBundle: v.string(), // Master Key chiffré biométrie/passkey
+    recoveryPhraseHash: v.string(), // sha256(phrase) — vérification
+    recoveryVerified: v.boolean(),
+    zkVerifierKey: v.string(), // Clé publique circuit Noir
 
     // Shard 5 — détenu par Keeplas, chiffré ZK
-    keeplasShard:         v.string(),                  // Illisible sans ZK proof valide
+    keeplasShard: v.string(), // Illisible sans ZK proof valide
 
     // Onboarding
-    onboardingStep:       v.union(
-                            v.literal("recovery_phrase"),
-                            v.literal("dashboard"),
-                            v.literal("complete")
-                          ),
-    vaultIntegrityScore:  v.number(),                  // 0-100
+    onboardingStep: v.union(
+      v.literal("recovery_phrase"),
+      v.literal("dashboard"),
+      v.literal("complete"),
+    ),
+    vaultIntegrityScore: v.number(), // 0-100
 
     // Statut
-    isActive:             v.boolean(),
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
-    lastSeenAt:           v.number(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    lastSeenAt: v.number(),
   })
-  .index("by_email", ["email"])
-  .index("by_last_seen", ["lastSeenAt"]),
+    .index("by_email", ["email"])
+    .index("by_last_seen", ["lastSeenAt"]),
 
   // ═══════════════════════════════════════════════
   // VAULTS
   // ═══════════════════════════════════════════════
 
   vaults: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
-    status:               v.union(
-                            v.literal("active"),
-                            v.literal("locked"),
-                            v.literal("emergency_access"),
-                            v.literal("suspended")
-                          ),
-    securityLevel:        v.union(
-                            v.literal("standard"),
-                            v.literal("maximum")
-                          ),
+    status: v.union(
+      v.literal("active"),
+      v.literal("locked"),
+      v.literal("emergency_access"),
+      v.literal("suspended"),
+    ),
+    securityLevel: v.union(v.literal("standard"), v.literal("maximum")),
 
     // Intégrité
-    integrityScore:       v.number(),
-    encryptedItemsCount:  v.number(),
-    secureNodesCount:     v.number(),
-    lastVerifiedAt:       v.number(),
+    integrityScore: v.number(),
+    encryptedItemsCount: v.number(),
+    secureNodesCount: v.number(),
+    lastVerifiedAt: v.number(),
 
     // Sync
-    syncHash:             v.string(),
-    lastSyncAt:           v.number(),
+    syncHash: v.string(),
+    lastSyncAt: v.number(),
 
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_status", ["status"]),
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 
   // ═══════════════════════════════════════════════
   // VAULT ITEMS
   // ═══════════════════════════════════════════════
 
   vault_items: defineTable({
-    vaultId:              v.id("vaults"),
-    userId:               v.id("users"),
+    vaultId: v.id("vaults"),
+    userId: v.id("users"),
 
-    category:             v.union(
-                            v.literal("personal_document"),
-                            v.literal("financial_asset"),
-                            v.literal("digital_asset"),
-                            v.literal("health_directive"),
-                            v.literal("legal_document"),
-                            v.literal("business_continuity"),
-                            v.literal("conditional_message"),
-                            v.literal("personal_message"),
-                            v.literal("credential")
-                          ),
+    category: v.union(
+      v.literal("personal_document"),
+      v.literal("financial_asset"),
+      v.literal("digital_asset"),
+      v.literal("health_directive"),
+      v.literal("legal_document"),
+      v.literal("business_continuity"),
+      v.literal("conditional_message"),
+      v.literal("personal_message"),
+      v.literal("credential"),
+    ),
 
     // Contenu — chiffré, illisible par Convex
-    title:                v.string(),                // Métadonnée en clair
-    description:          v.optional(v.string()),
-    encryptedContent:     v.string(),                // AES-256-GCM
-    encryptionType:       v.union(
-                            v.literal("aes_256_gcm"),
-                            v.literal("zero_knowledge")
-                          ),
-    contentHash:          v.string(),                // Vérification intégrité
+    title: v.string(), // Métadonnée en clair
+    description: v.optional(v.string()),
+    encryptedContent: v.string(), // AES-256-GCM
+    encryptionType: v.union(
+      v.literal("aes_256_gcm"),
+      v.literal("zero_knowledge"),
+    ),
+    contentHash: v.string(), // Vérification intégrité
 
     // Fichiers
-    fileStorageId:        v.optional(v.id("_storage")),
-    fileType:             v.optional(v.string()),
-    fileSize:             v.optional(v.number()),
+    fileStorageId: v.optional(v.id("_storage")),
+    fileType: v.optional(v.string()),
+    fileSize: v.optional(v.number()),
 
     // Accès
-    sharedWithContacts:   v.array(v.id("trusted_contacts")),
-    accessLevel:          v.union(
-                            v.literal("private"),
-                            v.literal("trusted_only"),
-                            v.literal("emergency_only"),
-                            v.literal("public")
-                          ),
+    sharedWithContacts: v.array(v.id("trusted_contacts")),
+    accessLevel: v.union(
+      v.literal("private"),
+      v.literal("trusted_only"),
+      v.literal("emergency_only"),
+      v.literal("public"),
+    ),
 
     // Statut
-    status:               v.union(
-                            v.literal("active"),
-                            v.literal("draft"),
-                            v.literal("archived"),
-                            v.literal("sealed")
-                          ),
+    status: v.union(
+      v.literal("active"),
+      v.literal("draft"),
+      v.literal("archived"),
+      v.literal("sealed"),
+    ),
 
-    tags:                 v.array(v.string()),
-    isCritical:           v.boolean(),
+    tags: v.array(v.string()),
+    isCritical: v.boolean(),
 
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_vault", ["vaultId"])
-  .index("by_category", ["vaultId", "category"])
-  .index("by_status", ["vaultId", "status"])
-  .index("by_user", ["userId"]),
+    .index("by_vault", ["vaultId"])
+    .index("by_category", ["vaultId", "category"])
+    .index("by_status", ["vaultId", "status"])
+    .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // TRUSTED CONTACTS
   // ═══════════════════════════════════════════════
 
   trusted_contacts: defineTable({
-    userId:               v.id("users"),             // Propriétaire vault
-    contactUserId:        v.optional(v.id("users")), // Si compte Keeplas
+    userId: v.id("users"), // Propriétaire vault
+    contactUserId: v.optional(v.id("users")), // Si compte Keeplas
 
     // Identité
-    name:                 v.string(),
-    email:                v.string(),
-    phoneNumber:          v.optional(v.string()),
-    avatarUrl:            v.optional(v.string()),
-    role:                 v.union(
-                            v.literal("family"),
-                            v.literal("friend"),
-                            v.literal("lawyer"),
-                            v.literal("doctor"),
-                            v.literal("other")
-                          ),
+    name: v.string(),
+    email: v.string(),
+    phoneNumber: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+    role: v.union(
+      v.literal("family"),
+      v.literal("friend"),
+      v.literal("lawyer"),
+      v.literal("doctor"),
+      v.literal("other"),
+    ),
 
     // Désignations spéciales
-    isFirstResponder:     v.boolean(),
-    isMedicalContact:     v.boolean(),
+    isFirstResponder: v.boolean(),
+    isMedicalContact: v.boolean(),
 
     // Permissions
-    accessModes:          v.array(v.union(
-                            v.literal("mode_a"),
-                            v.literal("mode_b1"),
-                            v.literal("mode_b2"),
-                            v.literal("mode_b3"),
-                            v.literal("mode_b4")
-                          )),
+    accessModes: v.array(
+      v.union(
+        v.literal("mode_a"),
+        v.literal("mode_b1"),
+        v.literal("mode_b2"),
+        v.literal("mode_b3"),
+        v.literal("mode_b4"),
+      ),
+    ),
 
     // Shard Shamir — chiffré avec clé publique du contact
-    shardIndex:           v.number(),                // 1-5
-    encryptedShard:       v.string(),                // Illisible sans clé privée contact
-    shardPublicKeyUsed:   v.string(),                // Clé publique utilisée
-    shardConfirmed:       v.boolean(),
-    shardConfirmedAt:     v.optional(v.number()),
+    shardIndex: v.number(), // 1-5
+    encryptedShard: v.string(), // Illisible sans clé privée contact
+    shardPublicKeyUsed: v.string(), // Clé publique utilisée
+    shardConfirmed: v.boolean(),
+    shardConfirmedAt: v.optional(v.number()),
 
     // Recovery du contact
-    contactRecoveryHash:  v.optional(v.string()),    // sha256(recovery phrase contact)
-    contactPublicKey:     v.optional(v.string()),    // Clé publique du contact
+    contactRecoveryHash: v.optional(v.string()), // sha256(recovery phrase contact)
+    contactPublicKey: v.optional(v.string()), // Clé publique du contact
 
     // Invitation
-    invitationStatus:     v.union(
-                            v.literal("pending"),
-                            v.literal("accepted"),
-                            v.literal("declined"),
-                            v.literal("revoked")
-                          ),
-    invitationToken:      v.string(),                // Token sécurisé (72h)
-    invitedAt:            v.number(),
-    acceptedAt:           v.optional(v.number()),
+    invitationStatus: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("declined"),
+      v.literal("revoked"),
+    ),
+    invitationToken: v.string(), // Token sécurisé (72h)
+    invitedAt: v.number(),
+    acceptedAt: v.optional(v.number()),
 
     // Accès proactif B2
-    proactiveAccess:      v.optional(v.object({
-      sections:           v.array(v.string()),
-      accessType:         v.union(
-                            v.literal("read"),
-                            v.literal("read_download")
-                          ),
-      expiresAt:          v.optional(v.number()),
-      isPermanent:        v.boolean(),
-    })),
+    proactiveAccess: v.optional(
+      v.object({
+        sections: v.array(v.string()),
+        accessType: v.union(v.literal("read"), v.literal("read_download")),
+        expiresAt: v.optional(v.number()),
+        isPermanent: v.boolean(),
+      }),
+    ),
 
     // Accès conditionnel B4
-    conditionalAccess:    v.optional(v.object({
-      inactivityDays:     v.number(),
-      sections:           v.array(v.string()),
-    })),
+    conditionalAccess: v.optional(
+      v.object({
+        inactivityDays: v.number(),
+        sections: v.array(v.string()),
+      }),
+    ),
 
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_contact_user", ["contactUserId"])
-  .index("by_shard_index", ["userId", "shardIndex"])
-  .index("by_first_responder", ["userId", "isFirstResponder"])
-  .index("by_invitation_token", ["invitationToken"]),
+    .index("by_user", ["userId"])
+    .index("by_contact_user", ["contactUserId"])
+    .index("by_shard_index", ["userId", "shardIndex"])
+    .index("by_first_responder", ["userId", "isFirstResponder"])
+    .index("by_invitation_token", ["invitationToken"]),
 
   // ═══════════════════════════════════════════════
   // LIFE CHECK CONFIG
   // ═══════════════════════════════════════════════
 
   life_check_configs: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
-    frequency:            v.union(
-                            v.literal("weekly"),
-                            v.literal("monthly"),
-                            v.literal("quarterly")
-                          ),
+    frequency: v.union(
+      v.literal("weekly"),
+      v.literal("monthly"),
+      v.literal("quarterly"),
+    ),
 
     // Signaux passifs (opt-in)
-    passiveSignals:       v.object({
-      appActivity:        v.boolean(),               // Toujours true
-      deviceActivity:     v.boolean(),
-      gpsMovement:        v.boolean(),
-      whatsappActivity:   v.boolean(),
-      googleActivity:     v.boolean(),
-      healthData:         v.boolean(),
-      appleWatch:         v.boolean(),
+    passiveSignals: v.object({
+      appActivity: v.boolean(), // Toujours true
+      deviceActivity: v.boolean(),
+      gpsMovement: v.boolean(),
+      whatsappActivity: v.boolean(),
+      googleActivity: v.boolean(),
+      healthData: v.boolean(),
+      appleWatch: v.boolean(),
     }),
 
     // Canaux actifs ordonnés
-    activeChannels:       v.array(v.object({
-      type:               v.union(
-                            v.literal("push"),
-                            v.literal("email"),
-                            v.literal("whatsapp"),
-                            v.literal("sms"),
-                            v.literal("ivr_call"),
-                            v.literal("first_responder")
-                          ),
-      order:              v.number(),
-      isEnabled:          v.boolean(),
-      delayHours:         v.number(),
-    })),
+    activeChannels: v.array(
+      v.object({
+        type: v.union(
+          v.literal("push"),
+          v.literal("email"),
+          v.literal("whatsapp"),
+          v.literal("sms"),
+          v.literal("ivr_call"),
+          v.literal("first_responder"),
+        ),
+        order: v.number(),
+        isEnabled: v.boolean(),
+        delayHours: v.number(),
+      }),
+    ),
 
     // Cas particuliers
-    travelModeEnabled:    v.boolean(),
-    travelModeUntil:      v.optional(v.number()),
-    expeditionMode:       v.boolean(),
+    travelModeEnabled: v.boolean(),
+    travelModeUntil: v.optional(v.number()),
+    expeditionMode: v.boolean(),
 
     // Statut
-    isActive:             v.boolean(),
-    nextCheckAt:          v.number(),
-    lastCheckAt:          v.optional(v.number()),
-    confidenceThreshold:  v.number(),                // Défaut: 50 pts
+    isActive: v.boolean(),
+    nextCheckAt: v.number(),
+    lastCheckAt: v.optional(v.number()),
+    confidenceThreshold: v.number(), // Défaut: 50 pts
 
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_next_check", ["nextCheckAt", "isActive"]),
+    .index("by_user", ["userId"])
+    .index("by_next_check", ["nextCheckAt", "isActive"]),
 
   // ═══════════════════════════════════════════════
   // LIFE CHECK CYCLES
   // ═══════════════════════════════════════════════
 
   life_check_cycles: defineTable({
-    userId:               v.id("users"),
-    configId:             v.id("life_check_configs"),
+    userId: v.id("users"),
+    configId: v.id("life_check_configs"),
 
-    status:               v.union(
-                            v.literal("running"),
-                            v.literal("validated"),
-                            v.literal("escalating"),
-                            v.literal("triggered"),
-                            v.literal("cancelled")
-                          ),
+    status: v.union(
+      v.literal("running"),
+      v.literal("validated"),
+      v.literal("escalating"),
+      v.literal("triggered"),
+      v.literal("cancelled"),
+    ),
 
     // Niveau 0 — Passif
-    passiveScore:         v.number(),
-    passiveValidatedAt:   v.optional(v.number()),
-    passiveSignalUsed:    v.optional(v.string()),
+    passiveScore: v.number(),
+    passiveValidatedAt: v.optional(v.number()),
+    passiveSignalUsed: v.optional(v.string()),
 
     // Escalade
-    currentLevel:         v.number(),                // 0-4
-    levelReachedAt:       v.optional(v.number()),
+    currentLevel: v.number(), // 0-4
+    levelReachedAt: v.optional(v.number()),
 
     // Canaux tentés
-    channelsAttempted:    v.array(v.object({
-      channelType:        v.string(),
-      attemptedAt:        v.number(),
-      respondedAt:        v.optional(v.number()),
-      response:           v.optional(v.string()),
-    })),
+    channelsAttempted: v.array(
+      v.object({
+        channelType: v.string(),
+        attemptedAt: v.number(),
+        respondedAt: v.optional(v.number()),
+        response: v.optional(v.string()),
+      }),
+    ),
 
     // Résolution
-    validatedAt:          v.optional(v.number()),
-    validatedBy:          v.optional(v.string()),    // "passive"|"tap"|"email"|...
-    cancelledAt:          v.optional(v.number()),
-    cancelledReason:      v.optional(v.string()),
+    validatedAt: v.optional(v.number()),
+    validatedBy: v.optional(v.string()), // "passive"|"tap"|"email"|...
+    cancelledAt: v.optional(v.number()),
+    cancelledReason: v.optional(v.string()),
 
-    scheduledAt:          v.number(),
-    startedAt:            v.number(),
-    completedAt:          v.optional(v.number()),
+    scheduledAt: v.number(),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
   })
-  .index("by_user", ["userId"])
-  .index("by_status", ["userId", "status"])
-  .index("by_scheduled", ["scheduledAt"]),
+    .index("by_user", ["userId"])
+    .index("by_status", ["userId", "status"])
+    .index("by_scheduled", ["scheduledAt"]),
 
   // ═══════════════════════════════════════════════
   // PASSIVE SIGNALS
   // ═══════════════════════════════════════════════
 
   passive_signals: defineTable({
-    userId:               v.id("users"),
-    cycleId:              v.optional(v.id("life_check_cycles")),
+    userId: v.id("users"),
+    cycleId: v.optional(v.id("life_check_cycles")),
 
-    signalType:           v.union(
-                            v.literal("app_activity"),
-                            v.literal("device_unlock"),
-                            v.literal("gps_movement"),
-                            v.literal("whatsapp_presence"),
-                            v.literal("google_activity"),
-                            v.literal("health_data"),
-                            v.literal("apple_watch")
-                          ),
+    signalType: v.union(
+      v.literal("app_activity"),
+      v.literal("device_unlock"),
+      v.literal("gps_movement"),
+      v.literal("whatsapp_presence"),
+      v.literal("google_activity"),
+      v.literal("health_data"),
+      v.literal("apple_watch"),
+    ),
 
-    scoreContribution:    v.number(),
-    detectedAt:           v.number(),
-    validUntil:           v.number(),
+    scoreContribution: v.number(),
+    detectedAt: v.number(),
+    validUntil: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_user_type", ["userId", "signalType"])
-  .index("by_detected", ["userId", "detectedAt"]),
+    .index("by_user", ["userId"])
+    .index("by_user_type", ["userId", "signalType"])
+    .index("by_detected", ["userId", "detectedAt"]),
 
   // ═══════════════════════════════════════════════
   // ACCESS REQUESTS
   // ═══════════════════════════════════════════════
 
   access_requests: defineTable({
-    vaultUserId:          v.id("users"),
-    requestedBy:          v.id("trusted_contacts"),
+    vaultUserId: v.id("users"),
+    requestedBy: v.id("trusted_contacts"),
 
-    accessMode:           v.union(
-                            v.literal("mode_a"),
-                            v.literal("mode_b1"),
-                            v.literal("mode_b2"),
-                            v.literal("mode_b3"),
-                            v.literal("mode_b4")
-                          ),
+    accessMode: v.union(
+      v.literal("mode_a"),
+      v.literal("mode_b1"),
+      v.literal("mode_b2"),
+      v.literal("mode_b3"),
+      v.literal("mode_b4"),
+    ),
 
-    sectionsRequested:    v.array(v.string()),
+    sectionsRequested: v.array(v.string()),
 
-    status:               v.union(
-                            v.literal("pending"),
-                            v.literal("approved"),
-                            v.literal("denied"),
-                            v.literal("auto_denied"),
-                            v.literal("expired"),
-                            v.literal("revoked")
-                          ),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("auto_denied"),
+      v.literal("expired"),
+      v.literal("revoked"),
+    ),
 
     // Réponse
-    respondedAt:          v.optional(v.number()),
-    autoResponseAt:       v.number(),                // Délai refus automatique
-    accessType:           v.optional(v.union(
-                            v.literal("read"),
-                            v.literal("read_download")
-                          )),
-    accessExpiresAt:      v.optional(v.number()),
+    respondedAt: v.optional(v.number()),
+    autoResponseAt: v.number(), // Délai refus automatique
+    accessType: v.optional(
+      v.union(v.literal("read"), v.literal("read_download")),
+    ),
+    accessExpiresAt: v.optional(v.number()),
 
     // Quorum Mode A
-    quorumRequired:       v.optional(v.number()),
-    quorumReached:        v.optional(v.boolean()),
-    contactsInitiated:    v.optional(v.array(v.id("trusted_contacts"))),
-    gracePeriodEndsAt:    v.optional(v.number()),
+    quorumRequired: v.optional(v.number()),
+    quorumReached: v.optional(v.boolean()),
+    contactsInitiated: v.optional(v.array(v.id("trusted_contacts"))),
+    gracePeriodEndsAt: v.optional(v.number()),
     cancelledDuringGrace: v.optional(v.boolean()),
 
-    reason:               v.optional(v.string()),
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    reason: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_vault_user", ["vaultUserId"])
-  .index("by_requester", ["requestedBy"])
-  .index("by_status", ["vaultUserId", "status"]),
+    .index("by_vault_user", ["vaultUserId"])
+    .index("by_requester", ["requestedBy"])
+    .index("by_status", ["vaultUserId", "status"]),
 
   // ═══════════════════════════════════════════════
   // CONDITIONAL MESSAGES
   // ═══════════════════════════════════════════════
 
   conditional_messages: defineTable({
-    userId:               v.id("users"),
-    vaultItemId:          v.id("vault_items"),
+    userId: v.id("users"),
+    vaultItemId: v.id("vault_items"),
 
-    title:                v.string(),
-    encryptedContent:     v.string(),                // ZK Sealed
+    title: v.string(),
+    encryptedContent: v.string(), // ZK Sealed
 
-    recipients:           v.array(v.id("trusted_contacts")),
+    recipients: v.array(v.id("trusted_contacts")),
 
-    triggerType:          v.union(
-                            v.literal("life_check_failure"),
-                            v.literal("time_based"),
-                            v.literal("age_based"),
-                            v.literal("legal_event"),
-                            v.literal("manual")
-                          ),
-    triggerConfig:        v.object({
-      inactivityDays:     v.optional(v.number()),
-      releaseDate:        v.optional(v.number()),
-      recipientAge:       v.optional(v.number()),
-      legalEventDesc:     v.optional(v.string()),
+    triggerType: v.union(
+      v.literal("life_check_failure"),
+      v.literal("time_based"),
+      v.literal("age_based"),
+      v.literal("legal_event"),
+      v.literal("manual"),
+    ),
+    triggerConfig: v.object({
+      inactivityDays: v.optional(v.number()),
+      releaseDate: v.optional(v.number()),
+      recipientAge: v.optional(v.number()),
+      legalEventDesc: v.optional(v.string()),
     }),
 
-    status:               v.union(
-                            v.literal("draft"),
-                            v.literal("active"),
-                            v.literal("sealed"),
-                            v.literal("released"),
-                            v.literal("cancelled")
-                          ),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("active"),
+      v.literal("sealed"),
+      v.literal("released"),
+      v.literal("cancelled"),
+    ),
 
-    encryptionType:       v.literal("zero_knowledge"),
-    curatorsRequired:     v.number(),                // Contacts requis pour libérer
+    encryptionType: v.literal("zero_knowledge"),
+    curatorsRequired: v.number(), // Contacts requis pour libérer
 
-    releasedAt:           v.optional(v.number()),
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    releasedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_status", ["userId", "status"])
-  .index("by_trigger", ["triggerType", "status"]),
+    .index("by_user", ["userId"])
+    .index("by_status", ["userId", "status"])
+    .index("by_trigger", ["triggerType", "status"]),
 
   // ═══════════════════════════════════════════════
   // SCENARIOS & STEPS
   // ═══════════════════════════════════════════════
 
   scenarios: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
-    title:                v.string(),
-    description:          v.optional(v.string()),
+    title: v.string(),
+    description: v.optional(v.string()),
 
-    status:               v.union(
-                            v.literal("armed"),
-                            v.literal("paused"),
-                            v.literal("triggered"),
-                            v.literal("completed"),
-                            v.literal("cancelled")
-                          ),
+    status: v.union(
+      v.literal("armed"),
+      v.literal("paused"),
+      v.literal("triggered"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    ),
 
-    isSafePauseActive:    v.boolean(),
-    safePauseUntil:       v.optional(v.number()),
+    isSafePauseActive: v.boolean(),
+    safePauseUntil: v.optional(v.number()),
 
     // Fail-safe
-    latentIntegrity:      v.number(),
-    syncHash:             v.string(),
-    triggerProtocol:      v.string(),
+    latentIntegrity: v.number(),
+    syncHash: v.string(),
+    triggerProtocol: v.string(),
 
-    lastCheckAt:          v.number(),
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    lastCheckAt: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_status", ["userId", "status"]),
+    .index("by_user", ["userId"])
+    .index("by_status", ["userId", "status"]),
 
   scenario_steps: defineTable({
-    scenarioId:           v.id("scenarios"),
-    userId:               v.id("users"),
+    scenarioId: v.id("scenarios"),
+    userId: v.id("users"),
 
-    triggerType:          v.literal("inactivity_days"),
-    triggerValue:         v.number(),                // Jours (7, 30, 60...)
-    label:                v.string(),
+    triggerType: v.literal("inactivity_days"),
+    triggerValue: v.number(), // Jours (7, 30, 60...)
+    label: v.string(),
 
-    actions:              v.array(v.object({
-      actionType:         v.union(
-                            v.literal("send_message"),
-                            v.literal("grant_access"),
-                            v.literal("alert_authority"),
-                            v.literal("unlock_vault"),
-                            v.literal("account_wipe")
-                          ),
-      targetContactId:    v.optional(v.id("trusted_contacts")),
-      config:             v.string(),                // JSON config
-    })),
+    actions: v.array(
+      v.object({
+        actionType: v.union(
+          v.literal("send_message"),
+          v.literal("grant_access"),
+          v.literal("alert_authority"),
+          v.literal("unlock_vault"),
+          v.literal("account_wipe"),
+        ),
+        targetContactId: v.optional(v.id("trusted_contacts")),
+        config: v.string(), // JSON config
+      }),
+    ),
 
-    executionStatus:      v.union(
-                            v.literal("pending"),
-                            v.literal("executed"),
-                            v.literal("skipped"),
-                            v.literal("failed")
-                          ),
-    executedAt:           v.optional(v.number()),
-    order:                v.number(),
-    createdAt:            v.number(),
+    executionStatus: v.union(
+      v.literal("pending"),
+      v.literal("executed"),
+      v.literal("skipped"),
+      v.literal("failed"),
+    ),
+    executedAt: v.optional(v.number()),
+    order: v.number(),
+    createdAt: v.number(),
   })
-  .index("by_scenario", ["scenarioId"])
-  .index("by_trigger", ["scenarioId", "triggerValue"]),
+    .index("by_scenario", ["scenarioId"])
+    .index("by_trigger", ["scenarioId", "triggerValue"]),
 
   // ═══════════════════════════════════════════════
   // EMERGENCY CARDS
   // ═══════════════════════════════════════════════
 
   emergency_cards: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
     // Données publiques
-    fullName:             v.optional(v.string()),
-    bloodType:            v.optional(v.string()),
-    allergies:            v.optional(v.string()),
-    medicalConditions:    v.optional(v.string()),
+    fullName: v.optional(v.string()),
+    bloodType: v.optional(v.string()),
+    allergies: v.optional(v.string()),
+    medicalConditions: v.optional(v.string()),
     emergencyContactName: v.optional(v.string()),
     emergencyContactPhone: v.optional(v.string()),
     emergencyContactRelation: v.optional(v.string()),
 
     // Privacy Controls
-    showFullName:         v.boolean(),
-    showBloodType:        v.boolean(),
-    showAllergies:        v.boolean(),
+    showFullName: v.boolean(),
+    showBloodType: v.boolean(),
+    showAllergies: v.boolean(),
     showEmergencyContact: v.boolean(),
     showMedicalConditions: v.boolean(),
 
     // QR Code
-    qrCodeToken:          v.string(),
-    qrCodeUrl:            v.string(),
+    qrCodeToken: v.string(),
+    qrCodeUrl: v.string(),
 
-    isActive:             v.boolean(),
-    lastPrintedAt:        v.optional(v.number()),
-    createdAt:            v.number(),
-    updatedAt:            v.number(),
+    isActive: v.boolean(),
+    lastPrintedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_qr_token", ["qrCodeToken"]),
+    .index("by_user", ["userId"])
+    .index("by_qr_token", ["qrCodeToken"]),
 
   // ═══════════════════════════════════════════════
   // AUDIT LOGS — IMMUABLE
   // ═══════════════════════════════════════════════
 
   audit_logs: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
-    actorType:            v.union(
-                            v.literal("user"),
-                            v.literal("trusted_contact"),
-                            v.literal("system"),
-                            v.literal("ai_assistant")
-                          ),
-    actorId:              v.string(),
+    actorType: v.union(
+      v.literal("user"),
+      v.literal("trusted_contact"),
+      v.literal("system"),
+      v.literal("ai_assistant"),
+    ),
+    actorId: v.string(),
 
     // Action sous forme "resource.action"
-    action:               v.string(),                // "vault.item.created"
-    resourceType:         v.string(),
-    resourceId:           v.string(),
+    action: v.string(), // "vault.item.created"
+    resourceType: v.string(),
+    resourceId: v.string(),
 
-    metadata:             v.optional(v.string()),    // JSON
-    ipAddress:            v.optional(v.string()),
-    deviceInfo:           v.optional(v.string()),
+    metadata: v.optional(v.string()), // JSON
+    ipAddress: v.optional(v.string()),
+    deviceInfo: v.optional(v.string()),
 
     // Chaîne d'intégrité
-    previousLogHash:      v.string(),
-    logHash:              v.string(),
+    previousLogHash: v.string(),
+    logHash: v.string(),
 
-    createdAt:            v.number(),
+    createdAt: v.number(),
     // Pas de updatedAt — jamais modifié
   })
-  .index("by_user", ["userId"])
-  .index("by_action", ["userId", "action"])
-  .index("by_created", ["userId", "createdAt"]),
+    .index("by_user", ["userId"])
+    .index("by_action", ["userId", "action"])
+    .index("by_created", ["userId", "createdAt"]),
 
   // ═══════════════════════════════════════════════
   // NOTIFICATIONS
   // ═══════════════════════════════════════════════
 
   notifications: defineTable({
-    userId:               v.id("users"),
+    userId: v.id("users"),
 
-    type:                 v.union(
-                            v.literal("life_check"),
-                            v.literal("access_request"),
-                            v.literal("contact_invited"),
-                            v.literal("contact_confirmed"),
-                            v.literal("vault_update"),
-                            v.literal("security_alert"),
-                            v.literal("system")
-                          ),
+    type: v.union(
+      v.literal("life_check"),
+      v.literal("access_request"),
+      v.literal("contact_invited"),
+      v.literal("contact_confirmed"),
+      v.literal("vault_update"),
+      v.literal("security_alert"),
+      v.literal("system"),
+    ),
 
-    title:                v.string(),
-    body:                 v.string(),
-    actionUrl:            v.optional(v.string()),
-    channels:             v.array(v.string()),
+    title: v.string(),
+    body: v.string(),
+    actionUrl: v.optional(v.string()),
+    channels: v.array(v.string()),
 
-    isRead:               v.boolean(),
-    readAt:               v.optional(v.number()),
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
 
-    relatedId:            v.optional(v.string()),
-    relatedType:          v.optional(v.string()),
+    relatedId: v.optional(v.string()),
+    relatedType: v.optional(v.string()),
 
-    createdAt:            v.number(),
+    createdAt: v.number(),
   })
-  .index("by_user", ["userId"])
-  .index("by_unread", ["userId", "isRead"])
-  .index("by_type", ["userId", "type"]),
-
+    .index("by_user", ["userId"])
+    .index("by_unread", ["userId", "isRead"])
+    .index("by_type", ["userId", "type"]),
 });
 ```
 
@@ -790,40 +801,40 @@ Stocké dans iCloud / Google          encryptedKeyBundle dans Convex
 
 export async function registerPasskey(
   userId: string,
-  masterKey: CryptoKey
+  masterKey: CryptoKey,
 ): Promise<PasskeyCredential> {
   // 1. Créer le Passkey via WebAuthn
-  const credential = await navigator.credentials.create({
+  const credential = (await navigator.credentials.create({
     publicKey: {
-      challenge:        crypto.getRandomValues(new Uint8Array(32)),
-      rp:               { name: "Keeplas", id: "keeplas.com" },
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: "Keeplas", id: "keeplas.com" },
       user: {
-        id:             new TextEncoder().encode(userId),
-        name:           userId,
-        displayName:    "Keeplas Vault",
+        id: new TextEncoder().encode(userId),
+        name: userId,
+        displayName: "Keeplas Vault",
       },
       pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
       authenticatorSelection: {
-        authenticatorAttachment: "platform",   // Biométrie locale
-        userVerification: "required",          // Face ID / empreinte obligatoire
-        residentKey: "required",               // Passkey stocké sur l'appareil
+        authenticatorAttachment: "platform", // Biométrie locale
+        userVerification: "required", // Face ID / empreinte obligatoire
+        residentKey: "required", // Passkey stocké sur l'appareil
       },
     },
-  }) as PublicKeyCredential;
+  })) as PublicKeyCredential;
 
   // 2. Chiffrer le Master Key avec la clé publique du Passkey
   // → encryptedKeyBundle sera stocké dans Convex
   const credentialPublicKey = extractPublicKey(credential);
   const encryptedKeyBundle = await encryptWithPasskey(
     masterKey,
-    credentialPublicKey
+    credentialPublicKey,
   );
 
   return {
-    credentialId:       bufferToBase64(credential.rawId),
-    publicKey:          credentialPublicKey,
-    encryptedKeyBundle,             // → Convex (illisible sans Passkey)
-    deviceName:         getDeviceName(),
+    credentialId: bufferToBase64(credential.rawId),
+    publicKey: credentialPublicKey,
+    encryptedKeyBundle, // → Convex (illisible sans Passkey)
+    deviceName: getDeviceName(),
   };
 }
 ```
@@ -834,22 +845,22 @@ export async function registerPasskey(
 // packages/crypto/passkey/authenticate.ts
 
 export async function authenticateWithPasskey(
-  encryptedKeyBundle: string      // Récupéré depuis Convex
+  encryptedKeyBundle: string, // Récupéré depuis Convex
 ): Promise<CryptoKey> {
   // 1. Challenge WebAuthn — biométrie requise
-  const assertion = await navigator.credentials.get({
+  const assertion = (await navigator.credentials.get({
     publicKey: {
-      challenge:        crypto.getRandomValues(new Uint8Array(32)),
-      rpId:             "keeplas.com",
-      userVerification: "required",           // Face ID / empreinte obligatoire
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rpId: "keeplas.com",
+      userVerification: "required", // Face ID / empreinte obligatoire
     },
-  }) as PublicKeyCredential;
+  })) as PublicKeyCredential;
 
   // 2. Déchiffrer le Master Key localement avec la clé privée du Passkey
   // La clé privée ne quitte jamais le Secure Enclave de l'appareil
   const masterKey = await decryptWithPasskey(
     base64ToBuffer(encryptedKeyBundle),
-    assertion
+    assertion,
   );
 
   return masterKey;
@@ -864,11 +875,11 @@ export async function authenticateWithPasskey(
 // Ajouter un nouvel appareil avec Passkey
 export const addPasskeyDevice = mutation({
   args: {
-    userId:             v.id("users"),
-    credentialId:       v.string(),
-    publicKey:          v.string(),
-    encryptedKeyBundle: v.string(),   // Master Key re-chiffré pour ce Passkey
-    deviceName:         v.optional(v.string()),
+    userId: v.id("users"),
+    credentialId: v.string(),
+    publicKey: v.string(),
+    encryptedKeyBundle: v.string(), // Master Key re-chiffré pour ce Passkey
+    deviceName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
@@ -885,10 +896,10 @@ export const addPasskeyDevice = mutation({
         ...existing,
         {
           credentialId: args.credentialId,
-          publicKey:    args.publicKey,
-          deviceName:   args.deviceName,
-          createdAt:    now,
-          lastUsedAt:   now,
+          publicKey: args.publicKey,
+          deviceName: args.deviceName,
+          createdAt: now,
+          lastUsedAt: now,
         },
       ],
       // Mettre à jour le encryptedKeyBundle pour ce nouvel appareil
@@ -897,13 +908,13 @@ export const addPasskeyDevice = mutation({
     });
 
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "user",
-      actorId:      args.userId,
-      action:       "passkey.device.added",
+      userId: args.userId,
+      actorType: "user",
+      actorId: args.userId,
+      action: "passkey.device.added",
       resourceType: "user",
-      resourceId:   args.userId,
-      metadata:     JSON.stringify({ deviceName: args.deviceName }),
+      resourceId: args.userId,
+      metadata: JSON.stringify({ deviceName: args.deviceName }),
     });
   },
 });
@@ -939,29 +950,30 @@ Nouveau encryptedKeyBundle + passkeyCredentials mis à jour dans Convex
 ```typescript
 export const revokePasskeyDevice = mutation({
   args: {
-    userId:       v.id("users"),
-    credentialId: v.string(),        // ID de l'appareil à révoquer
+    userId: v.id("users"),
+    credentialId: v.string(), // ID de l'appareil à révoquer
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
-    const updated = (user.passkeyCredentials ?? [])
-      .filter(c => c.credentialId !== args.credentialId);
+    const updated = (user.passkeyCredentials ?? []).filter(
+      (c) => c.credentialId !== args.credentialId,
+    );
 
     await ctx.db.patch(args.userId, {
       passkeyCredentials: updated,
-      updatedAt:          Date.now(),
+      updatedAt: Date.now(),
     });
 
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "user",
-      actorId:      args.userId,
-      action:       "passkey.device.revoked",
+      userId: args.userId,
+      actorType: "user",
+      actorId: args.userId,
+      action: "passkey.device.revoked",
       resourceType: "user",
-      resourceId:   args.userId,
-      metadata:     JSON.stringify({ credentialId: args.credentialId }),
+      resourceId: args.userId,
+      metadata: JSON.stringify({ credentialId: args.credentialId }),
     });
   },
 });
@@ -984,8 +996,8 @@ export async function generateMasterKey() {
   // 1. Générer la clé AES-256-GCM via Web Crypto API
   const masterKey = await window.crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
-    true,                    // extractable
-    ["encrypt", "decrypt"]
+    true, // extractable
+    ["encrypt", "decrypt"],
   );
 
   // 2. Exporter en raw bytes pour Shamir
@@ -994,7 +1006,7 @@ export async function generateMasterKey() {
 
   // 3. Dériver la Recovery Phrase (BIP-39)
   // La phrase N'EST PAS envoyée au serveur
-  const recoveryPhrase = deriveRecoveryPhrase(keyBytes);  // 24 mots
+  const recoveryPhrase = deriveRecoveryPhrase(keyBytes); // 24 mots
 
   // 4. Calculer le hash de vérification (envoyé à Convex)
   const phraseHash = await hashRecoveryPhrase(recoveryPhrase);
@@ -1008,11 +1020,11 @@ export async function generateMasterKey() {
   // shards[4] → Keeplas (shard 5, chiffré ZK)
 
   return {
-    masterKey,               // Reste en mémoire locale uniquement
-    rawKey: keyBytes,        // Idem
-    recoveryPhrase,          // Affiché une fois, jamais stocké
-    phraseHash,              // → Convex
-    shards,                  // Chiffrés avant envoi à Convex
+    masterKey, // Reste en mémoire locale uniquement
+    rawKey: keyBytes, // Idem
+    recoveryPhrase, // Affiché une fois, jamais stocké
+    phraseHash, // → Convex
+    shards, // Chiffrés avant envoi à Convex
   };
 }
 
@@ -1031,7 +1043,7 @@ async function hashRecoveryPhrase(phrase: string): Promise<string> {
 
 export async function encryptShardForContact(
   shard: Uint8Array,
-  contactPublicKey: string     // Clé publique EC du contact
+  contactPublicKey: string, // Clé publique EC du contact
 ): Promise<string> {
   // ECDH : chiffrement asymétrique
   // Seul le contact (avec sa clé privée) peut déchiffrer
@@ -1043,7 +1055,7 @@ export async function encryptShardForContact(
 
 export async function encryptShardForKeeplus(
   shard: Uint8Array,
-  zkVerifierKey: string        // Clé publique du circuit Noir
+  zkVerifierKey: string, // Clé publique du circuit Noir
 ): Promise<string> {
   // Chiffré de façon à ne pouvoir être déchiffré
   // qu'en fournissant une ZK Proof valide
@@ -1059,7 +1071,7 @@ export async function encryptShardForKeeplus(
 
 export async function encryptVaultItem(
   content: string,
-  masterKey: CryptoKey
+  masterKey: CryptoKey,
 ): Promise<{ encryptedContent: string; contentHash: string }> {
   // IV aléatoire pour chaque chiffrement
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -1069,7 +1081,7 @@ export async function encryptVaultItem(
   const encrypted = await window.crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     masterKey,
-    encoded
+    encoded,
   );
 
   // Préfixer l'IV au ciphertext pour le déchiffrement
@@ -1089,7 +1101,7 @@ export async function encryptVaultItem(
 
 export async function decryptVaultItem(
   encryptedContent: string,
-  masterKey: CryptoKey
+  masterKey: CryptoKey,
 ): Promise<string> {
   const combined = base64ToBuffer(encryptedContent);
   const iv = combined.slice(0, 12);
@@ -1098,7 +1110,7 @@ export async function decryptVaultItem(
   const decrypted = await window.crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
     masterKey,
-    ciphertext
+    ciphertext,
   );
 
   return new TextDecoder().decode(decrypted);
@@ -1117,8 +1129,8 @@ import { Noir } from "@noir-lang/noir_js";
 import circuit from "./circuits/keeplas_identity.json";
 
 export async function generateIdentityProof(
-  secretInput: Uint8Array,     // Dérivé du Master Key — jamais transmis
-  publicInput: string          // Identifiant public du user
+  secretInput: Uint8Array, // Dérivé du Master Key — jamais transmis
+  publicInput: string, // Identifiant public du user
 ): Promise<{ proof: Uint8Array; publicSignals: string[] }> {
   const backend = new BarretenbergBackend(circuit);
   const noir = new Noir(circuit, backend);
@@ -1126,8 +1138,8 @@ export async function generateIdentityProof(
   // La proof prouve : "je connais un secret tel que hash(secret) = publicInput"
   // Sans révéler le secret lui-même
   const { proof, publicInputs } = await noir.generateFinalProof({
-    secret: Array.from(secretInput),       // Resté côté client
-    identity_hash: publicInput,            // Connu de Convex
+    secret: Array.from(secretInput), // Resté côté client
+    identity_hash: publicInput, // Connu de Convex
   });
 
   return { proof, publicSignals: publicInputs };
@@ -1137,7 +1149,7 @@ export async function generateIdentityProof(
 export async function verifyIdentityProof(
   proof: Uint8Array,
   publicSignals: string[],
-  verifierKey: string          // zkVerifierKey stocké dans users
+  verifierKey: string, // zkVerifierKey stocké dans users
 ): Promise<boolean> {
   // Convex vérifie la proof mathématiquement
   // Sans jamais connaître le secret
@@ -1182,21 +1194,22 @@ Vault accessible sur le nouvel appareil ✅
 
 export async function recoverFromPhrase(
   inputPhrase: string,
-  storedHash: string           // Récupéré depuis Convex
+  storedHash: string, // Récupéré depuis Convex
 ): Promise<CryptoKey | null> {
   // 1. Vérifier le hash localement
   const inputHash = await hashRecoveryPhrase(inputPhrase);
-  if (inputHash !== storedHash) return null;  // Phrase incorrecte
+  if (inputHash !== storedHash) return null; // Phrase incorrecte
 
   // 2. Reconstruire le Master Key depuis la phrase
-  const rawKey = phraseToKeyBytes(inputPhrase);  // BIP-39 inverse
+  const rawKey = phraseToKeyBytes(inputPhrase); // BIP-39 inverse
 
   // 3. Importer en CryptoKey
   const masterKey = await window.crypto.subtle.importKey(
-    "raw", rawKey,
+    "raw",
+    rawKey,
     { name: "AES-GCM", length: 256 },
     true,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 
   return masterKey;
@@ -1244,24 +1257,25 @@ Tous les encryptedShards mis à jour dans Convex
 // packages/crypto/recovery/socialRecovery.ts
 
 export async function reconstructFromShards(
-  shards: Uint8Array[]         // Minimum 3 shards déchiffrés
+  shards: Uint8Array[], // Minimum 3 shards déchiffrés
 ): Promise<CryptoKey> {
   // Reconstruction Shamir (côté client uniquement)
   const rawKey = combineSecret(shards);
 
   const masterKey = await window.crypto.subtle.importKey(
-    "raw", rawKey,
+    "raw",
+    rawKey,
     { name: "AES-GCM", length: 256 },
     true,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 
   return masterKey;
 }
 
 export async function decryptContactShard(
-  encryptedShard: string,      // Récupéré depuis Convex
-  contactPrivateKey: CryptoKey // Clé privée du contact — locale uniquement
+  encryptedShard: string, // Récupéré depuis Convex
+  contactPrivateKey: CryptoKey, // Clé privée du contact — locale uniquement
 ): Promise<Uint8Array> {
   const shardBytes = base64ToBuffer(encryptedShard);
   return await ecdhDecrypt(shardBytes, contactPrivateKey);
@@ -1275,29 +1289,26 @@ export async function decryptContactShard(
 // packages/crypto/recovery/keeplasShard.ts
 
 export async function requestKeeplasShard(
-  masterKey: Uint8Array,       // Partiel — reconstruit depuis d'autres shards
+  masterKey: Uint8Array, // Partiel — reconstruit depuis d'autres shards
   userId: string,
-  zkVerifierKey: string
+  zkVerifierKey: string,
 ): Promise<Uint8Array> {
   // 1. Générer la ZK Proof d'identité (côté client)
   const { proof, publicSignals } = await generateIdentityProof(
     masterKey,
-    userId
+    userId,
   );
 
   // 2. Envoyer la proof à Convex (pas le secret)
   const encryptedShard5 = await convex.mutation(
     api.zkVerification.verifyAndReleaseShard,
-    { proof: bufferToBase64(proof), publicSignals, userId }
+    { proof: bufferToBase64(proof), publicSignals, userId },
   );
   // Convex vérifie la proof mathématiquement
   // Si valide → renvoie le shard 5 chiffré
 
   // 3. Déchiffrer le shard 5 côté client
-  const shard5 = await zkDecrypt(
-    base64ToBuffer(encryptedShard5),
-    masterKey
-  );
+  const shard5 = await zkDecrypt(base64ToBuffer(encryptedShard5), masterKey);
 
   return shard5;
 }
@@ -1318,19 +1329,21 @@ import { v } from "convex/values";
 // Création du compte — reçoit uniquement les données publiques
 export const createUser = mutation({
   args: {
-    email:              v.optional(v.string()),       // Optionnel si Passkey
-    authProviders:      v.array(v.string()),          // ["passkey"] | ["google"] | ...
-    publicKey:          v.string(),
-    encryptedKeyBundle: v.string(),                  // Master Key chiffré biométrie/passkey
-    recoveryPhraseHash: v.string(),                  // sha256 uniquement — pas la phrase
-    zkVerifierKey:      v.string(),
-    keeplasShard:       v.string(),                  // Shard 5 chiffré ZK
+    email: v.optional(v.string()), // Optionnel si Passkey
+    authProviders: v.array(v.string()), // ["passkey"] | ["google"] | ...
+    publicKey: v.string(),
+    encryptedKeyBundle: v.string(), // Master Key chiffré biométrie/passkey
+    recoveryPhraseHash: v.string(), // sha256 uniquement — pas la phrase
+    zkVerifierKey: v.string(),
+    keeplasShard: v.string(), // Shard 5 chiffré ZK
     // Passkey spécifique
-    passkeyCredential:  v.optional(v.object({
-      credentialId:     v.string(),
-      publicKey:        v.string(),
-      deviceName:       v.optional(v.string()),
-    })),
+    passkeyCredential: v.optional(
+      v.object({
+        credentialId: v.string(),
+        publicKey: v.string(),
+        deviceName: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -1340,46 +1353,46 @@ export const createUser = mutation({
       : undefined;
 
     const userId = await ctx.db.insert("users", {
-      email:               args.email,
-      authProviders:       args.authProviders as any[],
-      publicKey:           args.publicKey,
-      encryptedKeyBundle:  args.encryptedKeyBundle,
-      recoveryPhraseHash:  args.recoveryPhraseHash,
-      recoveryVerified:    false,
-      zkVerifierKey:       args.zkVerifierKey,
-      keeplasShard:        args.keeplasShard,
+      email: args.email,
+      authProviders: args.authProviders as any[],
+      publicKey: args.publicKey,
+      encryptedKeyBundle: args.encryptedKeyBundle,
+      recoveryPhraseHash: args.recoveryPhraseHash,
+      recoveryVerified: false,
+      zkVerifierKey: args.zkVerifierKey,
+      keeplasShard: args.keeplasShard,
       passkeyCredentials,
-      onboardingStep:      "recovery_phrase",
+      onboardingStep: "recovery_phrase",
       vaultIntegrityScore: 0,
-      isActive:            true,
-      createdAt:           now,
-      updatedAt:           now,
-      lastSeenAt:          now,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+      lastSeenAt: now,
     });
 
     // Créer le vault vide
     await ctx.db.insert("vaults", {
       userId,
-      status:              "active",
-      securityLevel:       "maximum",
-      integrityScore:      0,
+      status: "active",
+      securityLevel: "maximum",
+      integrityScore: 0,
       encryptedItemsCount: 0,
-      secureNodesCount:    0,
-      lastVerifiedAt:      Date.now(),
-      syncHash:            generateSyncHash(),
-      lastSyncAt:          Date.now(),
-      createdAt:           Date.now(),
-      updatedAt:           Date.now(),
+      secureNodesCount: 0,
+      lastVerifiedAt: Date.now(),
+      syncHash: generateSyncHash(),
+      lastSyncAt: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Log audit
     await createAuditLog(ctx, {
       userId,
-      actorType:    "user",
-      actorId:      userId,
-      action:       "user.created",
+      actorType: "user",
+      actorId: userId,
+      action: "user.created",
       resourceType: "user",
-      resourceId:   userId,
+      resourceId: userId,
     });
 
     return userId;
@@ -1389,8 +1402,8 @@ export const createUser = mutation({
 // Vérification Recovery Phrase — compare les hash uniquement
 export const verifyRecoveryPhrase = mutation({
   args: {
-    userId:              v.id("users"),
-    recoveryPhraseHash:  v.string(),   // sha256(phrase) calculé côté client
+    userId: v.id("users"),
+    recoveryPhraseHash: v.string(), // sha256(phrase) calculé côté client
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
@@ -1403,8 +1416,8 @@ export const verifyRecoveryPhrase = mutation({
 
     await ctx.db.patch(args.userId, {
       recoveryVerified: true,
-      onboardingStep:   "dashboard",
-      updatedAt:        Date.now(),
+      onboardingStep: "dashboard",
+      updatedAt: Date.now(),
     });
 
     return { success: true };
@@ -1417,16 +1430,16 @@ export const recordAppActivity = mutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.userId, {
       lastSeenAt: Date.now(),
-      updatedAt:  Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Enregistrer comme signal passif
     await ctx.db.insert("passive_signals", {
-      userId:            args.userId,
-      signalType:        "app_activity",
+      userId: args.userId,
+      signalType: "app_activity",
       scoreContribution: 40,
-      detectedAt:        Date.now(),
-      validUntil:        Date.now() + 15 * 24 * 60 * 60 * 1000, // 15 jours
+      detectedAt: Date.now(),
+      validUntil: Date.now() + 15 * 24 * 60 * 60 * 1000, // 15 jours
     });
   },
 });
@@ -1439,16 +1452,16 @@ export const recordAppActivity = mutation({
 
 export const addVaultItem = mutation({
   args: {
-    vaultId:          v.id("vaults"),
-    userId:           v.id("users"),
-    category:         v.string(),
-    title:            v.string(),
-    encryptedContent: v.string(),   // Chiffré côté client avant envoi
-    encryptionType:   v.string(),
-    contentHash:      v.string(),
-    accessLevel:      v.string(),
-    isCritical:       v.boolean(),
-    tags:             v.array(v.string()),
+    vaultId: v.id("vaults"),
+    userId: v.id("users"),
+    category: v.string(),
+    title: v.string(),
+    encryptedContent: v.string(), // Chiffré côté client avant envoi
+    encryptionType: v.string(),
+    contentHash: v.string(),
+    accessLevel: v.string(),
+    isCritical: v.boolean(),
+    tags: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     // Vérifier que le user est bien propriétaire du vault
@@ -1460,16 +1473,16 @@ export const addVaultItem = mutation({
     const itemId = await ctx.db.insert("vault_items", {
       ...args,
       sharedWithContacts: [],
-      description:        undefined,
-      status:             "active",
-      createdAt:          Date.now(),
-      updatedAt:          Date.now(),
+      description: undefined,
+      status: "active",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Mettre à jour le compteur du vault
     await ctx.db.patch(args.vaultId, {
       encryptedItemsCount: vault.encryptedItemsCount + 1,
-      updatedAt:           Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Recalculer le Vault Integrity Score
@@ -1477,13 +1490,13 @@ export const addVaultItem = mutation({
 
     // Log audit
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "user",
-      actorId:      args.userId,
-      action:       "vault.item.created",
+      userId: args.userId,
+      actorType: "user",
+      actorId: args.userId,
+      action: "vault.item.created",
       resourceType: "vault_item",
-      resourceId:   itemId,
-      metadata:     JSON.stringify({ category: args.category, title: args.title }),
+      resourceId: itemId,
+      metadata: JSON.stringify({ category: args.category, title: args.title }),
     });
 
     return itemId;
@@ -1498,27 +1511,28 @@ export const addVaultItem = mutation({
 
 export const inviteContact = mutation({
   args: {
-    userId:         v.id("users"),
-    name:           v.string(),
-    email:          v.string(),
-    phoneNumber:    v.optional(v.string()),
-    role:           v.string(),
-    accessModes:    v.array(v.string()),
+    userId: v.id("users"),
+    name: v.string(),
+    email: v.string(),
+    phoneNumber: v.optional(v.string()),
+    role: v.string(),
+    accessModes: v.array(v.string()),
     isFirstResponder: v.boolean(),
     isMedicalContact: v.boolean(),
-    shardIndex:     v.number(),
-    encryptedShard: v.string(),          // Chiffré côté client avec clé publique contact
+    shardIndex: v.number(),
+    encryptedShard: v.string(), // Chiffré côté client avec clé publique contact
     shardPublicKeyUsed: v.string(),
   },
   handler: async (ctx, args) => {
     // Vérifier qu'il n'y a pas déjà 5 contacts
     const existing = await ctx.db
       .query("trusted_contacts")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    const active = existing.filter(c =>
-      c.invitationStatus !== "revoked" && c.invitationStatus !== "declined"
+    const active = existing.filter(
+      (c) =>
+        c.invitationStatus !== "revoked" && c.invitationStatus !== "declined",
     );
     if (active.length >= 5) throw new Error("Maximum 5 trusted contacts");
 
@@ -1529,10 +1543,10 @@ export const inviteContact = mutation({
       ...args,
       invitationToken,
       invitationStatus: "pending",
-      shardConfirmed:   false,
-      invitedAt:        Date.now(),
-      createdAt:        Date.now(),
-      updatedAt:        Date.now(),
+      shardConfirmed: false,
+      invitedAt: Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Envoyer email d'invitation (via scheduled function)
@@ -1549,10 +1563,10 @@ export const inviteContact = mutation({
 // Confirmation du shard par le contact
 export const confirmShard = mutation({
   args: {
-    contactId:          v.id("trusted_contacts"),
-    invitationToken:    v.string(),
-    contactPublicKey:   v.string(),      // Clé publique du contact
-    contactRecoveryHash: v.string(),     // sha256(recovery phrase contact)
+    contactId: v.id("trusted_contacts"),
+    invitationToken: v.string(),
+    contactPublicKey: v.string(), // Clé publique du contact
+    contactRecoveryHash: v.string(), // sha256(recovery phrase contact)
   },
   handler: async (ctx, args) => {
     const contact = await ctx.db.get(args.contactId);
@@ -1561,13 +1575,13 @@ export const confirmShard = mutation({
     }
 
     await ctx.db.patch(args.contactId, {
-      invitationStatus:   "accepted",
-      shardConfirmed:     true,
-      shardConfirmedAt:   Date.now(),
-      contactPublicKey:   args.contactPublicKey,
+      invitationStatus: "accepted",
+      shardConfirmed: true,
+      shardConfirmedAt: Date.now(),
+      contactPublicKey: args.contactPublicKey,
       contactRecoveryHash: args.contactRecoveryHash,
-      acceptedAt:         Date.now(),
-      updatedAt:          Date.now(),
+      acceptedAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Mettre à jour le Vault Integrity Score
@@ -1583,8 +1597,8 @@ export const confirmShard = mutation({
 
 export const verifyAndReleaseShard = mutation({
   args: {
-    userId:       v.id("users"),
-    proof:        v.string(),        // ZK Proof générée côté client
+    userId: v.id("users"),
+    proof: v.string(), // ZK Proof générée côté client
     publicSignals: v.array(v.string()),
   },
   handler: async (ctx, args) => {
@@ -1596,29 +1610,29 @@ export const verifyAndReleaseShard = mutation({
     const isValid = await verifyZKProof(
       base64ToBuffer(args.proof),
       args.publicSignals,
-      user.zkVerifierKey
+      user.zkVerifierKey,
     );
 
     if (!isValid) {
       await createAuditLog(ctx, {
-        userId:       args.userId,
-        actorType:    "user",
-        actorId:      args.userId,
-        action:       "zk.proof.failed",
+        userId: args.userId,
+        actorType: "user",
+        actorId: args.userId,
+        action: "zk.proof.failed",
         resourceType: "user",
-        resourceId:   args.userId,
+        resourceId: args.userId,
       });
       throw new Error("Invalid ZK Proof");
     }
 
     // Log de l'accès au shard 5
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "user",
-      actorId:      args.userId,
-      action:       "zk.shard5.released",
+      userId: args.userId,
+      actorType: "user",
+      actorId: args.userId,
+      action: "zk.shard5.released",
       resourceType: "user",
-      resourceId:   args.userId,
+      resourceId: args.userId,
     });
 
     // Retourner le shard 5 chiffré — le client le déchiffre avec sa ZK proof
@@ -1635,11 +1649,11 @@ export const verifyAndReleaseShard = mutation({
 // Mode B1 — Trusted Contact demande l'accès
 export const requestAccess = mutation({
   args: {
-    vaultUserId:      v.id("users"),
-    contactId:        v.id("trusted_contacts"),
-    accessMode:       v.string(),
+    vaultUserId: v.id("users"),
+    contactId: v.id("trusted_contacts"),
+    accessMode: v.string(),
     sectionsRequested: v.array(v.string()),
-    reason:           v.optional(v.string()),
+    reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const contact = await ctx.db.get(args.contactId);
@@ -1657,29 +1671,29 @@ export const requestAccess = mutation({
     const autoResponseAt = Date.now() + autoResponseHours * 3600 * 1000;
 
     const requestId = await ctx.db.insert("access_requests", {
-      vaultUserId:      args.vaultUserId,
-      requestedBy:      args.contactId,
-      accessMode:       args.accessMode as any,
+      vaultUserId: args.vaultUserId,
+      requestedBy: args.contactId,
+      accessMode: args.accessMode as any,
       sectionsRequested: args.sectionsRequested,
-      status:           "pending",
+      status: "pending",
       autoResponseAt,
-      reason:           args.reason,
-      createdAt:        Date.now(),
-      updatedAt:        Date.now(),
+      reason: args.reason,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Notifier le propriétaire immédiatement
     await ctx.db.insert("notifications", {
-      userId:      args.vaultUserId,
-      type:        "access_request",
-      title:       `${contact.name} demande accès à votre vault`,
-      body:        args.reason ?? "Aucune raison précisée",
-      actionUrl:   `/access-requests/${requestId}`,
-      channels:    ["push", "email"],
-      isRead:      false,
-      relatedId:   requestId,
+      userId: args.vaultUserId,
+      type: "access_request",
+      title: `${contact.name} demande accès à votre vault`,
+      body: args.reason ?? "Aucune raison précisée",
+      actionUrl: `/access-requests/${requestId}`,
+      channels: ["push", "email"],
+      isRead: false,
+      relatedId: requestId,
       relatedType: "access_request",
-      createdAt:   Date.now(),
+      createdAt: Date.now(),
     });
 
     // Programmer le refus automatique si pas de réponse
@@ -1694,15 +1708,15 @@ export const requestAccess = mutation({
 // Réponse du propriétaire du vault
 export const respondToAccessRequest = mutation({
   args: {
-    requestId:      v.id("access_requests"),
-    userId:         v.id("users"),
-    decision:       v.union(
-                      v.literal("approve"),
-                      v.literal("deny"),
-                      v.literal("approve_temporary")
-                    ),
-    accessType:     v.optional(v.string()),
-    durationHours:  v.optional(v.number()),
+    requestId: v.id("access_requests"),
+    userId: v.id("users"),
+    decision: v.union(
+      v.literal("approve"),
+      v.literal("deny"),
+      v.literal("approve_temporary"),
+    ),
+    accessType: v.optional(v.string()),
+    durationHours: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const request = await ctx.db.get(args.requestId);
@@ -1719,40 +1733,39 @@ export const respondToAccessRequest = mutation({
       : undefined;
 
     await ctx.db.patch(args.requestId, {
-      status:         args.decision === "deny" ? "denied" : "approved",
-      respondedAt:    now,
-      accessType:     args.accessType as any,
+      status: args.decision === "deny" ? "denied" : "approved",
+      respondedAt: now,
+      accessType: args.accessType as any,
       accessExpiresAt,
-      updatedAt:      now,
+      updatedAt: now,
     });
 
     // Notifier le contact de la décision
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
       await ctx.db.insert("notifications", {
-        userId:      contact.contactUserId,
-        type:        "access_request",
-        title:       args.decision === "deny"
-                       ? "Accès refusé"
-                       : "Accès accordé",
-        body:        args.decision === "deny"
-                       ? "Le propriétaire a refusé votre demande d'accès."
-                       : "Vous avez maintenant accès au vault.",
-        channels:    ["push", "email"],
-        isRead:      false,
-        relatedId:   args.requestId,
+        userId: contact.contactUserId,
+        type: "access_request",
+        title: args.decision === "deny" ? "Accès refusé" : "Accès accordé",
+        body:
+          args.decision === "deny"
+            ? "Le propriétaire a refusé votre demande d'accès."
+            : "Vous avez maintenant accès au vault.",
+        channels: ["push", "email"],
+        isRead: false,
+        relatedId: args.requestId,
         relatedType: "access_request",
-        createdAt:   now,
+        createdAt: now,
       });
     }
 
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "user",
-      actorId:      args.userId,
-      action:       `access.request.${args.decision}d`,
+      userId: args.userId,
+      actorType: "user",
+      actorId: args.userId,
+      action: `access.request.${args.decision}d`,
       resourceType: "access_request",
-      resourceId:   args.requestId,
+      resourceId: args.requestId,
     });
   },
 });
@@ -1776,28 +1789,28 @@ const crons = cronJobs();
 crons.interval(
   "life-check-scheduler",
   { hours: 1 },
-  api.lifeCheck.processScheduledChecks
+  api.lifeCheck.processScheduledChecks,
 );
 
 // Toutes les 4 heures — escalade des cycles en cours
 crons.interval(
   "life-check-escalation",
   { hours: 4 },
-  api.lifeCheck.processEscalations
+  api.lifeCheck.processEscalations,
 );
 
 // Toutes les 15 minutes — signaux passifs
 crons.interval(
   "passive-signals-collector",
   { minutes: 15 },
-  api.lifeCheck.collectPassiveSignals
+  api.lifeCheck.collectPassiveSignals,
 );
 
 // Chaque jour — nettoyage des signaux expirés
 crons.daily(
   "cleanup-expired-signals",
   { hourUTC: 2, minuteUTC: 0 },
-  api.lifeCheck.cleanupExpiredSignals
+  api.lifeCheck.cleanupExpiredSignals,
 );
 
 export default crons;
@@ -1814,15 +1827,14 @@ export const processScheduledChecks = internalAction({
     const now = Date.now();
 
     // Trouver tous les Life Checks dus
-    const dueConfigs = await ctx.runQuery(
-      api.lifeCheck.getDueConfigs,
-      { before: now }
-    );
+    const dueConfigs = await ctx.runQuery(api.lifeCheck.getDueConfigs, {
+      before: now,
+    });
 
     for (const config of dueConfigs) {
       await ctx.runMutation(api.lifeCheck.startCycle, {
         configId: config._id,
-        userId:   config.userId,
+        userId: config.userId,
       });
     }
   },
@@ -1832,20 +1844,20 @@ export const processScheduledChecks = internalAction({
 export const startCycle = internalMutation({
   args: {
     configId: v.id("life_check_configs"),
-    userId:   v.id("users"),
+    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
     const cycleId = await ctx.db.insert("life_check_cycles", {
-      userId:           args.userId,
-      configId:         args.configId,
-      status:           "running",
-      passiveScore:     0,
-      currentLevel:     0,
+      userId: args.userId,
+      configId: args.configId,
+      status: "running",
+      passiveScore: 0,
+      currentLevel: 0,
       channelsAttempted: [],
-      scheduledAt:      now,
-      startedAt:        now,
+      scheduledAt: now,
+      startedAt: now,
     });
 
     // Étape 1 : Calculer le score passif immédiatement
@@ -1862,15 +1874,15 @@ export const startCycle = internalMutation({
 export const evaluatePassiveSignals = internalAction({
   args: {
     cycleId: v.id("life_check_cycles"),
-    userId:  v.id("users"),
+    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
 
     // Récupérer tous les signaux valides
     const signals = await ctx.runQuery(api.lifeCheck.getValidSignals, {
-      userId:    args.userId,
-      validAt:   now,
+      userId: args.userId,
+      validAt: now,
     });
 
     // Calculer le score total
@@ -1893,27 +1905,30 @@ export const evaluatePassiveSignals = internalAction({
     if (totalScore >= (config?.confidenceThreshold ?? 50)) {
       // Score suffisant → validation silencieuse ✅
       await ctx.runMutation(api.lifeCheck.validateCycle, {
-        cycleId:           args.cycleId,
-        validatedBy:       "passive",
-        passiveScore:      totalScore,
+        cycleId: args.cycleId,
+        validatedBy: "passive",
+        passiveScore: totalScore,
         passiveSignalUsed: bestSignal,
       });
     } else {
       // Score insuffisant → passer au niveau 1
       await ctx.runMutation(api.lifeCheck.updateCycleScore, {
-        cycleId:      args.cycleId,
+        cycleId: args.cycleId,
         passiveScore: totalScore,
       });
 
       // Délai avant niveau 1 selon fréquence
-      const delayHours = config?.frequency === "weekly" ? 12
-                       : config?.frequency === "monthly" ? 24
-                       : 72; // quarterly
+      const delayHours =
+        config?.frequency === "weekly"
+          ? 12
+          : config?.frequency === "monthly"
+            ? 24
+            : 72; // quarterly
 
       await ctx.scheduler.runAfter(
         delayHours * 3600 * 1000,
         api.lifeCheck.triggerLevel1,
-        { cycleId: args.cycleId, userId: args.userId }
+        { cycleId: args.cycleId, userId: args.userId },
       );
     }
   },
@@ -1923,7 +1938,7 @@ export const evaluatePassiveSignals = internalAction({
 export const triggerLevel1 = internalAction({
   args: {
     cycleId: v.id("life_check_cycles"),
-    userId:  v.id("users"),
+    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
     // Vérifier que le cycle est encore "running"
@@ -1933,12 +1948,13 @@ export const triggerLevel1 = internalAction({
     if (cycle?.status !== "running") return; // Déjà validé
 
     await ctx.runMutation(api.lifeCheck.updateCycleLevel, {
-      cycleId: args.cycleId, level: 1,
+      cycleId: args.cycleId,
+      level: 1,
     });
 
     // Envoyer push notification "Tout va bien ? 👍"
     await ctx.runMutation(api.notifications.sendLifeCheckPush, {
-      userId:  args.userId,
+      userId: args.userId,
       cycleId: args.cycleId,
       message: "Tout va bien ?",
     });
@@ -1953,7 +1969,7 @@ export const triggerLevel1 = internalAction({
     await ctx.scheduler.runAfter(
       nextChannelDelay,
       api.lifeCheck.triggerNextChannel,
-      { cycleId: args.cycleId, userId: args.userId, channelIndex: 0 }
+      { cycleId: args.cycleId, userId: args.userId, channelIndex: 0 },
     );
   },
 });
@@ -1961,8 +1977,8 @@ export const triggerLevel1 = internalAction({
 // Niveaux 2+ — Escalade canal par canal
 export const triggerNextChannel = internalAction({
   args: {
-    cycleId:      v.id("life_check_cycles"),
-    userId:       v.id("users"),
+    cycleId: v.id("life_check_cycles"),
+    userId: v.id("users"),
     channelIndex: v.number(),
   },
   handler: async (ctx, args) => {
@@ -1974,15 +1990,16 @@ export const triggerNextChannel = internalAction({
     const config = await ctx.runQuery(api.lifeCheck.getConfig, {
       userId: args.userId,
     });
-    const channels = config?.activeChannels
-      .filter(c => c.isEnabled)
-      .sort((a, b) => a.order - b.order) ?? [];
+    const channels =
+      config?.activeChannels
+        .filter((c) => c.isEnabled)
+        .sort((a, b) => a.order - b.order) ?? [];
 
     if (args.channelIndex >= channels.length) {
       // Tous les canaux épuisés → déclencher urgence
       await ctx.runMutation(api.lifeCheck.triggerEmergency, {
         cycleId: args.cycleId,
-        userId:  args.userId,
+        userId: args.userId,
       });
       return;
     }
@@ -1991,13 +2008,13 @@ export const triggerNextChannel = internalAction({
 
     await ctx.runMutation(api.lifeCheck.updateCycleLevel, {
       cycleId: args.cycleId,
-      level:   args.channelIndex + 2,
+      level: args.channelIndex + 2,
     });
 
     // Envoyer via le canal approprié
     await ctx.runMutation(api.notifications.sendViaChannel, {
-      userId:      args.userId,
-      cycleId:     args.cycleId,
+      userId: args.userId,
+      cycleId: args.cycleId,
       channelType: channel.type,
     });
 
@@ -2006,10 +2023,10 @@ export const triggerNextChannel = internalAction({
       channel.delayHours * 3600 * 1000,
       api.lifeCheck.triggerNextChannel,
       {
-        cycleId:      args.cycleId,
-        userId:       args.userId,
+        cycleId: args.cycleId,
+        userId: args.userId,
         channelIndex: args.channelIndex + 1,
-      }
+      },
     );
   },
 });
@@ -2017,9 +2034,9 @@ export const triggerNextChannel = internalAction({
 // Validation d'un cycle (par n'importe quel niveau)
 export const validateCycle = internalMutation({
   args: {
-    cycleId:           v.id("life_check_cycles"),
-    validatedBy:       v.string(),
-    passiveScore:      v.optional(v.number()),
+    cycleId: v.id("life_check_cycles"),
+    validatedBy: v.string(),
+    passiveScore: v.optional(v.number()),
     passiveSignalUsed: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -2029,12 +2046,12 @@ export const validateCycle = internalMutation({
     const now = Date.now();
 
     await ctx.db.patch(args.cycleId, {
-      status:            "validated",
-      validatedAt:       now,
-      validatedBy:       args.validatedBy,
-      passiveScore:      args.passiveScore ?? cycle.passiveScore,
+      status: "validated",
+      validatedAt: now,
+      validatedBy: args.validatedBy,
+      passiveScore: args.passiveScore ?? cycle.passiveScore,
       passiveSignalUsed: args.passiveSignalUsed,
-      completedAt:       now,
+      completedAt: now,
     });
 
     // Programmer le prochain cycle
@@ -2044,7 +2061,7 @@ export const validateCycle = internalMutation({
       await ctx.db.patch(cycle.configId, {
         lastCheckAt: now,
         nextCheckAt,
-        updatedAt:   now,
+        updatedAt: now,
       });
     }
   },
@@ -2054,49 +2071,49 @@ export const validateCycle = internalMutation({
 export const triggerEmergency = internalMutation({
   args: {
     cycleId: v.id("life_check_cycles"),
-    userId:  v.id("users"),
+    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     const gracePeriodEndsAt = now + 72 * 3600 * 1000; // 72h de grâce
 
     await ctx.db.patch(args.cycleId, {
-      status:       "triggered",
-      completedAt:  now,
+      status: "triggered",
+      completedAt: now,
     });
 
     // Notifier TOUS les trusted contacts
     const contacts = await ctx.db
       .query("trusted_contacts")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
-      .filter(q => q.eq(q.field("invitationStatus"), "accepted"))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
       .collect();
 
     for (const contact of contacts) {
       if (contact.contactUserId) {
         await ctx.db.insert("notifications", {
-          userId:      contact.contactUserId,
-          type:        "security_alert",
-          title:       "Life Check — Aucune réponse détectée",
-          body:        "Le propriétaire du vault n'a pas répondu. Une période de grâce de 72h est en cours.",
-          channels:    ["push", "email"],
-          isRead:      false,
-          relatedId:   args.cycleId,
+          userId: contact.contactUserId,
+          type: "security_alert",
+          title: "Life Check — Aucune réponse détectée",
+          body: "Le propriétaire du vault n'a pas répondu. Une période de grâce de 72h est en cours.",
+          channels: ["push", "email"],
+          isRead: false,
+          relatedId: args.cycleId,
           relatedType: "life_check_cycle",
-          createdAt:   now,
+          createdAt: now,
         });
       }
     }
 
     // Log audit immuable
     await createAuditLog(ctx, {
-      userId:       args.userId,
-      actorType:    "system",
-      actorId:      "life_check_system",
-      action:       "life_check.emergency.triggered",
+      userId: args.userId,
+      actorType: "system",
+      actorId: "life_check_system",
+      action: "life_check.emergency.triggered",
       resourceType: "life_check_cycle",
-      resourceId:   args.cycleId,
-      metadata:     JSON.stringify({ gracePeriodEndsAt }),
+      resourceId: args.cycleId,
+      metadata: JSON.stringify({ gracePeriodEndsAt }),
     });
   },
 });
@@ -2104,8 +2121,8 @@ export const triggerEmergency = internalMutation({
 // Helpers
 function calculateNextCheck(frequency: string, from: number): number {
   const DAY = 24 * 3600 * 1000;
-  if (frequency === "weekly")    return from + 7 * DAY;
-  if (frequency === "monthly")   return from + 30 * DAY;
+  if (frequency === "weekly") return from + 7 * DAY;
+  if (frequency === "monthly") return from + 30 * DAY;
   if (frequency === "quarterly") return from + 90 * DAY;
   return from + 30 * DAY;
 }
@@ -2121,22 +2138,22 @@ let lastLogHash = "genesis"; // Hash initial
 export async function createAuditLog(
   ctx: any,
   params: {
-    userId:       string;
-    actorType:    string;
-    actorId:      string;
-    action:       string;
+    userId: string;
+    actorType: string;
+    actorId: string;
+    action: string;
     resourceType: string;
-    resourceId:   string;
-    metadata?:    string;
-    ipAddress?:   string;
-  }
+    resourceId: string;
+    metadata?: string;
+    ipAddress?: string;
+  },
 ) {
   const now = Date.now();
 
   // Récupérer le dernier log pour la chaîne
   const lastLog = await ctx.db
     .query("audit_logs")
-    .withIndex("by_created", q => q.eq("userId", params.userId))
+    .withIndex("by_created", (q) => q.eq("userId", params.userId))
     .order("desc")
     .first();
 
@@ -2211,5 +2228,5 @@ packages/crypto/
 
 ---
 
-*Document technique — Keeplas v1 — Avril 2026 — v2*
-*Prochaine étape : Implémentation packages/crypto/ (Passkey + ZK circuits Noir)*
+_Document technique — Keeplas v1 — Avril 2026 — v2_
+_Prochaine étape : Implémentation packages/crypto/ (Passkey + ZK circuits Noir)_

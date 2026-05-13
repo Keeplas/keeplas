@@ -6,7 +6,7 @@ import { auditedMutation } from "./audit";
 async function assertContactsOwnedByUser(
   ctx: { db: { get: (id: any) => Promise<any> } },
   userId: string,
-  contactIds: string[]
+  contactIds: string[],
 ) {
   for (const cid of contactIds) {
     const contact = await ctx.db.get(cid);
@@ -60,7 +60,7 @@ export const createGroup = auditedMutation({
       const previousDefault = await ctx.db
         .query("recipient_groups")
         .withIndex("by_user_default", (q) =>
-          q.eq("userId", userId).eq("isDefault", true)
+          q.eq("userId", userId).eq("isDefault", true),
         )
         .first();
       if (previousDefault) {
@@ -137,7 +137,7 @@ export const setDefaultGroup = auditedMutation({
     const previous = await ctx.db
       .query("recipient_groups")
       .withIndex("by_user_default", (q) =>
-        q.eq("userId", userId).eq("isDefault", true)
+        q.eq("userId", userId).eq("isDefault", true),
       )
       .first();
 
@@ -213,7 +213,7 @@ export const removeMember = auditedMutation({
 
     await ctx.db.patch(args.groupId, {
       memberContactIds: group.memberContactIds.filter(
-        (id) => id !== args.contactId
+        (id) => id !== args.contactId,
       ),
       updatedAt: Date.now(),
     });

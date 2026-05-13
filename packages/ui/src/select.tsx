@@ -26,11 +26,14 @@ type ItemValueMap<Value> = Map<string, Value>;
 
 function collectItemValues<Value>(
   children: React.ReactNode,
-  map: ItemValueMap<Value>
+  map: ItemValueMap<Value>,
 ) {
   React.Children.forEach(children, (child) => {
     if (!React.isValidElement(child)) return;
-    const props = child.props as { value?: unknown; children?: React.ReactNode };
+    const props = child.props as {
+      value?: unknown;
+      children?: React.ReactNode;
+    };
     if (props.value !== undefined && props.value !== null) {
       map.set(String(props.value), props.value as Value);
     }
@@ -68,7 +71,7 @@ function SelectImpl<Value = string>({
       const mapped = valueMap.get(stringValue);
       onValueChange(mapped !== undefined ? mapped : (stringValue as Value));
     },
-    [onValueChange, valueMap]
+    [onValueChange, valueMap],
   );
 
   const stringValue =
@@ -95,7 +98,7 @@ function SelectImpl<Value = string>({
           "data-[state=open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
           triggerClassName,
-          className
+          className,
         )}
       >
         <SelectPrimitives.Value
@@ -136,7 +139,7 @@ function SelectImpl<Value = string>({
             "z-[60] min-w-[var(--radix-select-trigger-width)] max-h-[min(24rem,var(--radix-select-content-available-height))]",
             "bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
-            popupClassName
+            popupClassName,
           )}
         >
           <SelectPrimitives.Viewport className="p-0">
@@ -149,7 +152,7 @@ function SelectImpl<Value = string>({
 }
 
 export const Select = SelectImpl as <Value = string>(
-  props: SelectProps<Value>
+  props: SelectProps<Value>,
 ) => React.JSX.Element;
 
 export interface SelectItemProps {
@@ -177,7 +180,7 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         "data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary",
         "data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
         "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",
-        className
+        className,
       )}
     >
       <SelectPrimitives.ItemIndicator className="shrink-0 text-secondary mt-0.5">
@@ -189,7 +192,11 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
           strokeWidth={2.25}
           aria-hidden
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m4.5 12.75 6 6 9-13.5"
+          />
         </svg>
       </SelectPrimitives.ItemIndicator>
       <div className="flex-1 min-w-0">
@@ -203,7 +210,7 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
         )}
       </div>
     </SelectPrimitives.Item>
-  )
+  ),
 );
 SelectItem.displayName = "SelectItem";
 
@@ -217,7 +224,7 @@ export const SelectGroupLabel = React.forwardRef<
     ref={ref}
     className={cn(
       "px-3 pt-3 pb-1.5 text-[10px] font-headline font-bold uppercase tracking-widest text-on-surface-variant",
-      className
+      className,
     )}
     {...props}
   />

@@ -62,7 +62,7 @@ export function EnrollDeviceUnlockDialog({
   }
 
   async function handleWebAuthnSubmit(
-    attachment: "platform" | "cross-platform"
+    attachment: "platform" | "cross-platform",
   ) {
     setBusy(true);
     setError("");

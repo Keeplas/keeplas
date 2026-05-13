@@ -13,7 +13,8 @@ interface SectionMeta {
 const SECTION_META: Record<string, SectionMeta> = {
   "/settings": {
     title: "Identity",
-    description: "Update your account information and how others see you on the platform.",
+    description:
+      "Update your account information and how others see you on the platform.",
   },
   "/settings/security": {
     title: "Security Center",
@@ -26,7 +27,8 @@ const SECTION_META: Record<string, SectionMeta> = {
   },
   "/settings/recovery-kit": {
     title: "Recovery Kit",
-    description: "Export the printable kit that rebuilds your vault if access is lost.",
+    description:
+      "Export the printable kit that rebuilds your vault if access is lost.",
   },
   "/settings/subscription": {
     title: "Subscription",

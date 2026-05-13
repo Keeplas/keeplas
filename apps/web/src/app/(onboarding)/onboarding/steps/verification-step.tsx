@@ -31,7 +31,11 @@ interface VerificationStepProps {
   onBack: () => void;
 }
 
-export function VerificationStep({ phrase, onVerified, onBack }: VerificationStepProps) {
+export function VerificationStep({
+  phrase,
+  onVerified,
+  onBack,
+}: VerificationStepProps) {
   const storeHash = useMutation(api.onboarding.storeRecoveryPhraseHash);
 
   // Pick 3 random unique indices (stable across re-renders)
@@ -59,7 +63,7 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
       const actual = inputs[i].trim().toLowerCase();
       if (actual !== expected) {
         setError(
-          `The ${ordinal(indices[i])} word does not match. Please check and try again.`
+          `The ${ordinal(indices[i])} word does not match. Please check and try again.`,
         );
         setLoading(false);
         return;
@@ -135,12 +139,12 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
             Why is this important?
           </h4>
           <p className="text-sm text-on-primary-container leading-relaxed">
-            These 24 words are the <strong className="text-surface-container-lowest">only key</strong>{" "}
+            These 24 words are the{" "}
+            <strong className="text-surface-container-lowest">only key</strong>{" "}
             that encrypts your vault — we never see them. Your password just
-            authenticates you and can be reset with these same 24 words. But
-            the words themselves cannot be reset: only your trusted contacts
-            can recover them later via shared shards. Save them somewhere safe
-            now.
+            authenticates you and can be reset with these same 24 words. But the
+            words themselves cannot be reset: only your trusted contacts can
+            recover them later via shared shards. Save them somewhere safe now.
           </p>
         </div>
       </div>
@@ -176,7 +180,10 @@ export function VerificationStep({ phrase, onVerified, onBack }: VerificationSte
           >
             {loading ? (
               <>
-                <Spinner size="md" className="border-on-primary border-t-transparent" />
+                <Spinner
+                  size="md"
+                  className="border-on-primary border-t-transparent"
+                />
                 Verifying...
               </>
             ) : (

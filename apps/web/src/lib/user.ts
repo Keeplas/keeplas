@@ -1,6 +1,6 @@
 export function getInitials(
   nameOrEmail: string | null | undefined,
-  maxLength = 2
+  maxLength = 2,
 ): string {
   const source = (nameOrEmail ?? "").trim() || "?";
   return source

@@ -33,7 +33,7 @@ export function useVaultCrypto() {
       const ciphertext = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         key,
-        data
+        data,
       );
 
       const payload: EncryptedPayload = {
@@ -43,7 +43,7 @@ export function useVaultCrypto() {
 
       return JSON.stringify(payload);
     },
-    []
+    [],
   );
 
   /**
@@ -54,7 +54,7 @@ export function useVaultCrypto() {
       if (!masterKey) throw new Error("Master Key not available");
       return await encryptContentWithKey(plaintext, masterKey);
     },
-    [masterKey, encryptContentWithKey]
+    [masterKey, encryptContentWithKey],
   );
 
   /**
@@ -70,12 +70,12 @@ export function useVaultCrypto() {
       const plaintext = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv },
         key,
-        ciphertext
+        ciphertext,
       );
 
       return new TextDecoder().decode(plaintext);
     },
-    []
+    [],
   );
 
   /**
@@ -88,22 +88,25 @@ export function useVaultCrypto() {
       if (!masterKey) throw new Error("Master Key not available");
       return await decryptContentWithKey(encryptedJson, masterKey);
     },
-    [masterKey, decryptContentWithKey]
+    [masterKey, decryptContentWithKey],
   );
 
   /**
    * Compute SHA-256 hash of plaintext for integrity verification.
    */
-  const computeHash = useCallback(async (plaintext: string): Promise<string> => {
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest(
-      "SHA-256",
-      encoder.encode(plaintext)
-    );
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }, []);
+  const computeHash = useCallback(
+    async (plaintext: string): Promise<string> => {
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        encoder.encode(plaintext),
+      );
+      return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    },
+    [],
+  );
 
   /**
    * Encrypt a Blob with the given AES-GCM key. Small blobs use a single
@@ -112,7 +115,7 @@ export function useVaultCrypto() {
   const encryptBlobWithKey = useCallback(
     async (
       blob: Blob,
-      key: CryptoKey
+      key: CryptoKey,
     ): Promise<{ cipherBlob: Blob; iv: string }> => {
       if (blob.size <= STREAM_THRESHOLD_BYTES) {
         const buf = await blob.arrayBuffer();
@@ -120,7 +123,7 @@ export function useVaultCrypto() {
         const ciphertext = await crypto.subtle.encrypt(
           { name: "AES-GCM", iv },
           key,
-          buf
+          buf,
         );
         return {
           cipherBlob: new Blob([ciphertext]),
@@ -131,7 +134,7 @@ export function useVaultCrypto() {
       const { cipherBlob } = await encryptStream(blob, key);
       return { cipherBlob, iv: STREAM_IV_SENTINEL };
     },
-    []
+    [],
   );
 
   /**
@@ -143,7 +146,7 @@ export function useVaultCrypto() {
       if (!masterKey) throw new Error("Master Key not available");
       return await encryptBlobWithKey(blob, masterKey);
     },
-    [masterKey, encryptBlobWithKey]
+    [masterKey, encryptBlobWithKey],
   );
 
   /**
@@ -162,11 +165,11 @@ export function useVaultCrypto() {
       const plaintext = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: ivBytes },
         key,
-        cipherBuf
+        cipherBuf,
       );
       return new Blob([plaintext]);
     },
-    []
+    [],
   );
 
   /**
@@ -178,7 +181,7 @@ export function useVaultCrypto() {
       if (!masterKey) throw new Error("Master Key not available");
       return await decryptBlobWithKey(cipherBlob, iv, masterKey);
     },
-    [masterKey, decryptBlobWithKey]
+    [masterKey, decryptBlobWithKey],
   );
 
   return {

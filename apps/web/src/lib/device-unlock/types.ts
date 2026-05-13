@@ -54,7 +54,7 @@ export class DeviceUnlockError extends Error {
       | "cancelled"
       | "not-found"
       | "io",
-    options?: { cause?: unknown }
+    options?: { cause?: unknown },
   ) {
     super(message, options);
     this.name = "DeviceUnlockError";

@@ -74,14 +74,14 @@ export const resetPasswordWithRecovery = action({
   handler: async (ctx, args) => {
     if (args.newPassword.length < MIN_PASSWORD_LENGTH) {
       throw new Error(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
       );
     }
     const email = normalizeEmail(args.email);
 
     const userId = (await ctx.runQuery(
       internal.passwordReset.verifyRecoveryPhraseInternal,
-      { email, phraseHash: args.phraseHash }
+      { email, phraseHash: args.phraseHash },
     )) as Id<"users"> | null;
     if (!userId) {
       throw new Error("Invalid recovery phrase");

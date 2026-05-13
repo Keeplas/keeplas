@@ -13,17 +13,22 @@ interface RecipientGroupCardProps {
   contacts: Doc<"trusted_contacts">[];
 }
 
-export function RecipientGroupCard({ group, contacts }: RecipientGroupCardProps) {
+export function RecipientGroupCard({
+  group,
+  contacts,
+}: RecipientGroupCardProps) {
   const [showActions, setShowActions] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const setDefaultGroup = useAuditedMutation(api.recipient_groups.setDefaultGroup);
+  const setDefaultGroup = useAuditedMutation(
+    api.recipient_groups.setDefaultGroup,
+  );
   const deleteGroup = useAuditedMutation(api.recipient_groups.deleteGroup);
 
   const memberContacts = contacts.filter((c) =>
-    group.memberContactIds.includes(c._id)
+    group.memberContactIds.includes(c._id),
   );
 
   async function handleSetDefault() {
@@ -54,7 +59,7 @@ export function RecipientGroupCard({ group, contacts }: RecipientGroupCardProps)
     <div
       className={cn(
         "bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all",
-        group.isDefault && "ring-1 ring-secondary/40"
+        group.isDefault && "ring-1 ring-secondary/40",
       )}
     >
       <div className="flex items-start justify-between mb-5">

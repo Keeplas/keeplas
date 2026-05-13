@@ -60,7 +60,8 @@ export function InviteContactDialog({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [role, setRole] = useState<Role>("family");
-  const [contactType, setContactType] = useState<ContactType>(initialContactType);
+  const [contactType, setContactType] =
+    useState<ContactType>(initialContactType);
   const [notifyRecipient, setNotifyRecipient] = useState(false);
   const [introMessage, setIntroMessage] = useState(DEFAULT_RECIPIENT_INTRO);
   const [saving, setSaving] = useState(false);
@@ -106,7 +107,9 @@ export function InviteContactDialog({
       setNotifyRecipient(false);
       setIntroMessage(DEFAULT_RECIPIENT_INTRO);
       onOpenChange(false);
-      onContactInvited?.((result as { contactId: Id<"trusted_contacts"> }).contactId);
+      onContactInvited?.(
+        (result as { contactId: Id<"trusted_contacts"> }).contactId,
+      );
     } catch (err) {
       setError(getErrorMessage(err, "Failed to send invitation"));
     } finally {
@@ -120,7 +123,9 @@ export function InviteContactDialog({
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
             <DialogTitle>
-              {contactType === "recipient_only" ? "Add Recipient" : "Invite Trusted Contact"}
+              {contactType === "recipient_only"
+                ? "Add Recipient"
+                : "Invite Trusted Contact"}
             </DialogTitle>
             <DialogDescription className="mt-1">
               {contactType === "recipient_only"
@@ -130,7 +135,10 @@ export function InviteContactDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
+        >
           <div className="space-y-2">
             <Label htmlFor="contact-name">Full Name *</Label>
             <Input
@@ -156,11 +164,7 @@ export function InviteContactDialog({
 
           <div className="space-y-2">
             <Label htmlFor="contact-phone">Phone (optional)</Label>
-            <PhoneInput
-              id="contact-phone"
-              value={phone}
-              onChange={setPhone}
-            />
+            <PhoneInput id="contact-phone" value={phone} onChange={setPhone} />
           </div>
 
           <div className="space-y-2">
@@ -195,14 +199,15 @@ export function InviteContactDialog({
                   "text-left p-4 rounded-xl border transition-colors cursor-pointer",
                   contactType === "trust"
                     ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container"
+                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
                 )}
               >
                 <p className="text-headline-sm text-primary mb-1">
                   Trust contact
                 </p>
                 <p className="text-label-md text-on-surface-variant">
-                  Holds a recovery shard. Counts toward your 5-trust-contacts cap.
+                  Holds a recovery shard. Counts toward your 5-trust-contacts
+                  cap.
                 </p>
               </button>
               <button
@@ -212,7 +217,7 @@ export function InviteContactDialog({
                   "text-left p-4 rounded-xl border transition-colors cursor-pointer",
                   contactType === "recipient_only"
                     ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container"
+                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
                 )}
               >
                 <p className="text-headline-sm text-primary mb-1">
@@ -234,7 +239,8 @@ export function InviteContactDialog({
                     <HelpHint content="Off by default. Recipients are passive until trigger — but you can send a courtesy heads-up now if you'd like them to know they're on your list." />
                   </p>
                   <p className="text-body-md text-on-surface-variant mt-0.5">
-                    Let {name.trim() || "them"} know they&apos;ve been added. They have nothing to do until trigger.
+                    Let {name.trim() || "them"} know they&apos;ve been added.
+                    They have nothing to do until trigger.
                   </p>
                 </div>
                 <Switch

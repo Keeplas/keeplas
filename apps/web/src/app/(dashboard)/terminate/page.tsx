@@ -6,13 +6,7 @@ import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import {
-  Button,
-  ErrorAlert,
-  Icon,
-  Input,
-  Label,
-} from "@keeplas/ui";
+import { Button, ErrorAlert, Icon, Input, Label } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -31,7 +25,7 @@ export default function TerminatePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (confirmation !== "DELETE") {
-      setError('Type DELETE exactly to confirm.');
+      setError("Type DELETE exactly to confirm.");
       return;
     }
     setSubmitting(true);
@@ -62,8 +56,9 @@ export default function TerminatePage() {
               Destruction
             </h1>
             <p className="mt-4 text-body-lg opacity-90 max-w-sm">
-              Once destroyed, your encrypted archive cannot be reconstructed. There is no
-              backup, no admin override, no recovery path. Zero-knowledge means zero recovery.
+              Once destroyed, your encrypted archive cannot be reconstructed.
+              There is no backup, no admin override, no recovery path.
+              Zero-knowledge means zero recovery.
             </p>
           </div>
 
@@ -85,17 +80,15 @@ export default function TerminatePage() {
               Terminate Your Continuity Plan?
             </h2>
             <p className="text-body-md text-on-surface-variant mt-2">
-              This wipes the vault, every protocol, contact, message, audit entry and the user
-              record itself.
+              This wipes the vault, every protocol, contact, message, audit
+              entry and the user record itself.
             </p>
           </div>
 
           <div className="bg-error/10 border border-error/20 rounded-2xl p-4 text-body-md text-error">
-            <p className="text-label-md mb-1">
-              ⚠ Warning
-            </p>
-            This action cannot be undone. We recommend exporting your Recovery Kit and pausing
-            Life Check first if you only need a temporary stop.
+            <p className="text-label-md mb-1">⚠ Warning</p>
+            This action cannot be undone. We recommend exporting your Recovery
+            Kit and pausing Life Check first if you only need a temporary stop.
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -108,9 +101,7 @@ export default function TerminatePage() {
               </p>
             </div>
             <div className="bg-surface-container-low rounded-2xl p-4">
-              <p className="text-label-md text-on-surface-variant">
-                Protocols
-              </p>
+              <p className="text-label-md text-on-surface-variant">Protocols</p>
               <p className="text-headline-sm text-on-surface mt-1">
                 Life Check, Scenario, Messages
               </p>
@@ -121,7 +112,8 @@ export default function TerminatePage() {
             <ErrorAlert message={error} />
             <div className="space-y-2">
               <Label>
-                Type <span className="font-mono text-error">DELETE</span> to confirm
+                Type <span className="font-mono text-error">DELETE</span> to
+                confirm
               </Label>
               <Input
                 value={confirmation}

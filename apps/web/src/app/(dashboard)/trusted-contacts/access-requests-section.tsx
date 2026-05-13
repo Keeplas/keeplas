@@ -11,7 +11,7 @@ export function AccessRequestsSection() {
   const pendingRequests = useQuery(api.access_requests.getPendingRequests);
   const allRequests = useQuery(api.access_requests.getAccessRequests);
   const cancelEmergency = useAuditedMutation(
-    api.access_requests.cancelEmergencyAccess
+    api.access_requests.cancelEmergencyAccess,
   );
 
   const [processing, setProcessing] = useState<string | null>(null);

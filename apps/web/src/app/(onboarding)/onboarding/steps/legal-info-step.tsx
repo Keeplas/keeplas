@@ -36,7 +36,11 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
   // Pre-fill country from the server-attested geo header once the audit
   // context resolves. Only seeds the field — the user can always change it.
   useEffect(() => {
-    if (!country && requestCtx?.country && isValidCountryCode(requestCtx.country)) {
+    if (
+      !country &&
+      requestCtx?.country &&
+      isValidCountryCode(requestCtx.country)
+    ) {
       setCountry(requestCtx.country.toUpperCase());
     }
   }, [requestCtx, country]);
@@ -104,18 +108,12 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
             max={ISO_MAX_FOR_18}
             placeholder="Select your date of birth"
           />
-          {ageError && (
-            <p className="text-body-sm text-error">{ageError}</p>
-          )}
+          {ageError && <p className="text-body-sm text-error">{ageError}</p>}
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="country">Country of residence</Label>
-          <CountryCombobox
-            id="country"
-            value={country}
-            onChange={setCountry}
-          />
+          <CountryCombobox id="country" value={country} onChange={setCountry} />
         </div>
 
         <Button

@@ -12,15 +12,12 @@ function subscribeToKey(key: string) {
       notify();
     }
     window.addEventListener("storage", onEvent as EventListener);
-    window.addEventListener(
-      "keeplas:storage-change",
-      onEvent as EventListener
-    );
+    window.addEventListener("keeplas:storage-change", onEvent as EventListener);
     return () => {
       window.removeEventListener("storage", onEvent as EventListener);
       window.removeEventListener(
         "keeplas:storage-change",
-        onEvent as EventListener
+        onEvent as EventListener,
       );
     };
   };
@@ -29,7 +26,7 @@ function subscribeToKey(key: string) {
 function notifyLocalChange(key: string) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent("keeplas:storage-change", { detail: { key } })
+    new CustomEvent("keeplas:storage-change", { detail: { key } }),
   );
 }
 
@@ -54,7 +51,7 @@ function readRaw(key: string): string | null {
 
 export function useLocalStorageState<T extends object>(
   key: string,
-  defaultValue: T
+  defaultValue: T,
 ): [T, (next: Updater<T>) => void] {
   const subscribe = useMemo(() => subscribeToKey(key), [key]);
   const getSnapshot = useCallback(() => readRaw(key), [key]);
@@ -76,7 +73,7 @@ export function useLocalStorageState<T extends object>(
         typeof next === "function" ? (next as (p: T) => T)(value) : next;
       safeWrite(key, JSON.stringify(resolved));
     },
-    [key, value]
+    [key, value],
   );
 
   return [value, update];
@@ -84,7 +81,7 @@ export function useLocalStorageState<T extends object>(
 
 export function useLocalStorageString(
   key: string,
-  defaultValue: string
+  defaultValue: string,
 ): [string, (next: string) => void] {
   const subscribe = useMemo(() => subscribeToKey(key), [key]);
   const getSnapshot = useCallback(() => readRaw(key), [key]);
@@ -96,7 +93,7 @@ export function useLocalStorageString(
     (next: string) => {
       safeWrite(key, next);
     },
-    [key]
+    [key],
   );
 
   return [value, update];

@@ -21,9 +21,9 @@ type WithoutAudit<T> = Omit<T, "_audit">;
 export function useAuditedMutation<
   Mutation extends FunctionReference<"mutation">,
 >(
-  reference: Mutation
+  reference: Mutation,
 ): (
-  args?: WithoutAudit<Mutation["_args"]>
+  args?: WithoutAudit<Mutation["_args"]>,
 ) => Promise<Mutation["_returnType"]> {
   const ctx = useRequestContext();
   const fn = useMutation(reference);
@@ -32,7 +32,7 @@ export function useAuditedMutation<
     async (args) => {
       if (!ctx) {
         throw new Error(
-          "Audit context unavailable — refresh the page or check that KEEPLAS_CTX_SECRET is configured."
+          "Audit context unavailable — refresh the page or check that KEEPLAS_CTX_SECRET is configured.",
         );
       }
       return await fn({
@@ -40,7 +40,7 @@ export function useAuditedMutation<
         _audit: ctx,
       } as unknown as Mutation["_args"]);
     },
-    [fn, ctx]
+    [fn, ctx],
   );
 }
 

@@ -33,11 +33,11 @@ export type ReceiveShardStatus = "idle" | "restoring" | "ready";
  * matches the local copy are skipped.
  */
 export function useReceiveShard(
-  vaults: ReadonlyArray<IncomingVault> | undefined
+  vaults: ReadonlyArray<IncomingVault> | undefined,
 ): { status: ReceiveShardStatus } {
   const { ensureOwnerKeypair, isReady } = useRecipientCrypto();
   const confirmShardVerified = useAuditedMutation(
-    api.trusted_contacts.confirmShardVerified
+    api.trusted_contacts.confirmShardVerified,
   );
   const inFlightRef = useRef(false);
   const [status, setStatus] = useState<ReceiveShardStatus>("idle");
@@ -51,7 +51,7 @@ export function useReceiveShard(
         v.invitationStatus === "accepted" &&
         (v.contactType ?? "trust") === "trust" &&
         typeof v.encryptedShard === "string" &&
-        v.encryptedShard.length > 0
+        v.encryptedShard.length > 0,
     );
     if (candidates.length === 0) {
       setStatus("ready");
@@ -85,8 +85,7 @@ export function useReceiveShard(
           const fp = await envelopeFingerprint(envelope);
 
           const existing = await getStoredShard(vault.userId);
-          const alreadyHaveCurrent =
-            existing && existing.envelopeHash === fp;
+          const alreadyHaveCurrent = existing && existing.envelopeHash === fp;
 
           let didUnwrap = alreadyHaveCurrent;
           if (!alreadyHaveCurrent) {

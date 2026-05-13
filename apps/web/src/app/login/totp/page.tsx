@@ -65,8 +65,8 @@ export default function TotpLoginPage() {
             Two-factor authentication
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            Enter the 6-digit code from your authenticator app to finish
-            signing in.
+            Enter the 6-digit code from your authenticator app to finish signing
+            in.
           </p>
         </div>
 

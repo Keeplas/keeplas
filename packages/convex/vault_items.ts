@@ -20,7 +20,7 @@ import {
 const triggerTypeValidator = v.union(
   v.literal("life_check_failure"),
   v.literal("time_based"),
-  v.literal("manual")
+  v.literal("manual"),
 );
 
 const triggerConfigValidator = v.object({
@@ -30,7 +30,7 @@ const triggerConfigValidator = v.object({
 const recipientModeValidator = v.union(
   v.literal("default"),
   v.literal("groups"),
-  v.literal("explicit")
+  v.literal("explicit"),
 );
 
 const recipientKeyValidator = v.object({
@@ -71,7 +71,7 @@ export const getItemsByCategory = query({
     return await ctx.db
       .query("vault_items")
       .withIndex("by_category", (q) =>
-        q.eq("vaultId", vault._id).eq("category", args.category)
+        q.eq("vaultId", vault._id).eq("category", args.category),
       )
       .filter((q) => q.neq(q.field("status"), "archived"))
       .collect();
@@ -171,7 +171,7 @@ const fileKindValidator = v.union(
   v.literal("document"),
   v.literal("audio"),
   v.literal("video"),
-  v.literal("image")
+  v.literal("image"),
 );
 
 const newFileValidator = v.object({
@@ -214,7 +214,7 @@ export const createItem = auditedMutation({
     contentHash: v.string(),
     accessLevel: accessLevelValidator,
     encryptionType: v.optional(
-      v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge"))
+      v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge")),
     ),
     ownerWrappedDek: v.optional(v.string()),
     ownerWrappedDekIv: v.optional(v.string()),
@@ -291,8 +291,8 @@ export const createItem = auditedMutation({
             wrappedDek: rk.wrappedDek,
             wrappedDekIv: rk.wrappedDekIv,
             createdAt: now,
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -311,8 +311,8 @@ export const createItem = auditedMutation({
             durationSec: file.durationSec,
             order: index,
             createdAt: now,
-          })
-        )
+          }),
+        ),
       );
     }
 
@@ -386,8 +386,8 @@ export const updateItem = auditedMutation({
             wrappedDek: rk.wrappedDek,
             wrappedDekIv: rk.wrappedDekIv,
             createdAt: now,
-          })
-        )
+          }),
+        ),
       );
     }
   },
@@ -417,8 +417,7 @@ export const addItemFiles = auditedMutation({
       .query("vault_item_files")
       .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
       .collect();
-    let nextOrder =
-      existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
+    let nextOrder = existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
 
     const now = Date.now();
     await Promise.all(
@@ -435,8 +434,8 @@ export const addItemFiles = auditedMutation({
           durationSec: file.durationSec,
           order: nextOrder++,
           createdAt: now,
-        })
-      )
+        }),
+      ),
     );
 
     await ctx.db.patch(args.itemId, { updatedAt: now });
@@ -518,7 +517,7 @@ export const deleteItem = auditedMutation({
       files.map(async (file) => {
         await deleteBlob(ctx, file.storageId);
         await ctx.db.delete(file._id);
-      })
+      }),
     );
 
     await ctx.db.delete(args.itemId);

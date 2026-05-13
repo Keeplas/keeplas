@@ -35,7 +35,11 @@ export function FabAddEntry() {
           stroke="currentColor"
           strokeWidth={2.5}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 5v14M5 12h14"
+          />
         </svg>
       </Button>
       <AddItemDialog vaultId={vault._id} open={open} onOpenChange={setOpen} />
