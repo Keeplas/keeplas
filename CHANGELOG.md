@@ -23,6 +23,10 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 - Patch-bumped `next` and `eslint-config-next` to `16.2.6`, clearing 13 of the previous 24 security advisories.
 - React Compiler rules (`set-state-in-effect`, `purity`, `immutability`) downgraded from error → warn in `apps/web` while pre-existing violations are addressed incrementally.
 
+### Fixed
+
+- `pnpm dev` failed with `Failed to load deployment config` on Convex **local deployments** because turbo invoked `convex dev` from `packages/convex/` instead of the repo root, where the local deployment is registered. The dev wrapper now spawns `convex dev` directly from the root (in parallel with Next.js). Cloud deployments were unaffected.
+
 ### Removed
 
 - Stray `apps/web/.env copy.local` duplicate.

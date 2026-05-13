@@ -1,8 +1,13 @@
 #!/usr/bin/env node
-// Runs `turbo run dev` in the foreground and `pnpm check:convex-env` in the
-// background. The convex check takes ~30s to round-trip with the deployment;
-// we don't want that to block boot. On mismatch we print a yellow warning,
-// but we NEVER propagate a non-zero exit code into the dev process.
+// Boot the full dev stack from the repo root:
+//   1. `pnpm check:convex-env` in the background (warn-only, never blocks).
+//   2. `pnpm --filter @keeplas/web dev` — Next.js dev server.
+//   3. `npx convex dev` — Convex function watcher.
+//
+// Why we don't let turbo orchestrate `convex dev`: when turbo spawns it
+// from `packages/convex/`, local Convex deployments fail because the local
+// deployment registration is keyed to the repo root. Spawning `convex dev`
+// from the root works for both cloud and local deployments.
 
 import { spawn } from "node:child_process";
 
@@ -11,7 +16,6 @@ const GREEN = "\x1b[32m";
 const DIM = "\x1b[2m";
 const RESET = "\x1b[0m";
 
-// Skip the background check in CI — it's only useful for local devs.
 const skipCheck =
   process.env.CI === "true" || process.env.KEEPLAS_SKIP_CONVEX_CHECK === "1";
 
@@ -50,9 +54,32 @@ if (!skipCheck) {
   });
 }
 
-const dev = spawn("turbo", ["run", "dev"], { stdio: "inherit" });
-dev.on("exit", (code) => process.exit(code ?? 0));
+const children = [
+  spawn("npx", ["convex", "dev"], { stdio: "inherit" }),
+  spawn("pnpm", ["--filter", "@keeplas/web", "dev"], { stdio: "inherit" }),
+];
+
+let stopping = false;
+function stopAll(signal) {
+  if (stopping) return;
+  stopping = true;
+  for (const child of children) {
+    if (!child.killed) child.kill(signal);
+  }
+}
 
 for (const sig of ["SIGINT", "SIGTERM"]) {
-  process.on(sig, () => dev.kill(sig));
+  process.on(sig, () => stopAll(sig));
+}
+
+for (const child of children) {
+  child.on("exit", (code) => {
+    // First child to exit tears down the rest so we don't leave half a stack
+    // running. Propagate that child's exit code.
+    if (!stopping) {
+      const exitCode = code ?? 0;
+      stopAll("SIGTERM");
+      process.exit(exitCode);
+    }
+  });
 }
