@@ -23,22 +23,25 @@ pnpm sync:convex-env                             # push the rest of your local e
 pnpm check:convex                                # should be green
 ```
 
-After this, the only commands you'll routinely use are `pnpm dev` and `npx convex dev` (when changing schema/functions).
+After this, `pnpm dev` is your only command — it spawns the Next.js server and `convex dev` in parallel and runs the background env-drift check.
 
 ## Why each contributor needs their own deployment
 
 The Convex deployment stores the user's vault ciphertext, audit logs, trusted contacts, scenarios — everything. A shared dev deployment would either leak data between contributors or require fragile multi-tenant isolation. Convex's free tier covers a personal dev deployment easily.
 
-## The two configuration paths — cloud vs selfhosted
+## Deployment modes — cloud, local (BETA), self-hosted
 
-Set via `CONVEX_MODE` in `.env.local`:
+Set via `CONVEX_MODE` in `.env.local` (this is a Keeplas-side hint; the Convex CLI itself reads `CONVEX_DEPLOYMENT`).
 
-| Mode         | What it means                                        | Who uses it                        |
-| ------------ | ---------------------------------------------------- | ---------------------------------- |
-| `cloud`      | Talk to a deployment hosted at `convex.cloud`.       | **Default for all contributors.**  |
-| `selfhosted` | Talk to a self-hosted Convex backend (Docker or VM). | Advanced users, prod self-hosters. |
+| Mode               | What it means                                                        | Trade-offs                                                                                |
+| ------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **`cloud`**        | Deployment hosted at `convex.cloud` (free tier covers personal dev). | Easiest. Default for `pnpm bootstrap`. Internet required.                                 |
+| **`local` (BETA)** | Convex backend binary running on `http://127.0.0.1:3210`.            | Offline-friendly. State stored under `~/.convex/`. See gotcha below.                      |
+| **`selfhosted`**   | Self-hosted Convex backend (Docker / VM).                            | Production self-hosters. See [Convex self-hosting](https://docs.convex.dev/self-hosting). |
 
-`cloud` mode is what `pnpm bootstrap` configures and what these docs assume. For `selfhosted`, see [Convex self-hosting docs](https://docs.convex.dev/self-hosting) — you'll set `NEXT_PUBLIC_CONVEX_URL` and `CONVEX_DEPLOYMENT` manually.
+You're asked to pick during `npx convex dev --once --configure=new`. Most contributors should pick **cloud**. Pick **local** if you genuinely want offline dev or are debugging Convex itself.
+
+> **Local-deployment caveat.** Local deployments register state against the project root path. Earlier Keeplas versions ran `convex dev` from `packages/convex/` via turbo, which couldn't find that registration. `scripts/dev-with-convex-check.mjs` now spawns `convex dev` from the repo root, so `pnpm dev` works for both cloud and local. If you ever invoke convex directly, do it from the repo root — never from `packages/convex/`.
 
 ## Daily workflow
 
@@ -48,15 +51,9 @@ Just `pnpm dev`. The Convex background check warns on drift; the Next.js dev ser
 
 ### When you edit Convex code (`packages/convex/`)
 
-In a second terminal, run:
+`pnpm dev` already runs `convex dev` in parallel with the Next.js server — saving a `schema.ts` or query/mutation re-publishes within 1–2 seconds and regenerates `packages/convex/_generated/`. You only need a second terminal for `npx convex dev` if you've stopped the dev stack for some reason.
 
-```bash
-npx convex dev
-```
-
-It watches `packages/convex/**`, regenerates types in `packages/convex/_generated/`, and pushes function code to your deployment. **Keep it running** while you iterate — the moment you save `schema.ts` or a query/mutation, it republishes within 1–2 seconds.
-
-If you skip this step, your web app will be talking to a stale function bundle on the server and TypeScript will be out of date with the schema.
+If `convex dev` is _not_ running while you edit `packages/convex/`, the web app will be talking to a stale function bundle on the server and TypeScript will drift from the schema.
 
 ### When you edit env vars
 
