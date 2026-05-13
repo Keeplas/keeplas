@@ -115,18 +115,34 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-down {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Base styles ── */
@@ -216,7 +232,11 @@ body {
 }
 
 @utility glass-light {
-  background: color-mix(in srgb, var(--color-surface-container-lowest) 80%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-surface-container-lowest) 80%,
+    transparent
+  );
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
@@ -232,7 +252,8 @@ body {
 
 /* ── Ghost border (outline-variant at 15% opacity — only allowed border) ── */
 @utility ghost-border {
-  border: 1px solid color-mix(in srgb, var(--color-outline-variant) 15%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--color-outline-variant) 15%, transparent);
 }
 
 /* ── Scrollbar ── */
@@ -365,8 +386,12 @@ body {
   margin: 0.75rem 0 0.5rem;
 }
 
-.tiptap-content h2 { font-size: 1.25rem; }
-.tiptap-content h3 { font-size: 1.125rem; }
+.tiptap-content h2 {
+  font-size: 1.25rem;
+}
+.tiptap-content h3 {
+  font-size: 1.125rem;
+}
 
 .tiptap-content ul,
 .tiptap-content ol {
@@ -374,8 +399,12 @@ body {
   margin: 0 0 0.5rem 0;
 }
 
-.tiptap-content ul { list-style: disc; }
-.tiptap-content ol { list-style: decimal; }
+.tiptap-content ul {
+  list-style: disc;
+}
+.tiptap-content ol {
+  list-style: decimal;
+}
 
 .tiptap-content blockquote {
   border-left: 3px solid var(--color-secondary);
@@ -385,12 +414,15 @@ body {
   margin: 0.5rem 0;
 }
 
-.tiptap-content strong { font-weight: 600; }
-.tiptap-content em { font-style: italic; }
+.tiptap-content strong {
+  font-weight: 600;
+}
+.tiptap-content em {
+  font-style: italic;
+}
 .tiptap-content code {
   background: var(--color-surface-container-high);
   padding: 0.1rem 0.35rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
 }
-

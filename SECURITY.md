@@ -11,6 +11,7 @@ If you discover a security vulnerability in Keeplas, please report it responsibl
 - **PGP key:** Available on our website
 
 Please include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
@@ -18,9 +19,9 @@ Please include:
 
 ## Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| 0.x (beta) | Yes |
+| Version    | Supported |
+| ---------- | --------- |
+| 0.x (beta) | Yes       |
 
 ## Security Model
 

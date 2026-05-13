@@ -11,7 +11,7 @@ const AUTH_TAG_LENGTH = 16;
 export async function encryptStream(
   blob: Blob,
   key: CryptoKey,
-  chunkSize: number = DEFAULT_CHUNK_SIZE
+  chunkSize: number = DEFAULT_CHUNK_SIZE,
 ): Promise<{ cipherBlob: Blob; chunkCount: number }> {
   if (chunkSize <= 0) throw new Error("chunkSize must be > 0");
 
@@ -29,7 +29,7 @@ export async function encryptStream(
     const ciphertext = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
-      plaintext
+      plaintext,
     );
 
     parts.push(iv, ciphertext);
@@ -47,7 +47,7 @@ export async function encryptStream(
 export async function decryptStream(
   cipherBlob: Blob,
   key: CryptoKey,
-  chunkSize: number = DEFAULT_CHUNK_SIZE
+  chunkSize: number = DEFAULT_CHUNK_SIZE,
 ): Promise<Blob> {
   if (chunkSize <= 0) throw new Error("chunkSize must be > 0");
 
@@ -70,7 +70,7 @@ export async function decryptStream(
     const plaintext = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       key,
-      body
+      body,
     );
     parts.push(plaintext);
     offset = frameEnd;

@@ -13,8 +13,8 @@ export default function SharedWithMePage() {
         <p className="text-body-lg text-on-surface-variant">
           People who designated you as a trusted contact. You hold an encrypted
           recovery shard for each — you cannot read their vault, but together
-          with their other contacts you can help them regain access if they
-          ever lose their credentials.
+          with their other contacts you can help them regain access if they ever
+          lose their credentials.
         </p>
       </header>
 

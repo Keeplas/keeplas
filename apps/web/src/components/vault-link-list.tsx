@@ -12,7 +12,9 @@ interface VaultLinkListProps {
 const MASK = "••••••••••••••••••••";
 
 export function VaultLinkList({ urls }: VaultLinkListProps) {
-  const [revealed, setRevealed] = useState<boolean[]>(() => urls.map(() => false));
+  const [revealed, setRevealed] = useState<boolean[]>(() =>
+    urls.map(() => false),
+  );
 
   function toggleAt(index: number) {
     setRevealed((prev) => {
@@ -30,9 +32,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
 
   if (urls.length === 0) {
     return (
-      <p className="text-body-md text-on-surface-variant">
-        No links saved.
-      </p>
+      <p className="text-body-md text-on-surface-variant">No links saved.</p>
     );
   }
 
@@ -62,7 +62,9 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
               className="shrink-0 cursor-pointer text-on-surface-variant hover:text-primary"
             >
               <Icon
-                path={isRevealed ? ICON_PATHS.visibilityOff : ICON_PATHS.visibility}
+                path={
+                  isRevealed ? ICON_PATHS.visibilityOff : ICON_PATHS.visibility
+                }
                 className="w-4 h-4"
                 strokeWidth={1.75}
               />

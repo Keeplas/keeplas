@@ -38,7 +38,7 @@ function buildMonthGrid(year: number, month: number): Date[] {
   const cells: Date[] = [];
   for (let i = 0; i < 42; i++) {
     cells.push(
-      new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+      new Date(start.getFullYear(), start.getMonth(), start.getDate() + i),
     );
   }
   return cells;
@@ -48,11 +48,13 @@ function clampMonth(
   year: number,
   month: number,
   min?: Date,
-  max?: Date
+  max?: Date,
 ): number {
   let m = month;
-  if (min && year === min.getFullYear() && m < min.getMonth()) m = min.getMonth();
-  if (max && year === max.getFullYear() && m > max.getMonth()) m = max.getMonth();
+  if (min && year === min.getFullYear() && m < min.getMonth())
+    m = min.getMonth();
+  if (max && year === max.getFullYear() && m > max.getMonth())
+    m = max.getMonth();
   return m;
 }
 
@@ -104,7 +106,8 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
     function isMonthDisabled(y: number, m: number): boolean {
       const firstOfMonth = new Date(y, m, 1);
       const lastOfMonth = new Date(y, m + 1, 0);
-      if (max && firstOfMonth.getTime() > startOfDay(max).getTime()) return true;
+      if (max && firstOfMonth.getTime() > startOfDay(max).getTime())
+        return true;
       if (min && lastOfMonth.getTime() < startOfDay(min).getTime()) return true;
       return false;
     }
@@ -141,7 +144,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
         ref={ref}
         className={cn(
           "bg-surface-container-lowest rounded-2xl shadow-xl p-5 w-[312px] font-body border border-outline-variant/20",
-          className
+          className,
         )}
       >
         <div className="flex items-center justify-between gap-2 mb-4">
@@ -276,7 +279,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                     isToday &&
                     inMonth &&
                     "ring-1 ring-secondary/50 text-secondary font-bold",
-                  disabled && "opacity-30 cursor-not-allowed"
+                  disabled && "opacity-30 cursor-not-allowed",
                 )}
               >
                 {d.getDate()}
@@ -308,6 +311,6 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
         )}
       </div>
     );
-  }
+  },
 );
 Calendar.displayName = "Calendar";

@@ -5,7 +5,7 @@
 export async function decrypt(
   ciphertext: BufferSource,
   key: CryptoKey,
-  iv: Uint8Array<ArrayBuffer>
+  iv: Uint8Array<ArrayBuffer>,
 ): Promise<ArrayBuffer> {
   return crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
 }

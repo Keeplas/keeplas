@@ -38,7 +38,7 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
     enc.encode(getAuditSecret()),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["verify"]
+    ["verify"],
   );
 
   const sigBytes = base64ToBytes(payload.sig);
@@ -47,7 +47,7 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
     "HMAC",
     key,
     sigBytes as BufferSource,
-    data as BufferSource
+    data as BufferSource,
   );
 
   if (!valid) throw new Error("Invalid audit context signature");
@@ -78,7 +78,7 @@ export async function createAuditLog(
     ipAddress?: string;
     country?: string;
     deviceInfo?: string;
-  }
+  },
 ) {
   const lastLog = await ctx.db
     .query("audit_logs")
@@ -145,10 +145,7 @@ export type ActorIdentity = {
   actorId: string;
 };
 
-export function auditedMutation<
-  Args extends PropertyValidators,
-  Output,
->(opts: {
+export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
   action: string;
   resourceType: string;
   args: Args;
@@ -162,14 +159,14 @@ export function auditedMutation<
   getResourceId?: (
     args: ObjectType<Args>,
     result: Output,
-    userId: Id<"users">
+    userId: Id<"users">,
   ) => string;
   /**
    * Optional structured metadata persisted as JSON alongside the entry.
    */
   getMetadata?: (
     args: ObjectType<Args>,
-    result: Output
+    result: Output,
   ) => Record<string, unknown> | undefined;
   /**
    * Optional override for the actor identity. Defaults to treating the
@@ -179,7 +176,7 @@ export function auditedMutation<
    */
   resolveActor?: (
     ctx: MutationCtx,
-    args: ObjectType<Args>
+    args: ObjectType<Args>,
   ) => Promise<ActorIdentity>;
 }): RegisteredMutation<
   "public",
@@ -278,16 +275,23 @@ export const getSecuritySummary = query({
       .collect();
 
     const lastLogin = recentLogs.find((l) => l.action.includes("login"));
-    const lastVaultAction = recentLogs.find((l) => l.resourceType === "vault_item");
+    const lastVaultAction = recentLogs.find(
+      (l) => l.resourceType === "vault_item",
+    );
 
     return {
       totalEvents: recentLogs.length,
       lastEventAt: recentLogs[0]?.createdAt ?? null,
       lastLoginAt: lastLogin?.createdAt ?? null,
       lastVaultActionAt: lastVaultAction?.createdAt ?? null,
-      pendingAccessRequests: accessRequests.filter((r) => r.status === "pending").length,
-      approvedAccessRequests: accessRequests.filter((r) => r.status === "approved").length,
-      deniedAccessRequests: accessRequests.filter((r) => r.status === "denied").length,
+      pendingAccessRequests: accessRequests.filter(
+        (r) => r.status === "pending",
+      ).length,
+      approvedAccessRequests: accessRequests.filter(
+        (r) => r.status === "approved",
+      ).length,
+      deniedAccessRequests: accessRequests.filter((r) => r.status === "denied")
+        .length,
     };
   },
 });

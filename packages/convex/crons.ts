@@ -11,7 +11,7 @@ const crons = cronJobs();
 crons.interval(
   "release_time_based_items",
   { hours: 1 },
-  internal.release.processScheduledReleases
+  internal.release.processScheduledReleases,
 );
 
 /**
@@ -23,7 +23,7 @@ crons.interval(
 crons.interval(
   "life_check_evaluator",
   { hours: 1 },
-  internal.life_check.evaluateAllConfigs
+  internal.life_check.evaluateAllConfigs,
 );
 
 export default crons;

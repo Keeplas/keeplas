@@ -21,9 +21,9 @@ export default function TrustedContactsDocPage() {
         <span className="text-label-md text-secondary">Recovery network</span>
         <h1 className="text-headline-lg text-primary">Trusted Contacts</h1>
         <p className="text-body-lg text-on-surface-variant">
-          The people you designate to protect your vault — both during your
-          life (in case you lose access) and after (for your digital
-          succession). One unified role, one mental model.
+          The people you designate to protect your vault — both during your life
+          (in case you lose access) and after (for your digital succession). One
+          unified role, one mental model.
         </p>
       </header>
 
@@ -48,7 +48,9 @@ export default function TrustedContactsDocPage() {
             <ul className="text-body-md text-on-primary-container space-y-1 pt-2">
               <li>· Maximum 5 trust contacts per vault</li>
               <li>· Receives 1 Shamir shard (encrypted to their public key)</li>
-              <li>· Active role at three moments: invitation, escalation, recovery</li>
+              <li>
+                · Active role at three moments: invitation, escalation, recovery
+              </li>
             </ul>
           </article>
 
@@ -128,10 +130,7 @@ export default function TrustedContactsDocPage() {
           href="/trusted-contacts"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon
-            path={ICON_PATHS.users}
-            className="w-5 h-5 text-secondary"
-          />
+          <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
             Manage your contacts
           </span>

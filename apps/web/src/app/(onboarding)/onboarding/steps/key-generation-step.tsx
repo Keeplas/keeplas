@@ -55,7 +55,10 @@ const MIN_THRESHOLD = 2;
 const MAX_THRESHOLD = 5;
 const DEFAULT_THRESHOLD = 2;
 
-export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps) {
+export function KeyGenerationStep({
+  phrase,
+  onComplete,
+}: KeyGenerationStepProps) {
   const router = useRouter();
   const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
@@ -88,7 +91,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
         // to reconstruct.
         const masterKey = await generateMasterKey();
         const rawMasterKey = new Uint8Array(
-          await crypto.subtle.exportKey("raw", masterKey)
+          await crypto.subtle.exportKey("raw", masterKey),
         );
 
         setPhase("splitting_shards");
@@ -100,7 +103,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
         const wrapped = await crypto.subtle.encrypt(
           { name: "AES-GCM", iv },
           rootKey,
-          rawMasterKey
+          rawMasterKey,
         );
 
         const phraseSaltB64 = uint8ToBase64(phraseSalt);
@@ -148,7 +151,9 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
       } catch (err) {
         console.error("Key generation failed:", err);
         setPhase("error");
-        setError(getErrorMessage(err, "Key generation failed. Please try again."));
+        setError(
+          getErrorMessage(err, "Key generation failed. Please try again."),
+        );
       }
     }
 
@@ -182,9 +187,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
               d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
             />
           </svg>
-          <span className="text-label-md">
-            Securing Vault
-          </span>
+          <span className="text-label-md">Securing Vault</span>
         </div>
         <h2 className="text-headline-lg text-primary mb-3 break-words">
           {phase === "complete"
@@ -216,7 +219,7 @@ export function KeyGenerationStep({ phrase, onComplete }: KeyGenerationStepProps
         {VISIBLE_PHASES.map((p) => {
           const phaseIndex = VISIBLE_PHASES.indexOf(p);
           const currentIndex = [...VISIBLE_PHASES, "complete" as const].indexOf(
-            phase as (typeof VISIBLE_PHASES)[number] | "complete"
+            phase as (typeof VISIBLE_PHASES)[number] | "complete",
           );
           const isDone = currentIndex > phaseIndex;
           const isCurrent = phase === p;
@@ -320,7 +323,7 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
       <div className="grid grid-cols-4 gap-3 mb-6">
         {Array.from(
           { length: MAX_THRESHOLD - MIN_THRESHOLD + 1 },
-          (_, i) => i + MIN_THRESHOLD
+          (_, i) => i + MIN_THRESHOLD,
         ).map((n) => {
           const selected = value === n;
           return (
@@ -333,12 +336,8 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
                   : "border-outline-variant/30 hover:border-outline-variant/60 bg-surface-container-low"
               }`}
             >
-              <div className="text-headline-md text-primary font-bold">
-                {n}
-              </div>
-              <div className="text-label-md text-on-surface-variant">
-                of 5
-              </div>
+              <div className="text-headline-md text-primary font-bold">{n}</div>
+              <div className="text-label-md text-on-surface-variant">of 5</div>
             </button>
           );
         })}
@@ -361,9 +360,9 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
           )}
           {value === 4 && (
             <>
-              <strong className="text-primary">Strict.</strong> Four out of
-              five contacts must agree. Very strong, but recovery may be hard
-              if some contacts are unavailable.
+              <strong className="text-primary">Strict.</strong> Four out of five
+              contacts must agree. Very strong, but recovery may be hard if some
+              contacts are unavailable.
             </>
           )}
           {value === 5 && (

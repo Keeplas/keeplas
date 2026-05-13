@@ -50,7 +50,9 @@ function InvitationShell({
               <span className="text-label-md text-primary">{badgeLabel}</span>
             </div>
             <h3 className="text-headline-md text-primary mb-2">{heading}</h3>
-            <p className="text-body-md text-on-surface-variant">{description}</p>
+            <p className="text-body-md text-on-surface-variant">
+              {description}
+            </p>
           </div>
           {children}
         </div>
@@ -70,10 +72,10 @@ export default function InvitationPage({
     token,
   });
   const acceptInvitation = useAuditedMutation(
-    api.trusted_contacts.acceptInvitation
+    api.trusted_contacts.acceptInvitation,
   );
   const declineInvitation = useAuditedMutation(
-    api.trusted_contacts.declineInvitation
+    api.trusted_contacts.declineInvitation,
   );
   const { ensureOwnerKeypair, isReady: cryptoReady } = useRecipientCrypto();
 

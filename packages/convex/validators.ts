@@ -8,7 +8,7 @@ export const categoryValidator = v.union(
   v.literal("legal_document"),
   v.literal("business_continuity"),
   v.literal("conditional_message"),
-  v.literal("credential")
+  v.literal("credential"),
 );
 
 // TEMPORARY: "public" and "emergency_only" are kept here only so the schema
@@ -18,5 +18,5 @@ export const accessLevelValidator = v.union(
   v.literal("private"),
   v.literal("trusted_only"),
   v.literal("emergency_only"),
-  v.literal("public")
+  v.literal("public"),
 );

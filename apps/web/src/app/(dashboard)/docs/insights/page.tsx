@@ -58,13 +58,13 @@ export default function InsightsDocPage() {
       {/* 1 — If you died today */}
       <Section slug="if-you-died-today" tone="warning" iconKey="helpCircle">
         <p>
-          Take ninety seconds. Picture every account, file, and key in your
-          life — and then picture them gone. Your phone passcode. Your
-          password manager master key. The drive with the kids&rsquo; photos.
-          The crypto seed phrase you wrote down somewhere &laquo; safe &raquo;.
-          The login to the small business email forwarding addressed to your
-          home. Most adults manage more than a hundred online accounts and
-          almost none of them are mapped, named, or transferable.
+          Take ninety seconds. Picture every account, file, and key in your life
+          — and then picture them gone. Your phone passcode. Your password
+          manager master key. The drive with the kids&rsquo; photos. The crypto
+          seed phrase you wrote down somewhere &laquo; safe &raquo;. The login
+          to the small business email forwarding addressed to your home. Most
+          adults manage more than a hundred online accounts and almost none of
+          them are mapped, named, or transferable.
         </p>
         <p>
           The point of this question isn&rsquo;t to be morbid — it&rsquo;s to
@@ -77,7 +77,9 @@ export default function InsightsDocPage() {
           <li>Money (banks, brokerage, crypto wallets, retirement)</li>
           <li>Cloud (photos, drive, password manager, email)</li>
           <li>People (who needs to be contacted, who&rsquo;d step in)</li>
-          <li>Wishes (medical directives, organ donor status, funeral notes)</li>
+          <li>
+            Wishes (medical directives, organ donor status, funeral notes)
+          </li>
         </ul>
         <p>
           Mapping is the act. Choosing who gets what is the gift. The rest of
@@ -93,9 +95,9 @@ export default function InsightsDocPage() {
           iCloud account quietly freezes — Apple now offers a Legacy Contact,
           but only if it&rsquo;s set up <em>before</em> death; otherwise the
           family faces a court order or a permanent lock. Crypto wallets become
-          tombs the moment a seed phrase is missing — there is no support
-          line, no &laquo; forgot password &raquo;, no recovery. Photos and
-          documents on a phone protected by Face ID and an unknown passcode are
+          tombs the moment a seed phrase is missing — there is no support line,
+          no &laquo; forgot password &raquo;, no recovery. Photos and documents
+          on a phone protected by Face ID and an unknown passcode are
           functionally lost.
         </p>
         <p>
@@ -107,8 +109,8 @@ export default function InsightsDocPage() {
         </p>
         <p>
           That is the ten-minute version of what Keeplas does. Add the few
-          things you would not want to lose, name a trusted contact or two,
-          and the cliff becomes a slope.
+          things you would not want to lose, name a trusted contact or two, and
+          the cliff becomes a slope.
         </p>
         <Link
           href="/vault"
@@ -123,26 +125,26 @@ export default function InsightsDocPage() {
       <Section slug="probate-vs-grief" tone="warning" iconKey="lockClock">
         <p>
           Probate — the legal process that grants someone authority over a
-          deceased person&rsquo;s estate — typically takes <strong>six to
-          eighteen months</strong>, depending on the jurisdiction and the
-          complexity of the estate. In some countries it&rsquo;s faster, in
-          many it&rsquo;s slower. None of those timelines match the speed of
+          deceased person&rsquo;s estate — typically takes{" "}
+          <strong>six to eighteen months</strong>, depending on the jurisdiction
+          and the complexity of the estate. In some countries it&rsquo;s faster,
+          in many it&rsquo;s slower. None of those timelines match the speed of
           life.
         </p>
         <p>
-          Within the first thirty days after a death, the family usually has
-          to: pay the mortgage, keep insurance policies current, contest or
-          confirm subscriptions, file a death notice with banks, and find a
-          dozen account passwords that nobody wrote down. Without prepared
-          access, all of this either falls on one exhausted relative or
-          waits — accruing late fees, lapsing coverage, locking accounts.
+          Within the first thirty days after a death, the family usually has to:
+          pay the mortgage, keep insurance policies current, contest or confirm
+          subscriptions, file a death notice with banks, and find a dozen
+          account passwords that nobody wrote down. Without prepared access, all
+          of this either falls on one exhausted relative or waits — accruing
+          late fees, lapsing coverage, locking accounts.
         </p>
         <p>
           Documenting your essentials now isn&rsquo;t a substitute for a will.
           It&rsquo;s the bridge that gets your family through the first month
-          while the legal machinery catches up. Keeplas releases the
-          information you&rsquo;ve curated — not your whole life, just what
-          you chose — to the people you chose, on the timeline you chose.
+          while the legal machinery catches up. Keeplas releases the information
+          you&rsquo;ve curated — not your whole life, just what you chose — to
+          the people you chose, on the timeline you chose.
         </p>
         <Link
           href="/docs/recovery"
@@ -156,16 +158,16 @@ export default function InsightsDocPage() {
       {/* 4 — Medical ID (teaser → existing guide) */}
       <Section slug="medical-id" tone="success" iconKey="medicalInformation">
         <p>
-          For accidents and sudden illness, the fastest tool is already on
-          your phone: the built-in Medical ID. It lives on your lock screen,
-          works offline, requires no app, and is what trained paramedics
-          actually look for first. Two minutes to set up on iPhone or Android.
+          For accidents and sudden illness, the fastest tool is already on your
+          phone: the built-in Medical ID. It lives on your lock screen, works
+          offline, requires no app, and is what trained paramedics actually look
+          for first. Two minutes to set up on iPhone or Android.
         </p>
         <InfoCallout icon={ICON_PATHS.info} tone="info">
-          We deliberately don&rsquo;t replicate Medical ID inside Keeplas — a
-          QR card readable without a key would break our zero-knowledge
-          promise, and the operating system already solved this problem on
-          the device itself.
+          We deliberately don&rsquo;t replicate Medical ID inside Keeplas — a QR
+          card readable without a key would break our zero-knowledge promise,
+          and the operating system already solved this problem on the device
+          itself.
         </InfoCallout>
         <Link
           href="/docs/emergency-info"
@@ -181,9 +183,9 @@ export default function InsightsDocPage() {
         <p>
           Medical ID is excellent. Paper still beats it in a few specific
           situations: a dead phone battery, a foreign emergency room where
-          paramedics aren&rsquo;t looking for the iOS lock-screen flow, a
-          phone left in another room, a guardian who needs your blood type
-          read aloud over a phone call.
+          paramedics aren&rsquo;t looking for the iOS lock-screen flow, a phone
+          left in another room, a guardian who needs your blood type read aloud
+          over a phone call.
         </p>
         <p>
           A printed Emergency Card is the offline complement. It carries the
@@ -215,25 +217,24 @@ export default function InsightsDocPage() {
         <p>
           Your 24-word recovery phrase isn&rsquo;t a password — it&rsquo;s the
           mathematical seed every encryption key on your account is derived
-          from. We use the BIP-39 standard you may have seen in crypto
-          wallets, paired with Argon2id key derivation that turns the phrase
-          into your Root Key locally, on your device. The phrase itself never
-          leaves your device, and Keeplas servers never store it nor any
-          hash of it.
+          from. We use the BIP-39 standard you may have seen in crypto wallets,
+          paired with Argon2id key derivation that turns the phrase into your
+          Root Key locally, on your device. The phrase itself never leaves your
+          device, and Keeplas servers never store it nor any hash of it.
         </p>
         <p>
           That&rsquo;s the strength: the system has no fallback that bypasses
           the phrase, which is exactly what makes it impossible for us — or
           anyone we&rsquo;d be compelled to share with — to read your data.
-          That&rsquo;s also the responsibility: if you lose the phrase and
-          you haven&rsquo;t set up trusted contacts, the vault is gone.
+          That&rsquo;s also the responsibility: if you lose the phrase and you
+          haven&rsquo;t set up trusted contacts, the vault is gone.
         </p>
         <p>
-          The right way to store 24 words is offline, on paper or steel,
-          ideally in two separate physical locations (a fire-resistant box
-          and a sealed envelope at a relative&rsquo;s home, for example).
-          Never store them in a screenshot, a note app, an email draft, or a
-          password manager — those defeat the entire purpose.
+          The right way to store 24 words is offline, on paper or steel, ideally
+          in two separate physical locations (a fire-resistant box and a sealed
+          envelope at a relative&rsquo;s home, for example). Never store them in
+          a screenshot, a note app, an email draft, or a password manager —
+          those defeat the entire purpose.
         </p>
         <Link
           href="/settings/recovery-kit"
@@ -247,26 +248,26 @@ export default function InsightsDocPage() {
       {/* 7 — Zero-knowledge */}
       <Section slug="zero-knowledge" tone="info" iconKey="shieldCheck">
         <p>
-          Zero-knowledge is the cryptographic guarantee that a service can
-          store your data without ever being able to read it. In Keeplas, your
-          master key is derived locally from your 24-word phrase and never
-          leaves your device. Every vault item is encrypted with AES-256-GCM
-          on your device before upload. What we hold on our servers is
-          mathematically opaque ciphertext.
+          Zero-knowledge is the cryptographic guarantee that a service can store
+          your data without ever being able to read it. In Keeplas, your master
+          key is derived locally from your 24-word phrase and never leaves your
+          device. Every vault item is encrypted with AES-256-GCM on your device
+          before upload. What we hold on our servers is mathematically opaque
+          ciphertext.
         </p>
         <p>
           The practical comparison: with traditional cloud storage (or most
-          consumer password managers), the service holds a key that can
-          unlock your data — under a court order, a leaked credential, or a
-          rogue employee, that data becomes legible. With zero-knowledge, the
+          consumer password managers), the service holds a key that can unlock
+          your data — under a court order, a leaked credential, or a rogue
+          employee, that data becomes legible. With zero-knowledge, the
           ciphertext stays ciphertext until your device unlocks it.
         </p>
         <p>
-          The implication you should understand clearly: there is no
-          &laquo; reset password and recover &raquo; path. The two real
-          recovery paths are the 24-word phrase (self-service) and Shamir
-          social recovery via your trusted contacts (when the phrase is
-          lost). That&rsquo;s the whole shape of the system.
+          The implication you should understand clearly: there is no &laquo;
+          reset password and recover &raquo; path. The two real recovery paths
+          are the 24-word phrase (self-service) and Shamir social recovery via
+          your trusted contacts (when the phrase is lost). That&rsquo;s the
+          whole shape of the system.
         </p>
       </Section>
 
@@ -275,16 +276,16 @@ export default function InsightsDocPage() {
         <p>
           Trusted contacts are the people who can collectively unlock your
           continuity if you lose your phrase or become unreachable. They
-          don&rsquo;t hold your phrase — they hold cryptographic{" "}
-          <em>shards</em> of your master key, generated through Shamir secret
-          sharing. A configurable threshold (2-of-5 by default) must agree
-          before recovery proceeds, and reconstruction always happens on
-          their devices, never on Keeplas servers.
+          don&rsquo;t hold your phrase — they hold cryptographic <em>shards</em>{" "}
+          of your master key, generated through Shamir secret sharing. A
+          configurable threshold (2-of-5 by default) must agree before recovery
+          proceeds, and reconstruction always happens on their devices, never on
+          Keeplas servers.
         </p>
         <p>
           Pick at least three. Pick people in different households, ideally
-          different cities. Pick the ones who would actually pick up the
-          phone in a hard week.
+          different cities. Pick the ones who would actually pick up the phone
+          in a hard week.
         </p>
         <Link
           href="/docs/trusted-contacts"
@@ -298,28 +299,27 @@ export default function InsightsDocPage() {
       {/* 9 — Quantum-safe */}
       <Section slug="quantum-safe" tone="info" iconKey="fingerprint">
         <p>
-          The biggest cryptographic risk to legacy data isn&rsquo;t today&rsquo;s
-          attackers — it&rsquo;s tomorrow&rsquo;s. The pattern is called{" "}
-          <em>harvest now, decrypt later</em>: well-funded adversaries are
-          recording encrypted traffic and stored ciphertext today, betting
+          The biggest cryptographic risk to legacy data isn&rsquo;t
+          today&rsquo;s attackers — it&rsquo;s tomorrow&rsquo;s. The pattern is
+          called <em>harvest now, decrypt later</em>: well-funded adversaries
+          are recording encrypted traffic and stored ciphertext today, betting
           that a future quantum computer will break the underlying algorithms
           and let them read what was captured years earlier.
         </p>
         <p>
-          For consumer chat or short-lived sessions this is mostly
-          theoretical. For inheritance and continuity data — which has to
-          remain confidential for decades — it&rsquo;s a real planning horizon.
-          That&rsquo;s why Keeplas wraps every per-recipient data encryption
-          key, and every Shamir shard, with{" "}
-          <strong>ML-KEM-768</strong> (NIST FIPS 203), the post-quantum key
-          encapsulation standard ratified in 2024. It replaces RSA-OAEP on
-          the wrapping layer.
+          For consumer chat or short-lived sessions this is mostly theoretical.
+          For inheritance and continuity data — which has to remain confidential
+          for decades — it&rsquo;s a real planning horizon. That&rsquo;s why
+          Keeplas wraps every per-recipient data encryption key, and every
+          Shamir shard, with <strong>ML-KEM-768</strong> (NIST FIPS 203), the
+          post-quantum key encapsulation standard ratified in 2024. It replaces
+          RSA-OAEP on the wrapping layer.
         </p>
         <p>
           The user-visible impact is essentially zero: same flows, same
           performance. The future-visible impact is that ciphertext captured
-          today should still be unreadable when post-quantum decryption
-          becomes feasible.
+          today should still be unreadable when post-quantum decryption becomes
+          feasible.
         </p>
       </Section>
 

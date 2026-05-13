@@ -43,7 +43,7 @@ export function usePasskeySupport(): boolean {
   return useSyncExternalStore(
     noopSubscribe,
     getClientSnapshot,
-    getServerSnapshot
+    getServerSnapshot,
   );
 }
 
@@ -61,7 +61,7 @@ function detectDeviceName(): string {
 
 export async function registerPasskey(
   api: RegisterOptions,
-  deviceName?: string
+  deviceName?: string,
 ): Promise<void> {
   if (!isPasskeySupported()) {
     throw new Error("Passkeys are not supported in this browser.");
@@ -74,7 +74,7 @@ export async function registerPasskey(
 
 export async function loginWithPasskey(
   api: AuthenticateOptions,
-  email?: string
+  email?: string,
 ): Promise<void> {
   if (!isPasskeySupported()) {
     throw new Error("Passkeys are not supported in this browser.");

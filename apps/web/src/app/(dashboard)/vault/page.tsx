@@ -103,7 +103,9 @@ export default function VaultPage() {
 function VaultPageContent() {
   const searchParams = useSearchParams();
   const rawSection = searchParams.get("section");
-  const activeSection = rawSection ? SECTION_BY_KEY.get(rawSection) ?? null : null;
+  const activeSection = rawSection
+    ? (SECTION_BY_KEY.get(rawSection) ?? null)
+    : null;
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
@@ -111,7 +113,9 @@ function VaultPageContent() {
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [addDialogCategory, setAddDialogCategory] = useState<VaultCategory | undefined>(undefined);
+  const [addDialogCategory, setAddDialogCategory] = useState<
+    VaultCategory | undefined
+  >(undefined);
 
   function openAddDialog(section?: SectionConfig) {
     setAddDialogCategory(section?.category);
@@ -142,7 +146,7 @@ function VaultPageContent() {
 
   const sectionsToRender = activeSection ? [activeSection] : SECTIONS;
   const activeCount = activeSection
-    ? itemsByCategory.get(activeSection.category)?.length ?? 0
+    ? (itemsByCategory.get(activeSection.category)?.length ?? 0)
     : 0;
 
   return (
@@ -155,7 +159,10 @@ function VaultPageContent() {
               href="/vault"
               className="inline-flex items-center gap-2 text-label-md text-on-surface-variant hover:text-primary transition-colors"
             >
-              <Icon path={ICON_PATHS.chevronRight} className="w-4 h-4 rotate-180" />
+              <Icon
+                path={ICON_PATHS.chevronRight}
+                className="w-4 h-4 rotate-180"
+              />
               All vault sections
             </Link>
           )}
@@ -268,7 +275,9 @@ function VaultSection({
       </div>
       {isEmpty ? (
         <div className="bg-surface-container-low rounded-full p-10 text-center">
-          <p className="text-body-lg text-on-surface-variant mb-4">{emptyMessage}</p>
+          <p className="text-body-lg text-on-surface-variant mb-4">
+            {emptyMessage}
+          </p>
           {onAdd && (
             <button
               onClick={onAdd}
@@ -304,7 +313,7 @@ function VaultSection({
 function transmissionSummary(
   item: Doc<"vault_items">,
   groups: Doc<"recipient_groups">[],
-  contacts: Doc<"trusted_contacts">[]
+  contacts: Doc<"trusted_contacts">[],
 ): { label: string; tone: "private" | "shared" } {
   if (item.accessLevel === "private") {
     return { label: "Private", tone: "private" };
@@ -373,9 +382,7 @@ function VaultItemCard({
           <span className="truncate">{transmission.label}</span>
         </span>
       </div>
-      <h4 className="text-headline-sm text-primary truncate">
-        {item.title}
-      </h4>
+      <h4 className="text-headline-sm text-primary truncate">{item.title}</h4>
       <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
         Updated {formatDate(item.updatedAt)}
       </p>

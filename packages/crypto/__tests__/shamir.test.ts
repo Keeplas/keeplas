@@ -116,7 +116,7 @@ describe("Shamir Secret Sharing", () => {
 
       const shares = await split(secret, 5, 3);
       await expect(
-        reconstruct([shares[0], shares[0], shares[1]])
+        reconstruct([shares[0], shares[0], shares[1]]),
       ).rejects.toThrow("Duplicate");
     });
 
@@ -131,7 +131,9 @@ describe("Shamir Secret Sharing", () => {
     it("rejects shares of different lengths", async () => {
       const share1 = new Uint8Array([1, 10, 20, 30]);
       const share2 = new Uint8Array([2, 10, 20]);
-      await expect(reconstruct([share1, share2])).rejects.toThrow("same length");
+      await expect(reconstruct([share1, share2])).rejects.toThrow(
+        "same length",
+      );
     });
   });
 

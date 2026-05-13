@@ -21,12 +21,8 @@ export default defineSchema({
 
     authProviders: v.optional(
       v.array(
-        v.union(
-          v.literal("passkey"),
-          v.literal("email"),
-          v.literal("totp")
-        )
-      )
+        v.union(v.literal("passkey"), v.literal("email"), v.literal("totp")),
+      ),
     ),
 
     // Crypto fields — populated during onboarding (Phase 2)
@@ -73,8 +69,8 @@ export default defineSchema({
         v.literal("recovery_phrase"),
         v.literal("verification"),
         v.literal("key_generation"),
-        v.literal("complete")
-      )
+        v.literal("complete"),
+      ),
     ),
     vaultIntegrityScore: v.optional(v.number()),
 
@@ -124,7 +120,7 @@ export default defineSchema({
     deviceName: v.string(),
     backedUp: v.optional(v.boolean()),
     deviceType: v.optional(
-      v.union(v.literal("singleDevice"), v.literal("multiDevice"))
+      v.union(v.literal("singleDevice"), v.literal("multiDevice")),
     ),
     createdAt: v.number(),
     lastUsedAt: v.number(),
@@ -182,7 +178,7 @@ export default defineSchema({
       v.literal("active"),
       v.literal("locked"),
       v.literal("emergency_access"),
-      v.literal("suspended")
+      v.literal("suspended"),
     ),
     securityLevel: v.union(v.literal("standard"), v.literal("maximum")),
 
@@ -220,18 +216,14 @@ export default defineSchema({
     encryptedLinks: v.optional(v.string()),
     encryptionType: v.union(
       v.literal("aes_256_gcm"),
-      v.literal("zero_knowledge")
+      v.literal("zero_knowledge"),
     ),
     contentHash: v.string(),
 
     sharedWithContacts: v.array(v.id("trusted_contacts")),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientMode: v.optional(
-      v.union(
-        v.literal("default"),
-        v.literal("groups"),
-        v.literal("explicit")
-      )
+      v.union(v.literal("default"), v.literal("groups"), v.literal("explicit")),
     ),
     // ML-KEM-768 + AES-GCM envelope (JSON: {v, alg, kem, iv, ct}).
     ownerWrappedDek: v.optional(v.string()),
@@ -244,20 +236,20 @@ export default defineSchema({
       v.literal("draft"),
       v.literal("archived"),
       v.literal("sealed"),
-      v.literal("released")
+      v.literal("released"),
     ),
 
     triggerType: v.optional(
       v.union(
         v.literal("life_check_failure"),
         v.literal("time_based"),
-        v.literal("manual")
-      )
+        v.literal("manual"),
+      ),
     ),
     triggerConfig: v.optional(
       v.object({
         releaseDate: v.optional(v.number()),
-      })
+      }),
     ),
     releasedAt: v.optional(v.number()),
 
@@ -316,7 +308,7 @@ export default defineSchema({
       v.literal("document"),
       v.literal("audio"),
       v.literal("video"),
-      v.literal("image")
+      v.literal("image"),
     ),
 
     durationSec: v.optional(v.number()),
@@ -343,11 +335,11 @@ export default defineSchema({
       v.literal("friend"),
       v.literal("lawyer"),
       v.literal("doctor"),
-      v.literal("other")
+      v.literal("other"),
     ),
 
     contactType: v.optional(
-      v.union(v.literal("trust"), v.literal("recipient_only"))
+      v.union(v.literal("trust"), v.literal("recipient_only")),
     ),
 
     shardIndex: v.optional(v.number()),
@@ -370,7 +362,7 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("accepted"),
       v.literal("declined"),
-      v.literal("revoked")
+      v.literal("revoked"),
     ),
     invitationToken: v.string(),
     invitedAt: v.number(),
@@ -396,7 +388,7 @@ export default defineSchema({
     frequency: v.union(
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("quarterly")
+      v.literal("quarterly"),
     ),
 
     // Inactivity-driven trigger model. Derived from `frequency` at write time
@@ -424,12 +416,12 @@ export default defineSchema({
           v.literal("email"),
           v.literal("whatsapp"),
           v.literal("sms"),
-          v.literal("ivr_call")
+          v.literal("ivr_call"),
         ),
         order: v.number(),
         isEnabled: v.boolean(),
         delayHours: v.number(),
-      })
+      }),
     ),
 
     travelModeEnabled: v.boolean(),
@@ -461,7 +453,7 @@ export default defineSchema({
       v.literal("validated"),
       v.literal("escalating"),
       v.literal("triggered"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
 
     passiveScore: v.number(),
@@ -477,7 +469,7 @@ export default defineSchema({
         attemptedAt: v.number(),
         respondedAt: v.optional(v.number()),
         response: v.optional(v.string()),
-      })
+      }),
     ),
 
     // IDs of pending scheduled escalations (Convex scheduler). Cancelled when
@@ -512,7 +504,7 @@ export default defineSchema({
       v.literal("whatsapp_presence"),
       v.literal("google_activity"),
       v.literal("health_data"),
-      v.literal("apple_watch")
+      v.literal("apple_watch"),
     ),
 
     scoreContribution: v.number(),
@@ -555,13 +547,13 @@ export default defineSchema({
       v.literal("denied"),
       v.literal("auto_denied"),
       v.literal("expired"),
-      v.literal("revoked")
+      v.literal("revoked"),
     ),
 
     respondedAt: v.optional(v.number()),
     autoResponseAt: v.number(),
     accessType: v.optional(
-      v.union(v.literal("read"), v.literal("read_download"))
+      v.union(v.literal("read"), v.literal("read_download")),
     ),
     accessExpiresAt: v.optional(v.number()),
 
@@ -628,7 +620,7 @@ export default defineSchema({
       v.literal("time_based"),
       v.literal("age_based"),
       v.literal("legal_event"),
-      v.literal("manual")
+      v.literal("manual"),
     ),
     triggerConfig: v.object({
       inactivityDays: v.optional(v.number()),
@@ -642,7 +634,7 @@ export default defineSchema({
       v.literal("active"),
       v.literal("sealed"),
       v.literal("released"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
 
     encryptionType: v.literal("zero_knowledge"),
@@ -671,7 +663,7 @@ export default defineSchema({
       v.literal("paused"),
       v.literal("triggered"),
       v.literal("completed"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
 
     isSafePauseActive: v.boolean(),
@@ -703,8 +695,8 @@ export default defineSchema({
         v.literal("primary_outreach"),
         v.literal("incapacity"),
         v.literal("posthumous_release"),
-        v.literal("wipe")
-      )
+        v.literal("wipe"),
+      ),
     ),
 
     actions: v.array(
@@ -712,18 +704,18 @@ export default defineSchema({
         actionType: v.union(
           v.literal("grant_access"),
           v.literal("alert_authority"),
-          v.literal("account_wipe")
+          v.literal("account_wipe"),
         ),
         targetContactId: v.optional(v.id("trusted_contacts")),
         config: v.string(),
-      })
+      }),
     ),
 
     executionStatus: v.union(
       v.literal("pending"),
       v.literal("executed"),
       v.literal("skipped"),
-      v.literal("failed")
+      v.literal("failed"),
     ),
     executedAt: v.optional(v.number()),
     order: v.number(),
@@ -743,7 +735,7 @@ export default defineSchema({
       v.literal("user"),
       v.literal("trusted_contact"),
       v.literal("system"),
-      v.literal("ai_assistant")
+      v.literal("ai_assistant"),
     ),
     actorId: v.string(),
 
@@ -783,7 +775,7 @@ export default defineSchema({
       v.literal("billing"),
       v.literal("recovery"),
       v.literal("feature_request"),
-      v.literal("other")
+      v.literal("other"),
     ),
     subject: v.string(),
     message: v.string(),
@@ -792,7 +784,7 @@ export default defineSchema({
       v.literal("open"),
       v.literal("in_progress"),
       v.literal("resolved"),
-      v.literal("closed")
+      v.literal("closed"),
     ),
 
     createdAt: v.number(),
@@ -815,7 +807,7 @@ export default defineSchema({
       v.literal("contact_confirmed"),
       v.literal("vault_update"),
       v.literal("security_alert"),
-      v.literal("system")
+      v.literal("system"),
     ),
 
     title: v.string(),

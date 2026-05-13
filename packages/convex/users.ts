@@ -171,9 +171,7 @@ export const setPublicKey = auditedMutation({
     if (!user) throw new Error("User not found");
 
     if (user.publicKey && user.publicKey !== args.publicKey) {
-      throw new Error(
-        "A different public key is already set for this account"
-      );
+      throw new Error("A different public key is already set for this account");
     }
 
     await ctx.db.patch(userId, {
@@ -216,7 +214,7 @@ export async function wipeUserData(
   actor: {
     actorType: "user" | "trusted_contact" | "system" | "ai_assistant";
     actorId: string;
-  }
+  },
 ) {
   await createAuditLog(ctx, {
     userId,

@@ -15,7 +15,7 @@ const ToastViewport = React.forwardRef<
     ref={ref}
     className={cn(
       "fixed bottom-0 right-0 z-[100] flex max-h-screen w-full flex-col-reverse gap-3 p-4 sm:bottom-6 sm:right-6 sm:top-auto sm:flex-col md:max-w-md outline-none",
-      className
+      className,
     )}
     {...props}
   />
@@ -36,7 +36,7 @@ const toastVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 export type ToastVariant = NonNullable<
@@ -64,7 +64,7 @@ const ToastAction = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-transparent px-3 text-sm font-medium ring-offset-transparent transition-colors hover:bg-black/10 focus:outline-none focus:ring-1 focus:ring-current disabled:pointer-events-none disabled:opacity-50",
-      className
+      className,
     )}
     {...props}
   />
@@ -80,7 +80,7 @@ const ToastClose = React.forwardRef<
     toast-close=""
     className={cn(
       "absolute right-2 top-2 rounded-md p-1 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-1 focus:ring-current cursor-pointer",
-      className
+      className,
     )}
     {...props}
   >
@@ -92,7 +92,11 @@ const ToastClose = React.forwardRef<
       stroke="currentColor"
       className="w-4 h-4"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 18 18 6M6 6l12 12"
+      />
     </svg>
   </ToastPrimitives.Close>
 ));

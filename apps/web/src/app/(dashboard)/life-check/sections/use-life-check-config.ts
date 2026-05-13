@@ -35,7 +35,7 @@ export function useLifeCheckConfig() {
     setTravelMode(config.travelModeEnabled);
     if (config.travelModeUntil) {
       setTravelUntil(
-        new Date(config.travelModeUntil).toISOString().split("T")[0]
+        new Date(config.travelModeUntil).toISOString().split("T")[0],
       );
     }
     if (config.activeChannels.length > 0) {
@@ -51,7 +51,7 @@ export function useLifeCheckConfig() {
             isEnabled: ch.isEnabled,
             order: ch.order,
           };
-        })
+        }),
       );
     }
   }, [config]);
@@ -113,8 +113,8 @@ export function useLifeCheckConfig() {
   function toggleChannel(type: ChannelType) {
     setChannels((prev) =>
       prev.map((ch) =>
-        ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch
-      )
+        ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
+      ),
     );
     setSaved(false);
   }

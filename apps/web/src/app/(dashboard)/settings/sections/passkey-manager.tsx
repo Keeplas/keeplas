@@ -46,7 +46,11 @@ export function PasskeyManager() {
   }
 
   async function handleRemove(id: string) {
-    if (!window.confirm("Remove this passkey? You will need another way to sign in.")) {
+    if (
+      !window.confirm(
+        "Remove this passkey? You will need another way to sign in.",
+      )
+    ) {
       return;
     }
     setBusy(id);
@@ -71,7 +75,10 @@ export function PasskeyManager() {
             Sign in with Face ID, Touch ID, or your device biometrics.
           </p>
         </div>
-        <Icon path={ICON_PATHS.face} className="w-7 h-7 text-secondary shrink-0" />
+        <Icon
+          path={ICON_PATHS.face}
+          className="w-7 h-7 text-secondary shrink-0"
+        />
       </div>
 
       {!supported && (
@@ -164,7 +171,8 @@ export function PasskeyManager() {
         />
         <p className="text-body-md text-on-error-container">
           Biometrics are convenient but should never be your{" "}
-          <strong>only</strong> recovery method. Ensure your physical kit is printed.
+          <strong>only</strong> recovery method. Ensure your physical kit is
+          printed.
         </p>
       </div>
     </section>

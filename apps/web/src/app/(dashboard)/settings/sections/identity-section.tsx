@@ -33,7 +33,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
   const [name, setName] = useState(user.name ?? "");
   const [phone, setPhone] = useState<string | undefined>(
-    user.phoneNumber || undefined
+    user.phoneNumber || undefined,
   );
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [saving, setSaving] = useState(false);
@@ -152,10 +152,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
-          <Label
-            htmlFor="email"
-            className="text-label-md text-secondary"
-          >
+          <Label htmlFor="email" className="text-label-md text-secondary">
             Primary Email
           </Label>
           <Input
@@ -172,10 +169,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <Label
-              htmlFor="phone"
-              className="text-label-md text-secondary"
-            >
+            <Label htmlFor="phone" className="text-label-md text-secondary">
               WhatsApp Number
             </Label>
             {phoneStatus?.verifiedAt ? (
@@ -207,10 +201,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
-          <Label
-            htmlFor="avatar"
-            className="text-label-md text-secondary"
-          >
+          <Label htmlFor="avatar" className="text-label-md text-secondary">
             Avatar URL
           </Label>
           <Input
@@ -285,9 +276,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 </svg>
               </span>
               <div className="space-y-1 min-w-0">
-                <p className="text-title-md text-error">
-                  Residence not set
-                </p>
+                <p className="text-title-md text-error">Residence not set</p>
                 <p className="text-body-md text-on-surface-variant">
                   Inheritance jurisdiction can&apos;t be determined until you
                   declare your country of residence. Set it now to keep your
@@ -324,9 +313,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                   </span>
                 </>
               ) : (
-                <span className="text-on-surface-variant italic">
-                  Not set
-                </span>
+                <span className="text-on-surface-variant italic">Not set</span>
               )}
             </dd>
           </div>

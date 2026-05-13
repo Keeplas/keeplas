@@ -162,7 +162,7 @@ export function TotpManager() {
   async function handleDisable() {
     if (
       !window.confirm(
-        "Disable the authenticator app? You will lose this second factor and may need to set it up again."
+        "Disable the authenticator app? You will lose this second factor and may need to set it up again.",
       )
     ) {
       return;
@@ -307,7 +307,9 @@ export function TotpManager() {
         ) : (
           <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
         )}
-        <span>{enrolled ? "Authenticator active" : "Set up authenticator"}</span>
+        <span>
+          {enrolled ? "Authenticator active" : "Set up authenticator"}
+        </span>
       </Button>
 
       <div className="flex items-start gap-3 bg-surface-container-lowest p-4 rounded-xl mt-auto">
@@ -392,7 +394,7 @@ export function TotpManager() {
                           value={code}
                           onChange={(e) =>
                             setCode(
-                              e.target.value.replace(/\D/g, "").slice(0, 6)
+                              e.target.value.replace(/\D/g, "").slice(0, 6),
                             )
                           }
                           autoFocus

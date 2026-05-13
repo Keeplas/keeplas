@@ -8,10 +8,7 @@ export interface IconProps extends React.SVGAttributes<SVGSVGElement> {
 }
 
 const Icon = React.forwardRef<SVGSVGElement, IconProps>(
-  (
-    { className, path, filled = false, strokeWidth = 1.5, ...props },
-    ref
-  ) => {
+  ({ className, path, filled = false, strokeWidth = 1.5, ...props }, ref) => {
     if (filled) {
       return (
         <svg
@@ -38,7 +35,7 @@ const Icon = React.forwardRef<SVGSVGElement, IconProps>(
         <path strokeLinecap="round" strokeLinejoin="round" d={path} />
       </svg>
     );
-  }
+  },
 );
 Icon.displayName = "Icon";
 

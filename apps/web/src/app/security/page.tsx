@@ -26,7 +26,13 @@ interface PillarSectionProps {
   references?: Reference[];
 }
 
-function ExternalLink({ href, children }: { href: string; children: React.ReactNode }) {
+function ExternalLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <a
       href={href}
@@ -35,11 +41,7 @@ function ExternalLink({ href, children }: { href: string; children: React.ReactN
       className="inline-flex items-center gap-1 text-secondary font-bold hover:underline"
     >
       {children}
-      <Icon
-        path={ICON_PATHS.openInNew}
-        className="w-3.5 h-3.5"
-        aria-hidden
-      />
+      <Icon path={ICON_PATHS.openInNew} className="w-3.5 h-3.5" aria-hidden />
     </a>
   );
 }
@@ -52,7 +54,10 @@ function ReferenceList({ items }: { items: Reference[] }) {
       </p>
       <ul className="space-y-2">
         {items.map((ref) => (
-          <li key={ref.url} className="text-body-md text-on-surface-variant leading-relaxed">
+          <li
+            key={ref.url}
+            className="text-body-md text-on-surface-variant leading-relaxed"
+          >
             <ExternalLink href={ref.url}>{ref.label}</ExternalLink>
             {ref.note && (
               <span className="text-on-surface-variant/80"> — {ref.note}</span>
@@ -118,7 +123,9 @@ function PillarSection({
               {line}
             </p>
           ))}
-          {references && references.length > 0 && <ReferenceList items={references} />}
+          {references && references.length > 0 && (
+            <ReferenceList items={references} />
+          )}
         </div>
       </details>
     </section>
@@ -175,13 +182,13 @@ export default function SecurityPage() {
             How Keeplas protects your vault
           </h1>
           <p className="text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-            Five pillars: how you sign in, how your data is encrypted, how
-            you unlock day-to-day, what happens if you lose access, and the
-            tamper-evident audit trail that makes Keeplas usable as evidence
-            in succession proceedings. We see encrypted bytes — never your
-            data. Every per-recipient key is wrapped with a NIST post-quantum
-            KEM, so a future quantum computer cannot retroactively break what
-            we hold today.
+            Five pillars: how you sign in, how your data is encrypted, how you
+            unlock day-to-day, what happens if you lose access, and the
+            tamper-evident audit trail that makes Keeplas usable as evidence in
+            succession proceedings. We see encrypted bytes — never your data.
+            Every per-recipient key is wrapped with a NIST post-quantum KEM, so
+            a future quantum computer cannot retroactively break what we hold
+            today.
           </p>
         </header>
 
@@ -435,19 +442,36 @@ export default function SecurityPage() {
               question="What encryption algorithms do you use?"
               answer={
                 <>
-                  <ExternalLink href="https://www.rfc-editor.org/rfc/rfc9106.html">Argon2id</ExternalLink>
-                  {" "}(OWASP 2024 params) for key derivation,{" "}
-                  <ExternalLink href="https://csrc.nist.gov/pubs/sp/800/38/d/final">AES-256-GCM</ExternalLink>
-                  {" "}for symmetric encryption,{" "}
-                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/203/final">ML-KEM-768</ExternalLink>
-                  {" "}(NIST FIPS 203, the post-quantum KEM standardized in August 2024) for wrapping per-recipient keys,{" "}
-                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/180/4/upd1/final">SHA-256</ExternalLink>
-                  {" "}for verifiers, and{" "}
-                  <ExternalLink href="https://dl.acm.org/doi/10.1145/359168.359176">Shamir Secret Sharing</ExternalLink>
-                  {" "}over GF(256) for trusted-contact recovery. Cryptography runs client-side via the{" "}
-                  <ExternalLink href="https://www.w3.org/TR/WebCryptoAPI/">Web Crypto API</ExternalLink>
-                  {" "}and{" "}
-                  <ExternalLink href="https://github.com/paulmillr/noble-post-quantum">@noble/post-quantum</ExternalLink>.
+                  <ExternalLink href="https://www.rfc-editor.org/rfc/rfc9106.html">
+                    Argon2id
+                  </ExternalLink>{" "}
+                  (OWASP 2024 params) for key derivation,{" "}
+                  <ExternalLink href="https://csrc.nist.gov/pubs/sp/800/38/d/final">
+                    AES-256-GCM
+                  </ExternalLink>{" "}
+                  for symmetric encryption,{" "}
+                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/203/final">
+                    ML-KEM-768
+                  </ExternalLink>{" "}
+                  (NIST FIPS 203, the post-quantum KEM standardized in August
+                  2024) for wrapping per-recipient keys,{" "}
+                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/180/4/upd1/final">
+                    SHA-256
+                  </ExternalLink>{" "}
+                  for verifiers, and{" "}
+                  <ExternalLink href="https://dl.acm.org/doi/10.1145/359168.359176">
+                    Shamir Secret Sharing
+                  </ExternalLink>{" "}
+                  over GF(256) for trusted-contact recovery. Cryptography runs
+                  client-side via the{" "}
+                  <ExternalLink href="https://www.w3.org/TR/WebCryptoAPI/">
+                    Web Crypto API
+                  </ExternalLink>{" "}
+                  and{" "}
+                  <ExternalLink href="https://github.com/paulmillr/noble-post-quantum">
+                    @noble/post-quantum
+                  </ExternalLink>
+                  .
                 </>
               }
             />
@@ -455,11 +479,23 @@ export default function SecurityPage() {
               question="Are you quantum-safe?"
               answer={
                 <>
-                  Yes, end-to-end. Symmetric primitives (AES-256-GCM, Argon2id, SHA-256, Shamir Secret Sharing) are all quantum-resistant by construction. The asymmetric layer — used to wrap per-recipient keys and trusted-contact shards — uses{" "}
-                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/203/final">ML-KEM-768</ExternalLink>
-                  , the NIST-standardized post-quantum KEM (FIPS 203, August 2024). This blocks the{" "}
-                  <ExternalLink href="https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later">harvest-now-decrypt-later</ExternalLink>
-                  {" "}threat: data we store today stays opaque even to a future adversary running Shor&apos;s algorithm on a large quantum computer. Most password managers (Bitwarden, 1Password) have not yet migrated; we built Keeplas post-quantum from day one because vault data must stay confidential for decades.
+                  Yes, end-to-end. Symmetric primitives (AES-256-GCM, Argon2id,
+                  SHA-256, Shamir Secret Sharing) are all quantum-resistant by
+                  construction. The asymmetric layer — used to wrap
+                  per-recipient keys and trusted-contact shards — uses{" "}
+                  <ExternalLink href="https://csrc.nist.gov/pubs/fips/203/final">
+                    ML-KEM-768
+                  </ExternalLink>
+                  , the NIST-standardized post-quantum KEM (FIPS 203, August
+                  2024). This blocks the{" "}
+                  <ExternalLink href="https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later">
+                    harvest-now-decrypt-later
+                  </ExternalLink>{" "}
+                  threat: data we store today stays opaque even to a future
+                  adversary running Shor&apos;s algorithm on a large quantum
+                  computer. Most password managers (Bitwarden, 1Password) have
+                  not yet migrated; we built Keeplas post-quantum from day one
+                  because vault data must stay confidential for decades.
                 </>
               }
             />
@@ -471,10 +507,22 @@ export default function SecurityPage() {
               question="Will the audit log hold up in court?"
               answer={
                 <>
-                  That is exactly what it is built for. Every state-changing action is appended to an immutable hash-chained log with a server-attested IP and country (signed via{" "}
-                  <ExternalLink href="https://datatracker.ietf.org/doc/html/rfc2104">HMAC-SHA256</ExternalLink>
-                  {" "}so a client cannot fake its own location). Auditors and judges can replay the chain offline and detect any tampering: changing a single entry breaks every subsequent hash. Combined with your declared identity (date of birth, country), this is what lets a notary or probate court accept Keeplas activity as evidence of intent and authenticity. The full framework around legally-recognized electronic records in the EU is{" "}
-                  <ExternalLink href="https://eur-lex.europa.eu/eli/reg/2014/910/oj">eIDAS</ExternalLink>
+                  That is exactly what it is built for. Every state-changing
+                  action is appended to an immutable hash-chained log with a
+                  server-attested IP and country (signed via{" "}
+                  <ExternalLink href="https://datatracker.ietf.org/doc/html/rfc2104">
+                    HMAC-SHA256
+                  </ExternalLink>{" "}
+                  so a client cannot fake its own location). Auditors and judges
+                  can replay the chain offline and detect any tampering:
+                  changing a single entry breaks every subsequent hash. Combined
+                  with your declared identity (date of birth, country), this is
+                  what lets a notary or probate court accept Keeplas activity as
+                  evidence of intent and authenticity. The full framework around
+                  legally-recognized electronic records in the EU is{" "}
+                  <ExternalLink href="https://eur-lex.europa.eu/eli/reg/2014/910/oj">
+                    eIDAS
+                  </ExternalLink>
                   .
                 </>
               }
@@ -483,9 +531,17 @@ export default function SecurityPage() {
               question="What about GDPR?"
               answer={
                 <>
-                  Audit entries store action metadata only — never the plaintext of your vault. You can request export or deletion of your account at any time, but the audit chain itself is preserved (anonymized to your now-deleted user ID) so that the immutability guarantee on which a future probate court might rely is not retroactively destroyed. See{" "}
-                  <ExternalLink href="https://gdpr-info.eu/">GDPR full text</ExternalLink>
-                  {" "}for the legal basis (Article 6.1.f legitimate interest combined with Article 17.3.b legal obligation).
+                  Audit entries store action metadata only — never the plaintext
+                  of your vault. You can request export or deletion of your
+                  account at any time, but the audit chain itself is preserved
+                  (anonymized to your now-deleted user ID) so that the
+                  immutability guarantee on which a future probate court might
+                  rely is not retroactively destroyed. See{" "}
+                  <ExternalLink href="https://gdpr-info.eu/">
+                    GDPR full text
+                  </ExternalLink>{" "}
+                  for the legal basis (Article 6.1.f legitimate interest
+                  combined with Article 17.3.b legal obligation).
                 </>
               }
             />

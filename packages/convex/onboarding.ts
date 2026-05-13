@@ -1,4 +1,9 @@
-import { mutation, query, internalMutation, MutationCtx } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalMutation,
+  MutationCtx,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireAuth, optionalAuth } from "./helpers";
@@ -54,8 +59,12 @@ const DEFAULT_SCENARIO_STEPS: Array<{
  */
 export async function seedDefaults(
   ctx: MutationCtx,
-  userId: Id<"users">
-): Promise<{ configCreated: boolean; scenarioCreated: boolean; stepsCreated: number }> {
+  userId: Id<"users">,
+): Promise<{
+  configCreated: boolean;
+  scenarioCreated: boolean;
+  stepsCreated: number;
+}> {
   const now = Date.now();
 
   const existingConfig = await ctx.db
@@ -209,7 +218,7 @@ export const advanceOnboardingStep = mutation({
       v.literal("recovery_phrase"),
       v.literal("verification"),
       v.literal("key_generation"),
-      v.literal("complete")
+      v.literal("complete"),
     ),
   },
   handler: async (ctx, args) => {

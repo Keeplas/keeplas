@@ -1,4 +1,5 @@
 # Keeplas — Architecture, Sécurité & Décisions Produit
+
 > Document récapitulatif complet — Mai 2026 — v5.1
 >
 > **Changements v5 → v5.1** : modèle d'accès simplifié (suppression des modes B1–B4 et du rôle First Responder, fusion Medical Contact / Legal Authority dans le `role` standard), threshold Shamir configurable (2-of-5 par défaut, 5 max), flux de distribution + soumission peer-to-peer ML-KEM décrits.
@@ -30,13 +31,13 @@
 
 **Keeplas** est une **Life Continuity Platform** — une plateforme qui permet aux utilisateurs de sécuriser, organiser et transmettre leurs informations vitales (assets, directives médicales, legacy légal, contacts de confiance) de manière chiffrée et décentralisée.
 
-| | |
-|---|---|
-| **CEO / Co-fondateur** | Prince (51%) |
-| **CTO / Co-fondateur** | Ghislain MITAHI (49%) |
-| **Marché cible** | Kenya, Cameroun, Diaspora française, RDC |
-| **Modèle business** | Freemium + Lifetime Deal Beta à $49 |
-| **Approche** | Open source (AGPL v3 + CLA) + self-hostable |
+|                        |                                             |
+| ---------------------- | ------------------------------------------- |
+| **CEO / Co-fondateur** | Prince (51%)                                |
+| **CTO / Co-fondateur** | Ghislain MITAHI (49%)                       |
+| **Marché cible**       | Kenya, Cameroun, Diaspora française, RDC    |
+| **Modèle business**    | Freemium + Lifetime Deal Beta à $49         |
+| **Approche**           | Open source (AGPL v3 + CLA) + self-hostable |
 
 ### Proposition de valeur
 
@@ -53,15 +54,19 @@ Keeplas résout trois problèmes fondamentaux :
 L'application comprend 4 écrans principaux identifiés dans les maquettes :
 
 ### Life Map / Dashboard
+
 Vue holistic du legacy avec "central node" au centre, continuity score (ex: 75% — Strong Protection), AI Completeness Analyzer, et Protected Zones (Financial Redundancy, Trusted Node Mesh, Real Estate Chain, Healthcare Directive Gap).
 
 ### AI Assistant
+
 Interface chat pour la curation du vault. L'assistant analyse la complétude du vault, pose des questions ciblées, propose des quick replies, et génère un Family Guide exportable en PDF chiffré. Indicateur "END-TO-END ENCRYPTED SESSION" visible en permanence.
 
 ### Legal Legacy — Entrepreneur Portal
+
 Portail dédié aux entrepreneurs : procédures professionnelles (SOPs, succession plan), Operational Access Keys (credentials chiffrés), Business Associates, Contingency Instructions (actions 24h, equity distribution), Operational Asset Registry avec export CSV.
 
 ### Emergency Card
+
 Carte d'identité d'urgence publique avec Privacy Controls (Full Name, Blood Type, Allergies, Emergency Contact). Accessible aux secouristes même vault verrouillé. Options : Save to Wallet, Print Physical Card.
 
 ---
@@ -82,12 +87,14 @@ Next.js (App Router)        ← Web-first + PWA ready
 ### Justification des choix
 
 **Next.js App Router**
+
 - Web-first avec PWA possible via `next-pwa` si besoin
 - Pas de React Native au départ — évite la complexité du monorepo mobile
 - SSR/SSG natif, performant, bien connu des contributeurs open source
 - Responsive natif — fonctionne sur mobile via le browser
 
 **ShadCN UI**
+
 - Les composants sont copiés dans le repo (`components/ui/`) — pas une dépendance externe
 - Un contributeur ouvre `button.tsx` et voit du Tailwind pur, pas de magie
 - Standard de l'écosystème Next.js — la majorité des contributeurs le connaissent
@@ -107,6 +114,7 @@ Next.js (App Router)        ← Web-first + PWA ready
 | Sidebar navigation | Layout custom |
 
 **Convex Auth + WebAuthn (Passkey)**
+
 - Passkey recommandé par défaut — biométrie locale, clé privée jamais transmise
 - Alignement parfait avec la philosophie ZK : rien de secret ne quitte l'appareil
 - Résistant au phishing (lié au domaine keeplas.com uniquement)
@@ -118,12 +126,14 @@ Next.js (App Router)        ← Web-first + PWA ready
 - S'intègre proprement dans un monorepo Turborepo
 
 **pnpm + Turborepo**
+
 - Plus rapide que npm, store centralisé (pas de duplication `node_modules`)
 - Monorepo natif avec workspaces
 - Bloque les phantom dependencies — réduit les risques de supply chain attacks
 - Standard open source moderne
 
 **React Flow** (Life Map uniquement)
+
 - ShadCN ne couvre pas les visualisations graph/node
 - Nécessaire pour le "central node" et les connexions du dashboard
 
@@ -187,13 +197,13 @@ keeplas/
 
 ### Séparation stricte des zones
 
-| Zone | Périmètre | Accès |
-|---|---|---|
-| `apps/web/` | UI, pages, composants | ✅ Tout le monde |
-| `packages/ui/` | ShadCN components | ✅ Tout le monde |
-| `packages/convex/` | Schema, queries, functions | ✅ Tout le monde |
-| `packages/crypto/` | ZK, AES, Shamir | ⚠️ Fondateurs uniquement |
-| `security/` | Audits, rapports | ⚠️ Fondateurs uniquement |
+| Zone               | Périmètre                  | Accès                    |
+| ------------------ | -------------------------- | ------------------------ |
+| `apps/web/`        | UI, pages, composants      | ✅ Tout le monde         |
+| `packages/ui/`     | ShadCN components          | ✅ Tout le monde         |
+| `packages/convex/` | Schema, queries, functions | ✅ Tout le monde         |
+| `packages/crypto/` | ZK, AES, Shamir            | ⚠️ Fondateurs uniquement |
+| `security/`        | Audits, rapports           | ⚠️ Fondateurs uniquement |
 
 ### CODEOWNERS
 
@@ -233,16 +243,17 @@ Toute PR touchant `/crypto` ne peut pas être mergée sans approbation explicite
 
 ### Stack cryptographique
 
-| Composant | Technologie | Rôle |
-|---|---|---|
-| Zero-Knowledge Proofs | Noir + Barretenberg | Preuves ZK côté client — auditables |
-| Chiffrement symétrique | AES-256-GCM (Web Crypto API) | Chiffrement vault côté client |
-| Secret Sharing | Shamir threshold-of-5 (configurable) | Distribution et recovery des clés. Threshold choisi à l'onboarding (2-5) ; défaut 2-of-5. |
-| ML-KEM-768 (FIPS 203) | @noble/post-quantum | Wrap des shards et DEKs vers les clés publiques recipient (post-quantum, remplace RSA-OAEP) |
+| Composant              | Technologie                          | Rôle                                                                                        |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Zero-Knowledge Proofs  | Noir + Barretenberg                  | Preuves ZK côté client — auditables                                                         |
+| Chiffrement symétrique | AES-256-GCM (Web Crypto API)         | Chiffrement vault côté client                                                               |
+| Secret Sharing         | Shamir threshold-of-5 (configurable) | Distribution et recovery des clés. Threshold choisi à l'onboarding (2-5) ; défaut 2-of-5.   |
+| ML-KEM-768 (FIPS 203)  | @noble/post-quantum                  | Wrap des shards et DEKs vers les clés publiques recipient (post-quantum, remplace RSA-OAEP) |
 
 ### Principe d'isolation
 
 Le package `packages/crypto/` est entièrement isolé pour que :
+
 - Les auditeurs de sécurité peuvent le reviewer indépendamment de l'app
 - Les tests unitaires sont séparés et exhaustifs
 - Le versioning est indépendant
@@ -250,12 +261,12 @@ Le package `packages/crypto/` est entièrement isolé pour que :
 
 ### Vocabulaire utilisateur (jamais de jargon technique dans l'UI)
 
-| Terme technique | Terme UI |
-|---|---|
-| Shard Shamir | Fragment de clé |
-| ZK Proof | Preuve d'identité sécurisée |
-| Master Key | Clé secrète personnelle |
-| AES-256-GCM | Chiffrement de bout en bout |
+| Terme technique       | Terme UI                                                  |
+| --------------------- | --------------------------------------------------------- |
+| Shard Shamir          | Fragment de clé                                           |
+| ZK Proof              | Preuve d'identité sécurisée                               |
+| Master Key            | Clé secrète personnelle                                   |
+| AES-256-GCM           | Chiffrement de bout en bout                               |
 | Quorum threshold-of-5 | "X contacts sur 5 requis" (X dépend du choix utilisateur) |
 
 ---
@@ -289,6 +300,7 @@ Pour déchiffrer le vault : **3 shards sur 5 sont nécessaires**. Aucune entité
 ### Recovery du user (perte d'appareil)
 
 **Option A — Social Recovery**
+
 ```
 Minimum 2 trusted contacts confirment l'identité du user
 Chacun soumet son shard via sa propre Recovery Phrase
@@ -296,6 +308,7 @@ Quorum atteint → nouveau shard généré pour le nouvel appareil
 ```
 
 **Option B — Recovery Phrase personnelle**
+
 ```
 24 mots générés à l'inscription (BIP-39)
 Permettent de reconstruire le Master Key sans les contacts
@@ -305,6 +318,7 @@ Permettent de reconstruire le Master Key sans les contacts
 ### Recovery des Trusted Contacts
 
 Chaque trusted contact reçoit à son onboarding :
+
 - Son shard Shamir (stocké dans l'app Keeplas sur son appareil)
 - Sa propre Recovery Phrase de 24 mots pour retrouver son shard si il perd son appareil
 
@@ -334,11 +348,11 @@ Notification à tous les contacts du changement
 
 ### Fréquences configurables par le user
 
-| Fréquence | Profil recommandé | Délai total avant déclenchement |
-|---|---|---|
-| **Hebdomadaire** | Situation à risque élevé, maladie grave | ~5 jours |
-| **Mensuelle** | Standard — recommandé par défaut | ~5 jours |
-| **Trimestrielle** | Jeune, bonne santé | ~14 jours minimum |
+| Fréquence         | Profil recommandé                       | Délai total avant déclenchement |
+| ----------------- | --------------------------------------- | ------------------------------- |
+| **Hebdomadaire**  | Situation à risque élevé, maladie grave | ~5 jours                        |
+| **Mensuelle**     | Standard — recommandé par défaut        | ~5 jours                        |
+| **Trimestrielle** | Jeune, bonne santé                      | ~14 jours minimum               |
 
 ### Canaux configurables (ordonnés par le user)
 
@@ -412,6 +426,7 @@ Jour J+14   → Déclenchement (minimum J+14)
 ### Cas particuliers
 
 **Voyage / Expédition**
+
 ```
 User suspend le Life Check (max 90 jours)
 Confirmation de date de reprise obligatoire
@@ -421,6 +436,7 @@ Mode "expédition" pour zones sans réseau :
 ```
 
 **Hospitalisation**
+
 ```
 Déclenché par le user avant l'hospitalisation (mode pause)
 OU par un Trusted Contact médical désigné
@@ -428,6 +444,7 @@ Date de reprise automatique configurable
 ```
 
 **Faux positif post-déclenchement**
+
 ```
 Fenêtre de grâce de 72h après déclenchement
 Le user peut annuler l'accès d'urgence dans ce délai
@@ -436,6 +453,7 @@ Notification immédiate à tous les contacts en cas d'annulation
 ```
 
 **Reporter manuellement**
+
 ```
 Options disponibles à chaque canal :
   → Reporter 48h (une seule fois par cycle)
@@ -464,6 +482,7 @@ Niveau 4 — Déclenchement accès d'urgence (grace 72h puis quorum Shamir)
 ### Niveau 0 — Signaux passifs disponibles
 
 **Via l'app Keeplas**
+
 ```
 Dernière ouverture de l'app
 Dernière interaction (scroll, tap, navigation)
@@ -472,6 +491,7 @@ Dernière session active
 ```
 
 **Via le système mobile / browser**
+
 ```
 Activité de l'appareil (screen unlock)
 → Android : permission "Usage Stats"
@@ -488,6 +508,7 @@ Santé / activité physique (optionnel)
 ```
 
 **Via services tiers (optionnel, consentement explicite)**
+
 ```
 WhatsApp Business API
 → Détection de présence "en ligne" récente
@@ -512,16 +533,16 @@ Apple Watch / Wear OS
 
 Chaque signal a un poids. Le score détermine si le niveau 0 valide le cycle ou s'il faut passer au niveau 1.
 
-| Signal | Poids | Fenêtre de détection |
-|---|---|---|
-| Ouverture app Keeplas | 40 pts | 15 jours |
-| Interaction vault | 30 pts | 15 jours |
-| Activité appareil (unlock) | 20 pts | 7 jours |
-| Mouvement GPS | 20 pts | 7 jours |
-| Activité WhatsApp | 15 pts | 10 jours |
-| Activité Google / Calendar | 15 pts | 10 jours |
-| Données santé normales | 25 pts | 3 jours |
-| Apple Watch / rythme cardiaque | 35 pts | 24h |
+| Signal                         | Poids  | Fenêtre de détection |
+| ------------------------------ | ------ | -------------------- |
+| Ouverture app Keeplas          | 40 pts | 15 jours             |
+| Interaction vault              | 30 pts | 15 jours             |
+| Activité appareil (unlock)     | 20 pts | 7 jours              |
+| Mouvement GPS                  | 20 pts | 7 jours              |
+| Activité WhatsApp              | 15 pts | 10 jours             |
+| Activité Google / Calendar     | 15 pts | 10 jours             |
+| Données santé normales         | 25 pts | 3 jours              |
+| Apple Watch / rythme cardiaque | 35 pts | 24h                  |
 
 **Seuil de validation passive : ≥ 50 points**
 En dessous du seuil → passage automatique au niveau 1.
@@ -599,6 +620,7 @@ Signaux passifs — Paramètres
 ```
 
 Indicateur d'encouragement dans l'app :
+
 ```
 "Avec vos paramètres actuels :
  Probabilité d'être sollicité manuellement : Élevée
@@ -654,24 +676,25 @@ Statut            : ✅ Actif — Protection en cours
 
 Chaque check indique précisément comment il a été validé :
 
-| Icône | Type | Description |
-|---|---|---|
-| ✅ | Automatique | Activité dans l'app Keeplas |
-| ✅ | Automatique | Activité de l'appareil |
-| ✅ | Automatique | Mouvement GPS détecté |
-| ✅ | Automatique | Activité WhatsApp |
-| ✅ | Automatique | Activité Google / Calendar |
-| ✅ | Automatique | Données santé normales |
-| 👆 | Manuel | Confirmation par tap |
-| 📧 | Manuel | Confirmation par email |
-| 📞 | Manuel | Confirmation par appel |
-| 👤 | Manuel | Confirmé par quorum de trust contacts |
+| Icône | Type        | Description                           |
+| ----- | ----------- | ------------------------------------- |
+| ✅    | Automatique | Activité dans l'app Keeplas           |
+| ✅    | Automatique | Activité de l'appareil                |
+| ✅    | Automatique | Mouvement GPS détecté                 |
+| ✅    | Automatique | Activité WhatsApp                     |
+| ✅    | Automatique | Activité Google / Calendar            |
+| ✅    | Automatique | Données santé normales                |
+| 👆    | Manuel      | Confirmation par tap                  |
+| 📧    | Manuel      | Confirmation par email                |
+| 📞    | Manuel      | Confirmation par appel                |
+| 👤    | Manuel      | Confirmé par quorum de trust contacts |
 
 ---
 
 ### Où afficher cette information
 
 **Dashboard / Life Map — Widget Life Check**
+
 ```
 ┌─────────────────────────────────────────┐
 │ 🛡️  Life Check                           │
@@ -685,6 +708,7 @@ Chaque check indique précisément comment il a été validé :
 ```
 
 **Page Life Check — Historique complet**
+
 ```
 Avril 2026
 ──────────────────────────────────────────────
@@ -699,6 +723,7 @@ Avril 2026
 **Vue Trusted Contact — Information limitée**
 
 Les contacts voient le statut mais pas le détail du signal (vie privée du user) :
+
 ```
 [Nom du user]
 Dernier check  : Il y a 3 jours  ✅
@@ -730,12 +755,12 @@ RECIPIENT (passif) — pas de shard, pas de validation
 
 Le user choisit son threshold à l'onboarding (entre 2 et 5). Stocké dans `users.vaultThreshold`. Le défaut **2-of-5** maximise la facilité de récupération ; un threshold plus élevé renforce la résistance à la collusion mais demande plus de contacts joignables au moment de la recovery. Changer le threshold après distribution implique une re-distribution complète des shards.
 
-| Threshold | Trade-off |
-|---|---|
+| Threshold           | Trade-off                                                                          |
+| ------------------- | ---------------------------------------------------------------------------------- |
 | **2-of-5** (défaut) | Recovery facile. 2 contacts suffisent. Moins résistant à la collusion d'une paire. |
-| **3-of-5** | Résiste à une paire compromise. |
-| **4-of-5** | Forte sécurité. Recovery peut bloquer si ≥2 contacts indisponibles. |
-| **5-of-5** | Aucune collusion possible. Un seul contact manquant = vault verrouillé. |
+| **3-of-5**          | Résiste à une paire compromise.                                                    |
+| **4-of-5**          | Forte sécurité. Recovery peut bloquer si ≥2 contacts indisponibles.                |
+| **5-of-5**          | Aucune collusion possible. Un seul contact manquant = vault verrouillé.            |
 
 ---
 
@@ -801,11 +826,11 @@ Le user choisit son threshold à l'onboarding (entre 2 et 5). Stocké dans `user
 
 ### Ce qui a été supprimé du modèle initial
 
-| Concept supprimé | Raison |
-|---|---|
-| **Modes B1/B2/B3/B4** | Dispersion produit. La promesse Keeplas v1 est la succession numérique, pas une plateforme de partage généraliste. |
-| **First Responder** | Doublonnait la confirmation sociale par les trust contacts. La fonction (validation humaine) est conservée mais portée par tous les trust contacts via `markUserUnreachable`. |
-| **Medical Contact / Legal Authority** | Rôles distincts inutiles. Le `role` de chaque contact (lawyer, doctor, family, friend, other) suffit pour la sémantique métier ; aucun privilège crypto associé. |
+| Concept supprimé                             | Raison                                                                                                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Modes B1/B2/B3/B4**                        | Dispersion produit. La promesse Keeplas v1 est la succession numérique, pas une plateforme de partage généraliste.                                                                                            |
+| **First Responder**                          | Doublonnait la confirmation sociale par les trust contacts. La fonction (validation humaine) est conservée mais portée par tous les trust contacts via `markUserUnreachable`.                                 |
+| **Medical Contact / Legal Authority**        | Rôles distincts inutiles. Le `role` de chaque contact (lawyer, doctor, family, friend, other) suffit pour la sémantique métier ; aucun privilège crypto associé.                                              |
 | **Recovery du vivant via demande on-demand** | Le user vivant utilise sa phrase 24 mots (path A). En cas de perte de la phrase, il peut déclencher manuellement une recovery via les contacts (path B), qui suit exactement le même flux Shamir post-mortem. |
 
 ---
@@ -813,9 +838,11 @@ Le user choisit son threshold à l'onboarding (entre 2 et 5). Stocké dans `user
 ### Récupération du vivant
 
 Si le user perd l'accès à son device mais possède toujours sa phrase 24 mots :
+
 - Argon2id(24 mots, phraseSalt) → RootKey → unwrap(encryptedKeyBundle) → MasterKey. Aucun contact impliqué.
 
 Si le user perd la phrase 24 mots :
+
 - Les trust contacts peuvent collaborer (≥threshold) pour reconstruire la MasterKey, exactement comme en post-mortem. Le user peut ensuite générer une nouvelle phrase et re-wrapper la MasterKey sous une nouvelle RootKey. Le vault reste inchangé ; seule la phrase d'accès change.
 
 Les 24 mots eux-mêmes ne sont jamais récupérables — c'est une dérivation à sens unique. Aucune entité (Keeplas, contacts, autre device) ne peut les reproduire.
@@ -869,6 +896,7 @@ PROGRESSIF → Tout le reste via Vault Integrity Score + nudges
 ```
 
 Tooltip ℹ️ au clic sur "Passkey" :
+
 ```
 "Un Passkey utilise votre biométrie (Face ID, empreinte)
  à la place d'un mot de passe. Votre clé reste sur votre
@@ -878,6 +906,7 @@ Tooltip ℹ️ au clic sur "Passkey" :
 ```
 
 **Ordre de priorité recommandé :**
+
 ```
 1. 🥇 Passkey          ← Recommandé — le plus sécurisé, zéro friction
 2. 🥈 Google / Apple   ← Simple, familier
@@ -920,6 +949,7 @@ Seul moment où on force le user à s'arrêter. Présentée comme une protection
 ```
 
 Vérification rapide immédiate :
+
 ```
 Confirmez 3 mots pour continuer :
 
@@ -981,6 +1011,7 @@ Ce qui est intentionnel : le 0% n'est pas alarmant — il y a un message positif
 Le Vault Integrity Score pilote tous les nudges. Chaque palier débloque un message différent et des Priority Actions adaptées.
 
 **0% — Vault vide**
+
 ```
 Message sidebar   : "Votre vault est vide. Commencez par un document."
 Priority Action   : [➕ Ajouter mon premier document]
@@ -988,6 +1019,7 @@ Banner ⚠️         : "Aucun contact de confiance — vault inaccessible en ur
 ```
 
 **25% — Premiers documents ajoutés**
+
 ```
 Message sidebar   : "Bon début. Ajoutez vos directives médicales."
 Priority Action   : [🏥 Configurer mes Health Directives]
@@ -997,6 +1029,7 @@ AI Suggestion     : "Voulez-vous que je vous aide à rédiger
 ```
 
 **55% — Contenus bien remplis, pas encore de contacts**
+
 ```
 Message sidebar   : "Invitez vos contacts de confiance pour
                      sécuriser l'accès à votre vault."
@@ -1007,6 +1040,7 @@ Banner Life Check : "Configurez votre Life Check pour activer
 ```
 
 **70% — Contacts invités, Life Check non configuré**
+
 ```
 Message sidebar   : "Configurez votre Life Check pour activer
                      la surveillance automatique."
@@ -1016,6 +1050,7 @@ AI Suggestion     : "Votre vault est bien rempli mais votre protection
 ```
 
 **88% — Presque complet**
+
 ```
 Message sidebar   : "Ajoutez vos assets digitaux pour débloquer
                      la recovery premium."
@@ -1023,6 +1058,7 @@ Priority Action   : [💎 Ajouter mes assets digitaux]
 ```
 
 **97% — Vault complet**
+
 ```
 Message sidebar   : "Protection quasi-complète.
                      Testez votre workflow d'urgence."
@@ -1045,6 +1081,7 @@ Visible sur toutes les pages tant qu'aucun Trusted Contact n'a confirmé.
 ```
 
 Après 48h sans action, le rappel devient plus urgent :
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 🔴 Vault toujours non protégé — 48h sans action             │
@@ -1059,6 +1096,7 @@ Après 48h sans action, le rappel devient plus urgent :
 Accessible depuis le sidebar à tout moment. Jamais intrusif — se manifeste dans deux cas uniquement.
 
 **Cas 1 — Suggestion proactive (après 3 min d'inactivité sur une page complexe)**
+
 ```
 ┌────────────────────────────────────────────┐
 │ 🤖 Assistant                               │
@@ -1072,6 +1110,7 @@ Accessible depuis le sidebar à tout moment. Jamais intrusif — se manifeste da
 ```
 
 **Cas 2 — Réponse à une question du user**
+
 ```
 User      : "C'est quoi un contact de confiance ?"
 
@@ -1093,13 +1132,13 @@ L'assistant connaît l'état du vault du user et adapte ses réponses en conséq
 
 Pas de page de doc externe. Chaque concept a une explication intégrée, accessible au clic via une icône ℹ️.
 
-| Terme affiché | Tooltip au clic |
-|---|---|
-| Vault Integrity ℹ️ | "Score basé sur la complétude de votre vault et le nombre de contacts actifs." |
-| Zero-Knowledge ℹ️ | "Vos données sont chiffrées localement. Ni Keeplas ni personne ne peut les lire sans votre autorisation." |
-| Dead Man Switch ℹ️ | "Si vous ne répondez pas à vos checks pendant X jours, vos contacts désignés reçoivent accès selon vos règles." |
-| 3 contacts sur 5 requis ℹ️ | "Pour ouvrir votre vault en urgence, 3 de vos 5 contacts doivent agir ensemble. Aucun ne peut le faire seul." |
-| Heartbeat ℹ️ | "Signal silencieux détecté automatiquement. Tant que vous utilisez votre appareil, aucune action n'est requise." |
+| Terme affiché              | Tooltip au clic                                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Vault Integrity ℹ️         | "Score basé sur la complétude de votre vault et le nombre de contacts actifs."                                   |
+| Zero-Knowledge ℹ️          | "Vos données sont chiffrées localement. Ni Keeplas ni personne ne peut les lire sans votre autorisation."        |
+| Dead Man Switch ℹ️         | "Si vous ne répondez pas à vos checks pendant X jours, vos contacts désignés reçoivent accès selon vos règles."  |
+| 3 contacts sur 5 requis ℹ️ | "Pour ouvrir votre vault en urgence, 3 de vos 5 contacts doivent agir ensemble. Aucun ne peut le faire seul."    |
+| Heartbeat ℹ️               | "Signal silencieux détecté automatiquement. Tant que vous utilisez votre appareil, aucune action n'est requise." |
 
 ---
 
@@ -1108,6 +1147,7 @@ Pas de page de doc externe. Chaque concept a une explication intégrée, accessi
 Les paramètres importants non configurés apparaissent directement dans les sections concernées.
 
 **Page Life Check — si non configuré**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ ⚡ Life Check non activé                                     │
@@ -1117,6 +1157,7 @@ Les paramètres importants non configurés apparaissent directement dans les sec
 ```
 
 **Page Trusted Contacts — si moins de 3 contacts**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ ℹ️  Vous avez 1 contact sur 3 minimum recommandés           │
@@ -1127,6 +1168,7 @@ Les paramètres importants non configurés apparaissent directement dans les sec
 ```
 
 **Page Vault — si Recovery Phrase non vérifiée**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ 🔑 Recovery Phrase non confirmée                            │
@@ -1217,6 +1259,7 @@ J30 — Vault bien établi
 ### Deux niveaux d'utilisateurs
 
 **Développeurs / Contributeurs**
+
 ```bash
 git clone https://github.com/keeplas/keeplas.git
 cd keeplas
@@ -1226,6 +1269,7 @@ pnpm dev
 ```
 
 **Users self-hosting**
+
 ```bash
 curl -fsSL https://install.keeplas.com | bash
 # ou
@@ -1246,6 +1290,7 @@ docker compose up -d
 ### Setup Convex — deux modes interactifs
 
 **Mode Cloud**
+
 ```
 → L'user va sur dashboard.convex.dev
 → Crée un projet "keeplas"
@@ -1254,6 +1299,7 @@ docker compose up -d
 ```
 
 **Mode Self-hosted**
+
 ```
 → Lance le container convex-local-backend via Docker
 → Configure le port (défaut : 3210)
@@ -1308,6 +1354,7 @@ BACKUP_S3_SECRET=
 **Pourquoi AGPL v3**
 
 AGPL v3 est la licence la plus protectrice pour un SaaS open source :
+
 - Si quelqu'un modifie le code et le déploie comme service, il doit publier ses modifications
 - Protection maximale contre les forks commerciaux concurrents
 - Bien établie juridiquement — utilisée par MongoDB, GitLab, Grafana
@@ -1324,6 +1371,7 @@ Le CLA (Contributor License Agreement) donne à Keeplas Ltd la propriété intel
 ```
 
 **Modèle Open Core**
+
 ```
 AGPL v3          ← Licence du repo public
 CLA              ← Keeplas Ltd garde la propriété IP complète
@@ -1347,10 +1395,10 @@ Grâce au CLA, les fondateurs détiennent 100% de l'IP, y compris les contributi
 
 ### Niveaux de contributeurs
 
-| Niveau | Périmètre | Prérequis |
-|---|---|---|
-| **Contributor** | UI, docs, tests | PR + review standard + CLA signé |
-| **Core Contributor** | Convex, API | Track record de PRs mergées |
+| Niveau                | Périmètre            | Prérequis                         |
+| --------------------- | -------------------- | --------------------------------- |
+| **Contributor**       | UI, docs, tests      | PR + review standard + CLA signé  |
+| **Core Contributor**  | Convex, API          | Track record de PRs mergées       |
 | **Security Reviewer** | `/crypto` uniquement | Fondateurs + audit externe requis |
 
 ### Standards techniques non-négociables
@@ -1389,52 +1437,52 @@ Canal chiffré : clé PGP disponible sur le site
 
 ### Stack & Architecture
 
-| Sujet | Décision | Raison |
-|---|---|---|
-| Approche | Web-first + PWA | Éviter complexité React Native au départ |
-| UI Framework | ShadCN + Tailwind | Composants dans le repo, standard Next.js |
-| Backend | Convex | Realtime, TypeScript natif, self-hostable |
-| Auth | Passkey (WebAuthn) + Convex Auth | Biométrie locale, aligné ZK, zéro friction |
-| Auth fallback | Google / Apple / Email+mdp | Couverture maximale des cas |
-| Graph UI | React Flow | Life Map central node |
-| Package manager | pnpm | Performance, sécurité, monorepo natif |
-| Monorepo | Turborepo | Séparation claire app/crypto/ui |
-| Installation | Script bash + Docker Compose | One-command pour les users |
-| Convex mode | Cloud ou Self-hosted | Choix interactif à l'installation |
+| Sujet           | Décision                         | Raison                                     |
+| --------------- | -------------------------------- | ------------------------------------------ |
+| Approche        | Web-first + PWA                  | Éviter complexité React Native au départ   |
+| UI Framework    | ShadCN + Tailwind                | Composants dans le repo, standard Next.js  |
+| Backend         | Convex                           | Realtime, TypeScript natif, self-hostable  |
+| Auth            | Passkey (WebAuthn) + Convex Auth | Biométrie locale, aligné ZK, zéro friction |
+| Auth fallback   | Google / Apple / Email+mdp       | Couverture maximale des cas                |
+| Graph UI        | React Flow                       | Life Map central node                      |
+| Package manager | pnpm                             | Performance, sécurité, monorepo natif      |
+| Monorepo        | Turborepo                        | Séparation claire app/crypto/ui            |
+| Installation    | Script bash + Docker Compose     | One-command pour les users                 |
+| Convex mode     | Cloud ou Self-hosted             | Choix interactif à l'installation          |
 
 ### Sécurité & Licence
 
-| Sujet | Décision | Raison |
-|---|---|---|
-| Licence | AGPL v3 + CLA | Max protection + rachat possible + communauté |
-| Crypto isolation | `packages/crypto/` séparé | Auditabilité indépendante |
-| Accès crypto | CODEOWNERS strict | Fondateurs uniquement |
-| Secrets | Générés localement | Ne transitent jamais par les serveurs Keeplas |
-| Vulnérabilités | Email privé | Pas de GitHub Issues publics |
+| Sujet            | Décision                  | Raison                                        |
+| ---------------- | ------------------------- | --------------------------------------------- |
+| Licence          | AGPL v3 + CLA             | Max protection + rachat possible + communauté |
+| Crypto isolation | `packages/crypto/` séparé | Auditabilité indépendante                     |
+| Accès crypto     | CODEOWNERS strict         | Fondateurs uniquement                         |
+| Secrets          | Générés localement        | Ne transitent jamais par les serveurs Keeplas |
+| Vulnérabilités   | Email privé               | Pas de GitHub Issues publics                  |
 
 ### Produit & UX
 
-| Sujet | Décision | Raison |
-|---|---|---|
-| Recovery | Social (≥threshold contacts) + Recovery Phrase | Double sécurité sans dépendance serveur |
-| Shards | Shamir threshold-of-5 (configurable, 2 par défaut) | User choisit son curseur sécurité ↔ accessibilité à l'onboarding |
+| Sujet               | Décision                                             | Raison                                                           |
+| ------------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
+| Recovery            | Social (≥threshold contacts) + Recovery Phrase       | Double sécurité sans dépendance serveur                          |
+| Shards              | Shamir threshold-of-5 (configurable, 2 par défaut)   | User choisit son curseur sécurité ↔ accessibilité à l'onboarding |
 | Distribution shards | ML-KEM-768 wrap par contact, fan-out à la soumission | Zero-knowledge strict — serveur ne voit jamais un shard en clair |
-| Life Check | Passive First, Active Only If Needed | Zéro friction pour le user vivant |
-| Signaux passifs | Score ≥ 50 pts = validation silencieuse | Multi-sources pour éviter faux positifs |
-| Signaux passifs | Opt-in uniquement, traitement local | Vie privée et transparence |
-| Fréquence | Configurable (hebdo / mensuel / trimestriel) | Adapté à chaque profil |
-| Trimestriel | Tous les canaux actifs obligatoires | Anti-faux-positifs maximal |
-| Dernier check | Affiché avec type de signal | Transparence totale pour le user |
-| Vue contacts | Statut sans détail du signal | Vie privée du user préservée |
-| Rôles contacts | Trust (actif, holds shard) + Recipient (passif) | Modèle simplifié — supprimé B1/B2/B3/B4 et First Responder |
-| Validation | ≥threshold trust contacts confirment "unreachable" | Fail-closed — sans confirmation humaine, vault reste fermé |
-| Grace period | 72h après quorum atteint | User peut encore annuler s'il réapparaît |
-| Onboarding | Discover as You Go | Pas de tunnel — score + nudges + assistant |
-| Banner ⚠️ | Persistant jusqu'au 1er contact | Seule vraie friction acceptée |
-| Explain on Demand | Tooltips ℹ️ partout | Doc intégrée, jamais imposée |
-| Jargon technique | Banni de l'UI | Accessibilité à tous les profils |
+| Life Check          | Passive First, Active Only If Needed                 | Zéro friction pour le user vivant                                |
+| Signaux passifs     | Score ≥ 50 pts = validation silencieuse              | Multi-sources pour éviter faux positifs                          |
+| Signaux passifs     | Opt-in uniquement, traitement local                  | Vie privée et transparence                                       |
+| Fréquence           | Configurable (hebdo / mensuel / trimestriel)         | Adapté à chaque profil                                           |
+| Trimestriel         | Tous les canaux actifs obligatoires                  | Anti-faux-positifs maximal                                       |
+| Dernier check       | Affiché avec type de signal                          | Transparence totale pour le user                                 |
+| Vue contacts        | Statut sans détail du signal                         | Vie privée du user préservée                                     |
+| Rôles contacts      | Trust (actif, holds shard) + Recipient (passif)      | Modèle simplifié — supprimé B1/B2/B3/B4 et First Responder       |
+| Validation          | ≥threshold trust contacts confirment "unreachable"   | Fail-closed — sans confirmation humaine, vault reste fermé       |
+| Grace period        | 72h après quorum atteint                             | User peut encore annuler s'il réapparaît                         |
+| Onboarding          | Discover as You Go                                   | Pas de tunnel — score + nudges + assistant                       |
+| Banner ⚠️           | Persistant jusqu'au 1er contact                      | Seule vraie friction acceptée                                    |
+| Explain on Demand   | Tooltips ℹ️ partout                                  | Doc intégrée, jamais imposée                                     |
+| Jargon technique    | Banni de l'UI                                        | Accessibilité à tous les profils                                 |
 
 ---
 
-*Document généré lors des sessions de conception — Keeplas v1 — Avril 2026 — v5*
-*Prochaine étape : Implémentation packages/crypto/ (ZK circuits Noir)*
+_Document généré lors des sessions de conception — Keeplas v1 — Avril 2026 — v5_
+_Prochaine étape : Implémentation packages/crypto/ (ZK circuits Noir)_

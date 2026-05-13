@@ -40,9 +40,8 @@ const HELP_CONTENT = (
     <strong className="block mt-1">Active</strong> Both halves run normally.
     <strong className="block mt-1">Paused</strong> Indefinite suspension —
     nothing escalates or dispatches until you resume.
-    <strong className="block mt-1">Travel Mode</strong> Same as Paused but
-    with a return date that auto-resumes everything. Tap the badge to
-    manage.
+    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with
+    a return date that auto-resumes everything. Tap the badge to manage.
   </span>
 );
 
@@ -64,10 +63,7 @@ export function ContinuityStatusBadge() {
     } else if (config.travelModeEnabled) {
       status = "travel";
       returnDate = config.travelModeUntil ?? null;
-    } else if (
-      !config.isActive ||
-      scenarioData?.scenario?.isSafePauseActive
-    ) {
+    } else if (!config.isActive || scenarioData?.scenario?.isSafePauseActive) {
       status = "paused";
     } else {
       status = "active";
@@ -101,7 +97,11 @@ export function ContinuityStatusBadge() {
           </p>
         </div>
       </Link>
-      <HelpHint content={HELP_CONTENT} side="right" label="Continuity status help" />
+      <HelpHint
+        content={HELP_CONTENT}
+        side="right"
+        label="Continuity status help"
+      />
     </div>
   );
 }

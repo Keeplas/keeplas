@@ -10,7 +10,7 @@ const SIGNAL_TYPE = v.union(
   v.literal("whatsapp_presence"),
   v.literal("google_activity"),
   v.literal("health_data"),
-  v.literal("apple_watch")
+  v.literal("apple_watch"),
 );
 
 const THROTTLE_MS = 60 * 60 * 1000;
@@ -41,7 +41,7 @@ export const recordSignal = mutation({
     const lastSignal = await ctx.db
       .query("passive_signals")
       .withIndex("by_user_type", (q) =>
-        q.eq("userId", userId).eq("signalType", args.signalType)
+        q.eq("userId", userId).eq("signalType", args.signalType),
       )
       .order("desc")
       .first();

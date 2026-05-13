@@ -38,7 +38,7 @@ function flagFromCode(code: string): string {
   const b = code.charCodeAt(1) - 65;
   return String.fromCodePoint(
     REGIONAL_INDICATOR_OFFSET + a,
-    REGIONAL_INDICATOR_OFFSET + b
+    REGIONAL_INDICATOR_OFFSET + b,
   );
 }
 
@@ -85,7 +85,7 @@ function detectBrowserCountry(): CountryCode | undefined {
 }
 
 function resolveDefaultCountry(
-  preferred: CountryCode | undefined
+  preferred: CountryCode | undefined,
 ): CountryCode {
   if (isKnownCountry(preferred)) return preferred;
   const browser = detectBrowserCountry();
@@ -101,9 +101,7 @@ function safeParse(value: string) {
   }
 }
 
-export function normalizePhone(
-  value: string | undefined
-): string | undefined {
+export function normalizePhone(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const parsed = safeParse(value);
   return parsed?.isValid() ? parsed.number : undefined;
@@ -128,7 +126,10 @@ function stripToSignificantDigits(raw: string): string {
  * the input — the same grouping as the international format minus the
  * leading "+<dial> " prefix. Falls back to raw digits if formatting fails.
  */
-function formatNationalNoTrunk(country: CountryCode, digits: string): {
+function formatNationalNoTrunk(
+  country: CountryCode,
+  digits: string,
+): {
   display: string;
   e164: string | undefined;
 } {
@@ -153,7 +154,7 @@ function examplePlaceholder(country: CountryCode): string {
     if (!example) return "";
     return stripDialPrefix(
       example.formatInternational(),
-      getCountryCallingCode(country)
+      getCountryCallingCode(country),
     );
   } catch {
     return "";
@@ -182,7 +183,7 @@ export function PhoneInput({
   className,
 }: PhoneInputProps) {
   const [country, setCountry] = React.useState<CountryCode>(() =>
-    resolveDefaultCountry(defaultCountry)
+    resolveDefaultCountry(defaultCountry),
   );
   const [nationalDisplay, setNationalDisplay] = React.useState<string>("");
   const [internalInvalid, setInternalInvalid] = React.useState(false);
@@ -206,8 +207,8 @@ export function PhoneInput({
         setNationalDisplay(
           stripDialPrefix(
             parsed.formatInternational(),
-            parsed.countryCallingCode
-          )
+            parsed.countryCallingCode,
+          ),
         );
         setInternalInvalid(!parsed.isValid());
         return;
@@ -227,7 +228,7 @@ export function PhoneInput({
       lastEmitted.current = next;
       onChange(next);
     },
-    [onChange]
+    [onChange],
   );
 
   function handleNationalChange(raw: string) {
@@ -246,8 +247,7 @@ export function PhoneInput({
       if (detected && isKnownCountry(detected)) {
         setCountry(detected);
         const callingCode = getCountryCallingCode(detected);
-        const intl =
-          formatter.getNumber()?.formatInternational() ?? raw.trim();
+        const intl = formatter.getNumber()?.formatInternational() ?? raw.trim();
         setNationalDisplay(stripDialPrefix(intl, callingCode));
         const number = formatter.getNumber()?.number;
         setInternalInvalid(!formatter.getNumber()?.isValid());
@@ -311,7 +311,7 @@ export function PhoneInput({
             aria-label="Select country"
             className={cn(
               "flex items-center gap-1.5 px-3 py-3 bg-surface-container-low border border-outline-variant rounded-l-xl border-r-0 text-on-surface hover:border-outline focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shrink-0",
-              showInvalid && "border-error"
+              showInvalid && "border-error",
             )}
           >
             <span aria-hidden className="text-base leading-none">
@@ -336,10 +336,7 @@ export function PhoneInput({
             </svg>
           </button>
         </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          className="w-[320px] p-0 max-h-[360px]"
-        >
+        <PopoverContent align="start" className="w-[320px] p-0 max-h-[360px]">
           <Command>
             <CommandInput placeholder="Search country" />
             <CommandList>
@@ -376,7 +373,7 @@ export function PhoneInput({
         aria-invalid={showInvalid || undefined}
         className={cn(
           "rounded-l-none border-l-0 flex-1 min-w-0",
-          showInvalid && "border-error focus:border-error"
+          showInvalid && "border-error focus:border-error",
         )}
       />
     </div>

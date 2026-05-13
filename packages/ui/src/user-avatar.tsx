@@ -8,8 +8,7 @@ const sizeClasses = {
   xl: "w-20 h-20 text-xl",
 } as const;
 
-export interface UserAvatarProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface UserAvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   imageUrl?: string | null;
   initials: string;
   alt?: string;
@@ -34,7 +33,7 @@ const UserAvatar = React.forwardRef<HTMLDivElement, UserAvatarProps>(
       onImageError,
       ...props
     },
-    ref
+    ref,
   ) => {
     const sizeClass = sizeClasses[size];
     const baseRound = "rounded-full shrink-0";
@@ -46,7 +45,13 @@ const UserAvatar = React.forwardRef<HTMLDivElement, UserAvatarProps>(
           src={imageUrl}
           alt={alt ?? initials}
           onError={onImageError}
-          className={cn(baseRound, "object-cover", sizeClass, imageClassName, className)}
+          className={cn(
+            baseRound,
+            "object-cover",
+            sizeClass,
+            imageClassName,
+            className,
+          )}
         />
       );
     }
@@ -59,14 +64,14 @@ const UserAvatar = React.forwardRef<HTMLDivElement, UserAvatarProps>(
           "flex items-center justify-center font-headline font-bold",
           sizeClass,
           fallbackClassName,
-          className
+          className,
         )}
         {...props}
       >
         {initials}
       </div>
     );
-  }
+  },
 );
 UserAvatar.displayName = "UserAvatar";
 

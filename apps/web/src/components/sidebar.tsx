@@ -19,13 +19,21 @@ const CHEVRON_EXPAND = "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9";
 const navItems: Array<{ label: string; href: string; iconPath: string }> = [
   { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
   { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
-  { label: "Trusted Circle", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
+  {
+    label: "Trusted Circle",
+    href: "/trusted-contacts",
+    iconPath: ICON_PATHS.users,
+  },
   {
     label: "Continuity Protocol",
     href: "/life-check",
     iconPath: ICON_PATHS.heartbeat,
   },
-  { label: "Shared with me", href: "/shared-with-me", iconPath: ICON_PATHS.share },
+  {
+    label: "Shared with me",
+    href: "/shared-with-me",
+    iconPath: ICON_PATHS.share,
+  },
 ];
 
 const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
@@ -72,9 +80,7 @@ export function Sidebar() {
             height={40}
             className="shrink-0"
           />
-          <span className="text-headline-md text-primary">
-            Keeplas
-          </span>
+          <span className="text-headline-md text-primary">Keeplas</span>
         </Link>
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -90,7 +96,7 @@ export function Sidebar() {
                       "flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1",
                       isActive
                         ? "bg-secondary text-on-secondary shadow-lg"
-                        : "text-secondary/70 hover:bg-surface-container-highest"
+                        : "text-secondary/70 hover:bg-surface-container-highest",
                     )}
                   >
                     <Icon path={path} />
@@ -111,7 +117,7 @@ export function Sidebar() {
               "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
               isSettingsActive
                 ? "bg-secondary text-on-secondary shadow-lg"
-                : "text-secondary/70 hover:bg-surface-container-highest"
+                : "text-secondary/70 hover:bg-surface-container-highest",
             )}
           >
             <SettingsIcon />
@@ -172,9 +178,7 @@ export function Sidebar() {
             width={28}
             height={28}
           />
-          <span className="text-headline-sm text-primary">
-            Keeplas
-          </span>
+          <span className="text-headline-sm text-primary">Keeplas</span>
         </Link>
         <div className="flex items-center gap-2">
           <NotificationsMenu variant="icon" />
@@ -207,7 +211,7 @@ export function Sidebar() {
                     "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
                     isActive
                       ? "text-secondary-fixed"
-                      : "text-on-primary/60 hover:text-on-primary/80"
+                      : "text-on-primary/60 hover:text-on-primary/80",
                   )}
                 >
                   <Icon path={item.iconPath} />
@@ -225,7 +229,7 @@ export function Sidebar() {
                 "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
                 isSettingsActive
                   ? "text-secondary-fixed"
-                  : "text-on-primary/60 hover:text-on-primary/80"
+                  : "text-on-primary/60 hover:text-on-primary/80",
               )}
             >
               <SettingsIcon />

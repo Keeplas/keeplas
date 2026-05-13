@@ -30,10 +30,14 @@ interface NotificationsMenuProps {
   variant?: "sidebar" | "icon";
 }
 
-export function NotificationsMenu({ variant = "sidebar" }: NotificationsMenuProps) {
+export function NotificationsMenu({
+  variant = "sidebar",
+}: NotificationsMenuProps) {
   const [open, setOpen] = useState(false);
   const unreadCount = useQuery(api.notifications.getUnreadCount);
-  const notifications = useQuery(api.notifications.getNotifications, { limit: 20 });
+  const notifications = useQuery(api.notifications.getNotifications, {
+    limit: 20,
+  });
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
 
@@ -128,7 +132,7 @@ export function NotificationsMenu({ variant = "sidebar" }: NotificationsMenuProp
                     }}
                     className={cn(
                       "w-full text-left p-4 rounded-2xl bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors cursor-pointer",
-                      !n.isRead && "border-secondary/30"
+                      !n.isRead && "border-secondary/30",
                     )}
                   >
                     <div className="flex items-start gap-3">

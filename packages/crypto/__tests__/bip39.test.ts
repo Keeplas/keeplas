@@ -66,10 +66,10 @@ describe("BIP-39 Recovery Phrase", () => {
 
     it("rejects entropy that is not 32 bytes", async () => {
       await expect(entropyToPhrase(new Uint8Array(16))).rejects.toThrow(
-        "32 bytes"
+        "32 bytes",
       );
       await expect(entropyToPhrase(new Uint8Array(64))).rejects.toThrow(
-        "32 bytes"
+        "32 bytes",
       );
     });
 

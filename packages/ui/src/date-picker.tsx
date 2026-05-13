@@ -56,7 +56,7 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
       locale,
       align = "start",
     },
-    ref
+    ref,
   ) => {
     const [open, setOpen] = React.useState(false);
     const selectedDate = parseISO(value);
@@ -74,7 +74,7 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             "data-[state=open]:bg-surface-container-high",
             "disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",
             selectedDate ? "text-on-surface" : "text-outline-variant",
-            className
+            className,
           )}
         >
           <span className="truncate">
@@ -112,6 +112,6 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
         </PopoverContent>
       </Popover>
     );
-  }
+  },
 );
 DatePicker.displayName = "DatePicker";

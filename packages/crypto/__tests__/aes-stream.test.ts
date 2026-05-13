@@ -32,7 +32,11 @@ describe("AES-GCM streaming", () => {
     const data = randomBytes(chunkSize * 3 + 1234);
     const blob = new Blob([data]);
 
-    const { cipherBlob, chunkCount } = await encryptStream(blob, key, chunkSize);
+    const { cipherBlob, chunkCount } = await encryptStream(
+      blob,
+      key,
+      chunkSize,
+    );
     expect(chunkCount).toBe(4);
 
     const decrypted = await decryptStream(cipherBlob, key, chunkSize);
@@ -45,7 +49,11 @@ describe("AES-GCM streaming", () => {
     const data = randomBytes(chunkSize * 2);
     const blob = new Blob([data]);
 
-    const { cipherBlob, chunkCount } = await encryptStream(blob, key, chunkSize);
+    const { cipherBlob, chunkCount } = await encryptStream(
+      blob,
+      key,
+      chunkSize,
+    );
     expect(chunkCount).toBe(2);
 
     const decrypted = await decryptStream(cipherBlob, key, chunkSize);
@@ -81,7 +89,7 @@ describe("AES-GCM streaming", () => {
     const b = await encryptStream(blob, key);
 
     expect(await blobToUint8(a.cipherBlob)).not.toEqual(
-      await blobToUint8(b.cipherBlob)
+      await blobToUint8(b.cipherBlob),
     );
   });
 });

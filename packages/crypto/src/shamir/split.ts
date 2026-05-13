@@ -13,11 +13,12 @@ import { gfEvalPoly } from "./gf256";
 export async function split(
   secret: Uint8Array,
   totalShares: number = 5,
-  threshold: number = 3
+  threshold: number = 3,
 ): Promise<Uint8Array[]> {
   if (totalShares < 2) throw new Error("Need at least 2 shares");
   if (threshold < 2) throw new Error("Threshold must be at least 2");
-  if (threshold > totalShares) throw new Error("Threshold cannot exceed total shares");
+  if (threshold > totalShares)
+    throw new Error("Threshold cannot exceed total shares");
   if (totalShares > 255) throw new Error("Maximum 255 shares (GF(256) limit)");
   if (secret.length === 0) throw new Error("Secret cannot be empty");
 

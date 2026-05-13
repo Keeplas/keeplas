@@ -3,14 +3,7 @@
 import { useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import {
-  Button,
-  cn,
-  ErrorAlert,
-  Icon,
-  Loader,
-  Textarea,
-} from "@keeplas/ui";
+import { Button, cn, ErrorAlert, Icon, Loader, Textarea } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { QRCodeSVG } from "@/components/qr-code-svg";
@@ -18,7 +11,10 @@ import { QRCodeSVG } from "@/components/qr-code-svg";
 const GRAIN_DATA_URL =
   "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")";
 
-function buildDocumentId(creationTime: number | undefined, userId: string | undefined) {
+function buildDocumentId(
+  creationTime: number | undefined,
+  userId: string | undefined,
+) {
   const date = new Date(creationTime ?? 0);
   const yyyy = date.getUTCFullYear().toString().padStart(4, "0");
   const mm = (date.getUTCMonth() + 1).toString().padStart(2, "0");
@@ -54,12 +50,16 @@ export default function RecoveryKitPage() {
   const [exporting, setExporting] = useState(false);
   const printableRef = useRef<HTMLElement>(null);
 
-  if (user === undefined) return <Loader fullscreen label="Loading recovery kit" />;
+  if (user === undefined)
+    return <Loader fullscreen label="Loading recovery kit" />;
 
   const revealed = words !== null;
   const displayedWords = words ?? PLACEHOLDER_WORDS;
 
-  const documentId = buildDocumentId(user?._creationTime, user?._id ?? undefined);
+  const documentId = buildDocumentId(
+    user?._creationTime,
+    user?._id ?? undefined,
+  );
   const generatedAt = formatKitTimestamp(user?._creationTime);
 
   async function handleExportPdf() {
@@ -105,13 +105,12 @@ export default function RecoveryKitPage() {
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 print:hidden">
         <div className="max-w-2xl space-y-4">
-          <h1 className="text-headline-lg text-primary">
-            Master Recovery Key
-          </h1>
+          <h1 className="text-headline-lg text-primary">Master Recovery Key</h1>
           <p className="text-body-lg text-on-surface-variant">
-            This document is the sole method for recovering your Keeplas Architectural Vault
-            should you lose access. Keep it in a physically secure, fireproof location. Do
-            not share these credentials with anyone.
+            This document is the sole method for recovering your Keeplas
+            Architectural Vault should you lose access. Keep it in a physically
+            secure, fireproof location. Do not share these credentials with
+            anyone.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -162,9 +161,7 @@ export default function RecoveryKitPage() {
         <aside className="w-full md:w-1/3 bg-primary text-on-primary-container p-10 md:p-12 flex flex-col justify-between relative">
           <div className="space-y-12 relative z-10">
             <div className="space-y-1">
-              <div className="text-headline-md text-white">
-                Keeplas
-              </div>
+              <div className="text-headline-md text-white">Keeplas</div>
               <div className="text-label-md opacity-70">
                 The Architectural Vault
               </div>
@@ -185,10 +182,10 @@ export default function RecoveryKitPage() {
           </div>
 
           <div className="mt-12 pt-12 border-t border-white/10 relative z-10">
-            <div className="text-label-md opacity-40 mb-2">
-              Document ID
+            <div className="text-label-md opacity-40 mb-2">Document ID</div>
+            <div className="font-mono text-body-md opacity-60">
+              {documentId}
             </div>
-            <div className="font-mono text-body-md opacity-60">{documentId}</div>
           </div>
         </aside>
 
@@ -203,7 +200,8 @@ export default function RecoveryKitPage() {
               </h2>
               <p className="text-body-md text-on-surface-variant">
                 Scan this code using the Keeplas Recovery portal or any secure
-                Material-compatible device to initiate the vault restoration process.
+                Material-compatible device to initiate the vault restoration
+                process.
               </p>
               <div className="flex flex-col gap-3 pt-2">
                 <CheckItem label="End-to-end encrypted protocol" />
@@ -227,7 +225,7 @@ export default function RecoveryKitPage() {
                 path={revealed ? ICON_PATHS.lockOpen : ICON_PATHS.lock}
                 className={cn(
                   "w-10 h-10 text-on-surface-variant",
-                  revealed ? "opacity-30" : "opacity-60"
+                  revealed ? "opacity-30" : "opacity-60",
                 )}
               />
             </div>
@@ -235,7 +233,12 @@ export default function RecoveryKitPage() {
             {revealed ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {displayedWords.map((word, idx) => (
-                  <PhraseBlock key={idx} index={idx + 1} word={word} masked={false} />
+                  <PhraseBlock
+                    key={idx}
+                    index={idx + 1}
+                    word={word}
+                    masked={false}
+                  />
                 ))}
               </div>
             ) : (
@@ -259,12 +262,15 @@ export default function RecoveryKitPage() {
                 <div
                   className={cn(
                     "w-3.5 h-3.5",
-                    user?.recoveryVerified ? "bg-secondary-fixed" : "bg-outline-variant"
+                    user?.recoveryVerified
+                      ? "bg-secondary-fixed"
+                      : "bg-outline-variant",
                   )}
                   style={{ borderRadius: "50%" }}
                 />
                 <span className="text-label-md font-mono">
-                  SECURE_AUTH_STATUS: {user?.recoveryVerified ? "VALIDATED" : "PENDING"}
+                  SECURE_AUTH_STATUS:{" "}
+                  {user?.recoveryVerified ? "VALIDATED" : "PENDING"}
                 </span>
               </div>
             </BottomInfoCard>
@@ -301,7 +307,11 @@ function QRPanel({ words }: { words: string[] | null }) {
   );
 }
 
-function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void }) {
+function PhraseUnlockForm({
+  onReveal,
+}: {
+  onReveal: (words: string[]) => void;
+}) {
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
 
@@ -333,8 +343,8 @@ function PhraseUnlockForm({ onReveal }: { onReveal: (words: string[]) => void })
             Unlock &amp; Reveal
           </p>
           <p className="text-body-md text-on-surface-variant">
-            Enter your recovery phrase to render the QR and seed grid. Your phrase is
-            processed locally and never sent to Keeplas.
+            Enter your recovery phrase to render the QR and seed grid. Your
+            phrase is processed locally and never sent to Keeplas.
           </p>
         </div>
 
@@ -411,7 +421,7 @@ function PhraseBlock({
     <div
       className={cn(
         "bg-surface-container-low p-4 rounded-xl flex items-center gap-4 group transition-all duration-300",
-        masked ? "opacity-60" : "hover:bg-primary"
+        masked ? "opacity-60" : "hover:bg-primary",
       )}
     >
       <span
@@ -419,7 +429,7 @@ function PhraseBlock({
           "text-label-md",
           masked
             ? "text-on-surface-variant/40"
-            : "text-on-surface-variant/50 group-hover:text-white/50"
+            : "text-on-surface-variant/50 group-hover:text-white/50",
         )}
       >
         {String(index).padStart(2, "0")}
@@ -429,7 +439,7 @@ function PhraseBlock({
           "font-mono text-body-md font-bold uppercase tracking-wider truncate",
           masked
             ? "text-outline-variant"
-            : "text-primary group-hover:text-white"
+            : "text-primary group-hover:text-white",
         )}
       >
         {word}
@@ -458,9 +468,7 @@ function BottomInfoCard({
         <Icon path={icon} className="w-5 h-5 text-primary" />
       </div>
       <div className="space-y-1">
-        <div className="text-label-md text-on-surface">
-          {title}
-        </div>
+        <div className="text-label-md text-on-surface">{title}</div>
         {children}
         <p className="text-body-md text-on-surface-variant">{description}</p>
       </div>

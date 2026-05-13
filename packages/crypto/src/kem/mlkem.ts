@@ -39,7 +39,7 @@ export function generateRecipientKeyPair(): RecipientKeyPair {
 export function serializePublicKey(publicKey: Uint8Array): string {
   if (publicKey.length !== ML_KEM_PUBLIC_KEY_BYTES) {
     throw new Error(
-      `Public key must be exactly ${ML_KEM_PUBLIC_KEY_BYTES} bytes`
+      `Public key must be exactly ${ML_KEM_PUBLIC_KEY_BYTES} bytes`,
     );
   }
   return uint8ToBase64(publicKey);
@@ -49,7 +49,7 @@ export function parsePublicKey(serialized: string): Uint8Array {
   const bytes = base64ToUint8(serialized);
   if (bytes.length !== ML_KEM_PUBLIC_KEY_BYTES) {
     throw new Error(
-      `Decoded public key must be exactly ${ML_KEM_PUBLIC_KEY_BYTES} bytes`
+      `Decoded public key must be exactly ${ML_KEM_PUBLIC_KEY_BYTES} bytes`,
     );
   }
   return bytes;
@@ -58,7 +58,7 @@ export function parsePublicKey(serialized: string): Uint8Array {
 export function serializeSecretKey(secretKey: Uint8Array): string {
   if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
-      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`
+      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
     );
   }
   return uint8ToBase64(secretKey);
@@ -68,14 +68,14 @@ export function parseSecretKey(serialized: string): Uint8Array {
   const bytes = base64ToUint8(serialized);
   if (bytes.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
-      `Decoded secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`
+      `Decoded secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
     );
   }
   return bytes;
 }
 
 async function importAesKeyFromSharedSecret(
-  sharedSecret: Uint8Array
+  sharedSecret: Uint8Array,
 ): Promise<CryptoKey> {
   const buf = new Uint8Array(sharedSecret.length);
   buf.set(sharedSecret);
@@ -84,7 +84,7 @@ async function importAesKeyFromSharedSecret(
     buf,
     { name: "AES-GCM", length: 256 },
     false,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -98,14 +98,13 @@ async function importAesKeyFromSharedSecret(
  */
 export async function wrapDek(
   dek: CryptoKey,
-  recipientPublicKeyB64: string
+  recipientPublicKeyB64: string,
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
-  const { cipherText, sharedSecret } = ml_kem768.encapsulate(
-    recipientPublicKey
-  );
+  const { cipherText, sharedSecret } =
+    ml_kem768.encapsulate(recipientPublicKey);
   const wrapKey = await importAesKeyFromSharedSecret(
-    new Uint8Array(sharedSecret)
+    new Uint8Array(sharedSecret),
   );
   const rawDek = new Uint8Array(await crypto.subtle.exportKey("raw", dek));
   try {
@@ -115,7 +114,7 @@ export async function wrapDek(
     const ciphertext = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       wrapKey,
-      buf
+      buf,
     );
     const envelope: DekEnvelope = {
       v: 1,
@@ -132,14 +131,13 @@ export async function wrapDek(
 
 export async function wrapBytes(
   raw: Uint8Array,
-  recipientPublicKeyB64: string
+  recipientPublicKeyB64: string,
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
-  const { cipherText, sharedSecret } = ml_kem768.encapsulate(
-    recipientPublicKey
-  );
+  const { cipherText, sharedSecret } =
+    ml_kem768.encapsulate(recipientPublicKey);
   const wrapKey = await importAesKeyFromSharedSecret(
-    new Uint8Array(sharedSecret)
+    new Uint8Array(sharedSecret),
   );
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const buf = new Uint8Array(raw.byteLength);
@@ -147,7 +145,7 @@ export async function wrapBytes(
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     wrapKey,
-    buf
+    buf,
   );
   const envelope: DekEnvelope = {
     v: 1,
@@ -186,18 +184,18 @@ function parseEnvelope(envelopeStr: string): DekEnvelope {
  */
 export async function unwrapDek(
   envelopeStr: string,
-  secretKey: Uint8Array
+  secretKey: Uint8Array,
 ): Promise<CryptoKey> {
   if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
-      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`
+      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
     );
   }
   const envelope = parseEnvelope(envelopeStr);
   const cipherText = base64ToUint8(envelope.kem);
   if (cipherText.length !== ML_KEM_CIPHERTEXT_BYTES) {
     throw new Error(
-      `KEM ciphertext must be exactly ${ML_KEM_CIPHERTEXT_BYTES} bytes`
+      `KEM ciphertext must be exactly ${ML_KEM_CIPHERTEXT_BYTES} bytes`,
     );
   }
   const sharedSecretRet = ml_kem768.decapsulate(cipherText, secretKey);
@@ -209,7 +207,7 @@ export async function unwrapDek(
     const rawDekBuf = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       wrapKey,
-      ct
+      ct,
     );
     const rawDek = new Uint8Array(rawDekBuf);
     try {
@@ -218,7 +216,7 @@ export async function unwrapDek(
         rawDek,
         { name: "AES-GCM", length: 256 },
         true,
-        ["encrypt", "decrypt"]
+        ["encrypt", "decrypt"],
       );
     } finally {
       rawDek.fill(0);
@@ -230,11 +228,11 @@ export async function unwrapDek(
 
 export async function unwrapBytes(
   envelopeStr: string,
-  secretKey: Uint8Array
+  secretKey: Uint8Array,
 ): Promise<Uint8Array> {
   if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
-      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`
+      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
     );
   }
   const envelope = parseEnvelope(envelopeStr);
@@ -248,7 +246,7 @@ export async function unwrapBytes(
     const rawBuf = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       wrapKey,
-      ct
+      ct,
     );
     return new Uint8Array(rawBuf);
   } finally {

@@ -6,17 +6,57 @@ import {
 } from "../src/kdf";
 
 const TEST_PHRASE_24 = [
-  "abandon", "ability", "able", "about", "above", "absent",
-  "absorb", "abstract", "absurd", "abuse", "access", "accident",
-  "account", "accuse", "achieve", "acid", "acoustic", "acquire",
-  "across", "act", "action", "actor", "actress", "actual",
+  "abandon",
+  "ability",
+  "able",
+  "about",
+  "above",
+  "absent",
+  "absorb",
+  "abstract",
+  "absurd",
+  "abuse",
+  "access",
+  "accident",
+  "account",
+  "accuse",
+  "achieve",
+  "acid",
+  "acoustic",
+  "acquire",
+  "across",
+  "act",
+  "action",
+  "actor",
+  "actress",
+  "actual",
 ];
 
 const TEST_PHRASE_24_ALT = [
-  "zoo", "zone", "zero", "yellow", "year", "wrong",
-  "abandon", "ability", "able", "about", "above", "absent",
-  "absorb", "abstract", "absurd", "abuse", "access", "accident",
-  "account", "accuse", "achieve", "acid", "acoustic", "acquire",
+  "zoo",
+  "zone",
+  "zero",
+  "yellow",
+  "year",
+  "wrong",
+  "abandon",
+  "ability",
+  "able",
+  "about",
+  "above",
+  "absent",
+  "absorb",
+  "abstract",
+  "absurd",
+  "abuse",
+  "access",
+  "accident",
+  "account",
+  "accuse",
+  "achieve",
+  "acid",
+  "acoustic",
+  "acquire",
 ];
 
 function fixedSalt(byte: number = 0x42): Uint8Array {
@@ -38,8 +78,12 @@ describe("KDF Argon2id", () => {
   describe("deriveRootKey", () => {
     it("returns the same key for the same (phrase, salt)", async () => {
       const salt = fixedSalt();
-      const a = await deriveRootKey(TEST_PHRASE_24, salt, { extractable: true });
-      const b = await deriveRootKey(TEST_PHRASE_24, salt, { extractable: true });
+      const a = await deriveRootKey(TEST_PHRASE_24, salt, {
+        extractable: true,
+      });
+      const b = await deriveRootKey(TEST_PHRASE_24, salt, {
+        extractable: true,
+      });
       expect(await exportRaw(a)).toEqual(await exportRaw(b));
     });
 
@@ -55,7 +99,9 @@ describe("KDF Argon2id", () => {
 
     it("returns a different key when the phrase changes", async () => {
       const salt = fixedSalt();
-      const a = await deriveRootKey(TEST_PHRASE_24, salt, { extractable: true });
+      const a = await deriveRootKey(TEST_PHRASE_24, salt, {
+        extractable: true,
+      });
       const b = await deriveRootKey(TEST_PHRASE_24_ALT, salt, {
         extractable: true,
       });
@@ -70,7 +116,9 @@ describe("KDF Argon2id", () => {
         extractable: true,
       });
       const fromUpper = await deriveRootKey(upper, salt, { extractable: true });
-      const fromString = await deriveRootKey(joined, salt, { extractable: true });
+      const fromString = await deriveRootKey(joined, salt, {
+        extractable: true,
+      });
       const raw = await exportRaw(fromArray);
       expect(await exportRaw(fromUpper)).toEqual(raw);
       expect(await exportRaw(fromString)).toEqual(raw);
@@ -78,7 +126,7 @@ describe("KDF Argon2id", () => {
 
     it("rejects salts shorter than 16 bytes", async () => {
       await expect(
-        deriveRootKey(TEST_PHRASE_24, new Uint8Array(8))
+        deriveRootKey(TEST_PHRASE_24, new Uint8Array(8)),
       ).rejects.toThrow(/salt/i);
     });
 
@@ -94,12 +142,12 @@ describe("KDF Argon2id", () => {
       const ciphertext = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         key,
-        plaintext
+        plaintext,
       );
       const decrypted = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv },
         key,
-        ciphertext
+        ciphertext,
       );
       expect(new TextDecoder().decode(decrypted)).toBe("hello vault");
     });
@@ -114,21 +162,21 @@ describe("KDF Argon2id", () => {
       const ct = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         a,
-        new TextEncoder().encode("ping")
+        new TextEncoder().encode("ping"),
       );
       const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, b, ct);
       expect(new TextDecoder().decode(pt)).toBe("ping");
     });
 
     it("rejects empty secrets", async () => {
-      await expect(
-        deriveDeviceWrapKey("", fixedSalt())
-      ).rejects.toThrow(/empty/);
+      await expect(deriveDeviceWrapKey("", fixedSalt())).rejects.toThrow(
+        /empty/,
+      );
     });
 
     it("rejects salts shorter than 16 bytes", async () => {
       await expect(
-        deriveDeviceWrapKey("123456", new Uint8Array(4))
+        deriveDeviceWrapKey("123456", new Uint8Array(4)),
       ).rejects.toThrow(/salt/i);
     });
   });

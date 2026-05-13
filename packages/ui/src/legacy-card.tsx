@@ -13,7 +13,7 @@ const LegacyCard = React.forwardRef<
     ref={ref}
     className={cn(
       "rounded-full bg-primary-container p-6 text-on-primary-container",
-      className
+      className,
     )}
     {...props}
   />
@@ -24,14 +24,7 @@ const LegacyCardTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      "text-headline-sm",
-      className
-    )}
-    {...props}
-  />
+  <h3 ref={ref} className={cn("text-headline-sm", className)} {...props} />
 ));
 LegacyCardTitle.displayName = "LegacyCardTitle";
 

@@ -52,7 +52,7 @@ function formatBytes(bytes: number): string {
 function uploadWithProgress(
   url: string,
   body: Blob,
-  onProgress: (loaded: number) => void
+  onProgress: (loaded: number) => void,
 ): Promise<StorageRef> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -70,9 +70,7 @@ function uploadWithProgress(
           resolve(parsed.storageId);
         } catch (err) {
           reject(
-            err instanceof Error
-              ? err
-              : new Error("Malformed upload response")
+            err instanceof Error ? err : new Error("Malformed upload response"),
           );
         }
       } else {
@@ -88,7 +86,7 @@ function uploadWithProgress(
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const { encryptBlobWithKey } = useVaultCrypto();
   const generateUploadUrl = useAuditedMutation(
-    api.vault_items.generateUploadUrl
+    api.vault_items.generateUploadUrl,
   );
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
 
@@ -116,7 +114,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         handle.update({
           id: handle.id,
           description: `${label} — ${completed}/${files.length} done · ${formatBytes(
-            done
+            done,
           )} / ${formatBytes(totalBytes)}`,
         });
       };
@@ -128,10 +126,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
           if (i >= files.length) return;
           const file = files[i];
           try {
-            const { cipherBlob, iv } = await encryptBlobWithKey(
-              file.blob,
-              dek
-            );
+            const { cipherBlob, iv } = await encryptBlobWithKey(file.blob, dek);
             const url = await generateUploadUrl();
             const storageId = await uploadWithProgress(
               url,
@@ -139,7 +134,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
               (loaded) => {
                 fileBytesUploaded[i] = Math.min(loaded, file.blob.size);
                 refreshToast();
-              }
+              },
             );
             await addItemFiles({
               itemId,
@@ -168,9 +163,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       };
 
       const slotCount = Math.min(MAX_CONCURRENT_UPLOADS, files.length);
-      await Promise.all(
-        Array.from({ length: slotCount }, () => runSlot())
-      );
+      await Promise.all(Array.from({ length: slotCount }, () => runSlot()));
 
       if (failed.length === 0) {
         handle.update({
@@ -205,7 +198,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [encryptBlobWithKey, generateUploadUrl, addItemFiles]
+    [encryptBlobWithKey, generateUploadUrl, addItemFiles],
   );
 
   const enqueueAttachments = useCallback(
@@ -213,13 +206,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       if (args.files.length === 0) return;
       void runJob(args);
     },
-    [runJob]
+    [runJob],
   );
 
-  const value = useMemo(
-    () => ({ enqueueAttachments }),
-    [enqueueAttachments]
-  );
+  const value = useMemo(() => ({ enqueueAttachments }), [enqueueAttachments]);
 
   return (
     <UploadQueueContext.Provider value={value}>
@@ -232,7 +222,7 @@ export function useUploadQueue(): UploadQueueContextValue {
   const ctx = useContext(UploadQueueContext);
   if (!ctx) {
     throw new Error(
-      "useUploadQueue must be used inside <UploadQueueProvider>."
+      "useUploadQueue must be used inside <UploadQueueProvider>.",
     );
   }
   return ctx;

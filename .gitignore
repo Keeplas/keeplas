@@ -17,6 +17,8 @@ out/
 
 # IDE
 .vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -37,6 +39,9 @@ coverage/
 
 # Convex
 .convex/
+# Stale codegen output when `convex dev` runs from packages/convex/ instead of repo
+# root. Tracked issue: configure Convex to honor root convex.json. See ARCHITECTURE.md.
+packages/convex/convex/
 
 # Misc
 *.tsbuildinfo

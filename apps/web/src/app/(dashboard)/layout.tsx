@@ -21,16 +21,16 @@ export default function DashboardLayout({
   const router = useRouter();
   const onboardingState = useQuery(
     api.onboarding.getOnboardingState,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
   const totpGate = useQuery(
     api.totp.getMyTotpGate,
-    isAuthenticated ? {} : "skip"
+    isAuthenticated ? {} : "skip",
   );
 
   useRestoreMasterKey();
   usePassiveSignal(
-    isAuthenticated && onboardingState?.onboardingStep === "complete"
+    isAuthenticated && onboardingState?.onboardingStep === "complete",
   );
 
   useEffect(() => {

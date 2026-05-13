@@ -99,7 +99,12 @@ export {
 } from "./toast";
 export { Toaster } from "./toaster";
 export { toast, useToast } from "./use-toast";
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./tooltip";
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
 export { UserAvatar, type UserAvatarProps } from "./user-avatar";
 export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
 export { HelpHint, type HelpHintProps } from "./help-hint";

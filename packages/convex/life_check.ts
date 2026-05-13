@@ -52,7 +52,7 @@ export const saveConfig = mutation({
     frequency: v.union(
       v.literal("weekly"),
       v.literal("monthly"),
-      v.literal("quarterly")
+      v.literal("quarterly"),
     ),
     activeChannels: v.array(
       v.object({
@@ -61,12 +61,12 @@ export const saveConfig = mutation({
           v.literal("email"),
           v.literal("whatsapp"),
           v.literal("sms"),
-          v.literal("ivr_call")
+          v.literal("ivr_call"),
         ),
         order: v.number(),
         isEnabled: v.boolean(),
         delayHours: v.number(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -176,9 +176,7 @@ export const toggleTravelMode = mutation({
       userId,
       actorType: "user",
       actorId: userId,
-      action: args.enabled
-        ? "travel_mode_enabled"
-        : "travel_mode_disabled",
+      action: args.enabled ? "travel_mode_enabled" : "travel_mode_disabled",
       resourceType: "life_check_config",
       resourceId: config._id,
     });
@@ -201,7 +199,7 @@ export const validateCycle = mutation({
     const cycle = await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running")
+        q.eq("userId", userId).eq("status", "running"),
       )
       .first();
 
@@ -210,7 +208,7 @@ export const validateCycle = mutation({
       (await ctx.db
         .query("life_check_cycles")
         .withIndex("by_status", (q) =>
-          q.eq("userId", userId).eq("status", "escalating")
+          q.eq("userId", userId).eq("status", "escalating"),
         )
         .first());
 
@@ -260,11 +258,7 @@ export const validateCycle = mutation({
  */
 export const postponeCycle = mutation({
   args: {
-    duration: v.union(
-      v.literal("48h"),
-      v.literal("7d"),
-      v.literal("custom")
-    ),
+    duration: v.union(v.literal("48h"), v.literal("7d"), v.literal("custom")),
     customDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -294,7 +288,7 @@ export const postponeCycle = mutation({
     const activeCycle = await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running")
+        q.eq("userId", userId).eq("status", "running"),
       )
       .first();
 
@@ -356,7 +350,7 @@ export const getActiveCycle = query({
     const running = await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running")
+        q.eq("userId", userId).eq("status", "running"),
       )
       .first();
 
@@ -365,7 +359,7 @@ export const getActiveCycle = query({
     return await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "escalating")
+        q.eq("userId", userId).eq("status", "escalating"),
       )
       .first();
   },
@@ -378,12 +372,8 @@ type ChannelEntry = {
   delayHours: number;
 };
 
-function enabledChannelsSorted(
-  channels: ChannelEntry[]
-): ChannelEntry[] {
-  return channels
-    .filter((c) => c.isEnabled)
-    .sort((a, b) => a.order - b.order);
+function enabledChannelsSorted(channels: ChannelEntry[]): ChannelEntry[] {
+  return channels.filter((c) => c.isEnabled).sort((a, b) => a.order - b.order);
 }
 
 /**
@@ -394,7 +384,7 @@ function enabledChannelsSorted(
  */
 async function startCycleForConfig(
   ctx: MutationCtx,
-  configId: Id<"life_check_configs">
+  configId: Id<"life_check_configs">,
 ): Promise<Id<"life_check_cycles"> | null> {
   const config = await ctx.db.get(configId);
   if (!config || !config.isActive) return null;
@@ -451,7 +441,7 @@ async function startCycleForConfig(
   const sendId = await ctx.scheduler.runAfter(
     0,
     internal.dispatch.sendChannel,
-    { cycleId, channelType: first.type }
+    { cycleId, channelType: first.type },
   );
 
   const followUpDelay = first.delayHours * 60 * 60 * 1000;
@@ -460,13 +450,13 @@ async function startCycleForConfig(
     nextId = await ctx.scheduler.runAfter(
       followUpDelay,
       internal.life_check.escalateToNextChannel,
-      { cycleId, fromOrder: enabled[1].order }
+      { cycleId, fromOrder: enabled[1].order },
     );
   } else {
     nextId = await ctx.scheduler.runAfter(
       followUpDelay,
       internal.life_check.triggerCycleAndDispatch,
-      { cycleId }
+      { cycleId },
     );
   }
 
@@ -492,7 +482,7 @@ export const initiateCycle = internalMutation({
  */
 export async function cancelPendingSchedules(
   ctx: MutationCtx,
-  cycleId: Id<"life_check_cycles">
+  cycleId: Id<"life_check_cycles">,
 ) {
   const cycle = await ctx.db.get(cycleId);
   if (!cycle) return;
@@ -522,7 +512,7 @@ export async function cancelPendingSchedules(
 export async function recordActivityInternal(
   ctx: MutationCtx,
   userId: Id<"users">,
-  now: number
+  now: number,
 ) {
   const config = await ctx.db
     .query("life_check_configs")
@@ -541,7 +531,7 @@ export async function recordActivityInternal(
   const running = await ctx.db
     .query("life_check_cycles")
     .withIndex("by_status", (q) =>
-      q.eq("userId", userId).eq("status", "running")
+      q.eq("userId", userId).eq("status", "running"),
     )
     .first();
 
@@ -550,7 +540,7 @@ export async function recordActivityInternal(
     (await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "escalating")
+        q.eq("userId", userId).eq("status", "escalating"),
       )
       .first());
 
@@ -615,7 +605,7 @@ export const evaluateAllConfigs = internalMutation({
       const inFlight = await ctx.db
         .query("life_check_cycles")
         .withIndex("by_status", (q) =>
-          q.eq("userId", config.userId).eq("status", "running")
+          q.eq("userId", config.userId).eq("status", "running"),
         )
         .first();
       if (inFlight) continue;
@@ -623,7 +613,7 @@ export const evaluateAllConfigs = internalMutation({
       const escalating = await ctx.db
         .query("life_check_cycles")
         .withIndex("by_status", (q) =>
-          q.eq("userId", config.userId).eq("status", "escalating")
+          q.eq("userId", config.userId).eq("status", "escalating"),
         )
         .first();
       if (escalating) continue;
@@ -670,10 +660,7 @@ export const recordChannelAttempt = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle) return;
-    if (
-      cycle.status === "validated" ||
-      cycle.status === "cancelled"
-    ) {
+    if (cycle.status === "validated" || cycle.status === "cancelled") {
       return;
     }
 
@@ -736,7 +723,7 @@ export const escalateToNextChannel = internalMutation({
     const sendId = await ctx.scheduler.runAfter(
       0,
       internal.dispatch.sendChannel,
-      { cycleId: cycle._id, channelType: current.type }
+      { cycleId: cycle._id, channelType: current.type },
     );
 
     const delay = current.delayHours * 60 * 60 * 1000;
@@ -745,13 +732,13 @@ export const escalateToNextChannel = internalMutation({
       nextId = await ctx.scheduler.runAfter(
         delay,
         internal.life_check.escalateToNextChannel,
-        { cycleId: cycle._id, fromOrder: enabled[idx + 1].order }
+        { cycleId: cycle._id, fromOrder: enabled[idx + 1].order },
       );
     } else {
       nextId = await ctx.scheduler.runAfter(
         delay,
         internal.life_check.triggerCycleAndDispatch,
-        { cycleId: cycle._id }
+        { cycleId: cycle._id },
       );
     }
 
@@ -777,7 +764,7 @@ export const triggerCycleAndDispatch = internalMutation({
 
 async function markCycleTriggered(
   ctx: MutationCtx,
-  cycleId: Id<"life_check_cycles">
+  cycleId: Id<"life_check_cycles">,
 ) {
   const cycle = await ctx.db.get(cycleId);
   if (!cycle) return;
@@ -804,11 +791,10 @@ async function markCycleTriggered(
     resourceId: cycleId,
   });
 
-  await ctx.scheduler.runAfter(
-    0,
-    internal.scenario_engine.dispatchScenario,
-    { userId: cycle.userId, cycleId }
-  );
+  await ctx.scheduler.runAfter(0, internal.scenario_engine.dispatchScenario, {
+    userId: cycle.userId,
+    cycleId,
+  });
 }
 
 /**

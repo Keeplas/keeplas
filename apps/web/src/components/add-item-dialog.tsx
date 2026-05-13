@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type ChangeEvent,
+} from "react";
 import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
@@ -99,9 +106,7 @@ function SectionHeading({ step, title }: { step: string; title: string }) {
       <div className="w-9 h-9 bg-primary text-on-primary rounded-full flex items-center justify-center text-body-md font-bold shrink-0">
         {step}
       </div>
-      <h3 className="text-headline-sm text-primary">
-        {title}
-      </h3>
+      <h3 className="text-headline-sm text-primary">{title}</h3>
     </div>
   );
 }
@@ -140,34 +145,43 @@ function iconForKind(kind: FileKind): string {
   }
 }
 
-export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: AddItemDialogProps) {
+export function AddItemDialog({
+  vaultId,
+  open,
+  onOpenChange,
+  defaultCategory,
+}: AddItemDialogProps) {
   const createItem = useAuditedMutation(api.vault_items.createItem);
-  const {
-    encryptContentWithKey,
-    computeHash,
-    isReady,
-  } = useVaultCrypto();
+  const { encryptContentWithKey, computeHash, isReady } = useVaultCrypto();
   const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
   const { enqueueAttachments } = useUploadQueue();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
   const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
-  const recipientGroups = useMemo(() => recipientGroupsRaw ?? [], [recipientGroupsRaw]);
+  const recipientGroups = useMemo(
+    () => recipientGroupsRaw ?? [],
+    [recipientGroupsRaw],
+  );
   const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
   const [title, setTitle] = useState("");
   // Holds the rich-text body. Always encrypted into `encryptedContent` before
   // upload — never sent to the server in plaintext (zero-knowledge).
   const [body, setBody] = useState("");
-  const [category, setCategory] = useState<VaultCategory>(defaultCategory ?? "personal_document");
+  const [category, setCategory] = useState<VaultCategory>(
+    defaultCategory ?? "personal_document",
+  );
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
-  const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(null);
+  const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(
+    null,
+  );
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [recipientsTouched, setRecipientsTouched] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [triggerType, setTriggerType] = useState<TriggerType>("life_check_failure");
+  const [triggerType, setTriggerType] =
+    useState<TriggerType>("life_check_failure");
   const [releaseDate, setReleaseDate] = useState("");
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<string>("");
@@ -303,7 +317,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
 
   function handleRecorded(
     blob: Blob,
-    meta: { mimeType: string; durationSec: number }
+    meta: { mimeType: string; durationSec: number },
   ) {
     if (!recorderMode) return;
     const isVideo = recorderMode === "video";
@@ -481,7 +495,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
       if (skippedRecipientIds.length > 0) {
         const skippedCount = skippedRecipientIds.length;
         setProgress(
-          `Sealed. ${skippedCount} recipient${skippedCount === 1 ? "" : "s"} won't receive this item until they accept their invitation.`
+          `Sealed. ${skippedCount} recipient${skippedCount === 1 ? "" : "s"} won't receive this item until they accept their invitation.`,
         );
       }
 
@@ -502,18 +516,22 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
             <div className="flex items-center gap-2 text-label-md text-secondary">
               <span>Vault</span>
               <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
-              <span className="text-on-surface-variant/50">Secure New Asset</span>
+              <span className="text-on-surface-variant/50">
+                Secure New Asset
+              </span>
             </div>
-            <DialogTitle className="text-headline-md">
-              Add to Vault
-            </DialogTitle>
+            <DialogTitle className="text-headline-md">Add to Vault</DialogTitle>
             <DialogDescription className="text-body-md max-w-md">
               Deposit a critical asset. Files are encrypted on your device
               before they leave. AES-256-GCM.
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
-            <Icon path={ICON_PATHS.close} className="w-5 h-5 text-on-surface-variant" strokeWidth={2} />
+            <Icon
+              path={ICON_PATHS.close}
+              className="w-5 h-5 text-on-surface-variant"
+              strokeWidth={2}
+            />
           </DialogClose>
         </DialogHeader>
 
@@ -699,18 +717,24 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   className={cn(
                     "border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
                     "hover:bg-surface-container-high/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-                    isDragging && "bg-surface-container-high/80 border-secondary/40"
+                    isDragging &&
+                      "bg-surface-container-high/80 border-secondary/40",
                   )}
                 >
                   <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <Icon path={ICON_PATHS.download} className="w-7 h-7 rotate-180" strokeWidth={1.75} />
+                    <Icon
+                      path={ICON_PATHS.download}
+                      className="w-7 h-7 rotate-180"
+                      strokeWidth={1.75}
+                    />
                   </div>
                   <div>
                     <p className="text-headline-sm text-primary">
                       Drag and drop secure files
                     </p>
                     <p className="text-body-md text-on-surface-variant mt-1">
-                      PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.
+                      PDF, JPG, or PNG up to 50 MB per file. Encrypted on
+                      arrival.
                     </p>
                   </div>
                   <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full text-label-md hover:bg-surface-container-highest transition-colors">
@@ -730,7 +754,10 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                       className="bg-surface px-3 py-2.5 rounded-xl flex items-center gap-3 max-w-full"
                     >
                       <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
-                        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
+                        <Icon
+                          path={iconForKind(file.kind)}
+                          className="w-4 h-4"
+                        />
                       </div>
                       <div className="text-left min-w-0">
                         <p className="text-body-md font-bold text-primary truncate max-w-[200px]">
@@ -747,7 +774,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                         aria-label={`Remove ${file.name}`}
                         className="ml-1 p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
                       >
-                        <Icon path={ICON_PATHS.close} className="w-4 h-4" strokeWidth={2} />
+                        <Icon
+                          path={ICON_PATHS.close}
+                          className="w-4 h-4"
+                          strokeWidth={2}
+                        />
                       </button>
                     </div>
                   );
@@ -791,7 +822,7 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                     const labels = selected
                       .map(
                         (v) =>
-                          recipientOptions.find((o) => o.value === v)?.label
+                          recipientOptions.find((o) => o.value === v)?.label,
                       )
                       .filter(Boolean);
                     return (
@@ -804,7 +835,6 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                   group), or specific people. Empty = the item stays private.
                 </p>
               </div>
-
             </div>
           </section>
 
@@ -815,7 +845,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
               onClick={() => handleOpenChange(false)}
               className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-body-md font-bold transition-colors cursor-pointer"
             >
-              <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4 rotate-180" strokeWidth={2} />
+              <Icon
+                path={ICON_PATHS.arrowRight}
+                className="w-4 h-4 rotate-180"
+                strokeWidth={2}
+              />
               Cancel
             </button>
             <div className="flex items-center gap-4">
@@ -832,7 +866,11 @@ export function AddItemDialog({ vaultId, open, onOpenChange, defaultCategory }: 
                 className="gap-3 cursor-pointer"
               >
                 <span>{saving ? "Sealing…" : "Secure Asset to Vault"}</span>
-                <Icon path={ICON_PATHS.lock} className="w-5 h-5" strokeWidth={1.75} />
+                <Icon
+                  path={ICON_PATHS.lock}
+                  className="w-5 h-5"
+                  strokeWidth={1.75}
+                />
               </Button>
             </div>
           </div>

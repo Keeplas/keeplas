@@ -53,12 +53,12 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   const [timezone, setTimezone] = useState(user.timezone ?? "UTC");
   const [currency, setCurrency] = useLocalStorageString(
     STORAGE_KEYS.currency,
-    "USD"
+    "USD",
   );
   const [notifications, setNotifications] =
     useLocalStorageState<NotificationPrefs>(
       STORAGE_KEYS.notifications,
-      DEFAULT_NOTIFICATIONS
+      DEFAULT_NOTIFICATIONS,
     );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -120,9 +120,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-label-md text-secondary">
-                Timezone
-              </Label>
+              <Label className="text-label-md text-secondary">Timezone</Label>
               <Select
                 value={timezone}
                 onValueChange={setTimezone}
@@ -156,11 +154,10 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
 
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
-            <h2 className="text-headline-sm text-primary">
-              Alert Preferences
-            </h2>
+            <h2 className="text-headline-sm text-primary">Alert Preferences</h2>
             <p className="text-body-md text-on-surface-variant">
-              Control the frequency of Life Checks and vault synchronization alerts.
+              Control the frequency of Life Checks and vault synchronization
+              alerts.
             </p>
           </div>
           <div className="space-y-5">

@@ -21,16 +21,19 @@ function rpId(): string {
 }
 
 function fromBase64Url(b64url: string): Uint8Array {
-  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/").padEnd(
-    Math.ceil(b64url.length / 4) * 4,
-    "="
-  );
+  const b64 = b64url
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(b64url.length / 4) * 4, "=");
   return base64ToUint8(b64);
 }
 
 function toBase64Url(bytes: Uint8Array | ArrayBuffer): string {
   const u = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  return uint8ToBase64(u).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return uint8ToBase64(u)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 export function isWebAuthnSupported(): boolean {
@@ -48,13 +51,11 @@ interface PrfClientExtensionResults {
   prf?: PrfExtensionResults;
 }
 
-function getPrfFirst(
-  cred: PublicKeyCredential | null
-): Uint8Array | null {
+function getPrfFirst(cred: PublicKeyCredential | null): Uint8Array | null {
   if (!cred) return null;
-  const ext = (cred.getClientExtensionResults() as
+  const ext = cred.getClientExtensionResults() as
     | PrfClientExtensionResults
-    | undefined);
+    | undefined;
   const first = ext?.prf?.results?.first;
   if (!first) return null;
   return new Uint8Array(first);
@@ -63,7 +64,7 @@ function getPrfFirst(
 async function createCredentialWithPrf(
   attachment: "platform" | "cross-platform",
   userEmail: string,
-  prfSalt: Uint8Array
+  prfSalt: Uint8Array,
 ): Promise<PublicKeyCredential> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const userId = crypto.getRandomValues(new Uint8Array(16));
@@ -100,7 +101,7 @@ async function createCredentialWithPrf(
 
 async function evalPrf(
   credentialId: Uint8Array,
-  prfSalt: Uint8Array
+  prfSalt: Uint8Array,
 ): Promise<Uint8Array> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const credIdBuf = new Uint8Array(credentialId.byteLength);
@@ -126,7 +127,7 @@ async function evalPrf(
   if (!prf) {
     throw new DeviceUnlockError(
       "Authenticator does not support PRF or did not return a value",
-      "unsupported"
+      "unsupported",
     );
   }
   return prf;
@@ -147,7 +148,7 @@ export async function enrollWebAuthnPrf(
   userEmail: string,
   masterKey: CryptoKey,
   attachment: "platform" | "cross-platform",
-  label?: string
+  label?: string,
 ): Promise<DeviceUnlockEntry> {
   if (!isWebAuthnSupported()) {
     throw new DeviceUnlockError("WebAuthn not supported", "unsupported");
@@ -158,13 +159,13 @@ export async function enrollWebAuthnPrf(
     credential = await createCredentialWithPrf(attachment, userEmail, prfSalt);
   } catch (err) {
     if ((err as Error).name === "NotAllowedError") {
-      throw new DeviceUnlockError("User cancelled", "cancelled", { cause: err });
+      throw new DeviceUnlockError("User cancelled", "cancelled", {
+        cause: err,
+      });
     }
-    throw new DeviceUnlockError(
-      "Could not create credential",
-      "unsupported",
-      { cause: err }
-    );
+    throw new DeviceUnlockError("Could not create credential", "unsupported", {
+      cause: err,
+    });
   }
 
   const credentialId = new Uint8Array(credential.rawId);
@@ -200,7 +201,7 @@ export async function enrollWebAuthnPrf(
 }
 
 export async function unlockWithWebAuthnPrf(
-  entry: DeviceUnlockEntry
+  entry: DeviceUnlockEntry,
 ): Promise<CryptoKey> {
   if (entry.data.kind !== "webauthn-prf") {
     throw new DeviceUnlockError("Entry is not a WebAuthn entry", "io");
@@ -215,21 +216,21 @@ export async function unlockWithWebAuthnPrf(
     prfSecret = await evalPrf(credentialId, prfSalt);
   } catch (err) {
     if ((err as Error).name === "NotAllowedError") {
-      throw new DeviceUnlockError("User cancelled", "cancelled", { cause: err });
+      throw new DeviceUnlockError("User cancelled", "cancelled", {
+        cause: err,
+      });
     }
     if (err instanceof DeviceUnlockError) throw err;
-    throw new DeviceUnlockError(
-      "Authentication failed",
-      "wrong-secret",
-      { cause: err }
-    );
+    throw new DeviceUnlockError("Authentication failed", "wrong-secret", {
+      cause: err,
+    });
   }
   try {
     const wrapKey = await importWrapKeyFromBytes(prfSecret);
     const raw = await unwrapWithKey(
       entry.data.wrappedMasterKey,
       entry.data.iv,
-      wrapKey
+      wrapKey,
     );
     try {
       return await importMasterKey(raw);

@@ -11,9 +11,9 @@ labels: bug
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behavior
 
@@ -25,6 +25,6 @@ labels: bug
 
 ## Environment
 
-- Browser: 
-- OS: 
-- Keeplas version: 
+- Browser:
+- OS:
+- Keeplas version:

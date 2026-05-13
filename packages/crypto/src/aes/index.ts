@@ -4,4 +4,8 @@
 export { generateMasterKey } from "./masterKey";
 export { encrypt } from "./encrypt";
 export { decrypt } from "./decrypt";
-export { encryptStream, decryptStream, STREAM_CHUNK_SIZE } from "./encryptStream";
+export {
+  encryptStream,
+  decryptStream,
+  STREAM_CHUNK_SIZE,
+} from "./encryptStream";

@@ -3,8 +3,7 @@
 import { HelpHint, Icon } from "@keeplas/ui";
 import { FREQUENCIES, type Frequency } from "./constants";
 
-const CLOCK_ICON =
-  "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
+const CLOCK_ICON = "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 
 interface FrequencySelectorProps {
   value: Frequency;
@@ -20,7 +19,8 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
         <HelpHint content="How long Keeplas waits without hearing from you before kicking off the escalation sequence. Shorter = more frequent confirmations; longer = fewer interruptions but slower release." />
       </h3>
       <p className="text-body-md text-on-surface-variant mb-6">
-        The period of total silence — no logins, no navigation, no signal — before the verification sequence begins. Any activity resets it to zero.
+        The period of total silence — no logins, no navigation, no signal —
+        before the verification sequence begins. Any activity resets it to zero.
       </p>
       <div className="grid grid-cols-3 gap-3">
         {FREQUENCIES.map((freq) => {

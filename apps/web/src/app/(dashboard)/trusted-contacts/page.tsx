@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
-  Button,
   HelpHint,
   Icon,
   InfoCallout,

@@ -74,7 +74,7 @@ export async function getActiveItems(ctx: QueryCtx, userId: Id<"users">) {
 export async function requireItemOwnership(
   ctx: QueryCtx,
   itemId: Id<"vault_items">,
-  userId: Id<"users">
+  userId: Id<"users">,
 ) {
   const item = await ctx.db.get(itemId);
   if (!item || item.userId !== userId) {
@@ -108,7 +108,7 @@ export interface NotificationInput {
  */
 export async function createNotification(
   ctx: MutationCtx,
-  input: NotificationInput
+  input: NotificationInput,
 ) {
   return await ctx.db.insert("notifications", {
     userId: input.userId,
@@ -136,7 +136,7 @@ export async function createNotification(
 export async function resolveItemRecipients(
   ctx: QueryCtx,
   item: Doc<"vault_items">,
-  userId: Id<"users">
+  userId: Id<"users">,
 ): Promise<Id<"trusted_contacts">[]> {
   const allContacts = await ctx.db
     .query("trusted_contacts")

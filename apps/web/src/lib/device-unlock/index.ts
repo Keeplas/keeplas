@@ -1,8 +1,4 @@
-import {
-  DeviceUnlockEntry,
-  DeviceUnlockError,
-  EnrollOptions,
-} from "./types";
+import { DeviceUnlockEntry, DeviceUnlockError, EnrollOptions } from "./types";
 import { enrollPin, unlockWithPin } from "./pin";
 import {
   enrollWebAuthnPrf,
@@ -28,7 +24,7 @@ export { isWebAuthnSupported } from "./webauthn-prf";
 export { validatePin } from "./pin";
 
 export async function listMethods(
-  userEmail: string
+  userEmail: string,
 ): Promise<DeviceUnlockEntry[]> {
   return listEntriesForUser(userEmail);
 }
@@ -36,7 +32,7 @@ export async function listMethods(
 export async function enrollMethod(
   userEmail: string,
   masterKey: CryptoKey,
-  options: EnrollOptions
+  options: EnrollOptions,
 ): Promise<DeviceUnlockEntry> {
   if (options.method === "pin") {
     return enrollPin(userEmail, masterKey, options.pin, options.label);
@@ -45,13 +41,13 @@ export async function enrollMethod(
     userEmail,
     masterKey,
     options.attachment,
-    options.label
+    options.label,
   );
 }
 
 export async function unlockWith(
   entryId: string,
-  secret?: string
+  secret?: string,
 ): Promise<CryptoKey> {
   const entry = await getEntry(entryId);
   if (!entry) {
@@ -88,6 +84,6 @@ export function isPlatformAuthenticatorAvailable(): Promise<boolean> {
     return Promise.resolve(false);
   }
   return window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(
-    () => false
+    () => false,
   );
 }

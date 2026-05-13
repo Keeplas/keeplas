@@ -6,14 +6,14 @@ import { auditedMutation } from "./audit";
 const ACTION_TYPE = v.union(
   v.literal("grant_access"),
   v.literal("alert_authority"),
-  v.literal("account_wipe")
+  v.literal("account_wipe"),
 );
 
 const STEP_CATEGORY = v.union(
   v.literal("primary_outreach"),
   v.literal("incapacity"),
   v.literal("posthumous_release"),
-  v.literal("wipe")
+  v.literal("wipe"),
 );
 
 /**
@@ -123,7 +123,7 @@ export const addStep = auditedMutation({
         actionType: ACTION_TYPE,
         targetContactId: v.optional(v.id("trusted_contacts")),
         config: v.string(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -195,7 +195,7 @@ export const updateStep = auditedMutation({
         actionType: ACTION_TYPE,
         targetContactId: v.optional(v.id("trusted_contacts")),
         config: v.string(),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {

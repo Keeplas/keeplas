@@ -66,8 +66,8 @@ export default function PasswordRecoveryPage() {
       setError(
         getErrorMessage(
           err,
-          "Recovery failed. Check that your email and 24 words match."
-        )
+          "Recovery failed. Check that your email and 24 words match.",
+        ),
       );
     } finally {
       setBusy(false);
@@ -85,8 +85,8 @@ export default function PasswordRecoveryPage() {
             Password reset successful
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            Your password was reset. You will be redirected to login. Your
-            vault contents remain encrypted by your 24 words and stay safe.
+            Your password was reset. You will be redirected to login. Your vault
+            contents remain encrypted by your 24 words and stay safe.
           </p>
         </div>
       </main>

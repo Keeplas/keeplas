@@ -36,9 +36,7 @@ export default function RecoveryDocPage() {
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
             <Icon path={ICON_PATHS.key} className="w-5 h-5" />
           </span>
-          <h3 className="text-headline-sm text-primary">
-            You are alive
-          </h3>
+          <h3 className="text-headline-sm text-primary">You are alive</h3>
           <p className="text-body-md text-on-surface-variant">
             Path A: 24-word phrase → derives your Root Key locally → unwraps
             your master key. Self-service, no contacts involved.
@@ -55,9 +53,9 @@ export default function RecoveryDocPage() {
           </span>
           <h3 className="text-headline-sm">You are unreachable</h3>
           <p className="text-body-md text-on-primary-container">
-            Life Check fails on every channel → contacts confirm
-            unreachability → 72h grace window → contacts submit their shards →
-            vault opens in memorial mode → recipients receive their content.
+            Life Check fails on every channel → contacts confirm unreachability
+            → 72h grace window → contacts submit their shards → vault opens in
+            memorial mode → recipients receive their content.
           </p>
         </article>
       </section>
@@ -75,9 +73,9 @@ export default function RecoveryDocPage() {
           <p>
             At onboarding, your device generates a fresh BIP-39 24-word phrase.
             Those words are <strong className="text-primary">never</strong> sent
-            to Keeplas — not even hashed. They exist in three places only:
-            your head, your printed Recovery Kit, and (briefly) your browser
-            memory during onboarding.
+            to Keeplas — not even hashed. They exist in three places only: your
+            head, your printed Recovery Kit, and (briefly) your browser memory
+            during onboarding.
           </p>
           <p>
             The phrase feeds Argon2id (a memory-hard key derivation) along with
@@ -88,11 +86,11 @@ export default function RecoveryDocPage() {
           </p>
           <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
             <p className="text-body-md text-on-surface font-medium">
-              If you lose your 24 words, your trust contacts cannot recover
-              them — Keeplas cannot recover them either. What contacts{" "}
-              <em>can</em> do is rebuild your Master Key directly via Shamir
-              quorum. After that, you generate fresh 24 words and the vault
-              continues unchanged with a new phrase.
+              If you lose your 24 words, your trust contacts cannot recover them
+              — Keeplas cannot recover them either. What contacts <em>can</em>{" "}
+              do is rebuild your Master Key directly via Shamir quorum. After
+              that, you generate fresh 24 words and the vault continues
+              unchanged with a new phrase.
             </p>
           </div>
         </div>
@@ -196,54 +194,52 @@ export default function RecoveryDocPage() {
         <div className="space-y-4 text-body-md text-on-surface-variant">
           <p>
             Throughout the entire lifecycle — distribution, reception,
-            verification, recovery — Keeplas servers never see a raw shard
-            and never see your master key. They store only ciphertext blobs
-            wrapped to specific public keys, plus public metadata
-            (timestamps, audit logs, threshold values).
+            verification, recovery — Keeplas servers never see a raw shard and
+            never see your master key. They store only ciphertext blobs wrapped
+            to specific public keys, plus public metadata (timestamps, audit
+            logs, threshold values).
           </p>
 
           <ul className="space-y-2 pl-4 list-disc">
             <li>
-              <strong className="text-primary">Distribution</strong>: each
-              shard is wrapped to its target contact&apos;s ML-KEM public key
-              before it leaves your device. The server stores only the
-              envelope.
+              <strong className="text-primary">Distribution</strong>: each shard
+              is wrapped to its target contact&apos;s ML-KEM public key before
+              it leaves your device. The server stores only the envelope.
             </li>
             <li>
               <strong className="text-primary">Reception</strong>: the
-              contact&apos;s browser unwraps the envelope using its locally
-              held private key and persists the raw shard in IndexedDB.
-              Nothing about the raw bytes is ever sent back.
+              contact&apos;s browser unwraps the envelope using its locally held
+              private key and persists the raw shard in IndexedDB. Nothing about
+              the raw bytes is ever sent back.
             </li>
             <li>
               <strong className="text-primary">Verification</strong>:
               successfully unwrapping the shard automatically stamps
-              <code className="text-secondary mx-1">lastVerifiedAt</code> on
-              the contact&apos;s row. That timestamp is just an attestation;
-              the server can&apos;t and doesn&apos;t inspect the shard.
+              <code className="text-secondary mx-1">lastVerifiedAt</code> on the
+              contact&apos;s row. That timestamp is just an attestation; the
+              server can&apos;t and doesn&apos;t inspect the shard.
             </li>
             <li>
               <strong className="text-primary">Recovery submission</strong>:
-              when contacts submit their shard, each one wraps a copy for
-              every peer&apos;s public key (fan-out). The server stores the
-              fan-out envelopes — still ciphertext only.
+              when contacts submit their shard, each one wraps a copy for every
+              peer&apos;s public key (fan-out). The server stores the fan-out
+              envelopes — still ciphertext only.
             </li>
             <li>
               <strong className="text-primary">Reconstruction</strong>: the
-              Shamir interpolation that rebuilds the master key happens
-              entirely in the contact&apos;s browser. The master key never
-              touches a server, by construction.
+              Shamir interpolation that rebuilds the master key happens entirely
+              in the contact&apos;s browser. The master key never touches a
+              server, by construction.
             </li>
           </ul>
 
           <div className="bg-primary/5 rounded-xl p-4 border-l-4 border-primary">
             <p className="text-body-md text-on-surface font-medium">
               Trade-off worth knowing: with threshold = 2, two colluding
-              contacts can both confirm unreachability AND open the vault.
-              The Life Check escalation + the 72h grace window are the only
-              extra safeguards. If you anticipate that risk (e.g. all your
-              contacts share a household), raise your threshold at
-              onboarding.
+              contacts can both confirm unreachability AND open the vault. The
+              Life Check escalation + the 72h grace window are the only extra
+              safeguards. If you anticipate that risk (e.g. all your contacts
+              share a household), raise your threshold at onboarding.
             </p>
           </div>
         </div>
@@ -303,9 +299,9 @@ export default function RecoveryDocPage() {
 
         <p className="text-body-md text-on-surface-variant">
           A trust contact who switches phones, factory-resets their device,
-          opens an incognito window, or signs in on a new laptop does
-          not lose their shard. The architecture handles this without any
-          manual export, copy-paste or special action.
+          opens an incognito window, or signs in on a new laptop does not lose
+          their shard. The architecture handles this without any manual export,
+          copy-paste or special action.
         </p>
 
         <div className="space-y-4 text-body-md text-on-surface-variant">
@@ -314,16 +310,16 @@ export default function RecoveryDocPage() {
               The contact&apos;s ML-KEM keypair is portable.
             </strong>{" "}
             Their secret key is stored on the server, AES-GCM-encrypted under
-            their own master key. As soon as they unlock their vault on the
-            new device — with their 24-word phrase or via Device Unlock — the
-            secret key is decrypted in their browser, ready to use.
+            their own master key. As soon as they unlock their vault on the new
+            device — with their 24-word phrase or via Device Unlock — the secret
+            key is decrypted in their browser, ready to use.
           </p>
           <p>
             <strong className="text-primary">
               The encrypted shard is still on the server.
             </strong>{" "}
-            Your client wrapped it to their public key during distribution;
-            the ciphertext lives in your{" "}
+            Your client wrapped it to their public key during distribution; the
+            ciphertext lives in your{" "}
             <code className="text-secondary">trusted_contacts</code> row. It
             never depended on a specific device.
           </p>
@@ -332,26 +328,25 @@ export default function RecoveryDocPage() {
               Auto-restoration runs on the next visit.
             </strong>{" "}
             When the contact opens /shared-with-me on the new device, a brief
-            “Restoring your shards…” banner appears while the browser
-            unwraps the server envelope and persists the raw bytes in the
-            new device&apos;s IndexedDB. From there, every recovery action
-            works exactly like before.
+            “Restoring your shards…” banner appears while the browser unwraps
+            the server envelope and persists the raw bytes in the new
+            device&apos;s IndexedDB. From there, every recovery action works
+            exactly like before.
           </p>
         </div>
 
         <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
           <p className="text-body-md text-on-surface font-medium mb-2">
-            The only failure mode: a contact loses BOTH their device AND
-            their 24-word phrase.
+            The only failure mode: a contact loses BOTH their device AND their
+            24-word phrase.
           </p>
           <p className="text-body-md text-on-surface-variant">
-            Without the phrase, they can&apos;t unlock their master key —
-            so they can&apos;t decrypt their ML-KEM secret key — so they
-            can&apos;t unwrap their shard. Their slot is effectively
-            permanent dead weight. As the vault owner, you should revoke
-            them, invite a replacement, then click{" "}
-            <strong>Distribute now</strong> to issue fresh shards to all
-            current trust contacts.
+            Without the phrase, they can&apos;t unlock their master key — so
+            they can&apos;t decrypt their ML-KEM secret key — so they can&apos;t
+            unwrap their shard. Their slot is effectively permanent dead weight.
+            As the vault owner, you should revoke them, invite a replacement,
+            then click <strong>Distribute now</strong> to issue fresh shards to
+            all current trust contacts.
           </p>
         </div>
       </section>
@@ -362,10 +357,7 @@ export default function RecoveryDocPage() {
           href="/docs/trusted-contacts"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon
-            path={ICON_PATHS.users}
-            className="w-5 h-5 text-secondary"
-          />
+          <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
             Trusted Contacts in detail
           </span>
@@ -374,10 +366,7 @@ export default function RecoveryDocPage() {
           href="/settings/recovery-kit"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon
-            path={ICON_PATHS.print}
-            className="w-5 h-5 text-secondary"
-          />
+          <Icon path={ICON_PATHS.print} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
             Export your Recovery Kit
           </span>

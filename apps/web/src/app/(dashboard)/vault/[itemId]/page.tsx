@@ -9,7 +9,11 @@ import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
-import { getCategoryConfig, CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
+import {
+  getCategoryConfig,
+  CATEGORIES,
+  type VaultCategory,
+} from "@/lib/vault-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
@@ -122,7 +126,10 @@ export default function VaultItemPage() {
 
   const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
   const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
-  const recipientGroups = useMemo(() => recipientGroupsRaw ?? [], [recipientGroupsRaw]);
+  const recipientGroups = useMemo(
+    () => recipientGroupsRaw ?? [],
+    [recipientGroupsRaw],
+  );
   const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
@@ -130,7 +137,9 @@ export default function VaultItemPage() {
   const [decrypting, setDecrypting] = useState(false);
   // Per-item DEK (ZK items only). `null` = still unwrapping, `undefined` = not
   // a ZK item (use master key), `CryptoKey` = ready.
-  const [itemDek, setItemDek] = useState<CryptoKey | null | undefined>(undefined);
+  const [itemDek, setItemDek] = useState<CryptoKey | null | undefined>(
+    undefined,
+  );
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
@@ -140,11 +149,14 @@ export default function VaultItemPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editLinkUrls, setEditLinkUrls] = useState<string[]>([""]);
-  const [editCategory, setEditCategory] = useState<VaultCategory>("personal_document");
-  const [editRecipientSelection, setEditRecipientSelection] = useState<string[]>([]);
-  const [removedFileIds, setRemovedFileIds] = useState<Set<Id<"vault_item_files">>>(
-    new Set()
-  );
+  const [editCategory, setEditCategory] =
+    useState<VaultCategory>("personal_document");
+  const [editRecipientSelection, setEditRecipientSelection] = useState<
+    string[]
+  >([]);
+  const [removedFileIds, setRemovedFileIds] = useState<
+    Set<Id<"vault_item_files">>
+  >(new Set());
   const [stagedFiles, setStagedFiles] = useState<StagedAttachment[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingProgress, setSavingProgress] = useState("");
@@ -409,7 +421,8 @@ export default function VaultItemPage() {
         contactId: Id<"trusted_contacts">;
         wrappedDek: string;
       }> = [];
-      let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" = "zero_knowledge";
+      let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" =
+        "zero_knowledge";
       // The DEK we should use to encrypt newly-added attachments under,
       // matching whatever the item currently lives under.
       let attachmentDek: CryptoKey | undefined;
@@ -432,7 +445,10 @@ export default function VaultItemPage() {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
         const fresh = await generateDekAndWrap(resolvedRecipients);
         attachmentDek = fresh.dek;
-        encryptedContent = await encryptContentWithKey(contentPayload, fresh.dek);
+        encryptedContent = await encryptContentWithKey(
+          contentPayload,
+          fresh.dek,
+        );
         encryptedLinks = await encryptContentWithKey(linksPayload, fresh.dek);
         ownerWrappedDek = fresh.ownerWrap.wrappedDek;
         recipientKeysPayload = fresh.recipientWraps.map((rw) => ({
@@ -546,7 +562,10 @@ export default function VaultItemPage() {
     return (
       <div className="max-w-2xl mx-auto text-center py-24">
         <h2 className="text-headline-md text-primary mb-2">Item not found</h2>
-        <button onClick={() => router.push("/vault")} className="text-secondary font-bold cursor-pointer">
+        <button
+          onClick={() => router.push("/vault")}
+          className="text-secondary font-bold cursor-pointer"
+        >
           Back to Vault
         </button>
       </div>
@@ -562,8 +581,18 @@ export default function VaultItemPage() {
         onClick={() => router.push("/vault")}
         className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label font-bold mb-8 transition-colors cursor-pointer"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+          />
         </svg>
         Back to Vault
       </button>
@@ -571,24 +600,30 @@ export default function VaultItemPage() {
       {editing ? (
         /* ─── Edit Mode ─── */
         <form onSubmit={handleSave} className="space-y-5">
-          <h2 className="text-headline-md text-primary mb-6">
-            Edit Item
-          </h2>
+          <h2 className="text-headline-md text-primary mb-6">Edit Item</h2>
 
-          {error && (
-            <ErrorAlert message={error} className="mb-0" />
-          )}
+          {error && <ErrorAlert message={error} className="mb-0" />}
 
           <div className="space-y-2">
             <Label>Title</Label>
-            <Input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+            <Input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              required
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select<VaultCategory> value={editCategory} onValueChange={setEditCategory}>
+            <Select<VaultCategory>
+              value={editCategory}
+              onValueChange={setEditCategory}
+            >
               {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.key} value={cat.key}>{cat.label}</SelectItem>
+                <SelectItem key={cat.key} value={cat.key}>
+                  {cat.label}
+                </SelectItem>
               ))}
             </Select>
           </div>
@@ -604,7 +639,10 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <VaultLinkInputList urls={editLinkUrls} onChange={setEditLinkUrls} />
+            <VaultLinkInputList
+              urls={editLinkUrls}
+              onChange={setEditLinkUrls}
+            />
           </div>
 
           <div className="space-y-2">
@@ -678,7 +716,9 @@ export default function VaultItemPage() {
                   );
                 }
                 const labels = selected
-                  .map((v) => recipientOptions.find((o) => o.value === v)?.label)
+                  .map(
+                    (v) => recipientOptions.find((o) => o.value === v)?.label,
+                  )
                   .filter(Boolean);
                 return <span className="truncate">{labels.join(", ")}</span>;
               }}
@@ -707,9 +747,7 @@ export default function VaultItemPage() {
               disabled={saving}
               className="flex-1 text-sm cursor-pointer"
             >
-              {saving
-                ? savingProgress || "Encrypting…"
-                : "Save Changes"}
+              {saving ? savingProgress || "Encrypting…" : "Save Changes"}
             </Button>
           </div>
         </form>
@@ -720,28 +758,62 @@ export default function VaultItemPage() {
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={category.icon} />
+                <svg
+                  className="w-5 h-5 text-secondary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d={category.icon}
+                  />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                   {category.label}
                 </span>
               </div>
-              <h1 className="text-headline-lg text-primary">
-                {item.title}
-              </h1>
+              <h1 className="text-headline-lg text-primary">{item.title}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={startEditing}
-                className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer" title="Edit">
-                <svg className="w-5 h-5 text-on-surface-variant" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+              <button
+                onClick={startEditing}
+                className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer"
+                title="Edit"
+              >
+                <svg
+                  className="w-5 h-5 text-on-surface-variant"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                  />
                 </svg>
               </button>
-              <button onClick={openDeleteDialog}
-                className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer" title="Delete permanently">
-                <svg className="w-5 h-5 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m5.25 0V5.625c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V7.5m-9 0h13.5" />
+              <button
+                onClick={openDeleteDialog}
+                className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer"
+                title="Delete permanently"
+              >
+                <svg
+                  className="w-5 h-5 text-error"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m5.25 0V5.625c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V7.5m-9 0h13.5"
+                  />
                 </svg>
               </button>
             </div>
@@ -778,11 +850,22 @@ export default function VaultItemPage() {
           </div>
 
           {/* Decrypted Content */}
-          {(decrypting || (decryptedContent && decryptedContent.length > 0)) && (
+          {(decrypting ||
+            (decryptedContent && decryptedContent.length > 0)) && (
             <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <svg className="w-4 h-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                <svg
+                  className="w-4 h-4 text-secondary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                  />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
                   Decrypted Content
@@ -805,7 +888,11 @@ export default function VaultItemPage() {
           {decryptedLinks.length > 0 && (
             <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <Icon path={ICON_PATHS.link} className="w-4 h-4 text-secondary" strokeWidth={1.75} />
+                <Icon
+                  path={ICON_PATHS.link}
+                  className="w-4 h-4 text-secondary"
+                  strokeWidth={1.75}
+                />
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
                   Linked URLs
                 </span>
@@ -821,11 +908,15 @@ export default function VaultItemPage() {
 
           {/* Timestamp */}
           <p className="text-[11px] text-outline-variant">
-            Created {new Date(item.createdAt).toLocaleDateString()} · Updated {new Date(item.updatedAt).toLocaleDateString()}
+            Created {new Date(item.createdAt).toLocaleDateString()} · Updated{" "}
+            {new Date(item.updatedAt).toLocaleDateString()}
           </p>
 
           {/* Delete Confirmation — irreversible */}
-          <Dialog open={showDeleteConfirm} onOpenChange={handleDeleteDialogChange}>
+          <Dialog
+            open={showDeleteConfirm}
+            onOpenChange={handleDeleteDialogChange}
+          >
             <DialogContent className="max-w-sm p-8 text-left">
               <DialogTitle className="mb-2 text-error">
                 Delete this item permanently?

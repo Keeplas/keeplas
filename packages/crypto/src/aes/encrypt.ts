@@ -9,13 +9,13 @@ export interface EncryptedData {
  */
 export async function encrypt(
   plaintext: BufferSource,
-  key: CryptoKey
+  key: CryptoKey,
 ): Promise<EncryptedData> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    plaintext
+    plaintext,
   );
   return { ciphertext, iv };
 }

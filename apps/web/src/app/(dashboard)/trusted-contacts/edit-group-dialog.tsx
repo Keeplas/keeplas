@@ -37,7 +37,7 @@ export function EditGroupDialog({
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description ?? "");
   const [members, setMembers] = useState<string[]>(
-    group.memberContactIds as string[]
+    group.memberContactIds as string[],
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -85,7 +85,10 @@ export function EditGroupDialog({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
+        >
           <div className="space-y-2">
             <Label htmlFor="edit-group-name">Group name</Label>
             <Input

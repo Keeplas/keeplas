@@ -131,8 +131,7 @@ export function ScenarioPanel() {
   const scenario = data?.scenario;
   const steps = data?.steps ?? [];
   const lastCheck = scenario?.lastCheckAt ?? scenario?.createdAt ?? null;
-  const hasLegalAuthority =
-    contacts?.some((c) => c.role === "lawyer") ?? false;
+  const hasLegalAuthority = contacts?.some((c) => c.role === "lawyer") ?? false;
   const vaultRecipientNames =
     contacts
       ?.filter((c) => c.invitationStatus !== "revoked" && c.role !== "lawyer")
@@ -177,7 +176,7 @@ export function ScenarioPanel() {
                       <div
                         className={cn(
                           "absolute -left-[41px] top-0 w-4 h-4 rounded-full border-4 border-surface-container-lowest",
-                          dotColor(idx, total)
+                          dotColor(idx, total),
                         )}
                       />
                       <div className="flex justify-between items-start gap-4">
@@ -186,7 +185,7 @@ export function ScenarioPanel() {
                             <span
                               className={cn(
                                 "text-label-md",
-                                dotTextColor(idx, total)
+                                dotTextColor(idx, total),
                               )}
                             >
                               T+ {step.triggerValue} Days Inactivity
@@ -213,21 +212,24 @@ export function ScenarioPanel() {
                                     "px-4 py-2 rounded-xl flex items-center space-x-3 text-sm font-medium",
                                     isHighlight
                                       ? "bg-primary-container text-white"
-                                      : "bg-surface-container"
+                                      : "bg-surface-container",
                                   )}
                                 >
                                   <Icon
                                     path={
-                                      meta?.chipIconPath ?? ICON_PATHS.shieldCheck
+                                      meta?.chipIconPath ??
+                                      ICON_PATHS.shieldCheck
                                     }
                                     className={cn(
                                       "w-4 h-4",
                                       isHighlight
                                         ? "text-white"
-                                        : "text-secondary"
+                                        : "text-secondary",
                                     )}
                                   />
-                                  <span>{meta?.label ?? action.actionType}</span>
+                                  <span>
+                                    {meta?.label ?? action.actionType}
+                                  </span>
                                 </div>
                               );
                             })}
@@ -275,11 +277,13 @@ export function ScenarioPanel() {
                   "w-3 h-3 rounded-full",
                   scenario?.isSafePauseActive
                     ? "bg-tertiary-fixed"
-                    : "bg-secondary-fixed animate-pulse"
+                    : "bg-secondary-fixed animate-pulse",
                 )}
               />
               <span className="text-headline-md">
-                {scenario?.isSafePauseActive ? "Paused (Travel)" : "Armed & Ready"}
+                {scenario?.isSafePauseActive
+                  ? "Paused (Travel)"
+                  : "Armed & Ready"}
               </span>
             </div>
             <p className="text-body-md text-on-primary-container">
@@ -335,7 +339,9 @@ export function ScenarioPanel() {
           {/* Fail-Safe Log */}
           <div className="bg-surface-container-highest p-8 rounded-3xl ghost-border">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-label-md text-secondary">Fail-Safe Log</span>
+              <span className="text-label-md text-secondary">
+                Fail-Safe Log
+              </span>
               <Icon
                 path={ICON_PATHS.info}
                 className="w-4 h-4 text-on-surface-variant"
@@ -409,7 +415,7 @@ function MilestoneDialog({
   onCreate: (params: MilestoneFormValues) => Promise<void>;
   onUpdate: (
     stepId: ScenarioStep["_id"],
-    params: MilestoneFormValues
+    params: MilestoneFormValues,
   ) => Promise<void>;
   onDelete: (stepId: ScenarioStep["_id"]) => Promise<void>;
 }) {
@@ -420,7 +426,7 @@ function MilestoneDialog({
   const [label, setLabel] = useState("Primary Outreach Phase");
   const [category, setCategory] = useState<StepCategory>("primary_outreach");
   const [selectedActions, setSelectedActions] = useState<Set<ActionType>>(
-    new Set<ActionType>(["grant_access"])
+    new Set<ActionType>(["grant_access"]),
   );
   const [wipeConfirmText, setWipeConfirmText] = useState("");
   const [saving, setSaving] = useState(false);
@@ -434,10 +440,10 @@ function MilestoneDialog({
       setTriggerValue(step.triggerValue);
       setLabel(step.label);
       setCategory(
-        (step.category as StepCategory | undefined) ?? "primary_outreach"
+        (step.category as StepCategory | undefined) ?? "primary_outreach",
       );
       setSelectedActions(
-        new Set(step.actions.map((a) => a.actionType as ActionType))
+        new Set(step.actions.map((a) => a.actionType as ActionType)),
       );
     } else {
       setTriggerValue(7);
@@ -492,8 +498,8 @@ function MilestoneDialog({
           err,
           editingStep
             ? "Failed to update milestone."
-            : "Failed to add milestone."
-        )
+            : "Failed to add milestone.",
+        ),
       );
     } finally {
       setSaving(false);
@@ -599,7 +605,7 @@ function MilestoneDialog({
                         "w-full text-left p-3 pr-9 rounded-xl border transition-all cursor-pointer",
                         selected
                           ? "border-secondary bg-secondary/10"
-                          : "border-outline-variant/30 hover:border-secondary/50"
+                          : "border-outline-variant/30 hover:border-secondary/50",
                       )}
                     >
                       <div className="flex items-center gap-2">

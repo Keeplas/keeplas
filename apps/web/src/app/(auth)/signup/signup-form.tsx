@@ -22,7 +22,7 @@ export function SignupForm() {
 
   const invitation = useQuery(
     api.trusted_contacts.getInvitationByToken,
-    inviteToken ? { token: inviteToken } : "skip"
+    inviteToken ? { token: inviteToken } : "skip",
   );
   const lockedEmail =
     invitation && invitation.invitationStatus === "pending"
@@ -165,9 +165,9 @@ export function SignupForm() {
           Before you sign up · Quantum-safe end-to-end
         </p>
         <p className="text-body-sm text-on-surface leading-snug">
-          Your password lets you sign in. The{" "}
-          <strong>24 recovery words</strong> generated in the next step are
-          what actually encrypt your vault, we never see them.
+          Your password lets you sign in. The <strong>24 recovery words</strong>{" "}
+          generated in the next step are what actually encrypt your vault, we
+          never see them.
         </p>
         <span className="inline-flex items-center gap-1 mt-1.5 text-label-md text-secondary font-bold group-hover:underline">
           Read how it works →

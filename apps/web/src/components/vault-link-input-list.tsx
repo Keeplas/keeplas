@@ -10,9 +10,12 @@ interface VaultLinkInputListProps {
   onChange: (urls: string[]) => void;
 }
 
-export function VaultLinkInputList({ urls, onChange }: VaultLinkInputListProps) {
+export function VaultLinkInputList({
+  urls,
+  onChange,
+}: VaultLinkInputListProps) {
   const [touched, setTouched] = useState<boolean[]>(() =>
-    urls.map(() => false)
+    urls.map(() => false),
   );
 
   function setUrlAt(index: number, value: string) {
@@ -49,8 +52,8 @@ export function VaultLinkInputList({ urls, onChange }: VaultLinkInputListProps) 
         Saved links
       </Label>
       <p className="text-body-md text-on-surface-variant">
-        URLs are encrypted before they leave your device. Nothing is fetched
-        or previewed.
+        URLs are encrypted before they leave your device. Nothing is fetched or
+        previewed.
       </p>
 
       <div className="space-y-2">
@@ -86,7 +89,11 @@ export function VaultLinkInputList({ urls, onChange }: VaultLinkInputListProps) 
                 aria-label="Remove link"
                 className="mt-1 cursor-pointer text-on-surface-variant hover:text-error"
               >
-                <Icon path={ICON_PATHS.close} className="w-4 h-4" strokeWidth={2} />
+                <Icon
+                  path={ICON_PATHS.close}
+                  className="w-4 h-4"
+                  strokeWidth={2}
+                />
               </Button>
             </div>
           );
