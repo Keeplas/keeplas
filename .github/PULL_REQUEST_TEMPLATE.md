@@ -1,23 +1,30 @@
-## Summary
+### Description
 
-<!-- What does this PR do? -->
+> Description here
 
-## Changes
+### Type of change
 
--
+- [ ] Chore (chore, maintenance work)
+- [ ] Refactor (Refactor existing implementation)
+- [ ] New feature (adds functionality)
+- [ ] Bug fix (fixes an issue)
+- [ ] Add tests (Test related)
 
-## Testing
+### Related issues
 
-- [ ] Lint passes (`pnpm lint`)
-- [ ] Types pass (`pnpm typecheck`)
-- [ ] Tests pass (`pnpm test`)
-- [ ] Manual testing done
-- [ ] (For setup/tooling changes) `pnpm setup` works on a clean clone
+> Fix [#1]()
 
-## Screenshots (if UI change)
+### Development
 
-<!-- Add screenshots here -->
+- [ ] Lint rules pass locally
+- [ ] Application changes have been tested thoroughly
+- [ ] Automated tests covering modified code pass
 
-## CLA
+### Security
 
-- [ ] I agree to the [Contributor License Agreement](../CLA.md)
+- [ ] Security impact of change has been considered
+- [ ] Code follows company security practices and guidelines
+
+### Screenshots if applicable
+
+- N/A
