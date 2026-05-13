@@ -10,9 +10,10 @@
     "pnpm": ">=10"
   },
   "scripts": {
-    "predev": "pnpm check:env && pnpm check:convex-env",
-    "dev": "turbo run dev",
-    "prebuild": "pnpm check:env && pnpm check:convex-env",
+    "setup": "node scripts/setup.mjs",
+    "predev": "pnpm check:env",
+    "dev": "node scripts/dev-with-convex-check.mjs",
+    "prebuild": "pnpm check:env",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
@@ -21,6 +22,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "check:env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-env.mjs",
     "check:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/check-convex-env.mjs",
+    "check:convex": "pnpm check:convex-env",
     "check:zk": "node scripts/check-zk.mjs",
     "sync:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/sync-convex-env.mjs",
     "link:env": "node scripts/link-env.mjs",

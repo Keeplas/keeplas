@@ -16,7 +16,7 @@ out/
 .env.local.backup-*
 
 # IDE
-.vscode/
+.vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea/
