@@ -4,7 +4,7 @@ Thank you for your interest in contributing! For the system overview, read [`ARC
 
 ## First-time setup
 
-The fast path is **native** with `pnpm setup`. Docker is supported as an alternative.
+The fast path is **native** with `pnpm bootstrap`. Docker is supported as an alternative.
 
 ### Native (recommended)
 
@@ -13,8 +13,9 @@ The fast path is **native** with `pnpm setup`. Docker is supported as an alterna
 1. Fork and clone:
    `git clone https://github.com/YOUR_USERNAME/keeplas.git && cd keeplas`
 2. **One-command bootstrap:**
-   `pnpm setup`
+   `pnpm bootstrap`
    Copies `.env.local.example` → `.env.local`, installs, links per-package envs, prints the next steps.
+   _Note:_ this script is intentionally **not** named `setup` — `pnpm setup` is a reserved pnpm built-in that configures your shell's `PNPM_HOME`.
 3. Open `.env.local` and paste a freshly generated audit secret in `KEEPLAS_CTX_SECRET`:
    `openssl rand -base64 32`
 4. Provision your personal Convex deployment (interactive — opens a browser):
@@ -30,7 +31,11 @@ The fast path is **native** with `pnpm setup`. Docker is supported as an alterna
 
 ### Docker (alternative)
 
-`docker-compose.yml` pins Node 22 and pnpm 10.8.1. Steps mirror the native path: prefix everything with `docker compose run --rm app …`. Start the stack with `docker compose up`. Full reset with `docker compose down -v`.
+`docker-compose.yml` pins Node 22 and pnpm 10.8.1 for fresh-machine onboarding or CI-parity debugging. Steps mirror the native path; full workflow including `compose exec`, `compose run`, and gotchas: [`docs/DOCKER.md`](./docs/DOCKER.md).
+
+### Convex deep dive
+
+The first run hits a JWT chicken-and-egg (Better Auth generates keys on first sign-in). Every key concept — provisioning, schema changes, env sync, audit secret matching, the `cloud` vs `selfhosted` modes — is documented in [`docs/CONVEX.md`](./docs/CONVEX.md). Read it once before you touch `packages/convex/`.
 
 ## Development workflow
 
