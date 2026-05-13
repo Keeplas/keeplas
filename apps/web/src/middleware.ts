@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 
 /**
  * Cookie name carrying the sealed audit context. HttpOnly + SameSite=Strict
@@ -122,13 +123,7 @@ async function sign(payload: string, secret: string): Promise<string> {
     key,
     enc.encode(payload) as BufferSource,
   );
-  return bytesToBase64(new Uint8Array(sig));
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let bin = "";
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
+  return uint8ToBase64(new Uint8Array(sig));
 }
 
 export const config = {
