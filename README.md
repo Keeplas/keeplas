@@ -74,10 +74,14 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 # 1. One-command bootstrap: copies .env.local, installs, links per-package envs
 pnpm bootstrap
 
-# 2. Provision your Convex deployment (one-time, opens a browser)
+# 2. Generate the audit HMAC secret (only if .env.local placeholder is still there)
+openssl rand -base64 32
+# → paste the value as KEEPLAS_CTX_SECRET in .env.local
+
+# 3. Provision your Convex deployment (one-time, opens a browser)
 npx convex dev --once --configure=new
 
-# 3. Boot the app — Convex env check runs in the background, never blocks
+# 4. Boot the app — Convex env check runs in the background, never blocks
 pnpm dev
 ```
 
