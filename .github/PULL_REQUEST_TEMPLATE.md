@@ -12,6 +12,7 @@
 - [ ] Types pass (`pnpm typecheck`)
 - [ ] Tests pass (`pnpm test`)
 - [ ] Manual testing done
+- [ ] (For setup/tooling changes) `pnpm setup` works on a clean clone
 
 ## Screenshots (if UI change)
 
