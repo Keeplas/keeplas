@@ -83,9 +83,18 @@ npx convex dev --once --configure=new
 
 # 4. Boot the app — Convex env check runs in the background, never blocks
 pnpm dev
+# → open http://localhost:3000 and sign in once
+#   (this triggers Better Auth to generate the JWT keys on Convex)
+
+# 5. Push your local env vars to Convex (REQUIRED — without this, audited
+#    mutations will fail because KEEPLAS_CTX_SECRET won't match on the server)
+pnpm sync:convex-env
+
+# 6. Verify everything is in sync
+pnpm check:convex   # should be green
 ```
 
-Open <http://localhost:3000>, sign in once to trigger Better Auth's JWT key generation, then `pnpm sync:convex-env` to push your local secrets to the deployment. After that, `pnpm dev` is your normal workflow.
+After step 6, `pnpm dev` is your normal daily workflow — the background env-drift check will print a green tick instead of a warning.
 
 > Whenever you edit anything under `packages/convex/`, run `npx convex dev` again to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
 
