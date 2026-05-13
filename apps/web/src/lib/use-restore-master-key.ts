@@ -3,16 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { useMasterKey } from "./master-key-context";
-
-function base64ToUint8(base64: string): Uint8Array<ArrayBuffer> {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
 
 type LegacyBundle = {
   version?: 1;
