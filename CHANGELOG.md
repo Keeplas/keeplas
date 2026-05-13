@@ -8,12 +8,14 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 
 ### Added
 
-- One-command contributor bootstrap: `pnpm setup` copies `.env.local`, installs deps, links per-package env files, and prints the manual Convex steps.
+- One-command contributor bootstrap: `pnpm bootstrap` copies `.env.local`, installs deps, links per-package env files, and prints the manual Convex steps. Renamed from `pnpm setup` (collided with pnpm's reserved built-in command).
 - Non-blocking Convex env check on `pnpm dev` — the 30s `npx convex env list` round-trip now runs in the background and warns on drift without blocking the dev server.
 - `.env.local.example` with local-safe defaults (localhost URLs, dev WebAuthn config).
 - `.editorconfig` and `.vscode/{settings,extensions}.json` for consistent editor behavior across contributors.
-- `ARCHITECTURE.md` describing the audit envelope flow, package boundaries, and crypto-package isolation.
+- `ARCHITECTURE.md` describing the audit envelope flow, package boundaries, and crypto-package isolation. Now also includes a services/ports diagram and the "how to run it locally" entry-point.
 - `CHANGELOG.md` (this file) and `docs/RELEASE_PROCESS.md`.
+- `docs/CONVEX.md` — end-to-end Convex workflow (provisioning, schema changes, env sync, JWT bootstrap, gotchas, CLI reference).
+- `docs/DOCKER.md` — full Docker workflow (first-time setup, daily commands, `compose exec` vs `compose run`, host ↔ container file flow, when to use Docker vs native).
 
 ### Changed
 

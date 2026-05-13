@@ -72,7 +72,7 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 
 ```bash
 # 1. One-command bootstrap: copies .env.local, installs, links per-package envs
-pnpm setup
+pnpm bootstrap
 
 # 2. Provision your Convex deployment (one-time, opens a browser)
 npx convex dev --once --configure=new
@@ -89,27 +89,16 @@ For the full bootstrap including the auth-key chicken-and-egg dance, see [`CONTR
 
 ## Try it (Docker)
 
-A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, and uses named volumes for `node_modules`, `.next`, `.turbo`, and Convex local state — host files mount in via bind mount, so edits hot-reload as usual.
+A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, with bind-mounted source (so host edits hot-reload) and named volumes for `node_modules`, `.next/`, `.turbo/`, and `.convex/` state.
 
 ```bash
-# 1. Create your env file (loaded by Next.js, Convex CLI, and the env-check scripts)
-cp .env.example .env.local
-
-# 2. Build and start the dev container (installs deps, then runs `pnpm dev`)
-docker compose up
-
-# 3. App available at http://localhost:3000
+cp .env.local.example .env.local                # then fill KEEPLAS_CTX_SECRET
+docker compose up                               # installs + starts dev server on :3000
 ```
 
-Useful follow-ups:
+Full Docker workflow (provisioning Convex inside the container, running ad-hoc commands via `compose exec`, common gotchas, when to use Docker vs native): see [`docs/DOCKER.md`](./docs/DOCKER.md).
 
-```bash
-docker compose exec app pnpm typecheck       # run any pnpm script inside the container
-docker compose exec app npx convex dev       # provision/regenerate Convex types
-docker compose down -v                       # nuke node_modules + caches (named volumes)
-```
-
-> The image is **not production-ready** — it's `Dockerfile.dev` for contributors. No production Dockerfile is shipped yet; deployments target Vercel for the web app and Convex Cloud for the backend.
+> The image is **`Dockerfile.dev`** — not production-ready. Deployments target Vercel (web) + Convex Cloud (backend); no production Dockerfile is shipped.
 
 ## Environment variables
 
@@ -132,6 +121,8 @@ Both are read by `pnpm sync:convex-env` and pushed to the Convex deployment.
 
 Generate the audit secret with `openssl rand -base64 32`. `pnpm check:env` runs automatically before `pnpm dev` and `pnpm build` (fast, local). The slower `pnpm check:convex` (round-trips to the deployment) is manual — also fires in the background during `pnpm dev` and warns on drift without blocking.
 
+For the full Convex workflow (provisioning, schema changes, JWT bootstrap, env sync), see [`docs/CONVEX.md`](./docs/CONVEX.md). For the Docker workflow, see [`docs/DOCKER.md`](./docs/DOCKER.md).
+
 ## Pricing
 
 Keeplas ships with a deliberately simple two-tier model — **no monthly subscription**:
@@ -147,7 +138,7 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 | Command                | Description                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `pnpm setup`           | One-command bootstrap (`.env.local`, install, link envs, prints next steps)                                   |
+| `pnpm bootstrap`       | One-command bootstrap (`.env.local`, install, link envs, prints next steps)                                   |
 | `pnpm dev`             | Run all dev servers via Turborepo. Convex env check runs in the background — never blocks boot                |
 | `pnpm build`           | Production build for every workspace                                                                          |
 | `pnpm lint`            | ESLint across the monorepo                                                                                    |

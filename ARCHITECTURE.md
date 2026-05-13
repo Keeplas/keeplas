@@ -62,6 +62,38 @@ JWT signing keys (`JWKS` + `JWT_PRIVATE_KEY`) on the Convex deployment are **gen
 
 After step 3, `pnpm check:convex-env` (run manually via `pnpm check:convex`, or in the background by `pnpm dev`) will be green.
 
+## How services connect — running locally
+
+```
+┌─────────────────────────────┐                ┌───────────────────────────┐
+│   Browser (localhost:3000)  │ ◄── HTTPS ───► │  Convex deployment        │
+│   • React 19 + Next.js 16   │   WebSocket    │  (convex.cloud or self-   │
+│   • PWA / WebAuthn / Push   │   + REST       │   hosted)                 │
+│   • packages/crypto runs    │                │  • schema.ts (database)   │
+│     here, browser-only      │                │  • queries / mutations    │
+└──────────┬──────────────────┘                │  • audit log table        │
+           │                                   │  • Better Auth JWKS keys  │
+           │ same process                      └───────────────────────────┘
+           ▼
+┌─────────────────────────────┐
+│   Next.js dev server (host) │
+│   • turbopack hot-reload    │
+│   • middleware.ts signs the │
+│     audit envelope (HMAC)   │
+└─────────────────────────────┘
+```
+
+Three components, two processes (browser + Next.js server), one external service (Convex). The Next.js dev server runs either on your **host** (native path, `pnpm dev`) or inside the **Docker container** (compose path, `docker compose up`). Convex always runs on Convex Cloud (unless `CONVEX_MODE=selfhosted`).
+
+**Ports**:
+
+| Port | Service                  | Where it lives                        |
+| ---- | ------------------------ | ------------------------------------- |
+| 3000 | Next.js dev server (web) | host or Docker container              |
+| —    | Convex backend           | `convex.cloud` (HTTPS) or self-hosted |
+
+For the full contributor onboarding flow, see [`CONTRIBUTING.md`](./CONTRIBUTING.md). For Convex specifics (provisioning, schema changes, env sync, JWT bootstrap), see [`docs/CONVEX.md`](./docs/CONVEX.md). For Docker (when to use it, how to attach, common gotchas), see [`docs/DOCKER.md`](./docs/DOCKER.md).
+
 ## CI
 
 See [`.github/workflows/ci.yml`](./.github/workflows/ci.yml). Three jobs run on every PR:
