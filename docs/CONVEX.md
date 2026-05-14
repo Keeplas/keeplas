@@ -14,13 +14,17 @@ openssl rand -base64 32                          # copy output into KEEPLAS_CTX_
 npx convex dev --once --configure=new
 #    → writes CONVEX_DEPLOYMENT + NEXT_PUBLIC_CONVEX_URL into .env.local
 
-# 3. Bootstrap auth keys (one-time chicken-and-egg)
-pnpm dev                                         # boot the app
-# open http://localhost:3000 and sign in once    # triggers Better Auth JWT keygen on Convex
-pnpm sync:convex-env                             # push the rest of your local env to Convex
+# 3. Seed Convex Auth JWT keys on the deployment (one-time)
+npx @convex-dev/auth                             # generates JWT_PRIVATE_KEY + JWKS on Convex
 
-# 4. Verify
+# 4. Push the rest of your local env to Convex
+pnpm sync:convex-env                             # KEEPLAS_CTX_SECRET, WEBAUTHN_*, RESEND_*, etc.
+
+# 5. Verify
 pnpm check:convex                                # should be green
+
+# 6. Boot the app
+pnpm dev                                         # Next.js + `convex dev` in parallel
 ```
 
 After this, `pnpm dev` is your only command — it spawns the Next.js server and `convex dev` in parallel and runs the background env-drift check.
@@ -74,20 +78,24 @@ Schema lives in [`packages/convex/schema.ts`](../packages/convex/schema.ts). Aft
 
 > The directory **does not regenerate** `packages/convex/convex/_generated/` correctly when you run `convex dev` from `packages/convex/`. That's a known structural quirk — `.gitignore` ignores the stale path. The fix (per-package `convex.json`) is on the follow-up list.
 
-## The JWT chicken-and-egg
+## Seeding the auth keys — `npx @convex-dev/auth`
 
-The Convex deployment needs two env vars to validate auth tokens:
+`@convex-dev/auth` (Convex Auth) needs two env vars on the deployment to sign and verify session tokens:
 
 - `JWKS` — public key set
 - `JWT_PRIVATE_KEY` — signing key
 
-These are **generated lazily by Better Auth on the first sign-in**. Before that first sign-in, `pnpm check:convex` will complain those keys are missing — that's expected. The bootstrap flow is:
+**These are NOT auto-generated.** Convex Auth's `requireEnv('JWT_PRIVATE_KEY')` throws on first sign-in if the key is missing. You generate them once per deployment with:
 
-1. `pnpm dev` boots the app even with the keys missing.
-2. You sign in once (any method) — Better Auth generates the keys, persists them to Convex's env.
-3. `pnpm sync:convex-env` pushes the rest of your local secrets back. From now on, `pnpm check:convex` is green.
+```bash
+npx @convex-dev/auth
+```
 
-We do **not** push these two keys via `pnpm sync:convex-env` — they're omitted from `CONVEX_SYNC_KEYS` in [`scripts/_env-keys.mjs`](../scripts/_env-keys.mjs) so existing sessions don't get invalidated by an accidental overwrite.
+The CLI generates a fresh keypair and writes both values to your deployment's env vars via the Convex CLI. The full setup procedure it runs is documented at <https://labs.convex.dev/auth/setup/manual>.
+
+We do **not** push these two keys via `pnpm sync:convex-env` — they're omitted from `CONVEX_SYNC_KEYS` in [`scripts/_env-keys.mjs`](../scripts/_env-keys.mjs) so they stay unique per deployment and re-syncs never invalidate existing sessions.
+
+> A previous version of this doc described a "Better Auth chicken-and-egg" where keys auto-generated on first sign-in. That was wrong — that's how the separate Better Auth library behaves, not Convex Auth (`@convex-dev/auth`), which is what this codebase uses.
 
 ## The audit HMAC secret
 
@@ -112,8 +120,8 @@ For Keeplas the prod deployment is provisioned and managed by the founders — c
 
 - **`Invalid audit context` on every mutation.** → `KEEPLAS_CTX_SECRET` on Convex doesn't match the one in `.env.local`. Re-run `pnpm sync:convex-env`.
 - **TypeScript can't find `api.foo`.** → `packages/convex/_generated/` is stale. Run `npx convex dev` to regenerate.
-- **`pnpm dev` boots but mutations 401.** → JWT bootstrap not done. Sign in once via the app, then `pnpm sync:convex-env`.
-- **`pnpm check:convex` says JWKS / JWT_PRIVATE_KEY missing.** → Same as above — expected on a fresh deployment until you've signed in once.
+- **Sign-in throws `Missing environment variable JWT_PRIVATE_KEY`.** → JWT keys not seeded. Run `npx @convex-dev/auth` once.
+- **`pnpm check:convex` says JWKS / JWT_PRIVATE_KEY missing.** → Same as above — run `npx @convex-dev/auth`.
 - **`packages/convex/convex/_generated/` keeps reappearing.** → Known quirk (per-package `convex.json` missing). It's gitignored; ignore it. The fix is tracked.
 - **Lost track of your deployment URL.** → `npx convex dashboard` opens it in the browser.
 

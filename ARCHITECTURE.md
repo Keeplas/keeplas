@@ -52,15 +52,22 @@ The server only ever stores AES-GCM ciphertexts, ML-KEM-wrapped DEKs, and ML-KEM
 
 See [`packages/crypto/src/`](./packages/crypto/src) for the primitives. Each subdirectory (`aes`, `kdf`, `kem`, `recovery`, `shamir`) is paired with a `__tests__/` file under `packages/crypto/__tests__/`.
 
-## Auth bootstrap (Better Auth chicken-and-egg)
+## Auth bootstrap (Convex Auth)
 
-JWT signing keys (`JWKS` + `JWT_PRIVATE_KEY`) on the Convex deployment are **generated lazily on first sign-in**. That creates a setup paradox for new contributors:
+Convex Auth (`@convex-dev/auth`) needs two env vars on the deployment to sign and verify session tokens:
 
-1. `npx convex dev --once --configure=new` provisions the deployment but leaves JWT vars empty.
-2. `pnpm dev` boots; you open the app and sign in once — Better Auth writes the JWT vars to Convex.
-3. `pnpm sync:convex-env` pushes the rest of your local env (`KEEPLAS_CTX_SECRET`, WebAuthn config, Resend keys) to Convex.
+- `JWKS` — public key set
+- `JWT_PRIVATE_KEY` — signing key
 
-After step 3, `pnpm check:convex-env` (run manually via `pnpm check:convex`, or in the background by `pnpm dev`) will be green.
+**These are NOT auto-generated.** You seed them once per deployment with `npx @convex-dev/auth` — the CLI generates a fresh keypair and writes both values via the Convex CLI. They're deliberately omitted from `CONVEX_SYNC_KEYS` (in `scripts/_env-keys.mjs`) so a re-sync never invalidates existing sessions.
+
+Bootstrap order:
+
+1. `npx convex dev --once --configure=new` — provisions the deployment.
+2. `npx @convex-dev/auth` — seeds `JWKS` + `JWT_PRIVATE_KEY` on the deployment.
+3. `pnpm sync:convex-env` — pushes the rest of your local env (`KEEPLAS_CTX_SECRET`, WebAuthn config, Resend keys) to Convex.
+
+After step 3, `pnpm check:convex` is green. For the full Convex workflow, see [`docs/CONVEX.md`](./docs/CONVEX.md).
 
 ## How services connect — running locally
 
@@ -72,7 +79,7 @@ After step 3, `pnpm check:convex-env` (run manually via `pnpm check:convex`, or 
 │   • packages/crypto runs    │                │  • schema.ts (database)   │
 │     here, browser-only      │                │  • queries / mutations    │
 └──────────┬──────────────────┘                │  • audit log table        │
-           │                                   │  • Better Auth JWKS keys  │
+           │                                   │  • Convex Auth JWT keys   │
            │ same process                      └───────────────────────────┘
            ▼
 ┌─────────────────────────────┐
