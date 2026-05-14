@@ -67,10 +67,14 @@ ${BOLD}Initialize your Convex deployment${RESET} (one-time):
   ${CYAN}npx convex dev --once --configure=new${RESET}
   This writes CONVEX_DEPLOYMENT / NEXT_PUBLIC_CONVEX_URL into .env.local.
 
-${BOLD}Bootstrap auth keys${RESET} (one-time chicken-and-egg dance):
-  ${CYAN}pnpm dev${RESET}                          ${DIM}# boot the app${RESET}
-  open http://localhost:3000 and sign in once  ${DIM}# triggers JWT key gen on Convex${RESET}
-  ${CYAN}pnpm sync:convex-env${RESET}              ${DIM}# push your local env to Convex${RESET}
+${BOLD}Seed Convex Auth JWT keys${RESET} (one-time):
+  ${CYAN}npx @convex-dev/auth${RESET}              ${DIM}# generates JWT_PRIVATE_KEY + JWKS on the deployment${RESET}
+
+${BOLD}Push the rest of your local env to Convex${RESET}:
+  ${CYAN}pnpm sync:convex-env${RESET}
+
+${BOLD}Boot the app${RESET}:
+  ${CYAN}pnpm dev${RESET}                          ${DIM}# Next.js + convex dev in parallel${RESET}
 
 ${BOLD}You're done.${RESET} ${YELLOW}pnpm dev${RESET} is now your normal workflow.
 ${DIM}See CONTRIBUTING.md for details. Pre-push: pnpm check:convex.${RESET}

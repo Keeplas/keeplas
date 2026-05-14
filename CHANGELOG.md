@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 ### Fixed
 
 - `pnpm dev` failed with `Failed to load deployment config` on Convex **local deployments** because turbo invoked `convex dev` from `packages/convex/` instead of the repo root, where the local deployment is registered. The dev wrapper now spawns `convex dev` directly from the root (in parallel with Next.js). Cloud deployments were unaffected.
+- Documentation across README / CONTRIBUTING / ARCHITECTURE / CONVEX wrongly described the JWT key bootstrap as a Better-Auth-style auto-generation on first sign-in. The codebase uses Convex Auth (`@convex-dev/auth`), which throws on first sign-in if `JWT_PRIVATE_KEY` is missing. The correct one-time setup is `npx @convex-dev/auth`. Updated the bootstrap order in all four docs, the `pnpm bootstrap` printed steps, and the env-check hint.
 
 ### Removed
 

@@ -70,33 +70,37 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 
 ## Quick start (native)
 
+Run every step in order — none are optional for a first run:
+
 ```bash
 # 1. One-command bootstrap: copies .env.local, installs, links per-package envs
 pnpm bootstrap
 
-# 2. Generate the audit HMAC secret (only if .env.local placeholder is still there)
+# 2. Generate the audit HMAC secret, then paste it into .env.local
 openssl rand -base64 32
-# → paste the value as KEEPLAS_CTX_SECRET in .env.local
+# → set KEEPLAS_CTX_SECRET=<output> in .env.local
 
 # 3. Provision your Convex deployment (one-time, opens a browser)
 npx convex dev --once --configure=new
 
-# 4. Boot the app — Convex env check runs in the background, never blocks
-pnpm dev
-# → open http://localhost:3000 and sign in once
-#   (this triggers Better Auth to generate the JWT keys on Convex)
+# 4. Seed Convex Auth's JWT keys on the deployment (REQUIRED — without this
+#    the first sign-in throws "Missing environment variable JWT_PRIVATE_KEY")
+npx @convex-dev/auth
 
-# 5. Push your local env vars to Convex (REQUIRED — without this, audited
-#    mutations will fail because KEEPLAS_CTX_SECRET won't match on the server)
+# 5. Push the rest of your local env to Convex (REQUIRED — audited mutations
+#    fail if KEEPLAS_CTX_SECRET doesn't match on the server)
 pnpm sync:convex-env
 
 # 6. Verify everything is in sync
-pnpm check:convex   # should be green
+pnpm check:convex          # must be green before continuing
+
+# 7. Boot the app — Convex env check runs in the background, never blocks
+pnpm dev
 ```
 
-After step 6, `pnpm dev` is your normal daily workflow — the background env-drift check will print a green tick instead of a warning.
+After step 7, open <http://localhost:3000>, sign in, and you're running. From then on `pnpm dev` is your only daily command.
 
-> Whenever you edit anything under `packages/convex/`, run `npx convex dev` again to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
+> Whenever you edit anything under `packages/convex/`, `pnpm dev` already runs `convex dev` in parallel to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
 
 For the full bootstrap including the auth-key chicken-and-egg dance, see [`CONTRIBUTING.md`](./CONTRIBUTING.md#first-time-setup). For the system overview, see [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
