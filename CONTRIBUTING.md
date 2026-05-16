@@ -48,6 +48,34 @@ The first run requires seeding `JWT_PRIVATE_KEY` + `JWKS` on your deployment via
 3. Run checks locally: `pnpm lint && pnpm typecheck && pnpm test`.
 4. Push and open a PR. CI runs the same checks plus `pnpm audit`.
 
+## Troubleshooting
+
+### "Module factory is not available" / runtime error mentioning an old dep version
+
+After pulling main (especially across a dep bump), you may see something like:
+
+```
+Module [...]/next@16.2.3/[...] was instantiated [...] but the module factory is not available
+```
+
+…even though the lockfile has been at `16.2.6` for a while. This happens because pnpm's content-addressable store keeps every version of a dep across upgrades, and Turbopack's `.next/` cache may reference the old path.
+
+**Fix:**
+
+```bash
+pnpm reset
+```
+
+This wipes every `node_modules`, `.next`, and `.turbo` under the repo and reinstalls from the current lockfile. Then hard-reload the browser (Cmd+Shift+R) or open the page in a private window to bypass cached client chunks.
+
+### `pnpm setup` modifies your shell profile and does nothing
+
+`pnpm setup` is a reserved pnpm built-in that configures `PNPM_HOME` — it's not our bootstrap script. Use `pnpm bootstrap` instead.
+
+### `pnpm check:convex` complains about `JWKS` / `JWT_PRIVATE_KEY` missing
+
+Expected on a fresh Convex deployment. Convex Auth (`@convex-dev/auth`) does **not** auto-generate them — the first sign-in throws `Missing environment variable JWT_PRIVATE_KEY` if you skip this. Seed them once with `npx @convex-dev/auth`, then re-run `pnpm check:convex`.
+
 ## Issue labels
 
 We use a flat label scheme so newcomers can find work fast:
