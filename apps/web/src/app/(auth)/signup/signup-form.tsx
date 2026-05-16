@@ -46,7 +46,7 @@ export function SignupForm() {
 
   const [step, setStep] = useState<Step>("details");
   // Invitations are email-based, so the phone option is hidden for them.
-  const [kind, setKind] = useState<"email" | "phone">("email");
+  const [kind, setKind] = useState<"email" | "phone">("phone");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
@@ -274,11 +274,11 @@ export function SignupForm() {
               onValueChange={(v) => setKind(v as "email" | "phone")}
             >
               <TabsList className="w-full">
-                <TabsTrigger value="email" className="flex-1">
-                  Email
-                </TabsTrigger>
                 <TabsTrigger value="phone" className="flex-1">
                   Phone
+                </TabsTrigger>
+                <TabsTrigger value="email" className="flex-1">
+                  Email
                 </TabsTrigger>
               </TabsList>
             </Tabs>
