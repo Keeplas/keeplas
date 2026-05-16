@@ -1,9 +1,13 @@
 // Shared env metadata for `check-env.mjs`, `check-convex-env.mjs`, and
 // `sync-convex-env.mjs`. Single source of truth — edit here, never duplicate.
 
+// Shared ANSI palette for all scripts/ — import these, never re-declare.
 export const RED = "\x1b[31m";
 export const YELLOW = "\x1b[33m";
 export const GREEN = "\x1b[32m";
+export const CYAN = "\x1b[36m";
+export const DIM = "\x1b[2m";
+export const BOLD = "\x1b[1m";
 export const RESET = "\x1b[0m";
 
 export const nonEmpty = (v) => typeof v === "string" && v.length > 0;
