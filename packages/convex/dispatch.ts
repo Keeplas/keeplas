@@ -167,8 +167,14 @@ async function sendWhatsAppTemplate(args: {
   const sender = process.env.INFOBIP_WHATSAPP_SENDER;
   if (!baseUrl || !apiKey || !sender) return "whatsapp_not_configured";
 
+  // Infobip's dashboard hands out the base URL as a bare host
+  // (e.g. "d83lev.api.infobip.com"); fetch() requires an absolute URL, so
+  // default to https:// when no scheme is present.
+  const root = baseUrl.replace(/\/$/, "");
+  const origin = /^https?:\/\//i.test(root) ? root : `https://${root}`;
+
   const res = await fetch(
-    `${baseUrl.replace(/\/$/, "")}/whatsapp/1/message/template`,
+    `${origin}/whatsapp/1/message/template`,
     {
       method: "POST",
       headers: {
@@ -215,9 +221,12 @@ async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
 /**
  * Out-of-band delivery of a 6-digit OTP via WhatsApp (Infobip transport).
  * Uses an authentication-category template (configurable via
- * WHATSAPP_OTP_TEMPLATE_NAME) with the code as the body placeholder. Falls
- * back to a console log in dev when credentials are missing so manual
- * testing remains possible.
+ * WHATSAPP_OTP_TEMPLATE_NAME). WhatsApp authentication templates require the
+ * code in BOTH the body placeholder AND the copy-code button parameter —
+ * omitting the button yields Infobip error 7008 ("Failed to match template
+ * parameters"). Per Meta convention the copy-code button is sent as type
+ * "URL". Falls back to a console log in dev when credentials are missing so
+ * manual testing remains possible.
  */
 export const sendWhatsAppOtp = internalAction({
   args: {
@@ -230,6 +239,7 @@ export const sendWhatsAppOtp = internalAction({
       templateName: process.env.WHATSAPP_OTP_TEMPLATE_NAME ?? "keeplas_otp_en",
       language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
       placeholders: [args.code],
+      buttons: [{ type: "URL", parameter: args.code }],
     });
     if (result === "whatsapp_not_configured") {
       console.warn(
