@@ -54,7 +54,11 @@ export const WEB_OPTIONAL_GROUPS = {
     "VAPID_SUBJECT",
     "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
   ],
-  "WhatsApp Cloud API": ["WHATSAPP_PHONE_ID", "WHATSAPP_TOKEN"],
+  "WhatsApp (Infobip)": [
+    "INFOBIP_BASE_URL",
+    "INFOBIP_API_KEY",
+    "INFOBIP_WHATSAPP_SENDER",
+  ],
 };
 
 // Required on the Convex deployment — read at action/mutation time on the
@@ -87,9 +91,10 @@ export const CONVEX_OPTIONAL_GROUPS = {
     "VAPID_PRIVATE_KEY",
     "VAPID_SUBJECT",
   ],
-  "WhatsApp Cloud API": [
-    "WHATSAPP_PHONE_ID",
-    "WHATSAPP_TOKEN",
+  "WhatsApp (Infobip)": [
+    "INFOBIP_BASE_URL",
+    "INFOBIP_API_KEY",
+    "INFOBIP_WHATSAPP_SENDER",
     "WHATSAPP_TEMPLATE_NAME",
     "WHATSAPP_TEMPLATE_LANG",
   ],
@@ -111,8 +116,9 @@ export const CONVEX_SYNC_KEYS = [
   "VAPID_PUBLIC_KEY",
   "VAPID_PRIVATE_KEY",
   "VAPID_SUBJECT",
-  "WHATSAPP_PHONE_ID",
-  "WHATSAPP_TOKEN",
+  "INFOBIP_BASE_URL",
+  "INFOBIP_API_KEY",
+  "INFOBIP_WHATSAPP_SENDER",
   "WHATSAPP_TEMPLATE_NAME",
   "WHATSAPP_TEMPLATE_LANG",
 ];

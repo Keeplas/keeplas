@@ -144,32 +144,48 @@ async function sendEmail({ user }: DispatchContext): Promise<string> {
   return "sent";
 }
 
-async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
-  if (!user.phoneNumber) return "no_phone";
-  const phoneId = process.env.WHATSAPP_PHONE_ID;
-  const token = process.env.WHATSAPP_TOKEN;
-  if (!phoneId || !token) return "whatsapp_not_configured";
-
-  const templateName =
-    process.env.WHATSAPP_TEMPLATE_NAME ?? "keeplas_life_check";
-  const lang = process.env.WHATSAPP_TEMPLATE_LANG ?? "en";
+/**
+ * Single transport for outbound WhatsApp template messages via Infobip.
+ * Returns "whatsapp_not_configured" when credentials are absent so callers
+ * can degrade gracefully in dev; throws on a non-2xx Infobip response.
+ *
+ * Infobip API: POST {baseUrl}/whatsapp/1/message/template
+ * Auth: `Authorization: App {apiKey}`
+ */
+async function sendWhatsAppTemplate(args: {
+  to: string;
+  templateName: string;
+  language: string;
+  placeholders?: string[];
+}): Promise<"sent" | "whatsapp_not_configured"> {
+  const baseUrl = process.env.INFOBIP_BASE_URL;
+  const apiKey = process.env.INFOBIP_API_KEY;
+  const sender = process.env.INFOBIP_WHATSAPP_SENDER;
+  if (!baseUrl || !apiKey || !sender) return "whatsapp_not_configured";
 
   const res = await fetch(
-    `https://graph.facebook.com/v17.0/${phoneId}/messages`,
+    `${baseUrl.replace(/\/$/, "")}/whatsapp/1/message/template`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `App ${apiKey}`,
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: user.phoneNumber.replace(/^\+/, ""),
-        type: "template",
-        template: {
-          name: templateName,
-          language: { code: lang },
-        },
+        messages: [
+          {
+            from: sender,
+            to: args.to.replace(/^\+/, ""),
+            content: {
+              templateName: args.templateName,
+              templateData: {
+                body: { placeholders: args.placeholders ?? [] },
+              },
+              language: args.language,
+            },
+          },
+        ],
       }),
     },
   );
@@ -181,11 +197,21 @@ async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
   return "sent";
 }
 
+async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
+  if (!user.phoneNumber) return "no_phone";
+  return sendWhatsAppTemplate({
+    to: user.phoneNumber,
+    templateName: process.env.WHATSAPP_TEMPLATE_NAME ?? "keeplas_life_check",
+    language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+  });
+}
+
 /**
- * Out-of-band delivery of a 6-digit OTP via WhatsApp Business API. Uses an
- * authentication-category template (configurable via WHATSAPP_OTP_TEMPLATE_NAME)
- * with the code as a body parameter. Falls back to a console log in dev when
- * credentials are missing so manual testing remains possible.
+ * Out-of-band delivery of a 6-digit OTP via WhatsApp (Infobip transport).
+ * Uses an authentication-category template (configurable via
+ * WHATSAPP_OTP_TEMPLATE_NAME) with the code as the body placeholder. Falls
+ * back to a console log in dev when credentials are missing so manual
+ * testing remains possible.
  */
 export const sendWhatsAppOtp = internalAction({
   args: {
@@ -193,49 +219,18 @@ export const sendWhatsAppOtp = internalAction({
     code: v.string(),
   },
   handler: async (_ctx, args) => {
-    const phoneId = process.env.WHATSAPP_PHONE_ID;
-    const token = process.env.WHATSAPP_TOKEN;
-    if (!phoneId || !token) {
+    const result = await sendWhatsAppTemplate({
+      to: args.phoneNumber,
+      templateName: process.env.WHATSAPP_OTP_TEMPLATE_NAME ?? "keeplas_otp",
+      language: process.env.WHATSAPP_OTP_TEMPLATE_LANG ?? "en",
+      placeholders: [args.code],
+    });
+    if (result === "whatsapp_not_configured") {
       console.warn(
         `[whatsapp_otp] credentials missing; OTP for ${args.phoneNumber} = ${args.code}`,
       );
-      return "whatsapp_not_configured";
     }
-    const templateName =
-      process.env.WHATSAPP_OTP_TEMPLATE_NAME ?? "keeplas_otp";
-    const lang = process.env.WHATSAPP_OTP_TEMPLATE_LANG ?? "en";
-
-    const res = await fetch(
-      `https://graph.facebook.com/v17.0/${phoneId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: args.phoneNumber.replace(/^\+/, ""),
-          type: "template",
-          template: {
-            name: templateName,
-            language: { code: lang },
-            components: [
-              {
-                type: "body",
-                parameters: [{ type: "text", text: args.code }],
-              },
-            ],
-          },
-        }),
-      },
-    );
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`whatsapp_otp ${res.status}: ${text.slice(0, 120)}`);
-    }
-    return "sent";
+    return result;
   },
 });
 
