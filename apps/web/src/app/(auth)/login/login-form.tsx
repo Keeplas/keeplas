@@ -245,8 +245,7 @@ export function LoginForm() {
 
         <AuthSubmitButton
           disabled={
-            loading ||
-            (kind === "phone" && phoneCodeSent && code.length !== 6)
+            loading || (kind === "phone" && phoneCodeSent && code.length !== 6)
           }
         >
           {submitLabel}

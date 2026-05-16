@@ -975,7 +975,10 @@ export const runAvailabilityReconfirm = internalMutation({
         updatedAt: now,
       });
 
-      if (reminders >= MAX_RECONFIRM_REMINDERS && !c.ownerNotifiedUnavailableAt) {
+      if (
+        reminders >= MAX_RECONFIRM_REMINDERS &&
+        !c.ownerNotifiedUnavailableAt
+      ) {
         await createNotification(ctx, {
           userId: c.userId,
           type: "security_alert",

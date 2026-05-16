@@ -96,7 +96,9 @@ export default function LoginOtpPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.lockClock} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">Confirm it&apos;s you</h1>
+          <h1 className="text-headline-md text-primary">
+            Confirm it&apos;s you
+          </h1>
           <p className="text-body-md text-on-surface-variant">
             {gate.channelMasked
               ? `Enter the 6-digit code we sent to ${gate.channelMasked} to finish signing in.`

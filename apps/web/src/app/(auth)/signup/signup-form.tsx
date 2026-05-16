@@ -166,8 +166,12 @@ export function SignupForm() {
   if (step === "verify") {
     return (
       <AuthFormShell
-        badgeLabel={kind === "phone" ? "WhatsApp Confirmation" : "Email Confirmation"}
-        heading={kind === "phone" ? "Confirm your number" : "Confirm your email"}
+        badgeLabel={
+          kind === "phone" ? "WhatsApp Confirmation" : "Email Confirmation"
+        }
+        heading={
+          kind === "phone" ? "Confirm your number" : "Confirm your email"
+        }
         description={
           kind === "phone"
             ? "We sent a 6-digit code to your WhatsApp. Enter it below to activate your vault."
@@ -325,11 +329,7 @@ export function SignupForm() {
           ) : (
             <div className="space-y-2">
               <Label htmlFor="signup-phone">Phone Number</Label>
-              <PhoneInput
-                id="signup-phone"
-                value={phone}
-                onChange={setPhone}
-              />
+              <PhoneInput id="signup-phone" value={phone} onChange={setPhone} />
               <p className="text-label-md text-on-surface-variant">
                 We&apos;ll send your verification code and Life Check alerts to
                 this WhatsApp number.{" "}

@@ -24,10 +24,7 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     const secret = process.env.INFOBIP_INBOUND_SECRET;
-    if (
-      !secret ||
-      request.headers.get("x-keeplas-webhook-secret") !== secret
-    ) {
+    if (!secret || request.headers.get("x-keeplas-webhook-secret") !== secret) {
       return new Response("unauthorized", { status: 401 });
     }
 

@@ -98,7 +98,12 @@ export const getMyLoginOtpGate = query({
 
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) {
-      return { authenticated: true, required: true, channelMasked, recoveryBound };
+      return {
+        authenticated: true,
+        required: true,
+        channelMasked,
+        recoveryBound,
+      };
     }
     const cleared = await ctx.db
       .query("auth_session_login_otp")
