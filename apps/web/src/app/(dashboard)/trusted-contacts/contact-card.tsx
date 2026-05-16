@@ -77,7 +77,7 @@ function formatRelative(ts: number): string {
 
 function computeVerificationBadge(
   contact: Doc<"trusted_contacts">,
-): { label: string; className: string } | null {
+): { label: string; className: string; lastVerifiedAt?: number } | null {
   if (contact.invitationStatus !== "accepted") return null;
   if ((contact.contactType ?? "trust") === "recipient_only") return null;
 
@@ -90,10 +90,11 @@ function computeVerificationBadge(
   const isStale =
     Date.now() - contact.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS;
   return {
-    label: `Hash verified ${formatRelative(contact.lastVerifiedAt)}`,
+    label: isStale ? "Verification stale" : "Hash verified",
     className: isStale
       ? "bg-tertiary-container text-on-tertiary-container"
       : "bg-secondary-container text-on-secondary-container",
+    lastVerifiedAt: contact.lastVerifiedAt,
   };
 }
 
@@ -222,7 +223,29 @@ export function ContactCard({ contact }: ContactCardProps) {
             )}
           >
             {verificationBadge.label}
-            <HelpHint content="Round-trip cryptographic check that the contact's keypair is functional. The owner wraps a known plaintext to the contact's public key, and the contact unwraps it on-device — proving they hold the matching private key without exposing any vault content." />
+            <HelpHint
+              content={
+                <>
+                  <p>
+                    Round-trip cryptographic check that the contact&apos;s
+                    keypair is functional. The owner wraps a known plaintext to
+                    the contact&apos;s public key, and the contact unwraps it
+                    on-device — proving they hold the matching private key
+                    without exposing any vault content.
+                  </p>
+                  {verificationBadge.lastVerifiedAt !== undefined && (
+                    <p className="mt-2">
+                      Last verified{" "}
+                      {formatRelative(verificationBadge.lastVerifiedAt)} (
+                      {new Date(
+                        verificationBadge.lastVerifiedAt,
+                      ).toLocaleDateString()}
+                      ).
+                    </p>
+                  )}
+                </>
+              }
+            />
           </span>
         )}
       </div>
