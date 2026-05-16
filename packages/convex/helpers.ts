@@ -3,6 +3,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
+export const LOGIN_OTP_REQUIRED_ERROR = "LOGIN_OTP_REQUIRED";
 
 /**
  * Require an authenticated user (for mutations). Throws if not authenticated.
@@ -43,6 +44,46 @@ export async function requireAuthWithTotp(ctx: QueryCtx) {
     .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
     .first();
   if (!cleared) throw new Error(TOTP_REQUIRED_ERROR);
+
+  return userId;
+}
+
+/**
+ * Passwordless phone accounts authenticate with a WhatsApp OTP at every
+ * sign-in, so the always-on login-OTP gate would double-prompt them. Detect
+ * such accounts by the presence of a `phone-otp` auth account.
+ */
+export async function hasPhoneOtpAccount(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const account = await ctx.db
+    .query("authAccounts")
+    .withIndex("userIdAndProvider", (q) =>
+      q.eq("userId", userId).eq("provider", "phone-otp"),
+    )
+    .first();
+  return account !== null;
+}
+
+/**
+ * Like `requireAuth` but additionally enforces the always-on login-OTP
+ * step-up: the current Convex Auth session must have cleared a channel OTP.
+ * Skipped for passwordless phone accounts (their sign-in IS an OTP). Throws
+ * `"LOGIN_OTP_REQUIRED"` for callers to redirect the client to `/login/otp`.
+ */
+export async function requireAuthWithLoginOtp(ctx: QueryCtx) {
+  const userId = await requireAuth(ctx);
+  if (await hasPhoneOtpAccount(ctx, userId)) return userId;
+
+  const sessionId = await getAuthSessionId(ctx);
+  if (!sessionId) throw new Error(LOGIN_OTP_REQUIRED_ERROR);
+
+  const cleared = await ctx.db
+    .query("auth_session_login_otp")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .first();
+  if (!cleared) throw new Error(LOGIN_OTP_REQUIRED_ERROR);
 
   return userId;
 }

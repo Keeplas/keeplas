@@ -513,6 +513,7 @@ export async function recordActivityInternal(
   ctx: MutationCtx,
   userId: Id<"users">,
   now: number,
+  source: string = "passive_app_activity",
 ) {
   const config = await ctx.db
     .query("life_check_configs")
@@ -549,7 +550,7 @@ export async function recordActivityInternal(
   await ctx.db.patch(escalating._id, {
     status: "validated",
     validatedAt: now,
-    validatedBy: "passive_app_activity",
+    validatedBy: source,
     completedAt: now,
   });
 
@@ -564,6 +565,30 @@ export async function recordActivityInternal(
     resourceId: escalating._id,
   });
 }
+
+/**
+ * Validate a Life Check cycle from an inbound WhatsApp event (a free-text
+ * reply or a Quick-reply button tap). Called by the Infobip inbound webhook
+ * — no auth context — so the user is resolved by their verified phone number.
+ * A mere read receipt is NOT routed here: only a deliberate reply counts as
+ * liveness. No-ops silently when the phone maps to no user or there is no
+ * cycle in flight.
+ */
+export const validateFromWhatsApp = internalMutation({
+  args: { phoneNumber: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
+      .first();
+    if (!user) return { matched: false };
+
+    const now = Date.now();
+    await ctx.db.patch(user._id, { lastSeenAt: now });
+    await recordActivityInternal(ctx, user._id, now, "passive_whatsapp");
+    return { matched: true };
+  },
+});
 
 /**
  * Cron-driven evaluator. For every active config, decide whether the user

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { phraseToHash } from "@keeplas/crypto";
 import {
   Button,
@@ -11,8 +12,13 @@ import {
   Input,
   Label,
   PasswordInput,
+  PhoneInput,
   Spinner,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Textarea,
+  isValidPhone,
 } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
@@ -24,8 +30,11 @@ export const dynamic = "force-dynamic";
 export default function PasswordRecoveryPage() {
   const router = useRouter();
   const resetPassword = useAction(api.passwordReset.resetPasswordWithRecovery);
+  const { signIn } = useAuthActions();
 
+  const [kind, setKind] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState<string | undefined>(undefined);
   const [phrase, setPhrase] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,6 +51,36 @@ export default function PasswordRecoveryPage() {
       setError("Please enter all 24 words of your recovery phrase.");
       return;
     }
+
+    if (kind === "phone") {
+      // Passwordless phone: 24 words → session via the phone-recovery
+      // provider. No password to set.
+      if (!phone || !isValidPhone(phone)) {
+        setError("Enter a valid phone number for your account.");
+        return;
+      }
+      setBusy(true);
+      setError(null);
+      try {
+        const phraseHash = await phraseToHash(words);
+        await signIn("phone-recovery", { phoneNumber: phone, phraseHash });
+        router.push("/hub");
+      } catch (err) {
+        setError(
+          getErrorMessage(
+            err,
+            "Recovery failed. Check that your number and 24 words match.",
+          ),
+        );
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Enter the email for your account.");
+      return;
+    }
     if (newPassword.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -56,7 +95,7 @@ export default function PasswordRecoveryPage() {
     try {
       const phraseHash = await phraseToHash(words);
       await resetPassword({
-        email: email.trim().toLowerCase(),
+        email: email.trim(),
         phraseHash,
         newPassword,
       });
@@ -101,12 +140,12 @@ export default function PasswordRecoveryPage() {
             <Icon path={ICON_PATHS.key} className="w-7 h-7" />
           </div>
           <h1 className="text-headline-md text-primary">
-            Reset your password with your 24 words
+            Recover access with your 24 words
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            Your password is purely an authentication credential. Resetting it
-            does not touch your encrypted vault — your 24 words remain the
-            crypto root.
+            Email accounts reset their password; phone accounts regain access
+            directly. Either way your encrypted vault is untouched — your 24
+            words remain the crypto root.
           </p>
         </div>
 
@@ -120,17 +159,36 @@ export default function PasswordRecoveryPage() {
           onSubmit={handleSubmit}
           className="bg-surface-container-lowest p-6 rounded-2xl space-y-4 ghost-border"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="rec-email">Email</Label>
-            <Input
-              id="rec-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
+          <Tabs
+            value={kind}
+            onValueChange={(v) => setKind(v as "email" | "phone")}
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="email" className="flex-1">
+                Email
+              </TabsTrigger>
+              <TabsTrigger value="phone" className="flex-1">
+                Phone
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {kind === "email" ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="rec-email">Email</Label>
+              <Input
+                id="rec-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="rec-phone">Phone</Label>
+              <PhoneInput id="rec-phone" value={phone} onChange={setPhone} />
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="rec-phrase">Recovery phrase (24 words)</Label>
             <Textarea
@@ -150,34 +208,50 @@ export default function PasswordRecoveryPage() {
               Words never leave this device — only a SHA-256 verifier is sent.
             </p>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="rec-new-password">New password</Label>
-            <PasswordInput
-              id="rec-new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="rec-confirm-password">Confirm new password</Label>
-            <PasswordInput
-              id="rec-confirm-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
+          {kind === "email" && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="rec-new-password">New password</Label>
+                <PasswordInput
+                  id="rec-new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="rec-confirm-password">
+                  Confirm new password
+                </Label>
+                <PasswordInput
+                  id="rec-confirm-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </div>
+            </>
+          )}
           <Button
             type="submit"
             variant="vault"
             size="md"
-            disabled={busy || !email || !phrase || !newPassword}
+            disabled={
+              busy ||
+              (kind === "email" ? !email || !newPassword : !phone) ||
+              !phrase
+            }
             className="w-full justify-center"
           >
-            {busy ? <Spinner size="sm" /> : "Reset password"}
+            {busy ? (
+              <Spinner size="sm" />
+            ) : kind === "phone" ? (
+              "Recover access"
+            ) : (
+              "Reset password"
+            )}
           </Button>
         </form>
 

@@ -27,6 +27,10 @@ export default function DashboardLayout({
     api.totp.getMyTotpGate,
     isAuthenticated ? {} : "skip",
   );
+  const loginOtpGate = useQuery(
+    api.login_otp.getMyLoginOtpGate,
+    isAuthenticated ? {} : "skip",
+  );
 
   useRestoreMasterKey();
   usePassiveSignal(
@@ -51,7 +55,20 @@ export default function DashboardLayout({
     }
   }, [totpGate?.required, router]);
 
-  if (isLoading || onboardingState === undefined || totpGate === undefined) {
+  // Login OTP is the last gate: only redirect once TOTP is satisfied so the
+  // two gates don't fight over the route.
+  useEffect(() => {
+    if (totpGate && !totpGate.required && loginOtpGate?.required) {
+      router.push("/login/otp");
+    }
+  }, [totpGate, loginOtpGate?.required, router]);
+
+  if (
+    isLoading ||
+    onboardingState === undefined ||
+    totpGate === undefined ||
+    loginOtpGate === undefined
+  ) {
     return <Loader fullscreen label="Unlocking your vault" />;
   }
 
@@ -64,6 +81,10 @@ export default function DashboardLayout({
   }
 
   if (totpGate.required) {
+    return null;
+  }
+
+  if (loginOtpGate.required) {
     return null;
   }
 

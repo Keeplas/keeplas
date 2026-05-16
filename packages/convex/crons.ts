@@ -26,4 +26,15 @@ crons.interval(
   internal.life_check.evaluateAllConfigs,
 );
 
+/**
+ * Weekly availability re-confirmation sweep. Nudges trust contacts whose
+ * shard verification is stale/missing and alerts the owner to replace a
+ * contact who never accepted or stays unresponsive.
+ */
+crons.interval(
+  "trusted_contact_reconfirm",
+  { hours: 24 * 7 },
+  internal.trusted_contacts.runAvailabilityReconfirm,
+);
+
 export default crons;

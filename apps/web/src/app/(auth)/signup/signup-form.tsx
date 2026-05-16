@@ -4,9 +4,18 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Input, Label, PasswordInput } from "@keeplas/ui";
+import {
+  Input,
+  Label,
+  PasswordInput,
+  PhoneInput,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  isValidPhone,
+} from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
 
@@ -16,6 +25,8 @@ const INVITE_PATH_RE = /^\/invite\/([^/?#]+)/;
 
 export function SignupForm() {
   const { signIn } = useAuthActions();
+  const creditSignupSession = useMutation(api.login_otp.creditSignupSession);
+  const requestPhoneOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "";
   const inviteToken = redirect.match(INVITE_PATH_RE)?.[1];
@@ -34,8 +45,11 @@ export function SignupForm() {
       : undefined;
 
   const [step, setStep] = useState<Step>("details");
+  // Invitations are email-based, so the phone option is hidden for them.
+  const [kind, setKind] = useState<"email" | "phone">("email");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -51,14 +65,47 @@ export function SignupForm() {
 
   async function handlePasswordSignUp(e: React.FormEvent) {
     e.preventDefault();
+    if (kind === "phone") {
+      // Passwordless: request a WhatsApp OTP, then verify it in step 2.
+      if (!phone || !isValidPhone(phone)) {
+        setError("Please enter a valid phone number.");
+        return;
+      }
+      setLoading(true);
+      setError("");
+      try {
+        await requestPhoneOtp({ phoneNumber: phone, intent: "signup" });
+        setStep("verify");
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not start signup. Try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (phone && !isValidPhone(phone)) {
+      setError("Please enter a valid phone number.");
       return;
     }
     setLoading(true);
     setError("");
     try {
-      await signIn("password", { name, email, password, flow: "signUp" });
+      await signIn("password", {
+        name,
+        email,
+        password,
+        ...(phone ? { phoneNumber: phone } : {}),
+        flow: "signUp",
+      });
       setStep("verify");
     } catch {
       setError("Could not create account. Email may already be in use.");
@@ -72,11 +119,25 @@ export function SignupForm() {
     setLoading(true);
     setError("");
     try {
-      await signIn("password", {
-        email,
-        code,
-        flow: "email-verification",
-      });
+      if (kind === "phone") {
+        // Passwordless phone: the code IS the auth. No login-OTP gate to
+        // credit (phone-otp accounts skip it).
+        await signIn("phone-otp", {
+          phoneNumber: phone as string,
+          code,
+          name,
+          flow: "signUp",
+        });
+      } else {
+        await signIn("password", {
+          email,
+          code,
+          flow: "email-verification",
+        });
+        // Signup already proved channel ownership — credit the fresh session
+        // so the always-on login-OTP gate doesn't re-prompt.
+        await creditSignupSession({}).catch(() => undefined);
+      }
     } catch {
       setError("Invalid or expired code.");
       setLoading(false);
@@ -87,7 +148,14 @@ export function SignupForm() {
     setLoading(true);
     setError("");
     try {
-      await signIn("password", { email, flow: "email-verification" });
+      if (kind === "phone") {
+        await requestPhoneOtp({
+          phoneNumber: phone as string,
+          intent: "signup",
+        });
+      } else {
+        await signIn("password", { email, flow: "email-verification" });
+      }
     } catch {
       setError("Could not resend the code. Try again in a moment.");
     } finally {
@@ -98,11 +166,15 @@ export function SignupForm() {
   if (step === "verify") {
     return (
       <AuthFormShell
-        badgeLabel="Email Confirmation"
-        heading="Confirm your email"
-        description={`We sent a 6-digit code to ${email}. Enter it below to activate your vault.`}
+        badgeLabel={kind === "phone" ? "WhatsApp Confirmation" : "Email Confirmation"}
+        heading={kind === "phone" ? "Confirm your number" : "Confirm your email"}
+        description={
+          kind === "phone"
+            ? "We sent a 6-digit code to your WhatsApp. Enter it below to activate your vault."
+            : `We sent a 6-digit code to ${email}. Enter it below to activate your vault.`
+        }
         footer={{
-          prompt: "Wrong email?",
+          prompt: kind === "phone" ? "Wrong number?" : "Wrong email?",
           label: "Start over",
           href: "/signup",
           accent: "secondary",
@@ -127,7 +199,11 @@ export function SignupForm() {
           </div>
 
           <AuthSubmitButton disabled={loading || code.length !== 6}>
-            {loading ? "Verifying..." : "Confirm Email"}
+            {loading
+              ? "Verifying..."
+              : kind === "phone"
+                ? "Confirm Number"
+                : "Confirm Email"}
           </AuthSubmitButton>
 
           <button
@@ -188,37 +264,98 @@ export function SignupForm() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="signup-email">Email Address</Label>
-            <Input
-              id="signup-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="curator@keeplas.vault"
-              disabled={!!lockedEmail}
-              readOnly={!!lockedEmail}
-              required
-            />
-            {lockedEmail && (
-              <p className="text-label-md text-on-surface-variant">
-                Locked — this is the email your inviter used to send you the
-                invitation.
-              </p>
-            )}
-          </div>
+          {!lockedEmail && (
+            <Tabs
+              value={kind}
+              onValueChange={(v) => setKind(v as "email" | "phone")}
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="email" className="flex-1">
+                  Email
+                </TabsTrigger>
+                <TabsTrigger value="phone" className="flex-1">
+                  Phone
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="signup-password">Password</Label>
-            <PasswordInput
-              id="signup-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={8}
-            />
-          </div>
+          {kind === "email" ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email Address</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="curator@keeplas.vault"
+                  disabled={!!lockedEmail}
+                  readOnly={!!lockedEmail}
+                  required
+                />
+                {lockedEmail && (
+                  <p className="text-label-md text-on-surface-variant">
+                    Locked — this is the email your inviter used to send you the
+                    invitation.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-phone">Phone (optional)</Label>
+                <PhoneInput
+                  id="signup-phone"
+                  value={phone}
+                  onChange={setPhone}
+                />
+                <p className="text-label-md text-on-surface-variant">
+                  Used for WhatsApp verification and Life Check alerts. You can
+                  also reply to a Life Check on WhatsApp to confirm you are
+                  well.{" "}
+                  <Link
+                    href="/security"
+                    className="text-secondary font-bold hover:underline"
+                  >
+                    Learn more
+                  </Link>
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="signup-phone">Phone Number</Label>
+              <PhoneInput
+                id="signup-phone"
+                value={phone}
+                onChange={setPhone}
+              />
+              <p className="text-label-md text-on-surface-variant">
+                We&apos;ll send your verification code and Life Check alerts to
+                this WhatsApp number.{" "}
+                <Link
+                  href="/security"
+                  className="text-secondary font-bold hover:underline"
+                >
+                  Learn more
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {kind === "email" && (
+            <div className="space-y-2">
+              <Label htmlFor="signup-password">Password</Label>
+              <PasswordInput
+                id="signup-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
+            </div>
+          )}
         </div>
 
         <AuthSubmitButton disabled={loading}>
