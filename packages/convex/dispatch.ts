@@ -173,33 +173,30 @@ async function sendWhatsAppTemplate(args: {
   const root = baseUrl.replace(/\/$/, "");
   const origin = /^https?:\/\//i.test(root) ? root : `https://${root}`;
 
-  const res = await fetch(
-    `${origin}/whatsapp/1/message/template`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `App ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            from: sender,
-            to: args.to.replace(/^\+/, ""),
-            content: {
-              templateName: args.templateName,
-              templateData: {
-                body: { placeholders: args.placeholders ?? [] },
-                ...(args.buttons ? { buttons: args.buttons } : {}),
-              },
-              language: args.language,
-            },
-          },
-        ],
-      }),
+  const res = await fetch(`${origin}/whatsapp/1/message/template`, {
+    method: "POST",
+    headers: {
+      Authorization: `App ${apiKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
     },
-  );
+    body: JSON.stringify({
+      messages: [
+        {
+          from: sender,
+          to: args.to.replace(/^\+/, ""),
+          content: {
+            templateName: args.templateName,
+            templateData: {
+              body: { placeholders: args.placeholders ?? [] },
+              ...(args.buttons ? { buttons: args.buttons } : {}),
+            },
+            language: args.language,
+          },
+        },
+      ],
+    }),
+  });
 
   if (!res.ok) {
     const text = await res.text();
