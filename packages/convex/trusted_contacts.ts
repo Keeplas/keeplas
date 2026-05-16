@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { internalAction, internalQuery, query } from "./_generated/server";
+import {
+  internalAction,
+  internalMutation,
+  internalQuery,
+  query,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import { createNotification, requireAuth } from "./helpers";
 import { auditedMutation } from "./audit";
@@ -184,6 +189,21 @@ export const inviteContact = auditedMutation({
         0,
         internal.trusted_contacts.sendInvitationEmail,
         { contactId },
+      );
+    }
+
+    // Additive WhatsApp nudge for trust contacts who provided a phone number.
+    // Email remains the canonical channel (carries the same accept link).
+    if (contactType === "trust" && baseFields.phoneNumber) {
+      const inviter = await ctx.db.get(userId);
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendInvitationWhatsApp,
+        {
+          phoneNumber: baseFields.phoneNumber,
+          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          invitationToken,
+        },
       );
     }
 
@@ -850,3 +870,130 @@ function escapeHtml(s: string) {
             : "&#39;",
   );
 }
+
+const RECONFIRM_STALE_MS = 30 * 24 * 60 * 60 * 1000; // verification considered stale
+const RECONFIRM_THROTTLE_MS = 6 * 24 * 60 * 60 * 1000; // ≤ 1 nudge / weekly run
+const MAX_RECONFIRM_REMINDERS = 3; // then alert the owner to replace
+const INVITE_EXPIRY_MS = 72 * 60 * 60 * 1000; // matches the accept-link TTL
+
+/**
+ * Weekly availability re-confirmation sweep (driven by crons.ts). Two gaps
+ * it closes:
+ *
+ *  - An accepted trust contact whose shard verification is missing or older
+ *    than 30 days gets nudged (in-app + email, plus WhatsApp when a phone is
+ *    on file) to re-verify. After 3 ignored nudges the vault owner is alerted
+ *    once to replace the unresponsive contact.
+ *  - A trust invitation still "pending" past its 72h accept window alerts the
+ *    owner once that the contact never came on board.
+ *
+ * Reuses the existing notification + WhatsApp dispatch infrastructure; no
+ * new messaging system. Idempotent via `ownerNotifiedUnavailableAt`.
+ */
+export const runAvailabilityReconfirm = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const contacts = await ctx.db.query("trusted_contacts").collect();
+
+    for (const c of contacts) {
+      if ((c.contactType ?? "trust") !== "trust") continue;
+      if (
+        c.invitationStatus === "revoked" ||
+        c.invitationStatus === "declined"
+      ) {
+        continue;
+      }
+
+      // Gap 2: invitation never accepted within the accept window.
+      if (
+        c.invitationStatus === "pending" &&
+        now - c.invitedAt > INVITE_EXPIRY_MS
+      ) {
+        if (!c.ownerNotifiedUnavailableAt) {
+          await createNotification(ctx, {
+            userId: c.userId,
+            type: "security_alert",
+            title: "Trusted contact unavailable",
+            body: `${c.name} never accepted your invitation. Replace them so your continuity protocol stays operational.`,
+            channels: ["push", "email"],
+            actionUrl: "/trusted-contacts",
+            relatedId: c._id,
+            relatedType: "trusted_contact",
+          });
+          await ctx.db.patch(c._id, {
+            ownerNotifiedUnavailableAt: now,
+            updatedAt: now,
+          });
+        }
+        continue;
+      }
+
+      // Gap 1: accepted but shard verification missing/stale.
+      const verificationStale =
+        c.lastVerifiedAt === undefined ||
+        now - c.lastVerifiedAt > RECONFIRM_STALE_MS;
+      if (
+        c.invitationStatus !== "accepted" ||
+        !c.contactUserId ||
+        !verificationStale
+      ) {
+        continue;
+      }
+
+      const throttled =
+        c.lastReconfirmAt !== undefined &&
+        now - c.lastReconfirmAt < RECONFIRM_THROTTLE_MS;
+      if (throttled) continue;
+
+      const owner = await ctx.db.get(c.userId);
+      const ownerName = owner?.name?.trim() || "a Keeplas user";
+
+      await createNotification(ctx, {
+        userId: c.contactUserId,
+        type: "vault_update",
+        title: "Can you still safeguard their recovery shard?",
+        body: `Please re-verify that you can still access ${ownerName}'s recovery shard on Keeplas so their continuity protection stays active.`,
+        channels: ["push", "email"],
+        actionUrl: "/shared-with-me",
+        relatedId: c._id,
+        relatedType: "trusted_contact",
+      });
+
+      if (c.phoneNumber) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.dispatch.sendReconfirmWhatsApp,
+          { phoneNumber: c.phoneNumber, ownerName },
+        );
+      }
+
+      const reminders = (c.reconfirmReminders ?? 0) + 1;
+      await ctx.db.patch(c._id, {
+        reconfirmReminders: reminders,
+        lastReconfirmAt: now,
+        updatedAt: now,
+      });
+
+      if (
+        reminders >= MAX_RECONFIRM_REMINDERS &&
+        !c.ownerNotifiedUnavailableAt
+      ) {
+        await createNotification(ctx, {
+          userId: c.userId,
+          type: "security_alert",
+          title: "Trusted contact unresponsive",
+          body: `${c.name} hasn't re-verified their recovery shard after several reminders. Replace them so your continuity protocol stays operational.`,
+          channels: ["push", "email"],
+          actionUrl: "/trusted-contacts",
+          relatedId: c._id,
+          relatedType: "trusted_contact",
+        });
+        await ctx.db.patch(c._id, {
+          ownerNotifiedUnavailableAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+  },
+});

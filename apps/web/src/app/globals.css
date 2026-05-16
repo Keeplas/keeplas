@@ -339,19 +339,19 @@ body {
     page-break-inside: avoid;
   }
 
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
 
-  .print\\:max-w-none {
+  .print\:max-w-none {
     max-width: none !important;
   }
 
-  .print\\:rounded-none {
+  .print\:rounded-none {
     border-radius: 0 !important;
   }
 
-  .print\\:shadow-none {
+  .print\:shadow-none {
     box-shadow: none !important;
   }
 }

@@ -42,6 +42,9 @@ export const getPhraseSaltByEmail = query({
 /**
  * Internal helper — verifies the recovery phrase hash for the given email
  * and returns the user id when it matches. Used by the reset action below.
+ *
+ * Email-only: passwordless phone accounts have no password to reset; their
+ * lost-phone recovery uses the `phone-recovery` ConvexCredentials provider.
  */
 export const verifyRecoveryPhraseInternal = internalQuery({
   args: { email: v.string(), phraseHash: v.string() },

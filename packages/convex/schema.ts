@@ -88,7 +88,8 @@ export default defineSchema({
     phoneNumberVerifiedAt: v.optional(v.number()),
   })
     .index("email", ["email"])
-    .index("by_last_seen", ["lastSeenAt"]),
+    .index("by_last_seen", ["lastSeenAt"])
+    .index("by_phone", ["phoneNumber"]),
 
   // ═══════════════════════════════════════════════
   // PHONE VERIFICATION (WhatsApp OTP)
@@ -106,6 +107,18 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_expires", ["userId", "expiresAt"]),
+
+  // Pre-auth OTP for passwordless phone accounts (signup/login). Keyed by
+  // phone, NOT userId: at signup no user exists yet, and the credentials
+  // provider's authorize() runs without an auth context. Mirrors
+  // phone_verification_codes' hashing/expiry/attempts semantics.
+  phone_auth_codes: defineTable({
+    phoneNumber: v.string(),
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+    intent: v.union(v.literal("signup"), v.literal("signin")),
+  }).index("by_phone", ["phoneNumber"]),
 
   // ═══════════════════════════════════════════════
   // PASSKEYS (WebAuthn credentials)
@@ -160,6 +173,37 @@ export default defineSchema({
   // without a row here are blocked from TOTP-gated functions when the user
   // has TOTP enrolled. Rows live as long as the underlying authSessions row.
   auth_session_totp: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    verifiedAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"]),
+
+  // ═══════════════════════════════════════════════
+  // LOGIN OTP (always-on step-up at every login)
+  // ═══════════════════════════════════════════════
+
+  // Pending login-OTP code, mirroring phone_verification_codes but
+  // channel-aware (delivered on the account's email or WhatsApp).
+  login_otp_codes: defineTable({
+    userId: v.id("users"),
+    channel: v.union(v.literal("email"), v.literal("whatsapp")),
+    // Email address or E.164 phone snapshot at issuance — invalidates the
+    // code if the destination changes before the user submits it.
+    destination: v.string(),
+    // SHA-256 hex of the 6-digit OTP. Plaintext is never stored.
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_expires", ["userId", "expiresAt"]),
+
+  // Marker that a Convex Auth session has cleared the login-OTP step.
+  // Login OTP is always required, so a session without a row here is
+  // blocked from the dashboard. Rows live as long as the authSessions row.
+  auth_session_login_otp: defineTable({
     sessionId: v.id("authSessions"),
     userId: v.id("users"),
     verifiedAt: v.number(),
@@ -369,6 +413,14 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
 
     introMessage: v.optional(v.string()),
+
+    // Availability re-confirmation tracking (weekly cron). `reconfirmReminders`
+    // counts nudges sent to a contact whose shard verification is stale/missing;
+    // `ownerNotifiedUnavailableAt` is stamped once the owner has been alerted to
+    // replace an unresponsive contact (prevents repeat owner alerts).
+    reconfirmReminders: v.optional(v.number()),
+    lastReconfirmAt: v.optional(v.number()),
+    ownerNotifiedUnavailableAt: v.optional(v.number()),
 
     createdAt: v.number(),
     updatedAt: v.number(),

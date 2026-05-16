@@ -25,6 +25,7 @@
     "check:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/check-convex-env.mjs",
     "check:convex": "pnpm check:convex-env",
     "check:zk": "node scripts/check-zk.mjs",
+    "debug:whatsapp": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/infobip-report.mjs",
     "sync:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/sync-convex-env.mjs",
     "link:env": "node scripts/link-env.mjs",
     "prepare": "husky"
