@@ -10,11 +10,7 @@
 // from the root works for both cloud and local deployments.
 
 import { spawn } from "node:child_process";
-
-const YELLOW = "\x1b[33m";
-const GREEN = "\x1b[32m";
-const DIM = "\x1b[2m";
-const RESET = "\x1b[0m";
+import { YELLOW, GREEN, DIM, RESET } from "./_env-keys.mjs";
 
 const skipCheck =
   process.env.CI === "true" || process.env.KEEPLAS_SKIP_CONVEX_CHECK === "1";
