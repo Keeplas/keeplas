@@ -27,7 +27,7 @@ export function LoginForm() {
   const { signIn } = useAuthActions();
   const startPasskeyAuth = useMutation(api.webauthn.startAuthentication);
   const requestPhoneOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
-  const [kind, setKind] = useState<"email" | "phone">("email");
+  const [kind, setKind] = useState<"email" | "phone">("phone");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState("");
@@ -153,11 +153,11 @@ export function LoginForm() {
             onValueChange={(v) => switchKind(v as "email" | "phone")}
           >
             <TabsList className="w-full">
-              <TabsTrigger value="email" className="flex-1">
-                Email
-              </TabsTrigger>
               <TabsTrigger value="phone" className="flex-1">
                 Phone
+              </TabsTrigger>
+              <TabsTrigger value="email" className="flex-1">
+                Email
               </TabsTrigger>
             </TabsList>
           </Tabs>
