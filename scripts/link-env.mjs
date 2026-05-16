@@ -14,12 +14,7 @@ import {
 } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-const RED = "\x1b[31m";
-const YELLOW = "\x1b[33m";
-const GREEN = "\x1b[32m";
-const DIM = "\x1b[2m";
-const RESET = "\x1b[0m";
+import { RED, YELLOW, GREEN, DIM, RESET } from "./_env-keys.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const masterPath = resolve(repoRoot, ".env.local");
