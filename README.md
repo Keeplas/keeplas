@@ -12,7 +12,6 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 ---
 
---
 
 ## Stack
 
