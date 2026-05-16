@@ -21,11 +21,15 @@ The fast path is **native** with `pnpm bootstrap`. Docker is supported as an alt
 4. Provision your personal Convex deployment (interactive — opens a browser):
    `npx convex dev --once --configure=new`
    This writes `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` into `.env.local`.
-5. Bootstrap the auth keys (chicken-and-egg — Better Auth writes JWT keys on first sign-in):
-   - `pnpm dev` to boot the app.
-   - Open <http://localhost:3000>, sign in once — this triggers JWT key generation on Convex.
-   - In another terminal: `pnpm sync:convex-env` — pushes the rest of your local env (audit secret, WebAuthn config, Resend keys) to Convex.
-6. From now on, just `pnpm dev`. The Convex env check runs in the background and warns on drift without blocking boot. Pre-push, run `pnpm check:convex` for a hard check.
+5. Seed Convex Auth's JWT keys on your deployment (one-time):
+   `npx @convex-dev/auth`
+   Generates a unique `JWT_PRIVATE_KEY` + `JWKS` pair and sets them on your deployment via the Convex CLI. Without this, the very first sign-in throws `Missing environment variable JWT_PRIVATE_KEY`.
+6. Push the rest of your local env to Convex:
+   `pnpm sync:convex-env`
+   Pushes the audit secret, WebAuthn config, and Resend keys. `JWKS` / `JWT_PRIVATE_KEY` are deliberately **not** pushed by this script (they're per-deployment unique, seeded by step 5).
+7. Boot the app:
+   `pnpm dev`
+   The Convex env check runs in the background and warns on drift without blocking boot. Pre-push, run `pnpm check:convex` for a hard check.
 
 > **Windows:** `pnpm link:env` uses POSIX symlinks. Enable Windows Developer Mode (Settings → Privacy → For developers) or run your shell as administrator the first time — afterward, the symlinks persist.
 
@@ -35,7 +39,7 @@ The fast path is **native** with `pnpm bootstrap`. Docker is supported as an alt
 
 ### Convex deep dive
 
-The first run hits a JWT chicken-and-egg (Better Auth generates keys on first sign-in). Every key concept — provisioning, schema changes, env sync, audit secret matching, the `cloud` vs `selfhosted` modes — is documented in [`docs/CONVEX.md`](./docs/CONVEX.md). Read it once before you touch `packages/convex/`.
+The first run requires seeding `JWT_PRIVATE_KEY` + `JWKS` on your deployment via `npx @convex-dev/auth`. Every key concept — provisioning, schema changes, env sync, audit secret matching, the `cloud` vs `selfhosted` modes — is documented in [`docs/CONVEX.md`](./docs/CONVEX.md). Read it once before you touch `packages/convex/`.
 
 ## Development workflow
 
