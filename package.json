@@ -28,6 +28,8 @@
     "debug:whatsapp": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/infobip-report.mjs",
     "sync:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/sync-convex-env.mjs",
     "link:env": "node scripts/link-env.mjs",
+    "predeploy:convex": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-convex-deploy.mjs",
+    "deploy:convex": "npx --no-install convex deploy",
     "prepare": "husky"
   },
   "lint-staged": {

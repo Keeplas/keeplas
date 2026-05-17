@@ -23,6 +23,11 @@ pnpm lint               # ESLint across workspace
 pnpm typecheck          # tsc --noEmit across workspace
 pnpm format             # Prettier on **/*.{ts,tsx,js,jsx,json,css,md}
 
+# Deploy Convex (prod) — ALWAYS use this, never bare `convex deploy`
+pnpm deploy:convex      # Guarded prod deploy: dry-run preflight refuses an
+                        # empty / mass-index-deleting push before it can wipe
+                        # production (see scripts/check-convex-deploy.mjs)
+
 # Build / clean
 pnpm build              # Turbo build
 pnpm clean              # Clear .next / .turbo / node_modules

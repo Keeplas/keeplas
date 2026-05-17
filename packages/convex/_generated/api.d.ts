@@ -12,8 +12,6 @@ import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
-import type * as convex__generated_api from "../convex/_generated/api.js";
-import type * as convex__generated_server from "../convex/_generated/server.js";
 import type * as crons from "../crons.js";
 import type * as dispatch from "../dispatch.js";
 import type * as helpers from "../helpers.js";
@@ -58,8 +56,6 @@ declare const fullApi: ApiFromModules<{
   access_requests: typeof access_requests;
   audit: typeof audit;
   auth: typeof auth;
-  "convex/_generated/api": typeof convex__generated_api;
-  "convex/_generated/server": typeof convex__generated_server;
   crons: typeof crons;
   dispatch: typeof dispatch;
   helpers: typeof helpers;

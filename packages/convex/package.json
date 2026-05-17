@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "convex dev",
-    "deploy": "convex deploy",
+    "deploy": "pnpm -w run deploy:convex",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
