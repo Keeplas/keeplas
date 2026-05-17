@@ -21,6 +21,7 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 type Step = "phone" | "code";
 
@@ -50,6 +51,7 @@ export function PhoneVerificationDialog({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cooldown = useResendCooldown(30);
 
   useEffect(() => {
     if (!open) return;
@@ -75,6 +77,7 @@ export function PhoneVerificationDialog({
     setError(null);
     try {
       await requestVerification({ phoneNumber: phone });
+      cooldown.start();
       setStep("code");
     } catch (err) {
       setError(getErrorMessage(err, "Could not send verification code."));
@@ -104,11 +107,12 @@ export function PhoneVerificationDialog({
   }
 
   async function handleResend() {
-    if (!phone) return;
+    if (!phone || cooldown.active) return;
     setBusy(true);
     setError(null);
     try {
       await requestVerification({ phoneNumber: phone });
+      cooldown.start();
       setCode("");
     } catch (err) {
       setError(getErrorMessage(err, "Could not resend code."));
@@ -192,9 +196,11 @@ export function PhoneVerificationDialog({
                   variant="ghost"
                   size="sm"
                   onClick={handleResend}
-                  disabled={busy}
+                  disabled={busy || cooldown.active}
                 >
-                  Resend code
+                  {cooldown.active
+                    ? `Resend code in ${cooldown.remaining}s`
+                    : "Resend code"}
                 </Button>
                 <div className="flex gap-2">
                   <Button

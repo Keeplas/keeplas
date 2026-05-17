@@ -42,8 +42,9 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
           Digital Legacy.
         </h2>
         <p className="text-body-md xl:text-body-lg text-on-primary-container font-light">
-          A private gallery for your most vital assets. Protected by
-          architectural-grade encryption, curated for your next generation.
+          Everything you cannot take with you, kept safe for the day you are no
+          longer here. Encrypted end-to-end, delivered when death makes it yours
+          to give.
         </p>
       </div>
 

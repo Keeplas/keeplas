@@ -18,6 +18,7 @@ import {
 } from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 type Step = "details" | "verify";
 
@@ -54,6 +55,7 @@ export function SignupForm() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const cooldown = useResendCooldown(30);
 
   useEffect(() => {
     if (lockedEmail) setEmail(lockedEmail);
@@ -75,6 +77,7 @@ export function SignupForm() {
       setError("");
       try {
         await requestPhoneOtp({ phoneNumber: phone, intent: "signup" });
+        cooldown.start();
         setStep("verify");
       } catch (err) {
         setError(
@@ -106,6 +109,7 @@ export function SignupForm() {
         ...(phone ? { phoneNumber: phone } : {}),
         flow: "signUp",
       });
+      cooldown.start();
       setStep("verify");
     } catch {
       setError("Could not create account. Email may already be in use.");
@@ -145,6 +149,7 @@ export function SignupForm() {
   }
 
   async function handleResendCode() {
+    if (cooldown.active) return;
     setLoading(true);
     setError("");
     try {
@@ -156,6 +161,7 @@ export function SignupForm() {
       } else {
         await signIn("password", { email, flow: "email-verification" });
       }
+      cooldown.start();
     } catch {
       setError("Could not resend the code. Try again in a moment.");
     } finally {
@@ -180,7 +186,11 @@ export function SignupForm() {
         footer={{
           prompt: kind === "phone" ? "Wrong number?" : "Wrong email?",
           label: "Start over",
-          href: "/signup",
+          onClick: () => {
+            setStep("details");
+            setCode("");
+            setError("");
+          },
           accent: "secondary",
         }}
         error={error}
@@ -213,10 +223,12 @@ export function SignupForm() {
           <button
             type="button"
             onClick={handleResendCode}
-            disabled={loading}
+            disabled={loading || cooldown.active}
             className="w-full text-center text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
           >
-            Resend code
+            {cooldown.active
+              ? `Resend code in ${cooldown.remaining}s`
+              : "Resend code"}
           </button>
         </form>
       </AuthFormShell>

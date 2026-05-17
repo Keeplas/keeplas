@@ -9,7 +9,10 @@ import { MobileBrand } from "./mobile-brand";
 interface FooterLink {
   prompt: string;
   label: string;
-  href: string;
+  /** Navigates to a route. Use `onClick` instead for in-page actions. */
+  href?: string;
+  /** In-page action (e.g. reset a multi-step form). Takes precedence over `href`. */
+  onClick?: () => void;
   accent?: "primary" | "secondary";
 }
 
@@ -68,9 +71,19 @@ export function AuthFormShell({
 
           <p className="mt-8 text-center text-body-md text-on-surface-variant">
             {footer.prompt}{" "}
-            <Link href={footer.href} className={accentClass}>
-              {footer.label}
-            </Link>
+            {footer.onClick ? (
+              <button
+                type="button"
+                onClick={footer.onClick}
+                className={accentClass}
+              >
+                {footer.label}
+              </button>
+            ) : (
+              <Link href={footer.href ?? "#"} className={accentClass}>
+                {footer.label}
+              </Link>
+            )}
           </p>
         </div>
       </section>

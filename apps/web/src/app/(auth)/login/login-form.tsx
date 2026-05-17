@@ -22,6 +22,7 @@ import {
   loginWithPasskey,
   usePasskeySupport,
 } from "@/lib/passkey";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 export function LoginForm() {
   const { signIn } = useAuthActions();
@@ -35,6 +36,7 @@ export function LoginForm() {
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const cooldown = useResendCooldown(30);
   const passkeySupported = usePasskeySupport();
 
   function switchKind(next: "email" | "phone") {
@@ -70,6 +72,7 @@ export function LoginForm() {
       if (!phoneCodeSent) {
         await requestPhoneOtp({ phoneNumber: phone, intent: "signin" });
         setPhoneCodeSent(true);
+        cooldown.start();
         setLoading(false);
         return;
       }
@@ -89,11 +92,12 @@ export function LoginForm() {
   }
 
   async function handleResendPhoneCode() {
-    if (!phone) return;
+    if (!phone || cooldown.active) return;
     setLoading(true);
     setError("");
     try {
       await requestPhoneOtp({ phoneNumber: phone, intent: "signin" });
+      cooldown.start();
     } catch {
       setError("Could not resend the code. Try again in a moment.");
     } finally {
@@ -232,10 +236,12 @@ export function LoginForm() {
                   <button
                     type="button"
                     onClick={handleResendPhoneCode}
-                    disabled={loading}
+                    disabled={loading || cooldown.active}
                     className="text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
                   >
-                    Resend code
+                    {cooldown.active
+                      ? `Resend code in ${cooldown.remaining}s`
+                      : "Resend code"}
                   </button>
                 </div>
               )}

@@ -9,6 +9,7 @@ import { Button, Icon, Input, Label, Loader, Spinner } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,11 @@ export default function LoginOtpPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const {
+    remaining: cooldownRemaining,
+    active: cooldownActive,
+    start: startCooldown,
+  } = useResendCooldown(30);
   const requestedRef = useRef(false);
 
   useEffect(() => {
@@ -48,10 +54,12 @@ export default function LoginOtpPage() {
       .then((r) => {
         if (r.sent === false && !("alreadyCleared" in r)) {
           setError("No verification channel available for this account.");
+        } else {
+          startCooldown();
         }
       })
       .catch((err) => setError(getErrorMessage(err, "Could not send code.")));
-  }, [gate?.required, request]);
+  }, [gate?.required, request, startCooldown]);
 
   if (isLoading || gate === undefined) {
     return <Loader fullscreen label="Verifying session" />;
@@ -75,12 +83,13 @@ export default function LoginOtpPage() {
   }
 
   async function handleResend() {
-    if (resending) return;
+    if (resending || cooldownActive) return;
     setResending(true);
     setError(null);
     setNotice(null);
     try {
       await request();
+      startCooldown();
       setNotice("A new code is on its way.");
     } catch (err) {
       setError(getErrorMessage(err, "Could not resend the code."));
@@ -152,10 +161,14 @@ export default function LoginOtpPage() {
           <button
             type="button"
             onClick={handleResend}
-            disabled={resending}
+            disabled={resending || cooldownActive}
             className="text-body-md text-secondary hover:underline disabled:opacity-60"
           >
-            {resending ? "Sending…" : "Didn't get it? Resend code"}
+            {resending
+              ? "Sending…"
+              : cooldownActive
+                ? `Resend code in ${cooldownRemaining}s`
+                : "Didn't get it? Resend code"}
           </button>
           {gate.recoveryBound ? (
             <Link
