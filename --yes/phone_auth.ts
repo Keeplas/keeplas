@@ -1,0 +1,154 @@
+import { v } from "convex/values";
+import { mutation, internalMutation, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { normalizeE164 } from "./lib/phone";
+
+function constantTimeStringEquals(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+const OTP_TTL_MS = 10 * 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 3;
+const MAX_ATTEMPTS = 5;
+
+async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const buf = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function generateOtp(): string {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return (arr[0] % 1_000_000).toString().padStart(6, "0");
+}
+
+/**
+ * Issue + dispatch a pre-auth WhatsApp OTP for a passwordless phone account.
+ * `intent` distinguishes signup (must NOT already exist) from signin.
+ * Rate-limited to 3 per rolling hour per number. The code is consumed by the
+ * `phone-otp` ConvexCredentials provider's authorize() at signIn.
+ *
+ * Returns `{ sent: true }` even for an unknown number on signin so the
+ * endpoint does not leak account existence (the subsequent signIn fails).
+ */
+export const requestPhoneAuthOtp = mutation({
+  args: {
+    phoneNumber: v.string(),
+    intent: v.union(v.literal("signup"), v.literal("signin")),
+  },
+  handler: async (ctx, args) => {
+    const phone = normalizeE164(args.phoneNumber);
+    if (!phone) throw new Error("Invalid phone number");
+
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+      .first();
+    if (args.intent === "signup" && existing) {
+      throw new Error("An account with this phone number already exists");
+    }
+
+    const now = Date.now();
+    const recent = await ctx.db
+      .query("phone_auth_codes")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+      .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
+      .collect();
+    if (recent.length >= RATE_LIMIT_MAX) {
+      throw new Error("Too many verification attempts. Try again later.");
+    }
+    for (const stale of recent) {
+      if (stale.expiresAt > now) await ctx.db.delete(stale._id);
+    }
+
+    const code = generateOtp();
+    const codeHash = await sha256Hex(code);
+    await ctx.db.insert("phone_auth_codes", {
+      phoneNumber: phone,
+      codeHash,
+      expiresAt: now + OTP_TTL_MS,
+      attempts: 0,
+      intent: args.intent,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
+      phoneNumber: phone,
+      code,
+    });
+
+    return { sent: true };
+  },
+});
+
+/**
+ * Verify + consume a pre-auth phone OTP. Called by the `phone-otp`
+ * ConvexCredentials provider from its action context (via runMutation).
+ * Throws on any failure; deletes the code on success.
+ */
+export const consumePhoneAuthCode = internalMutation({
+  args: { phoneNumber: v.string(), code: v.string() },
+  handler: async (ctx, args) => {
+    const phone = normalizeE164(args.phoneNumber);
+    if (!phone) throw new Error("Invalid phone number");
+    const trimmed = args.code.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      throw new Error("Code must be 6 digits");
+    }
+
+    const now = Date.now();
+    const candidates = await ctx.db
+      .query("phone_auth_codes")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+      .collect();
+    const active = candidates
+      .filter((c) => c.expiresAt > now)
+      .sort((a, b) => b._creationTime - a._creationTime)[0];
+    if (!active) throw new Error("Code expired or not requested");
+
+    if (active.attempts >= MAX_ATTEMPTS) {
+      await ctx.db.delete(active._id);
+      throw new Error("Too many attempts. Request a new code.");
+    }
+
+    const submittedHash = await sha256Hex(trimmed);
+    if (submittedHash !== active.codeHash) {
+      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
+      throw new Error("Invalid code");
+    }
+
+    await ctx.db.delete(active._id);
+    return { ok: true };
+  },
+});
+
+/**
+ * Lost-phone recovery for passwordless phone accounts: resolve the user by
+ * phone and verify the 24-word recovery-phrase hash (constant-time). Used by
+ * the `phone-recovery` ConvexCredentials provider. Returns the userId on
+ * match, else null. ZK: only a stored hash is compared, no crypto changes.
+ */
+export const verifyPhoneRecovery = internalQuery({
+  args: { phoneNumber: v.string(), phraseHash: v.string() },
+  handler: async (ctx, args) => {
+    const phone = normalizeE164(args.phoneNumber);
+    if (!phone) return null;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+      .first();
+    if (!user || !user.recoveryPhraseHash) return null;
+    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+      return null;
+    }
+    return user._id;
+  },
+});

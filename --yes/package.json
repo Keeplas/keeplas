@@ -1,0 +1,26 @@
+{
+  "name": "@keeplas/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist .turbo node_modules"
+  },
+  "dependencies": {
+    "@auth/core": "^0.37.4",
+    "@convex-dev/auth": "^0.0.91",
+    "@simplewebauthn/server": "^13.3.0",
+    "convex": "^1.35.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/web-push": "^3.6.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
+  }
+}
