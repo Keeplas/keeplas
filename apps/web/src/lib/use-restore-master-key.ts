@@ -14,18 +14,18 @@ type LegacyBundle = {
 };
 
 /**
- * Restores the MasterKey from the encrypted key bundle stored in Convex.
- * Called on hub load for returning users who already completed
- * onboarding.
+ * Restores the MasterKey from the legacy V1 key bundle stored in Convex.
+ * Called on hub load for returning users who already completed onboarding.
  *
  * V2 bundles (Argon2id-derived RootKey from the 24-word phrase) cannot be
- * unwrapped without the user-supplied phrase or a device-unlock secret —
- * Phase 5 will replace this hook with a prompt-driven flow. Until then we
- * skip silently so the app does not crash; the user will need to re-enter
- * their 24 words via the upcoming login flow.
+ * unwrapped from the server bundle without the user-supplied phrase or a
+ * device-unlock secret, so this hook skips them silently. For V2, the unwrapped
+ * MasterKey is instead persisted on-device after unlock and restored from
+ * IndexedDB by MasterKeyProvider (see master-key-context.tsx / master-key-store.ts).
  *
- * V1 bundles (legacy plaintext-wrappingKey) are still supported here so
- * any pre-existing dev account keeps working through the migration window.
+ * V1 bundles (legacy plaintext-wrappingKey) are still supported here so any
+ * pre-existing dev account keeps working through the migration window; once
+ * restored, the provider persists the key the same way.
  */
 export function useRestoreMasterKey() {
   const { masterKey, setMasterKey } = useMasterKey();

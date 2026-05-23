@@ -28,7 +28,7 @@ interface UnlockGateProps {
 type Mode = "list" | "pin" | "phrase";
 
 export function UnlockGate({ children }: UnlockGateProps) {
-  const { masterKey, setMasterKey } = useMasterKey();
+  const { masterKey, setMasterKey, restoring } = useMasterKey();
   const user = useQuery(api.users.viewer);
   const userEmail = user?.email ?? null;
   const {
@@ -178,6 +178,12 @@ export function UnlockGate({ children }: UnlockGateProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Still reading the persisted key from IndexedDB — show a loader instead of
+  // flashing the unlock screen for a vault that's about to restore itself.
+  if (restoring) {
+    return <Loader fullscreen label="Unlocking vault" />;
   }
 
   if (entriesLoading) {
