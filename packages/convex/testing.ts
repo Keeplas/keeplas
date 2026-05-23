@@ -27,7 +27,7 @@ type Target = {
   name: string;
   phoneNumber: string | null;
   configId: Id<"life_check_configs">;
-  frequency: "weekly" | "monthly" | "quarterly";
+  frequency: "test" | "weekly" | "monthly" | "quarterly";
   isActive: boolean;
   whatsappEnabled: boolean;
   fallbackBehavior: "abort" | "release_anyway";

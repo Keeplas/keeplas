@@ -188,7 +188,7 @@ async function sendWhatsAppTemplate(args: {
   // has a "Click to URL" button with a trailing {{1}} placeholder (e.g. the
   // invitation token appended to https://app.keeplas.com/invite/).
   buttons?: { type: "URL" | "QUICK_REPLY"; parameter: string }[];
-}): Promise<"sent" | "whatsapp_not_configured"> {
+}): Promise<string> {
   const baseUrl = process.env.INFOBIP_BASE_URL;
   const apiKey = process.env.INFOBIP_API_KEY;
   const sender = process.env.INFOBIP_WHATSAPP_SENDER;
@@ -229,7 +229,23 @@ async function sendWhatsAppTemplate(args: {
     const text = await res.text();
     throw new Error(`whatsapp ${res.status}: ${text.slice(0, 120)}`);
   }
-  return "sent";
+
+  // HTTP 2xx only means Infobip accepted the request — the per-message status
+  // tells us whether it was actually queued for delivery or rejected (wrong /
+  // unapproved template, number not on WhatsApp, outside the 24h session
+  // window, ...). Surface it so a rejected send isn't silently logged as "sent".
+  const body = (await res.json().catch(() => null)) as {
+    messages?: {
+      status?: { groupName?: string; name?: string; description?: string };
+    }[];
+  } | null;
+  const status = body?.messages?.[0]?.status;
+  if (!status?.name) return "sent";
+  const group = (status.groupName ?? "").toUpperCase();
+  if (group === "REJECTED" || group === "UNDELIVERABLE") {
+    return `rejected:${status.name}${status.description ? ` (${status.description})` : ""}`;
+  }
+  return status.name.toLowerCase();
 }
 
 async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
@@ -239,6 +255,11 @@ async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
     templateName:
       process.env.WHATSAPP_LIFE_CHECK_TEMPLATE_NAME ?? "keeplas_life_check_en",
     language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+    // The template carries a single "I'm well" QUICK_REPLY button; Infobip
+    // rejects the send (error 7008, UNDELIVERABLE_REJECTED_OPERATOR) unless we
+    // echo it back. The payload is irrelevant to us — any reply maps to the
+    // user by phone in validateFromWhatsApp — but it must be present.
+    buttons: [{ type: "QUICK_REPLY", parameter: "im_well" }],
   });
 }
 

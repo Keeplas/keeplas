@@ -184,6 +184,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md) — Convex + zero-knowledge technical spec
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap
 - [`PRD/Design/`](./PRD/Design) — wireframes and design tokens
+- [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
 - [`CLAUDE.md`](./CLAUDE.md) — engineering conventions for AI assistants & humans
 
 ## Contributing

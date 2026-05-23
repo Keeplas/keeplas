@@ -23,7 +23,7 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
         reply — in-app tap, email button, or WhatsApp — resets the countdown;
         using the app does not.
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {FREQUENCIES.map((freq) => {
           const selected = value === freq.value;
           return (

@@ -1,6 +1,8 @@
 import { ICON_PATHS } from "@/lib/icons";
 
 export const FREQUENCIES = [
+  // Sub-day dev cadence for exercising the full flow without waiting days.
+  { value: "test", label: "60", unit: "Seconds", description: "Test" },
   { value: "weekly", label: "7", unit: "Days", description: "Active" },
   { value: "monthly", label: "30", unit: "Days", description: "Recommended" },
   { value: "quarterly", label: "90", unit: "Days", description: "Relaxed" },

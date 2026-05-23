@@ -45,8 +45,10 @@ interface PhaseStep {
   help?: string;
 }
 
-function frequencyDays(frequency: Frequency): number {
-  return Number(FREQUENCIES.find((f) => f.value === frequency)?.label ?? 30);
+function cadenceLabel(frequency: Frequency): string {
+  const freq = FREQUENCIES.find((f) => f.value === frequency);
+  if (!freq) return "30 days";
+  return `${freq.label} ${freq.unit.toLowerCase()}`;
 }
 
 function joinChannelLabels(channels: ChannelConfig[]): string {
@@ -167,7 +169,7 @@ export function EscalationTimeline({
     fallbackBehavior,
   };
   const steps = buildSteps(channels, policy);
-  const days = frequencyDays(frequency);
+  const cadence = cadenceLabel(frequency);
 
   return (
     <aside className="lg:col-span-5">
@@ -183,7 +185,7 @@ export function EscalationTimeline({
           What happens after a missed check-in.
         </p>
         <p className="text-label-md text-on-primary-container/80 mb-8">
-          Keeplas asks you to confirm every {days} days.
+          Keeplas asks you to confirm every {cadence}.
         </p>
 
         {travelModeEnabled && (

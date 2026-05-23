@@ -12,6 +12,11 @@ import { createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 
 const FREQUENCY_DAYS: Record<string, number> = {
+  // "test" is a 60-second dev cadence stored as a fractional day so it flows
+  // through the same day-based threshold math (60s = 60/86400 days). Not a real
+  // continuity setting — note the inactivity evaluator only runs hourly, so the
+  // cycle still starts on the next evaluator tick, not exactly 60s later.
+  test: 60 / 86_400,
   weekly: 7,
   monthly: 30,
   quarterly: 90,
@@ -38,7 +43,7 @@ const CONFIRMATION_WINDOW_DAYS = 7;
  * `frequency` mapping when `inactivityThresholdDays` is not yet populated.
  */
 export function resolveThresholdDays(config: {
-  frequency: "weekly" | "monthly" | "quarterly";
+  frequency: "test" | "weekly" | "monthly" | "quarterly";
   inactivityThresholdDays?: number;
 }): number {
   return config.inactivityThresholdDays ?? FREQUENCY_DAYS[config.frequency];
@@ -64,6 +69,7 @@ export const getConfig = query({
 export const saveConfig = mutation({
   args: {
     frequency: v.union(
+      v.literal("test"),
       v.literal("weekly"),
       v.literal("monthly"),
       v.literal("quarterly"),
