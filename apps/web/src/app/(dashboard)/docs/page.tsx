@@ -18,7 +18,7 @@ const CORE_FEATURES: Feature[] = [
     description:
       "Zero-knowledge storage for documents, credentials, financial assets and digital legacy. Everything is encrypted on your device before it leaves.",
     iconPath: ICON_PATHS.lock,
-    href: "/vault",
+    href: "/docs/vault",
     accent: "bg-secondary/10 text-secondary",
   },
   {
@@ -26,7 +26,7 @@ const CORE_FEATURES: Feature[] = [
     description:
       "Automated proof-of-life over WhatsApp and email — verify each channel once so we can reach you (app push coming soon). Configurable cadence, a 15-day response window with reminders, and a travel-mode pause for trips.",
     iconPath: ICON_PATHS.heartbeat,
-    href: "/life-check",
+    href: "/docs/life-check",
     accent: "bg-error/10 text-error",
   },
   {
@@ -34,7 +34,7 @@ const CORE_FEATURES: Feature[] = [
     description:
       "Sealed letters released by specific life events or dates. Compose them as a Letter / Message item from your vault — recipients receive them once curators validate the trigger.",
     iconPath: ICON_PATHS.notes,
-    href: "/vault",
+    href: "/docs/letters",
     accent: "bg-tertiary/15 text-tertiary",
   },
   {
@@ -195,7 +195,7 @@ export default function DocsPage() {
                 </p>
               </div>
               <span className="mt-auto pt-2 flex items-center gap-2 text-label-md text-secondary">
-                Open
+                Read
                 <Icon
                   path={ICON_PATHS.chevronRight}
                   className="w-3 h-3 group-hover:translate-x-1 transition-transform"
