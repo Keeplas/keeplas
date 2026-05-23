@@ -64,7 +64,10 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const restoring =
     isLoading ||
     (isAuthenticated && user === undefined) ||
-    (isAuthenticated && !!userEmail && !masterKey && restoredEmail !== userEmail);
+    (isAuthenticated &&
+      !!userEmail &&
+      !masterKey &&
+      restoredEmail !== userEmail);
 
   // Restore the persisted MasterKey on load so a refresh (or a browser restart)
   // does not force the user to re-enter their 24 words. The key is stored only
