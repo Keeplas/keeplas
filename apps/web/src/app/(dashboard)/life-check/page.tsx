@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader } from "@keeplas/ui";
+import { Button, Loader, type CountryCode } from "@keeplas/ui";
 import { LifeCheckHistory } from "./life-check-history";
 import { ActiveCycleBanner } from "./sections/active-cycle-banner";
 import { ChannelList } from "./sections/channel-list";
@@ -17,6 +17,8 @@ export default function LifeCheckPage() {
     activeCycle,
     frequency,
     channels,
+    phoneNumber,
+    country,
     updateFrequency,
     toggleChannel,
     handleValidate,
@@ -52,13 +54,23 @@ export default function LifeCheckPage() {
               onPostpone={handlePostpone}
             />
           ) : (
-            config && <NextCheckInCard nextCheckAt={config.nextCheckAt} />
+            config && (
+              <NextCheckInCard
+                nextCheckAt={config.nextCheckAt}
+                onReset={handleValidate}
+              />
+            )
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7 space-y-6">
               <FrequencySelector value={frequency} onChange={updateFrequency} />
-              <ChannelList channels={channels} onToggle={toggleChannel} />
+              <ChannelList
+                channels={channels}
+                onToggle={toggleChannel}
+                phoneNumber={phoneNumber}
+                defaultCountry={country as CountryCode | undefined}
+              />
               <ReleasePolicySettings />
             </div>
 
@@ -75,8 +87,15 @@ export default function LifeCheckPage() {
 }
 
 // Surfaces the otherwise-silent inactivity counter as a live countdown so users
-// always know a deadline is running and what resets it.
-function NextCheckInCard({ nextCheckAt }: { nextCheckAt: number }) {
+// always know a deadline is running and what resets it. The "I'm well" button
+// is the explicit in-app reply that resets the countdown (validateCycle → tap).
+function NextCheckInCard({
+  nextCheckAt,
+  onReset,
+}: {
+  nextCheckAt: number;
+  onReset: () => void;
+}) {
   return (
     <div className="mb-8 bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
@@ -85,10 +104,15 @@ function NextCheckInCard({ nextCheckAt }: { nextCheckAt: number }) {
         </p>
         <Countdown target={nextCheckAt} />
       </div>
-      <p className="text-body-md text-on-surface-variant sm:max-w-xs sm:text-right">
-        We&apos;ll ask you to confirm you&apos;re well. Only your explicit reply
-        resets the countdown — using the app doesn&apos;t.
-      </p>
+      <div className="flex flex-col gap-3 sm:items-end sm:max-w-xs">
+        <p className="text-body-md text-on-surface-variant sm:text-right">
+          We&apos;ll ask you to confirm you&apos;re well. Only your explicit
+          reply resets the countdown — using the app doesn&apos;t.
+        </p>
+        <Button variant="default" onClick={onReset} className="w-full sm:w-auto">
+          I&apos;m well — reset countdown
+        </Button>
+      </div>
     </div>
   );
 }

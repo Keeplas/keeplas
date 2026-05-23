@@ -20,6 +20,11 @@ export function useLifeCheckConfig() {
   const validateCycle = useMutation(api.life_check.validateCycle);
   const postponeCycle = useMutation(api.life_check.postponeCycle);
   const toggleActive = useMutation(api.life_check.toggleActive);
+  const phoneStatus = useQuery(api.phone_verification.getMyStatus);
+  const viewer = useQuery(api.users.viewer);
+
+  // WhatsApp can only reach a phone the user has proven they own (OTP).
+  const phoneVerified = phoneStatus?.verifiedAt != null;
 
   const [frequency, setFrequency] = useState<Frequency>("monthly");
   const [channels, setChannels] = useState<ChannelConfig[]>(DEFAULT_CHANNELS);
@@ -101,6 +106,11 @@ export function useLifeCheckConfig() {
   async function handleValidate() {
     try {
       await validateCycle({ method: "tap" });
+      toast({
+        variant: "success",
+        title: "Check-in confirmed",
+        description: "Your countdown has been reset.",
+      });
     } catch (err) {
       toast({
         variant: "error",
@@ -122,6 +132,8 @@ export function useLifeCheckConfig() {
 
   function toggleChannel(type: ChannelType) {
     if (channels.find((c) => c.type === type)?.isUpcoming) return;
+    // An unverified contact can't receive a check-in — verify before enabling.
+    if (type === "whatsapp" && !phoneVerified) return;
     const next = channels.map((ch) =>
       ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
     );
@@ -145,11 +157,20 @@ export function useLifeCheckConfig() {
     }
   }
 
+  // Surface per-channel verification so the UI can require it before enabling.
+  // WhatsApp needs a phone proven via OTP; email is verified at login.
+  const verifiedChannels: ChannelConfig[] = channels.map((ch) => ({
+    ...ch,
+    isVerified: ch.type === "whatsapp" ? phoneVerified : true,
+  }));
+
   return {
     config,
     activeCycle,
     frequency,
-    channels,
+    channels: verifiedChannels,
+    phoneNumber: phoneStatus?.phoneNumber ?? undefined,
+    country: viewer?.country,
     travelMode,
     travelUntil,
     setTravelUntil,

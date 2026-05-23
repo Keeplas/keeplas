@@ -18,6 +18,7 @@ export interface ChannelConfig {
   isEnabled: boolean;
   order: number;
   isUpcoming?: boolean; // not yet available (e.g. no mobile app); shown disabled
+  isVerified?: boolean; // derived: contact proven (phone OTP); email is auth-verified
 }
 
 const EMAIL_ICON_PATH =
