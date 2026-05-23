@@ -359,14 +359,14 @@ export function SignupForm() {
                 />
                 {lockedPhone ? (
                   <p className="text-label-md text-on-surface-variant">
-                    Locked — this is the number your inviter used to send you the
-                    invitation.
+                    Locked — this is the number your inviter used to send you
+                    the invitation.
                   </p>
                 ) : (
                   <p className="text-label-md text-on-surface-variant">
-                    Used for WhatsApp verification and Life Check alerts. You can
-                    also reply to a Life Check on WhatsApp to confirm you are
-                    well.{" "}
+                    Used for WhatsApp verification and Life Check alerts. You
+                    can also reply to a Life Check on WhatsApp to confirm you
+                    are well.{" "}
                     <Link
                       href="/security"
                       className="text-secondary font-bold hover:underline"
@@ -393,8 +393,8 @@ export function SignupForm() {
                 </p>
               ) : (
                 <p className="text-label-md text-on-surface-variant">
-                  We&apos;ll send your verification code and Life Check alerts to
-                  this WhatsApp number.{" "}
+                  We&apos;ll send your verification code and Life Check alerts
+                  to this WhatsApp number.{" "}
                   <Link
                     href="/security"
                     className="text-secondary font-bold hover:underline"
