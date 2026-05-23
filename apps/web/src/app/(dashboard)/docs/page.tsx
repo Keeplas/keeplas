@@ -24,18 +24,10 @@ const CORE_FEATURES: Feature[] = [
   {
     title: "Life Check",
     description:
-      "Automated proof-of-life over WhatsApp and email — verify each channel once so we can reach you (app push coming soon). Configurable cadence with a travel-mode pause for trips.",
+      "Automated proof-of-life over WhatsApp and email — verify each channel once so we can reach you (app push coming soon). Configurable cadence, a 15-day response window with reminders, and a travel-mode pause for trips.",
     iconPath: ICON_PATHS.heartbeat,
     href: "/life-check",
     accent: "bg-error/10 text-error",
-  },
-  {
-    title: "Scenario Engine",
-    description:
-      "Compose the chain of autonomous actions that fire when life check thresholds are crossed — T+7, T+30, T+60 inactivity milestones.",
-    iconPath: ICON_PATHS.shieldCheck,
-    href: "/life-check?tab=reaction",
-    accent: "bg-primary/10 text-primary",
   },
   {
     title: "Letters & Messages",
@@ -138,9 +130,8 @@ export default function DocsPage() {
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
           Keeplas is a life-continuity platform. We combine a zero-knowledge
-          vault, a multi-channel life check, an autonomous scenario engine and a
-          social recovery network so your digital legacy outlives you — on your
-          terms.
+          vault, a multi-channel life check and a social recovery network so your
+          digital legacy outlives you — on your terms.
         </p>
       </header>
 
@@ -251,33 +242,33 @@ export default function DocsPage() {
         </div>
         <ol className="relative pl-8 border-l-2 border-secondary/20 space-y-8">
           <LifecycleStep
-            value="Detection"
-            title="Passive signals fail"
-            body="Confidence score drops below 50: no app activity, no device unlock, no third-party signal of life. A Life Check cycle opens."
+            value="Cadence elapses"
+            title="A check-in opens"
+            body="Your cadence passes without an explicit 'I'm well'. Keeplas opens a Life Check cycle and starts a 15-day response window. Using the app does not count — only an explicit reply does."
             accent="bg-secondary"
           />
           <LifecycleStep
-            value="Outreach"
-            title="Active channels fire"
-            body="Your verified channels — WhatsApp and email — reach you together (not in sequence), with reminders across the window. App push is coming soon. Each non-response moves the cycle toward escalating."
+            value="Days 0–15"
+            title="Every channel reaches you"
+            body="WhatsApp and email fire together at day 0, with reminders at day 3, 7 and 10 (app push coming soon). One tap, the email button, or a WhatsApp reply resets the countdown."
             accent="bg-secondary/60"
           />
           <LifecycleStep
-            value="Confirmation"
-            title="Trust contacts mark you unreachable"
-            body="All your trust contacts can confirm unreachability from their hub. The threshold number of confirmations opens the 72-hour grace window."
+            value="Day 15 · Confirmation"
+            title="Trust contacts confirm unreachability"
+            body="No reply across the whole window. Your trust contacts are asked to confirm they can't reach you — within the window you set (default 7 days) and to the number you require. Nothing is released yet."
             accent="bg-tertiary"
           />
           <LifecycleStep
             value="Grace 72h"
             title="Last chance to come back"
-            body="If you sign in and click I am well, the cycle is cancelled. Nothing leaves the vault."
+            body="Once enough contacts confirm, a fixed 72-hour grace window opens — separate from the confirmation window. Sign in and click I am well and the cycle is cancelled. Nothing leaves the vault."
             accent="bg-warning"
           />
           <LifecycleStep
-            value="Reconstruction"
+            value="Release"
             title="Vault opens for inheritance"
-            body="Contacts submit their shards. Threshold reached → master key reconstructed on their device → vault opens read-only → recipients receive their pre-assigned items."
+            body="When the grace expires, contacts submit their shards. Threshold reached → master key reconstructed on their device → vault opens read-only → recipients receive their pre-assigned items."
             accent="bg-error"
           />
         </ol>
@@ -344,9 +335,7 @@ function LifecycleStep({
       <span
         className={`absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface ${accent}`}
       />
-      <p className="text-label-md text-on-surface-variant">
-        {value} days inactivity
-      </p>
+      <p className="text-label-md text-on-surface-variant">{value}</p>
       <h3 className="text-headline-sm text-primary mt-1">{title}</h3>
       <p className="text-body-md text-on-surface-variant mt-1 max-w-xl">
         {body}
