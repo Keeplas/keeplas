@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { normalizeE164 } from "./lib/phone";
@@ -54,7 +54,17 @@ export const requestPhoneAuthOtp = mutation({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
     if (args.intent === "signup" && existing) {
-      throw new Error("An account with this phone number already exists");
+      throw new ConvexError(
+        "An account with this phone number already exists. Sign in instead.",
+      );
+    }
+    // Signin: refuse early so we never send an OTP to a number with no account
+    // (saves a WhatsApp message and avoids a confusing post-code failure).
+    // ConvexError so the message survives Convex's prod error redaction.
+    if (args.intent === "signin" && !existing) {
+      throw new ConvexError(
+        "No account found for this phone number. Sign up to create one.",
+      );
     }
 
     const now = Date.now();

@@ -19,6 +19,25 @@ export const viewer = query({
 });
 
 /**
+ * Whether a password (email) account exists for `email`. The login form calls
+ * this after a failed sign-in to tell apart "no account" (point the user to
+ * signup) from "wrong password" (keep the generic credentials error). Queries
+ * the exact email string — no normalization — to mirror the Password
+ * provider's case-sensitive `account: { id: email }` lookup.
+ */
+export const accountExistsByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.email) return false;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+    return user !== null;
+  },
+});
+
+/**
  * Update the user's profile fields (name, phone, avatar).
  * Email is controlled by the auth provider and cannot be changed here.
  */

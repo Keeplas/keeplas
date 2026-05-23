@@ -73,10 +73,10 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           <Image
             src="/assets/logo/logo-wordmark.svg"
             alt="Keeplas"
-            width={140}
-            height={28}
+            width={200}
+            height={40}
             priority
-            className="h-6 md:h-7 w-auto"
+            className="h-9 md:h-11 w-auto"
           />
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">

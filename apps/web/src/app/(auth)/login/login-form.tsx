@@ -3,7 +3,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Input,
@@ -23,9 +23,11 @@ import {
   usePasskeySupport,
 } from "@/lib/passkey";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { getErrorMessage } from "@/lib/utils";
 
 export function LoginForm() {
   const { signIn } = useAuthActions();
+  const convex = useConvex();
   const startPasskeyAuth = useMutation(api.webauthn.startAuthentication);
   const requestPhoneOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
   const [kind, setKind] = useState<"email" | "phone">("phone");
@@ -55,7 +57,16 @@ export function LoginForm() {
       try {
         await signIn("password", { email, password, flow: "signIn" });
       } catch {
-        setError("Invalid email or password.");
+        // Tell apart "no account" (→ point to signup) from "wrong password".
+        // On any lookup failure, fall back to the generic credentials error.
+        const exists = await convex
+          .query(api.users.accountExistsByEmail, { email })
+          .catch(() => true);
+        setError(
+          exists
+            ? "Invalid email or password."
+            : "No account found for this email. Sign up to create one.",
+        );
         setLoading(false);
       }
       return;
@@ -81,11 +92,11 @@ export function LoginForm() {
         code,
         flow: "signIn",
       });
-    } catch {
+    } catch (err) {
       setError(
         phoneCodeSent
           ? "Invalid or expired code."
-          : "Could not send the code. Try again.",
+          : getErrorMessage(err, "Could not send the code. Try again."),
       );
       setLoading(false);
     }

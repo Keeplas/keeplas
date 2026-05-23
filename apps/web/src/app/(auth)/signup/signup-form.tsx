@@ -4,7 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Input,
@@ -19,6 +19,7 @@ import {
 import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { getErrorMessage } from "@/lib/utils";
 
 type Step = "details" | "verify";
 
@@ -26,6 +27,7 @@ const INVITE_PATH_RE = /^\/invite\/([^/?#]+)/;
 
 export function SignupForm() {
   const { signIn } = useAuthActions();
+  const convex = useConvex();
   const creditSignupSession = useMutation(api.login_otp.creditSignupSession);
   const requestPhoneOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
   const searchParams = useSearchParams();
@@ -80,11 +82,7 @@ export function SignupForm() {
         cooldown.start();
         setStep("verify");
       } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Could not start signup. Try again.",
-        );
+        setError(getErrorMessage(err, "Could not start signup. Try again."));
       } finally {
         setLoading(false);
       }
@@ -112,7 +110,16 @@ export function SignupForm() {
       cooldown.start();
       setStep("verify");
     } catch {
-      setError("Could not create account. Email may already be in use.");
+      // Tell apart "already exists" (→ point to login) from other failures.
+      // On any lookup failure, fall back to the generic create error.
+      const exists = await convex
+        .query(api.users.accountExistsByEmail, { email })
+        .catch(() => false);
+      setError(
+        exists
+          ? "An account with this email already exists. Sign in instead."
+          : "Could not create account. Try again.",
+      );
     } finally {
       setLoading(false);
     }
