@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { getErrorMessage } from "@/lib/utils";
 import {
@@ -24,9 +25,6 @@ export function useLifeCheckConfig() {
   const [channels, setChannels] = useState<ChannelConfig[]>(DEFAULT_CHANNELS);
   const [travelMode, setTravelMode] = useState(false);
   const [travelUntil, setTravelUntil] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!config) return;
@@ -60,9 +58,6 @@ export function useLifeCheckConfig() {
     nextFrequency: Frequency,
     nextChannels: ChannelConfig[],
   ) {
-    setSaving(true);
-    setError("");
-    setSaved(false);
     try {
       await saveConfig({
         frequency: nextFrequency,
@@ -73,11 +68,11 @@ export function useLifeCheckConfig() {
           delayHours: ch.delayHours,
         })),
       });
-      setSaved(true);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to save configuration"));
-    } finally {
-      setSaving(false);
+      toast({
+        variant: "error",
+        title: getErrorMessage(err, "Failed to save configuration"),
+      });
     }
   }
 
@@ -93,7 +88,10 @@ export function useLifeCheckConfig() {
       });
       setTravelMode(!travelMode);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to toggle travel mode"));
+      toast({
+        variant: "error",
+        title: getErrorMessage(err, "Failed to toggle travel mode"),
+      });
     }
   }
 
@@ -101,7 +99,10 @@ export function useLifeCheckConfig() {
     try {
       await validateCycle({ method: "tap" });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to validate"));
+      toast({
+        variant: "error",
+        title: getErrorMessage(err, "Failed to validate"),
+      });
     }
   }
 
@@ -109,7 +110,10 @@ export function useLifeCheckConfig() {
     try {
       await postponeCycle({ duration });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to postpone"));
+      toast({
+        variant: "error",
+        title: getErrorMessage(err, "Failed to postpone"),
+      });
     }
   }
 
@@ -130,7 +134,10 @@ export function useLifeCheckConfig() {
     try {
       await toggleActive({ isActive: nextActive });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to toggle Life Check"));
+      toast({
+        variant: "error",
+        title: getErrorMessage(err, "Failed to toggle Life Check"),
+      });
     }
   }
 
@@ -141,9 +148,6 @@ export function useLifeCheckConfig() {
     channels,
     travelMode,
     travelUntil,
-    saving,
-    error,
-    saved,
     setTravelUntil,
     updateFrequency,
     toggleChannel,

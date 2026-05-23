@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ErrorAlert,
   Loader,
   Tabs,
   TabsContent,
@@ -89,9 +88,6 @@ function MonitoringPanel() {
     activeCycle,
     frequency,
     channels,
-    saving,
-    error,
-    saved,
     updateFrequency,
     toggleChannel,
     handleValidate,
@@ -120,31 +116,6 @@ function MonitoringPanel() {
         </div>
 
         <EscalationTimeline channels={channels} frequency={frequency} />
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
-        <div>
-          <h3 className="text-headline-sm text-primary">
-            Verification Profile
-          </h3>
-          <p className="text-body-md text-on-surface-variant">
-            Changes save automatically and take effect across all linked vaults
-            immediately.
-          </p>
-        </div>
-        <div className="flex gap-3 items-center">
-          {error && <ErrorAlert message={error} />}
-          {saving && (
-            <span className="text-body-md text-on-surface-variant font-medium self-center">
-              Saving…
-            </span>
-          )}
-          {saved && !saving && (
-            <span className="text-body-md text-secondary font-medium self-center">
-              Saved ✓
-            </span>
-          )}
-        </div>
       </div>
 
       <LifeCheckHistory />
