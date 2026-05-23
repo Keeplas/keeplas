@@ -233,6 +233,7 @@ export const getInvitationByToken = query({
       _id: contact._id,
       name: contact.name,
       email: contact.email,
+      phoneNumber: contact.phoneNumber ?? null,
       role: contact.role,
       invitationStatus: contact.invitationStatus,
       invitedAt: contact.invitedAt,

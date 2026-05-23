@@ -86,7 +86,7 @@ export default function TrustedContactsDocPage() {
           <Step
             value="01"
             title="Accepts the invitation"
-            body="When you invite them, they receive an email with a one-time link. They sign in to Keeplas, which generates their own ML-KEM keypair on-device. The public key is uploaded so you can wrap their shard to it."
+            body="To invite them you provide their name, email, and optionally their phone number. They receive an email with a one-time link. When they accept and create their own vault, those identifiers are pre-filled and locked on the signup form, so their account matches the identity you registered. They sign in to Keeplas, which generates their own ML-KEM keypair on-device; the public key is uploaded so you can wrap their shard to it."
           />
           <Step
             value="02"

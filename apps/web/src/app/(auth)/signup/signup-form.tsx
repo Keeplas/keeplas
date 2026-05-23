@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useConvex, useMutation, useQuery } from "convex/react";
@@ -42,13 +42,16 @@ export function SignupForm() {
     invitation && invitation.invitationStatus === "pending"
       ? invitation.email
       : undefined;
+  const lockedPhone =
+    invitation && invitation.invitationStatus === "pending"
+      ? (invitation.phoneNumber ?? undefined)
+      : undefined;
   const suggestedName =
     invitation && invitation.invitationStatus === "pending"
       ? invitation.name
       : undefined;
 
   const [step, setStep] = useState<Step>("details");
-  // Invitations are email-based, so the phone option is hidden for them.
   const [kind, setKind] = useState<"email" | "phone">("phone");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -59,13 +62,32 @@ export function SignupForm() {
   const [loading, setLoading] = useState(false);
   const cooldown = useResendCooldown(30);
 
+  // Email/phone tabs show when there's no invitation, or when the invitation
+  // carries both identifiers; an email-only invitation hides them.
+  const showIdentityTabs = !lockedEmail || !!lockedPhone;
+
   useEffect(() => {
     if (lockedEmail) setEmail(lockedEmail);
   }, [lockedEmail]);
 
   useEffect(() => {
+    if (lockedPhone) setPhone(lockedPhone);
+  }, [lockedPhone]);
+
+  useEffect(() => {
     if (suggestedName && !name) setName(suggestedName);
   }, [suggestedName, name]);
+
+  // Once the invitation resolves, anchor the signup to its identifiers: if it
+  // carries a phone, default to the passwordless Phone tab; otherwise force the
+  // Email tab so the locked email actually renders. Guarded so a manual tab
+  // switch afterwards is never overridden.
+  const inviteKindApplied = useRef(false);
+  useEffect(() => {
+    if (!lockedEmail || inviteKindApplied.current) return;
+    inviteKindApplied.current = true;
+    setKind(lockedPhone ? "phone" : "email");
+  }, [lockedEmail, lockedPhone]);
 
   async function handlePasswordSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -287,7 +309,7 @@ export function SignupForm() {
             />
           </div>
 
-          {!lockedEmail && (
+          {showIdentityTabs && (
             <Tabs
               value={kind}
               onValueChange={(v) => setKind(v as "email" | "phone")}
@@ -326,16 +348,53 @@ export function SignupForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-phone">Phone (optional)</Label>
+                <Label htmlFor="signup-phone">
+                  {lockedPhone ? "Phone Number" : "Phone (optional)"}
+                </Label>
                 <PhoneInput
                   id="signup-phone"
                   value={phone}
                   onChange={setPhone}
+                  disabled={!!lockedPhone}
                 />
+                {lockedPhone ? (
+                  <p className="text-label-md text-on-surface-variant">
+                    Locked — this is the number your inviter used to send you the
+                    invitation.
+                  </p>
+                ) : (
+                  <p className="text-label-md text-on-surface-variant">
+                    Used for WhatsApp verification and Life Check alerts. You can
+                    also reply to a Life Check on WhatsApp to confirm you are
+                    well.{" "}
+                    <Link
+                      href="/security"
+                      className="text-secondary font-bold hover:underline"
+                    >
+                      Learn more
+                    </Link>
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="signup-phone">Phone Number</Label>
+              <PhoneInput
+                id="signup-phone"
+                value={phone}
+                onChange={setPhone}
+                disabled={!!lockedPhone}
+              />
+              {lockedPhone ? (
                 <p className="text-label-md text-on-surface-variant">
-                  Used for WhatsApp verification and Life Check alerts. You can
-                  also reply to a Life Check on WhatsApp to confirm you are
-                  well.{" "}
+                  Locked — this is the number your inviter used to send you the
+                  invitation.
+                </p>
+              ) : (
+                <p className="text-label-md text-on-surface-variant">
+                  We&apos;ll send your verification code and Life Check alerts to
+                  this WhatsApp number.{" "}
                   <Link
                     href="/security"
                     className="text-secondary font-bold hover:underline"
@@ -343,22 +402,7 @@ export function SignupForm() {
                     Learn more
                   </Link>
                 </p>
-              </div>
-            </>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="signup-phone">Phone Number</Label>
-              <PhoneInput id="signup-phone" value={phone} onChange={setPhone} />
-              <p className="text-label-md text-on-surface-variant">
-                We&apos;ll send your verification code and Life Check alerts to
-                this WhatsApp number.{" "}
-                <Link
-                  href="/security"
-                  className="text-secondary font-bold hover:underline"
-                >
-                  Learn more
-                </Link>
-              </p>
+              )}
             </div>
           )}
 

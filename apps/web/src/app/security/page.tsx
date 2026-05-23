@@ -504,6 +504,10 @@ export default function SecurityPage() {
               answer="Two legal reasons. Date of birth proves civil capacity (you must be at least 18 to commit your estate) and identifies you in succession proceedings. Country of residence determines which inheritance law applies — French, Belgian, Quebec, and U.S. probate rules differ substantially. Both fields are stored only on your user record and inside the tamper-evident audit chain; they are never used for marketing and never shared with third parties."
             />
             <FaqItem
+              question="I was invited as a trusted contact — why are my email and phone already filled in?"
+              answer="Because the person who invited you entered them. To add you, they provide your name, email, and optionally your phone number so Keeplas can send you the one-time invitation link and, later, Life Check alerts. When you accept and create your own vault, those identifiers are pre-filled and locked on the signup form so your account matches the identity they registered, which prevents a mismatched email or number. That is the only information shared about you; nothing from their vault is exposed, and you alone hold your 24 words and keys."
+            />
+            <FaqItem
               question="Will the audit log hold up in court?"
               answer={
                 <>
