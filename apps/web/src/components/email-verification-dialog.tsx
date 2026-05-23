@@ -138,8 +138,8 @@ export function EmailVerificationDialog({
           <div className="space-y-1.5">
             <DialogTitle>Add an email</DialogTitle>
             <DialogDescription>
-              We will email you a 6-digit code. Confirm it to add this email — you
-              can then sign in with an emailed code, no password.
+              We will email you a 6-digit code. Confirm it to add this email —
+              you can then sign in with an emailed code, no password.
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">

@@ -152,11 +152,15 @@ export const verifyCode = mutation({
       const clash = await ctx.db
         .query("authAccounts")
         .withIndex("providerAndAccountId", (q) =>
-          q.eq("provider", "phone-otp").eq("providerAccountId", active.phoneNumber),
+          q
+            .eq("provider", "phone-otp")
+            .eq("providerAccountId", active.phoneNumber),
         )
         .first();
       if (clash && clash.userId !== userId) {
-        throw new Error("This phone number is already linked to another account.");
+        throw new Error(
+          "This phone number is already linked to another account.",
+        );
       }
       if (!clash) {
         await ctx.db.insert("authAccounts", {

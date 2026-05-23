@@ -226,7 +226,9 @@ export default function PasswordRecoveryPage() {
                         email: email.trim(),
                       })
                       .then((m) =>
-                        setEmailMode(m === "email-otp" ? "email-otp" : "password"),
+                        setEmailMode(
+                          m === "email-otp" ? "email-otp" : "password",
+                        ),
                       )
                       .catch(() => setEmailMode("password"));
                 }}
