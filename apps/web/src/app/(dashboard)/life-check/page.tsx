@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Button,
   ErrorAlert,
   Loader,
   Tabs,
@@ -95,7 +94,6 @@ function MonitoringPanel() {
     saved,
     updateFrequency,
     toggleChannel,
-    handleSave,
     handleValidate,
     handlePostpone,
   } = useLifeCheckConfig();
@@ -103,8 +101,6 @@ function MonitoringPanel() {
   if (config === undefined) {
     return <Loader />;
   }
-
-  const isConfigured = config !== null;
 
   return (
     <div className="space-y-8">
@@ -129,34 +125,25 @@ function MonitoringPanel() {
       <div className="flex flex-col md:flex-row items-center justify-between bg-surface-container-high p-6 rounded-2xl gap-6">
         <div>
           <h3 className="text-headline-sm text-primary">
-            {isConfigured
-              ? "Update Verification Profile"
-              : "Confirm Verification Profile"}
+            Verification Profile
           </h3>
           <p className="text-body-md text-on-surface-variant">
-            Settings take effect across all linked vaults immediately.
+            Changes save automatically and take effect across all linked vaults
+            immediately.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
           {error && <ErrorAlert message={error} />}
-          {saved && (
+          {saving && (
+            <span className="text-body-md text-on-surface-variant font-medium self-center">
+              Saving…
+            </span>
+          )}
+          {saved && !saving && (
             <span className="text-body-md text-secondary font-medium self-center">
               Saved ✓
             </span>
           )}
-          <Button
-            variant="vault"
-            size="md"
-            onClick={handleSave}
-            disabled={saving}
-            className="shadow-xl cursor-pointer"
-          >
-            {saving
-              ? "Saving..."
-              : isConfigured
-                ? "Update Life Check"
-                : "Enable Life Check"}
-          </Button>
         </div>
       </div>
 

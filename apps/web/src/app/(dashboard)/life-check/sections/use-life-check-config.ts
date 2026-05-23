@@ -56,14 +56,17 @@ export function useLifeCheckConfig() {
     }
   }, [config]);
 
-  async function handleSave() {
+  async function persist(
+    nextFrequency: Frequency,
+    nextChannels: ChannelConfig[],
+  ) {
     setSaving(true);
     setError("");
     setSaved(false);
     try {
       await saveConfig({
-        frequency,
-        activeChannels: channels.map((ch) => ({
+        frequency: nextFrequency,
+        activeChannels: nextChannels.map((ch) => ({
           type: ch.type,
           order: ch.order,
           isEnabled: ch.isEnabled,
@@ -111,17 +114,16 @@ export function useLifeCheckConfig() {
   }
 
   function toggleChannel(type: ChannelType) {
-    setChannels((prev) =>
-      prev.map((ch) =>
-        ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
-      ),
+    const next = channels.map((ch) =>
+      ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
     );
-    setSaved(false);
+    setChannels(next);
+    void persist(frequency, next);
   }
 
   function updateFrequency(next: Frequency) {
     setFrequency(next);
-    setSaved(false);
+    void persist(next, channels);
   }
 
   async function handleToggleActive(nextActive: boolean) {
@@ -145,7 +147,6 @@ export function useLifeCheckConfig() {
     setTravelUntil,
     updateFrequency,
     toggleChannel,
-    handleSave,
     handleTravelToggle,
     handleValidate,
     handlePostpone,
