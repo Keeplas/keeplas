@@ -44,6 +44,43 @@ export const accountExistsByEmail = query({
 });
 
 /**
+ * Resolve how an email signs in: `"password"` (email + password account),
+ * `"email-otp"` (passwordless emailed-code account), or `null` (no account).
+ * The login and recovery forms use this to show the right fields (password vs
+ * emailed code). Account existence by email is already deliberately revealed
+ * (see `accountExistsByEmail`), so this exposes nothing new. The `password`
+ * provider keys its account id on the raw email (case-sensitive), so we probe
+ * both the raw and normalized forms.
+ */
+export const getEmailAuthMode = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    const raw = args.email.trim();
+    if (!raw) return null;
+    const normalized = raw.toLowerCase();
+
+    const otp = await ctx.db
+      .query("authAccounts")
+      .withIndex("providerAndAccountId", (q) =>
+        q.eq("provider", "email-otp").eq("providerAccountId", normalized),
+      )
+      .first();
+    if (otp) return "email-otp" as const;
+
+    for (const id of raw === normalized ? [raw] : [raw, normalized]) {
+      const pwd = await ctx.db
+        .query("authAccounts")
+        .withIndex("providerAndAccountId", (q) =>
+          q.eq("provider", "password").eq("providerAccountId", id),
+        )
+        .first();
+      if (pwd) return "password" as const;
+    }
+    return null;
+  },
+});
+
+/**
  * Update the user's profile fields (name, phone).
  * Email is controlled by the auth provider and cannot be changed here;
  * the avatar is uploaded separately via `generateAvatarUploadUrl` /

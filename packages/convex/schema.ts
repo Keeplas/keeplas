@@ -125,6 +125,37 @@ export default defineSchema({
   }).index("by_phone", ["phoneNumber"]),
 
   // ═══════════════════════════════════════════════
+  // EMAIL VERIFICATION / AUTH (passwordless email OTP)
+  // ═══════════════════════════════════════════════
+
+  // Settings-side add+verify of an email (authenticated). Mirrors
+  // phone_verification_codes: keyed by userId, consumed to link an `email-otp`
+  // auth account to the current user.
+  email_verification_codes: defineTable({
+    userId: v.id("users"),
+    // Normalized (lowercased) email snapshot at issuance — invalidates the
+    // code if the pending email changes before submission.
+    email: v.string(),
+    // SHA-256 hex of the 6-digit OTP. Plaintext is never stored.
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_expires", ["userId", "expiresAt"]),
+
+  // Pre-auth OTP for passwordless email accounts (signup/login). Keyed by
+  // email, NOT userId — sibling of phone_auth_codes for the `email-otp`
+  // ConvexCredentials provider whose authorize() runs without an auth context.
+  email_auth_codes: defineTable({
+    email: v.string(),
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+    intent: v.union(v.literal("signup"), v.literal("signin")),
+  }).index("by_email", ["email"]),
+
+  // ═══════════════════════════════════════════════
   // PASSKEYS (WebAuthn credentials)
   // ═══════════════════════════════════════════════
 

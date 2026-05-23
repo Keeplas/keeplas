@@ -9,6 +9,7 @@ import { ResendOTP } from "./ResendOTP";
 import { internal } from "./_generated/api";
 import { verifyAssertionAndGetUserId } from "./webauthn";
 import { normalizeE164 } from "./lib/phone";
+import { normalizeEmail } from "./lib/email";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
@@ -70,6 +71,44 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return { userId: user._id };
       },
     }),
+    // Passwordless email account, sibling of `phone-otp`. Sign-up/sign-in =
+    // email + a one-time emailed code (no password). The pre-auth code is
+    // issued by `email_auth.requestEmailAuthOtp` and consumed here. Used both
+    // for brand-new email-passwordless accounts and, more importantly, as the
+    // login method for a phone account that linked an email from settings.
+    ConvexCredentials({
+      id: "email-otp",
+      authorize: async (credentials, ctx) => {
+        const email = normalizeEmail(credentials.email as string);
+        if (!email) throw new Error("A valid email is required");
+        const code = String(credentials.code ?? "");
+
+        await ctx.runMutation(internal.email_auth.consumeEmailAuthCode, {
+          email,
+          code,
+        });
+
+        if (credentials.flow === "signUp") {
+          const name = (credentials.name as string | undefined)?.trim();
+          const { user } = await createAccount(ctx, {
+            provider: "email-otp",
+            account: { id: email },
+            profile: {
+              email,
+              emailVerificationTime: Date.now(),
+              ...(name ? { name } : {}),
+            },
+          });
+          return { userId: user._id };
+        }
+
+        const { user } = await retrieveAccount(ctx, {
+          provider: "email-otp",
+          account: { id: email },
+        });
+        return { userId: user._id };
+      },
+    }),
     // Lost-phone recovery for passwordless phone accounts: 24-word phrase
     // hash → session (no WhatsApp code needed). The user can then update
     // their number from settings. ZK unchanged (hash comparison only).
@@ -82,6 +121,23 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         const userId = await ctx.runQuery(
           internal.phone_auth.verifyPhoneRecovery,
           { phoneNumber: phone, phraseHash },
+        );
+        if (!userId) throw new Error("Invalid recovery phrase");
+        return { userId };
+      },
+    }),
+    // Recovery for passwordless email accounts (sibling of `phone-recovery`):
+    // 24-word phrase hash → session, when the email-otp channel is unreachable.
+    // ZK unchanged (hash comparison only).
+    ConvexCredentials({
+      id: "email-recovery",
+      authorize: async (credentials, ctx) => {
+        const email = normalizeEmail(credentials.email as string);
+        if (!email) throw new Error("A valid email is required");
+        const phraseHash = String(credentials.phraseHash ?? "");
+        const userId = await ctx.runQuery(
+          internal.email_auth.verifyEmailRecovery,
+          { email, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
         return { userId };

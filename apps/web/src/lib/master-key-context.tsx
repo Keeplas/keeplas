@@ -35,22 +35,24 @@ const MasterKeyContext = createContext<MasterKeyContextValue>({
 
 export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const [masterKey, setMasterKeyState] = useState<CryptoKey | null>(null);
-  // Email for which the IndexedDB restore attempt has finished. Lets us tell
+  // userId for which the IndexedDB restore attempt has finished. Lets us tell
   // "still reading the persisted key" apart from "read, nothing stored".
-  const [restoredEmail, setRestoredEmail] = useState<string | null>(null);
+  const [restoredUserId, setRestoredUserId] = useState<string | null>(null);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const user = useQuery(api.users.viewer);
-  const userEmail = user?.email ?? null;
+  // Key the device cache by userId, not email: the MasterKey is identifier-
+  // agnostic, and an account can carry both an email and a phone.
+  const userId = user?._id ?? null;
 
   const setMasterKey = useCallback(
     (key: CryptoKey) => {
       setMasterKeyState(key);
-      if (userEmail) {
+      if (userId) {
         // Best-effort: a persistence failure must never block unlocking.
-        void persistMasterKey(userEmail, key);
+        void persistMasterKey(userId, key);
       }
     },
-    [userEmail],
+    [userId],
   );
 
   const clearMasterKey = useCallback(() => {
@@ -64,28 +66,25 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const restoring =
     isLoading ||
     (isAuthenticated && user === undefined) ||
-    (isAuthenticated &&
-      !!userEmail &&
-      !masterKey &&
-      restoredEmail !== userEmail);
+    (isAuthenticated && !!userId && !masterKey && restoredUserId !== userId);
 
   // Restore the persisted MasterKey on load so a refresh (or a browser restart)
   // does not force the user to re-enter their 24 words. The key is stored only
   // on this device (IndexedDB, never sent to the server) and stays until an
   // explicit sign-out clears it below.
   useEffect(() => {
-    if (isLoading || !isAuthenticated || !userEmail || masterKey) return;
-    if (restoredEmail === userEmail) return;
+    if (isLoading || !isAuthenticated || !userId || masterKey) return;
+    if (restoredUserId === userId) return;
     let cancelled = false;
-    loadMasterKey(userEmail).then((key) => {
+    loadMasterKey(userId).then((key) => {
       if (cancelled) return;
       if (key) setMasterKeyState(key);
-      setRestoredEmail(userEmail);
+      setRestoredUserId(userId);
     });
     return () => {
       cancelled = true;
     };
-  }, [isLoading, isAuthenticated, userEmail, masterKey, restoredEmail]);
+  }, [isLoading, isAuthenticated, userId, masterKey, restoredUserId]);
 
   // Drop the in-memory master key AND wipe the persisted copy as soon as the
   // Convex session is no longer authenticated (sign-out, token expiry, account
@@ -99,12 +98,12 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMasterKeyState(null);
       }
-      if (restoredEmail !== null) {
-        setRestoredEmail(null);
+      if (restoredUserId !== null) {
+        setRestoredUserId(null);
       }
       void clearPersistedMasterKeys();
     }
-  }, [isAuthenticated, isLoading, masterKey, restoredEmail]);
+  }, [isAuthenticated, isLoading, masterKey, restoredUserId]);
 
   return (
     <MasterKeyContext.Provider

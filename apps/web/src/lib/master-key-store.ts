@@ -18,11 +18,14 @@
  */
 
 const DB_NAME = "keeplas-master-key";
-const DB_VERSION = 1;
+// v2: keyed by userId instead of email. The MasterKey is identifier-agnostic
+// (derived from the 24-word phrase, bound to the userId), and accounts can now
+// carry both an email and a phone, so email is no longer a stable cache key.
+const DB_VERSION = 2;
 const STORE = "keys";
 
 interface StoredMasterKey {
-  userEmail: string;
+  userId: string;
   key: CryptoKey;
 }
 
@@ -38,9 +41,12 @@ function openDb(): Promise<IDBDatabase> {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: "userEmail" });
+      // Drop the old email-keyed store; persisted keys can't be re-derived
+      // without the phrase, so the only cost of the migration is one re-unlock.
+      if (db.objectStoreNames.contains(STORE)) {
+        db.deleteObjectStore(STORE);
       }
+      db.createObjectStore(STORE, { keyPath: "userId" });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -53,14 +59,14 @@ function openDb(): Promise<IDBDatabase> {
  * swallowed so they never block the unlock flow.
  */
 export async function persistMasterKey(
-  userEmail: string,
+  userId: string,
   key: CryptoKey,
 ): Promise<void> {
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put({ userEmail, key } satisfies StoredMasterKey);
+      tx.objectStore(STORE).put({ userId, key } satisfies StoredMasterKey);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -72,14 +78,12 @@ export async function persistMasterKey(
 /**
  * Load the persisted MasterKey for a user, or null if none / on error.
  */
-export async function loadMasterKey(
-  userEmail: string,
-): Promise<CryptoKey | null> {
+export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
   try {
     const db = await openDb();
     return await new Promise<CryptoKey | null>((resolve, reject) => {
       const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).get(userEmail);
+      const req = tx.objectStore(STORE).get(userId);
       req.onsuccess = () => {
         const record = req.result as StoredMasterKey | undefined;
         resolve(record?.key ?? null);

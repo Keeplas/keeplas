@@ -23,6 +23,7 @@ import { getInitials } from "@/lib/user";
 import { getCountry } from "@/lib/countries";
 import { UpdateResidenceDialog } from "./update-residence-dialog";
 import { PhoneVerificationDialog } from "@/components/phone-verification-dialog";
+import { EmailVerificationDialog } from "@/components/email-verification-dialog";
 
 interface IdentitySectionProps {
   user: Doc<"users">;
@@ -54,6 +55,9 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const searchParams = useSearchParams();
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(
     () => searchParams.get("verify") === "whatsapp",
+  );
+  const [emailDialogOpen, setEmailDialogOpen] = useState(
+    () => searchParams.get("add") === "email",
   );
 
   // Re-seed the editable fields whenever the viewer record changes, adjusting
@@ -254,9 +258,26 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
-          <Label htmlFor="email" className="text-label-md text-secondary">
-            Primary Email
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="email" className="text-label-md text-secondary">
+              Primary Email
+            </Label>
+            {user.emailVerificationTime ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
+                Verified
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEmailDialogOpen(true)}
+              >
+                {user.email ? "Verify" : "Add email"}
+              </Button>
+            )}
+          </div>
           <Input
             id="email"
             type="email"
@@ -266,9 +287,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             className="opacity-70"
           />
           <p className="text-label-md text-on-surface-variant mt-1">
-            {user.email
+            {user.emailVerificationTime
               ? "Managed by your auth provider"
-              : "You signed in with WhatsApp — no email is linked to this account."}
+              : user.email
+                ? "On file from your invitation — verify it to sign in with an emailed code."
+                : "Add an email to also sign in with an emailed code."}
           </p>
         </div>
 
@@ -448,6 +471,12 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         onOpenChange={setVerifyDialogOpen}
         initialPhone={phone}
         defaultCountry={user.country as CountryCode | undefined}
+      />
+
+      <EmailVerificationDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        initialEmail={user.email ?? undefined}
       />
     </section>
   );

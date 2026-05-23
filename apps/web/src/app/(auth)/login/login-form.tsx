@@ -30,12 +30,19 @@ export function LoginForm() {
   const convex = useConvex();
   const startPasskeyAuth = useMutation(api.webauthn.startAuthentication);
   const requestPhoneOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
+  const requestEmailOtp = useMutation(api.email_auth.requestEmailAuthOtp);
   const [kind, setKind] = useState<"email" | "phone">("phone");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
+  // How the entered email signs in: detected on blur/submit. "email-otp"
+  // accounts (passwordless) get an emailed code instead of a password.
+  const [emailMode, setEmailMode] = useState<
+    "unknown" | "password" | "email-otp"
+  >("unknown");
+  const [emailCodeSent, setEmailCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const cooldown = useResendCooldown(30);
@@ -45,7 +52,23 @@ export function LoginForm() {
     setKind(next);
     setError("");
     setPhoneCodeSent(false);
+    setEmailCodeSent(false);
+    setEmailMode("unknown");
     setCode("");
+  }
+
+  // Resolve whether the email is a password or passwordless (email-otp) account
+  // so we can show the right field. Treats "no account" as password so the
+  // existing invalid-credentials handling applies on submit.
+  async function detectEmailMode(
+    value: string,
+  ): Promise<"password" | "email-otp"> {
+    const mode = await convex
+      .query(api.users.getEmailAuthMode, { email: value.trim() })
+      .catch(() => null);
+    const resolved = mode === "email-otp" ? "email-otp" : "password";
+    setEmailMode(resolved);
+    return resolved;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,19 +77,46 @@ export function LoginForm() {
     if (kind === "email") {
       setLoading(true);
       setError("");
+      let mode = emailMode;
       try {
+        if (mode === "unknown") mode = await detectEmailMode(email);
+
+        if (mode === "email-otp") {
+          // Passwordless email: step 1 emails a code, step 2 signs in.
+          if (!emailCodeSent) {
+            await requestEmailOtp({ email: email.trim(), intent: "signin" });
+            setEmailCodeSent(true);
+            cooldown.start();
+            setLoading(false);
+            return;
+          }
+          await signIn("email-otp", {
+            email: email.trim(),
+            code,
+            flow: "signIn",
+          });
+          return;
+        }
+
         await signIn("password", { email, password, flow: "signIn" });
-      } catch {
-        // Tell apart "no account" (→ point to signup) from "wrong password".
-        // On any lookup failure, fall back to the generic credentials error.
-        const exists = await convex
-          .query(api.users.accountExistsByEmail, { email })
-          .catch(() => true);
-        setError(
-          exists
-            ? "Invalid email or password."
-            : "No account found for this email. Sign up to create one.",
-        );
+      } catch (err) {
+        if (mode === "email-otp") {
+          setError(
+            emailCodeSent
+              ? "Invalid or expired code."
+              : getErrorMessage(err, "Could not send the code. Try again."),
+          );
+        } else {
+          // Tell apart "no account" (→ point to signup) from "wrong password".
+          const exists = await convex
+            .query(api.users.accountExistsByEmail, { email })
+            .catch(() => true);
+          setError(
+            exists
+              ? "Invalid email or password."
+              : "No account found for this email. Sign up to create one.",
+          );
+        }
         setLoading(false);
       }
       return;
@@ -116,6 +166,20 @@ export function LoginForm() {
     }
   }
 
+  async function handleResendEmailCode() {
+    if (!email.trim() || cooldown.active) return;
+    setLoading(true);
+    setError("");
+    try {
+      await requestEmailOtp({ email: email.trim(), intent: "signin" });
+      cooldown.start();
+    } catch {
+      setError("Could not resend the code. Try again in a moment.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handlePasskeySignIn() {
     setLoading(true);
     setError("");
@@ -139,14 +203,16 @@ export function LoginForm() {
     }
   }
 
-  const submitLabel =
-    kind === "phone" && !phoneCodeSent
-      ? loading
-        ? "Sending..."
-        : "Send code"
-      : loading
-        ? "Unlocking..."
-        : "Unlock Vault";
+  const needsSendStep =
+    (kind === "phone" && !phoneCodeSent) ||
+    (kind === "email" && emailMode === "email-otp" && !emailCodeSent);
+  const submitLabel = needsSendStep
+    ? loading
+      ? "Sending..."
+      : "Send code"
+    : loading
+      ? "Unlocking..."
+      : "Unlock Vault";
 
   return (
     <AuthFormShell
@@ -185,29 +251,79 @@ export function LoginForm() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailMode("unknown");
+                    setEmailCodeSent(false);
+                  }}
+                  onBlur={() => {
+                    if (email.trim()) void detectEmailMode(email);
+                  }}
                   placeholder="curator@keeplas.vault"
                 />
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-end ml-1">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    href="/login/recovery"
-                    className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
-                  >
-                    Reset with 24 words
-                  </Link>
+              {emailMode === "email-otp" ? (
+                emailCodeSent ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end ml-1">
+                      <Label htmlFor="email-code">Email code</Label>
+                      <Link
+                        href="/login/recovery"
+                        className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
+                      >
+                        Lost access? 24 words
+                      </Link>
+                    </div>
+                    <Input
+                      id="email-code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      value={code}
+                      onChange={(e) =>
+                        setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      placeholder="123456"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleResendEmailCode}
+                      disabled={loading || cooldown.active}
+                      className="text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
+                    >
+                      {cooldown.active
+                        ? `Resend code in ${cooldown.remaining}s`
+                        : "Resend code"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-label-md text-on-surface-variant ml-1">
+                    This account signs in with an emailed code — no password.
+                  </p>
+                )
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-end ml-1">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      href="/login/recovery"
+                      className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
+                    >
+                      Reset with 24 words
+                    </Link>
+                  </div>
+                  <PasswordInput
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required={emailMode === "password"}
+                  />
                 </div>
-                <PasswordInput
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+              )}
             </>
           ) : (
             <>
@@ -262,7 +378,12 @@ export function LoginForm() {
 
         <AuthSubmitButton
           disabled={
-            loading || (kind === "phone" && phoneCodeSent && code.length !== 6)
+            loading ||
+            (kind === "phone" && phoneCodeSent && code.length !== 6) ||
+            (kind === "email" &&
+              emailMode === "email-otp" &&
+              emailCodeSent &&
+              code.length !== 6)
           }
         >
           {submitLabel}

@@ -49,18 +49,21 @@ export async function requireAuthWithTotp(ctx: QueryCtx) {
 }
 
 /**
- * Passwordless phone accounts authenticate with a WhatsApp OTP at every
- * sign-in, so the always-on login-OTP gate would double-prompt them. Detect
- * such accounts by the presence of a `phone-otp` auth account.
+ * Whether the user has a `password` (email + password) auth account. The
+ * always-on login-OTP gate applies ONLY to such accounts: passwordless
+ * accounts (`phone-otp` / `email-otp`) already cleared an OTP at sign-in, so
+ * gating them would double-prompt. Basing the skip on "has a password account"
+ * — rather than "has a phone-otp account" — keeps the gate armed for a password
+ * account even after it links a phone, closing a step-up bypass.
  */
-export async function hasPhoneOtpAccount(
+export async function hasPasswordAccount(
   ctx: QueryCtx,
   userId: Id<"users">,
 ): Promise<boolean> {
   const account = await ctx.db
     .query("authAccounts")
     .withIndex("userIdAndProvider", (q) =>
-      q.eq("userId", userId).eq("provider", "phone-otp"),
+      q.eq("userId", userId).eq("provider", "password"),
     )
     .first();
   return account !== null;
@@ -69,12 +72,12 @@ export async function hasPhoneOtpAccount(
 /**
  * Like `requireAuth` but additionally enforces the always-on login-OTP
  * step-up: the current Convex Auth session must have cleared a channel OTP.
- * Skipped for passwordless phone accounts (their sign-in IS an OTP). Throws
+ * Skipped for passwordless accounts (their sign-in IS an OTP). Throws
  * `"LOGIN_OTP_REQUIRED"` for callers to redirect the client to `/login/otp`.
  */
 export async function requireAuthWithLoginOtp(ctx: QueryCtx) {
   const userId = await requireAuth(ctx);
-  if (await hasPhoneOtpAccount(ctx, userId)) return userId;
+  if (!(await hasPasswordAccount(ctx, userId))) return userId;
 
   const sessionId = await getAuthSessionId(ctx);
   if (!sessionId) throw new Error(LOGIN_OTP_REQUIRED_ERROR);

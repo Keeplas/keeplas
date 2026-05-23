@@ -137,6 +137,37 @@ export const verifyCode = mutation({
       phoneNumberVerifiedAt: now,
       updatedAt: now,
     });
+
+    // Link a passwordless `phone-otp` auth account if the user doesn't have one
+    // (e.g. an email/password account adding a phone), so the verified number
+    // becomes a login method — not just a notification channel. Pure phone
+    // accounts already have one from signup, so this is a no-op for them.
+    const existingPhoneOtp = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) =>
+        q.eq("userId", userId).eq("provider", "phone-otp"),
+      )
+      .first();
+    if (!existingPhoneOtp) {
+      const clash = await ctx.db
+        .query("authAccounts")
+        .withIndex("providerAndAccountId", (q) =>
+          q.eq("provider", "phone-otp").eq("providerAccountId", active.phoneNumber),
+        )
+        .first();
+      if (clash && clash.userId !== userId) {
+        throw new Error("This phone number is already linked to another account.");
+      }
+      if (!clash) {
+        await ctx.db.insert("authAccounts", {
+          userId,
+          provider: "phone-otp",
+          providerAccountId: active.phoneNumber,
+          phoneVerified: active.phoneNumber,
+        });
+      }
+    }
+
     await ctx.db.delete(active._id);
 
     return { verified: true };

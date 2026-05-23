@@ -314,6 +314,37 @@ export const acceptInvitation = auditedMutation({
       updatedAt: now,
     });
 
+    // Backfill the contact's other identifier onto their user record. The
+    // invite holds both email and phone, but signup only persists the one the
+    // contact signed in with (e.g. phone signup drops the invited email). We
+    // copy any missing identifier so it is on file. It is stored UNVERIFIED —
+    // no `emailVerificationTime` / `phoneNumberVerifiedAt` and no auth account
+    // — so it is contact info only, never a login method until the contact
+    // proves ownership themselves. Skipped if it would collide with another
+    // user's identifier.
+    const user = await ctx.db.get(contactUserId);
+    const invitedEmail = contact.email?.trim().toLowerCase() || undefined;
+    const invitedPhone = normalizeE164(contact.phoneNumber);
+    const backfill: { email?: string; phoneNumber?: string } = {};
+
+    if (user && !user.email && invitedEmail) {
+      const clash = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", invitedEmail))
+        .first();
+      if (!clash) backfill.email = invitedEmail;
+    }
+    if (user && !user.phoneNumber && invitedPhone) {
+      const clash = await ctx.db
+        .query("users")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", invitedPhone))
+        .first();
+      if (!clash) backfill.phoneNumber = invitedPhone;
+    }
+    if (Object.keys(backfill).length > 0) {
+      await ctx.db.patch(contactUserId, { ...backfill, updatedAt: now });
+    }
+
     await createNotification(ctx, {
       userId: contact.userId,
       type: "contact_confirmed",

@@ -3,7 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { hasPhoneOtpAccount, optionalAuth, requireAuth } from "./helpers";
+import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -85,9 +85,10 @@ export const getMyLoginOtpGate = query({
       ? maskDestination(resolved.channel, resolved.destination)
       : null;
 
-    // Passwordless phone accounts already did a WhatsApp OTP at sign-in —
-    // don't double-prompt them.
-    if (await hasPhoneOtpAccount(ctx, userId)) {
+    // Passwordless accounts (phone-otp / email-otp) already did an OTP at
+    // sign-in — don't double-prompt them. The gate applies only to accounts
+    // that have a password.
+    if (!(await hasPasswordAccount(ctx, userId))) {
       return {
         authenticated: true,
         required: false,

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAction } from "convex/react";
+import { useAction, useConvex } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { phraseToHash } from "@keeplas/crypto";
 import {
@@ -29,10 +29,16 @@ export const dynamic = "force-dynamic";
 
 export default function PasswordRecoveryPage() {
   const router = useRouter();
+  const convex = useConvex();
   const resetPassword = useAction(api.passwordReset.resetPasswordWithRecovery);
   const { signIn } = useAuthActions();
 
   const [kind, setKind] = useState<"email" | "phone">("email");
+  // Passwordless `email-otp` accounts recover with 24 words → session (no new
+  // password); password accounts reset their password. Detected on blur/submit.
+  const [emailMode, setEmailMode] = useState<
+    "unknown" | "password" | "email-otp"
+  >("unknown");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [phrase, setPhrase] = useState("");
@@ -81,6 +87,36 @@ export default function PasswordRecoveryPage() {
       setError("Enter the email for your account.");
       return;
     }
+
+    let mode = emailMode;
+    if (mode === "unknown") {
+      const m = await convex
+        .query(api.users.getEmailAuthMode, { email: email.trim() })
+        .catch(() => null);
+      mode = m === "email-otp" ? "email-otp" : "password";
+      setEmailMode(mode);
+    }
+
+    if (mode === "email-otp") {
+      // Passwordless email: 24 words → session via the email-recovery provider.
+      setBusy(true);
+      setError(null);
+      try {
+        const phraseHash = await phraseToHash(words);
+        await signIn("email-recovery", { email: email.trim(), phraseHash });
+        router.push("/hub");
+      } catch (err) {
+        setError(
+          getErrorMessage(
+            err,
+            "Recovery failed. Check that your email and 24 words match.",
+          ),
+        );
+        setBusy(false);
+      }
+      return;
+    }
+
     if (newPassword.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -179,7 +215,21 @@ export default function PasswordRecoveryPage() {
                 id="rec-email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailMode("unknown");
+                }}
+                onBlur={() => {
+                  if (email.trim())
+                    void convex
+                      .query(api.users.getEmailAuthMode, {
+                        email: email.trim(),
+                      })
+                      .then((m) =>
+                        setEmailMode(m === "email-otp" ? "email-otp" : "password"),
+                      )
+                      .catch(() => setEmailMode("password"));
+                }}
                 autoComplete="email"
               />
             </div>
@@ -208,7 +258,13 @@ export default function PasswordRecoveryPage() {
               Words never leave this device — only a SHA-256 verifier is sent.
             </p>
           </div>
-          {kind === "email" && (
+          {kind === "email" && emailMode === "email-otp" && (
+            <p className="text-label-md text-on-surface-variant">
+              This account signs in with an emailed code — your 24 words restore
+              access directly, no new password needed.
+            </p>
+          )}
+          {kind === "email" && emailMode !== "email-otp" && (
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="rec-new-password">New password</Label>
@@ -217,7 +273,7 @@ export default function PasswordRecoveryPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   minLength={8}
-                  required
+                  required={emailMode === "password"}
                 />
               </div>
               <div className="space-y-1.5">
@@ -229,7 +285,7 @@ export default function PasswordRecoveryPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   minLength={8}
-                  required
+                  required={emailMode === "password"}
                 />
               </div>
             </>
@@ -240,14 +296,16 @@ export default function PasswordRecoveryPage() {
             size="md"
             disabled={
               busy ||
-              (kind === "email" ? !email || !newPassword : !phone) ||
+              (kind === "email"
+                ? !email || (emailMode === "password" && !newPassword)
+                : !phone) ||
               !phrase
             }
             className="w-full justify-center"
           >
             {busy ? (
               <Spinner size="sm" />
-            ) : kind === "phone" ? (
+            ) : kind === "phone" || emailMode === "email-otp" ? (
               "Recover access"
             ) : (
               "Reset password"

@@ -46,6 +46,7 @@ export {
   CommandSeparator,
   CommandItem,
 } from "./command";
+export { isValidEmail } from "./email";
 export { ErrorAlert } from "./error-alert";
 export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";
