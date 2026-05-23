@@ -31,7 +31,9 @@ export default function VaultDocPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-primary rounded-full" />
-          <h2 className="text-headline-md text-primary">How encryption works</h2>
+          <h2 className="text-headline-md text-primary">
+            How encryption works
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -39,7 +41,9 @@ export default function VaultDocPage() {
             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
               <Icon path={ICON_PATHS.encrypted} className="w-5 h-5" />
             </span>
-            <h3 className="text-headline-sm text-primary">Encrypted on-device</h3>
+            <h3 className="text-headline-sm text-primary">
+              Encrypted on-device
+            </h3>
             <p className="text-body-md text-on-surface-variant">
               Each item is encrypted with AES-256-GCM in your browser before
               upload. Plaintext never travels over the network.
@@ -49,20 +53,24 @@ export default function VaultDocPage() {
             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
               <Icon path={ICON_PATHS.key} className="w-5 h-5" />
             </span>
-            <h3 className="text-headline-sm text-primary">Your key, your key</h3>
+            <h3 className="text-headline-sm text-primary">
+              Your key, your key
+            </h3>
             <p className="text-body-md text-on-surface-variant">
-              The master key that unlocks your vault is derived locally from your
-              24-word phrase and never sent to Keeplas.
+              The master key that unlocks your vault is derived locally from
+              your 24-word phrase and never sent to Keeplas.
             </p>
           </article>
           <article className="bg-surface-container-low rounded-2xl p-6 space-y-3 ghost-border">
             <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
               <Icon path={ICON_PATHS.shieldCheck} className="w-5 h-5" />
             </span>
-            <h3 className="text-headline-sm text-primary">Servers stay blind</h3>
+            <h3 className="text-headline-sm text-primary">
+              Servers stay blind
+            </h3>
             <p className="text-body-md text-on-surface-variant">
-              Keeplas stores only encrypted blobs plus the public metadata needed
-              to orchestrate recovery. Even we cannot read your vault.
+              Keeplas stores only encrypted blobs plus the public metadata
+              needed to orchestrate recovery. Even we cannot read your vault.
             </p>
           </article>
         </div>

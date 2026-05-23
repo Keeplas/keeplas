@@ -62,10 +62,12 @@ export default function LettersDocPage() {
 
       {/* Privacy note */}
       <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
-        <h2 className="text-headline-sm text-primary">Sealed until the moment</h2>
+        <h2 className="text-headline-sm text-primary">
+          Sealed until the moment
+        </h2>
         <p className="text-body-md text-on-surface-variant">
-          A letter stays encrypted in your vault until its trigger fires. Keeplas
-          servers only ever hold ciphertext, so no one — not us, not the
+          A letter stays encrypted in your vault until its trigger fires.
+          Keeplas servers only ever hold ciphertext, so no one — not us, not the
           recipient, not your curators — can read it ahead of time.
         </p>
         <Link
@@ -92,7 +94,10 @@ export default function LettersDocPage() {
           href="/docs/vault"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon path={ICON_PATHS.encrypted} className="w-5 h-5 text-secondary" />
+          <Icon
+            path={ICON_PATHS.encrypted}
+            className="w-5 h-5 text-secondary"
+          />
           <span className="text-body-md font-medium text-primary">
             Digital Vault
           </span>

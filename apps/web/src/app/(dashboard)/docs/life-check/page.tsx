@@ -96,7 +96,10 @@ export default function LifeCheckDocPage() {
           href="/life-check"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon path={ICON_PATHS.heartbeat} className="w-5 h-5 text-secondary" />
+          <Icon
+            path={ICON_PATHS.heartbeat}
+            className="w-5 h-5 text-secondary"
+          />
           <span className="text-body-md font-medium text-primary">
             Go to Life Check
           </span>
