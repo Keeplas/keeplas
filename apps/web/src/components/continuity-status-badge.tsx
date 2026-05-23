@@ -40,8 +40,8 @@ const HELP_CONTENT = (
     <strong className="block mt-1">Active</strong> Check-ins run on schedule.
     <strong className="block mt-1">Paused</strong> Indefinite suspension —
     nothing runs until you resume.
-    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with a
-    return date that auto-resumes everything. Tap the badge to manage.
+    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with
+    a return date that auto-resumes everything. Tap the badge to manage.
   </span>
 );
 

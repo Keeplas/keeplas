@@ -153,8 +153,8 @@ export function EscalationTimeline({
               className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
             />
             <p className="text-body-md text-on-primary-container italic">
-              Keeplas uses zero-knowledge encryption. Only an explicit reply from
-              you — tap, email button, or WhatsApp — pauses the protocol.
+              Keeplas uses zero-knowledge encryption. Only an explicit reply
+              from you — tap, email button, or WhatsApp — pauses the protocol.
             </p>
           </div>
         </div>

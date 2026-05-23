@@ -822,7 +822,8 @@ export const enterConfirmationStage = internalMutation({
       });
     }
 
-    const windowDays = config.confirmationWindowDays ?? CONFIRMATION_WINDOW_DAYS;
+    const windowDays =
+      config.confirmationWindowDays ?? CONFIRMATION_WINDOW_DAYS;
     const resolveId = await ctx.scheduler.runAfter(
       windowDays * DAY_MS,
       internal.life_check.resolveConfirmationWindow,

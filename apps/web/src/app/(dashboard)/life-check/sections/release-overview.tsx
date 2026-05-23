@@ -22,10 +22,12 @@ export function ReleaseOverview() {
 
   return (
     <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
-      <h3 className="text-headline-sm text-primary mb-1.5">Who receives what</h3>
+      <h3 className="text-headline-sm text-primary mb-1.5">
+        Who receives what
+      </h3>
       <p className="text-body-md text-on-surface-variant mb-5">
-        If your Life Check is confirmed, each trusted contact gets read access to
-        the items you&apos;ve shared with them.
+        If your Life Check is confirmed, each trusted contact gets read access
+        to the items you&apos;ve shared with them.
       </p>
 
       {preview === undefined ? (
