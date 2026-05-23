@@ -62,22 +62,33 @@ export function ChannelList({
                       <Badge variant="outline">Coming soon</Badge>
                     )}
                     {isUnverified && (
-                      <Badge variant="outline">Not verified</Badge>
+                      <Badge variant="outline">
+                        {ch.type === "whatsapp" ? "Not verified" : "No email"}
+                      </Badge>
                     )}
                   </div>
                   <p className="text-body-md text-on-surface-variant">
-                    {ch.description}
+                    {isUnverified && ch.type === "email"
+                      ? "No email is linked to this account."
+                      : ch.description}
                   </p>
                 </div>
               </div>
               {isUnverified ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setVerifyOpen(true)}
-                >
-                  Verify
-                </Button>
+                // WhatsApp self-verifies via phone OTP, so offer that flow.
+                // Email has no in-app verify step (the auth provider sets it at
+                // login), so just show it locked off until an address exists.
+                ch.type === "whatsapp" ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setVerifyOpen(true)}
+                  >
+                    Verify
+                  </Button>
+                ) : (
+                  <Switch checked={false} disabled />
+                )
               ) : (
                 <Switch
                   checked={ch.isUpcoming ? false : ch.isEnabled}
@@ -90,8 +101,9 @@ export function ChannelList({
         })}
       </div>
 
-      {/* Only WhatsApp gates on contact verification today (phone ownership via
-          OTP); email is verified at login. */}
+      {/* WhatsApp is the only channel with an in-app verify flow (phone
+          ownership via OTP). Email gates on a verified address too, but that is
+          set by the auth provider at login — there is no dialog for it here. */}
       <PhoneVerificationDialog
         open={verifyOpen}
         onOpenChange={setVerifyOpen}

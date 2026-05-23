@@ -69,7 +69,9 @@ function buildSteps(
   channels: ChannelConfig[],
   policy: ReleasePolicy,
 ): PhaseStep[] {
-  const enabled = channels.filter((c) => c.isEnabled);
+  // Only channels that are enabled AND verified actually go out — an
+  // unverified email/phone can't be reached, so keep it out of the timeline.
+  const enabled = channels.filter((c) => c.isEnabled && c.isVerified !== false);
   const { confirmationThreshold, confirmationWindowDays, fallbackBehavior } =
     policy;
 
@@ -133,7 +135,7 @@ function buildSteps(
           : `Once ${plural(confirmationThreshold, "trusted contact")} confirm, your vault is released to them. If no one confirms in time, nothing is released.`,
       tone: "triggered",
       isFinal: true,
-      help: 'Controlled by the "Release anyway if no one confirms" toggle in Release policy. Off (recommended): release only if your contacts confirm. On: release even if none confirm once the window passes.',
+      help: 'Controlled by the "Release anyway if no one confirms" toggle in Release policy. On (recommended): release even if none confirm once the window passes. Off: release only if your contacts confirm.',
     },
   ];
 }

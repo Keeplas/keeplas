@@ -25,6 +25,11 @@ export function useLifeCheckConfig() {
 
   // WhatsApp can only reach a phone the user has proven they own (OTP).
   const phoneVerified = phoneStatus?.verifiedAt != null;
+  // Email check-ins need a verified address on file. Phone-only accounts have
+  // none, so the email channel stays unverified for them (email is managed by
+  // the auth provider and verified at login via OTP).
+  const emailVerified =
+    viewer?.email != null && viewer?.emailVerificationTime != null;
 
   const [frequency, setFrequency] = useState<Frequency>("monthly");
   const [channels, setChannels] = useState<ChannelConfig[]>(DEFAULT_CHANNELS);
@@ -134,6 +139,7 @@ export function useLifeCheckConfig() {
     if (channels.find((c) => c.type === type)?.isUpcoming) return;
     // An unverified contact can't receive a check-in — verify before enabling.
     if (type === "whatsapp" && !phoneVerified) return;
+    if (type === "email" && !emailVerified) return;
     const next = channels.map((ch) =>
       ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
     );
@@ -158,10 +164,15 @@ export function useLifeCheckConfig() {
   }
 
   // Surface per-channel verification so the UI can require it before enabling.
-  // WhatsApp needs a phone proven via OTP; email is verified at login.
+  // WhatsApp needs a phone proven via OTP; email needs a verified address.
   const verifiedChannels: ChannelConfig[] = channels.map((ch) => ({
     ...ch,
-    isVerified: ch.type === "whatsapp" ? phoneVerified : true,
+    isVerified:
+      ch.type === "whatsapp"
+        ? phoneVerified
+        : ch.type === "email"
+          ? emailVerified
+          : true,
   }));
 
   return {

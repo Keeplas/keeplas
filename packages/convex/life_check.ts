@@ -868,7 +868,7 @@ export const resolveConfirmationWindow = internalMutation({
     if (confirmed) return; // release will fire after its grace window
 
     const config = await ctx.db.get(cycle.configId);
-    const fallback = config?.fallbackBehavior ?? "abort";
+    const fallback = config?.fallbackBehavior ?? "release_anyway";
 
     if (fallback === "release_anyway") {
       await markCycleTriggered(ctx, cycle._id, "life_check_fallback_release");

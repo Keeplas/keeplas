@@ -4,6 +4,12 @@ import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
 import { normalizeE164 } from "./lib/phone";
+import {
+  deleteBlob,
+  generateBlobUploadUrl,
+  getBlobDownloadUrl,
+  storageRefValidator,
+} from "./lib/storage";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 130 * 365.25 * 24 * 60 * 60 * 1000;
@@ -38,8 +44,10 @@ export const accountExistsByEmail = query({
 });
 
 /**
- * Update the user's profile fields (name, phone, avatar).
- * Email is controlled by the auth provider and cannot be changed here.
+ * Update the user's profile fields (name, phone).
+ * Email is controlled by the auth provider and cannot be changed here;
+ * the avatar is uploaded separately via `generateAvatarUploadUrl` /
+ * `setAvatarImage`.
  */
 export const updateProfile = auditedMutation({
   action: "user.profile.updated",
@@ -47,7 +55,6 @@ export const updateProfile = auditedMutation({
   args: {
     name: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
-    avatarUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -63,10 +70,78 @@ export const updateProfile = auditedMutation({
         patch.phoneNumberVerifiedAt = undefined;
       }
     }
-    if (args.avatarUrl !== undefined)
-      patch.avatarUrl = args.avatarUrl.trim() || undefined;
 
     await ctx.db.patch(userId, patch);
+  },
+});
+
+/**
+ * Issue a short-lived signed URL so the client can POST the avatar image
+ * directly to Convex storage. Unlike vault blobs, the avatar is not
+ * client-encrypted — it is a profile picture, not vault content.
+ */
+export const generateAvatarUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireAuth(ctx);
+    return await generateBlobUploadUrl(ctx);
+  },
+});
+
+/**
+ * Persist a freshly uploaded avatar image: resolve its serving URL, store
+ * both the URL (for display) and the storage handle (for later cleanup), and
+ * delete the previously uploaded blob so replacements don't orphan storage.
+ * Returns the serving URL so the client can preview it immediately.
+ */
+export const setAvatarImage = auditedMutation({
+  action: "user.profile.updated",
+  resourceType: "user",
+  args: { storageId: storageRefValidator },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const url = await getBlobDownloadUrl(ctx, args.storageId);
+    if (!url) throw new Error("Uploaded image could not be resolved");
+
+    if (user.avatarStorageId && user.avatarStorageId !== args.storageId) {
+      await deleteBlob(ctx, user.avatarStorageId);
+    }
+
+    await ctx.db.patch(userId, {
+      avatarUrl: url,
+      avatarStorageId: args.storageId,
+      updatedAt: Date.now(),
+    });
+
+    return url;
+  },
+});
+
+/**
+ * Clear the user's avatar: drop the URL + storage handle and delete the
+ * underlying blob if it was an uploaded one.
+ */
+export const removeAvatar = auditedMutation({
+  action: "user.profile.updated",
+  resourceType: "user",
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    if (user.avatarStorageId) {
+      await deleteBlob(ctx, user.avatarStorageId);
+    }
+
+    await ctx.db.patch(userId, {
+      avatarUrl: undefined,
+      avatarStorageId: undefined,
+      updatedAt: Date.now(),
+    });
   },
 });
 
@@ -271,6 +346,12 @@ export async function wipeUserData(
     .collect();
   for (const row of accessRequests) {
     await ctx.db.delete(row._id);
+  }
+
+  // Drop the uploaded avatar blob so the wipe leaves no orphaned storage.
+  const user = await ctx.db.get(userId);
+  if (user?.avatarStorageId) {
+    await deleteBlob(ctx, user.avatarStorageId);
   }
 
   await ctx.db.delete(userId);

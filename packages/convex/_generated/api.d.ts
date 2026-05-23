@@ -36,6 +36,7 @@ import type * as recipient_groups from "../recipient_groups.js";
 import type * as release from "../release.js";
 import type * as shared_types from "../shared_types.js";
 import type * as support from "../support.js";
+import type * as testing from "../testing.js";
 import type * as totp from "../totp.js";
 import type * as trusted_contacts from "../trusted_contacts.js";
 import type * as users from "../users.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   release: typeof release;
   shared_types: typeof shared_types;
   support: typeof support;
+  testing: typeof testing;
   totp: typeof totp;
   trusted_contacts: typeof trusted_contacts;
   users: typeof users;

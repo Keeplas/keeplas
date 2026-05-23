@@ -130,8 +130,8 @@ export default function DocsPage() {
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
           Keeplas is a life-continuity platform. We combine a zero-knowledge
-          vault, a multi-channel life check and a social recovery network so your
-          digital legacy outlives you — on your terms.
+          vault, a multi-channel life check and a social recovery network so
+          your digital legacy outlives you — on your terms.
         </p>
       </header>
 

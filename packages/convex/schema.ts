@@ -15,6 +15,10 @@ export default defineSchema({
     email: v.optional(v.string()),
     name: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    // Convex storage handle for an uploaded avatar image. Tracked so the
+    // previous blob can be deleted when the avatar is replaced or the account
+    // is wiped; `avatarUrl` holds the resolved serving URL used for display.
+    avatarStorageId: v.optional(v.id("_storage")),
     phoneNumber: v.optional(v.string()),
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),

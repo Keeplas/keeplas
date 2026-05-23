@@ -25,7 +25,7 @@ export function ReleasePolicySettings() {
 
   const [threshold, setThreshold] = useState(2);
   const [windowDays, setWindowDays] = useState(7);
-  const [releaseAnyway, setReleaseAnyway] = useState(false);
+  const [releaseAnyway, setReleaseAnyway] = useState(true);
 
   // Seed the editable form from the server config the first time it resolves
   // (and again if it changes), without an effect. Tracking the seeded source
@@ -36,7 +36,9 @@ export function ReleasePolicySettings() {
     setSeededFrom(config);
     setThreshold(config.confirmationThreshold ?? 2);
     setWindowDays(config.confirmationWindowDays ?? 7);
-    setReleaseAnyway((config.fallbackBehavior ?? "abort") === "release_anyway");
+    setReleaseAnyway(
+      (config.fallbackBehavior ?? "release_anyway") === "release_anyway",
+    );
   }
 
   if (config === null) return null;
@@ -121,8 +123,8 @@ export function ReleasePolicySettings() {
           </p>
           <p className="text-label-md text-on-surface-variant">
             {releaseAnyway
-              ? "After the window, your vault is released even without a confirmation."
-              : "Recommended: if no contact confirms, nothing is released."}
+              ? "Recommended: if no contact confirms, your vault is still released after the window, so your recipients are reached."
+              : "If no contact confirms, nothing is released."}
           </p>
         </div>
         <Switch

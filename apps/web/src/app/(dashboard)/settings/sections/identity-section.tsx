@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
+import type { StorageRef } from "@keeplas/backend/lib/storage";
 import {
   Button,
   Icon,
@@ -28,14 +29,23 @@ interface IdentitySectionProps {
   onError: (message: string) => void;
 }
 
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const updateProfile = useAuditedMutation(api.users.updateProfile);
+  const generateAvatarUploadUrl = useMutation(
+    api.users.generateAvatarUploadUrl,
+  );
+  const setAvatarImage = useAuditedMutation(api.users.setAvatarImage);
+  const removeAvatar = useAuditedMutation(api.users.removeAvatar);
 
   const [name, setName] = useState(user.name ?? "");
   const [phone, setPhone] = useState<string | undefined>(
     user.phoneNumber || undefined,
   );
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [residenceDialogOpen, setResidenceDialogOpen] = useState(false);
@@ -82,12 +92,53 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
     onError("");
     setSaved(false);
     try {
-      await updateProfile({ name, phoneNumber: phone, avatarUrl });
+      await updateProfile({ name, phoneNumber: phone });
       setSaved(true);
     } catch (err) {
       onError(getErrorMessage(err, "Failed to update profile"));
     } finally {
       setSaving(false);
+    }
+  }
+
+  // The avatar uploads on its own (not part of the identity form): the image
+  // is sent straight to storage, then persisted and previewed immediately.
+  async function handleAvatarFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      onError("Please choose an image file.");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      onError("Image must be 5 MB or smaller.");
+      return;
+    }
+    setUploadingAvatar(true);
+    onError("");
+    try {
+      const uploadUrl = await generateAvatarUploadUrl();
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      const { storageId } = (await res.json()) as { storageId: StorageRef };
+      const url = await setAvatarImage({ storageId });
+      setAvatarUrl(url);
+    } catch (err) {
+      onError(getErrorMessage(err, "Failed to upload image"));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    onError("");
+    try {
+      await removeAvatar();
+      setAvatarUrl("");
+    } catch (err) {
+      onError(getErrorMessage(err, "Failed to remove image"));
     }
   }
 
@@ -107,14 +158,42 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         className="grid grid-cols-1 sm:grid-cols-2 gap-6"
       >
         <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <UserAvatar
-            size="xl"
-            imageUrl={avatarUrl || null}
-            initials={initials}
-            alt={name || "Profile"}
-            imageClassName="shadow-xl border-4 border-surface"
-            className="shadow-xl border-4 border-surface"
-            onImageError={() => setAvatarUrl("")}
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            aria-label="Change profile photo"
+            className="group relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-wait cursor-pointer"
+          >
+            <UserAvatar
+              size="xl"
+              imageUrl={avatarUrl || null}
+              initials={initials}
+              alt={name || "Profile"}
+              imageClassName="shadow-xl border-4 border-surface"
+              className="shadow-xl border-4 border-surface"
+              onImageError={() => setAvatarUrl("")}
+            />
+            <span
+              className={`absolute inset-0 flex items-center justify-center rounded-full bg-primary/60 text-on-primary transition-opacity ${
+                uploadingAvatar
+                  ? "opacity-100 animate-pulse"
+                  : "opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              <Icon path={ICON_PATHS.image} className="w-6 h-6" />
+            </span>
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleAvatarFile(file);
+              e.target.value = "";
+            }}
           />
           <div className="space-y-1 flex-1 min-w-0">
             <h3 className="text-headline-sm text-primary truncate">
@@ -131,6 +210,29 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-primary-container text-on-primary-container">
                   Recovery Set
                 </span>
+              )}
+            </div>
+            <div className="pt-2 flex items-center gap-3 text-label-md">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="text-secondary underline cursor-pointer disabled:opacity-60"
+              >
+                {uploadingAvatar
+                  ? "Uploading…"
+                  : avatarUrl
+                    ? "Change photo"
+                    : "Upload photo"}
+              </button>
+              {avatarUrl && !uploadingAvatar && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  className="text-on-surface-variant underline cursor-pointer"
+                >
+                  Remove
+                </button>
               )}
             </div>
           </div>
@@ -159,11 +261,14 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             id="email"
             type="email"
             value={user.email ?? ""}
+            placeholder={user.email ? undefined : "No email linked"}
             disabled
             className="opacity-70"
           />
           <p className="text-label-md text-on-surface-variant mt-1">
-            Managed by your auth provider
+            {user.email
+              ? "Managed by your auth provider"
+              : "You signed in with WhatsApp — no email is linked to this account."}
           </p>
         </div>
 
@@ -198,18 +303,6 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           <p className="text-label-md text-on-surface-variant">
             Used for Life Check escalations and important notifications.
           </p>
-        </div>
-
-        <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
-          <Label htmlFor="avatar" className="text-label-md text-secondary">
-            Avatar URL
-          </Label>
-          <Input
-            id="avatar"
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder="https://..."
-          />
         </div>
 
         <div className="col-span-full flex items-center justify-start gap-4">
