@@ -4,22 +4,34 @@ import { HelpHint, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { FREQUENCIES, type ChannelConfig, type Frequency } from "./constants";
 
-// Mirrors CHECK_IN_WINDOW_DAYS / REMINDER_FRACTIONS in
+// Mirrors CHECK_IN_WINDOW_DAYS / REMINDER_DAYS in
 // packages/convex/life_check.ts. Keep in sync.
-const CHECK_IN_WINDOW_DAYS = 7;
-const REMINDER_DAYS = [3, 6] as const;
+const CHECK_IN_WINDOW_DAYS = 15;
+const REMINDER_DAYS = [3, 7, 10] as const;
+// Owner-cancel grace once enough contacts confirm. Mirrors GRACE_MS in
+// packages/convex/access_requests.ts (72h). Display-only.
+const GRACE_HOURS = 72;
 
 const TONE_STYLES = {
   active: "bg-secondary ring-4 ring-secondary/20",
   reminder: "bg-secondary/50",
+  confirm: "bg-error/50",
   triggered: "bg-error ring-4 ring-error/30",
 } as const;
 
 type Tone = keyof typeof TONE_STYLES;
 
-interface EscalationTimelineProps {
+interface ReleasePolicy {
+  confirmationThreshold: number;
+  confirmationWindowDays: number;
+  fallbackBehavior: "abort" | "release_anyway";
+}
+
+interface EscalationTimelineProps extends ReleasePolicy {
   channels: ChannelConfig[];
   frequency: Frequency;
+  travelModeEnabled: boolean;
+  travelModeUntil?: number;
 }
 
 interface PhaseStep {
@@ -30,6 +42,7 @@ interface PhaseStep {
   tone: Tone;
   isFinal?: boolean;
   extra?: React.ReactNode;
+  help?: string;
 }
 
 function frequencyDays(frequency: Frequency): number {
@@ -48,8 +61,17 @@ function joinChannelLabels(channels: ChannelConfig[]): string {
   return `${head} & ${channels[channels.length - 1].label}`;
 }
 
-function buildSteps(channels: ChannelConfig[]): PhaseStep[] {
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n > 1 ? "s" : ""}`;
+}
+
+function buildSteps(
+  channels: ChannelConfig[],
+  policy: ReleasePolicy,
+): PhaseStep[] {
   const enabled = channels.filter((c) => c.isEnabled);
+  const { confirmationThreshold, confirmationWindowDays, fallbackBehavior } =
+    policy;
 
   return [
     {
@@ -74,25 +96,75 @@ function buildSteps(channels: ChannelConfig[]): PhaseStep[] {
       title: "Continuity protocol begins",
       titleClass: "text-on-primary text-headline-sm",
       description:
-        "No confirmation across the whole window — Keeplas begins releasing your vault to your trusted contacts.",
-      tone: "triggered",
-      isFinal: true,
+        "No reply across the whole window. Keeplas now asks your trusted contacts to confirm you're unavailable — nothing is released yet.",
+      tone: "confirm",
+      help: "The check-in window has fully elapsed with no reply from you. Your trusted contacts are now asked to confirm you're unavailable. Nothing is decrypted or released at this point.",
       extra: (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap mt-3">
           <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-full">
             Trusted contacts notified
           </span>
         </div>
       ),
     },
+    {
+      dayLabel: "Then",
+      title: "Trusted contacts confirm",
+      titleClass: "text-on-primary/90",
+      description: `At least ${plural(confirmationThreshold, "trusted contact")} must confirm they can't reach you, within ${confirmationWindowDays} days.`,
+      tone: "confirm",
+      help: `Set in Release policy: "Contacts that must confirm you're unavailable" (${confirmationThreshold}) and "Days they have to confirm" (${confirmationWindowDays} days). The contacts have that long to reach the required number.`,
+    },
+    {
+      dayLabel: `+${GRACE_HOURS}h`,
+      title: "Last chance to cancel",
+      titleClass: "text-on-primary/90",
+      description: `Once enough confirm, you still have ${GRACE_HOURS} hours to cancel before anything is released.`,
+      tone: "confirm",
+      help: `A fixed ${GRACE_HOURS}-hour safety window — it is NOT the "Days they have to confirm" setting. It starts the moment enough contacts confirm, and confirming you're well (tap, email, or WhatsApp) during it cancels the release.`,
+    },
+    {
+      dayLabel: "Outcome",
+      title: "Vault released",
+      titleClass: "text-on-primary text-headline-sm",
+      description:
+        fallbackBehavior === "release_anyway"
+          ? `Once ${plural(confirmationThreshold, "trusted contact")} confirm, your vault is released to them — and released anyway if the window passes without any confirmation.`
+          : `Once ${plural(confirmationThreshold, "trusted contact")} confirm, your vault is released to them. If no one confirms in time, nothing is released.`,
+      tone: "triggered",
+      isFinal: true,
+      help: 'Controlled by the "Release anyway if no one confirms" toggle in Release policy. Off (recommended): release only if your contacts confirm. On: release even if none confirm once the window passes.',
+    },
   ];
+}
+
+function policyRecap({
+  confirmationThreshold,
+  confirmationWindowDays,
+  fallbackBehavior,
+}: ReleasePolicy): string {
+  const fallback =
+    fallbackBehavior === "release_anyway"
+      ? "released anyway after the window"
+      : "nothing released without confirmation";
+  return `${plural(confirmationThreshold, "contact")} to confirm · ${confirmationWindowDays}-day window · ${fallback}`;
 }
 
 export function EscalationTimeline({
   channels,
   frequency,
+  confirmationThreshold,
+  confirmationWindowDays,
+  fallbackBehavior,
+  travelModeEnabled,
+  travelModeUntil,
 }: EscalationTimelineProps) {
-  const steps = buildSteps(channels);
+  const policy: ReleasePolicy = {
+    confirmationThreshold,
+    confirmationWindowDays,
+    fallbackBehavior,
+  };
+  const steps = buildSteps(channels, policy);
   const days = frequencyDays(frequency);
 
   return (
@@ -101,16 +173,32 @@ export function EscalationTimeline({
         <h3 className="text-headline-md mb-1.5 flex items-center gap-2">
           Escalation Protocol
           <HelpHint
-            content="Every cadence period Keeplas asks you to confirm you're well. You then have a 7-day window with reminders to reply — by tapping in the app, clicking the email button, or replying on WhatsApp. Only an explicit reply resets the countdown; using the app does not. If the whole window passes in silence, Keeplas begins releasing your vault to your trusted contacts."
+            content="Every cadence period Keeplas asks you to confirm you're well. You then have a 15-day window with reminders to reply — by tapping in the app, clicking the email button, or replying on WhatsApp. Only an explicit reply resets the countdown; using the app does not. If the whole window passes in silence, Keeplas asks your trusted contacts to confirm you're unavailable before anything is released."
             className="text-on-primary/60 hover:text-secondary-fixed"
           />
         </h3>
         <p className="text-body-md text-on-primary-container mb-2">
           What happens after a missed check-in.
         </p>
-        <p className="text-label-md text-on-primary-container/80 mb-10">
+        <p className="text-label-md text-on-primary-container/80 mb-8">
           Keeplas asks you to confirm every {days} days.
         </p>
+
+        {travelModeEnabled && (
+          <div className="mb-8 p-4 bg-on-primary/5 rounded-xl ghost-border flex items-start gap-3">
+            <Icon
+              path={ICON_PATHS.globe}
+              className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
+            />
+            <p className="text-body-md text-on-primary-container">
+              Protocol paused — travel mode is on
+              {travelModeUntil
+                ? ` until ${new Date(travelModeUntil).toLocaleDateString()}`
+                : ""}
+              . No check-ins go out while it&apos;s active.
+            </p>
+          </div>
+        )}
 
         <div className="relative">
           <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-secondary/30" />
@@ -123,8 +211,16 @@ export function EscalationTimeline({
                 />
                 {step.isFinal ? (
                   <div className="bg-on-primary/5 p-4 rounded-xl backdrop-blur-sm">
-                    <p className={`text-headline-sm mb-1.5 ${step.titleClass}`}>
+                    <p
+                      className={`text-headline-sm mb-1.5 flex items-center gap-1.5 ${step.titleClass}`}
+                    >
                       {step.dayLabel}: {step.title}
+                      {step.help && (
+                        <HelpHint
+                          content={step.help}
+                          className="text-on-primary/60 hover:text-secondary-fixed"
+                        />
+                      )}
                     </p>
                     <p className="text-body-md text-on-primary-container mb-3">
                       {step.description}
@@ -133,12 +229,21 @@ export function EscalationTimeline({
                   </div>
                 ) : (
                   <>
-                    <p className={`text-headline-sm mb-1 ${step.titleClass}`}>
+                    <p
+                      className={`text-headline-sm mb-1 flex items-center gap-1.5 ${step.titleClass}`}
+                    >
                       {step.dayLabel}: {step.title}
+                      {step.help && (
+                        <HelpHint
+                          content={step.help}
+                          className="text-on-primary/60 hover:text-secondary-fixed"
+                        />
+                      )}
                     </p>
                     <p className="text-body-md text-on-primary-container">
                       {step.description}
                     </p>
+                    {step.extra}
                   </>
                 )}
               </div>
@@ -152,10 +257,15 @@ export function EscalationTimeline({
               path={ICON_PATHS.shieldCheck}
               className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
             />
-            <p className="text-body-md text-on-primary-container italic">
-              Keeplas uses zero-knowledge encryption. Only an explicit reply
-              from you — tap, email button, or WhatsApp — pauses the protocol.
-            </p>
+            <div>
+              <p className="text-label-md text-on-primary-container/80 mb-1">
+                {policyRecap(policy)}
+              </p>
+              <p className="text-body-md text-on-primary-container italic">
+                Keeplas uses zero-knowledge encryption. Only an explicit reply
+                from you — tap, email button, or WhatsApp — pauses the protocol.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -22,11 +22,13 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Stage-1 user check-in window: once the cadence elapses the user has this many
  * days to confirm (one-click email, WhatsApp reply, or in-app tap) before the
- * cycle hands off to the next stage. Reminders are re-sent at each fraction of
- * the window — at the default 7-day window that is J+0, J+3 and J+6.
+ * cycle hands off to the next stage. The check-in is fanned out at J+0 and then
+ * re-sent at each reminder day below — at the default 15-day window that is
+ * J+0, J+3, J+7 and J+10, with the handoff at J+15.
  */
-const CHECK_IN_WINDOW_DAYS = 7;
-const REMINDER_FRACTIONS = [0, 3 / 7, 6 / 7] as const;
+const CHECK_IN_WINDOW_DAYS = 15;
+/** Reminder day offsets within the window. J+0 is the initial fan-out. */
+const REMINDER_DAYS = [3, 7, 10] as const;
 
 /** Stage-2: how long trusted contacts have to confirm before the fallback. */
 const CONFIRMATION_WINDOW_DAYS = 7;
@@ -399,8 +401,8 @@ async function startCycleForConfig(
   });
 
   // Explicit dead-man's switch: fan out every enabled channel at once (no
-  // per-channel cascade), repeat the reminder at each fraction of the window,
-  // then hand off when the window closes if the user never confirmed.
+  // per-channel cascade), repeat the reminder at each reminder day, then hand
+  // off when the window closes if the user never confirmed.
   const scheduleIds: Id<"_scheduled_functions">[] = [];
   for (const channel of enabled) {
     scheduleIds.push(
@@ -410,11 +412,11 @@ async function startCycleForConfig(
       }),
     );
   }
-  for (const fraction of REMINDER_FRACTIONS) {
-    if (fraction === 0) continue; // the immediate fan-out above is reminder #1
+  for (const day of REMINDER_DAYS) {
+    if (day * DAY_MS >= windowMs) continue; // a reminder must land before handoff
     scheduleIds.push(
       await ctx.scheduler.runAfter(
-        windowMs * fraction,
+        day * DAY_MS,
         internal.life_check.sendReminder,
         { cycleId },
       ),

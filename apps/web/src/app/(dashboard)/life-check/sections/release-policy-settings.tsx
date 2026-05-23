@@ -73,8 +73,9 @@ export function ReleasePolicySettings() {
       </div>
 
       <div>
-        <p className="text-label-md text-on-surface-variant mb-2">
+        <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
           Contacts that must confirm you&apos;re unavailable
+          <HelpHint content="The minimum number of trusted contacts who must independently confirm they can't reach you before your vault can be released. A higher number guards against any single contact acting alone." />
         </p>
         <div className="grid grid-cols-3 gap-3">
           {THRESHOLDS.map((n) => (
@@ -93,8 +94,9 @@ export function ReleasePolicySettings() {
       </div>
 
       <div>
-        <p className="text-label-md text-on-surface-variant mb-2">
+        <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
           Days they have to confirm
+          <HelpHint content="How long your trusted contacts have to reach the required number once Keeplas alerts them. This is separate from the fixed 72-hour grace window you get to cancel the release after they confirm." />
         </p>
         <div className="grid grid-cols-3 gap-3">
           {WINDOWS.map((n) => (
