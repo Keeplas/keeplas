@@ -23,9 +23,18 @@ export default defineSchema({
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),
 
+    // Auth methods available on this account. Seeded with the sign-up method
+    // ("email" for password/email-OTP accounts, "phone" for phone-OTP) by the
+    // `afterUserCreatedOrUpdated` callback in auth.ts; "passkey"/"totp" are
+    // appended later as the user enrolls them (webauthn.ts / totp.ts).
     authProviders: v.optional(
       v.array(
-        v.union(v.literal("passkey"), v.literal("email"), v.literal("totp")),
+        v.union(
+          v.literal("passkey"),
+          v.literal("email"),
+          v.literal("phone"),
+          v.literal("totp"),
+        ),
       ),
     ),
 
@@ -78,8 +87,11 @@ export default defineSchema({
     ),
     vaultIntegrityScore: v.optional(v.number()),
 
+    // Soft account state. Stays `v.optional` because @convex-dev/auth inserts
+    // the user row before our `afterUserCreatedOrUpdated` callback stamps it;
+    // a required field would fail that initial insert. Always `true` once set.
     isActive: v.optional(v.boolean()),
-    createdAt: v.optional(v.number()),
+    // No `createdAt` — Convex stamps `_creationTime` on every document; use it.
     updatedAt: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
 

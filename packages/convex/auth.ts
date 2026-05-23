@@ -11,7 +11,31 @@ import { verifyAssertionAndGetUserId } from "./webauthn";
 import { normalizeE164 } from "./lib/phone";
 import { normalizeEmail } from "./lib/email";
 
+// Maps the sign-up provider id to the initial auth method recorded on the
+// user. The passkey + recovery credential providers never create a user, so
+// they're absent; "passkey"/"totp" are added later on enrollment.
+const INITIAL_AUTH_METHOD: Record<string, "email" | "phone"> = {
+  password: "email",
+  "email-otp": "email",
+  "phone-otp": "phone",
+};
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  callbacks: {
+    // @convex-dev/auth never sets our custom user fields. Stamp account
+    // defaults exactly once, when the row is first created (existingUserId is
+    // null). Skipping later sign-in/verification passes is what keeps the
+    // authProviders entries added by passkey/TOTP enrollment from being
+    // clobbered (the default flow re-patches `profile()` onto existing users).
+    async afterUserCreatedOrUpdated(ctx, { userId, existingUserId, provider }) {
+      if (existingUserId !== null) return;
+      const method = INITIAL_AUTH_METHOD[provider.id];
+      await ctx.db.patch(userId, {
+        isActive: true,
+        ...(method ? { authProviders: [method] } : {}),
+      });
+    },
+  },
   providers: [
     // Email-keyed account (password + always-on login-OTP via email).
     // `profile().email` is the account identifier. Optional phone is

@@ -276,6 +276,50 @@ export const addWhatsAppChannelToLifeCheckConfigs = internalMutation({
 });
 
 /**
+ * Backfill account defaults on `users` rows created before
+ * `afterUserCreatedOrUpdated` (auth.ts) seeded them:
+ *   - isActive       → true (never previously written)
+ *   - authProviders  → the base sign-up method merged with any passkey/totp
+ *                      entries already present. Base = "email" when the row
+ *                      has an email, else "phone" for phone-only accounts.
+ *
+ * `createdAt` is intentionally untouched: it was never written, so no row
+ * carries it, and it has been dropped from the schema in favour of the
+ * built-in `_creationTime`.
+ *
+ * Idempotent: rows already carrying the correct values are skipped.
+ */
+export const backfillUserDefaults = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let patched = 0;
+    const users = await ctx.db.query("users").collect();
+
+    for (const user of users) {
+      const patch: Record<string, unknown> = {};
+
+      if (user.isActive === undefined) patch.isActive = true;
+
+      const base = user.email ? "email" : user.phoneNumber ? "phone" : null;
+      if (base) {
+        const merged = new Set([...(user.authProviders ?? []), base]);
+        if (merged.size !== (user.authProviders?.length ?? 0)) {
+          patch.authProviders = Array.from(merged);
+        }
+      }
+
+      if (Object.keys(patch).length > 0) {
+        patch.updatedAt = Date.now();
+        await ctx.db.patch(user._id, patch);
+        patched++;
+      }
+    }
+
+    return { patched };
+  },
+});
+
+/**
  * Phase-7 cleanup for the Life Check redesign: cancel any in-flight cycle so
  * scheduled jobs from the now-removed escalation cascade can't fire, and cancel
  * their pending scheduled functions. Idempotent / safe to re-run.
