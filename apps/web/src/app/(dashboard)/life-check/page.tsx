@@ -109,7 +109,11 @@ function NextCheckInCard({
           We&apos;ll ask you to confirm you&apos;re well. Only your explicit
           reply resets the countdown — using the app doesn&apos;t.
         </p>
-        <Button variant="default" onClick={onReset} className="w-full sm:w-auto">
+        <Button
+          variant="default"
+          onClick={onReset}
+          className="w-full sm:w-auto"
+        >
           I&apos;m well — reset countdown
         </Button>
       </div>

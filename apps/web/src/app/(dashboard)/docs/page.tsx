@@ -24,7 +24,7 @@ const CORE_FEATURES: Feature[] = [
   {
     title: "Life Check",
     description:
-      "Automated proof-of-life across email, SMS, WhatsApp and IVR. Configurable cadence with a travel-mode pause for trips.",
+      "Automated proof-of-life over WhatsApp and email — verify each channel once so we can reach you (app push coming soon). Configurable cadence with a travel-mode pause for trips.",
     iconPath: ICON_PATHS.heartbeat,
     href: "/life-check",
     accent: "bg-error/10 text-error",
@@ -259,7 +259,7 @@ export default function DocsPage() {
           <LifecycleStep
             value="Outreach"
             title="Active channels fire"
-            body="Push, email, WhatsApp, SMS, IVR — your configured channels notify you in order, with the delays you set. Each non-response moves the cycle to escalating."
+            body="Your verified channels — WhatsApp and email — reach you together (not in sequence), with reminders across the window. App push is coming soon. Each non-response moves the cycle toward escalating."
             accent="bg-secondary/60"
           />
           <LifecycleStep
