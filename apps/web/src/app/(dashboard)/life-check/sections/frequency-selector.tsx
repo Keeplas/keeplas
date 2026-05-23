@@ -15,12 +15,13 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
     <section className="bg-surface-container-low rounded-2xl p-6 relative overflow-hidden">
       <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
         <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
-        Inactivity Threshold
-        <HelpHint content="How long Keeplas waits without hearing from you before kicking off the escalation sequence. Shorter = more frequent confirmations; longer = fewer interruptions but slower release." />
+        Check-in cadence
+        <HelpHint content="How often Keeplas asks you to confirm you're well. Shorter = more frequent check-ins; longer = fewer interruptions but slower release." />
       </h3>
       <p className="text-body-md text-on-surface-variant mb-6">
-        The period of total silence — no logins, no navigation, no signal —
-        before the verification sequence begins. Any activity resets it to zero.
+        How often Keeplas asks you to confirm you&apos;re well. Only an explicit
+        reply — in-app tap, email button, or WhatsApp — resets the countdown;
+        using the app does not.
       </p>
       <div className="grid grid-cols-3 gap-3">
         {FREQUENCIES.map((freq) => {

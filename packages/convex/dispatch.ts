@@ -3,15 +3,14 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { Doc } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { requireEnv } from "./lib/require_env";
+import { signLifeCheckToken } from "./lib/life_check_token";
 
 const CHANNEL_TYPE = v.union(
   v.literal("push"),
   v.literal("email"),
   v.literal("whatsapp"),
-  v.literal("sms"),
-  v.literal("ivr_call"),
 );
 
 interface DispatchContext {
@@ -58,8 +57,6 @@ export const sendChannel = internalAction({
         case "whatsapp":
           response = await sendWhatsApp(dispatch);
           break;
-        default:
-          response = "channel_not_supported";
       }
     } catch (error) {
       response = `error:${error instanceof Error ? error.message : String(error)}`;
@@ -115,13 +112,43 @@ async function sendPush({
   return `delivered:${delivered}/${pushSubscriptions.length}`;
 }
 
-async function sendEmail({ user }: DispatchContext): Promise<string> {
+// How long the one-click confirm link stays valid after it's sent. Comfortably
+// covers the 7-day check-in window (reminders keep issuing fresh tokens) while
+// bounding how long a leaked link could reset a later cycle.
+const CONFIRM_TOKEN_TTL_MS = 10 * 24 * 60 * 60 * 1000;
+
+/**
+ * Build the unauthenticated one-click confirmation URL. Points at the Convex
+ * HTTP action origin (CONVEX_SITE_URL), NOT the Next.js app, so the link works
+ * without a logged-in session.
+ */
+async function buildConfirmUrl(
+  cycleId: Id<"life_check_cycles">,
+  userId: Id<"users">,
+): Promise<string> {
+  const base = process.env.CONVEX_SITE_URL ?? requireEnv("APP_URL");
+  const token = await signLifeCheckToken({
+    cycleId,
+    userId,
+    exp: Date.now() + CONFIRM_TOKEN_TTL_MS,
+  });
+  return `${base}/life-check/confirm?token=${token}`;
+}
+
+async function sendEmail({ cycle, user }: DispatchContext): Promise<string> {
   if (!user.email) return "no_email";
+
+  const verifyUrl = await buildConfirmUrl(cycle._id, user._id);
+
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return "resend_not_configured";
+  if (!apiKey) {
+    console.warn(
+      `[life_check_email] Resend not configured; confirm URL = ${verifyUrl}`,
+    );
+    return "resend_not_configured";
+  }
 
   const from = requireEnv("RESEND_FROM_EMAIL");
-  const verifyUrl = `${requireEnv("APP_URL")}/life-check`;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -132,7 +159,7 @@ async function sendEmail({ user }: DispatchContext): Promise<string> {
     body: JSON.stringify({
       from,
       to: [user.email],
-      subject: "Keeplas — please confirm you are well",
+      subject: "Keeplas — your scheduled check-in",
       html: lifeCheckEmailHtml(user.name, verifyUrl),
     }),
   });
@@ -342,9 +369,9 @@ function lifeCheckEmailHtml(name: string | undefined, url: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
 <p>${greeting}</p>
-<p>We have not seen any activity from you on Keeplas in a while. Please confirm you are well so your continuity protocol stays paused.</p>
+<p>It's time for your scheduled Keeplas check-in. Tap the button below to confirm you're well and reset your countdown — no need to log in.</p>
 <p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#0b1f3b;color:#fff;text-decoration:none;border-radius:8px">I am well</a></p>
-<p style="color:#666;font-size:13px">If you cannot use the button, open ${url} in your browser.</p>
+<p style="color:#666;font-size:13px">If you cannot use the button, open ${url} in your browser. If you don't respond, Keeplas will keep reminding you, then begin your continuity protocol.</p>
 </body></html>`;
 }
 

@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { requireAuth } from "./helpers";
-import { recordActivityInternal } from "./life_check";
 
 const SIGNAL_TYPE = v.union(
   v.literal("app_activity"),
@@ -28,9 +27,10 @@ const SCORE_BY_TYPE: Record<string, number> = {
 /**
  * Record a passive activity signal from the authenticated user. Server-side
  * throttle: a new signal of the same `signalType` is ignored if the previous
- * one was recorded less than an hour ago. Each accepted signal pings the
- * Life Check module to update `lastActivityAt` and validate any in-flight
- * cycle (full reset on activity).
+ * one was recorded less than an hour ago. Used only to maintain `lastSeenAt`
+ * (the "last access" display). In the explicit dead-man's switch model passive
+ * activity NO LONGER resets the Life Check counter — only an explicit
+ * confirmation (in-app tap, one-click email, or WhatsApp reply) does.
  */
 export const recordSignal = mutation({
   args: { signalType: SIGNAL_TYPE },
@@ -47,7 +47,6 @@ export const recordSignal = mutation({
       .first();
 
     if (lastSignal && now - lastSignal.detectedAt < THROTTLE_MS) {
-      await recordActivityInternal(ctx, userId, now);
       return { recorded: false, throttled: true };
     }
 
@@ -60,8 +59,6 @@ export const recordSignal = mutation({
     });
 
     await ctx.db.patch(userId, { lastSeenAt: now });
-
-    await recordActivityInternal(ctx, userId, now);
 
     return { recorded: true, throttled: false };
   },

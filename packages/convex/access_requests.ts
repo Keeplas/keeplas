@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { createNotification, requireAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 
@@ -91,7 +93,47 @@ export const markUserUnreachable = auditedMutation({
       throw new Error("Only trust contacts can confirm unreachability");
     }
 
+    // Gate: contacts may only confirm once the owner's Life Check has escalated
+    // to the confirmation stage (it went unanswered through every check-in).
+    const cycle = await ctx.db
+      .query("life_check_cycles")
+      .withIndex("by_status", (q) =>
+        q.eq("userId", contact.userId).eq("status", "awaiting_confirmation"),
+      )
+      .first();
+    if (!cycle) {
+      throw new Error(
+        "This vault owner's Life Check has not requested contact confirmation.",
+      );
+    }
+
+    const ownerConfig = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", contact.userId))
+      .first();
+    const threshold = ownerConfig?.confirmationThreshold ?? 2;
+    const GRACE_MS = 72 * 60 * 60 * 1000;
     const now = Date.now();
+
+    // When the threshold is first reached, open the owner-cancel grace window
+    // and schedule the release for its end.
+    const onQuorumReached = async (requestId: Id<"access_requests">) => {
+      await ctx.scheduler.runAfter(
+        GRACE_MS,
+        internal.life_check.releaseAfterConfirmation,
+        { userId: contact.userId, requestId },
+      );
+      await createNotification(ctx, {
+        userId: contact.userId,
+        type: "security_alert",
+        title: "Emergency access initiated",
+        body: `${threshold} or more contacts have confirmed you are unreachable. You have 72 hours to cancel.`,
+        actionUrl: "/life-check",
+        channels: ["push", "email"],
+        relatedId: requestId,
+        relatedType: "access_request",
+      });
+    };
 
     const existing = await ctx.db
       .query("access_requests")
@@ -111,47 +153,46 @@ export const markUserUnreachable = auditedMutation({
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
-      const quorumReached = updatedContacts.length >= 2;
+      const quorumReached = updatedContacts.length >= threshold;
+      const newlyReached = quorumReached && !existing.quorumReached;
 
       await ctx.db.patch(existing._id, {
         contactsInitiated: updatedContacts,
+        quorumRequired: threshold,
         quorumReached,
-        gracePeriodEndsAt: quorumReached
-          ? now + 72 * 60 * 60 * 1000
-          : undefined,
+        gracePeriodEndsAt: newlyReached
+          ? now + GRACE_MS
+          : existing.gracePeriodEndsAt,
         updatedAt: now,
       });
 
-      if (quorumReached) {
-        await createNotification(ctx, {
-          userId: contact.userId,
-          type: "security_alert",
-          title: "Emergency access initiated",
-          body: "Two or more contacts have confirmed you are unreachable. You have 72 hours to cancel.",
-          actionUrl: "/trusted-contacts",
-          channels: ["push", "email"],
-          relatedId: existing._id,
-          relatedType: "access_request",
-        });
+      if (newlyReached) {
+        await onQuorumReached(existing._id);
       }
 
       return { requestId: existing._id, quorumReached };
     }
 
+    const quorumReached = 1 >= threshold;
     const requestId = await ctx.db.insert("access_requests", {
       vaultUserId: contact.userId,
       requestedBy: args.contactId,
       sectionsRequested: ["all"],
       status: "pending",
-      autoResponseAt: now + 72 * 60 * 60 * 1000,
-      quorumRequired: 2,
-      quorumReached: false,
+      autoResponseAt: now + GRACE_MS,
+      quorumRequired: threshold,
+      quorumReached,
+      gracePeriodEndsAt: quorumReached ? now + GRACE_MS : undefined,
       contactsInitiated: [args.contactId],
       createdAt: now,
       updatedAt: now,
     });
 
-    return { requestId, quorumReached: false };
+    if (quorumReached) {
+      await onQuorumReached(requestId);
+    }
+
+    return { requestId, quorumReached };
   },
 });
 

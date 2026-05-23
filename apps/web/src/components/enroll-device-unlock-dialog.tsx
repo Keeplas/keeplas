@@ -28,13 +28,12 @@ export function EnrollDeviceUnlockDialog({
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [hardwareAvailable, setHardwareAvailable] = useState(false);
+  const [hardwareAvailable] = useState(() => isWebAuthnSupported());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setBiometricAvailable);
-    setHardwareAvailable(isWebAuthnSupported());
   }, []);
 
   if (!masterKey) return null;

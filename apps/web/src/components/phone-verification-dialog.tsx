@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
@@ -53,20 +53,29 @@ export function PhoneVerificationDialog({
   const [error, setError] = useState<string | null>(null);
   const cooldown = useResendCooldown(30);
 
-  useEffect(() => {
-    if (!open) return;
-    setStep("phone");
-    setPhone(initialPhone);
-    setCode("");
-    setError(null);
-  }, [open, initialPhone]);
+  // Reset the flow each time the dialog opens, jumping straight to the code
+  // step when a verification code is already pending. Adjusting during render
+  // avoids setState-in-effect syncs.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setStep(status?.hasPendingCode ? "code" : "phone");
+      setPhone(initialPhone);
+      setCode("");
+      setError(null);
+    }
+  }
 
-  // Skip the phone step if the user already has a pending non-expired code.
-  useEffect(() => {
+  // The pending-code status may resolve after the dialog is already open —
+  // skip the phone step once it does.
+  const [prevPending, setPrevPending] = useState(status?.hasPendingCode);
+  if (status?.hasPendingCode !== prevPending) {
+    setPrevPending(status?.hasPendingCode);
     if (open && status?.hasPendingCode && step === "phone") {
       setStep("code");
     }
-  }, [open, status?.hasPendingCode, step]);
+  }
 
   async function handleSendCode() {
     if (!phone || !isValidPhone(phone)) {

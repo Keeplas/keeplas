@@ -20,6 +20,18 @@ const FREQUENCY_DAYS: Record<string, number> = {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
+ * Stage-1 user check-in window: once the cadence elapses the user has this many
+ * days to confirm (one-click email, WhatsApp reply, or in-app tap) before the
+ * cycle hands off to the next stage. Reminders are re-sent at each fraction of
+ * the window — at the default 7-day window that is J+0, J+3 and J+6.
+ */
+const CHECK_IN_WINDOW_DAYS = 7;
+const REMINDER_FRACTIONS = [0, 3 / 7, 6 / 7] as const;
+
+/** Stage-2: how long trusted contacts have to confirm before the fallback. */
+const CONFIRMATION_WINDOW_DAYS = 7;
+
+/**
  * Resolve the inactivity threshold for a config. Falls back to the legacy
  * `frequency` mapping when `inactivityThresholdDays` is not yet populated.
  */
@@ -60,12 +72,10 @@ export const saveConfig = mutation({
           v.literal("push"),
           v.literal("email"),
           v.literal("whatsapp"),
-          v.literal("sms"),
-          v.literal("ivr_call"),
         ),
         order: v.number(),
         isEnabled: v.boolean(),
-        delayHours: v.number(),
+        delayHours: v.optional(v.number()),
       }),
     ),
   },
@@ -186,7 +196,10 @@ export const toggleTravelMode = mutation({
 });
 
 /**
- * Validate the current Life Check cycle (user confirms they're alive).
+ * Validate the current Life Check cycle (user confirms they're alive via the
+ * in-app tap or a one-click email link). Lenient: also resets the counter when
+ * no cycle is in flight, so a proactive confirmation simply extends the
+ * countdown. See `confirmAlive`.
  */
 export const validateCycle = mutation({
   args: {
@@ -194,61 +207,7 @@ export const validateCycle = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-
-    // Find the active cycle
-    const cycle = await ctx.db
-      .query("life_check_cycles")
-      .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running"),
-      )
-      .first();
-
-    const escalatingCycle =
-      cycle ??
-      (await ctx.db
-        .query("life_check_cycles")
-        .withIndex("by_status", (q) =>
-          q.eq("userId", userId).eq("status", "escalating"),
-        )
-        .first());
-
-    if (!escalatingCycle) {
-      throw new Error("No active Life Check cycle found");
-    }
-
-    const now = Date.now();
-
-    await ctx.db.patch(escalatingCycle._id, {
-      status: "validated",
-      validatedAt: now,
-      validatedBy: args.method,
-      completedAt: now,
-    });
-
-    // Update config with next check time
-    const config = await ctx.db.get(escalatingCycle.configId);
-    if (config) {
-      const nextCheckAt = now + resolveThresholdDays(config) * DAY_MS;
-      await ctx.db.patch(config._id, {
-        lastCheckAt: now,
-        lastActivityAt: now,
-        nextCheckAt,
-        updatedAt: now,
-      });
-    }
-
-    await cancelPendingSchedules(ctx, escalatingCycle._id);
-
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "life_check_validated",
-      resourceType: "life_check_cycle",
-      resourceId: escalatingCycle._id,
-      metadata: JSON.stringify({ method: args.method }),
-    });
-
+    await confirmAlive(ctx, userId, Date.now(), args.method);
     return { success: true };
   },
 });
@@ -359,28 +318,29 @@ export const getActiveCycle = query({
     return await ctx.db
       .query("life_check_cycles")
       .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "escalating"),
+        q.eq("userId", userId).eq("status", "awaiting_confirmation"),
       )
       .first();
   },
 });
 
 type ChannelEntry = {
-  type: "push" | "email" | "whatsapp" | "sms" | "ivr_call";
+  type: "push" | "email" | "whatsapp";
   order: number;
   isEnabled: boolean;
-  delayHours: number;
+  delayHours?: number;
 };
 
-function enabledChannelsSorted(channels: ChannelEntry[]): ChannelEntry[] {
-  return channels.filter((c) => c.isEnabled).sort((a, b) => a.order - b.order);
+function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
+  return channels.filter((c) => c.isEnabled);
 }
 
 /**
  * Insert a new Life Check cycle for a config and notify the user. Shared
- * by `initiateCycle` (legacy entry) and the cron evaluator. Schedules the
- * first channel send + the first escalation in one shot. Returns the new
- * cycle ID, or null when the config is inactive / blocked by travel mode.
+ * by `initiateCycle` (legacy entry) and the cron evaluator. Fans out every
+ * enabled channel at once, schedules reminders across the check-in window,
+ * and schedules the handoff at the window's end. Returns the new cycle ID,
+ * or null when the config is inactive / blocked by travel mode.
  */
 async function startCycleForConfig(
   ctx: MutationCtx,
@@ -400,10 +360,11 @@ async function startCycleForConfig(
     });
   }
 
-  const enabled = enabledChannelsSorted(config.activeChannels);
+  const enabled = enabledChannels(config.activeChannels);
   if (enabled.length === 0) return null;
 
   const now = Date.now();
+  const windowMs = (config.checkInWindowDays ?? CHECK_IN_WINDOW_DAYS) * DAY_MS;
 
   const cycleId = await ctx.db.insert("life_check_cycles", {
     userId: config.userId,
@@ -437,30 +398,37 @@ async function startCycleForConfig(
     resourceId: cycleId,
   });
 
-  const first = enabled[0];
-  const sendId = await ctx.scheduler.runAfter(
-    0,
-    internal.dispatch.sendChannel,
-    { cycleId, channelType: first.type },
-  );
-
-  const followUpDelay = first.delayHours * 60 * 60 * 1000;
-  let nextId: Id<"_scheduled_functions">;
-  if (enabled.length > 1) {
-    nextId = await ctx.scheduler.runAfter(
-      followUpDelay,
-      internal.life_check.escalateToNextChannel,
-      { cycleId, fromOrder: enabled[1].order },
-    );
-  } else {
-    nextId = await ctx.scheduler.runAfter(
-      followUpDelay,
-      internal.life_check.triggerCycleAndDispatch,
-      { cycleId },
+  // Explicit dead-man's switch: fan out every enabled channel at once (no
+  // per-channel cascade), repeat the reminder at each fraction of the window,
+  // then hand off when the window closes if the user never confirmed.
+  const scheduleIds: Id<"_scheduled_functions">[] = [];
+  for (const channel of enabled) {
+    scheduleIds.push(
+      await ctx.scheduler.runAfter(0, internal.dispatch.sendChannel, {
+        cycleId,
+        channelType: channel.type,
+      }),
     );
   }
+  for (const fraction of REMINDER_FRACTIONS) {
+    if (fraction === 0) continue; // the immediate fan-out above is reminder #1
+    scheduleIds.push(
+      await ctx.scheduler.runAfter(
+        windowMs * fraction,
+        internal.life_check.sendReminder,
+        { cycleId },
+      ),
+    );
+  }
+  scheduleIds.push(
+    await ctx.scheduler.runAfter(
+      windowMs,
+      internal.life_check.enterConfirmationStage,
+      { cycleId },
+    ),
+  );
 
-  await ctx.db.patch(cycleId, { pendingScheduleIds: [sendId, nextId] });
+  await ctx.db.patch(cycleId, { pendingScheduleIds: scheduleIds });
 
   return cycleId;
 }
@@ -473,6 +441,36 @@ export const initiateCycle = internalMutation({
   args: { configId: v.id("life_check_configs") },
   handler: async (ctx, args) => {
     await startCycleForConfig(ctx, args.configId);
+  },
+});
+
+/**
+ * Re-send the check-in on every enabled channel. Scheduled at each reminder
+ * fraction of the check-in window. No-ops once the cycle leaves "running" (the
+ * user confirmed, or the window already closed and the cycle handed off).
+ */
+export const sendReminder = internalMutation({
+  args: { cycleId: v.id("life_check_cycles") },
+  handler: async (ctx, args) => {
+    const cycle = await ctx.db.get(args.cycleId);
+    if (!cycle || cycle.status !== "running") return;
+
+    const config = await ctx.db.get(cycle.configId);
+    if (!config) return;
+
+    const newIds: Id<"_scheduled_functions">[] = [];
+    for (const channel of enabledChannels(config.activeChannels)) {
+      newIds.push(
+        await ctx.scheduler.runAfter(0, internal.dispatch.sendChannel, {
+          cycleId: args.cycleId,
+          channelType: channel.type,
+        }),
+      );
+    }
+
+    await ctx.db.patch(args.cycleId, {
+      pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), ...newIds],
+    });
   },
 });
 
@@ -501,19 +499,37 @@ export async function cancelPendingSchedules(
 }
 
 /**
- * Record an activity ping for the user. Called from passive_signals on every
- * accepted signal. Refreshes `lastActivityAt` + `nextCheckAt`, and if a cycle
- * is currently `running` or `escalating`, validates it (full reset model).
- *
- * Exported as a plain helper so other modules (passive_signals, future
- * integrations) can hook in without going through the public mutation
- * surface. Audit-logged so the validation is traceable.
+ * Find the user's in-flight Life Check cycle, if any. ("escalating" is a
+ * legacy status retained only so cycles created before the redesign are still
+ * recognised until the Phase-7 migration converts them.)
  */
-export async function recordActivityInternal(
+async function findInFlightCycle(ctx: MutationCtx, userId: Id<"users">) {
+  // "escalating" is legacy (pre-redesign); kept until the Phase-7 migration.
+  const statuses = ["running", "awaiting_confirmation", "escalating"] as const;
+  for (const status of statuses) {
+    const cycle = await ctx.db
+      .query("life_check_cycles")
+      .withIndex("by_status", (q) =>
+        q.eq("userId", userId).eq("status", status),
+      )
+      .first();
+    if (cycle) return cycle;
+  }
+  return null;
+}
+
+/**
+ * Record an explicit liveness confirmation: reset the inactivity counter and
+ * validate any in-flight cycle. In the explicit dead-man's switch model this
+ * is the ONLY proof of liveness — an in-app tap, a one-click email
+ * confirmation, or a WhatsApp reply. App usage / passive signals no longer
+ * reset the counter. Audit-logged so the confirmation is traceable.
+ */
+export async function confirmAlive(
   ctx: MutationCtx,
   userId: Id<"users">,
   now: number,
-  source: string = "passive_app_activity",
+  method: string,
 ) {
   const config = await ctx.db
     .query("life_check_configs")
@@ -521,48 +537,49 @@ export async function recordActivityInternal(
     .first();
   if (!config) return;
 
-  const nextCheckAt = now + resolveThresholdDays(config) * DAY_MS;
-
   await ctx.db.patch(config._id, {
+    lastCheckAt: now,
     lastActivityAt: now,
-    nextCheckAt,
+    nextCheckAt: now + resolveThresholdDays(config) * DAY_MS,
     updatedAt: now,
   });
 
-  const running = await ctx.db
-    .query("life_check_cycles")
+  // The user is alive — cancel any in-progress trusted-contact confirmation.
+  const pendingRequests = await ctx.db
+    .query("access_requests")
     .withIndex("by_status", (q) =>
-      q.eq("userId", userId).eq("status", "running"),
+      q.eq("vaultUserId", userId).eq("status", "pending"),
     )
-    .first();
+    .collect();
+  for (const req of pendingRequests) {
+    await ctx.db.patch(req._id, {
+      status: "denied",
+      cancelledDuringGrace: true,
+      respondedAt: now,
+      updatedAt: now,
+    });
+  }
 
-  const escalating =
-    running ??
-    (await ctx.db
-      .query("life_check_cycles")
-      .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "escalating"),
-      )
-      .first());
+  const cycle = await findInFlightCycle(ctx, userId);
+  if (!cycle) return;
 
-  if (!escalating) return;
-
-  await ctx.db.patch(escalating._id, {
+  await ctx.db.patch(cycle._id, {
     status: "validated",
     validatedAt: now,
-    validatedBy: source,
+    validatedBy: method,
     completedAt: now,
   });
 
-  await cancelPendingSchedules(ctx, escalating._id);
+  await cancelPendingSchedules(ctx, cycle._id);
 
   await createAuditLog(ctx, {
     userId,
-    actorType: "system",
-    actorId: "passive_signal_collector",
-    action: "life_check_passive_validated",
+    actorType: "user",
+    actorId: userId,
+    action: "life_check_validated",
     resourceType: "life_check_cycle",
-    resourceId: escalating._id,
+    resourceId: cycle._id,
+    metadata: JSON.stringify({ method }),
   });
 }
 
@@ -585,8 +602,26 @@ export const validateFromWhatsApp = internalMutation({
 
     const now = Date.now();
     await ctx.db.patch(user._id, { lastSeenAt: now });
-    await recordActivityInternal(ctx, user._id, now, "passive_whatsapp");
+    await confirmAlive(ctx, user._id, now, "whatsapp");
     return { matched: true };
+  },
+});
+
+/**
+ * Validate a cycle from the one-click email link (unauthenticated HTTP route).
+ * The token is verified upstream in http.ts; here we just confirm the cycle
+ * belongs to the user, then run the shared `confirmAlive`. Idempotent.
+ */
+export const confirmFromEmail = internalMutation({
+  args: {
+    cycleId: v.id("life_check_cycles"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const cycle = await ctx.db.get(args.cycleId);
+    if (!cycle || cycle.userId !== args.userId) return { ok: false };
+    await confirmAlive(ctx, args.userId, Date.now(), "email_link");
+    return { ok: true };
   },
 });
 
@@ -627,21 +662,8 @@ export const evaluateAllConfigs = internalMutation({
       const thresholdMs = resolveThresholdDays(config) * DAY_MS;
       if (now - lastActivity < thresholdMs) continue;
 
-      const inFlight = await ctx.db
-        .query("life_check_cycles")
-        .withIndex("by_status", (q) =>
-          q.eq("userId", config.userId).eq("status", "running"),
-        )
-        .first();
+      const inFlight = await findInFlightCycle(ctx, config.userId);
       if (inFlight) continue;
-
-      const escalating = await ctx.db
-        .query("life_check_cycles")
-        .withIndex("by_status", (q) =>
-          q.eq("userId", config.userId).eq("status", "escalating"),
-        )
-        .first();
-      if (escalating) continue;
 
       const cycleId = await startCycleForConfig(ctx, config._id);
       if (cycleId) initiated++;
@@ -703,79 +725,6 @@ export const recordChannelAttempt = internalMutation({
 });
 
 /**
- * Move the cycle to its next escalation channel. If we have run out of
- * channels, the cycle is marked `triggered` and the scenario engine is
- * dispatched. Skips silently when the cycle is already validated/cancelled.
- */
-export const escalateToNextChannel = internalMutation({
-  args: {
-    cycleId: v.id("life_check_cycles"),
-    fromOrder: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const cycle = await ctx.db.get(args.cycleId);
-    if (!cycle) return;
-    if (
-      cycle.status === "validated" ||
-      cycle.status === "cancelled" ||
-      cycle.status === "triggered"
-    ) {
-      return;
-    }
-
-    const config = await ctx.db.get(cycle.configId);
-    if (!config) return;
-
-    const enabled = enabledChannelsSorted(config.activeChannels);
-    const idx = enabled.findIndex((c) => c.order >= args.fromOrder);
-
-    if (idx === -1) {
-      await markCycleTriggered(ctx, cycle._id);
-      return;
-    }
-
-    const current = enabled[idx];
-    const now = Date.now();
-
-    if (cycle.status === "running") {
-      await ctx.db.patch(cycle._id, {
-        status: "escalating",
-        currentLevel: cycle.currentLevel + 1,
-        levelReachedAt: now,
-      });
-    }
-
-    const sendId = await ctx.scheduler.runAfter(
-      0,
-      internal.dispatch.sendChannel,
-      { cycleId: cycle._id, channelType: current.type },
-    );
-
-    const delay = current.delayHours * 60 * 60 * 1000;
-    let nextId: Id<"_scheduled_functions">;
-    if (idx + 1 < enabled.length) {
-      nextId = await ctx.scheduler.runAfter(
-        delay,
-        internal.life_check.escalateToNextChannel,
-        { cycleId: cycle._id, fromOrder: enabled[idx + 1].order },
-      );
-    } else {
-      nextId = await ctx.scheduler.runAfter(
-        delay,
-        internal.life_check.triggerCycleAndDispatch,
-        { cycleId: cycle._id },
-      );
-    }
-
-    const refreshed = await ctx.db.get(cycle._id);
-    const ids = refreshed?.pendingScheduleIds ?? [];
-    await ctx.db.patch(cycle._id, {
-      pendingScheduleIds: [...ids, sendId, nextId],
-    });
-  },
-});
-
-/**
  * Final transition: mark the cycle as `triggered` and hand off to the
  * Scenario Engine. Idempotent — repeated calls on a triggered cycle return
  * without further side effects.
@@ -790,6 +739,7 @@ export const triggerCycleAndDispatch = internalMutation({
 async function markCycleTriggered(
   ctx: MutationCtx,
   cycleId: Id<"life_check_cycles">,
+  reason: string = "life_check_triggered",
 ) {
   const cycle = await ctx.db.get(cycleId);
   if (!cycle) return;
@@ -814,13 +764,176 @@ async function markCycleTriggered(
     action: "life_check_cycle_triggered",
     resourceType: "life_check_cycle",
     resourceId: cycleId,
+    metadata: JSON.stringify({ reason }),
   });
 
-  await ctx.scheduler.runAfter(0, internal.scenario_engine.dispatchScenario, {
+  // Hand off to the per-recipient release fan-out (each trusted contact gets
+  // the vault items meant for them, at their access level). The previous
+  // Scenario Engine handoff is gone — release is the single, legible outcome.
+  await ctx.scheduler.runAfter(0, internal.release.triggerRelease, {
     userId: cycle.userId,
-    cycleId,
+    reason,
   });
 }
+
+/**
+ * Stage-1 → Stage-2 transition. The user never confirmed across the whole
+ * check-in window, so the cycle moves to `awaiting_confirmation` and the
+ * owner's accepted trust contacts are asked to confirm unreachability. A
+ * release only happens once enough contacts confirm (see access_requests) or,
+ * at the window's end, per the owner's fallback policy.
+ */
+export const enterConfirmationStage = internalMutation({
+  args: { cycleId: v.id("life_check_cycles") },
+  handler: async (ctx, args) => {
+    const cycle = await ctx.db.get(args.cycleId);
+    if (!cycle || cycle.status !== "running") return;
+
+    const config = await ctx.db.get(cycle.configId);
+    if (!config) return;
+
+    const now = Date.now();
+    await ctx.db.patch(cycle._id, {
+      status: "awaiting_confirmation",
+      levelReachedAt: now,
+    });
+
+    const owner = await ctx.db.get(cycle.userId);
+    const ownerName = owner?.name ?? "A Keeplas user";
+
+    const contacts = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", cycle.userId))
+      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+      .collect();
+
+    for (const contact of contacts) {
+      if ((contact.contactType ?? "trust") !== "trust") continue;
+      if (!contact.contactUserId) continue;
+      await createNotification(ctx, {
+        userId: contact.contactUserId,
+        type: "security_alert",
+        title: "Action needed: confirm a contact's status",
+        body: `${ownerName} has stopped responding to their Keeplas check-ins. If you cannot reach them, confirm they are unavailable.`,
+        actionUrl: "/shared-with-me",
+        channels: ["push", "email"],
+        relatedId: cycle._id,
+        relatedType: "life_check_cycle",
+      });
+    }
+
+    const windowDays = config.confirmationWindowDays ?? CONFIRMATION_WINDOW_DAYS;
+    const resolveId = await ctx.scheduler.runAfter(
+      windowDays * DAY_MS,
+      internal.life_check.resolveConfirmationWindow,
+      { cycleId: cycle._id },
+    );
+    await ctx.db.patch(cycle._id, {
+      pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), resolveId],
+    });
+
+    await createAuditLog(ctx, {
+      userId: cycle.userId,
+      actorType: "system",
+      actorId: "life_check_scheduler",
+      action: "life_check_awaiting_confirmation",
+      resourceType: "life_check_cycle",
+      resourceId: cycle._id,
+    });
+  },
+});
+
+/**
+ * Confirmation window elapsed. If contacts reached the confirmation threshold,
+ * a release is already pending behind its owner-cancel grace — do nothing.
+ * Otherwise apply the owner's fallback: "abort" (release nothing) or
+ * "release_anyway".
+ */
+export const resolveConfirmationWindow = internalMutation({
+  args: { cycleId: v.id("life_check_cycles") },
+  handler: async (ctx, args) => {
+    const cycle = await ctx.db.get(args.cycleId);
+    if (!cycle || cycle.status !== "awaiting_confirmation") return;
+
+    const confirmed = await ctx.db
+      .query("access_requests")
+      .withIndex("by_status", (q) =>
+        q.eq("vaultUserId", cycle.userId).eq("status", "pending"),
+      )
+      .filter((q) => q.eq(q.field("quorumReached"), true))
+      .first();
+    if (confirmed) return; // release will fire after its grace window
+
+    const config = await ctx.db.get(cycle.configId);
+    const fallback = config?.fallbackBehavior ?? "abort";
+
+    if (fallback === "release_anyway") {
+      await markCycleTriggered(ctx, cycle._id, "life_check_fallback_release");
+      return;
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(cycle._id, {
+      status: "cancelled",
+      cancelledAt: now,
+      cancelledReason: "no_contact_confirmation",
+      completedAt: now,
+    });
+
+    const pending = await ctx.db
+      .query("access_requests")
+      .withIndex("by_status", (q) =>
+        q.eq("vaultUserId", cycle.userId).eq("status", "pending"),
+      )
+      .collect();
+    for (const req of pending) {
+      await ctx.db.patch(req._id, { status: "expired", updatedAt: now });
+    }
+
+    await createAuditLog(ctx, {
+      userId: cycle.userId,
+      actorType: "system",
+      actorId: "life_check_scheduler",
+      action: "life_check_aborted_no_confirmation",
+      resourceType: "life_check_cycle",
+      resourceId: cycle._id,
+    });
+  },
+});
+
+/**
+ * Fired after the owner-cancel grace window once enough trusted contacts have
+ * confirmed unreachability (scheduled by access_requests.markUserUnreachable).
+ * Re-checks state, then releases. Bails if the user came back (cycle no longer
+ * `awaiting_confirmation`) or the request was cancelled during grace.
+ */
+export const releaseAfterConfirmation = internalMutation({
+  args: {
+    userId: v.id("users"),
+    requestId: v.id("access_requests"),
+  },
+  handler: async (ctx, args) => {
+    const request = await ctx.db.get(args.requestId);
+    if (
+      !request ||
+      request.cancelledDuringGrace ||
+      request.status !== "pending"
+    )
+      return;
+
+    const cycle = await findInFlightCycle(ctx, args.userId);
+    if (!cycle || cycle.status !== "awaiting_confirmation") return;
+
+    const now = Date.now();
+    await ctx.db.patch(request._id, {
+      status: "approved",
+      respondedAt: now,
+      updatedAt: now,
+    });
+
+    await markCycleTriggered(ctx, cycle._id, "life_check_confirmed");
+  },
+});
 
 /**
  * Toggle Life Check active status.
@@ -840,6 +953,57 @@ export const toggleActive = mutation({
     await ctx.db.patch(config._id, {
       isActive: args.isActive,
       updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Persist the Stage-2 release policy: how many trusted contacts must confirm
+ * unavailability, how long they have, and what happens if they don't. Read by
+ * `enterConfirmationStage` / `resolveConfirmationWindow` / `markUserUnreachable`.
+ */
+export const saveReleasePolicy = mutation({
+  args: {
+    confirmationThreshold: v.number(),
+    confirmationWindowDays: v.number(),
+    fallbackBehavior: v.union(v.literal("abort"), v.literal("release_anyway")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    if (args.confirmationThreshold < 1 || args.confirmationThreshold > 10) {
+      throw new Error("Confirmation threshold must be between 1 and 10");
+    }
+    if (args.confirmationWindowDays < 1 || args.confirmationWindowDays > 90) {
+      throw new Error("Confirmation window must be between 1 and 90 days");
+    }
+
+    const config = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (!config) throw new Error("Life Check not configured");
+
+    await ctx.db.patch(config._id, {
+      confirmationThreshold: args.confirmationThreshold,
+      confirmationWindowDays: args.confirmationWindowDays,
+      fallbackBehavior: args.fallbackBehavior,
+      updatedAt: Date.now(),
+    });
+
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "user",
+      actorId: userId,
+      action: "life_check_release_policy_saved",
+      resourceType: "life_check_config",
+      resourceId: config._id,
+      metadata: JSON.stringify({
+        confirmationThreshold: args.confirmationThreshold,
+        confirmationWindowDays: args.confirmationWindowDays,
+        fallbackBehavior: args.fallbackBehavior,
+      }),
     });
 
     return { success: true };

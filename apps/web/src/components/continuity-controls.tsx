@@ -4,22 +4,19 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { ErrorAlert, Loader, Switch } from "@keeplas/ui";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-mode-section";
 
 /**
- * Master controls for the Continuity Protocol — pauses both Life Check AND
- * the Scenario Engine in lock-step. Lives in Settings so the day-to-day
- * pages stay focused on configuration; a small status badge in the global
- * sidebar surfaces the current state at all times.
+ * Master controls for the Life Check. Pause it entirely, or use Travel Mode to
+ * pause with an auto-resume date. Lives in Settings so day-to-day pages stay
+ * focused on configuration; a small status badge in the global sidebar surfaces
+ * the current state at all times.
  */
 export function ContinuityControls() {
   const config = useQuery(api.life_check.getConfig);
-  const scenarioData = useQuery(api.scenarios.getScenario);
   const toggleActive = useMutation(api.life_check.toggleActive);
   const toggleTravelMode = useMutation(api.life_check.toggleTravelMode);
-  const setSafePause = useAuditedMutation(api.scenarios.setSafePause);
 
   const [travelUntil, setTravelUntil] = useState("");
   const [error, setError] = useState("");
@@ -33,25 +30,21 @@ export function ContinuityControls() {
     }
   }, [config?.travelModeUntil]);
 
-  if (config === undefined || scenarioData === undefined) {
+  if (config === undefined) {
     return <Loader />;
   }
 
   const isConfigured = config !== null;
   const lifeCheckOn = config?.isActive ?? false;
-  const scenarioPaused = scenarioData?.scenario?.isSafePauseActive ?? false;
   const travelModeOn = config?.travelModeEnabled ?? false;
-  const masterActive = lifeCheckOn && !scenarioPaused && !travelModeOn;
+  const masterActive = lifeCheckOn && !travelModeOn;
 
   async function handleMasterToggle(nextActive: boolean) {
     setError("");
     try {
-      await Promise.all([
-        toggleActive({ isActive: nextActive }),
-        setSafePause({ paused: !nextActive }),
-      ]);
+      await toggleActive({ isActive: nextActive });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to update Continuity Protocol"));
+      setError(getErrorMessage(err, "Failed to update Life Check"));
     }
   }
 
@@ -62,10 +55,7 @@ export function ContinuityControls() {
     const until =
       enabling && travelUntil ? new Date(travelUntil).getTime() : undefined;
     try {
-      await Promise.all([
-        toggleTravelMode({ enabled: enabling, until }),
-        setSafePause({ paused: enabling, until }),
-      ]);
+      await toggleTravelMode({ enabled: enabling, until });
     } catch (err) {
       setError(getErrorMessage(err, "Failed to toggle Travel Mode"));
     }
@@ -81,7 +71,7 @@ export function ContinuityControls() {
     return (
       <div className="bg-surface-container-low p-6 rounded-2xl">
         <p className="text-body-md text-on-surface-variant">
-          Continuity Protocol is not configured yet. Visit{" "}
+          Life Check is not configured yet. Visit{" "}
           <a href="/life-check" className="underline font-medium">
             Life Check
           </a>{" "}
@@ -95,10 +85,9 @@ export function ContinuityControls() {
     <div className="space-y-4">
       <section className="bg-surface-container-low p-6 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h3 className="text-headline-sm text-primary">Continuity Protocol</h3>
+          <h3 className="text-headline-sm text-primary">Life Check</h3>
           <p className="text-body-md text-on-surface-variant">
-            Pause both halves at once — Life Check stops escalating, the
-            Scenario Engine stops dispatching. Status:{" "}
+            Pause your Life Check entirely — no check-ins, no release. Status:{" "}
             <strong className="text-primary">{statusLabel}</strong>.
           </p>
         </div>

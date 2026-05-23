@@ -35,13 +35,12 @@ export function DeviceUnlockManager() {
   const { entries, loading, remove } = useDeviceUnlock({ userEmail });
   const [showEnroll, setShowEnroll] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [hardwareSupported, setHardwareSupported] = useState(false);
+  const [hardwareSupported] = useState(() => isWebAuthnSupported());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     isPlatformAuthenticatorAvailable().then(setBiometricAvailable);
-    setHardwareSupported(isWebAuthnSupported());
   }, []);
 
   if (user === undefined || loading) {

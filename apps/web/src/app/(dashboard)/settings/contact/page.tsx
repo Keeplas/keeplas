@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
@@ -46,11 +46,15 @@ export default function SettingsContactPage() {
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => {
-    if (user?.name && !name) setName(user.name);
-    if (user?.email && !email) setEmail(user.email);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // Prefill name/email once the viewer resolves, without clobbering anything
+  // the user has already typed. Adjusting during render (tracking the seeded
+  // source) avoids a setState-in-effect sync.
+  const [seededFrom, setSeededFrom] = useState(user);
+  if (user && user !== seededFrom) {
+    setSeededFrom(user);
+    if (user.name && !name) setName(user.name);
+    if (user.email && !email) setEmail(user.email);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

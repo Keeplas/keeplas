@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -67,13 +67,17 @@ export function InviteContactDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // Reset the form each time the dialog opens, adjusting during render instead
+  // of syncing in an effect.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setContactType(initialContactType);
       setNotifyRecipient(false);
       setIntroMessage(DEFAULT_RECIPIENT_INTRO);
     }
-  }, [open, initialContactType]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

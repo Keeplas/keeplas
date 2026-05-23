@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
@@ -63,10 +63,14 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+  // Re-seed the editable fields whenever the viewer record changes, adjusting
+  // during render instead of syncing in an effect.
+  const [seededFrom, setSeededFrom] = useState(user);
+  if (user !== seededFrom) {
+    setSeededFrom(user);
     setLanguage(user.language ?? "en-US");
     setTimezone(user.timezone ?? "UTC");
-  }, [user]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -6,6 +6,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import {
   buttonVariants,
   cn,
+  HelpHint,
   Icon,
   InfoCallout,
   Loader,
@@ -31,10 +32,33 @@ const DOCUMENT_CATEGORIES: VaultCategory[] = [
 const ACTION_ICONS: Record<string, string> = {
   add_item: ICON_PATHS.archive,
   invite_contact: ICON_PATHS.userPlus,
+  distribute_shards: ICON_PATHS.shieldCheck,
   life_check: ICON_PATHS.heartbeat,
+  release_policy: ICON_PATHS.group,
   two_factor: ICON_PATHS.key,
   verify_whatsapp: ICON_PATHS.phone,
   more_categories: ICON_PATHS.plus,
+};
+
+// Plain-language explanation surfaced via the per-action help icon, so users
+// understand why each step matters before they commit to it.
+const ACTION_HINTS: Record<string, string> = {
+  add_item:
+    "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
+  invite_contact:
+    "Trust contacts are the guardians who can help recover your vault. Invite someone you trust; they accept with their own Keeplas key.",
+  distribute_shards:
+    "Split your master key into encrypted shards and seal one to each trust contact. Recovery needs a threshold of shards, so no single contact can unlock your vault alone. Re-distribute after adding a new guardian.",
+  life_check:
+    "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
+  release_policy:
+    "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable, how long they have, and whether to release anyway or keep everything sealed if no one confirms.",
+  two_factor:
+    "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
+  verify_whatsapp:
+    "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
+  more_categories:
+    "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out.",
 };
 
 export function HubContent() {
@@ -362,27 +386,25 @@ export function HubContent() {
           </h4>
           <div className="space-y-2">
             {hubData.priorityActions.map((action) => (
-              <Link
+              // Container (not the Link) carries the background and `group` so
+              // the help button can sit beside the Link — a <button> nested in
+              // an <a> is invalid HTML.
+              <div
                 key={action.key}
-                href={action.href}
                 className={cn(
-                  "flex items-center justify-between p-4 transition-colors rounded-xl group cursor-pointer",
+                  "flex items-center transition-colors rounded-xl group",
                   action.done
                     ? "bg-surface-container-low/50 hover:bg-surface-container-low"
                     : "bg-error/10 hover:bg-error/15",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex items-center gap-3 font-headline font-bold text-sm",
-                    action.done
-                      ? "text-on-surface-variant line-through decoration-on-surface-variant/40"
-                      : "text-error",
-                  )}
+                <Link
+                  href={action.href}
+                  className="flex flex-1 min-w-0 items-center gap-3 p-4 cursor-pointer"
                 >
                   <span
                     className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center shadow-sm",
+                      "w-9 h-9 rounded-lg flex items-center justify-center shadow-sm shrink-0",
                       action.done
                         ? "bg-secondary-container/30"
                         : "bg-surface-container-lowest",
@@ -400,18 +422,32 @@ export function HubContent() {
                       )}
                     />
                   </span>
-                  {action.label}
-                </span>
-                <Icon
-                  path={ICON_PATHS.chevronRight}
-                  className={cn(
-                    "w-5 h-5 transition-transform",
-                    action.done
-                      ? "text-outline-variant/40"
-                      : "text-outline-variant group-hover:translate-x-1",
+                  <span
+                    className={cn(
+                      "font-headline font-bold text-sm truncate",
+                      action.done
+                        ? "text-on-surface-variant line-through decoration-on-surface-variant/40"
+                        : "text-error",
+                    )}
+                  >
+                    {action.label}
+                  </span>
+                </Link>
+                <div className="flex items-center gap-1 pr-3 shrink-0">
+                  {ACTION_HINTS[action.key] && (
+                    <HelpHint content={ACTION_HINTS[action.key]} side="left" />
                   )}
-                />
-              </Link>
+                  <Icon
+                    path={ICON_PATHS.chevronRight}
+                    className={cn(
+                      "w-5 h-5 transition-transform",
+                      action.done
+                        ? "text-outline-variant/40"
+                        : "text-outline-variant group-hover:translate-x-1",
+                    )}
+                  />
+                </div>
+              </div>
             ))}
           </div>
         </div>

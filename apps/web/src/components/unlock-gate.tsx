@@ -77,10 +77,13 @@ export function UnlockGate({ children }: UnlockGateProps) {
     !("wrappingKey" in (bundle ?? {}))
   );
 
-  // Reset error when switching modes
-  useEffect(() => {
+  // Reset the error when switching modes, adjusting during render instead of
+  // syncing in an effect.
+  const [prevMode, setPrevMode] = useState(mode);
+  if (mode !== prevMode) {
+    setPrevMode(mode);
     setError("");
-  }, [mode]);
+  }
 
   if (user === undefined) {
     return <Loader fullscreen label="Loading vault" />;

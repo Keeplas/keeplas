@@ -66,17 +66,16 @@ export function SignupForm() {
   // carries both identifiers; an email-only invitation hides them.
   const showIdentityTabs = !lockedEmail || !!lockedPhone;
 
-  useEffect(() => {
+  // Anchor the signup fields to the invitation once it resolves, without
+  // clobbering anything the user has typed. Adjusting during render avoids
+  // setState-in-effect syncs.
+  const [seededInvite, setSeededInvite] = useState(invitation);
+  if (invitation !== seededInvite) {
+    setSeededInvite(invitation);
     if (lockedEmail) setEmail(lockedEmail);
-  }, [lockedEmail]);
-
-  useEffect(() => {
     if (lockedPhone) setPhone(lockedPhone);
-  }, [lockedPhone]);
-
-  useEffect(() => {
     if (suggestedName && !name) setName(suggestedName);
-  }, [suggestedName, name]);
+  }
 
   // Once the invitation resolves, anchor the signup to its identifiers: if it
   // carries a phone, default to the passwordless Phone tab; otherwise force the

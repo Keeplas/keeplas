@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
@@ -42,14 +42,18 @@ export function EditGroupDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // Reset the form each time the dialog opens, adjusting during render instead
+  // of syncing in an effect.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setName(group.name);
       setDescription(group.description ?? "");
       setMembers(group.memberContactIds as string[]);
       setError("");
     }
-  }, [open, group]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

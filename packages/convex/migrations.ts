@@ -201,57 +201,6 @@ export const mergeConditionalMessagesIntoVault = internalMutation({
 });
 
 /**
- * Rewrite legacy `scenario_steps.actions` entries to the new 3-action set.
- *
- * Mapping:
- *   - `send_message` → `grant_access` (closest functional equivalent: the
- *     scenario engine fans out vault items to recipients; per-message
- *     timed triggers continue to live on `vault_items.triggerType`).
- *   - `unlock_vault` → dropped (vault unlock is now implicit when the
- *     scenario dispatches; no per-step toggle needed).
- *
- * After this migration runs and observation confirms no rows still hold
- * `send_message` / `unlock_vault`, the legacy literals can be removed from
- * the `scenario_steps.actions[].actionType` validator in `schema.ts`.
- *
- * Idempotent: rows whose actions already use only the new set are skipped.
- */
-export const migrateScenarioActions = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    let stepsPatched = 0;
-    let stepsCleared = 0;
-
-    const steps = await ctx.db.query("scenario_steps").collect();
-    for (const step of steps) {
-      let touched = false;
-      const next: typeof step.actions = [];
-      for (const action of step.actions) {
-        // The literals are no longer in the typed union after the schema
-        // narrow. Compare via a string cast so this migration remains
-        // re-runnable against environments still holding legacy rows.
-        const actionType = action.actionType as string;
-        if (actionType === "send_message") {
-          next.push({ ...action, actionType: "grant_access" });
-          touched = true;
-        } else if (actionType === "unlock_vault") {
-          touched = true;
-        } else {
-          next.push(action);
-        }
-      }
-      if (touched) {
-        await ctx.db.patch(step._id, { actions: next });
-        if (next.length === 0) stepsCleared++;
-        else stepsPatched++;
-      }
-    }
-
-    return { stepsPatched, stepsCleared };
-  },
-});
-
-/**
  * Scrub the deprecated plaintext `description` field from every vault_items
  * row. Earlier the Add-to-Vault dialog mistakenly sent the rich-text body in
  * plaintext as `description` while ALSO encrypting it into `encryptedContent`
@@ -325,3 +274,48 @@ export const addWhatsAppChannelToLifeCheckConfigs = internalMutation({
     return { patched, skipped };
   },
 });
+
+/**
+ * Phase-7 cleanup for the Life Check redesign: cancel any in-flight cycle so
+ * scheduled jobs from the now-removed escalation cascade can't fire, and cancel
+ * their pending scheduled functions. Idempotent / safe to re-run.
+ */
+export const cancelInFlightLifeCheckCycles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const statuses = [
+      "running",
+      "awaiting_confirmation",
+      "escalating",
+    ] as const;
+    const now = Date.now();
+    let cancelled = 0;
+
+    for (const status of statuses) {
+      const cycles = await ctx.db
+        .query("life_check_cycles")
+        .filter((q) => q.eq(q.field("status"), status))
+        .collect();
+      for (const cycle of cycles) {
+        for (const id of cycle.pendingScheduleIds ?? []) {
+          try {
+            await ctx.scheduler.cancel(id);
+          } catch {
+            // Already executed or expired — ignore.
+          }
+        }
+        await ctx.db.patch(cycle._id, {
+          status: "cancelled",
+          cancelledAt: now,
+          cancelledReason: "life_check_redesign_migration",
+          completedAt: now,
+          pendingScheduleIds: [],
+        });
+        cancelled++;
+      }
+    }
+
+    return { cancelled };
+  },
+});
+

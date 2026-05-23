@@ -4,7 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   type ReactNode,
 } from "react";
 import { toast, ToastAction } from "@keeplas/ui";
@@ -89,6 +91,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     api.vault_items.generateUploadUrl,
   );
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
+
+  // Held in a ref so the retry action can re-invoke the latest `runJob`
+  // without `runJob` referencing itself before it is declared.
+  const runJobRef = useRef<(args: EnqueueArgs) => Promise<void>>(undefined);
 
   const runJob = useCallback(
     async (args: EnqueueArgs) => {
@@ -189,7 +195,12 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
               altText="Retry failed attachments"
               onClick={() => {
                 handle.dismiss();
-                void runJob({ itemId, label, dek, files: retryFiles });
+                void runJobRef.current?.({
+                  itemId,
+                  label,
+                  dek,
+                  files: retryFiles,
+                });
               }}
             >
               Retry
@@ -200,6 +211,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     },
     [encryptBlobWithKey, generateUploadUrl, addItemFiles],
   );
+
+  useEffect(() => {
+    runJobRef.current = runJob;
+  }, [runJob]);
 
   const enqueueAttachments = useCallback(
     (args: EnqueueArgs) => {

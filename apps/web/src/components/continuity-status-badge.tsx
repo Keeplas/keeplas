@@ -36,34 +36,33 @@ const STATUS_META: Record<
 
 const HELP_CONTENT = (
   <span>
-    The Continuity Protocol covers both Life Check and the Scenario Engine.
-    <strong className="block mt-1">Active</strong> Both halves run normally.
+    Your Life Check status.
+    <strong className="block mt-1">Active</strong> Check-ins run on schedule.
     <strong className="block mt-1">Paused</strong> Indefinite suspension —
-    nothing escalates or dispatches until you resume.
-    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with
-    a return date that auto-resumes everything. Tap the badge to manage.
+    nothing runs until you resume.
+    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with a
+    return date that auto-resumes everything. Tap the badge to manage.
   </span>
 );
 
 /**
- * Sidebar pill that surfaces the Continuity Protocol state at all times.
- * Click → routes to `/settings/continuity` where the user can flip the
- * master pause / Travel Mode controls.
+ * Sidebar pill that surfaces the Life Check state at all times. Click → routes
+ * to `/settings/continuity` where the user can flip the pause / Travel Mode
+ * controls.
  */
 export function ContinuityStatusBadge() {
   const config = useQuery(api.life_check.getConfig);
-  const scenarioData = useQuery(api.scenarios.getScenario);
 
   let status: Status = "unconfigured";
   let returnDate: number | null = null;
 
-  if (config !== undefined && scenarioData !== undefined) {
+  if (config !== undefined) {
     if (config === null) {
       status = "unconfigured";
     } else if (config.travelModeEnabled) {
       status = "travel";
       returnDate = config.travelModeUntil ?? null;
-    } else if (!config.isActive || scenarioData?.scenario?.isSafePauseActive) {
+    } else if (!config.isActive) {
       status = "paused";
     } else {
       status = "active";
@@ -91,16 +90,14 @@ export function ContinuityStatusBadge() {
             {meta.label}
           </p>
           <p className="text-[10px] text-on-surface-variant truncate">
-            {formattedReturn
-              ? `Resumes ${formattedReturn}`
-              : "Continuity Protocol"}
+            {formattedReturn ? `Resumes ${formattedReturn}` : "Life Check"}
           </p>
         </div>
       </Link>
       <HelpHint
         content={HELP_CONTENT}
         side="right"
-        label="Continuity status help"
+        label="Life Check status help"
       />
     </div>
   );

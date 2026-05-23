@@ -190,10 +190,10 @@ export default function VaultItemPage() {
     const isZk = item.encryptionType === "zero_knowledge";
     if (isZk && !cryptoReady) return;
 
-    setDecrypting(true);
-    if (isZk) setItemDek(null);
-
     (async () => {
+      setDecrypting(true);
+      if (isZk) setItemDek(null);
+
       let dek: CryptoKey | undefined;
       try {
         if (isZk) {

@@ -22,11 +22,11 @@ export const getHubData = query({
       categoriesPopulated.add(item.category);
     }
 
-    // Recent items (last 6) — kept in sync with the Priority Actions count so
+    // Recent items (last 7) — kept in sync with the Priority Actions count so
     // the Hub bottom row stays visually balanced.
     const recentItems = [...items]
       .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 6);
+      .slice(0, 7);
 
     // Confirmed contacts
     const contacts = await ctx.db
@@ -34,6 +34,21 @@ export const getHubData = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
       .collect();
+
+    // Recovery shards distributed? A trust contact becomes an eligible
+    // distribution target once it has accepted and uploaded its public key
+    // (mirrors trusted_contacts.getDistributionTargets). The axis is "done"
+    // only when every eligible target holds a confirmed shard, so onboarding a
+    // new guardian re-surfaces the action until shards are re-distributed.
+    const distributionTargets = contacts.filter(
+      (c) =>
+        (c.contactType ?? "trust") === "trust" &&
+        typeof c.shardIndex === "number" &&
+        typeof c.contactPublicKey === "string",
+    );
+    const shardsDistributed =
+      distributionTargets.length > 0 &&
+      distributionTargets.every((c) => c.shardConfirmed === true);
 
     // Life Check configured?
     const lifeCheckConfig = await ctx.db
@@ -57,12 +72,19 @@ export const getHubData = query({
     const user = await ctx.db.get(userId);
     const phoneVerified = !!user?.phoneNumberVerifiedAt;
 
-    // Continuity score: 6 axes equipondérés, identiques aux conditions des Priority Actions.
-    // Garantit l'invariant: priorityActions.length === 0 ⇔ continuityScore === 100.
+    // A release policy is "set" once the user has explicitly chosen the
+    // confirmation fallback (saveReleasePolicy persists all three fields).
+    const releasePolicySet = !!lifeCheckConfig?.fallbackBehavior;
+
+    // Continuity score: 8 equally-weighted axes, identical to the Priority
+    // Action conditions. Guarantees the invariant:
+    // priorityActions.every((a) => a.done) ⇔ continuityScore === 100.
     const axes = [
       items.length > 0,
       contacts.length > 0,
+      shardsDistributed,
       !!lifeCheckConfig,
+      releasePolicySet,
       hasStrongAuth,
       phoneVerified,
       categoriesPopulated.size >= 5 && items.length > 0,
@@ -71,7 +93,7 @@ export const getHubData = query({
       (axes.filter(Boolean).length / axes.length) * 100,
     );
 
-    // Priority actions: always emit all six with their done flag, so the UI
+    // Priority actions: always emit all eight with their done flag, so the UI
     // can render the completed ones in a muted state ("trophée" feel).
     // Pending actions are listed first, completed ones at the bottom.
     const priorityActions: Array<{
@@ -93,10 +115,22 @@ export const getHubData = query({
         done: contacts.length > 0,
       },
       {
+        key: "distribute_shards",
+        label: "Distribute recovery shards",
+        href: "/trusted-contacts",
+        done: shardsDistributed,
+      },
+      {
         key: "life_check",
         label: "Configure Life Check",
         href: "/life-check",
         done: !!lifeCheckConfig,
+      },
+      {
+        key: "release_policy",
+        label: "Set your release policy",
+        href: "/life-check",
+        done: releasePolicySet,
       },
       {
         key: "two_factor",

@@ -467,12 +467,13 @@ export default defineSchema({
           v.literal("push"),
           v.literal("email"),
           v.literal("whatsapp"),
-          v.literal("sms"),
-          v.literal("ivr_call"),
         ),
         order: v.number(),
         isEnabled: v.boolean(),
-        delayHours: v.number(),
+        // Deprecated: the per-channel escalation cascade was removed in favour
+        // of an all-at-once fan-out + reminders. Kept optional during rollout;
+        // dropped by the Phase-7 migration.
+        delayHours: v.optional(v.number()),
       }),
     ),
 
@@ -483,6 +484,17 @@ export default defineSchema({
     isActive: v.boolean(),
     nextCheckAt: v.number(),
     lastCheckAt: v.optional(v.number()),
+    // Stage-1 user check-in window length (days). Optional override; defaults
+    // to CHECK_IN_WINDOW_DAYS in life_check.ts. Used by the dev fast-test mode.
+    checkInWindowDays: v.optional(v.number()),
+    // Stage-2 human confirmation. Defaults applied in life_check.ts: threshold
+    // 2 trusted contacts, window 7 days, fallback "abort" (release nothing
+    // unless a human confirms). Edited via the release-policy settings (Phase 6).
+    confirmationThreshold: v.optional(v.number()),
+    confirmationWindowDays: v.optional(v.number()),
+    fallbackBehavior: v.optional(
+      v.union(v.literal("abort"), v.literal("release_anyway")),
+    ),
     confidenceThreshold: v.number(),
 
     createdAt: v.number(),
@@ -502,7 +514,11 @@ export default defineSchema({
 
     status: v.union(
       v.literal("running"),
+      // Stage 2: the user never replied; trusted contacts are being asked to
+      // confirm unavailability before any release.
+      v.literal("awaiting_confirmation"),
       v.literal("validated"),
+      // Legacy (pre-redesign cascade); removed by the Phase-7 migration.
       v.literal("escalating"),
       v.literal("triggered"),
       v.literal("cancelled"),
@@ -699,82 +715,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["userId", "status"])
     .index("by_trigger", ["triggerType", "status"]),
-
-  // ═══════════════════════════════════════════════
-  // SCENARIOS & STEPS
-  // ═══════════════════════════════════════════════
-
-  scenarios: defineTable({
-    userId: v.id("users"),
-
-    title: v.string(),
-    description: v.optional(v.string()),
-
-    status: v.union(
-      v.literal("armed"),
-      v.literal("paused"),
-      v.literal("triggered"),
-      v.literal("completed"),
-      v.literal("cancelled"),
-    ),
-
-    isSafePauseActive: v.boolean(),
-    safePauseUntil: v.optional(v.number()),
-
-    latentIntegrity: v.number(),
-    syncHash: v.string(),
-    triggerProtocol: v.string(),
-
-    lastCheckAt: v.number(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_status", ["userId", "status"]),
-
-  scenario_steps: defineTable({
-    scenarioId: v.id("scenarios"),
-    userId: v.id("users"),
-
-    triggerType: v.literal("inactivity_days"),
-    triggerValue: v.number(),
-    label: v.string(),
-    // Optional grouping so the UI can render "phases of life" (primary
-    // outreach, incapacity handling, posthumous release, terminal wipe).
-    // The execution engine treats steps in `triggerValue` order regardless.
-    category: v.optional(
-      v.union(
-        v.literal("primary_outreach"),
-        v.literal("incapacity"),
-        v.literal("posthumous_release"),
-        v.literal("wipe"),
-      ),
-    ),
-
-    actions: v.array(
-      v.object({
-        actionType: v.union(
-          v.literal("grant_access"),
-          v.literal("alert_authority"),
-          v.literal("account_wipe"),
-        ),
-        targetContactId: v.optional(v.id("trusted_contacts")),
-        config: v.string(),
-      }),
-    ),
-
-    executionStatus: v.union(
-      v.literal("pending"),
-      v.literal("executed"),
-      v.literal("skipped"),
-      v.literal("failed"),
-    ),
-    executedAt: v.optional(v.number()),
-    order: v.number(),
-    createdAt: v.number(),
-  })
-    .index("by_scenario", ["scenarioId"])
-    .index("by_trigger", ["scenarioId", "triggerValue"]),
 
   // ═══════════════════════════════════════════════
   // AUDIT LOGS — IMMUTABLE

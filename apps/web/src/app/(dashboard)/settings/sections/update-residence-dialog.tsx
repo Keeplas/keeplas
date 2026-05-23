@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Dialog,
@@ -33,12 +33,16 @@ export function UpdateResidenceDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  // Reset the form each time the dialog opens, adjusting during render instead
+  // of syncing in an effect.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) {
       setCountry(currentCountry ?? "");
       setError("");
     }
-  }, [open, currentCountry]);
+  }
 
   const unchanged =
     !!currentCountry && country.toUpperCase() === currentCountry.toUpperCase();

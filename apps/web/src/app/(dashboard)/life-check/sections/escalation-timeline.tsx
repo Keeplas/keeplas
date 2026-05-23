@@ -4,12 +4,14 @@ import { HelpHint, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { FREQUENCIES, type ChannelConfig, type Frequency } from "./constants";
 
-const PHASE_RATIOS = [0, 7 / 30, 25 / 30, 1] as const;
+// Mirrors CHECK_IN_WINDOW_DAYS / REMINDER_FRACTIONS in
+// packages/convex/life_check.ts. Keep in sync.
+const CHECK_IN_WINDOW_DAYS = 7;
+const REMINDER_DAYS = [3, 6] as const;
 
 const TONE_STYLES = {
   active: "bg-secondary ring-4 ring-secondary/20",
-  secondary: "bg-secondary/50",
-  critical: "bg-error/50",
+  reminder: "bg-secondary/50",
   triggered: "bg-error ring-4 ring-error/30",
 } as const;
 
@@ -34,17 +36,6 @@ function frequencyDays(frequency: Frequency): number {
   return Number(FREQUENCIES.find((f) => f.value === frequency)?.label ?? 30);
 }
 
-function dayLabel(thresholdDays: number, ratio: number): string {
-  const exact = thresholdDays * ratio;
-  if (exact === 0) return "D+0";
-  if (exact < 1) {
-    const hours = Math.round(exact * 24);
-    return `D+${hours}h`;
-  }
-  const rounded = Math.round(exact);
-  return `D+${rounded}`;
-}
-
 function joinChannelLabels(channels: ChannelConfig[]): string {
   if (channels.length === 0) return "no channel";
   if (channels.length === 1) return channels[0].label;
@@ -57,73 +48,39 @@ function joinChannelLabels(channels: ChannelConfig[]): string {
   return `${head} & ${channels[channels.length - 1].label}`;
 }
 
-function buildSteps(
-  channels: ChannelConfig[],
-  frequency: Frequency,
-): PhaseStep[] {
-  const enabled = channels
-    .filter((c) => c.isEnabled)
-    .sort((a, b) => a.order - b.order);
-
-  const days = frequencyDays(frequency);
-  const total = enabled.length;
-
-  const first = enabled[0];
-  const last = total > 1 ? enabled[total - 1] : undefined;
-  const middle = total > 2 ? enabled.slice(1, -1) : [];
-
-  const openingDescription = first
-    ? `${first.label} is dispatched. ${first.description}.`
-    : "No channel enabled — the cycle cannot start.";
-
-  const secondaryDescription =
-    middle.length > 0
-      ? `Alternative channels (${joinChannelLabels(middle)}) are utilized as the silence persists.`
-      : total === 2
-        ? "No intermediate channels enabled — Keeplas waits for the final attempt."
-        : "No additional channels — the cycle proceeds straight to the final attempt.";
-
-  const criticalDescription = last
-    ? `Final attempt via ${last.label}. This is the last chance to abort the automated protocol.`
-    : "Only one channel enabled — no critical pre-trigger reach-out.";
+function buildSteps(channels: ChannelConfig[]): PhaseStep[] {
+  const enabled = channels.filter((c) => c.isEnabled);
 
   return [
     {
-      dayLabel: dayLabel(days, PHASE_RATIOS[0]),
-      title: "Verification Window Opens",
+      dayLabel: "D+0",
+      title: "Check-in sent",
       titleClass: "text-on-primary",
-      description: openingDescription,
+      description: enabled.length
+        ? `${joinChannelLabels(enabled)} go out together. Confirm with one tap, the email button, or a WhatsApp reply.`
+        : "No channel enabled — turn one on so we can reach you.",
       tone: "active",
     },
-    {
-      dayLabel: dayLabel(days, PHASE_RATIOS[1]),
-      title: "Secondary Reach-out",
+    ...REMINDER_DAYS.map((day, i) => ({
+      dayLabel: `D+${day}`,
+      title: i === REMINDER_DAYS.length - 1 ? "Final reminder" : "Reminder",
       titleClass: "text-on-primary/90",
-      description: secondaryDescription,
-      tone: "secondary",
-    },
+      description:
+        "Still no reply — Keeplas reaches out again on every channel.",
+      tone: "reminder" as Tone,
+    })),
     {
-      dayLabel: dayLabel(days, PHASE_RATIOS[2]),
-      title: "Critical Alert",
-      titleClass: "text-error-container",
-      description: <span className="font-medium">{criticalDescription}</span>,
-      tone: "critical",
-    },
-    {
-      dayLabel: dayLabel(days, PHASE_RATIOS[3]),
-      title: "Protocol Triggered",
+      dayLabel: `D+${CHECK_IN_WINDOW_DAYS}`,
+      title: "Continuity protocol begins",
       titleClass: "text-on-primary text-headline-sm",
       description:
-        "The Vault decrypts. Access keys are released to your Trusted Contacts automatically.",
+        "No confirmation across the whole window — Keeplas begins releasing your vault to your trusted contacts.",
       tone: "triggered",
       isFinal: true,
       extra: (
         <div className="flex gap-2 flex-wrap">
           <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-full">
-            Legal Legacy
-          </span>
-          <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-full">
-            Health Directives
+            Trusted contacts notified
           </span>
         </div>
       ),
@@ -135,7 +92,7 @@ export function EscalationTimeline({
   channels,
   frequency,
 }: EscalationTimelineProps) {
-  const steps = buildSteps(channels, frequency);
+  const steps = buildSteps(channels);
   const days = frequencyDays(frequency);
 
   return (
@@ -144,15 +101,15 @@ export function EscalationTimeline({
         <h3 className="text-headline-md mb-1.5 flex items-center gap-2">
           Escalation Protocol
           <HelpHint
-            content="The timeline scales to your Inactivity Threshold. From D+0, Keeplas tries each enabled Verification Channel in order — the first reaches you immediately, the last is the critical pre-trigger attempt. If every channel goes unanswered, the Vault decrypts at the threshold and access keys are released to your Trusted Contacts."
+            content="Every cadence period Keeplas asks you to confirm you're well. You then have a 7-day window with reminders to reply — by tapping in the app, clicking the email button, or replying on WhatsApp. Only an explicit reply resets the countdown; using the app does not. If the whole window passes in silence, Keeplas begins releasing your vault to your trusted contacts."
             className="text-on-primary/60 hover:text-secondary-fixed"
           />
         </h3>
         <p className="text-body-md text-on-primary-container mb-2">
-          Visual logic of the fail-safe trigger.
+          What happens after a missed check-in.
         </p>
         <p className="text-label-md text-on-primary-container/80 mb-10">
-          Scaled to your {days}-day inactivity threshold.
+          Keeplas asks you to confirm every {days} days.
         </p>
 
         <div className="relative">
@@ -160,7 +117,7 @@ export function EscalationTimeline({
 
           <div className="space-y-8">
             {steps.map((step) => (
-              <div key={step.title} className="relative pl-12">
+              <div key={step.dayLabel} className="relative pl-12">
                 <div
                   className={`absolute left-0 top-1 w-6 h-6 rounded-full z-10 ${TONE_STYLES[step.tone]}`}
                 />
@@ -196,9 +153,8 @@ export function EscalationTimeline({
               className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
             />
             <p className="text-body-md text-on-primary-container italic">
-              Keeplas uses zero-knowledge encryption. Even our system
-              administrators cannot abort a triggered protocol once the final
-              threshold is crossed without your master key.
+              Keeplas uses zero-knowledge encryption. Only an explicit reply from
+              you — tap, email button, or WhatsApp — pauses the protocol.
             </p>
           </div>
         </div>

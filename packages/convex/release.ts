@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, mutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireAuth, resolveItemRecipients } from "./helpers";
 import { createAuditLog } from "./audit";
@@ -53,12 +53,7 @@ async function fanOutRelease(
     const existing = await ctx.db
       .query("access_requests")
       .withIndex("by_requester", (q: any) => q.eq("requestedBy", contactId))
-      .filter((q: any) =>
-        q.and(
-          q.eq(q.field("status"), "approved"),
-          q.eq(q.field("accessMode"), "mode_a"),
-        ),
-      )
+      .filter((q: any) => q.eq(q.field("status"), "approved"))
       .first();
 
     if (existing) continue;
@@ -66,7 +61,6 @@ async function fanOutRelease(
     await ctx.db.insert("access_requests", {
       vaultUserId: userId,
       requestedBy: contactId,
-      accessMode: "mode_a",
       sectionsRequested: itemIds.map((id) => `item:${id}`),
       status: "approved",
       respondedAt: now,
@@ -83,9 +77,9 @@ async function fanOutRelease(
       await createNotification(ctx, {
         userId: contact.contactUserId,
         type: "access_request",
-        title: "Vault release",
-        body: `You have access to ${itemIds.length} item${itemIds.length === 1 ? "" : "s"} from a vault you are a recipient of.`,
-        actionUrl: "/trusted-contacts",
+        title: "Vault released to you",
+        body: `You've been granted read access to ${itemIds.length} item${itemIds.length === 1 ? "" : "s"} from a vault you are a recipient of.`,
+        actionUrl: "/shared-with-me",
         channels: ["push", "email"],
         relatedType: "access_request",
       });
@@ -133,6 +127,56 @@ export const simulateEmergencyTrigger = mutation({
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
     return await fanOutRelease(ctx, userId, "manual_simulation");
+  },
+});
+
+/**
+ * Owner-facing preview: for each trusted contact, the items they'd receive (and
+ * at what access level) if a release fired right now. Mirrors fanOutRelease's
+ * resolution exactly, so the owner can verify "who gets what" before anything
+ * is triggered. Read-only; touches no release state.
+ */
+export const getReleasePreview = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("status"), "archived"),
+          q.neq(q.field("accessLevel"), "private"),
+        ),
+      )
+      .collect();
+
+    const perContact = new Map<Id<"trusted_contacts">, string[]>();
+    for (const item of items) {
+      const recipients = await resolveItemRecipients(ctx, item, userId);
+      for (const cid of recipients) {
+        const titles = perContact.get(cid) ?? [];
+        titles.push(item.title);
+        perContact.set(cid, titles);
+      }
+    }
+
+    const result = [];
+    for (const [contactId, titles] of perContact.entries()) {
+      const contact = await ctx.db.get(contactId);
+      if (!contact) continue;
+      result.push({
+        contactId,
+        name: contact.name,
+        role: contact.role,
+        itemCount: titles.length,
+        itemTitles: titles.slice(0, 5),
+        // The release fan-out grants read access (read-only) to each recipient.
+        accessType: "read" as const,
+      });
+    }
+    return result;
   },
 });
 

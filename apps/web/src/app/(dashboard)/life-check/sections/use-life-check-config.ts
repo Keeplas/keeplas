@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { toast } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
@@ -26,9 +26,12 @@ export function useLifeCheckConfig() {
   const [travelMode, setTravelMode] = useState(false);
   const [travelUntil, setTravelUntil] = useState("");
 
-  useEffect(() => {
-    if (!config) return;
-
+  // Seed the editable form from the server config the first time it resolves
+  // (and again if it changes) by tracking the seeded source and adjusting
+  // during render — the React-blessed alternative to a setState-in-effect sync.
+  const [seededFrom, setSeededFrom] = useState(config);
+  if (config && config !== seededFrom) {
+    setSeededFrom(config);
     setFrequency(config.frequency);
     setTravelMode(config.travelModeEnabled);
     if (config.travelModeUntil) {
@@ -40,19 +43,20 @@ export function useLifeCheckConfig() {
       setChannels(
         config.activeChannels.map((ch) => {
           const def = DEFAULT_CHANNELS.find((d) => d.type === ch.type);
+          const isUpcoming = def?.isUpcoming ?? false;
           return {
             type: ch.type as ChannelType,
             label: def?.label ?? ch.type,
             description: def?.description ?? "",
             iconPath: def?.iconPath ?? DEFAULT_CHANNELS[0].iconPath,
-            delayHours: ch.delayHours,
-            isEnabled: ch.isEnabled,
+            isEnabled: isUpcoming ? false : ch.isEnabled,
             order: ch.order,
+            isUpcoming,
           };
         }),
       );
     }
-  }, [config]);
+  }
 
   async function persist(
     nextFrequency: Frequency,
@@ -65,7 +69,6 @@ export function useLifeCheckConfig() {
           type: ch.type,
           order: ch.order,
           isEnabled: ch.isEnabled,
-          delayHours: ch.delayHours,
         })),
       });
     } catch (err) {
@@ -118,6 +121,7 @@ export function useLifeCheckConfig() {
   }
 
   function toggleChannel(type: ChannelType) {
+    if (channels.find((c) => c.type === type)?.isUpcoming) return;
     const next = channels.map((ch) =>
       ch.type === type ? { ...ch, isEnabled: !ch.isEnabled } : ch,
     );

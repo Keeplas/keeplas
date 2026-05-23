@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -39,22 +39,22 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [residenceDialogOpen, setResidenceDialogOpen] = useState(false);
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
 
   const phoneStatus = useQuery(api.phone_verification.getMyStatus);
   const searchParams = useSearchParams();
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(
+    () => searchParams.get("verify") === "whatsapp",
+  );
 
-  useEffect(() => {
+  // Re-seed the editable fields whenever the viewer record changes, adjusting
+  // during render instead of syncing in an effect.
+  const [seededFrom, setSeededFrom] = useState(user);
+  if (user !== seededFrom) {
+    setSeededFrom(user);
     setName(user.name ?? "");
     setPhone(user.phoneNumber || undefined);
     setAvatarUrl(user.avatarUrl ?? "");
-  }, [user]);
-
-  useEffect(() => {
-    if (searchParams.get("verify") === "whatsapp") {
-      setVerifyDialogOpen(true);
-    }
-  }, [searchParams]);
+  }
 
   const country = user.country ? getCountry(user.country) : undefined;
   const birthdayLabel = user.birthday

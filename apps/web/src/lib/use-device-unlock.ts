@@ -21,6 +21,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
   const [error, setError] = useState<DeviceUnlockError | null>(null);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
     if (!userEmail) {
       setEntries([]);
       setLoading(false);
@@ -44,8 +45,9 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
   }, [userEmail]);
 
   useEffect(() => {
-    setLoading(true);
-    refresh();
+    void (async () => {
+      await refresh();
+    })();
   }, [refresh]);
 
   const enroll = useCallback(

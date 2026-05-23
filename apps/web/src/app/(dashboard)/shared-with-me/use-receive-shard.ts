@@ -53,14 +53,17 @@ export function useReceiveShard(
         typeof v.encryptedShard === "string" &&
         v.encryptedShard.length > 0,
     );
-    if (candidates.length === 0) {
-      setStatus("ready");
-      return;
-    }
-
     inFlightRef.current = true;
 
     void (async () => {
+      // No shards to receive — settle immediately. Resetting the in-flight
+      // guard keeps the effect re-runnable when `vaults` later changes.
+      if (candidates.length === 0) {
+        inFlightRef.current = false;
+        setStatus("ready");
+        return;
+      }
+
       // Pre-scan: if at least one candidate has no local shard with the
       // current envelope fingerprint, we're restoring (likely fresh device,
       // or owner re-distributed). Surface a brief loader to the contact so

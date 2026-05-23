@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, DatePicker, ErrorAlert, Label } from "@keeplas/ui";
 import { CountryCombobox } from "@/components/country-combobox";
@@ -35,7 +35,10 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
 
   // Pre-fill country from the server-attested geo header once the audit
   // context resolves. Only seeds the field — the user can always change it.
-  useEffect(() => {
+  // Adjusting during render avoids a setState-in-effect sync.
+  const [seededCtx, setSeededCtx] = useState(requestCtx);
+  if (requestCtx !== seededCtx) {
+    setSeededCtx(requestCtx);
     if (
       !country &&
       requestCtx?.country &&
@@ -43,17 +46,19 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
     ) {
       setCountry(requestCtx.country.toUpperCase());
     }
-  }, [requestCtx, country]);
+  }
 
+  // Anchor "now" once at mount so the age check stays pure across renders.
+  const [now] = useState(() => Date.now());
   const ageError = useMemo(() => {
     if (!birthday) return null;
     const ts = Date.parse(birthday);
     if (Number.isNaN(ts)) return "Please pick a valid date.";
-    const ageMs = Date.now() - ts;
+    const ageMs = now - ts;
     const eighteenMs = 18 * 365.25 * 24 * 60 * 60 * 1000;
     if (ageMs < eighteenMs) return "You must be at least 18 to use Keeplas.";
     return null;
-  }, [birthday]);
+  }, [birthday, now]);
 
   const canSubmit =
     !!birthday && !!country && !ageError && !submitting && !!requestCtx;

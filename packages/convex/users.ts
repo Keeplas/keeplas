@@ -250,7 +250,6 @@ export async function wipeUserData(
     "life_check_configs",
     "life_check_cycles",
     "passive_signals",
-    "scenarios",
     "conditional_messages",
     "notifications",
     "vaults",
@@ -264,14 +263,6 @@ export async function wipeUserData(
     for (const row of rows) {
       await ctx.db.delete(row._id);
     }
-  }
-
-  const scenarioSteps = await ctx.db
-    .query("scenario_steps")
-    .filter((q) => q.eq(q.field("userId"), userId))
-    .collect();
-  for (const row of scenarioSteps) {
-    await ctx.db.delete(row._id);
   }
 
   const accessRequests = await ctx.db

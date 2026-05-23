@@ -22,6 +22,7 @@ interface SharedVault extends Doc<"trusted_contacts"> {
   ownerEmail: string;
   ownerCycleStatus:
     | "running"
+    | "awaiting_confirmation"
     | "validated"
     | "escalating"
     | "triggered"
@@ -83,12 +84,13 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const hasEnvelope = !!vault.verificationEnvelope;
   const hasKey = !!vault.contactPublicKey;
   const canVerify = hasEnvelope && hasKey && status !== "running";
-  // Mark-as-unreachable only surfaces once the owner's Life Check has actually
-  // escalated past the inactivity threshold. Outside escalation the action is
-  // hidden — contacts shouldn't be able to fire it speculatively.
-  const isOwnerEscalating = vault.ownerCycleStatus === "escalating";
+  // Mark-as-unreachable only surfaces once the owner's Life Check has escalated
+  // to the contact-confirmation stage (every check-in went unanswered). Outside
+  // that stage the action is hidden — contacts can't fire it speculatively.
+  const isAwaitingConfirmation =
+    vault.ownerCycleStatus === "awaiting_confirmation";
   const canMarkUnreachable =
-    !isRecipientOnly && isAccepted && isOwnerEscalating;
+    !isRecipientOnly && isAccepted && isAwaitingConfirmation;
 
   // Recovery section is surfaced once the unreachability quorum has been
   // reached AND the 72h grace window has expired without cancellation.
