@@ -208,7 +208,7 @@ export function SignupForm() {
         }
         description={
           kind === "phone"
-            ? "We sent a 6-digit code to your WhatsApp. Enter it below to activate your vault."
+            ? `We sent a 6-digit code to your WhatsApp at ${phone}. Enter it below to activate your vault.`
             : `We sent a 6-digit code to ${email}. Enter it below to activate your vault.`
         }
         footer={{
