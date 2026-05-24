@@ -586,3 +586,60 @@ export const summary = internalQuery({
     };
   },
 });
+
+/**
+ * Read-only dump of the owner's release surface, for diagnosing why a contact's
+ * memorial vault is empty: the owner's items (+ recipient routing), the trust
+ * contacts (+ whether each has a published key), and every access_request with
+ * its requestedBy/status/reason/sectionsRequested. Touches no state.
+ */
+export const inspectRelease = internalQuery({
+  args: { email: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const t = await loadTarget(ctx, args.email);
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", t.userId))
+      .collect();
+
+    const contacts = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", t.userId))
+      .collect();
+
+    const requests = await ctx.db
+      .query("access_requests")
+      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", t.userId))
+      .collect();
+
+    return {
+      email: t.email,
+      userId: t.userId,
+      items: items.map((i) => ({
+        _id: i._id,
+        title: i.title,
+        status: i.status,
+        accessLevel: i.accessLevel,
+        encryptionType: i.encryptionType,
+        recipientMode: i.recipientMode ?? "default",
+        sharedWithContacts: i.sharedWithContacts,
+        sharedWithGroups: i.sharedWithGroups ?? [],
+      })),
+      contacts: contacts.map((c) => ({
+        _id: c._id,
+        name: c.name,
+        email: c.email ?? null,
+        contactType: c.contactType ?? "trust",
+        invitationStatus: c.invitationStatus,
+        hasPublicKey: !!c.contactPublicKey,
+      })),
+      accessRequests: requests.map((r) => ({
+        requestedBy: r.requestedBy,
+        status: r.status,
+        reason: r.reason ?? null,
+        sectionsRequested: r.sectionsRequested,
+      })),
+    };
+  },
+});

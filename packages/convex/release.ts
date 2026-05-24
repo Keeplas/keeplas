@@ -50,13 +50,21 @@ async function fanOutRelease(
   let requestsCreated = 0;
 
   for (const [contactId, itemIds] of perRecipient.entries()) {
-    const existing = await ctx.db
+    // Idempotency: skip only if a prior PER-RECIPIENT release (a row carrying
+    // `item:` sections) already exists. The recovery-quorum request uses the
+    // `["all"]` sentinel and gets flipped to "approved" by releaseAfterConfirmation
+    // for the contacts who confirmed unreachability — it must NOT shadow the
+    // release fan-out, or those contacts would never receive their item list.
+    const approved = await ctx.db
       .query("access_requests")
       .withIndex("by_requester", (q: any) => q.eq("requestedBy", contactId))
       .filter((q: any) => q.eq(q.field("status"), "approved"))
-      .first();
+      .collect();
+    const alreadyReleased = approved.some((r: any) =>
+      r.sectionsRequested.some((s: string) => s.startsWith("item:")),
+    );
 
-    if (existing) continue;
+    if (alreadyReleased) continue;
 
     await ctx.db.insert("access_requests", {
       vaultUserId: userId,

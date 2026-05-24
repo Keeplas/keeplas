@@ -40,11 +40,18 @@ async function resolveApprovedRelease(
   const contact = await ctx.db.get(contactId);
   if (!contact || contact.contactUserId !== requesterId) return null;
 
-  const request = await ctx.db
+  // A contact may hold both a recovery-quorum request (sentinel `["all"]`) and a
+  // per-recipient release request (`item:` sections). The memorial reads the
+  // bequest, so select the release row and ignore the recovery sentinel; a
+  // contact with no `item:` row is recovery-only (no items left to them).
+  const approved = await ctx.db
     .query("access_requests")
     .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
     .filter((q) => q.eq(q.field("status"), "approved"))
-    .first();
+    .collect();
+  const request = approved.find((r) =>
+    r.sectionsRequested.some((s) => s.startsWith(ITEM_PREFIX)),
+  );
   if (!request) return null;
 
   const itemIds = request.sectionsRequested

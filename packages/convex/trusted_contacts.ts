@@ -861,15 +861,20 @@ export const getVaultsWhereIAmContact = query({
         .first();
 
       // Whether the owner's vault has been released to this contact — drives
-      // the "View memorial vault" entry point. One approved access_request per
-      // contact aggregates all their released item ids (release.fanOutRelease).
-      const approved = await ctx.db
+      // the "View memorial vault" entry point. Use the PER-RECIPIENT release row
+      // (carries `item:` sections), not the recovery-quorum `["all"]` sentinel a
+      // confirming contact also holds, so the count and gate reflect the bequest.
+      const approvedReqs = await ctx.db
         .query("access_requests")
         .withIndex("by_requester", (q) => q.eq("requestedBy", contact._id))
         .filter((q) => q.eq(q.field("status"), "approved"))
-        .first();
-      const releasedItemCount = approved
-        ? approved.sectionsRequested.filter((s) => s.startsWith("item:")).length
+        .collect();
+      const releaseReq = approvedReqs.find((r) =>
+        r.sectionsRequested.some((s) => s.startsWith("item:")),
+      );
+      const releasedItemCount = releaseReq
+        ? releaseReq.sectionsRequested.filter((s) => s.startsWith("item:"))
+            .length
         : 0;
 
       const trimmedName = owner?.name?.trim() || "";
@@ -883,7 +888,7 @@ export const getVaultsWhereIAmContact = query({
         ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
         ownerCycleEscalatedAt: activeCycle?.levelReachedAt ?? null,
-        released: !!approved,
+        released: !!releaseReq,
         releasedItemCount,
       });
     }
