@@ -96,7 +96,7 @@ export function useRecoveryFlow({
     if (!peers || peers.length === 0) {
       setSubmitStatus("no_peers");
       setSubmitError(
-        "No other trust contact has published a public key — recovery cannot proceed.",
+        "Recovery needs at least one other trusted contact with a published key — ask the vault owner to confirm their circle has 2+ active guardians.",
       );
       return;
     }

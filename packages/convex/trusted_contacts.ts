@@ -13,6 +13,15 @@ import { requireEnv } from "./lib/require_env";
 
 const MAX_TRUST_CONTACTS = 5;
 
+/**
+ * Minimum trust contacts required before recovery shards can be distributed.
+ * A single guardian is useless for continuity: the unreachability quorum needs
+ * ≥2 votes, and a lone contact has no peer to exchange shards with, so Shamir
+ * reconstruction can never reach 2 shares. Exported so the Hub can reflect the
+ * same floor in its continuity score.
+ */
+export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
+
 const contactTypeValidator = v.union(
   v.literal("trust"),
   v.literal("recipient_only"),
@@ -443,6 +452,23 @@ export const storeEncryptedShard = auditedMutation({
     }
     if (contact.invitationStatus !== "accepted") {
       throw new Error("Contact must accept the invitation first");
+    }
+
+    // Refuse to seal a shard while the trusted circle is below the recovery
+    // floor — a lone guardian creates a broken-but-silent setup (no peer to
+    // exchange shards with, quorum unreachable). Authoritative across every
+    // distribution path.
+    const acceptedTrustCount = (
+      await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+        .collect()
+    ).filter((c) => (c.contactType ?? "trust") === "trust").length;
+    if (acceptedTrustCount < MIN_TRUST_CONTACTS_FOR_RECOVERY) {
+      throw new Error(
+        "Recovery needs at least 2 trusted contacts before shards can be distributed.",
+      );
     }
 
     const isFirstDistribution = !contact.shardConfirmed;

@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
 import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
+import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./trusted_contacts";
 
 /**
  * Get all hub data in one query: continuity score, category counts,
@@ -38,8 +39,10 @@ export const getHubData = query({
     // Recovery shards distributed? A trust contact becomes an eligible
     // distribution target once it has accepted and uploaded its public key
     // (mirrors trusted_contacts.getDistributionTargets). The axis is "done"
-    // only when every eligible target holds a confirmed shard, so onboarding a
-    // new guardian re-surfaces the action until shards are re-distributed.
+    // only when at least MIN_TRUST_CONTACTS_FOR_RECOVERY targets each hold a
+    // confirmed shard — a single guardian cannot recover (no peer, quorum
+    // unreachable), so it must not light the Hub green. Onboarding a new
+    // guardian re-surfaces the action until shards are re-distributed.
     const distributionTargets = contacts.filter(
       (c) =>
         (c.contactType ?? "trust") === "trust" &&
@@ -47,7 +50,7 @@ export const getHubData = query({
         typeof c.contactPublicKey === "string",
     );
     const shardsDistributed =
-      distributionTargets.length > 0 &&
+      distributionTargets.length >= MIN_TRUST_CONTACTS_FOR_RECOVERY &&
       distributionTargets.every((c) => c.shardConfirmed === true);
 
     // Life Check configured?
@@ -79,6 +82,8 @@ export const getHubData = query({
     // Continuity score: 8 equally-weighted axes, identical to the Priority
     // Action conditions. Guarantees the invariant:
     // priorityActions.every((a) => a.done) ⇔ continuityScore === 100.
+    // Note: the shards axis requires ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY
+    // confirmed guardians, so a lone contact never completes this axis.
     const axes = [
       items.length > 0,
       contacts.length > 0,

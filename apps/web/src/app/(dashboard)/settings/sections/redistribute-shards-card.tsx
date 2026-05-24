@@ -3,7 +3,10 @@
 import { useQuery } from "convex/react";
 import { Button, HelpHint } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
-import { useDistributeShards } from "@/lib/use-distribute-shards";
+import {
+  useDistributeShards,
+  MIN_TRUST_CONTACTS_FOR_RECOVERY,
+} from "@/lib/use-distribute-shards";
 
 /**
  * Settings-side action: explicit, always-visible re-distribution of recovery
@@ -22,7 +25,8 @@ export function RedistributeShardsCard() {
 
   const eligible = targets ?? [];
   const threshold = me?.vaultThreshold ?? 2;
-  const disabled = status === "running" || eligible.length === 0;
+  const belowMin = eligible.length < MIN_TRUST_CONTACTS_FOR_RECOVERY;
+  const disabled = status === "running" || belowMin;
 
   return (
     <section className="bg-surface-container p-6 md:p-8 rounded-2xl">
@@ -34,10 +38,10 @@ export function RedistributeShardsCard() {
           </h2>
           <p className="text-body-md text-on-surface-variant mt-1">
             {eligible.length === 0
-              ? "Invite at least one trust contact and wait for them to accept before you can distribute."
-              : `${eligible.length} eligible trust contact${
-                  eligible.length === 1 ? "" : "s"
-                } · current threshold ${threshold}-of-5.`}
+              ? "Invite at least 2 trust contacts and wait for them to accept before you can distribute."
+              : belowMin
+                ? "Only 1 eligible trust contact. Recovery needs at least 2 — invite and confirm one more before distributing."
+                : `${eligible.length} eligible trust contacts · current threshold ${threshold}-of-5.`}
           </p>
         </div>
         <Button
@@ -57,7 +61,7 @@ export function RedistributeShardsCard() {
           their next visit to /shared-with-me.
         </p>
       )}
-      {status === "error" && error && (
+      {(status === "error" || status === "insufficient_contacts") && error && (
         <p className="text-label-md text-error mt-2">{error}</p>
       )}
       {status === "missing_master_key" && (

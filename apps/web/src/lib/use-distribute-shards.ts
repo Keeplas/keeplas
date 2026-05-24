@@ -10,13 +10,22 @@ import { split } from "@keeplas/crypto/shamir";
 import { wrapBytes } from "@keeplas/crypto/kem";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 
+/**
+ * Minimum trust contacts required before recovery shards can be distributed.
+ * Mirrors the backend floor in packages/convex/trusted_contacts.ts (Convex
+ * constants can't be imported into the web build). A single guardian is a
+ * broken setup: no peer to exchange shards with, quorum unreachable.
+ */
+export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
+
 export type DistributeStatus =
   | "idle"
   | "running"
   | "ok"
   | "error"
   | "missing_master_key"
-  | "no_targets";
+  | "no_targets"
+  | "insufficient_contacts";
 
 interface DistributeResult {
   contactsDistributed: number;
@@ -64,6 +73,13 @@ export function useDistributeShards(): {
       setStatus("no_targets");
       setError(
         "No trust contact is ready yet. Each contact must accept the invitation and publish their key first.",
+      );
+      return null;
+    }
+    if (targets.length < MIN_TRUST_CONTACTS_FOR_RECOVERY) {
+      setStatus("insufficient_contacts");
+      setError(
+        "Recovery needs at least 2 trusted contacts. Invite and confirm one more before distributing.",
       );
       return null;
     }

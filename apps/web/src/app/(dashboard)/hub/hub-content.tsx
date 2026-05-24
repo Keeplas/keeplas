@@ -90,8 +90,6 @@ export function HubContent() {
         ? "Partial Coverage"
         : "Action Required";
 
-  const missingDirectives = directives.length === 0;
-
   return (
     <div className="max-w-screen-2xl mx-auto">
       {/* Header */}
@@ -144,7 +142,7 @@ export function HubContent() {
           iconPath={ICON_PATHS.accountBalance}
           title="Assets"
           position="md:top-10 md:left-10 lg:left-24"
-          status="protected"
+          isEmpty={assets.length === 0}
           href="/vault"
         >
           {assets.length === 0 ? (
@@ -176,7 +174,7 @@ export function HubContent() {
           iconPath={ICON_PATHS.group}
           title="Contacts"
           position="md:bottom-10 md:left-10 lg:left-24"
-          status="protected"
+          isEmpty={contacts.length === 0}
           href="/trusted-contacts"
         >
           {contacts.length === 0 ? (
@@ -213,125 +211,68 @@ export function HubContent() {
         </NodeCard>
 
         {/* Directives — top right */}
-        <div className="md:absolute md:top-10 md:right-10 lg:right-24">
-          <Link
-            href="/vault?section=documents"
-            className={cn(
-              "block p-6 w-full md:w-64 relative shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
-              missingDirectives
-                ? "bg-surface-container border-2 border-error/20"
-                : "bg-surface-container-lowest border border-secondary/10",
-            )}
-            style={{ borderRadius: "2rem" }}
-          >
-            {missingDirectives && (
-              <div className="absolute -top-3 -right-3 bg-error text-white text-label-md px-3 py-1 rounded-full animate-pulse">
-                Action Required
-              </div>
-            )}
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={cn(
-                  "w-12 h-12 flex items-center justify-center",
-                  missingDirectives
-                    ? "bg-error/10 text-error"
-                    : "bg-secondary-container/30 text-secondary",
-                )}
-                style={{ borderRadius: "1rem" }}
-              >
-                <Icon
-                  path={ICON_PATHS.medicalInformation}
-                  className="w-6 h-6"
-                />
-              </div>
-              <span
-                className={cn(
-                  "text-label-md px-2 py-1 rounded",
-                  missingDirectives
-                    ? "text-error bg-error/10"
-                    : "text-secondary bg-secondary-container/20",
-                )}
-              >
-                {missingDirectives ? "Unmapped" : "Protected"}
-              </span>
+        <NodeCard
+          iconPath={ICON_PATHS.medicalInformation}
+          title="Directives"
+          position="md:top-10 md:right-10 lg:right-24"
+          isEmpty={directives.length === 0}
+          href="/vault?section=documents"
+        >
+          {directives.length === 0 ? (
+            <p className="text-body-md text-on-surface-variant mt-2">
+              No directives recorded yet.
+            </p>
+          ) : (
+            <div className="space-y-3 mt-4">
+              {directives.slice(0, 3).map((d) => (
+                <div
+                  key={d._id}
+                  className="flex justify-between items-center text-body-md"
+                >
+                  <span className="text-on-surface-variant truncate">
+                    {d.title}
+                  </span>
+                  <Icon
+                    path={ICON_PATHS.checkCircle}
+                    className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
+                  />
+                </div>
+              ))}
             </div>
-            <h3 className="text-headline-sm text-primary mb-1">Directives</h3>
-            {missingDirectives ? (
-              <>
-                <p className="text-body-md text-on-surface-variant mt-2">
-                  Medical POA and Advance Directives are currently missing or
-                  expired.
-                </p>
-                <span className="mt-4 w-full py-2 bg-error text-white rounded-lg text-body-md font-bold transition-transform active:scale-95 flex items-center justify-center">
-                  Update Now
-                </span>
-              </>
-            ) : (
-              <div className="space-y-3 mt-4">
-                {directives.slice(0, 3).map((d) => (
-                  <div
-                    key={d._id}
-                    className="flex justify-between items-center text-body-md"
-                  >
-                    <span className="text-on-surface-variant truncate">
-                      {d.title}
-                    </span>
-                    <Icon
-                      path={ICON_PATHS.checkCircle}
-                      className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </Link>
-        </div>
+          )}
+        </NodeCard>
 
         {/* Documents — bottom right */}
-        <div className="md:absolute md:bottom-10 md:right-10 lg:right-24">
-          <Link
-            href="/vault?section=documents"
-            className="block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
-            style={{ borderRadius: "2rem" }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className="w-12 h-12 bg-secondary-container/30 text-secondary flex items-center justify-center"
-                style={{ borderRadius: "1rem" }}
-              >
-                <Icon path={ICON_PATHS.description} className="w-6 h-6" />
-              </div>
-              <span className="text-label-md text-secondary bg-secondary-container/20 px-2 py-1 rounded">
-                {documents.length > 0 ? "Protected" : "Empty"}
-              </span>
+        <NodeCard
+          iconPath={ICON_PATHS.description}
+          title="Documents"
+          position="md:bottom-10 md:right-10 lg:right-24"
+          isEmpty={documents.length === 0}
+          href="/vault?section=documents"
+        >
+          {documents.length === 0 ? (
+            <p className="text-body-md text-on-surface-variant mt-2">
+              No documents stored yet.
+            </p>
+          ) : (
+            <div className="space-y-3 mt-4">
+              {documents.slice(0, 3).map((d) => (
+                <div
+                  key={d._id}
+                  className="flex justify-between items-center text-body-md"
+                >
+                  <span className="text-on-surface-variant truncate">
+                    {d.title}
+                  </span>
+                  <Icon
+                    path={ICON_PATHS.checkCircle}
+                    className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
+                  />
+                </div>
+              ))}
             </div>
-            <h3 className="font-headline font-bold text-primary mb-1">
-              Documents
-            </h3>
-            {documents.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant mt-2">
-                No documents stored yet.
-              </p>
-            ) : (
-              <div className="space-y-3 mt-4">
-                {documents.slice(0, 3).map((d) => (
-                  <div
-                    key={d._id}
-                    className="flex justify-between items-center text-body-md"
-                  >
-                    <span className="text-on-surface-variant truncate">
-                      {d.title}
-                    </span>
-                    <Icon
-                      path={ICON_PATHS.checkCircle}
-                      className="w-3.5 h-3.5 text-secondary shrink-0 ml-2"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </Link>
-        </div>
+          )}
+        </NodeCard>
 
         {/* Decorative connection lines (desktop only) */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 hidden md:block">
@@ -354,8 +295,8 @@ export function HubContent() {
             y2="50%"
           />
           <line
-            stroke={missingDirectives ? "#ba1a1a" : "#041632"}
-            strokeDasharray={missingDirectives ? "4 4" : "8 8"}
+            stroke="#041632"
+            strokeDasharray="8 8"
             strokeWidth="2"
             x1="75%"
             x2="50%"
@@ -559,14 +500,14 @@ function NodeCard({
   iconPath,
   title,
   position,
-  status,
+  isEmpty,
   href,
   children,
 }: {
   iconPath: string;
   title: string;
   position: string;
-  status: "protected" | "unmapped";
+  isEmpty: boolean;
   href: string;
   children: React.ReactNode;
 }) {
@@ -574,12 +515,7 @@ function NodeCard({
     <div className={cn("md:absolute", position)}>
       <Link
         href={href}
-        className={cn(
-          "block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 cursor-pointer",
-          status === "protected"
-            ? "border border-secondary/10"
-            : "border-2 border-error/20",
-        )}
+        className="block bg-surface-container-lowest p-6 w-full md:w-64 shadow-xl hover:shadow-2xl md:hover:-translate-y-1 transition-all duration-500 border border-secondary/10 cursor-pointer"
         style={{ borderRadius: "2rem" }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -590,7 +526,7 @@ function NodeCard({
             <Icon path={iconPath} className="w-6 h-6" />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded">
-            Protected
+            {isEmpty ? "Empty" : "Protected"}
           </span>
         </div>
         <h3 className="text-headline-sm text-primary mb-1">{title}</h3>

@@ -22,6 +22,7 @@ import { DistributeShardsSection } from "./distribute-shards-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { useBackfillVerificationEnvelopes } from "./use-backfill-verification-envelopes";
+import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "@/lib/use-distribute-shards";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -279,19 +280,23 @@ export default function TrustedContactsPage() {
             </aside>
 
             <div className="lg:col-span-8 space-y-6">
-              {acceptedTrustContacts.length === 1 && (
-                <div className="p-4 bg-error-container/30 rounded-xl">
-                  <p className="text-label-md uppercase tracking-wider text-error mb-1">
-                    Step 1 · Unreachability confirmation
-                  </p>
-                  <p className="text-body-md text-on-surface font-medium">
-                    Before recovery can start, at least 2 trust contacts must
-                    vote that you are unreachable. Only{" "}
-                    {acceptedTrustContacts[0].name} is accepted so far — invite
-                    at least one more.
-                  </p>
-                </div>
-              )}
+              {acceptedCount > 0 &&
+                acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
+                  <div className="p-4 bg-error-container/30 rounded-xl">
+                    <p className="text-label-md uppercase tracking-wider text-error mb-1">
+                      One guardian is not enough
+                    </p>
+                    <p className="text-body-md text-on-surface font-medium">
+                      Only {acceptedTrustContacts[0].name} is accepted so far —
+                      invite at least one more. Recovery cannot work with a
+                      single guardian for two reasons: at least 2 trust contacts
+                      must vote that you are unreachable before the grace window
+                      opens, and a lone guardian has no peer to exchange shards
+                      with, so the vault can never reach the 2 shards needed to
+                      reconstruct your key.
+                    </p>
+                  </div>
+                )}
 
               <DistributeShardsSection />
 
