@@ -562,7 +562,7 @@ function ContinuityScoreBadge({
             strokeWidth="4"
           />
           <circle
-            className="text-secondary transition-all duration-700"
+            className="text-error transition-all duration-700"
             cx="24"
             cy="24"
             fill="none"
@@ -580,9 +580,9 @@ function ContinuityScoreBadge({
       </div>
       <div>
         <p className="text-label-md text-on-surface-variant">
-          Continuity Score
+          Actions required
         </p>
-        <p className="text-body-md font-bold text-primary">{label}</p>
+        <p className="text-body-md font-bold text-error">{label}</p>
       </div>
     </div>
   );

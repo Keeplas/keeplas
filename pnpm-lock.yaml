@@ -148,6 +148,9 @@ importers:
       '@types/web-push':
         specifier: ^3.6.4
         version: 3.6.4
+      convex-test:
+        specifier: ^0.0.53
+        version: 0.0.53(convex@1.35.1(react@19.2.4))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -2731,6 +2734,11 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  convex-test@0.0.53:
+    resolution: {integrity: sha512-bouZQTnTvZi8IHljHL++yClj1vcV+/9ZxEcd8JZz7RDxOfPkRKrkMgkk/xlX4M1EAiwcEJPNiQE7VJFvDM3lCQ==}
+    peerDependencies:
+      convex: ^1.32.0
 
   convex@1.35.1:
     resolution: {integrity: sha512-g23KrTjBiXqRHzWIN0PVFagKjrmFxWUaOSiBsAWPTpXX2rXl0L1F4PR0YpAcMJEzMgfZR9AGymJvLTM+KA6lsQ==}
@@ -7614,6 +7622,10 @@ snapshots:
   content-type@1.0.5: {}
 
   convert-source-map@2.0.0: {}
+
+  convex-test@0.0.53(convex@1.35.1(react@19.2.4)):
+    dependencies:
+      convex: 1.35.1(react@19.2.4)
 
   convex@1.35.1(react@19.2.4):
     dependencies:

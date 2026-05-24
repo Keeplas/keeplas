@@ -6,7 +6,11 @@ import {
   query,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { createNotification, requireAuth } from "./helpers";
+import {
+  createNotification,
+  requireAuth,
+  resolveItemRecipients,
+} from "./helpers";
 import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
 import { requireEnv } from "./lib/require_env";
@@ -54,6 +58,54 @@ export const getContact = query({
       throw new Error("Contact not found");
     }
     return contact;
+  },
+});
+
+/**
+ * Summarise what a single contact is routed to receive, for the contact
+ * detail view. NOT standing vault access — a contact never reads vault data.
+ * It lists the vault items that would be released to them on trigger (computed
+ * with the exact same precedence used at release time, via
+ * `resolveItemRecipients`, so the view can never drift from real behaviour)
+ * plus the recipient groups they belong to. Recovery/shard state already
+ * lives on the contact doc, so it is not re-fetched here.
+ */
+export const getContactAccessSummary = query({
+  args: { contactId: v.id("trusted_contacts") },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.userId !== userId) {
+      throw new Error("Contact not found");
+    }
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const releasedItems = [];
+    for (const item of items) {
+      const recipients = await resolveItemRecipients(ctx, item, userId);
+      if (recipients.includes(args.contactId)) {
+        releasedItems.push({
+          _id: item._id,
+          title: item.title,
+          category: item.category,
+          recipientMode: item.recipientMode ?? "default",
+        });
+      }
+    }
+
+    const groups = await ctx.db
+      .query("recipient_groups")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const memberGroups = groups
+      .filter((g) => g.memberContactIds.includes(args.contactId))
+      .map((g) => ({ _id: g._id, name: g.name }));
+
+    return { releasedItems, memberGroups };
   },
 });
 

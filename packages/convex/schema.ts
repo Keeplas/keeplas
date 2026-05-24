@@ -58,7 +58,8 @@ export default defineSchema({
     zkVerifierKey: v.optional(v.string()),
     keeplasShard: v.optional(v.string()),
     // Shamir threshold chosen at onboarding: how many trusted contacts must
-    // collaborate to reconstruct the MasterKey. Min 2, max 5. Once shards are
+    // collaborate to reconstruct the MasterKey. Min 2, max 3 (only the 3
+    // contact shards participate in contacts-only recovery). Once shards are
     // distributed, changing this requires a full re-split + re-distribution.
     vaultThreshold: v.optional(v.number()),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with

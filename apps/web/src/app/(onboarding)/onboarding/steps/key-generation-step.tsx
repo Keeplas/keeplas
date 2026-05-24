@@ -52,7 +52,11 @@ const VISIBLE_PHASES = [
 ] as const;
 
 const MIN_THRESHOLD = 2;
-const MAX_THRESHOLD = 5;
+// Capped at 3: only the 3 trusted-contact shards (slots 2-4) participate in
+// the contacts-only recovery path. The device shard helps the owner locally
+// and the Keeplas custodian shard is never replayed, so a threshold of 4-5
+// would make the vault unrecoverable after the owner is gone.
+const MAX_THRESHOLD = 3;
 const DEFAULT_THRESHOLD = 2;
 
 export function KeyGenerationStep({
@@ -320,7 +324,7 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         {Array.from(
           { length: MAX_THRESHOLD - MIN_THRESHOLD + 1 },
           (_, i) => i + MIN_THRESHOLD,
@@ -356,20 +360,6 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
             <>
               <strong className="text-primary">Balanced.</strong> Any three
               contacts must collaborate. Resistant to single-pair collusion.
-            </>
-          )}
-          {value === 4 && (
-            <>
-              <strong className="text-primary">Strict.</strong> Four out of five
-              contacts must agree. Very strong, but recovery may be hard if some
-              contacts are unavailable.
-            </>
-          )}
-          {value === 5 && (
-            <>
-              <strong className="text-primary">Maximum.</strong> All five
-              contacts must agree. No collusion possible, but a single
-              unreachable contact blocks recovery permanently.
             </>
           )}
         </p>

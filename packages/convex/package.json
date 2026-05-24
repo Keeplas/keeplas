@@ -20,6 +20,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/web-push": "^3.6.4",
+    "convex-test": "^0.0.53",
     "typescript": "^5.8.3",
     "vitest": "^3.2.1"
   }

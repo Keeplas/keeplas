@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   HelpHint,
   Icon,
@@ -16,6 +17,7 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { ContactCard } from "./contact-card";
+import { ContactDetailSheet } from "./contact-detail-sheet";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
 import { DistributeShardsSection } from "./distribute-shards-section";
@@ -57,10 +59,18 @@ export default function TrustedContactsPage() {
     "trust",
   );
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [selectedContact, setSelectedContact] =
+    useState<Doc<"trusted_contacts"> | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   function openInvite(type: "trust" | "recipient_only") {
     setInviteType(type);
     setShowInviteDialog(true);
+  }
+
+  function openContact(contact: Doc<"trusted_contacts">) {
+    setSelectedContact(contact);
+    setSheetOpen(true);
   }
 
   if (contacts === undefined || groups === undefined) {
@@ -342,7 +352,11 @@ export default function TrustedContactsPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {trustContacts.map((contact) => (
-                        <ContactCard key={contact._id} contact={contact} />
+                        <ContactCard
+                          key={contact._id}
+                          contact={contact}
+                          onSelect={openContact}
+                        />
                       ))}
                       {canInviteTrust && (
                         <button
@@ -404,7 +418,11 @@ export default function TrustedContactsPage() {
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {recipientContacts.map((contact) => (
-                            <ContactCard key={contact._id} contact={contact} />
+                            <ContactCard
+                              key={contact._id}
+                              contact={contact}
+                              onSelect={openContact}
+                            />
                           ))}
                           <button
                             onClick={() => openInvite("recipient_only")}
@@ -549,6 +567,11 @@ export default function TrustedContactsPage() {
         open={showCreateGroup}
         onOpenChange={setShowCreateGroup}
         contacts={contacts}
+      />
+      <ContactDetailSheet
+        contact={selectedContact}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
       />
     </div>
   );

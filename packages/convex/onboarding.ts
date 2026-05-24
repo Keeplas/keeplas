@@ -180,8 +180,8 @@ export const storeKeyBundle = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    if (args.vaultThreshold < 2 || args.vaultThreshold > 5) {
-      throw new Error("vaultThreshold must be between 2 and 5");
+    if (args.vaultThreshold < 2 || args.vaultThreshold > 3) {
+      throw new Error("vaultThreshold must be between 2 and 3");
     }
 
     await ctx.db.patch(userId, {
