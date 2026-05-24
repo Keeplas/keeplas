@@ -102,6 +102,34 @@ export const dropVaultItemTags = internalMutation({
 });
 
 /**
+ * Strip the deprecated `verificationEnvelope` field from every trusted_contacts
+ * row. The sentinel round-trip verification path is gone — verification now
+ * happens automatically when the contact unwraps their real `encryptedShard`
+ * (see useReceiveShard). After this migration runs (and the field is observed
+ * undefined on every row), `verificationEnvelope` is removed from the schema.
+ * Idempotent / safe to re-run.
+ */
+export const dropVerificationEnvelopes = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let cleared = 0;
+    const contacts = await ctx.db.query("trusted_contacts").collect();
+    for (const contact of contacts) {
+      // @ts-expect-error verificationEnvelope removed from the validator
+      if (contact.verificationEnvelope !== undefined) {
+        await ctx.db.patch(contact._id, {
+          // @ts-expect-error verificationEnvelope removed from the validator
+          verificationEnvelope: undefined,
+          updatedAt: Date.now(),
+        });
+        cleared++;
+      }
+    }
+    return { cleared };
+  },
+});
+
+/**
  * Convert any legacy vault_items with category="personal_message" to
  * "conditional_message" — the two were redundant and have been collapsed
  * into a single "Letter / Personal Message" category. Idempotent.

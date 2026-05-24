@@ -27,7 +27,7 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
     <button
       type="button"
       onClick={() => onSelect(contact)}
-      className="w-full text-left bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+      className="w-full text-left bg-surface-container-low p-6 rounded-2xl group cursor-pointer hover:bg-surface-container transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-5">

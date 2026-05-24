@@ -82,6 +82,9 @@ export function computeVerificationBadge(
 ): { label: string; className: string; lastVerifiedAt?: number } | null {
   if (contact.invitationStatus !== "accepted") return null;
   if ((contact.contactType ?? "trust") === "recipient_only") return null;
+  // No fragment distributed yet → nothing to verify, so no badge. Verification
+  // is the contact unwrapping their real shard, which can't exist pre-distribution.
+  if (!contact.shardConfirmed) return null;
 
   if (contact.lastVerifiedAt === undefined) {
     return {

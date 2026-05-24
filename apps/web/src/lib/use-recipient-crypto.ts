@@ -48,6 +48,10 @@ export function useRecipientCrypto() {
 
   const ownerSecretKeyRef = useRef<Uint8Array | null>(null);
   const ownerPublicKeyB64Ref = useRef<string | null>(null);
+  // Set only during a master-key rotation: the PREVIOUS owner secret key,
+  // used to read items not yet re-encrypted to the new keypair (see
+  // rotation.ts / encryptedAsymmetricSecretKeyPrev).
+  const ownerPrevSecretKeyRef = useRef<Uint8Array | null>(null);
 
   const ensureOwnerKeypair = useCallback(async (): Promise<{
     publicKeyB64: string;
@@ -161,13 +165,43 @@ export function useRecipientCrypto() {
     [ensureOwnerKeypair],
   );
 
+  /**
+   * Decrypt and cache the previous owner secret key during a rotation. Returns
+   * null when no rotation is in flight. The previous secret is wrapped under
+   * the CURRENT (new) master key, so the live masterKey unwraps it.
+   */
+  const loadPrevSecretKey = useCallback(async (): Promise<Uint8Array | null> => {
+    if (ownerPrevSecretKeyRef.current) return ownerPrevSecretKeyRef.current;
+    if (!masterKey || !viewer?.encryptedAsymmetricSecretKeyPrev) return null;
+
+    const bundle = JSON.parse(viewer.encryptedAsymmetricSecretKeyPrev) as {
+      ciphertext: string;
+      iv: string;
+    };
+    const plaintext = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: base64ToUint8(bundle.iv) },
+      masterKey,
+      base64ToUint8(bundle.ciphertext),
+    );
+    const secretKey = parseSecretKey(new TextDecoder().decode(plaintext));
+    ownerPrevSecretKeyRef.current = secretKey;
+    return secretKey;
+  }, [masterKey, viewer]);
+
   const unwrapOwnerDek = useCallback(
     async (wrap: WrappedDek): Promise<CryptoKey> => {
       const { secretKey } = await ensureOwnerKeypair();
       // unwrapDek already returns an extractable key suitable for re-wrap.
-      return unwrapDek(wrap.wrappedDek, secretKey);
+      try {
+        return await unwrapDek(wrap.wrappedDek, secretKey);
+      } catch (err) {
+        // Mid-rotation: the item may still be wrapped to the previous keypair.
+        const prev = await loadPrevSecretKey();
+        if (prev) return await unwrapDek(wrap.wrappedDek, prev);
+        throw err;
+      }
     },
-    [ensureOwnerKeypair],
+    [ensureOwnerKeypair, loadPrevSecretKey],
   );
 
   /**

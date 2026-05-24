@@ -8,7 +8,6 @@ import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
-import { useVerifyShard } from "./use-verify-shard";
 import { useRecoveryFlow } from "./use-recovery-flow";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -41,6 +40,59 @@ interface SharedVaultCardProps {
   vault: SharedVault;
 }
 
+type PhaseKey = "guarding" | "action_needed" | "recovery" | "released";
+
+interface Phase {
+  key: PhaseKey;
+  label: string;
+  pillClass: string;
+  dotClass: string;
+}
+
+/**
+ * Collapse the contact's many possible states into ONE lifecycle phase so the
+ * card can foreground a single status + primary action. Precedence is
+ * most-advanced-wins: released > recovery > action needed > guarding. (Recovery
+ * can still co-exist with released — it's then shown as a secondary action.)
+ */
+function getVaultPhase(opts: {
+  released: boolean;
+  showRecovery: boolean;
+  canMarkUnreachable: boolean;
+  isRecipientOnly: boolean;
+}): Phase {
+  if (opts.released) {
+    return {
+      key: "released",
+      label: "Released",
+      pillClass: "bg-primary/10 text-primary",
+      dotClass: "bg-primary",
+    };
+  }
+  if (opts.showRecovery) {
+    return {
+      key: "recovery",
+      label: "Recovery",
+      pillClass: "bg-error text-on-error",
+      dotClass: "bg-on-error",
+    };
+  }
+  if (opts.canMarkUnreachable) {
+    return {
+      key: "action_needed",
+      label: "Action needed",
+      pillClass: "bg-error-container/60 text-on-error-container",
+      dotClass: "bg-error",
+    };
+  }
+  return {
+    key: "guarding",
+    label: opts.isRecipientOnly ? "Awaiting release" : "Guarding",
+    pillClass: "bg-surface-container-highest text-on-surface-variant",
+    dotClass: "bg-secondary",
+  };
+}
+
 function formatRelative(ts: number): string {
   const diff = Date.now() - ts;
   const sec = Math.round(diff / 1000);
@@ -63,7 +115,6 @@ function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
 }
 
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
-  const { verify, status, error } = useVerifyShard();
   const markUnreachable = useAuditedMutation(
     api.access_requests.markUserUnreachable,
   );
@@ -87,19 +138,12 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
 
   const isRecipientOnly = (vault.contactType ?? "trust") === "recipient_only";
   const isAccepted = vault.invitationStatus === "accepted";
-  const hasEnvelope = !!vault.verificationEnvelope;
-  const hasKey = !!vault.contactPublicKey;
-  const canVerify = hasEnvelope && hasKey && status !== "running";
-  // Mark-as-unreachable only surfaces once the owner's Life Check has escalated
-  // to the contact-confirmation stage (every check-in went unanswered). Outside
-  // that stage the action is hidden — contacts can't fire it speculatively.
+
   const isAwaitingConfirmation =
     vault.ownerCycleStatus === "awaiting_confirmation";
   const canMarkUnreachable =
     !isRecipientOnly && isAccepted && isAwaitingConfirmation;
 
-  // Recovery section is surfaced once the unreachability quorum has been
-  // reached AND the 72h grace window has expired without cancellation.
   const graceExpired = isGraceExpired(activeRequest?.gracePeriodEndsAt);
   const showRecovery =
     !isRecipientOnly &&
@@ -107,6 +151,21 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
     !!activeRequest?.quorumReached &&
     !activeRequest?.cancelledDuringGrace &&
     graceExpired;
+  const recoveryComplete = recovery.reconstructStatus === "ok";
+
+  const phase = getVaultPhase({
+    released: vault.released,
+    showRecovery,
+    canMarkUnreachable,
+    isRecipientOnly,
+  });
+
+  // Recovery surfaces as the primary action in its own phase, and as a
+  // secondary action under the memorial link once released — collapsed once the
+  // master key is reconstructed so the memorial stays the focus.
+  const showRecoveryBlock =
+    showRecovery && !(phase.key === "released" && recoveryComplete);
+
   const initials = vault.ownerName
     .split(" ")
     .map((n) => n[0])
@@ -114,12 +173,12 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  async function handleVerify() {
-    await verify({
-      contactId: vault._id as Id<"trusted_contacts">,
-      verificationEnvelope: vault.verificationEnvelope,
-    });
-  }
+  // Verification is automatic: useReceiveShard unwraps the real shard on load
+  // and stamps lastVerifiedAt. The label just reflects that server state.
+  const verifiedLabel =
+    vault.lastVerifiedAt !== undefined
+      ? `Verified ${formatRelative(vault.lastVerifiedAt)}`
+      : "Verifying…";
 
   async function handleMarkUnreachable() {
     if (unreachableState !== "confirming") {
@@ -139,67 +198,75 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
     }
   }
 
-  const lastVerifiedLabel =
-    vault.lastVerifiedAt !== undefined
-      ? `Verified ${formatRelative(vault.lastVerifiedAt)}`
-      : "Not yet verified";
-
-  const buttonLabel =
-    status === "running"
-      ? "Verifying..."
-      : status === "ok"
-        ? "Shard verified ✓"
-        : !hasKey
-          ? "Awaiting key"
-          : !hasEnvelope
-            ? "Verification not ready"
-            : "Verify my shard";
-
   return (
     <div className="bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all">
-      <div className="flex items-start justify-between mb-5">
-        <div className="w-12 h-12 rounded-full border-2 border-secondary p-0.5">
+      {/* Header: identity + the single phase chip */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="w-12 h-12 rounded-full border-2 border-secondary p-0.5 shrink-0">
           <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
             <span className="text-label-md text-on-primary-container">
               {initials}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "px-3 py-1 text-label-md rounded-full",
-              isRecipientOnly
-                ? "bg-surface-container-high text-on-surface-variant"
-                : "bg-primary/10 text-primary",
-            )}
-          >
-            {isRecipientOnly ? "Recipient" : "Trust"}
-          </span>
-          <span className="px-3 py-1 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
-            {ROLE_LABELS[vault.role] ?? "Contact"}
-          </span>
-        </div>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-md shrink-0",
+            phase.pillClass,
+          )}
+        >
+          <span className={cn("w-1.5 h-1.5 rounded-full", phase.dotClass)} />
+          {phase.label}
+        </span>
       </div>
 
       <h3 className="text-headline-sm text-primary">{vault.ownerName}</h3>
-      <p className="text-body-md text-on-surface-variant mb-5 truncate">
+      <p className="text-body-md text-on-surface-variant truncate">
         {vault.ownerEmail}
       </p>
 
-      <div className="flex items-center gap-2 flex-wrap mb-5">
-        {vault.shardConfirmed && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center gap-1.5">
-            Fragment Held
-            <HelpHint content="An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. Together with the other trust contacts (recovery threshold set by the owner), you can help reopen the vault — alone you cannot." />
-          </span>
-        )}
+      <div className="flex items-center gap-2 flex-wrap mt-3">
+        <span
+          className={cn(
+            "px-2.5 py-0.5 text-label-md rounded-full",
+            isRecipientOnly
+              ? "bg-surface-container-high text-on-surface-variant"
+              : "bg-primary/10 text-primary",
+          )}
+        >
+          {isRecipientOnly ? "Recipient" : "Trust"}
+        </span>
+        <span className="px-2.5 py-0.5 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
+          {ROLE_LABELS[vault.role] ?? "Contact"}
+        </span>
       </div>
 
-      {vault.released && (
+      {/* Compact custody + verification status (trust contacts only) */}
+      {!isRecipientOnly && (
+        <div className="flex items-center gap-1.5 mt-4 min-w-0">
+          <span className="text-label-md text-on-surface-variant truncate">
+            {vault.shardConfirmed
+              ? `Fragment held · ${verifiedLabel}`
+              : "No fragment yet"}
+          </span>
+          <HelpHint content="An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. With the other trust contacts (threshold set by the owner) you can help reopen the vault — alone you cannot. It re-verifies automatically each time you open this page, so the owner knows you can still unwrap it." />
+        </div>
+      )}
+
+      {/* ── Primary action zone, by phase ── */}
+
+      {phase.key === "guarding" && (
+        <p className="text-label-md text-on-surface-variant mt-5">
+          {isRecipientOnly
+            ? `You'll receive what ${vault.ownerName} left you here if their vault is ever released.`
+            : `Nothing to do for now — you'll be asked to help only if ${vault.ownerName} stops responding to their check-ins.`}
+        </p>
+      )}
+
+      {phase.key === "released" && (
         <Link
           href={`/shared-with-me/${vault._id}/memorial`}
-          className="flex items-center justify-between gap-3 mb-5 px-4 py-3 rounded-xl bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity"
+          className="vault-gradient text-on-primary flex items-center justify-between gap-3 mt-5 px-4 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
         >
           <span>View memorial vault</span>
           <span className="text-label-md opacity-80">
@@ -209,50 +276,14 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         </Link>
       )}
 
-      {!isRecipientOnly && (
-        <div className="pt-5 border-t border-outline-variant/15 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-label-md text-on-surface-variant">
-              {lastVerifiedLabel}
+      {phase.key === "action_needed" && (
+        <div className="mt-5 space-y-2">
+          <p className="text-label-md text-on-surface-variant inline-flex items-start gap-1.5">
+            <span>
+              {vault.ownerName} stopped responding to their check-ins. If you
+              genuinely can&apos;t reach them, confirm it.
             </span>
-            <button
-              onClick={handleVerify}
-              disabled={!canVerify}
-              className="text-body-md font-bold text-secondary hover:underline cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:no-underline"
-            >
-              {buttonLabel}
-            </button>
-          </div>
-          {status === "error" && error && (
-            <p className="text-label-md text-error">{error}</p>
-          )}
-          {status === "ok" && (
-            <p className="text-label-md text-on-surface-variant">
-              Your keypair unwrapped the test envelope correctly. The vault
-              owner will see this confirmation.
-            </p>
-          )}
-          {!hasKey && (
-            <p className="text-label-md text-on-surface-variant">
-              The vault owner provisions your verification key after you accept
-              your invitation. Check back later.
-            </p>
-          )}
-          {hasKey && !hasEnvelope && (
-            <p className="text-label-md text-on-surface-variant">
-              The vault owner hasn&apos;t enabled verification on their side
-              yet.
-            </p>
-          )}
-        </div>
-      )}
-
-      {canMarkUnreachable && (
-        <div className="pt-5 mt-5 border-t border-outline-variant/15 space-y-2">
-          <p className="text-label-md text-on-surface-variant">
-            If you genuinely cannot reach {vault.ownerName} and Life Check has
-            already escalated, you can confirm they are unreachable. Two trust
-            contacts must confirm before the 72h grace window opens.
+            <HelpHint content="Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes can the vault be recovered/released." />
           </p>
           {unreachableState === "confirming" ? (
             <div className="flex gap-2">
@@ -280,7 +311,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
               className="w-full text-sm px-3 py-2 rounded-lg bg-error/10 hover:bg-error/15 text-error font-medium transition-colors cursor-pointer disabled:opacity-60"
             >
               {unreachableState === "running"
-                ? "Submitting..."
+                ? "Submitting…"
                 : "Mark as unreachable"}
             </button>
           )}
@@ -290,12 +321,20 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         </div>
       )}
 
-      {showRecovery && (
-        <div className="pt-5 mt-5 border-t border-outline-variant/15 space-y-3">
+      {/* Recovery: primary in its phase, secondary under the memorial link */}
+      {showRecoveryBlock && (
+        <div
+          className={cn(
+            "space-y-3",
+            phase.key === "released"
+              ? "pt-4 mt-4 border-t border-outline-variant/15"
+              : "mt-5",
+          )}
+        >
           <div className="flex items-center justify-between">
             <h4 className="text-label-md font-bold uppercase tracking-wide text-error inline-flex items-center gap-2">
               Recovery in progress
-              <HelpHint content="The 72h grace window passed without the vault owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards." />
+              <HelpHint content="The 72h grace window passed without the owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards." />
             </h4>
             <span className="text-label-md text-on-surface-variant">
               {recovery.submissionCount} submission

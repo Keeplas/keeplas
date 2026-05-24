@@ -50,6 +50,12 @@ export default defineSchema({
     // wrapped client-side under their MasterKey. Stored separately from
     // `encryptedKeyBundle` to avoid overwriting the MasterKey bundle.
     encryptedAsymmetricSecretKey: v.optional(v.string()),
+    // Transitional only — set during a master-key rotation (return-after-release
+    // flow). The PREVIOUS owner ML-KEM secret key, re-wrapped under the NEW
+    // MasterKey, so items still wrapped to the old keypair stay readable while
+    // they are re-encrypted item-by-item. Cleared by `rotation.finalizeRotation`
+    // once every item has migrated to the new keypair.
+    encryptedAsymmetricSecretKeyPrev: v.optional(v.string()),
     // Per-user salt for Argon2id derivation of the RootKey. Public — served
     // alongside the bundle so the client can re-derive the RootKey on login.
     phraseSalt: v.optional(v.string()),
@@ -442,11 +448,10 @@ export default defineSchema({
     shardConfirmed: v.optional(v.boolean()),
     shardConfirmedAt: v.optional(v.number()),
 
-    // Round-trip verification: the owner's client wraps a known plaintext to
-    // the contact's ML-KEM public key once they accept. The contact can then
-    // unwrap it on-device to prove their keypair is functional, without
-    // exposing any vault content. `lastVerifiedAt` is stamped on success.
-    verificationEnvelope: v.optional(v.string()),
+    // Stamped automatically after a successful on-device shard unwrap (see
+    // useReceiveShard) — the contact decrypting their real `encryptedShard` is
+    // the verification. The legacy sentinel `verificationEnvelope` field was
+    // dropped (migrations.ts:dropVerificationEnvelopes).
     lastVerifiedAt: v.optional(v.number()),
 
     contactRecoveryHash: v.optional(v.string()),

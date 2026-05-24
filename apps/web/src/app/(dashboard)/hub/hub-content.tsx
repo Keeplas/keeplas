@@ -13,6 +13,7 @@ import {
   UserAvatar,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { ReturnAfterReleaseBanner } from "@/components/return-after-release-banner";
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { getInitials } from "@/lib/user";
@@ -111,6 +112,8 @@ export function HubContent() {
           <ContinuityScoreBadge score={continuityScore} label={scoreLabel} />
         </a>
       </header>
+
+      <ReturnAfterReleaseBanner />
 
       {/* Life Map Canvas */}
       <div

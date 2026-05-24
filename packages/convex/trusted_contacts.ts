@@ -570,43 +570,10 @@ export const storeEncryptedShard = auditedMutation({
 });
 
 /**
- * Store the round-trip verification envelope for a contact. The owner's
- * client wraps a known plaintext to the contact's ML-KEM public key — the
- * contact later unwraps it on-device to prove their keypair is functional.
- * No vault data is ever embedded in the envelope.
- */
-export const setVerificationEnvelope = auditedMutation({
-  action: "trusted_contact.verification_envelope_set",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  args: {
-    contactId: v.id("trusted_contacts"),
-    verificationEnvelope: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-    if (contact.invitationStatus !== "accepted") {
-      throw new Error("Contact must accept the invitation first");
-    }
-
-    await ctx.db.patch(args.contactId, {
-      verificationEnvelope: args.verificationEnvelope,
-      updatedAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
- * Stamp `lastVerifiedAt` after the contact successfully unwrapped the
- * verification envelope on their device. Called by the contact, not the
- * vault owner — the audit entry lives on the owner's chain.
+ * Stamp `lastVerifiedAt` after the contact successfully unwrapped their
+ * encrypted shard on their device (see useReceiveShard) — a fresh unwrap is
+ * the liveness proof. Called by the contact, not the vault owner, so the
+ * audit entry lives on the owner's chain.
  */
 export const confirmShardVerified = auditedMutation({
   action: "trusted_contact.shard_verified",
@@ -635,6 +602,12 @@ export const confirmShardVerified = auditedMutation({
     }
     if (contact.invitationStatus !== "accepted") {
       throw new Error("Access has been revoked");
+    }
+    // Verification proves the contact can unwrap their shard — it is
+    // meaningless before one has been distributed. Enforce at the boundary so
+    // the badge can never light up without a real fragment in custody.
+    if (!contact.shardConfirmed) {
+      throw new Error("No shard distributed to verify");
     }
 
     await ctx.db.patch(args.contactId, {

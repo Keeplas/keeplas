@@ -23,7 +23,6 @@ import { AccessRequestsSection } from "./access-requests-section";
 import { DistributeShardsSection } from "./distribute-shards-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
-import { useBackfillVerificationEnvelopes } from "./use-backfill-verification-envelopes";
 import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "@/lib/use-distribute-shards";
 
 const MAX_TRUST_CONTACTS = 5;
@@ -53,7 +52,6 @@ export default function TrustedContactsPage() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const me = useQuery(api.onboarding.getOnboardingState);
-  useBackfillVerificationEnvelopes(contacts);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
     "trust",

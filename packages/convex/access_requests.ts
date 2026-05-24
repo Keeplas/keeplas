@@ -467,3 +467,77 @@ export const cancelEmergencyAccess = auditedMutation({
     return { success: true };
   },
 });
+
+/**
+ * Owner returned AFTER a release already fired: revoke the granted access.
+ *
+ * Unlike `cancelEmergencyAccess` (which only works during the 72h grace, on
+ * "pending" requests), this closes already-"approved" release requests — the
+ * state `confirmAlive` never touches. It flips every approved request for the
+ * owner's vault to "revoked" and deletes the wrapped recovery shards, which
+ * immediately starves every contact-facing read path (they all gate on
+ * status === "approved": getVaultsWhereIAmContact, resolveApprovedRelease).
+ *
+ * NOTE (zero-knowledge): this severs FUTURE app access only. It cannot claw
+ * back item content a contact already decrypted on their device during the
+ * release window — that requires the client-side master-key rotation flow.
+ */
+export const revokeReleasedAccess = auditedMutation({
+  action: "access_request.revoked_after_return",
+  resourceType: "user",
+  args: {},
+  getMetadata: (_args, result) => result as Record<string, unknown>,
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+
+    const approved = await ctx.db
+      .query("access_requests")
+      .withIndex("by_status", (q) =>
+        q.eq("vaultUserId", userId).eq("status", "approved"),
+      )
+      .collect();
+
+    const affectedContactUsers = new Set<Id<"users">>();
+
+    for (const req of approved) {
+      // Drop the wrapped Shamir shards tied to this request so they can no
+      // longer be served for on-device master-key reconstruction.
+      const shards = await ctx.db
+        .query("recovery_shard_submissions")
+        .withIndex("by_request", (q) => q.eq("accessRequestId", req._id))
+        .collect();
+      for (const shard of shards) {
+        await ctx.db.delete(shard._id);
+      }
+
+      await ctx.db.patch(req._id, {
+        status: "revoked",
+        respondedAt: now,
+        updatedAt: now,
+      });
+
+      const contact = await ctx.db.get(req.requestedBy);
+      if (contact?.contactUserId) {
+        affectedContactUsers.add(contact.contactUserId);
+      }
+    }
+
+    for (const contactUserId of affectedContactUsers) {
+      await createNotification(ctx, {
+        userId: contactUserId,
+        type: "security_alert",
+        title: "Vault access revoked",
+        body: "The vault owner has returned and revoked the access that was released to you.",
+        actionUrl: "/shared-with-me",
+        channels: ["push", "email"],
+        relatedType: "access_request",
+      });
+    }
+
+    return {
+      revokedCount: approved.length,
+      contactsNotified: affectedContactUsers.size,
+    };
+  },
+});

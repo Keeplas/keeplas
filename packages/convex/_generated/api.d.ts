@@ -38,6 +38,7 @@ import type * as phone_verification from "../phone_verification.js";
 import type * as push_subscriptions from "../push_subscriptions.js";
 import type * as recipient_groups from "../recipient_groups.js";
 import type * as release from "../release.js";
+import type * as rotation from "../rotation.js";
 import type * as shared_types from "../shared_types.js";
 import type * as support from "../support.js";
 import type * as testing from "../testing.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   push_subscriptions: typeof push_subscriptions;
   recipient_groups: typeof recipient_groups;
   release: typeof release;
+  rotation: typeof rotation;
   shared_types: typeof shared_types;
   support: typeof support;
   testing: typeof testing;

@@ -11,6 +11,7 @@ import {
   getStoredShard,
   putStoredShard,
 } from "@/lib/recovery-shard-store";
+import { STALE_VERIFICATION_THRESHOLD_MS } from "../trusted-contacts/contact-display";
 
 interface IncomingVault {
   _id: Id<"trusted_contacts">;
@@ -90,32 +91,41 @@ export function useReceiveShard(
           const existing = await getStoredShard(vault.userId);
           const alreadyHaveCurrent = existing && existing.envelopeHash === fp;
 
-          let didUnwrap = alreadyHaveCurrent;
-          if (!alreadyHaveCurrent) {
-            try {
-              const raw = await unwrapBytes(envelope, secretKey);
+          // Re-verify when the owner has never seen a stamp or it has gone
+          // stale (periodic liveness). A *fresh* unwrap is the proof, so we
+          // also unwrap when stale even if the local copy is already current.
+          const needsVerification =
+            !vault.lastVerifiedAt ||
+            Date.now() - vault.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS;
+
+          // Nothing to do: local shard is current and verification is fresh.
+          if (alreadyHaveCurrent && !needsVerification) continue;
+
+          let unwrapped = false;
+          try {
+            const raw = await unwrapBytes(envelope, secretKey);
+            if (!alreadyHaveCurrent) {
               await putStoredShard({
                 ownerUserId: vault.userId,
                 rawShard: raw,
                 envelopeHash: fp,
                 storedAt: Date.now(),
               });
-              didUnwrap = true;
-            } catch {
-              // Single envelope failure shouldn't block the others — likely
-              // means the owner re-distributed with a different key while
-              // the contact was offline. They'll see "Hash not yet verified"
-              // until the owner re-runs distribution.
-              didUnwrap = false;
             }
+            unwrapped = true;
+          } catch {
+            // Single envelope failure shouldn't block the others — likely
+            // means the owner re-distributed with a different key while
+            // the contact was offline. They'll see "Hash not yet verified"
+            // until the owner re-runs distribution.
+            unwrapped = false;
           }
 
-          // Successfully unwrapping the shard is a stronger proof than the
-          // round-trip envelope check — stamp `lastVerifiedAt` so the owner
-          // sees "Hash verified Xd ago" without requiring a manual click.
-          // Only re-stamp once per session per envelope to avoid mutation
-          // spam on every page load.
-          if (didUnwrap && !vault.lastVerifiedAt) {
+          // Successfully unwrapping the real shard is the verification — a
+          // stronger proof than any round-trip sentinel — so stamp
+          // `lastVerifiedAt` automatically. Bounded by `needsVerification`
+          // to avoid mutation spam on every page load.
+          if (unwrapped && needsVerification) {
             try {
               await confirmShardVerified({ contactId: vault._id });
             } catch {
