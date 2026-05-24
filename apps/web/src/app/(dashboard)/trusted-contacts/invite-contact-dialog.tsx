@@ -23,6 +23,7 @@ import {
   HelpHint,
   PhoneInput,
   isValidPhone,
+  isValidEmail,
   cn,
 } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
@@ -81,7 +82,15 @@ export function InviteContactDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
+    if (!name.trim()) return;
+    if (!email.trim() && !phone) {
+      setError("Add an email or a phone number");
+      return;
+    }
+    if (email.trim() && !isValidEmail(email)) {
+      setError("Please enter a valid email");
+      return;
+    }
     if (phone && !isValidPhone(phone)) {
       setError("Please enter a valid phone number");
       return;
@@ -97,7 +106,7 @@ export function InviteContactDialog({
         introMessage.trim().length > 0;
       const result = await inviteContact({
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        email: email.trim() ? email.trim().toLowerCase() : undefined,
         phoneNumber: phone || undefined,
         role,
         contactType,
@@ -155,20 +164,22 @@ export function InviteContactDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-email">Email *</Label>
+            <Label htmlFor="contact-email">Email</Label>
             <Input
               id="contact-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contact@example.com"
-              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-phone">Phone (optional)</Label>
+            <Label htmlFor="contact-phone">Phone</Label>
             <PhoneInput id="contact-phone" value={phone} onChange={setPhone} />
+            <p className="text-label-md text-on-surface-variant">
+              Add an email, a phone number, or both — at least one is required.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -234,7 +245,7 @@ export function InviteContactDialog({
             </div>
           </div>
 
-          {contactType === "recipient_only" && (
+          {contactType === "recipient_only" && email.trim() && (
             <div className="space-y-3 bg-surface-container-low rounded-xl p-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -287,7 +298,7 @@ export function InviteContactDialog({
               type="submit"
               variant="vault"
               size="md"
-              disabled={saving || !name.trim() || !email.trim()}
+              disabled={saving || !name.trim() || (!email.trim() && !phone)}
               className="flex-1 cursor-pointer"
             >
               {saving

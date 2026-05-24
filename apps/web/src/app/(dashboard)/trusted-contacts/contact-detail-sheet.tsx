@@ -172,7 +172,7 @@ function ContactDetailBody({
         <section>
           <SectionLabel>Details</SectionLabel>
           <dl className="space-y-2.5">
-            <DetailRow label="Email" value={contact.email} />
+            {contact.email && <DetailRow label="Email" value={contact.email} />}
             {contact.phoneNumber && (
               <DetailRow label="Phone" value={contact.phoneNumber} />
             )}

@@ -13,6 +13,7 @@ import {
 } from "./helpers";
 import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
+import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 
 const MAX_TRUST_CONTACTS = 5;
@@ -140,7 +141,7 @@ export const inviteContact = auditedMutation({
   }),
   args: {
     name: v.string(),
-    email: v.string(),
+    email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
     role: v.union(
       v.literal("family"),
@@ -157,6 +158,17 @@ export const inviteContact = auditedMutation({
     const contactType = args.contactType ?? "trust";
     const introMessage = args.introMessage?.trim() || undefined;
 
+    // A contact is reachable by email, phone, or both — but at least one
+    // identifier is required. `normalizeE164` also validates the phone format.
+    const email = args.email?.trim() ? normalizeEmail(args.email) : undefined;
+    const phoneNumber = normalizeE164(args.phoneNumber);
+    if (!email && !phoneNumber) {
+      throw new Error("Add an email or a phone number");
+    }
+    if (email && !isValidEmail(email)) {
+      throw new Error("Please enter a valid email");
+    }
+
     const existing = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -172,11 +184,15 @@ export const inviteContact = auditedMutation({
       }
     }
 
-    const duplicate = existing.find(
-      (c) => c.email.toLowerCase() === args.email.toLowerCase(),
-    );
-    if (duplicate) {
+    // Dedup on whichever identifier(s) the invite carries.
+    if (email && existing.some((c) => c.email?.toLowerCase() === email)) {
       throw new Error("A contact with this email already exists");
+    }
+    if (
+      phoneNumber &&
+      existing.some((c) => normalizeE164(c.phoneNumber) === phoneNumber)
+    ) {
+      throw new Error("A contact with this phone number already exists");
     }
 
     const tokenBytes = new Uint8Array(32);
@@ -190,8 +206,8 @@ export const inviteContact = auditedMutation({
     const baseFields = {
       userId,
       name: args.name,
-      email: args.email,
-      phoneNumber: normalizeE164(args.phoneNumber),
+      email,
+      phoneNumber,
       role: args.role,
       contactType,
       invitationStatus: "pending" as const,
@@ -239,12 +255,13 @@ export const inviteContact = auditedMutation({
       relatedType: "trusted_contact",
     });
 
-    // Trust contacts always get an email with the acceptance link.
-    // Recipient-only contacts only get one when the inviter opted into the
-    // courtesy intro (introMessage carries that intent).
+    // Email is the acceptance-link channel for trust contacts, and the
+    // courtesy-intro channel for recipient-only contacts who opted in — only
+    // possible when an email is on file (phone-only contacts skip it).
     const shouldEmail =
-      contactType === "trust" ||
-      (contactType === "recipient_only" && !!introMessage);
+      !!email &&
+      (contactType === "trust" ||
+        (contactType === "recipient_only" && !!introMessage));
     if (shouldEmail) {
       await ctx.scheduler.runAfter(
         0,
@@ -293,7 +310,7 @@ export const getInvitationByToken = query({
     return {
       _id: contact._id,
       name: contact.name,
-      email: contact.email,
+      email: contact.email ?? null,
       phoneNumber: contact.phoneNumber ?? null,
       role: contact.role,
       invitationStatus: contact.invitationStatus,
@@ -705,11 +722,24 @@ export const resendInvitation = auditedMutation({
       updatedAt: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.trusted_contacts.sendInvitationEmail,
-      { contactId: args.contactId },
-    );
+    // Re-deliver on whichever channel the contact has on file. Email carries
+    // the accept link; for trust contacts with a phone, WhatsApp does too —
+    // and is the only channel for phone-only contacts.
+    if (contact.email) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.trusted_contacts.sendInvitationEmail,
+        { contactId: args.contactId },
+      );
+    }
+    if ((contact.contactType ?? "trust") === "trust" && contact.phoneNumber) {
+      const inviter = await ctx.db.get(userId);
+      await ctx.scheduler.runAfter(0, internal.dispatch.sendInvitationWhatsApp, {
+        phoneNumber: contact.phoneNumber,
+        inviterName: inviter?.name?.trim() || "A Keeplas user",
+        invitationToken,
+      });
+    }
 
     return { invitationToken };
   },
@@ -863,6 +893,7 @@ export const sendInvitationEmail = internalAction({
     );
     if (!data) return "contact_not_found";
     if (data.invitationStatus !== "pending") return "not_pending";
+    if (!data.email) return "no_email";
 
     const from = requireEnv("RESEND_FROM_EMAIL");
     const appUrl = requireEnv("APP_URL");

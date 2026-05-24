@@ -65,10 +65,10 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
         </div>
       </div>
 
-      {/* Name + Email */}
+      {/* Name + primary identifier (email, falling back to phone) */}
       <h3 className="text-headline-sm text-primary">{contact.name}</h3>
       <p className="text-body-md text-on-surface-variant mb-5 truncate">
-        {contact.email}
+        {contact.email ?? contact.phoneNumber}
       </p>
 
       {/* Role + verification badges (details live in the contact sheet) */}

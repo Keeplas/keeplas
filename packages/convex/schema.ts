@@ -419,7 +419,9 @@ export default defineSchema({
     contactUserId: v.optional(v.id("users")),
 
     name: v.string(),
-    email: v.string(),
+    // At least one of email / phoneNumber is provided (enforced in
+    // inviteContact); a contact can be invited by either channel or both.
+    email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     role: v.union(
