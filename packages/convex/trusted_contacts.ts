@@ -860,6 +860,18 @@ export const getVaultsWhereIAmContact = query({
         .order("desc")
         .first();
 
+      // Whether the owner's vault has been released to this contact — drives
+      // the "View memorial vault" entry point. One approved access_request per
+      // contact aggregates all their released item ids (release.fanOutRelease).
+      const approved = await ctx.db
+        .query("access_requests")
+        .withIndex("by_requester", (q) => q.eq("requestedBy", contact._id))
+        .filter((q) => q.eq(q.field("status"), "approved"))
+        .first();
+      const releasedItemCount = approved
+        ? approved.sectionsRequested.filter((s) => s.startsWith("item:")).length
+        : 0;
+
       const trimmedName = owner?.name?.trim() || "";
       const email = owner?.email ?? "";
       const localPart = email.split("@")[0] ?? "";
@@ -871,6 +883,8 @@ export const getVaultsWhereIAmContact = query({
         ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
         ownerCycleEscalatedAt: activeCycle?.levelReachedAt ?? null,
+        released: !!approved,
+        releasedItemCount,
       });
     }
     return result;

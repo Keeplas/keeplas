@@ -144,6 +144,12 @@ export const resolveTarget = internalQuery({
  * is auth-gated to a contact's own session, so it can't be driven from a script
  * — this short-circuits to the same end state, skipping the 72h grace. The
  * caller fires releaseAfterConfirmation immediately afterwards.
+ *
+ * `gracePeriodEndsAt` is set to the PAST: a real quorum opens the 72h grace, and
+ * the collapsed-timer tests want it already elapsed. This also lets the contact
+ * recovery UI surface ("Submit my shard" requires a pending, quorum-reached
+ * request whose grace has expired — see shared-vault-card.tsx) when seedQuorum
+ * is used WITHOUT a following release (see seedRecoveryReady).
  */
 export const seedQuorum = internalMutation({
   args: { userId: v.id("users") },
@@ -167,6 +173,8 @@ export const seedQuorum = internalMutation({
       .slice(0, Math.max(threshold, 1))
       .map((c) => c._id);
     const now = Date.now();
+    // 72h grace already elapsed (one second in the past).
+    const gracePeriodEndsAt = now - 1000;
 
     const existing = await ctx.db
       .query("access_requests")
@@ -180,6 +188,7 @@ export const seedQuorum = internalMutation({
         contactsInitiated: initiated,
         quorumRequired: threshold,
         quorumReached: true,
+        gracePeriodEndsAt,
         updatedAt: now,
       });
       return { requestId: existing._id };
@@ -193,6 +202,7 @@ export const seedQuorum = internalMutation({
       autoResponseAt: now,
       quorumRequired: threshold,
       quorumReached: true,
+      gracePeriodEndsAt,
       contactsInitiated: initiated,
       createdAt: now,
       updatedAt: now,
@@ -449,6 +459,86 @@ export const runEscalation = internalAction({
       steps,
       message:
         "Escalation Protocol executed. Run testing:summary (or check the dashboard) to see the result.",
+    };
+  },
+});
+
+/**
+ * Park the system in the exact state the CONTACT recovery UI reads, so a trusted
+ * contact can exercise "Submit my shard" -> "Reconstruct master key" in
+ * /shared-with-me without waiting for the real windows:
+ *   1. ensure a cycle in `awaiting_confirmation` (notifies the trust contacts)
+ *   2. seed a PENDING, quorum-reached access_request whose 72h grace has already
+ *      elapsed (seedQuorum)
+ *
+ * Unlike runEscalation it stops BEFORE the release, so the pending request the
+ * UI depends on is left in place — getActiveAccessRequestForContact filters
+ * status="pending", and shared-vault-card.tsx requires quorumReached + an
+ * expired gracePeriodEndsAt to show the recovery section. runEscalation instead
+ * drives all the way to `triggered`/`approved`, which closes that request.
+ */
+export const seedRecoveryReady = internalAction({
+  args: { email: v.optional(v.string()) },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    ok: boolean;
+    email: string;
+    cycleId: Id<"life_check_cycles"> | null;
+    requestId: Id<"access_requests"> | null;
+    message: string;
+  }> => {
+    const t: Target = await ctx.runQuery(internal.testing.resolveTarget, {
+      email: args.email,
+    });
+    if (!t.trustContactId) {
+      throw new Error(
+        "Owner has no trusted contacts — there is no one to recover the vault",
+      );
+    }
+
+    // Ensure a cycle parked in awaiting_confirmation.
+    let cycleId = t.inFlightCycleId;
+    let status = t.inFlightStatus;
+    if (!cycleId) {
+      await ctx.runMutation(internal.life_check.initiateCycle, {
+        configId: t.configId,
+      });
+      const s: Target = await ctx.runQuery(internal.testing.resolveTarget, {
+        email: args.email,
+      });
+      cycleId = s.inFlightCycleId;
+      status = s.inFlightStatus;
+    }
+    if (!cycleId) {
+      return {
+        ok: false,
+        email: t.email,
+        cycleId: null,
+        requestId: null,
+        message:
+          "Could not start a cycle — config inactive, in travel mode, or no enabled channel.",
+      };
+    }
+    if (status === "running") {
+      await ctx.runMutation(internal.life_check.enterConfirmationStage, {
+        cycleId,
+      });
+    }
+
+    // Seed the pending quorum-reached request with the grace already expired.
+    const { requestId }: { requestId: Id<"access_requests"> } =
+      await ctx.runMutation(internal.testing.seedQuorum, { userId: t.userId });
+
+    return {
+      ok: true,
+      email: t.email,
+      cycleId,
+      requestId,
+      message:
+        "Recovery-ready: cycle awaiting_confirmation + a pending, grace-expired access_request. " +
+        "Each trust contact can now open /shared-with-me, Submit my shard, then Reconstruct master key.",
     };
   },
 });

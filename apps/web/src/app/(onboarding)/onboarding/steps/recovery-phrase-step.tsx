@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Loader } from "@keeplas/ui";
 import { generatePhrase } from "@keeplas/crypto/recovery";
@@ -21,6 +21,7 @@ export function RecoveryPhraseStep({
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   const advanceStep = useMutation(api.onboarding.advanceOnboardingStep);
+  const user = useQuery(api.users.viewer);
 
   useEffect(() => {
     if (!phrase) {
@@ -42,6 +43,13 @@ export function RecoveryPhraseStep({
     if (!phrase || exporting) return;
     setExporting(true);
     try {
+      const accountId = user?.email ?? user?.phoneNumber ?? null;
+      const accountSlug =
+        (accountId ?? "account")
+          .replace(/[^a-z0-9]+/gi, "-")
+          .replace(/^-+|-+$/g, "")
+          .toLowerCase() || "account";
+
       const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -55,6 +63,12 @@ export function RecoveryPhraseStep({
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(18);
       pdf.text("Keeplas — Master Recovery Words", marginX, cursorY);
+
+      cursorY += 8;
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.setTextColor(60);
+      pdf.text(`Account: ${accountId ?? "—"}`, marginX, cursorY);
 
       cursorY += 10;
       pdf.setFont("helvetica", "normal");
@@ -101,7 +115,7 @@ export function RecoveryPhraseStep({
       );
       pdf.text(copyPasteWrapped, marginX, cursorY);
 
-      pdf.save("keeplas-recovery-words.pdf");
+      pdf.save(`keeplas-recovery-words-${accountSlug}.pdf`);
     } finally {
       setExporting(false);
     }

@@ -185,6 +185,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap
 - [`PRD/Design/`](./PRD/Design) — wireframes and design tokens
 - [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
+- [`docs/TRUSTED_CONTACTS_SHARDS.md`](./docs/TRUSTED_CONTACTS_SHARDS.md) — trusted contacts, shard distribution & recovery
 - [`CLAUDE.md`](./CLAUDE.md) — engineering conventions for AI assistants & humans
 
 ## Contributing

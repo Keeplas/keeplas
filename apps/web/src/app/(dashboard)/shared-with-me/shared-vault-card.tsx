@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "convex/react";
 import { cn, HelpHint } from "@keeplas/ui";
+import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
@@ -29,6 +31,10 @@ interface SharedVault extends Doc<"trusted_contacts"> {
     | "cancelled"
     | null;
   ownerCycleEscalatedAt: number | null;
+  // The owner's vault has been released to this contact (an approved
+  // access_request exists) — gates the "View memorial vault" entry point.
+  released: boolean;
+  releasedItemCount: number;
 }
 
 interface SharedVaultCardProps {
@@ -126,7 +132,9 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       await markUnreachable({ contactId: vault._id as Id<"trusted_contacts"> });
       setUnreachableState("done");
     } catch (err) {
-      setUnreachableError(err instanceof Error ? err.message : String(err));
+      setUnreachableError(
+        getErrorMessage(err, "Could not confirm unreachability."),
+      );
       setUnreachableState("error");
     }
   }
@@ -187,6 +195,19 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           </span>
         )}
       </div>
+
+      {vault.released && (
+        <Link
+          href={`/shared-with-me/${vault._id}/memorial`}
+          className="flex items-center justify-between gap-3 mb-5 px-4 py-3 rounded-xl bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity"
+        >
+          <span>View memorial vault</span>
+          <span className="text-label-md opacity-80">
+            {vault.releasedItemCount} item
+            {vault.releasedItemCount === 1 ? "" : "s"} →
+          </span>
+        </Link>
+      )}
 
       {!isRecipientOnly && (
         <div className="pt-5 border-t border-outline-variant/15 space-y-3">

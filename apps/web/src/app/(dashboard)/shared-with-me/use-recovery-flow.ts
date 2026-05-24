@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useQuery } from "convex/react";
 import { reconstruct } from "@keeplas/crypto/shamir";
 import { wrapBytes, unwrapBytes } from "@keeplas/crypto/kem";
+import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { getStoredShard } from "@/lib/recovery-shard-store";
@@ -117,7 +118,7 @@ export function useRecoveryFlow({
       });
       setSubmitStatus("ok");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = getErrorMessage(err, "Could not submit your shard.");
       if (msg.includes("already submitted")) {
         setSubmitStatus("already_submitted");
       } else {
@@ -161,8 +162,9 @@ export function useRecoveryFlow({
       setReconstructStatus("ok");
       return masterKey;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setReconstructError(msg);
+      setReconstructError(
+        getErrorMessage(err, "Could not reconstruct the master key."),
+      );
       setReconstructStatus("error");
       return null;
     }

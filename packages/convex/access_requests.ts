@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
@@ -71,7 +71,7 @@ export const markUserUnreachable = auditedMutation({
   resolveActor: async (ctx, args) => {
     const requesterId = await requireAuth(ctx);
     const contact = await ctx.db.get(args.contactId);
-    if (!contact) throw new Error("Contact not found");
+    if (!contact) throw new ConvexError("Contact not found");
     return {
       chainUserId: contact.userId,
       actorType: "trusted_contact",
@@ -84,13 +84,15 @@ export const markUserUnreachable = auditedMutation({
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.contactUserId !== requesterId) {
-      throw new Error("Not authorized");
+      throw new ConvexError("Not authorized");
     }
     if (contact.invitationStatus !== "accepted") {
-      throw new Error("Contact must be accepted to confirm unreachability");
+      throw new ConvexError(
+        "Contact must be accepted to confirm unreachability",
+      );
     }
     if ((contact.contactType ?? "trust") !== "trust") {
-      throw new Error("Only trust contacts can confirm unreachability");
+      throw new ConvexError("Only trust contacts can confirm unreachability");
     }
 
     // Gate: contacts may only confirm once the owner's Life Check has escalated
@@ -102,7 +104,7 @@ export const markUserUnreachable = auditedMutation({
       )
       .first();
     if (!cycle) {
-      throw new Error(
+      throw new ConvexError(
         "This vault owner's Life Check has not requested contact confirmation.",
       );
     }
@@ -149,7 +151,7 @@ export const markUserUnreachable = auditedMutation({
     if (existing) {
       const contactsInitiated = existing.contactsInitiated ?? [];
       if (contactsInitiated.includes(args.contactId)) {
-        throw new Error("You have already confirmed unreachability");
+        throw new ConvexError("You have already confirmed unreachability");
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
@@ -232,10 +234,10 @@ export const getRecoveryPeers = query({
     const requesterId = await requireAuth(ctx);
     const myRow = await ctx.db.get(args.contactId);
     if (!myRow || myRow.contactUserId !== requesterId) {
-      throw new Error("Not authorized");
+      throw new ConvexError("Not authorized");
     }
     if ((myRow.contactType ?? "trust") !== "trust") {
-      throw new Error("Caller is not a trust contact");
+      throw new ConvexError("Caller is not a trust contact");
     }
 
     const peers = await ctx.db
@@ -281,7 +283,7 @@ export const submitRecoveryShards = auditedMutation({
   resolveActor: async (ctx, args) => {
     const requesterId = await requireAuth(ctx);
     const contact = await ctx.db.get(args.submitterContactId);
-    if (!contact) throw new Error("Contact not found");
+    if (!contact) throw new ConvexError("Contact not found");
     return {
       chainUserId: contact.userId,
       actorType: "trusted_contact",
@@ -294,26 +296,26 @@ export const submitRecoveryShards = auditedMutation({
 
     const submitter = await ctx.db.get(args.submitterContactId);
     if (!submitter || submitter.contactUserId !== requesterId) {
-      throw new Error("Not authorized");
+      throw new ConvexError("Not authorized");
     }
     if ((submitter.contactType ?? "trust") !== "trust") {
-      throw new Error("Only trust contacts can submit recovery shards");
+      throw new ConvexError("Only trust contacts can submit recovery shards");
     }
 
     const request = await ctx.db.get(args.accessRequestId);
     if (!request || request.vaultUserId !== submitter.userId) {
-      throw new Error("Access request mismatch");
+      throw new ConvexError("Access request mismatch");
     }
     if (!request.quorumReached) {
-      throw new Error(
+      throw new ConvexError(
         "Cannot submit shards before unreachability quorum is reached",
       );
     }
     if (request.gracePeriodEndsAt && Date.now() < request.gracePeriodEndsAt) {
-      throw new Error("Grace period not yet expired");
+      throw new ConvexError("Grace period not yet expired");
     }
     if (request.cancelledDuringGrace) {
-      throw new Error("Access request was cancelled during grace");
+      throw new ConvexError("Access request was cancelled during grace");
     }
 
     const existing = await ctx.db
@@ -325,7 +327,7 @@ export const submitRecoveryShards = auditedMutation({
       )
       .collect();
     if (existing.length > 0) {
-      throw new Error("You already submitted your shard");
+      throw new ConvexError("You already submitted your shard");
     }
 
     const now = Date.now();
@@ -429,13 +431,13 @@ export const cancelEmergencyAccess = auditedMutation({
 
     const request = await ctx.db.get(args.requestId);
     if (!request || request.vaultUserId !== userId) {
-      throw new Error("Request not found");
+      throw new ConvexError("Request not found");
     }
 
     const now = Date.now();
 
     if (request.gracePeriodEndsAt && now > request.gracePeriodEndsAt) {
-      throw new Error("Grace period has expired");
+      throw new ConvexError("Grace period has expired");
     }
 
     await ctx.db.patch(args.requestId, {

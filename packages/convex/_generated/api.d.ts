@@ -27,6 +27,7 @@ import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_storage from "../lib/storage.js";
 import type * as life_check from "../life_check.js";
 import type * as login_otp from "../login_otp.js";
+import type * as memorial from "../memorial.js";
 import type * as migrations from "../migrations.js";
 import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
@@ -74,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   "lib/storage": typeof lib_storage;
   life_check: typeof life_check;
   login_otp: typeof login_otp;
+  memorial: typeof memorial;
   migrations: typeof migrations;
   notifications: typeof notifications;
   onboarding: typeof onboarding;

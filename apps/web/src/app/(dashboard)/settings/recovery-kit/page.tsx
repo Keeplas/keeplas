@@ -61,6 +61,12 @@ export default function RecoveryKitPage() {
     user?._id ?? undefined,
   );
   const generatedAt = formatKitTimestamp(user?._creationTime);
+  const accountId = user?.email ?? user?.phoneNumber ?? null;
+  const accountSlug =
+    (accountId ?? "account")
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase() || "account";
 
   async function handleExportPdf() {
     if (!printableRef.current || exporting) return;
@@ -94,7 +100,7 @@ export default function RecoveryKitPage() {
       const offsetX = (pageWidth - renderWidth) / 2;
       const offsetY = (pageHeight - renderHeight) / 2;
       pdf.addImage(imgData, "PNG", offsetX, offsetY, renderWidth, renderHeight);
-      pdf.save(`${documentId}.pdf`);
+      pdf.save(`${documentId}-${accountSlug}.pdf`);
     } finally {
       setExporting(false);
     }
@@ -181,10 +187,18 @@ export default function RecoveryKitPage() {
             </div>
           </div>
 
-          <div className="mt-12 pt-12 border-t border-white/10 relative z-10">
-            <div className="text-label-md opacity-40 mb-2">Document ID</div>
-            <div className="font-mono text-body-md opacity-60">
-              {documentId}
+          <div className="mt-12 pt-12 border-t border-white/10 relative z-10 space-y-4">
+            <div>
+              <div className="text-label-md opacity-40 mb-2">Document ID</div>
+              <div className="font-mono text-body-md opacity-60">
+                {documentId}
+              </div>
+            </div>
+            <div>
+              <div className="text-label-md opacity-40 mb-2">Account</div>
+              <div className="font-mono text-body-md opacity-60 break-all">
+                {accountId ?? "—"}
+              </div>
             </div>
           </div>
         </aside>
