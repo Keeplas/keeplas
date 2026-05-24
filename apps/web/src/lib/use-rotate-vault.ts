@@ -136,7 +136,9 @@ export function useRotateVault() {
   const rotateKeyMaterial = useAuditedMutation(api.rotation.rotateKeyMaterial);
   const finalizeRotation = useAuditedMutation(api.rotation.finalizeRotation);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const generateUploadUrl = useAuditedMutation(api.vault_items.generateUploadUrl);
+  const generateUploadUrl = useAuditedMutation(
+    api.vault_items.generateUploadUrl,
+  );
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
   const updateKeeplasShard = useAuditedMutation(
@@ -176,7 +178,10 @@ export function useRotateVault() {
       const shards = await split(rawMasterKey, 5, threshold);
       rawMasterKey.fill(0);
       try {
-        localStorage.setItem(STORAGE_KEYS.deviceShard, uint8ToBase64(shards[0]));
+        localStorage.setItem(
+          STORAGE_KEYS.deviceShard,
+          uint8ToBase64(shards[0]),
+        );
       } catch {
         // Private mode etc — non-fatal.
       }

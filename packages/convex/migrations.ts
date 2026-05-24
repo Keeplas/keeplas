@@ -115,10 +115,8 @@ export const dropVerificationEnvelopes = internalMutation({
     let cleared = 0;
     const contacts = await ctx.db.query("trusted_contacts").collect();
     for (const contact of contacts) {
-      // @ts-expect-error verificationEnvelope removed from the validator
       if (contact.verificationEnvelope !== undefined) {
         await ctx.db.patch(contact._id, {
-          // @ts-expect-error verificationEnvelope removed from the validator
           verificationEnvelope: undefined,
           updatedAt: Date.now(),
         });

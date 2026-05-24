@@ -113,7 +113,10 @@ export function ReturnAfterReleaseBanner() {
     <>
       <div className="mb-8 rounded-2xl bg-error-container text-on-error-container p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <Icon path={ICON_PATHS.shieldCheck} className="w-6 h-6 shrink-0 mt-1" />
+          <Icon
+            path={ICON_PATHS.shieldCheck}
+            className="w-6 h-6 shrink-0 mt-1"
+          />
           <div>
             <p className="text-title-md">
               {rotationInProgress
@@ -132,7 +135,9 @@ export function ReturnAfterReleaseBanner() {
           className="shrink-0"
           onClick={() => setOpen(true)}
         >
-          {rotationInProgress ? "Resume re-keying" : "I'm back — secure my vault"}
+          {rotationInProgress
+            ? "Resume re-keying"
+            : "I'm back — secure my vault"}
         </Button>
       </div>
 

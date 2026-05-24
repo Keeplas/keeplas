@@ -170,23 +170,24 @@ export function useRecipientCrypto() {
    * null when no rotation is in flight. The previous secret is wrapped under
    * the CURRENT (new) master key, so the live masterKey unwraps it.
    */
-  const loadPrevSecretKey = useCallback(async (): Promise<Uint8Array | null> => {
-    if (ownerPrevSecretKeyRef.current) return ownerPrevSecretKeyRef.current;
-    if (!masterKey || !viewer?.encryptedAsymmetricSecretKeyPrev) return null;
+  const loadPrevSecretKey =
+    useCallback(async (): Promise<Uint8Array | null> => {
+      if (ownerPrevSecretKeyRef.current) return ownerPrevSecretKeyRef.current;
+      if (!masterKey || !viewer?.encryptedAsymmetricSecretKeyPrev) return null;
 
-    const bundle = JSON.parse(viewer.encryptedAsymmetricSecretKeyPrev) as {
-      ciphertext: string;
-      iv: string;
-    };
-    const plaintext = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: base64ToUint8(bundle.iv) },
-      masterKey,
-      base64ToUint8(bundle.ciphertext),
-    );
-    const secretKey = parseSecretKey(new TextDecoder().decode(plaintext));
-    ownerPrevSecretKeyRef.current = secretKey;
-    return secretKey;
-  }, [masterKey, viewer]);
+      const bundle = JSON.parse(viewer.encryptedAsymmetricSecretKeyPrev) as {
+        ciphertext: string;
+        iv: string;
+      };
+      const plaintext = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: base64ToUint8(bundle.iv) },
+        masterKey,
+        base64ToUint8(bundle.ciphertext),
+      );
+      const secretKey = parseSecretKey(new TextDecoder().decode(plaintext));
+      ownerPrevSecretKeyRef.current = secretKey;
+      return secretKey;
+    }, [masterKey, viewer]);
 
   const unwrapOwnerDek = useCallback(
     async (wrap: WrappedDek): Promise<CryptoKey> => {

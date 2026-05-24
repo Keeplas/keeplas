@@ -454,6 +454,12 @@ export default defineSchema({
     // dropped (migrations.ts:dropVerificationEnvelopes).
     lastVerifiedAt: v.optional(v.number()),
 
+    // TEMPORARY (phase-1 of verificationEnvelope removal): kept optional so the
+    // schema accepts existing prod rows that still carry this legacy field while
+    // migrations:dropVerificationEnvelopes strips it. Remove again in phase-2
+    // once the migration has cleared every row.
+    verificationEnvelope: v.optional(v.string()),
+
     contactRecoveryHash: v.optional(v.string()),
     contactPublicKey: v.optional(v.string()),
 
