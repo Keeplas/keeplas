@@ -1,6 +1,6 @@
 # Contributing to Keeplas
 
-Thank you for your interest in contributing! For the system overview, read [`ARCHITECTURE.md`](./ARCHITECTURE.md) first.
+Thank you for your interest in contributing! For the system overview, read [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) first.
 
 ## First-time setup
 

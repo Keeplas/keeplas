@@ -1,6 +1,6 @@
 # Architecture
 
-> System overview for contributors. For the product spec, see [`PRD/keeplas-architecture-recap-v5.md`](./PRD/keeplas-architecture-recap-v5.md); for the cryptographic protocol, see [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md).
+> System overview for contributors. For the product spec, see [`PRD/keeplas-architecture-recap-v5.md`](../PRD/keeplas-architecture-recap-v5.md); for the cryptographic protocol, see [`PRD/keeplas-convex-zk-technical-v2.md`](../PRD/keeplas-convex-zk-technical-v2.md).
 
 ## High-level view
 
@@ -50,7 +50,7 @@ Everything in `packages/crypto/` runs **in the browser only**. Convex never sees
 
 The server only ever stores AES-GCM ciphertexts, ML-KEM-wrapped DEKs, and ML-KEM-wrapped shards. The threat model: even a fully compromised Convex deployment cannot read user content.
 
-See [`packages/crypto/src/`](./packages/crypto/src) for the primitives. Each subdirectory (`aes`, `kdf`, `kem`, `recovery`, `shamir`) is paired with a `__tests__/` file under `packages/crypto/__tests__/`.
+See [`packages/crypto/src/`](../packages/crypto/src) for the primitives. Each subdirectory (`aes`, `kdf`, `kem`, `recovery`, `shamir`) is paired with a `__tests__/` file under `packages/crypto/__tests__/`.
 
 ## Auth bootstrap (Convex Auth)
 
@@ -67,7 +67,7 @@ Bootstrap order:
 2. `npx @convex-dev/auth` — seeds `JWKS` + `JWT_PRIVATE_KEY` on the deployment.
 3. `pnpm sync:convex-env` — pushes the rest of your local env (`KEEPLAS_CTX_SECRET`, WebAuthn config, Resend keys) to Convex.
 
-After step 3, `pnpm check:convex` is green. For the full Convex workflow, see [`docs/CONVEX.md`](./docs/CONVEX.md).
+After step 3, `pnpm check:convex` is green. For the full Convex workflow, see [`docs/CONVEX.md`](./CONVEX.md).
 
 ## How services connect — running locally
 
@@ -99,11 +99,11 @@ Three components, two processes (browser + Next.js server), one external service
 | 3000 | Next.js dev server (web) | host or Docker container              |
 | —    | Convex backend           | `convex.cloud` (HTTPS) or self-hosted |
 
-For the full contributor onboarding flow, see [`CONTRIBUTING.md`](./CONTRIBUTING.md). For Convex specifics (provisioning, schema changes, env sync, JWT bootstrap), see [`docs/CONVEX.md`](./docs/CONVEX.md). For Docker (when to use it, how to attach, common gotchas), see [`docs/DOCKER.md`](./docs/DOCKER.md).
+For the full contributor onboarding flow, see [`CONTRIBUTING.md`](../CONTRIBUTING.md). For Convex specifics (provisioning, schema changes, env sync, JWT bootstrap), see [`docs/CONVEX.md`](./CONVEX.md). For Docker (when to use it, how to attach, common gotchas), see [`docs/DOCKER.md`](./DOCKER.md).
 
 ## CI
 
-See [`.github/workflows/ci.yml`](./.github/workflows/ci.yml). Three jobs run on every PR:
+See [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Three jobs run on every PR:
 
 - **Lint & Typecheck** — `pnpm lint`, `pnpm typecheck`
 - **Test** — `pnpm test` (Vitest, only `packages/crypto/` today; broader scaffolding in progress)

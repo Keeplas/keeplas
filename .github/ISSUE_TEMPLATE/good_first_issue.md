@@ -33,6 +33,6 @@ assignees: []
 
 ## Before you start
 
-- Read [`ARCHITECTURE.md`](../../ARCHITECTURE.md) and [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+- Read [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) and [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 - Sign the [Contributor License Agreement](../../CONTRIBUTOR_LICENSE_AGREEMENT.md) (auto-checked on PR).
 - Comment on this issue saying you're picking it up — we'll assign you.
