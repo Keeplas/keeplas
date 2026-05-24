@@ -121,7 +121,11 @@ function AttachmentCard({
         const res = await fetch(signedUrl);
         if (!res.ok) throw new Error(`Download failed (${res.status})`);
         const cipherBlob = await res.blob();
-        const plainBlob = await decryptBlobWithKey(cipherBlob, file.iv, itemDek);
+        const plainBlob = await decryptBlobWithKey(
+          cipherBlob,
+          file.iv,
+          itemDek,
+        );
         const typedBlob = new Blob([plainBlob], {
           type: file.mimeType || plainBlob.type || "application/octet-stream",
         });
