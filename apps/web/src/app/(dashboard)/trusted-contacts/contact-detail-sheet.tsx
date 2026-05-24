@@ -180,7 +180,10 @@ function ContactDetailBody({
               label="Role"
               value={ROLE_LABELS[contact.role] ?? "Contact"}
             />
-            <DetailRow label="Invited" value={formatRelative(contact.invitedAt)} />
+            <DetailRow
+              label="Invited"
+              value={formatRelative(contact.invitedAt)}
+            />
             {contact.acceptedAt && (
               <DetailRow
                 label="Accepted"
@@ -238,7 +241,9 @@ function ContactDetailBody({
                             {verificationBadge.lastVerifiedAt !== undefined && (
                               <p className="mt-2">
                                 Last verified{" "}
-                                {formatRelative(verificationBadge.lastVerifiedAt)}{" "}
+                                {formatRelative(
+                                  verificationBadge.lastVerifiedAt,
+                                )}{" "}
                                 (
                                 {new Date(
                                   verificationBadge.lastVerifiedAt,
