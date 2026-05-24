@@ -148,24 +148,25 @@ export interface NotificationInput {
 }
 
 /**
- * Insert a notification row. Defaults channels to ["push"] and stamps createdAt.
+ * Insert an in-app notification row.
+ *
+ * TEMPORARILY DISABLED (no-op): the in-app notifications bell is hidden for now
+ * because the same events are already surfaced by the logs (Security Center
+ * Activity Log + Life Check History). We keep this chokepoint so re-enabling is
+ * a one-place change.
+ *
+ * Out of scope of this disable — unaffected:
+ *   - Outbound reminders (web push / email / WhatsApp) go out via
+ *     `internal.dispatch.sendChannel`, scheduled separately by the callers.
+ *   - Audit logging via `createAuditLog` / the `audit_logs` table.
  */
-export async function createNotification(
+export function createNotification(
   ctx: MutationCtx,
   input: NotificationInput,
-) {
-  return await ctx.db.insert("notifications", {
-    userId: input.userId,
-    type: input.type,
-    title: input.title,
-    body: input.body,
-    actionUrl: input.actionUrl,
-    channels: input.channels ?? ["push"],
-    isRead: false,
-    relatedId: input.relatedId,
-    relatedType: input.relatedType,
-    createdAt: Date.now(),
-  });
+): Promise<void> {
+  void ctx;
+  void input;
+  return Promise.resolve();
 }
 
 /**
