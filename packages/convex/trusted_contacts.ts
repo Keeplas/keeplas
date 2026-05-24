@@ -734,11 +734,15 @@ export const resendInvitation = auditedMutation({
     }
     if ((contact.contactType ?? "trust") === "trust" && contact.phoneNumber) {
       const inviter = await ctx.db.get(userId);
-      await ctx.scheduler.runAfter(0, internal.dispatch.sendInvitationWhatsApp, {
-        phoneNumber: contact.phoneNumber,
-        inviterName: inviter?.name?.trim() || "A Keeplas user",
-        invitationToken,
-      });
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendInvitationWhatsApp,
+        {
+          phoneNumber: contact.phoneNumber,
+          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          invitationToken,
+        },
+      );
     }
 
     return { invitationToken };
