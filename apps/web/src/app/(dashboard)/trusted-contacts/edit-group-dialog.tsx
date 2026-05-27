@@ -65,7 +65,9 @@ export function EditGroupDialog({
     try {
       await updateGroup({
         groupId: group._id,
-        name: name.trim(),
+        // The default group's name is fixed server-side; omit it from the
+        // payload so a stale local value can't trigger the rename rejection.
+        ...(group.isDefault ? {} : { name: name.trim() }),
         description: description.trim(),
         memberContactIds: members as Id<"trusted_contacts">[],
       });
@@ -100,7 +102,14 @@ export function EditGroupDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              readOnly={group.isDefault}
+              disabled={group.isDefault}
             />
+            {group.isDefault && (
+              <p className="text-label-md text-on-surface-variant">
+                The default group name is fixed.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

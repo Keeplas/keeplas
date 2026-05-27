@@ -110,6 +110,9 @@ export const updateGroup = auditedMutation({
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (args.name !== undefined) {
       if (!args.name.trim()) throw new Error("Group name is required");
+      if (group.isDefault && args.name.trim() !== group.name) {
+        throw new Error("The default group cannot be renamed.");
+      }
       patch.name = args.name.trim();
     }
     if (args.description !== undefined) {
@@ -164,6 +167,13 @@ export const deleteGroup = auditedMutation({
     const userId = await requireAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
+
+    // The default group is the routing fallback for vault items with
+    // recipientMode="default". Deleting it would silently break that path,
+    // so we keep exactly one default per user at all times.
+    if (group.isDefault) {
+      throw new Error("The default group cannot be deleted.");
+    }
 
     await ctx.db.delete(args.groupId);
   },

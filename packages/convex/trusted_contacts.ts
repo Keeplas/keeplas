@@ -251,6 +251,26 @@ export const inviteContact = auditedMutation({
       contactId = await ctx.db.insert("trusted_contacts", baseFields);
     }
 
+    // Trust contacts are auto-added to the user's default group so vault items
+    // with recipientMode="default" route to them out of the box. Recipient-only
+    // contacts stay unassigned — the owner decides which group they belong to.
+    // Silent skip when the default group is missing (legacy user that escaped
+    // seeding): invite must not fail because of group bookkeeping.
+    if (contactType === "trust") {
+      const defaultGroup = await ctx.db
+        .query("recipient_groups")
+        .withIndex("by_user_default", (q) =>
+          q.eq("userId", userId).eq("isDefault", true),
+        )
+        .first();
+      if (defaultGroup && !defaultGroup.memberContactIds.includes(contactId)) {
+        await ctx.db.patch(defaultGroup._id, {
+          memberContactIds: [...defaultGroup.memberContactIds, contactId],
+          updatedAt: now,
+        });
+      }
+    }
+
     await createNotification(ctx, {
       userId,
       type: "contact_invited",

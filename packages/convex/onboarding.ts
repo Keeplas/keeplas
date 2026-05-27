@@ -34,14 +34,15 @@ const DEFAULT_PASSIVE_SIGNALS = {
 const DEFAULT_THRESHOLD_DAYS = 30;
 
 /**
- * Seed a default Life Check config for a user. Idempotent: skips if a config
- * already exists. Called at the end of onboarding so users land on a configured
- * Life Check instead of an empty form.
+ * Seed a default Life Check config AND a default recipient group for a user.
+ * Each step is independently idempotent — re-running only fills in what's
+ * missing. Called at the end of onboarding so users land on a configured Life
+ * Check + a ready-to-use "Trusted Contacts" group instead of empty shells.
  */
 export async function seedDefaults(
   ctx: MutationCtx,
   userId: Id<"users">,
-): Promise<{ configCreated: boolean }> {
+): Promise<{ configCreated: boolean; groupCreated: boolean }> {
   const now = Date.now();
 
   const existingConfig = await ctx.db
@@ -49,35 +50,112 @@ export async function seedDefaults(
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .first();
 
-  if (existingConfig) return { configCreated: false };
+  let configCreated = false;
+  if (!existingConfig) {
+    await ctx.db.insert("life_check_configs", {
+      userId,
+      frequency: "monthly",
+      inactivityThresholdDays: DEFAULT_THRESHOLD_DAYS,
+      lastActivityAt: now,
+      passiveSignals: DEFAULT_PASSIVE_SIGNALS,
+      activeChannels: DEFAULT_ACTIVE_CHANNELS,
+      travelModeEnabled: false,
+      expeditionMode: false,
+      isActive: true,
+      nextCheckAt: now + DEFAULT_THRESHOLD_DAYS * DAY_MS,
+      confidenceThreshold: 50,
+      createdAt: now,
+      updatedAt: now,
+    });
 
-  await ctx.db.insert("life_check_configs", {
-    userId,
-    frequency: "monthly",
-    inactivityThresholdDays: DEFAULT_THRESHOLD_DAYS,
-    lastActivityAt: now,
-    passiveSignals: DEFAULT_PASSIVE_SIGNALS,
-    activeChannels: DEFAULT_ACTIVE_CHANNELS,
-    travelModeEnabled: false,
-    expeditionMode: false,
-    isActive: true,
-    nextCheckAt: now + DEFAULT_THRESHOLD_DAYS * DAY_MS,
-    confidenceThreshold: 50,
-    createdAt: now,
-    updatedAt: now,
-  });
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "system",
+      actorId: "onboarding_seeder",
+      action: "life_check_seeded",
+      resourceType: "life_check_config",
+      resourceId: userId,
+    });
+    configCreated = true;
+  }
 
-  await createAuditLog(ctx, {
-    userId,
-    actorType: "system",
-    actorId: "onboarding_seeder",
-    action: "life_check_seeded",
-    resourceType: "life_check_config",
-    resourceId: userId,
-  });
+  const existingDefaultGroup = await ctx.db
+    .query("recipient_groups")
+    .withIndex("by_user_default", (q) =>
+      q.eq("userId", userId).eq("isDefault", true),
+    )
+    .first();
 
-  return { configCreated: true };
+  // Collect the user's current non-revoked trust contacts — used both to
+  // pre-populate a freshly-seeded group and to repair an empty pre-existing
+  // one (migration signal: see top-up branch below). Mirrors the membership
+  // rule from the one-shot `migrateRecipients` in migrations.ts.
+  const existingTrustContactIds = (
+    await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+      .collect()
+  )
+    .filter((c) => (c.contactType ?? "trust") === "trust")
+    .map((c) => c._id);
+
+  let groupCreated = false;
+  if (!existingDefaultGroup) {
+    const groupId = await ctx.db.insert("recipient_groups", {
+      userId,
+      name: "Trusted Contacts",
+      description:
+        "Default group — every trusted contact you invite is added here automatically.",
+      memberContactIds: existingTrustContactIds,
+      isDefault: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "system",
+      actorId: "onboarding_seeder",
+      action: "recipient_group.seeded",
+      resourceType: "recipient_group",
+      resourceId: groupId,
+    });
+    groupCreated = true;
+  } else if (
+    existingDefaultGroup.memberContactIds.length === 0 &&
+    existingTrustContactIds.length > 0
+  ) {
+    // One-shot repair: an earlier version of this helper seeded the default
+    // group with an empty `memberContactIds`, leaving users who already had
+    // trust contacts on a routing-broken fallback. An empty default group is
+    // not a legitimate steady state (recipientMode=default → nobody), so we
+    // backfill it with the user's existing trust contacts. After this runs
+    // the condition is false and we never overwrite manual edits.
+    await ctx.db.patch(existingDefaultGroup._id, {
+      memberContactIds: existingTrustContactIds,
+      updatedAt: now,
+    });
+  }
+
+  return { configCreated, groupCreated };
 }
+
+/**
+ * Idempotent self-heal entry point for the dashboard. Existing users who
+ * finished onboarding before `seedDefaults` covered recipient groups never
+ * received the default "Trusted Contacts" group — this mutation lets the
+ * frontend top them up the first time they visit the relevant page, without
+ * requiring a CLI-triggered backfill. Safe to call repeatedly: the helper
+ * short-circuits when both the Life Check config and the default group exist.
+ */
+export const ensureDefaults = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    return await seedDefaults(ctx, userId);
+  },
+});
 
 /**
  * Get the current user's onboarding state.
@@ -199,22 +277,24 @@ export const storeKeyBundle = mutation({
 });
 
 /**
- * Backfill helper: seed a default Life Check config for every existing user
- * that already finished onboarding but predates the seeding logic. Idempotent —
- * re-running it is a no-op for users that already have a config.
+ * Backfill helper: seed default Life Check config + default recipient group
+ * for every existing user that already finished onboarding but predates the
+ * seeding logic. Idempotent — each piece is a no-op when already present.
  */
 export const seedDefaultsForExistingUsers = internalMutation({
   args: {},
   handler: async (ctx) => {
     const users = await ctx.db.query("users").collect();
     let configsCreated = 0;
+    let groupsCreated = 0;
 
     for (const user of users) {
       if (user.onboardingStep !== "complete") continue;
       const result = await seedDefaults(ctx, user._id);
       if (result.configCreated) configsCreated++;
+      if (result.groupCreated) groupsCreated++;
     }
 
-    return { configsCreated };
+    return { configsCreated, groupsCreated };
   },
 });

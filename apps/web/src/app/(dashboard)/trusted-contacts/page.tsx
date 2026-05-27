@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
@@ -52,6 +52,7 @@ export default function TrustedContactsPage() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const me = useQuery(api.onboarding.getOnboardingState);
+  const ensureDefaults = useMutation(api.onboarding.ensureDefaults);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
     "trust",
@@ -60,6 +61,32 @@ export default function TrustedContactsPage() {
   const [selectedContact, setSelectedContact] =
     useState<Doc<"trusted_contacts"> | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Self-heal: existing users who finished onboarding before the default
+  // recipient group was part of the seed need to be topped up the first time
+  // they land here. Two regression shapes to repair, both routed through the
+  // same idempotent server mutation:
+  //   1. No default group at all → seedDefaults creates one.
+  //   2. Default group exists but is empty while trust contacts already
+  //      exist (previous broken seed) → seedDefaults' top-up branch backfills
+  //      it. After that the condition is false and we leave manual edits be.
+  useEffect(() => {
+    if (!groups || !contacts) return;
+    const defaultGroup = groups.find((g) => g.isDefault);
+    const hasTrustContacts = contacts.some(
+      (c) =>
+        (c.contactType ?? "trust") === "trust" &&
+        c.invitationStatus !== "revoked",
+    );
+    const needsSeed = !defaultGroup;
+    const needsTopUp =
+      !!defaultGroup &&
+      defaultGroup.memberContactIds.length === 0 &&
+      hasTrustContacts;
+    if (needsSeed || needsTopUp) {
+      void ensureDefaults();
+    }
+  }, [groups, contacts, ensureDefaults]);
 
   function openInvite(type: "trust" | "recipient_only") {
     setInviteType(type);
@@ -497,32 +524,11 @@ export default function TrustedContactsPage() {
             </aside>
             <div className="lg:col-span-8 space-y-6">
               {groups.length === 0 ? (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setShowCreateGroup(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setShowCreateGroup(true);
-                    }
-                  }}
-                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
-                >
-                  <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Icon
-                      path={ICON_PATHS.userPlus}
-                      className="w-8 h-8 text-secondary"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                  <h3 className="text-headline-sm text-primary">
-                    No groups yet
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    Create your first group to start routing vault items to
-                    specific recipients at trigger time.
-                  </p>
+                // Transient state for existing users while the self-heal
+                // mutation seeds their default group — the live query flips
+                // to non-empty within a tick.
+                <div className="flex items-center justify-center p-12 rounded-2xl bg-surface-container-low/40">
+                  <Loader size="sm" />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

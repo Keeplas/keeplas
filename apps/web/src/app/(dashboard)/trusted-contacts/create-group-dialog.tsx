@@ -14,7 +14,6 @@ import {
   Input,
   Label,
   Textarea,
-  Switch,
   ErrorAlert,
 } from "@keeplas/ui";
 import { ContactMembersSelect } from "@/components/contact-members-select";
@@ -36,7 +35,6 @@ export function CreateGroupDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [members, setMembers] = useState<string[]>([]);
-  const [isDefault, setIsDefault] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,7 +42,6 @@ export function CreateGroupDialog({
     setName("");
     setDescription("");
     setMembers([]);
-    setIsDefault(false);
     setError("");
     setSaving(false);
   }
@@ -66,7 +63,6 @@ export function CreateGroupDialog({
         name: name.trim(),
         description: description.trim() || undefined,
         memberContactIds: members as Id<"trusted_contacts">[],
-        isDefault,
       });
       handleOpenChange(false);
     } catch (err) {
@@ -120,20 +116,6 @@ export function CreateGroupDialog({
               selected={members}
               onChange={setMembers}
               placeholder="Add contacts to this group"
-            />
-          </div>
-
-          <div className="flex items-start justify-between gap-4 bg-surface-container-low rounded-xl p-4">
-            <div>
-              <p className="text-headline-sm text-primary">Default group</p>
-              <p className="text-body-md text-on-surface-variant mt-0.5">
-                New vault items without explicit recipients will route here.
-              </p>
-            </div>
-            <Switch
-              checked={isDefault}
-              onCheckedChange={setIsDefault}
-              className="mt-1"
             />
           </div>
 

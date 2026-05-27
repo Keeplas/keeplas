@@ -117,30 +117,30 @@ export function RecipientGroupCard({
         >
           Manage members
         </button>
-        <button
-          onClick={() => setShowActions(!showActions)}
-          className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-          aria-label="More"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="12" cy="19" r="2" />
-          </svg>
-        </button>
+        {!group.isDefault && (
+          <button
+            onClick={() => setShowActions(!showActions)}
+            className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+            aria-label="More"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {showActions && (
+      {showActions && !group.isDefault && (
         <div className="mt-4 space-y-2 pt-4 border-t border-outline-variant/15">
-          {!group.isDefault && (
-            <button
-              onClick={handleSetDefault}
-              disabled={busy}
-              className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
-            >
-              Set as default group
-            </button>
-          )}
+          <button
+            onClick={handleSetDefault}
+            disabled={busy}
+            className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
+          >
+            Set as default group
+          </button>
           {confirmDelete ? (
             <div className="flex gap-2">
               <button

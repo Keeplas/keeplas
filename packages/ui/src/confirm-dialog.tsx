@@ -67,10 +67,7 @@ export function ConfirmDialogProvider({
     <ConfirmContext.Provider value={confirm}>
       {children}
       <Dialog open={state.open} onOpenChange={handleOpenChange}>
-        <DialogContent
-          className="max-w-md p-6 space-y-5"
-          role="alertdialog"
-        >
+        <DialogContent className="max-w-md p-6 space-y-5" role="alertdialog">
           <div className="space-y-2">
             <DialogTitle className="text-headline-sm">
               {options.title}
