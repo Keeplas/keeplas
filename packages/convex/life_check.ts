@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import {
+  action,
   mutation,
   query,
   internalMutation,
@@ -10,6 +11,7 @@ import { Id } from "./_generated/dataModel";
 import { createNotification, requireAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
+import { verifyLifeCheckToken } from "./lib/life_check_token";
 
 const FREQUENCY_DAYS: Record<string, number> = {
   // "test" is a 60-second dev cadence stored as a fractional day so it flows
@@ -616,9 +618,9 @@ export const validateFromWhatsApp = internalMutation({
 });
 
 /**
- * Validate a cycle from the one-click email link (unauthenticated HTTP route).
- * The token is verified upstream in http.ts; here we just confirm the cycle
- * belongs to the user, then run the shared `confirmAlive`. Idempotent.
+ * Validate a cycle from the one-click email link. The HMAC token is verified
+ * upstream in `confirmFromEmailToken`; here we just confirm the cycle belongs
+ * to the user, then run the shared `confirmAlive`. Idempotent.
  */
 export const confirmFromEmail = internalMutation({
   args: {
@@ -630,6 +632,29 @@ export const confirmFromEmail = internalMutation({
     if (!cycle || cycle.userId !== args.userId) return { ok: false };
     await confirmAlive(ctx, args.userId, Date.now(), "email_link");
     return { ok: true };
+  },
+});
+
+/**
+ * Public unauthenticated action invoked from the Next.js confirm page when the
+ * user clicks the "I am well" button in the check-in email. Verifies the
+ * HMAC-signed token (proves the call came from a real check-in email) and
+ * runs the shared confirmation mutation. Never exposes vault data — the token
+ * only authorises resetting a liveness timer. Kept as an `action` (not a
+ * mutation) because token verification uses WebCrypto, which is only available
+ * in the action runtime.
+ */
+export const confirmFromEmailToken = action({
+  args: { token: v.string() },
+  returns: v.union(v.literal("ok"), v.literal("invalid")),
+  handler: async (ctx, args) => {
+    const payload = await verifyLifeCheckToken(args.token);
+    if (!payload) return "invalid";
+    await ctx.runMutation(internal.life_check.confirmFromEmail, {
+      cycleId: payload.cycleId as Id<"life_check_cycles">,
+      userId: payload.userId as Id<"users">,
+    });
+    return "ok";
   },
 });
 

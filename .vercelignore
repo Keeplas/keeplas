@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs and caches
+dist/
+.next/
+out/
+.turbo/
+apps/*/.next/
+apps/*/.turbo/
+packages/*/.turbo/
+
+# Environment
+.env
+.env.local
+.env.production
+.env.*.local
+.env.local.backup-*
+
+# Tooling and local state
+.convex/
+.DS_Store
+coverage/
+*.tsbuildinfo

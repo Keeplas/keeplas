@@ -118,15 +118,17 @@ async function sendPush({
 const CONFIRM_TOKEN_TTL_MS = 10 * 24 * 60 * 60 * 1000;
 
 /**
- * Build the unauthenticated one-click confirmation URL. Points at the Convex
- * HTTP action origin (CONVEX_SITE_URL), NOT the Next.js app, so the link works
- * without a logged-in session.
+ * Build the one-click confirmation URL. Always points at the Next.js app
+ * (APP_URL) so user-facing emails never expose the raw Convex deployment
+ * origin. The confirm page calls `life_check.confirmFromEmailToken`
+ * server-side, which verifies the HMAC token without requiring a logged-in
+ * session.
  */
 async function buildConfirmUrl(
   cycleId: Id<"life_check_cycles">,
   userId: Id<"users">,
 ): Promise<string> {
-  const base = process.env.CONVEX_SITE_URL ?? requireEnv("APP_URL");
+  const base = requireEnv("APP_URL");
   const token = await signLifeCheckToken({
     cycleId,
     userId,
