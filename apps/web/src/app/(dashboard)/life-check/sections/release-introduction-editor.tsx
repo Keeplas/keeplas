@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { Button, HelpHint, Icon, toast } from "@keeplas/ui";
+import { Button, HelpHint, Icon, toast, useConfirm } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -39,6 +39,7 @@ export function ReleaseIntroductionEditor() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -77,13 +78,13 @@ export function ReleaseIntroductionEditor() {
   }
 
   async function handleDelete(id: Id<"vault_items">, title: string) {
-    if (
-      !window.confirm(
-        `Delete "${title}"? Contacts will no longer see this welcome message.`,
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: `Delete "${title}"?`,
+      description: "Contacts will no longer see this welcome message.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!ok) return;
     try {
       await deleteItem({ itemId: id });
     } catch (err) {

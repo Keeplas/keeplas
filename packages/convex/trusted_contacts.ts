@@ -103,7 +103,8 @@ export const getContactAccessSummary = query({
     // they read anything else, so they shouldn't get buried under categorized
     // items. Stable secondary order = insertion (vault item by_user index).
     releasedItems.sort(
-      (a, b) => Number(b.isReleaseIntroduction) - Number(a.isReleaseIntroduction),
+      (a, b) =>
+        Number(b.isReleaseIntroduction) - Number(a.isReleaseIntroduction),
     );
 
     const groups = await ctx.db

@@ -950,9 +950,7 @@ export function AddItemDialog({
                         }
                   }
                   placeholder={
-                    isIntroMode
-                      ? "All trust contacts"
-                      : "No one — keep private"
+                    isIntroMode ? "All trust contacts" : "No one — keep private"
                   }
                   searchPlaceholder="Search groups or contacts…"
                   emptyMessage="No groups or contacts yet."

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, Icon, Loader, Spinner } from "@keeplas/ui";
+import { Button, Icon, Loader, Spinner, useConfirm } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import {
@@ -19,6 +19,7 @@ export function PasskeyManager() {
   const removeCredential = useMutation(api.webauthn.removeCredential);
 
   const supported = usePasskeySupport();
+  const confirm = useConfirm();
   const [busy, setBusy] = useState<"adding" | string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,13 +47,13 @@ export function PasskeyManager() {
   }
 
   async function handleRemove(id: string) {
-    if (
-      !window.confirm(
-        "Remove this passkey? You will need another way to sign in.",
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Remove this passkey?",
+      description: "You will need another way to sign in.",
+      confirmLabel: "Remove",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setBusy(id);
     setError(null);
     try {

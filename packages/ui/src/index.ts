@@ -23,6 +23,11 @@ export {
   DialogDescription,
 } from "./dialog";
 export {
+  ConfirmDialogProvider,
+  useConfirm,
+  type ConfirmOptions,
+} from "./confirm-dialog";
+export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuPortal,

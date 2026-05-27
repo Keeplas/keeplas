@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, Icon, Loader, Spinner } from "@keeplas/ui";
+import { Button, Icon, Loader, Spinner, useConfirm } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import {
@@ -33,6 +33,7 @@ export function DeviceUnlockManager() {
   const userEmail = user?.email ?? null;
   const { masterKey } = useMasterKey();
   const { entries, loading, remove } = useDeviceUnlock({ userEmail });
+  const confirm = useConfirm();
   const [showEnroll, setShowEnroll] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [hardwareSupported] = useState(() => isWebAuthnSupported());
@@ -53,10 +54,17 @@ export function DeviceUnlockManager() {
 
   async function handleRemove(entry: DeviceUnlockEntry) {
     const last = entries.length === 1;
-    const confirmText = last
-      ? "Remove the only unlock on this device? You will need to re-enter your 24 words next time."
-      : `Remove ${entry.label}?`;
-    if (!window.confirm(confirmText)) return;
+    const ok = await confirm({
+      title: last
+        ? "Remove the only unlock on this device?"
+        : `Remove ${entry.label}?`,
+      description: last
+        ? "You will need to re-enter your 24 words next time."
+        : undefined,
+      confirmLabel: "Remove",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setBusyId(entry.id);
     setError(null);
     try {

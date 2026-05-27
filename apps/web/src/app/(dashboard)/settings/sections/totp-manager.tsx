@@ -18,6 +18,7 @@ import {
   Loader,
   Spinner,
   Textarea,
+  useConfirm,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
@@ -39,6 +40,7 @@ export function TotpManager() {
   const cancelEnrollment = useMutation(api.totp.cancelEnrollment);
   const bindRecoveryReset = useMutation(api.totp.bindRecoveryReset);
   const disable = useMutation(api.totp.disable);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<DialogPhase>("code");
@@ -160,13 +162,14 @@ export function TotpManager() {
   }
 
   async function handleDisable() {
-    if (
-      !window.confirm(
-        "Disable the authenticator app? You will lose this second factor and may need to set it up again.",
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Disable the authenticator app?",
+      description:
+        "You will lose this second factor and may need to set it up again.",
+      confirmLabel: "Disable",
+      variant: "destructive",
+    });
+    if (!ok) return;
     setBusy("disabling");
     setError(null);
     try {
