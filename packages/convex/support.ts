@@ -107,7 +107,10 @@ export const notifySupportInbox = internalAction({
     const inbox = process.env.SUPPORT_INBOX_EMAIL;
     if (!apiKey || !inbox) return "support_inbox_not_configured";
 
-    const from = requireEnv("RESEND_FROM_EMAIL");
+    // Contact form has its own sender (e.g. form@keeplas.com) so it stays
+    // distinct from transactional senders like noreply@keeplas.com used for
+    // OTP / Life Check. Falls back to RESEND_FROM_EMAIL when unset.
+    const from = process.env.SUPPORT_FROM_EMAIL ?? requireEnv("RESEND_FROM_EMAIL");
     const topicLabel = TOPIC_LABELS[args.topic] ?? args.topic;
 
     const res = await fetch("https://api.resend.com/emails", {

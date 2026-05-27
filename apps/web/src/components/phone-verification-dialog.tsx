@@ -21,15 +21,22 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 type Step = "phone" | "code";
+type Mode = "add" | "change";
 
 interface PhoneVerificationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialPhone?: string;
   defaultCountry?: CountryCode;
+  /**
+   * "add" (default) when the user has no verified phone yet; "change" when
+   * they already do — only the copy changes, the OTP flow is identical.
+   */
+  mode?: Mode;
   onVerified?: () => void;
 }
 
@@ -38,13 +45,14 @@ export function PhoneVerificationDialog({
   onOpenChange,
   initialPhone,
   defaultCountry,
+  mode = "add",
   onVerified,
 }: PhoneVerificationDialogProps) {
   const status = useQuery(api.phone_verification.getMyStatus);
   const requestVerification = useMutation(
     api.phone_verification.requestVerification,
   );
-  const verifyCode = useMutation(api.phone_verification.verifyCode);
+  const verifyCode = useAuditedMutation(api.phone_verification.verifyCode);
 
   const [step, setStep] = useState<Step>(initialPhone ? "phone" : "phone");
   const [phone, setPhone] = useState<string | undefined>(initialPhone);
@@ -61,7 +69,7 @@ export function PhoneVerificationDialog({
     setWasOpen(open);
     if (open) {
       setStep(status?.hasPendingCode ? "code" : "phone");
-      setPhone(initialPhone);
+      setPhone(status?.pendingPhone ?? initialPhone);
       setCode("");
       setError(null);
     }
@@ -73,6 +81,7 @@ export function PhoneVerificationDialog({
   if (status?.hasPendingCode !== prevPending) {
     setPrevPending(status?.hasPendingCode);
     if (open && status?.hasPendingCode && step === "phone") {
+      setPhone(status?.pendingPhone ?? phone);
       setStep("code");
     }
   }
@@ -135,10 +144,15 @@ export function PhoneVerificationDialog({
       <DialogContent className="max-w-md p-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-6 py-5 items-start static">
           <div className="space-y-1.5">
-            <DialogTitle>Verify your WhatsApp number</DialogTitle>
+            <DialogTitle>
+              {mode === "change"
+                ? "Change your WhatsApp number"
+                : "Verify your WhatsApp number"}
+            </DialogTitle>
             <DialogDescription>
-              We will send a 6-digit code to your WhatsApp. Enter it below to
-              confirm ownership of this number.
+              {mode === "change"
+                ? "We'll send a 6-digit code to your new number on WhatsApp. Confirm it to replace your current number — sign-ins via the old one will stop working."
+                : "We will send a 6-digit code to your WhatsApp. Enter it below to confirm ownership of this number."}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">

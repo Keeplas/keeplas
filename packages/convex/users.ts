@@ -3,7 +3,6 @@ import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
-import { normalizeE164 } from "./lib/phone";
 import {
   deleteBlob,
   generateBlobUploadUrl,
@@ -81,32 +80,23 @@ export const getEmailAuthMode = query({
 });
 
 /**
- * Update the user's profile fields (name, phone).
- * Email is controlled by the auth provider and cannot be changed here;
- * the avatar is uploaded separately via `generateAvatarUploadUrl` /
- * `setAvatarImage`.
+ * Update mutable profile fields (currently only `name`). Email and phone are
+ * identifiers — changes go through the OTP-gated flows in
+ * `email_verification` / `phone_verification` so the auth accounts rotate
+ * atomically and the change lands on the audit chain. The avatar is uploaded
+ * separately via `generateAvatarUploadUrl` / `setAvatarImage`.
  */
 export const updateProfile = auditedMutation({
   action: "user.profile.updated",
   resourceType: "user",
   args: {
     name: v.optional(v.string()),
-    phoneNumber: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
 
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (args.name !== undefined) patch.name = args.name.trim() || undefined;
-    if (args.phoneNumber !== undefined) {
-      const next = normalizeE164(args.phoneNumber);
-      patch.phoneNumber = next;
-      // Changing the phone invalidates any previous verification.
-      const current = await ctx.db.get(userId);
-      if (current?.phoneNumber !== next) {
-        patch.phoneNumberVerifiedAt = undefined;
-      }
-    }
 
     await ctx.db.patch(userId, patch);
   },

@@ -19,33 +19,42 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 
 type Step = "email" | "code";
+type Mode = "add" | "change";
 
 interface EmailVerificationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialEmail?: string;
+  /**
+   * "add" (default) when the user has no verified email yet; "change" when
+   * they already do — only the copy changes, the OTP flow is identical.
+   */
+  mode?: Mode;
   onVerified?: () => void;
 }
 
 /**
- * Add + verify an email for the signed-in account. On success the backend links
- * a passwordless `email-otp` auth account, so the email becomes a login method.
- * Sibling of PhoneVerificationDialog (email instead of phone OTP).
+ * Add or change the email tied to the signed-in account. On success the
+ * backend either links a passwordless `email-otp` auth account (add) or
+ * re-points existing email-keyed auth accounts (change), so the new address
+ * becomes the active login identifier. Sibling of PhoneVerificationDialog.
  */
 export function EmailVerificationDialog({
   open,
   onOpenChange,
   initialEmail,
+  mode = "add",
   onVerified,
 }: EmailVerificationDialogProps) {
   const status = useQuery(api.email_verification.getMyStatus);
   const requestVerification = useMutation(
     api.email_verification.requestVerification,
   );
-  const verifyCodeAndLink = useMutation(
+  const verifyCodeAndLink = useAuditedMutation(
     api.email_verification.verifyCodeAndLink,
   );
 
@@ -136,10 +145,13 @@ export function EmailVerificationDialog({
       <DialogContent className="max-w-md p-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-6 py-5 items-start static">
           <div className="space-y-1.5">
-            <DialogTitle>Add an email</DialogTitle>
+            <DialogTitle>
+              {mode === "change" ? "Change your email" : "Add an email"}
+            </DialogTitle>
             <DialogDescription>
-              We will email you a 6-digit code. Confirm it to add this email —
-              you can then sign in with an emailed code, no password.
+              {mode === "change"
+                ? "We'll email a 6-digit code to your new address. Confirm it to replace your current email — sign-ins via the old address will stop working."
+                : "We will email you a 6-digit code. Confirm it to add this email — you can then sign in with an emailed code, no password."}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">

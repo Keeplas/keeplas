@@ -12,9 +12,7 @@ import {
   Icon,
   Input,
   Label,
-  PhoneInput,
   UserAvatar,
-  isValidPhone,
   type CountryCode,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
@@ -41,9 +39,6 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const removeAvatar = useAuditedMutation(api.users.removeAvatar);
 
   const [name, setName] = useState(user.name ?? "");
-  const [phone, setPhone] = useState<string | undefined>(
-    user.phoneNumber || undefined,
-  );
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +61,6 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   if (user !== seededFrom) {
     setSeededFrom(user);
     setName(user.name ?? "");
-    setPhone(user.phoneNumber || undefined);
     setAvatarUrl(user.avatarUrl ?? "");
   }
 
@@ -88,15 +82,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (phone && !isValidPhone(phone)) {
-      onError("Please enter a valid phone number");
-      return;
-    }
     setSaving(true);
     onError("");
     setSaved(false);
     try {
-      await updateProfile({ name, phoneNumber: phone });
+      await updateProfile({ name });
       setSaved(true);
     } catch (err) {
       onError(getErrorMessage(err, "Failed to update profile"));
@@ -262,21 +252,26 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             <Label htmlFor="email" className="text-label-md text-secondary">
               Primary Email
             </Label>
-            {user.emailVerificationTime ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
-                <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
-                Verified
-              </span>
-            ) : (
+            <div className="flex items-center gap-2">
+              {user.emailVerificationTime && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                  <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
+                  Verified
+                </span>
+              )}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => setEmailDialogOpen(true)}
               >
-                {user.email ? "Verify" : "Add email"}
+                {user.emailVerificationTime
+                  ? "Change email"
+                  : user.email
+                    ? "Verify"
+                    : "Add email"}
               </Button>
-            )}
+            </div>
           </div>
           <Input
             id="email"
@@ -288,7 +283,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           />
           <p className="text-label-md text-on-surface-variant mt-1">
             {user.emailVerificationTime
-              ? "Managed by your auth provider"
+              ? "Sign in with this email and a one-time code. Change it any time — we'll verify the new address with a code."
               : user.email
                 ? "On file from your invitation — verify it to sign in with an emailed code."
                 : "Add an email to also sign in with an emailed code."}
@@ -300,28 +295,34 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             <Label htmlFor="phone" className="text-label-md text-secondary">
               WhatsApp Number
             </Label>
-            {phoneStatus?.verifiedAt ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
-                <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
-                Verified
-              </span>
-            ) : (
+            <div className="flex items-center gap-2">
+              {phoneStatus?.verifiedAt && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                  <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
+                  Verified
+                </span>
+              )}
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => setVerifyDialogOpen(true)}
-                disabled={!phone || !isValidPhone(phone)}
               >
-                Verify
+                {phoneStatus?.verifiedAt
+                  ? "Change number"
+                  : user.phoneNumber
+                    ? "Verify"
+                    : "Add number"}
               </Button>
-            )}
+            </div>
           </div>
-          <PhoneInput
+          <Input
             id="phone"
-            value={phone}
-            onChange={setPhone}
-            defaultCountry={user.country as CountryCode | undefined}
+            type="tel"
+            value={user.phoneNumber ?? ""}
+            placeholder={user.phoneNumber ? undefined : "No number linked"}
+            disabled
+            className="opacity-70"
           />
           <p className="text-label-md text-on-surface-variant">
             Used for Life Check escalations and important notifications.
@@ -469,14 +470,20 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       <PhoneVerificationDialog
         open={verifyDialogOpen}
         onOpenChange={setVerifyDialogOpen}
-        initialPhone={phone}
+        initialPhone={
+          phoneStatus?.verifiedAt ? undefined : (user.phoneNumber ?? undefined)
+        }
         defaultCountry={user.country as CountryCode | undefined}
+        mode={phoneStatus?.verifiedAt ? "change" : "add"}
       />
 
       <EmailVerificationDialog
         open={emailDialogOpen}
         onOpenChange={setEmailDialogOpen}
-        initialEmail={user.email ?? undefined}
+        initialEmail={
+          user.emailVerificationTime ? undefined : (user.email ?? undefined)
+        }
+        mode={user.emailVerificationTime ? "change" : "add"}
       />
     </section>
   );

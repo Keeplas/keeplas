@@ -51,6 +51,7 @@ export const WEB_OPTIONAL_GROUPS = {
     "RESEND_API_KEY",
     "RESEND_FROM_EMAIL",
     "SUPPORT_INBOX_EMAIL",
+    "SUPPORT_FROM_EMAIL",
   ],
   "Web Push (VAPID)": [
     "VAPID_PUBLIC_KEY",
@@ -89,7 +90,7 @@ export const CONVEX_REQUIRED = [
 ];
 
 export const CONVEX_OPTIONAL_GROUPS = {
-  "Support inbox (Resend)": ["SUPPORT_INBOX_EMAIL"],
+  "Support inbox (Resend)": ["SUPPORT_INBOX_EMAIL", "SUPPORT_FROM_EMAIL"],
   "Web Push (VAPID)": [
     "VAPID_PUBLIC_KEY",
     "VAPID_PRIVATE_KEY",
@@ -121,6 +122,7 @@ export const CONVEX_SYNC_KEYS = [
   "RESEND_API_KEY",
   "RESEND_FROM_EMAIL",
   "SUPPORT_INBOX_EMAIL",
+  "SUPPORT_FROM_EMAIL",
   "VAPID_PUBLIC_KEY",
   "VAPID_PRIVATE_KEY",
   "VAPID_SUBJECT",

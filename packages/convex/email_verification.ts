@@ -2,14 +2,16 @@ import { v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 
-// Settings-side add+verify of an email for an authenticated user, sibling of
-// phone_verification.ts. On success it links a passwordless `email-otp` auth
-// account to the CURRENT user so the email becomes a login method. The pending
-// email lives on the code row (not on `users`) until verified, so an unverified
-// address never lands on the user record or its index.
+// Settings-side add OR change of the user's email. On success it links a
+// passwordless `email-otp` auth account to the CURRENT user and, when the
+// user already had a verified email, re-points existing `password`/`email-otp`
+// auth accounts at the new identifier so the old email stops authenticating.
+// The pending email lives on the code row (not on `users`) until verified, so
+// an unverified address never lands on the user record or its index.
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -51,8 +53,10 @@ async function assertEmailAvailable(
 
 /**
  * Issue + dispatch a fresh 6-digit code to verify ownership of `email` before
- * linking it. Rate-limited to 3 per rolling hour. Refuses if the account
- * already has an email or the address belongs to someone else.
+ * linking it (add flow) or replacing the current verified one (change flow).
+ * Rate-limited to 3 per rolling hour. Refuses if the user is trying to verify
+ * the same address they already have, or if the address belongs to someone
+ * else.
  */
 export const requestVerification = mutation({
   args: { email: v.string() },
@@ -61,12 +65,11 @@ export const requestVerification = mutation({
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new Error("Invalid email address");
 
-    // Allowed when the account has no VERIFIED email yet. A backfilled,
-    // unverified email (from an invitation) is fine to verify — even to a
-    // different address; we only block adding a second verified email.
+    // Block re-verifying the same address. Add (no current email) and change
+    // (current verified, but new value differs) flows are both allowed.
     const user = await ctx.db.get(userId);
-    if (user?.emailVerificationTime) {
-      throw new Error("A verified email is already linked to this account.");
+    if (user?.emailVerificationTime && user.email === email) {
+      throw new Error("New email is the same as the current one.");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -103,11 +106,19 @@ export const requestVerification = mutation({
 });
 
 /**
- * Validate the submitted code and, on success, link a passwordless `email-otp`
- * auth account to the current user and set `users.email` + verification time.
- * Atomic: any failure rolls back the whole mutation.
+ * Validate the submitted code and, on success, either:
+ *  - **Add flow** (no current verified email): link a fresh passwordless
+ *    `email-otp` auth account and stamp `users.email` + verification time.
+ *  - **Change flow** (already had a verified email): re-point this user's
+ *    existing `password` / `email-otp` auth accounts at the new normalized
+ *    address so the old email stops authenticating, then stamp `users.email`.
+ *
+ * Either way the mutation is atomic — any failure rolls back the whole tx —
+ * and audited so the identifier rotation lands on the chain.
  */
-export const verifyCodeAndLink = mutation({
+export const verifyCodeAndLink = auditedMutation({
+  action: "user.email.changed",
+  resourceType: "user",
   args: { code: v.string() },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -138,21 +149,65 @@ export const verifyCodeAndLink = mutation({
     }
 
     const email = active.email;
-    // Re-check at the security boundary (transactional): the account must still
-    // have no VERIFIED email and the address must still be free.
+    // Re-check at the security boundary (transactional): the address must
+    // still be free and the user must not be re-confirming their current one.
     const user = await ctx.db.get(userId);
-    if (user?.emailVerificationTime) {
+    const previousEmail = user?.email ?? null;
+    if (user?.emailVerificationTime && previousEmail === email) {
       await ctx.db.delete(active._id);
-      throw new Error("A verified email is already linked to this account.");
+      throw new Error("New email is the same as the current one.");
     }
     await assertEmailAvailable(ctx, email, userId);
 
-    await ctx.db.insert("authAccounts", {
-      userId,
-      provider: "email-otp",
-      providerAccountId: email,
-      emailVerified: email,
-    });
+    if (user?.emailVerificationTime) {
+      // Change flow: rotate the providerAccountId on every email-keyed auth
+      // account this user owns so the old address stops being a valid login.
+      // Defensive: re-check no other user already owns the new id on each
+      // provider before patching.
+      const ownedAccounts = await ctx.db
+        .query("authAccounts")
+        .withIndex("userIdAndProvider", (q) => q.eq("userId", userId))
+        .collect();
+      let hasEmailOtp = false;
+      for (const acc of ownedAccounts) {
+        if (acc.provider !== "password" && acc.provider !== "email-otp") {
+          continue;
+        }
+        const clash = await ctx.db
+          .query("authAccounts")
+          .withIndex("providerAndAccountId", (q) =>
+            q.eq("provider", acc.provider).eq("providerAccountId", email),
+          )
+          .first();
+        if (clash && clash._id !== acc._id) {
+          await ctx.db.delete(active._id);
+          throw new Error("This email is already linked to another account.");
+        }
+        await ctx.db.patch(acc._id, {
+          providerAccountId: email,
+          ...(acc.emailVerified !== undefined ? { emailVerified: email } : {}),
+        });
+        if (acc.provider === "email-otp") hasEmailOtp = true;
+      }
+      // Password-only accounts gain a passwordless login method on first
+      // change, mirroring the add flow's behaviour.
+      if (!hasEmailOtp) {
+        await ctx.db.insert("authAccounts", {
+          userId,
+          provider: "email-otp",
+          providerAccountId: email,
+          emailVerified: email,
+        });
+      }
+    } else {
+      await ctx.db.insert("authAccounts", {
+        userId,
+        provider: "email-otp",
+        providerAccountId: email,
+        emailVerified: email,
+      });
+    }
+
     await ctx.db.patch(userId, {
       email,
       emailVerificationTime: now,
@@ -160,8 +215,12 @@ export const verifyCodeAndLink = mutation({
     });
     await ctx.db.delete(active._id);
 
-    return { verified: true, email };
+    return { verified: true, email, previousEmail };
   },
+  getMetadata: (_args, result) => ({
+    previousEmail: result.previousEmail,
+    newEmail: result.email,
+  }),
 });
 
 export const getMyStatus = query({
