@@ -49,6 +49,11 @@ import { useUploadQueue } from "@/lib/upload-queue";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
+// Sentinel for the "All trust contacts" pseudo-option surfaced in intro mode.
+// Selecting it stores the item as recipientMode="default" (the resolver expands
+// to every accepted trust contact at release time) while still triggering a
+// per-recipient DEK wrap for the current trust contacts so they can decrypt.
+const ALL_TRUSTED_VALUE = "all-trusted";
 
 type RecipientMode = "default" | "groups" | "explicit";
 
@@ -204,16 +209,23 @@ export function AddItemDialog({
 
   // Pre-select the user's default group on first open of the dialog so
   // most items go to "all trust contacts" without any picking. The user
-  // can then narrow down or clear to make the item private.
+  // can then narrow down or clear to make the item private. Intro mode
+  // skips the group altogether and pre-selects the explicit "All trust
+  // contacts" pseudo-option — that way an owner with no recipient groups
+  // (or who deleted the default one) still gets a sane default.
   useEffect(() => {
     if (!open || recipientsTouched) return;
+    if (isIntroMode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-fills selection on dialog open; guarded by `recipientsTouched`.
+      setRecipientSelection([ALL_TRUSTED_VALUE]);
+      return;
+    }
     if (recipientGroups.length === 0) return;
     const defaultGroup = recipientGroups.find((g) => g.isDefault);
     if (defaultGroup) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-fills selection from async query data once per open; the `recipientsTouched` guard keeps the override-then-edit semantics simple.
       setRecipientSelection([`${GROUP_PREFIX}${defaultGroup._id}`]);
     }
-  }, [open, recipientGroups, recipientsTouched]);
+  }, [open, recipientGroups, recipientsTouched, isIntroMode]);
 
   // Sync category with the caller-provided default each time the dialog
   // opens, so callers (e.g. "Add Digital Asset" CTA) can land the user
@@ -232,6 +244,16 @@ export function AddItemDialog({
   }, [open, defaultCategory, isIntroMode]);
 
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
+    const allTrustedOpt: MultiSelectOption[] = isIntroMode
+      ? [
+          {
+            value: ALL_TRUSTED_VALUE,
+            label: "All trust contacts",
+            hint: "Everyone who's accepted your invite",
+            groupLabel: "Broadcast",
+          },
+        ]
+      : [];
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
       value: `${GROUP_PREFIX}${g._id}`,
       label: g.name,
@@ -247,8 +269,27 @@ export function AddItemDialog({
       hint: c.email,
       groupLabel: "Individual contacts",
     }));
-    return [...groupOpts, ...contactOpts];
-  }, [recipientGroups, allContacts]);
+    return [...allTrustedOpt, ...groupOpts, ...contactOpts];
+  }, [isIntroMode, recipientGroups, allContacts]);
+
+  // Mutual exclusivity for the "All trust contacts" sentinel: picking it clears
+  // any specific group/contact selections, and picking a specific recipient
+  // turns it off. Keeps the picker semantically consistent — broadcast or
+  // targeted, never both.
+  function handleRecipientChange(next: string[]) {
+    setRecipientsTouched(true);
+    const hadAll = recipientSelection.includes(ALL_TRUSTED_VALUE);
+    const hasAll = next.includes(ALL_TRUSTED_VALUE);
+    if (!hadAll && hasAll) {
+      setRecipientSelection([ALL_TRUSTED_VALUE]);
+      return;
+    }
+    if (hadAll && next.length > 1) {
+      setRecipientSelection(next.filter((v) => v !== ALL_TRUSTED_VALUE));
+      return;
+    }
+    setRecipientSelection(next);
+  }
 
   function resolveRecipientConfig(): {
     mode: RecipientMode;
@@ -256,6 +297,17 @@ export function AddItemDialog({
     sharedWithContacts: Id<"trusted_contacts">[];
     derivedAccessLevel: AccessLevel;
   } {
+    // "All trust contacts" sentinel → store as default mode. The release
+    // fan-out's resolver expands default to every accepted trust contact.
+    if (recipientSelection.includes(ALL_TRUSTED_VALUE)) {
+      return {
+        mode: "default",
+        sharedWithGroups: [],
+        sharedWithContacts: [],
+        derivedAccessLevel: "trusted_only",
+      };
+    }
+
     const groupIds = recipientSelection
       .filter((v) => v.startsWith(GROUP_PREFIX))
       .map((v) => v.slice(GROUP_PREFIX.length) as Id<"recipient_groups">);
@@ -407,7 +459,12 @@ export function AddItemDialog({
       return;
     }
 
-    if (isLetter && !isIntroMode && triggerType === "time_based" && !releaseDate) {
+    if (
+      isLetter &&
+      !isIntroMode &&
+      triggerType === "time_based" &&
+      !releaseDate
+    ) {
       setError("Pick a release date for the time-based trigger.");
       return;
     }
@@ -425,11 +482,20 @@ export function AddItemDialog({
     try {
       const recipientConfig = resolveRecipientConfig();
 
+      const allTrustedSelected = recipientSelection.includes(ALL_TRUSTED_VALUE);
       let resolvedRecipients: Array<{
         contactId: string;
         contactPublicKey?: string;
       }> = [];
-      if (recipientConfig.mode === "explicit") {
+      if (allTrustedSelected) {
+        // Wrap DEKs to every current trust contact so each one can decrypt
+        // at release time. The recipientMode stays "default" on the item,
+        // so future contacts also get the intro via the fan-out resolver.
+        resolvedRecipients = allContacts.map((c) => ({
+          contactId: c._id,
+          contactPublicKey: c.contactPublicKey,
+        }));
+      } else if (recipientConfig.mode === "explicit") {
         const byId = new Map(allContacts.map((c) => [c._id, c]));
         resolvedRecipients = recipientConfig.sharedWithContacts
           .map((id) => byId.get(id))
@@ -584,12 +650,7 @@ export function AddItemDialog({
               title={isIntroMode ? "Message identity" : "Asset Identity"}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div
-                className={cn(
-                  "space-y-2",
-                  isIntroMode && "md:col-span-2",
-                )}
-              >
+              <div className={cn("space-y-2", isIntroMode && "md:col-span-2")}>
                 <Label className="text-label-md text-on-surface-variant">
                   {isIntroMode ? "Title" : "Asset Name"}
                 </Label>
@@ -688,21 +749,23 @@ export function AddItemDialog({
                 </div>
               )}
 
-              {isLetter && !isIntroMode && triggerType === "life_check_failure" && (
-                <div className="md:col-span-2">
-                  <InfoCallout icon={ICON_PATHS.heartbeat}>
-                    Uses your global Life Check cadence and escalation. Adjust
-                    the inactivity threshold once in{" "}
-                    <Link
-                      href="/life-check"
-                      className="text-secondary font-semibold hover:underline"
-                    >
-                      Life Check settings
-                    </Link>
-                    — it applies to every letter with this trigger.
-                  </InfoCallout>
-                </div>
-              )}
+              {isLetter &&
+                !isIntroMode &&
+                triggerType === "life_check_failure" && (
+                  <div className="md:col-span-2">
+                    <InfoCallout icon={ICON_PATHS.heartbeat}>
+                      Uses your global Life Check cadence and escalation. Adjust
+                      the inactivity threshold once in{" "}
+                      <Link
+                        href="/life-check"
+                        className="text-secondary font-semibold hover:underline"
+                      >
+                        Life Check settings
+                      </Link>
+                      — it applies to every letter with this trigger.
+                    </InfoCallout>
+                  </div>
+                )}
 
               {isIntroMode && (
                 <div className="md:col-span-2">
@@ -864,7 +927,9 @@ export function AddItemDialog({
           <section className="bg-surface-container-low rounded-2xl p-6">
             <SectionHeading
               step={isIntroMode ? "03" : "04"}
-              title={isIntroMode ? "Who sees this message?" : "Transmission Logic"}
+              title={
+                isIntroMode ? "Who sees this message?" : "Transmission Logic"
+              }
             />
             <div className="space-y-4">
               <div className="space-y-2">
@@ -876,13 +941,17 @@ export function AddItemDialog({
                 <MultiSelect
                   options={recipientOptions}
                   selected={recipientSelection}
-                  onChange={(next) => {
-                    setRecipientsTouched(true);
-                    setRecipientSelection(next);
-                  }}
+                  onChange={
+                    isIntroMode
+                      ? handleRecipientChange
+                      : (next) => {
+                          setRecipientsTouched(true);
+                          setRecipientSelection(next);
+                        }
+                  }
                   placeholder={
                     isIntroMode
-                      ? "Pick a group or contacts"
+                      ? "All trust contacts"
                       : "No one — keep private"
                   }
                   searchPlaceholder="Search groups or contacts…"
@@ -910,7 +979,7 @@ export function AddItemDialog({
                 />
                 <p className="text-label-md text-on-surface-variant/70">
                   {isIntroMode
-                    ? "Default group = every trusted contact sees this. Pick specific people to override for them only."
+                    ? "Broadcast to every trusted contact, target a group, or pick specific people. Combinations of groups and individuals are allowed."
                     : "Pick one or more groups (your trust contacts are already a group), or specific people. Empty = the item stays private."}
                 </p>
               </div>

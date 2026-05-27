@@ -153,38 +153,27 @@ function VaultPageContent() {
   return (
     <div className="max-w-screen-2xl mx-auto space-y-10">
       {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-2">
-          {activeSection && (
-            <Link
-              href="/vault"
-              className="inline-flex items-center gap-2 text-label-md text-on-surface-variant hover:text-primary transition-colors"
-            >
-              <Icon
-                path={ICON_PATHS.chevronRight}
-                className="w-4 h-4 rotate-180"
-              />
-              All vault sections
-            </Link>
-          )}
-          <h1 className="text-headline-lg text-primary">
-            {activeSection ? activeSection.label : "Digital Vault"}
-          </h1>
-          <p className="text-body-lg text-on-surface-variant max-w-md">
-            {activeSection
-              ? `Showing all ${activeCount} item${activeCount === 1 ? "" : "s"} in this category.`
-              : "Your life's core documentation, secured with end-to-end zero-knowledge encryption."}
-          </p>
-        </div>
-        <Button
-          variant="vault"
-          size="lg"
-          onClick={() => openAddDialog(activeSection ?? undefined)}
-          className="shadow-2xl shadow-primary/20 cursor-pointer"
-        >
-          <Icon path={ICON_PATHS.plusCircle} className="w-5 h-5" />
-          Add New Entry
-        </Button>
+      <header className="space-y-2">
+        {activeSection && (
+          <Link
+            href="/vault"
+            className="inline-flex items-center gap-2 text-label-md text-on-surface-variant hover:text-primary transition-colors"
+          >
+            <Icon
+              path={ICON_PATHS.chevronRight}
+              className="w-4 h-4 rotate-180"
+            />
+            All vault sections
+          </Link>
+        )}
+        <h1 className="text-headline-lg text-primary">
+          {activeSection ? activeSection.label : "Digital Vault"}
+        </h1>
+        <p className="text-body-lg text-on-surface-variant max-w-md">
+          {activeSection
+            ? `Showing all ${activeCount} item${activeCount === 1 ? "" : "s"} in this category.`
+            : "Your life's core documentation, secured with end-to-end zero-knowledge encryption."}
+        </p>
       </header>
 
       {/* Welcome message editor — sits above categories so users see it

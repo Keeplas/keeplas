@@ -94,9 +94,17 @@ export const getContactAccessSummary = query({
           title: item.title,
           category: item.category,
           recipientMode: item.recipientMode ?? "default",
+          isReleaseIntroduction: item.isReleaseIntroduction === true,
         });
       }
     }
+    // Welcome messages (release introductions) always render at the top of
+    // the contact's item list — they're meant to greet the contact before
+    // they read anything else, so they shouldn't get buried under categorized
+    // items. Stable secondary order = insertion (vault item by_user index).
+    releasedItems.sort(
+      (a, b) => Number(b.isReleaseIntroduction) - Number(a.isReleaseIntroduction),
+    );
 
     const groups = await ctx.db
       .query("recipient_groups")

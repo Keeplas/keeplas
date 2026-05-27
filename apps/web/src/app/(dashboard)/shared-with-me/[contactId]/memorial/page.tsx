@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "convex/react";
@@ -8,11 +9,70 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { CATEGORIES } from "@/lib/vault-categories";
 import { MemorialIntroductionCard } from "./memorial-introduction-card";
+import { MemorialIntroductionDialog } from "./memorial-introduction-dialog";
+
+function seenStorageKey(contactId: string) {
+  return `keeplas:memorial-intros-seen:${contactId}`;
+}
+
+function readSeenIntros(contactId: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(seenStorageKey(contactId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function markIntrosSeen(contactId: string, introIds: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = new Set(readSeenIntros(contactId));
+    for (const id of introIds) current.add(id);
+    window.localStorage.setItem(
+      seenStorageKey(contactId),
+      JSON.stringify(Array.from(current)),
+    );
+  } catch {
+    // localStorage unavailable (private mode quota, disabled storage) — the
+    // dialog just re-opens next visit, which is a benign degradation.
+  }
+}
 
 export default function MemorialVaultPage() {
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const data = useQuery(api.memorial.getReleasedVaultForMe, { contactId });
+  const [introOpen, setIntroOpen] = useState(false);
+  const [lastIntroKey, setLastIntroKey] = useState<string | null>(null);
+
+  const introductions = data?.introductions ?? [];
+  const introIds = introductions.map((i) => i._id);
+  const introIdsKey = introIds.join(",");
+
+  // Render-time sync: when the set of intros first arrives or changes (e.g. a
+  // new intro is published by the owner), reopen the dialog if any id hasn't
+  // been acknowledged yet. Mirrors the `edit-group-dialog` pattern of syncing
+  // derived state during render rather than in an effect.
+  if (introIdsKey !== lastIntroKey) {
+    setLastIntroKey(introIdsKey);
+    if (introIds.length > 0) {
+      const seen = new Set(readSeenIntros(contactId));
+      if (introIds.some((id) => !seen.has(id))) {
+        setIntroOpen(true);
+      }
+    }
+  }
+
+  function handleIntroOpenChange(next: boolean) {
+    setIntroOpen(next);
+    if (!next && introIds.length > 0) {
+      markIntrosSeen(contactId, introIds);
+    }
+  }
 
   if (data === undefined) return <Loader size="md" />;
 
@@ -36,7 +96,7 @@ export default function MemorialVaultPage() {
     );
   }
 
-  const { owner, items, introductions } = data;
+  const { owner, items } = data;
 
   return (
     <div className="max-w-screen-xl mx-auto">
@@ -60,9 +120,18 @@ export default function MemorialVaultPage() {
       {introductions.length > 0 && (
         <section className="mb-12 bg-surface-container-low rounded-3xl p-8 space-y-8 max-w-3xl">
           <div>
-            <p className="text-label-md text-secondary mb-1">
-              A message from {owner.name}
-            </p>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <p className="text-label-md text-secondary">
+                A message from {owner.name}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIntroOpen(true)}
+                className="text-label-md font-bold text-secondary hover:underline cursor-pointer"
+              >
+                Re-read message
+              </button>
+            </div>
             <div className="h-px bg-outline-variant/30" />
           </div>
           {introductions.map((intro) => (
@@ -124,6 +193,16 @@ export default function MemorialVaultPage() {
             );
           })}
         </div>
+      )}
+
+      {introductions.length > 0 && (
+        <MemorialIntroductionDialog
+          open={introOpen}
+          onOpenChange={handleIntroOpenChange}
+          ownerName={owner.name}
+          contactId={contactId}
+          introductions={introductions}
+        />
       )}
     </div>
   );

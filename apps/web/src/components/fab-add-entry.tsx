@@ -26,10 +26,10 @@ export function FabAddEntry() {
         size="icon"
         aria-label="Add new entry"
         onClick={() => setOpen(true)}
-        className="fixed right-6 bottom-24 md:bottom-6 z-40 h-14 w-14 rounded-full shadow-2xl shadow-primary/30 cursor-pointer"
+        className="fixed right-6 bottom-24 md:bottom-6 z-40 h-16 w-16 rounded-full shadow-2xl shadow-primary/30 cursor-pointer"
       >
         <svg
-          className="w-6 h-6"
+          className="w-7 h-7"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
