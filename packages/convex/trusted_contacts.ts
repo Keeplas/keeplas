@@ -160,12 +160,10 @@ export const inviteContact = auditedMutation({
       v.literal("other"),
     ),
     contactType: v.optional(contactTypeValidator),
-    introMessage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     const contactType = args.contactType ?? "trust";
-    const introMessage = args.introMessage?.trim() || undefined;
 
     // A contact is reachable by email, phone, or both — but at least one
     // identifier is required. `normalizeE164` also validates the phone format.
@@ -222,7 +220,6 @@ export const inviteContact = auditedMutation({
       invitationStatus: "pending" as const,
       invitationToken,
       invitedAt: now,
-      introMessage,
       createdAt: now,
       updatedAt: now,
     };
@@ -284,14 +281,11 @@ export const inviteContact = auditedMutation({
       relatedType: "trusted_contact",
     });
 
-    // Email is the acceptance-link channel for trust contacts, and the
-    // courtesy-intro channel for recipient-only contacts who opted in — only
-    // possible when an email is on file (phone-only contacts skip it).
-    const shouldEmail =
-      !!email &&
-      (contactType === "trust" ||
-        (contactType === "recipient_only" && !!introMessage));
-    if (shouldEmail) {
+    // Email is the acceptance-link channel for trust contacts and the
+    // courtesy-intro channel for recipient-only contacts — fire whenever an
+    // email is on file. The recipient-only email body is a fixed template
+    // mirroring the WhatsApp content, no opt-in needed.
+    if (email) {
       await ctx.scheduler.runAfter(
         0,
         internal.trusted_contacts.sendInvitationEmail,
@@ -310,6 +304,20 @@ export const inviteContact = auditedMutation({
           phoneNumber: baseFields.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
           invitationToken,
+        },
+      );
+    }
+
+    // Courtesy WhatsApp intro for recipient-only contacts with a phone on
+    // file. Template body is static (no free-text payload allowed).
+    if (contactType === "recipient_only" && baseFields.phoneNumber) {
+      const inviter = await ctx.db.get(userId);
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendRecipientInvitationWhatsApp,
+        {
+          phoneNumber: baseFields.phoneNumber,
+          inviterName: inviter?.name?.trim() || "A Keeplas user",
         },
       );
     }
@@ -746,6 +754,20 @@ export const resendInvitation = auditedMutation({
         },
       );
     }
+    if (
+      (contact.contactType ?? "trust") === "recipient_only" &&
+      contact.phoneNumber
+    ) {
+      const inviter = await ctx.db.get(userId);
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendRecipientInvitationWhatsApp,
+        {
+          phoneNumber: contact.phoneNumber,
+          inviterName: inviter?.name?.trim() || "A Keeplas user",
+        },
+      );
+    }
 
     return { invitationToken };
   },
@@ -937,12 +959,7 @@ export const sendInvitationEmail = internalAction({
           inviterName,
           acceptUrl,
         })
-      : recipientIntroHtml({
-          appUrl,
-          recipientName: data.name,
-          inviterName,
-          introMessage: data.introMessage ?? "",
-        });
+      : recipientIntroHtml({ appUrl, inviterName });
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -982,7 +999,6 @@ export const getInvitationEmailContext = internalQuery({
       contactType: contact.contactType,
       invitationStatus: contact.invitationStatus,
       invitationToken: contact.invitationToken,
-      introMessage: contact.introMessage,
       inviterName: inviter?.name ?? null,
     };
   },
@@ -1005,20 +1021,15 @@ function trustInvitationHtml(opts: {
 </body></html>`;
 }
 
-function recipientIntroHtml(opts: {
-  appUrl: string;
-  recipientName: string;
-  inviterName: string;
-  introMessage: string;
-}) {
-  const message = opts.introMessage
-    ? `<div style="white-space:pre-wrap;background:#f6f6f6;border-radius:10px;padding:16px;margin:24px 0">${escapeHtml(opts.introMessage)}</div>`
-    : "";
+function recipientIntroHtml(opts: { appUrl: string; inviterName: string }) {
+  // Body mirrors the Infobip WhatsApp template `keeplas_invite_recipient_only_en`
+  // so the two channels carry identical wording.
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
 <p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
-<p>Hi ${escapeHtml(opts.recipientName)},</p>
-<p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas. You don't need to do anything right now — Keeplas will only contact you if a specific event they have set up is triggered.</p>
-${message}
+<p>Hi!</p>
+<p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.</p>
+<p>Thanks for being there.</p>
+<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Discover Keeplas</a></p>
 <p style="color:#666;font-size:13px;margin-top:24px">If this email reached you by mistake, you can ignore it.</p>
 </body></html>`;
 }

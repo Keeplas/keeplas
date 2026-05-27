@@ -321,6 +321,29 @@ export const sendInvitationWhatsApp = internalAction({
 });
 
 /**
+ * WhatsApp courtesy intro to a recipient-only contact who provided a phone
+ * number. Utility template `keeplas_invite_recipient_only_en`: body
+ * placeholder = inviter name; static "Discover Keeplas" URL button
+ * (no parameter). No-op when Infobip is not configured.
+ */
+export const sendRecipientInvitationWhatsApp = internalAction({
+  args: {
+    phoneNumber: v.string(),
+    inviterName: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    return sendWhatsAppTemplate({
+      to: args.phoneNumber,
+      templateName:
+        process.env.WHATSAPP_TC_RECIPIENT_INVITE_TEMPLATE_NAME ??
+        "keeplas_invite_recipient_only_en",
+      language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+      placeholders: [args.inviterName],
+    });
+  },
+});
+
+/**
  * WhatsApp availability re-confirmation nudge to a trusted contact whose
  * shard verification is stale/missing. Utility template
  * `keeplas_reconfirm_tc_en`: body placeholder = vault owner name; static

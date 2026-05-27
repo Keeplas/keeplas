@@ -12,8 +12,6 @@ import {
   DialogDescription,
   Select,
   SelectItem,
-  Switch,
-  Textarea,
 } from "@keeplas/ui";
 import {
   Button,
@@ -39,9 +37,6 @@ const ROLES = [
 type Role = (typeof ROLES)[number]["value"];
 type ContactType = "trust" | "recipient_only";
 
-const DEFAULT_RECIPIENT_INTRO =
-  "Hi,\n\nI've added you as a recipient on my Keeplas vault. You don't need to do anything right now — Keeplas will only contact you if a specific event I've set up is triggered.\n\nThanks for being there.";
-
 interface InviteContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,8 +58,6 @@ export function InviteContactDialog({
   const [role, setRole] = useState<Role>("family");
   const [contactType, setContactType] =
     useState<ContactType>(initialContactType);
-  const [notifyRecipient, setNotifyRecipient] = useState(false);
-  const [introMessage, setIntroMessage] = useState(DEFAULT_RECIPIENT_INTRO);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -75,8 +68,6 @@ export function InviteContactDialog({
     setWasOpen(open);
     if (open) {
       setContactType(initialContactType);
-      setNotifyRecipient(false);
-      setIntroMessage(DEFAULT_RECIPIENT_INTRO);
     }
   }
 
@@ -100,25 +91,18 @@ export function InviteContactDialog({
     setError("");
 
     try {
-      const shouldSendIntro =
-        contactType === "recipient_only" &&
-        notifyRecipient &&
-        introMessage.trim().length > 0;
       const result = await inviteContact({
         name: name.trim(),
         email: email.trim() ? email.trim().toLowerCase() : undefined,
         phoneNumber: phone || undefined,
         role,
         contactType,
-        introMessage: shouldSendIntro ? introMessage.trim() : undefined,
       });
       setName("");
       setEmail("");
       setPhone(undefined);
       setRole("family");
       setContactType(initialContactType);
-      setNotifyRecipient(false);
-      setIntroMessage(DEFAULT_RECIPIENT_INTRO);
       onOpenChange(false);
       onContactInvited?.(
         (result as { contactId: Id<"trusted_contacts"> }).contactId,
@@ -245,43 +229,6 @@ export function InviteContactDialog({
             </div>
           </div>
 
-          {contactType === "recipient_only" && email.trim() && (
-            <div className="space-y-3 bg-surface-container-low rounded-xl p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-headline-sm text-primary flex items-center gap-1.5">
-                    Send introduction email
-                    <HelpHint content="Off by default. Recipients are passive until trigger — but you can send a courtesy heads-up now if you'd like them to know they're on your list." />
-                  </p>
-                  <p className="text-body-md text-on-surface-variant mt-0.5">
-                    Let {name.trim() || "them"} know they&apos;ve been added.
-                    They have nothing to do until trigger.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifyRecipient}
-                  onCheckedChange={setNotifyRecipient}
-                  className="mt-1"
-                />
-              </div>
-              {notifyRecipient && (
-                <div className="space-y-2 pt-1">
-                  <Label htmlFor="contact-intro">Message</Label>
-                  <Textarea
-                    id="contact-intro"
-                    value={introMessage}
-                    onChange={(e) => setIntroMessage(e.target.value)}
-                    rows={5}
-                    placeholder="Write a short note for them"
-                  />
-                  <p className="text-label-md text-on-surface-variant">
-                    Sent once, at the email above. Edit freely.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
           {error && <ErrorAlert message={error} />}
 
           <div className="flex gap-3 pt-2">
@@ -304,9 +251,7 @@ export function InviteContactDialog({
               {saving
                 ? "Sending..."
                 : contactType === "recipient_only"
-                  ? notifyRecipient
-                    ? "Add & Notify"
-                    : "Add Recipient"
+                  ? "Add Recipient"
                   : "Send Invitation"}
             </Button>
           </div>
