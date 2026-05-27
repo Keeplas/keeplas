@@ -36,6 +36,7 @@ const ACTION_ICONS: Record<string, string> = {
   distribute_shards: ICON_PATHS.shieldCheck,
   life_check: ICON_PATHS.heartbeat,
   release_policy: ICON_PATHS.group,
+  welcome_message: ICON_PATHS.mail,
   two_factor: ICON_PATHS.key,
   verify_whatsapp: ICON_PATHS.phone,
   more_categories: ICON_PATHS.plus,
@@ -54,6 +55,8 @@ const ACTION_HINTS: Record<string, string> = {
     "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
   release_policy:
     "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable, how long they have, and whether to release anyway or keep everything sealed if no one confirms.",
+  welcome_message:
+    "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
   two_factor:
     "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
   verify_whatsapp:

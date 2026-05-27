@@ -5,8 +5,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, cn, Icon, Loader } from "@keeplas/ui";
+import { cn, Icon, Loader } from "@keeplas/ui";
 import { AddItemDialog } from "@/components/add-item-dialog";
+import { ReleaseIntroductionEditor } from "@/app/(dashboard)/life-check/sections/release-introduction-editor";
 import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
@@ -185,6 +186,11 @@ function VaultPageContent() {
           Add New Entry
         </Button>
       </header>
+
+      {/* Welcome message editor — sits above categories so users see it
+          immediately on the main /vault landing. Hidden when drilling into a
+          single category to keep that view focused on items. */}
+      {!activeSection && <ReleaseIntroductionEditor />}
 
       {/* Vault Sections */}
       <div className="space-y-12">

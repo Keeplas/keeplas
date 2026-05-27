@@ -19,6 +19,7 @@ import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
+import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useUploadQueue } from "@/lib/upload-queue";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
@@ -82,19 +83,6 @@ function formatAttachmentSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-// Legacy items were stored as plain text; new items are TipTap HTML. Wrap
-// plain text into a paragraph so newlines survive a round-trip through the
-// rich-text editor instead of collapsing into a single line.
-function normalizeContentForRichText(content: string): string {
-  if (/^\s*<[a-z!/]/i.test(content)) return content;
-  const escaped = content
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
-  return `<p>${escaped}</p>`;
 }
 
 export default function VaultItemPage() {

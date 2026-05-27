@@ -10,20 +10,8 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { MemorialItemAttachments } from "@/components/memorial-item-attachments";
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
+import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { getCategoryConfig } from "@/lib/vault-categories";
-
-// Legacy items were stored as plain text; new items are TipTap HTML. Wrap plain
-// text into a paragraph so newlines survive the rich-text round-trip. (Mirrors
-// the owner item page; small enough to keep local — only two call sites today.)
-function normalizeContentForRichText(content: string): string {
-  if (/^\s*<[a-z!/]/i.test(content)) return content;
-  const escaped = content
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
-  return `<p>${escaped}</p>`;
-}
 
 export default function MemorialItemPage() {
   const params = useParams();

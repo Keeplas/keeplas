@@ -78,11 +78,20 @@ const TRIGGER_OPTIONS: TriggerOption[] = [
   },
 ];
 
+type AddItemDialogMode = "vault" | "release_introduction";
+
 interface AddItemDialogProps {
   vaultId: Id<"vaults">;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultCategory?: VaultCategory;
+  /**
+   * "release_introduction" repurposes the dialog to author the welcome
+   * message shown to trusted contacts on the memorial page after release.
+   * Category / trigger fields are hidden, the item is flagged
+   * isReleaseIntroduction=true, and recipients default to "everyone".
+   */
+  mode?: AddItemDialogMode;
 }
 
 const ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
@@ -150,7 +159,9 @@ export function AddItemDialog({
   open,
   onOpenChange,
   defaultCategory,
+  mode = "vault",
 }: AddItemDialogProps) {
+  const isIntroMode = mode === "release_introduction";
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const { encryptContentWithKey, computeHash, isReady } = useVaultCrypto();
   const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
@@ -170,7 +181,9 @@ export function AddItemDialog({
   // upload — never sent to the server in plaintext (zero-knowledge).
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<VaultCategory>(
-    defaultCategory ?? "personal_document",
+    isIntroMode
+      ? "conditional_message"
+      : (defaultCategory ?? "personal_document"),
   );
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
@@ -204,13 +217,19 @@ export function AddItemDialog({
 
   // Sync category with the caller-provided default each time the dialog
   // opens, so callers (e.g. "Add Digital Asset" CTA) can land the user
-  // directly in the right category without manual picking.
+  // directly in the right category without manual picking. Intro mode
+  // forces "conditional_message" regardless of defaults — the field is
+  // hidden in that mode and the category is semantically meaningless.
   useEffect(() => {
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- resets category to caller-provided default on each (re)open; a `key`-based remount would lose all draft state.
-      setCategory(defaultCategory ?? "personal_document");
+      setCategory(
+        isIntroMode
+          ? "conditional_message"
+          : (defaultCategory ?? "personal_document"),
+      );
     }
-  }, [open, defaultCategory]);
+  }, [open, defaultCategory, isIntroMode]);
 
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
@@ -348,7 +367,11 @@ export function AddItemDialog({
   function resetDialog() {
     setTitle("");
     setBody("");
-    setCategory(defaultCategory ?? "personal_document");
+    setCategory(
+      isIntroMode
+        ? "conditional_message"
+        : (defaultCategory ?? "personal_document"),
+    );
     setFiles([]);
     setLinkUrls([""]);
     setRecorderMode(null);
@@ -384,8 +407,15 @@ export function AddItemDialog({
       return;
     }
 
-    if (isLetter && triggerType === "time_based" && !releaseDate) {
+    if (isLetter && !isIntroMode && triggerType === "time_based" && !releaseDate) {
       setError("Pick a release date for the time-based trigger.");
+      return;
+    }
+
+    if (isIntroMode && recipientSelection.length === 0) {
+      setError(
+        "Pick at least one recipient — an introduction with no audience is never shown.",
+      );
       return;
     }
 
@@ -442,15 +472,16 @@ export function AddItemDialog({
           ? await encryptContentWithKey(serializeLinks(cleanUrls), dek)
           : undefined;
 
-      const triggerArgs = isLetter
-        ? {
-            triggerType,
-            triggerConfig:
-              triggerType === "time_based" && releaseDate
-                ? { releaseDate: new Date(releaseDate).getTime() }
-                : undefined,
-          }
-        : {};
+      const triggerArgs =
+        isLetter && !isIntroMode
+          ? {
+              triggerType,
+              triggerConfig:
+                triggerType === "time_based" && releaseDate
+                  ? { releaseDate: new Date(releaseDate).getTime() }
+                  : undefined,
+            }
+          : {};
 
       // Create the item without attachments first, then hand the files to
       // the background upload queue so the dialog can close immediately.
@@ -474,6 +505,7 @@ export function AddItemDialog({
           wrappedDek: rw.wrappedDek,
         })),
         files: undefined,
+        isReleaseIntroduction: isIntroMode || undefined,
         ...triggerArgs,
       })) as Id<"vault_items">;
 
@@ -514,16 +546,19 @@ export function AddItemDialog({
         <DialogHeader className="px-8 py-6 items-start shrink-0 static">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-label-md text-secondary">
-              <span>Vault</span>
+              <span>{isIntroMode ? "Life Check" : "Vault"}</span>
               <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
               <span className="text-on-surface-variant/50">
-                Secure New Asset
+                {isIntroMode ? "Welcome message" : "Secure New Asset"}
               </span>
             </div>
-            <DialogTitle className="text-headline-md">Add to Vault</DialogTitle>
+            <DialogTitle className="text-headline-md">
+              {isIntroMode ? "Record a welcome message" : "Add to Vault"}
+            </DialogTitle>
             <DialogDescription className="text-body-md max-w-md">
-              Deposit a critical asset. Files are encrypted on your device
-              before they leave. AES-256-GCM.
+              {isIntroMode
+                ? "A text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Encrypted on your device before it leaves."
+                : "Deposit a critical asset. Files are encrypted on your device before they leave. AES-256-GCM."}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
@@ -544,40 +579,58 @@ export function AddItemDialog({
 
           {/* Section 01 — Asset Identity */}
           <section className="bg-surface-container-low rounded-2xl p-6">
-            <SectionHeading step="01" title="Asset Identity" />
+            <SectionHeading
+              step="01"
+              title={isIntroMode ? "Message identity" : "Asset Identity"}
+            />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div
+                className={cn(
+                  "space-y-2",
+                  isIntroMode && "md:col-span-2",
+                )}
+              >
                 <Label className="text-label-md text-on-surface-variant">
-                  Asset Name
+                  {isIntroMode ? "Title" : "Asset Name"}
                 </Label>
                 <Input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Primary Brokerage Account"
+                  placeholder={
+                    isIntroMode
+                      ? "e.g. A few words from me"
+                      : "e.g. Primary Brokerage Account"
+                  }
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-label-md text-on-surface-variant">
-                  Category
-                </Label>
-                <Select<VaultCategory>
-                  value={category}
-                  onValueChange={setCategory}
-                  placeholder="Choose a category"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.key} value={cat.key}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
+              {!isIntroMode && (
+                <div className="space-y-2">
+                  <Label className="text-label-md text-on-surface-variant">
+                    Category
+                  </Label>
+                  <Select<VaultCategory>
+                    value={category}
+                    onValueChange={setCategory}
+                    placeholder="Choose a category"
+                  >
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.key} value={cat.key}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              )}
               <div className="md:col-span-2 space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
-                  {isLetter ? "Message" : "Asset Description"}{" "}
-                  {!isLetter && (
+                  {isIntroMode
+                    ? "Your message"
+                    : isLetter
+                      ? "Message"
+                      : "Asset Description"}{" "}
+                  {!isLetter && !isIntroMode && (
                     <span className="text-outline-variant normal-case tracking-normal">
                       (optional)
                     </span>
@@ -587,15 +640,17 @@ export function AddItemDialog({
                   value={body}
                   onChange={setBody}
                   placeholder={
-                    isLetter
-                      ? "Write the message that will be released…"
-                      : "Describe the significance and location of this asset…"
+                    isIntroMode
+                      ? "Write a few words for your trusted contacts. They'll see this above the items you left them…"
+                      : isLetter
+                        ? "Write the message that will be released…"
+                        : "Describe the significance and location of this asset…"
                   }
-                  minHeight={isLetter ? 240 : 160}
+                  minHeight={isLetter || isIntroMode ? 240 : 160}
                 />
               </div>
 
-              {isLetter && (
+              {isLetter && !isIntroMode && (
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-label-md text-on-surface-variant">
                     Trigger
@@ -619,7 +674,7 @@ export function AddItemDialog({
                 </div>
               )}
 
-              {isLetter && triggerType === "time_based" && (
+              {isLetter && !isIntroMode && triggerType === "time_based" && (
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-label-md text-on-surface-variant">
                     Release on
@@ -633,7 +688,7 @@ export function AddItemDialog({
                 </div>
               )}
 
-              {isLetter && triggerType === "life_check_failure" && (
+              {isLetter && !isIntroMode && triggerType === "life_check_failure" && (
                 <div className="md:col-span-2">
                   <InfoCallout icon={ICON_PATHS.heartbeat}>
                     Uses your global Life Check cadence and escalation. Adjust
@@ -645,6 +700,16 @@ export function AddItemDialog({
                       Life Check settings
                     </Link>
                     — it applies to every letter with this trigger.
+                  </InfoCallout>
+                </div>
+              )}
+
+              {isIntroMode && (
+                <div className="md:col-span-2">
+                  <InfoCallout icon={ICON_PATHS.heartbeat}>
+                    Released alongside your vault when Life Check confirms
+                    you&apos;re unreachable. Shown to recipients at the top of
+                    their memorial view.
                   </InfoCallout>
                 </div>
               )}
@@ -787,19 +852,26 @@ export function AddItemDialog({
             )}
           </section>
 
-          {/* Section 03 — Linked URLs */}
-          <section className="bg-surface-container-low rounded-2xl p-6">
-            <SectionHeading step="03" title="Linked URLs" />
-            <VaultLinkInputList urls={linkUrls} onChange={setLinkUrls} />
-          </section>
+          {/* Section 03 — Linked URLs (hidden for intro mode) */}
+          {!isIntroMode && (
+            <section className="bg-surface-container-low rounded-2xl p-6">
+              <SectionHeading step="03" title="Linked URLs" />
+              <VaultLinkInputList urls={linkUrls} onChange={setLinkUrls} />
+            </section>
+          )}
 
           {/* Section 04 — Transmission Logic */}
           <section className="bg-surface-container-low rounded-2xl p-6">
-            <SectionHeading step="04" title="Transmission Logic" />
+            <SectionHeading
+              step={isIntroMode ? "03" : "04"}
+              title={isIntroMode ? "Who sees this message?" : "Transmission Logic"}
+            />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
-                  Who receives this at trigger?
+                  {isIntroMode
+                    ? "Pick the contacts who'll see this welcome"
+                    : "Who receives this at trigger?"}
                 </Label>
                 <MultiSelect
                   options={recipientOptions}
@@ -808,14 +880,20 @@ export function AddItemDialog({
                     setRecipientsTouched(true);
                     setRecipientSelection(next);
                   }}
-                  placeholder="No one — keep private"
+                  placeholder={
+                    isIntroMode
+                      ? "Pick a group or contacts"
+                      : "No one — keep private"
+                  }
                   searchPlaceholder="Search groups or contacts…"
                   emptyMessage="No groups or contacts yet."
                   renderTrigger={(selected) => {
                     if (selected.length === 0) {
                       return (
                         <span className="text-outline-variant">
-                          No one — keep private
+                          {isIntroMode
+                            ? "Pick at least one recipient"
+                            : "No one — keep private"}
                         </span>
                       );
                     }
@@ -831,8 +909,9 @@ export function AddItemDialog({
                   }}
                 />
                 <p className="text-label-md text-on-surface-variant/70">
-                  Pick one or more groups (your trust contacts are already a
-                  group), or specific people. Empty = the item stays private.
+                  {isIntroMode
+                    ? "Default group = every trusted contact sees this. Pick specific people to override for them only."
+                    : "Pick one or more groups (your trust contacts are already a group), or specific people. Empty = the item stays private."}
                 </p>
               </div>
             </div>
@@ -865,7 +944,13 @@ export function AddItemDialog({
                 disabled={saving || !isReady}
                 className="gap-3 cursor-pointer"
               >
-                <span>{saving ? "Sealing…" : "Secure Asset to Vault"}</span>
+                <span>
+                  {saving
+                    ? "Sealing…"
+                    : isIntroMode
+                      ? "Save welcome message"
+                      : "Secure Asset to Vault"}
+                </span>
                 <Icon
                   path={ICON_PATHS.lock}
                   className="w-5 h-5"

@@ -79,7 +79,24 @@ export const getHubData = query({
     // confirmation fallback (saveReleasePolicy persists all three fields).
     const releasePolicySet = !!lifeCheckConfig?.fallbackBehavior;
 
-    // Continuity score: 8 equally-weighted axes, identical to the Priority
+    // At least one release introduction authored? The welcome message that
+    // greets trusted contacts on the memorial vault — see
+    // ReleaseIntroductionEditor on /life-check. Intros live in vault_items
+    // but are excluded from the regular item listing (getActiveItems already
+    // filters them out), so we look them up separately.
+    const introduction = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isReleaseIntroduction"), true),
+          q.neq(q.field("status"), "archived"),
+        ),
+      )
+      .first();
+    const hasIntroduction = !!introduction;
+
+    // Continuity score: 9 equally-weighted axes, identical to the Priority
     // Action conditions. Guarantees the invariant:
     // priorityActions.every((a) => a.done) ⇔ continuityScore === 100.
     // Note: the shards axis requires ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY
@@ -93,12 +110,13 @@ export const getHubData = query({
       hasStrongAuth,
       phoneVerified,
       categoriesPopulated.size >= 5 && items.length > 0,
+      hasIntroduction,
     ];
     const continuityScore = Math.round(
       (axes.filter(Boolean).length / axes.length) * 100,
     );
 
-    // Priority actions: always emit all eight with their done flag, so the UI
+    // Priority actions: always emit all nine with their done flag, so the UI
     // can render the completed ones in a muted state ("trophée" feel).
     // Pending actions are listed first, completed ones at the bottom.
     const priorityActions: Array<{
@@ -136,6 +154,12 @@ export const getHubData = query({
         label: "Set your release policy",
         href: "/life-check",
         done: releasePolicySet,
+      },
+      {
+        key: "welcome_message",
+        label: "Record a welcome message",
+        href: "/life-check#welcome-message",
+        done: hasIntroduction,
       },
       {
         key: "two_factor",

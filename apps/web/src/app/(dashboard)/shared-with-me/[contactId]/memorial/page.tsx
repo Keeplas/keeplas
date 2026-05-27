@@ -7,6 +7,7 @@ import { Loader, Icon } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { CATEGORIES } from "@/lib/vault-categories";
+import { MemorialIntroductionCard } from "./memorial-introduction-card";
 
 export default function MemorialVaultPage() {
   const params = useParams();
@@ -35,7 +36,7 @@ export default function MemorialVaultPage() {
     );
   }
 
-  const { owner, items } = data;
+  const { owner, items, introductions } = data;
 
   return (
     <div className="max-w-screen-xl mx-auto">
@@ -55,6 +56,24 @@ export default function MemorialVaultPage() {
           is decrypted on your device.
         </p>
       </header>
+
+      {introductions.length > 0 && (
+        <section className="mb-12 bg-surface-container-low rounded-3xl p-8 space-y-8 max-w-3xl">
+          <div>
+            <p className="text-label-md text-secondary mb-1">
+              A message from {owner.name}
+            </p>
+            <div className="h-px bg-outline-variant/30" />
+          </div>
+          {introductions.map((intro) => (
+            <MemorialIntroductionCard
+              key={intro._id}
+              contactId={contactId}
+              intro={intro}
+            />
+          ))}
+        </section>
+      )}
 
       {items.length === 0 ? (
         <p className="text-body-md text-on-surface-variant">

@@ -73,8 +73,59 @@ export const getItemsByCategory = query({
       .withIndex("by_category", (q) =>
         q.eq("vaultId", vault._id).eq("category", args.category),
       )
-      .filter((q) => q.neq(q.field("status"), "archived"))
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("status"), "archived"),
+          q.neq(q.field("isReleaseIntroduction"), true),
+        ),
+      )
       .collect();
+  },
+});
+
+/**
+ * List the owner's release-introduction items (welcome messages shown to
+ * trusted contacts on the memorial page). Excluded from the regular vault
+ * listing — surfaced only through this dedicated query for the /life-check
+ * editor.
+ *
+ * Each row is enriched with a `hasAttachments` flag so the editor can label
+ * "Text + recording" without an extra round-trip per item.
+ */
+export const listReleaseIntroductions = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) return [];
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isReleaseIntroduction"), true),
+          q.neq(q.field("status"), "archived"),
+        ),
+      )
+      .collect();
+
+    return await Promise.all(
+      items.map(async (item) => {
+        const firstFile = await ctx.db
+          .query("vault_item_files")
+          .withIndex("by_item", (q) => q.eq("itemId", item._id))
+          .first();
+        return {
+          _id: item._id,
+          title: item.title,
+          recipientMode: item.recipientMode ?? "default",
+          sharedWithContacts: item.sharedWithContacts,
+          sharedWithGroups: item.sharedWithGroups ?? [],
+          createdAt: item.createdAt,
+          hasAttachments: firstFile !== null,
+        };
+      }),
+    );
   },
 });
 
@@ -203,6 +254,7 @@ export const createItem = auditedMutation({
     accessLevel: args.accessLevel,
     recipientMode: args.recipientMode ?? "default",
     fileCount: args.files?.length ?? 0,
+    isReleaseIntroduction: args.isReleaseIntroduction ?? false,
   }),
   args: {
     vaultId: v.id("vaults"),
@@ -225,6 +277,7 @@ export const createItem = auditedMutation({
     files: v.optional(v.array(newFileValidator)),
     triggerType: v.optional(triggerTypeValidator),
     triggerConfig: v.optional(triggerConfigValidator),
+    isReleaseIntroduction: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -237,6 +290,13 @@ export const createItem = auditedMutation({
     const recipientMode = args.recipientMode ?? "default";
     const sharedWithContacts = args.sharedWithContacts ?? [];
     const sharedWithGroups = args.sharedWithGroups ?? [];
+
+    // Intros are addressed to trusted contacts by definition — clamp the
+    // access level server-side so a malformed client can't smuggle one in
+    // as "private" (where the release fan-out would skip it).
+    const accessLevel = args.isReleaseIntroduction
+      ? "trusted_only"
+      : args.accessLevel;
 
     if (sharedWithContacts.length > 0 || sharedWithGroups.length > 0) {
       const own = await ctx.db
@@ -274,10 +334,11 @@ export const createItem = auditedMutation({
       recipientMode,
       ownerWrappedDek: args.ownerWrappedDek,
       ownerWrappedDekIv: args.ownerWrappedDekIv,
-      accessLevel: args.accessLevel,
+      accessLevel,
       status: "active",
       triggerType: args.triggerType,
       triggerConfig: args.triggerConfig,
+      isReleaseIntroduction: args.isReleaseIntroduction,
       createdAt: now,
       updatedAt: now,
     });
@@ -356,6 +417,7 @@ export const updateItem = auditedMutation({
     // Re-keying a ZK item replaces its owner wrap; mirror createItem.
     ownerWrappedDek: v.optional(v.string()),
     ownerWrappedDekIv: v.optional(v.string()),
+    isReleaseIntroduction: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -368,6 +430,12 @@ export const updateItem = auditedMutation({
       if (value !== undefined) {
         patch[key] = value;
       }
+    }
+
+    // Clamp accessLevel server-side when flipping an item to intro mode
+    // (matches createItem's defense-in-depth against malformed clients).
+    if (args.isReleaseIntroduction === true) {
+      patch.accessLevel = "trusted_only";
     }
 
     await ctx.db.patch(itemId, patch);

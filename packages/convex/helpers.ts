@@ -102,13 +102,20 @@ export async function getUserVault(ctx: QueryCtx, userId: Id<"users">) {
 }
 
 /**
- * Get all active (non-archived) vault items for a user.
+ * Get all active (non-archived) vault items for a user. Excludes release
+ * introductions — those are authored from /life-check and rendered separately
+ * on the memorial page, not in the main /vault listing or hub counters.
  */
 export async function getActiveItems(ctx: QueryCtx, userId: Id<"users">) {
   return await ctx.db
     .query("vault_items")
     .withIndex("by_user", (q) => q.eq("userId", userId))
-    .filter((q) => q.neq(q.field("status"), "archived"))
+    .filter((q) =>
+      q.and(
+        q.neq(q.field("status"), "archived"),
+        q.neq(q.field("isReleaseIntroduction"), true),
+      ),
+    )
     .collect();
 }
 

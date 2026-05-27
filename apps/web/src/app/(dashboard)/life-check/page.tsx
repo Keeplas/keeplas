@@ -7,6 +7,7 @@ import { ChannelList } from "./sections/channel-list";
 import { EscalationTimeline } from "./sections/escalation-timeline";
 import { FrequencySelector } from "./sections/frequency-selector";
 import { Countdown } from "./sections/countdown";
+import { ReleaseIntroductionEditor } from "./sections/release-introduction-editor";
 import { ReleaseOverview } from "./sections/release-overview";
 import { ReleasePolicySettings } from "./sections/release-policy-settings";
 import { useLifeCheckConfig } from "./sections/use-life-check-config";
@@ -72,6 +73,7 @@ export default function LifeCheckPage() {
                 defaultCountry={country as CountryCode | undefined}
               />
               <ReleasePolicySettings />
+              <ReleaseIntroductionEditor />
             </div>
 
             <EscalationTimeline

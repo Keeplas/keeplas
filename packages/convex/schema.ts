@@ -353,6 +353,12 @@ export default defineSchema({
 
     tags: v.optional(v.array(v.string())),
 
+    // When true, the item is a "release introduction": a welcome message the
+    // owner authors for trusted contacts who unlock the memorial vault after
+    // release. Hidden from the owner's regular /vault listings and surfaced
+    // separately on the memorial page above the categorized items.
+    isReleaseIntroduction: v.optional(v.boolean()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })

@@ -109,12 +109,20 @@ async function shapeItem(
     wrappedDek: recRow?.wrappedDek ?? null,
     readable: item.encryptionType === "zero_knowledge" && !!recRow?.wrappedDek,
     hasFiles: firstFile !== null,
+    isReleaseIntroduction: item.isReleaseIntroduction === true,
+    recipientMode: item.recipientMode ?? "default",
   };
 }
 
 /**
  * The released vault as seen by a contact: owner display info + the list of
  * items released to them (encrypted, with each one's per-recipient wrapped DEK).
+ *
+ * Release introductions are split into their own bucket so the UI can render
+ * them as a "message from the owner" above the categorized items. Targeting
+ * applies an override rule: when at least one intro is specifically addressed
+ * to this contact (recipientMode != "default"), the global ("default") intros
+ * are hidden — the targeted one is meant to replace the generic welcome.
  */
 export const getReleasedVaultForMe = query({
   args: { contactId: v.id("trusted_contacts") },
@@ -125,12 +133,24 @@ export const getReleasedVaultForMe = query({
     const owner = ownerDisplay(await ctx.db.get(access.contact.userId));
 
     const items = [];
+    const allIntros = [];
     for (const itemId of access.itemIds) {
       const shaped = await shapeItem(ctx, itemId, args.contactId);
-      if (shaped) items.push(shaped);
+      if (!shaped) continue;
+      if (shaped.isReleaseIntroduction) {
+        allIntros.push(shaped);
+      } else {
+        items.push(shaped);
+      }
     }
 
-    return { owner, items };
+    const targetedIntros = allIntros.filter(
+      (i) => i.recipientMode !== "default",
+    );
+    const introductions =
+      targetedIntros.length > 0 ? targetedIntros : allIntros;
+
+    return { owner, items, introductions };
   },
 });
 
