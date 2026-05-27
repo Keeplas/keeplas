@@ -174,7 +174,9 @@ export const verifyCode = auditedMutation({
       .first();
     if (clash && clash.userId !== userId) {
       await ctx.db.delete(active._id);
-      throw new Error("This phone number is already linked to another account.");
+      throw new Error(
+        "This phone number is already linked to another account.",
+      );
     }
     if (existingPhoneOtp) {
       if (existingPhoneOtp.providerAccountId !== newPhone) {
