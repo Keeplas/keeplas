@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Keeplas Vault">
+  <title>Keeplas Vault</title>
+
+  <rect width="1280" height="360" fill="#041632"/>
+  <rect x="12" y="12" width="1256" height="336" fill="none" stroke="#28657a" stroke-width="2" stroke-opacity="0.45"/>
+
+  <defs>
+    <g id="K">
+      <rect x="0" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/><rect x="54" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/><rect x="36" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="18" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/><rect x="36" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/><rect x="54" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/><rect x="72" y="108" width="18" height="18"/>
+    </g>
+    <g id="E">
+      <rect x="0" y="0" width="18" height="18"/><rect x="18" y="0" width="18" height="18"/><rect x="36" y="0" width="18" height="18"/><rect x="54" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="18" y="54" width="18" height="18"/><rect x="36" y="54" width="18" height="18"/><rect x="54" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/><rect x="18" y="108" width="18" height="18"/><rect x="36" y="108" width="18" height="18"/><rect x="54" y="108" width="18" height="18"/><rect x="72" y="108" width="18" height="18"/>
+    </g>
+    <g id="P">
+      <rect x="0" y="0" width="18" height="18"/><rect x="18" y="0" width="18" height="18"/><rect x="36" y="0" width="18" height="18"/><rect x="54" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/><rect x="72" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/><rect x="72" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="18" y="54" width="18" height="18"/><rect x="36" y="54" width="18" height="18"/><rect x="54" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/>
+    </g>
+    <g id="L">
+      <rect x="0" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/><rect x="18" y="108" width="18" height="18"/><rect x="36" y="108" width="18" height="18"/><rect x="54" y="108" width="18" height="18"/><rect x="72" y="108" width="18" height="18"/>
+    </g>
+    <g id="A">
+      <rect x="18" y="0" width="18" height="18"/><rect x="36" y="0" width="18" height="18"/><rect x="54" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/><rect x="72" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/><rect x="72" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="18" y="54" width="18" height="18"/><rect x="36" y="54" width="18" height="18"/><rect x="54" y="54" width="18" height="18"/><rect x="72" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/><rect x="72" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/><rect x="72" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/><rect x="72" y="108" width="18" height="18"/>
+    </g>
+    <g id="S">
+      <rect x="18" y="0" width="18" height="18"/><rect x="36" y="0" width="18" height="18"/><rect x="54" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/>
+      <rect x="18" y="54" width="18" height="18"/><rect x="36" y="54" width="18" height="18"/><rect x="54" y="54" width="18" height="18"/>
+      <rect x="72" y="72" width="18" height="18"/>
+      <rect x="72" y="90" width="18" height="18"/>
+      <rect x="0" y="108" width="18" height="18"/><rect x="18" y="108" width="18" height="18"/><rect x="36" y="108" width="18" height="18"/><rect x="54" y="108" width="18" height="18"/>
+    </g>
+    <g id="V">
+      <rect x="0" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/><rect x="72" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/><rect x="72" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="72" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/><rect x="72" y="72" width="18" height="18"/>
+      <rect x="18" y="90" width="18" height="18"/><rect x="54" y="90" width="18" height="18"/>
+      <rect x="36" y="108" width="18" height="18"/>
+    </g>
+    <g id="U">
+      <rect x="0" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="0" y="18" width="18" height="18"/><rect x="72" y="18" width="18" height="18"/>
+      <rect x="0" y="36" width="18" height="18"/><rect x="72" y="36" width="18" height="18"/>
+      <rect x="0" y="54" width="18" height="18"/><rect x="72" y="54" width="18" height="18"/>
+      <rect x="0" y="72" width="18" height="18"/><rect x="72" y="72" width="18" height="18"/>
+      <rect x="0" y="90" width="18" height="18"/><rect x="72" y="90" width="18" height="18"/>
+      <rect x="18" y="108" width="18" height="18"/><rect x="36" y="108" width="18" height="18"/><rect x="54" y="108" width="18" height="18"/>
+    </g>
+    <g id="T">
+      <rect x="0" y="0" width="18" height="18"/><rect x="18" y="0" width="18" height="18"/><rect x="36" y="0" width="18" height="18"/><rect x="54" y="0" width="18" height="18"/><rect x="72" y="0" width="18" height="18"/>
+      <rect x="36" y="18" width="18" height="18"/>
+      <rect x="36" y="36" width="18" height="18"/>
+      <rect x="36" y="54" width="18" height="18"/>
+      <rect x="36" y="72" width="18" height="18"/>
+      <rect x="36" y="90" width="18" height="18"/>
+      <rect x="36" y="108" width="18" height="18"/>
+    </g>
+  </defs>
+
+  <g fill="#28657a">
+    <use href="#K" x="275" y="40"/>
+    <use href="#E" x="383" y="40"/>
+    <use href="#E" x="491" y="40"/>
+    <use href="#P" x="599" y="40"/>
+    <use href="#L" x="707" y="40"/>
+    <use href="#A" x="815" y="40"/>
+    <use href="#S" x="923" y="40"/>
+    <use href="#V" x="383" y="202"/>
+    <use href="#A" x="491" y="202"/>
+    <use href="#U" x="599" y="202"/>
+    <use href="#L" x="707" y="202"/>
+    <use href="#T" x="815" y="202"/>
+  </g>
+
+  <g fill="#b9eaff">
+    <use href="#K" x="271" y="36"/>
+    <use href="#E" x="379" y="36"/>
+    <use href="#E" x="487" y="36"/>
+    <use href="#P" x="595" y="36"/>
+    <use href="#L" x="703" y="36"/>
+    <use href="#A" x="811" y="36"/>
+    <use href="#S" x="919" y="36"/>
+    <use href="#V" x="379" y="198"/>
+    <use href="#A" x="487" y="198"/>
+    <use href="#U" x="595" y="198"/>
+    <use href="#L" x="703" y="198"/>
+    <use href="#T" x="811" y="198"/>
+  </g>
+</svg>
