@@ -359,8 +359,9 @@ export default function TrustedContactsPage() {
                     Invite Your First Guardian
                   </h3>
                   <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    Up to {MAX_TRUST_CONTACTS} trusted guardians can receive
-                    recovery fragments. Recipient-only contacts have no cap.
+                    Invite at least 2 trusted guardians for recovery. The
+                    current shard model uses up to 3 shard holders; recipients
+                    have no cap.
                   </p>
                 </div>
               ) : (

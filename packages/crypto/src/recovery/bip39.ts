@@ -1,3 +1,5 @@
+import { argon2idRaw } from "../kdf";
+import { uint8ToHex } from "../encoding";
 import { WORDLIST } from "./wordlist";
 
 /**
@@ -65,59 +67,63 @@ export async function entropyToPhrase(
   return words;
 }
 
+// Domain-separation prefix so the salted verifier digest can never collide
+// with any other Argon2id-derived secret in the system (root key, device
+// wrap key, TOTP reset). Mixed into the Argon2id password input.
+const PHRASE_VERIFIER_DOMAIN = "keeplas-phrase-verifier-v1";
+
+const PHRASE_VERIFIER_SALT_BYTES = 16;
+
 /**
- * Derive a 256-bit AES-GCM CryptoKey deterministically from a BIP-39 phrase.
+ * Generate a fresh per-user random salt for {@link derivePhraseVerifier}.
  *
- * Uses PBKDF2 with:
- *   - Password: the space-joined mnemonic words (normalized to lowercase)
- *   - Salt: "keeplas-vault-key" (application-specific, not user-specific)
- *   - Iterations: 600,000 (OWASP recommendation for PBKDF2-SHA256)
- *   - Hash: SHA-256
- *   - Output: 256-bit AES-GCM key
- *
- * Same phrase always produces the same key.
+ * The salt is NOT secret and is stored server-side alongside the verifier;
+ * its only job is to make every user's Argon2id digest unique so a single
+ * DB-wide precomputation / rainbow table cannot attack all users at once.
  */
-export async function phraseToKey(words: string[]): Promise<CryptoKey> {
+export function generatePhraseVerifierSalt(): Uint8Array {
+  return crypto.getRandomValues(new Uint8Array(PHRASE_VERIFIER_SALT_BYTES));
+}
+
+/**
+ * Derive a STRONG, salted server-side verifier for the 24-word recovery
+ * phrase.
+ *
+ * Uses the shared OWASP-tuned Argon2id (see `argon2idRaw`) with a per-user
+ * random `salt` and a domain-separation prefix, so:
+ *   - identical phrases across users yield different verifiers (salt), and
+ *   - the verifier is memory-hard to brute-force on DB compromise (unlike
+ *     a bare unsalted SHA-256 of the phrase).
+ *
+ * The phrase never leaves the client. The server stores only `salt` and the
+ * returned hex verifier, and compares with a constant-time check.
+ *
+ * Returns a 64-char lowercase hex string (32-byte Argon2id digest).
+ */
+export async function derivePhraseVerifier(
+  words: string[],
+  salt: Uint8Array,
+): Promise<string> {
   if (words.length !== 24) {
     throw new Error("Recovery phrase must be exactly 24 words");
   }
-
-  const passphrase = words.map((w) => w.toLowerCase().trim()).join(" ");
-  const encoder = new TextEncoder();
-
-  // Import passphrase as PBKDF2 key material
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(passphrase),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
-
-  // Derive AES-256-GCM key
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode("keeplas-vault-key"),
-      iterations: 600_000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    { name: "AES-GCM", length: 256 },
-    true, // extractable — needed for Shamir splitting
-    ["encrypt", "decrypt"],
-  );
+  const normalized = words
+    .map((w) => w.toLowerCase().trim().normalize("NFKD"))
+    .join(" ");
+  const password = `${PHRASE_VERIFIER_DOMAIN}:${normalized}`;
+  const digest = await argon2idRaw(password, salt);
+  return uint8ToHex(digest);
 }
 
 /**
  * Derive a SHA-256 hex verifier dedicated to TOTP reset.
  *
- * Uses PBKDF2 with the same parameters as `phraseToKey` but a different,
- * domain-separated salt (`"keeplas-totp-reset-v1"`). Output bytes are then
+ * Uses PBKDF2 with a domain-separated salt (`"keeplas-totp-reset-v1"`),
+ * distinct from any other derivation. Output bytes are then
  * SHA-256-hashed so what's stored server-side is irreversible.
  *
  * The verifier proves possession of the recovery phrase without coupling
- * the TOTP-reset path with vault-key derivation or `phraseToHash`.
+ * the TOTP-reset path with vault-key derivation or the login verifier.
  */
 export async function phraseToTotpResetVerifier(
   words: string[],
@@ -149,31 +155,6 @@ export async function phraseToTotpResetVerifier(
   );
 
   const hashBuffer = await crypto.subtle.digest("SHA-256", derivedBits);
-  const hashArray = new Uint8Array(hashBuffer);
-  return Array.from(hashArray)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * Compute SHA-256 hash of a phrase for server-side verification.
- * The hash is safe to store on the server (non-reversible).
- *
- * Same phrase always produces the same hash.
- */
-export async function phraseToHash(words: string[]): Promise<string> {
-  if (words.length !== 24) {
-    throw new Error("Recovery phrase must be exactly 24 words");
-  }
-
-  const normalized = words.map((w) => w.toLowerCase().trim()).join(" ");
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest(
-    "SHA-256",
-    encoder.encode(normalized),
-  );
-
-  // Convert to hex string
   const hashArray = new Uint8Array(hashBuffer);
   return Array.from(hashArray)
     .map((b) => b.toString(16).padStart(2, "0"))

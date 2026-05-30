@@ -41,7 +41,7 @@ export function RedistributeShardsCard() {
               ? "Invite at least 2 trust contacts and wait for them to accept before you can distribute."
               : belowMin
                 ? "Only 1 eligible trust contact. Recovery needs at least 2 — invite and confirm one more before distributing."
-                : `${eligible.length} eligible trust contacts · current threshold ${threshold}-of-5.`}
+                : `${eligible.length} eligible trust contacts · current threshold ${threshold}.`}
           </p>
         </div>
         <Button

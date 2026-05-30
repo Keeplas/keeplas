@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useQuery } from "convex/react";
 import { reconstruct } from "@keeplas/crypto/shamir";
 import { wrapBytes, unwrapBytes } from "@keeplas/crypto/kem";
+import { verifyContactKey } from "@/lib/verify-contact-key";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -104,12 +105,44 @@ export function useRecoveryFlow({
 
     setSubmitStatus("running");
     try {
-      const submissions = await Promise.all(
-        peers.map(async (peer) => ({
+      // Verify-before-wrap (finding #2): authenticate every peer's encryption
+      // key via their identity signature before wrapping the shard to it. A
+      // server-substituted peer key has no valid signature and is refused — we
+      // do NOT silently skip it, because dropping a peer could break the quorum
+      // while looking successful. There is no TOFU pin here: the recovering
+      // contact isn't the vault owner, so pinning is not their decision.
+      const submissions: Array<{
+        recipientContactId: (typeof peers)[number]["contactId"];
+        wrappedShard: string;
+      }> = [];
+      const unverifiedPeers: string[] = [];
+      for (const peer of peers) {
+        const outcome = await verifyContactKey({
+          contactId: peer.contactId,
+          name: peer.name,
+          contactPublicKey: peer.contactPublicKey,
+          contactIdentityPublicKey: peer.contactIdentityPublicKey,
+          contactPublicKeySignature: peer.contactPublicKeySignature,
+        });
+        if (outcome.status !== "ok") {
+          unverifiedPeers.push(peer.name?.trim() || "a contact");
+          continue;
+        }
+        submissions.push({
           recipientContactId: peer.contactId,
-          wrappedShard: await wrapBytes(stored.rawShard, peer.contactPublicKey),
-        })),
-      );
+          wrappedShard: await wrapBytes(
+            stored.rawShard,
+            outcome.contactPublicKey,
+          ),
+        });
+      }
+      if (unverifiedPeers.length > 0) {
+        setSubmitStatus("error");
+        setSubmitError(
+          `Could not verify the encryption key for ${unverifiedPeers.join(", ")}. This may indicate server tampering. Your shard was not submitted — ask the vault owner to confirm their circle.`,
+        );
+        return;
+      }
 
       await submitMutation({
         accessRequestId,

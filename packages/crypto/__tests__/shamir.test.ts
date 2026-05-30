@@ -190,6 +190,95 @@ describe("Shamir Secret Sharing", () => {
     });
   });
 
+  // Finding #3: the server holds NO Shamir shard. The master key is split into
+  // exactly 4 shares — 1 device + 3 trusted contacts — and recovery must work
+  // from device + contact shards alone (no server-held custodian shard exists).
+  describe("server-less 4-share scheme (finding #3)", () => {
+    // Slot mapping mirrors the app:
+    //   shards[0] → device (localStorage, cleared on logout)
+    //   shards[1..3] → trusted contacts at shardIndex 2..4
+    const DEVICE = 0;
+    const CONTACTS = [1, 2, 3];
+
+    it("splits the master key into exactly 4 shares (no server shard)", async () => {
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+      const shards = await split(masterKey, 4, 2);
+      expect(shards).toHaveLength(4);
+      // x-coordinates 1..4, none reserved for a 5th server-held share.
+      expect(shards.map((s) => s[0])).toEqual([1, 2, 3, 4]);
+    });
+
+    it("threshold-2: reconstructs from device + ONE contact", async () => {
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+      const shards = await split(masterKey, 4, 2);
+
+      const result = await reconstruct([shards[DEVICE], shards[CONTACTS[0]]]);
+      expect(result).toEqual(masterKey);
+    });
+
+    it("threshold-2: reconstructs from TWO contacts alone (owner gone, no device)", async () => {
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+      const shards = await split(masterKey, 4, 2);
+
+      // Post-mortem contacts-only path: device shard is cleared on logout.
+      const result = await reconstruct([
+        shards[CONTACTS[0]],
+        shards[CONTACTS[1]],
+      ]);
+      expect(result).toEqual(masterKey);
+    });
+
+    it("threshold-3: reconstructs from all THREE contacts (no device, no server)", async () => {
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+      const shards = await split(masterKey, 4, 3);
+
+      const result = await reconstruct(CONTACTS.map((i) => shards[i]));
+      expect(result).toEqual(masterKey);
+    });
+
+    it("every threshold-meeting combination reconstructs, for both thresholds", async () => {
+      for (const threshold of [2, 3]) {
+        const masterKey = new Uint8Array(32);
+        crypto.getRandomValues(masterKey);
+        const shards = await split(masterKey, 4, threshold);
+        const combos = getCombinations([0, 1, 2, 3], threshold);
+        for (const combo of combos) {
+          const result = await reconstruct(combo.map((i) => shards[i]));
+          expect(result).toEqual(masterKey);
+        }
+      }
+    });
+
+    it("fewer-than-threshold shares cannot reconstruct the master key", async () => {
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+
+      // threshold-3: any 2 shares (including a lone-device or two-contact pair)
+      // must NOT recover the key.
+      const shards = await split(masterKey, 4, 3);
+      for (const combo of getCombinations([0, 1, 2, 3], 2)) {
+        const result = await reconstruct(combo.map((i) => shards[i]));
+        expect(result).not.toEqual(masterKey);
+      }
+    });
+
+    it("a single shard reveals nothing (server-absent scenario)", async () => {
+      // The server holds no shard at all; even if it could observe ONE contact
+      // shard, a lone share cannot reach the 2-share floor to reconstruct.
+      const masterKey = new Uint8Array(32);
+      crypto.getRandomValues(masterKey);
+      const shards = await split(masterKey, 4, 2);
+
+      await expect(reconstruct([shards[CONTACTS[0]]])).rejects.toThrow(
+        "at least 2",
+      );
+    });
+  });
+
   describe("zero-knowledge property", () => {
     it("2 shares reveal nothing about a 3-of-5 split", async () => {
       // Statistical test: split same secret many times,

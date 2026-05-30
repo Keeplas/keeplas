@@ -1,16 +1,13 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, internalMutation, internalQuery } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalQuery,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
+import { constantTimeStringEquals } from "./lib/crypto";
 import { normalizeE164 } from "./lib/phone";
-
-function constantTimeStringEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return mismatch === 0;
-}
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -141,9 +138,34 @@ export const consumePhoneAuthCode = internalMutation({
 });
 
 /**
+ * Public query — returns the Argon2id `phraseSalt` for a phone account so the
+ * client can derive the salted recovery-phrase verifier before lost-phone
+ * recovery. Mirrors getPhraseSaltByEmail: the salt is non-sensitive but is
+ * only returned once a recovery verifier has actually been configured, to
+ * limit account enumeration.
+ *
+ * TODO: layer per-IP rate limiting before exposing in production.
+ */
+export const getPhraseSaltByPhone = query({
+  args: { phoneNumber: v.string() },
+  handler: async (ctx, args) => {
+    const phone = normalizeE164(args.phoneNumber);
+    if (!phone) return null;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+      .first();
+    if (!user || !user.phraseSalt || !user.recoveryPhraseHash) {
+      return null;
+    }
+    return { phraseSalt: user.phraseSalt };
+  },
+});
+
+/**
  * Lost-phone recovery for passwordless phone accounts: resolve the user by
- * phone and verify the 24-word recovery-phrase hash (constant-time). Used by
- * the `phone-recovery` ConvexCredentials provider. Returns the userId on
+ * phone and verify the 24-word recovery-phrase verifier (constant-time). Used
+ * by the `phone-recovery` ConvexCredentials provider. Returns the userId on
  * match, else null. ZK: only a stored hash is compared, no crypto changes.
  */
 export const verifyPhoneRecovery = internalQuery({

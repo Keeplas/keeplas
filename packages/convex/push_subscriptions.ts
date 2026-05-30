@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { requireFullAuth } from "./helpers";
 
 /**
  * Register a Web Push subscription for the authenticated user. Idempotent
@@ -15,7 +15,7 @@ export const subscribe = mutation({
     deviceLabel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
 
     const existing = await ctx.db
@@ -55,7 +55,7 @@ export const subscribe = mutation({
 export const unsubscribe = mutation({
   args: { endpoint: v.string() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const sub = await ctx.db
       .query("push_subscriptions")
       .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
@@ -73,7 +73,7 @@ export const unsubscribe = mutation({
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     return await ctx.db
       .query("push_subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))

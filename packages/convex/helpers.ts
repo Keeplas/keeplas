@@ -92,6 +92,27 @@ export async function requireAuthWithLoginOtp(ctx: QueryCtx) {
 }
 
 /**
+ * Steady-state guard for sensitive owner operations. Composes both step-up
+ * gates on top of `requireAuth`:
+ *   1. login-OTP gate (password accounts only — `requireAuthWithLoginOtp`)
+ *   2. TOTP gate (only when TOTP is enrolled — `requireAuthWithTotp`)
+ *
+ * Reuses the two single-purpose helpers rather than re-implementing their
+ * checks (DRY). Throws `"LOGIN_OTP_REQUIRED"` / `"TOTP_REQUIRED"`, which the
+ * dashboard layout already reacts to (it polls `getMyLoginOtpGate` /
+ * `getMyTotpGate` and redirects to `/login/otp` / `/login/totp`). These throws
+ * are the defense-in-depth backstop for a session that bypasses the UI and
+ * calls the API directly without clearing the gates.
+ *
+ * Order: login-OTP first to mirror the layout (login-OTP is the last gate the
+ * user clears, but throwing it first is harmless — both must pass).
+ */
+export async function requireFullAuth(ctx: QueryCtx) {
+  await requireAuthWithLoginOtp(ctx);
+  return await requireAuthWithTotp(ctx);
+}
+
+/**
  * Get the user's vault by userId.
  */
 export async function getUserVault(ctx: QueryCtx, userId: Id<"users">) {

@@ -56,13 +56,25 @@ export default defineSchema({
     // they are re-encrypted item-by-item. Cleared by `rotation.finalizeRotation`
     // once every item has migrated to the new keypair.
     encryptedAsymmetricSecretKeyPrev: v.optional(v.string()),
+    // Identity key (finding #2 — malicious-server key substitution). Base64
+    // ML-DSA-65 public key (FIPS 204). The long-lived signing key that binds
+    // this user's ML-KEM public key to their identity so contacts can detect a
+    // server-substituted encryption key (TOFU + verification land in step 2).
+    identityPublicKey: v.optional(v.string()),
+    // JSON { ciphertext, iv } — the user's ML-DSA-65 secret key, AES-GCM
+    // wrapped client-side under their MasterKey, mirroring
+    // `encryptedAsymmetricSecretKey`. The raw identity secret key never reaches
+    // the server.
+    encryptedIdentitySecretKey: v.optional(v.string()),
+    // Base64 ML-DSA-65 signature over this user's ML-KEM public-key bytes,
+    // produced with the identity secret key. Binds `publicKey` to
+    // `identityPublicKey`; step 2 verifies it before wrapping to this user.
+    publicKeySignature: v.optional(v.string()),
     // Per-user salt for Argon2id derivation of the RootKey. Public — served
     // alongside the bundle so the client can re-derive the RootKey on login.
     phraseSalt: v.optional(v.string()),
     recoveryPhraseHash: v.optional(v.string()),
     recoveryVerified: v.optional(v.boolean()),
-    zkVerifierKey: v.optional(v.string()),
-    keeplasShard: v.optional(v.string()),
     // Shamir threshold chosen at onboarding: how many trusted contacts must
     // collaborate to reconstruct the MasterKey. Min 2, max 3 (only the 3
     // contact shards participate in contacts-only recovery). Once shards are
@@ -92,12 +104,7 @@ export default defineSchema({
         v.literal("complete"),
       ),
     ),
-    vaultIntegrityScore: v.optional(v.number()),
 
-    // Soft account state. Stays `v.optional` because @convex-dev/auth inserts
-    // the user row before our `afterUserCreatedOrUpdated` callback stamps it;
-    // a required field would fail that initial insert. Always `true` once set.
-    isActive: v.optional(v.boolean()),
     // No `createdAt` — Convex stamps `_creationTime` on every document; use it.
     updatedAt: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
@@ -272,27 +279,14 @@ export default defineSchema({
   vaults: defineTable({
     userId: v.id("users"),
 
-    status: v.union(
-      v.literal("active"),
-      v.literal("locked"),
-      v.literal("emergency_access"),
-      v.literal("suspended"),
-    ),
-    securityLevel: v.union(v.literal("standard"), v.literal("maximum")),
-
-    integrityScore: v.number(),
     encryptedItemsCount: v.number(),
-    secureNodesCount: v.number(),
+    // Stamped on creation and refreshed when a trusted contact verifies their
+    // shard; read by the recipient UI to show a "Verified Xm ago" badge.
     lastVerifiedAt: v.number(),
-
-    syncHash: v.string(),
-    lastSyncAt: v.number(),
 
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
+  }).index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // VAULT ITEMS
@@ -305,7 +299,6 @@ export default defineSchema({
     category: categoryValidator,
 
     title: v.string(),
-    description: v.optional(v.string()),
     encryptedContent: v.string(),
     // Optional encrypted JSON array of URLs attached to this item. Encrypted
     // with the same per-item DEK as encryptedContent — payload is a self
@@ -316,8 +309,6 @@ export default defineSchema({
       v.literal("aes_256_gcm"),
       v.literal("zero_knowledge"),
     ),
-    contentHash: v.string(),
-
     sharedWithContacts: v.array(v.id("trusted_contacts")),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientMode: v.optional(
@@ -325,8 +316,6 @@ export default defineSchema({
     ),
     // ML-KEM-768 + AES-GCM envelope (JSON: {v, alg, kem, iv, ct}).
     ownerWrappedDek: v.optional(v.string()),
-    // Deprecated — IV now lives inside the ownerWrappedDek envelope.
-    ownerWrappedDekIv: v.optional(v.string()),
     accessLevel: accessLevelValidator,
 
     status: v.union(
@@ -350,8 +339,6 @@ export default defineSchema({
       }),
     ),
     releasedAt: v.optional(v.number()),
-
-    tags: v.optional(v.array(v.string())),
 
     // When true, the item is a "release introduction": a welcome message the
     // owner authors for trusted contacts who unlock the memorial vault after
@@ -386,8 +373,6 @@ export default defineSchema({
     contactId: v.id("trusted_contacts"),
     // ML-KEM-768 + AES-GCM envelope (JSON: {v, alg, kem, iv, ct}).
     wrappedDek: v.string(),
-    // Deprecated — IV now lives inside the wrappedDek envelope.
-    wrappedDekIv: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_item", ["itemId"])
@@ -435,7 +420,6 @@ export default defineSchema({
     // inviteContact); a contact can be invited by either channel or both.
     email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
-    avatarUrl: v.optional(v.string()),
     role: v.union(
       v.literal("family"),
       v.literal("friend"),
@@ -452,22 +436,26 @@ export default defineSchema({
     encryptedShard: v.optional(v.string()),
     shardPublicKeyUsed: v.optional(v.string()),
     shardConfirmed: v.optional(v.boolean()),
-    shardConfirmedAt: v.optional(v.number()),
 
     // Stamped automatically after a successful on-device shard unwrap (see
     // useReceiveShard) — the contact decrypting their real `encryptedShard` is
-    // the verification. The legacy sentinel `verificationEnvelope` field was
-    // dropped (migrations.ts:dropVerificationEnvelopes).
+    // the verification.
     lastVerifiedAt: v.optional(v.number()),
 
-    // TEMPORARY (phase-1 of verificationEnvelope removal): kept optional so the
-    // schema accepts existing prod rows that still carry this legacy field while
-    // migrations:dropVerificationEnvelopes strips it. Remove again in phase-2
-    // once the migration has cleared every row.
-    verificationEnvelope: v.optional(v.string()),
-
-    contactRecoveryHash: v.optional(v.string()),
     contactPublicKey: v.optional(v.string()),
+    // Identity material mirrored from the contact user's record (finding #2 —
+    // malicious-server key substitution). `contactIdentityPublicKey` is the
+    // contact's ML-DSA-65 public key; `contactPublicKeySignature` is their
+    // ML-DSA signature over `contactPublicKey`'s ML-KEM public-key bytes. The
+    // owner verifies the signature before wrapping any DEK/shard to this
+    // contact, so a server cannot substitute the encryption key.
+    contactIdentityPublicKey: v.optional(v.string()),
+    contactPublicKeySignature: v.optional(v.string()),
+    // TOFU pin: hex SHA-256 of `contactIdentityPublicKey`, set by the owner the
+    // first time they successfully verify this contact's key. If the contact's
+    // identity key later changes, the recomputed fingerprint differs from the
+    // pin and the owner is blocked from wrapping until they explicitly re-pin.
+    pinnedIdentityFingerprint: v.optional(v.string()),
 
     invitationStatus: v.union(
       v.literal("pending"),
@@ -478,8 +466,6 @@ export default defineSchema({
     invitationToken: v.string(),
     invitedAt: v.number(),
     acceptedAt: v.optional(v.number()),
-
-    introMessage: v.optional(v.string()),
 
     // Availability re-confirmation tracking (weekly cron). `reconfirmReminders`
     // counts nudges sent to a contact whose shard verification is stale/missing;
@@ -519,16 +505,6 @@ export default defineSchema({
     // initiates a cycle once `now - lastActivityAt >= inactivityThresholdDays`.
     lastActivityAt: v.optional(v.number()),
 
-    passiveSignals: v.object({
-      appActivity: v.boolean(),
-      deviceActivity: v.boolean(),
-      gpsMovement: v.boolean(),
-      whatsappActivity: v.boolean(),
-      googleActivity: v.boolean(),
-      healthData: v.boolean(),
-      appleWatch: v.boolean(),
-    }),
-
     activeChannels: v.array(
       v.object({
         type: v.union(
@@ -538,16 +514,11 @@ export default defineSchema({
         ),
         order: v.number(),
         isEnabled: v.boolean(),
-        // Deprecated: the per-channel escalation cascade was removed in favour
-        // of an all-at-once fan-out + reminders. Kept optional during rollout;
-        // dropped by the Phase-7 migration.
-        delayHours: v.optional(v.number()),
       }),
     ),
 
     travelModeEnabled: v.boolean(),
     travelModeUntil: v.optional(v.number()),
-    expeditionMode: v.boolean(),
 
     isActive: v.boolean(),
     nextCheckAt: v.number(),
@@ -563,7 +534,6 @@ export default defineSchema({
     fallbackBehavior: v.optional(
       v.union(v.literal("abort"), v.literal("release_anyway")),
     ),
-    confidenceThreshold: v.number(),
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -586,18 +556,9 @@ export default defineSchema({
       // confirm unavailability before any release.
       v.literal("awaiting_confirmation"),
       v.literal("validated"),
-      // Legacy (pre-redesign cascade); removed by the Phase-7 migration.
-      v.literal("escalating"),
       v.literal("triggered"),
       v.literal("cancelled"),
     ),
-
-    passiveScore: v.number(),
-    passiveValidatedAt: v.optional(v.number()),
-    passiveSignalUsed: v.optional(v.string()),
-
-    currentLevel: v.number(),
-    levelReachedAt: v.optional(v.number()),
 
     channelsAttempted: v.array(
       v.object({
@@ -625,31 +586,6 @@ export default defineSchema({
     .index("by_status", ["userId", "status"])
     .index("by_scheduled", ["scheduledAt"]),
 
-  // ═══════════════════════════════════════════════
-  // PASSIVE SIGNALS
-  // ═══════════════════════════════════════════════
-
-  passive_signals: defineTable({
-    userId: v.id("users"),
-    cycleId: v.optional(v.id("life_check_cycles")),
-
-    signalType: v.union(
-      v.literal("app_activity"),
-      v.literal("device_unlock"),
-      v.literal("gps_movement"),
-      v.literal("whatsapp_presence"),
-      v.literal("google_activity"),
-      v.literal("health_data"),
-      v.literal("apple_watch"),
-    ),
-
-    scoreContribution: v.number(),
-    detectedAt: v.number(),
-    validUntil: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_user_type", ["userId", "signalType"])
-    .index("by_detected", ["userId", "detectedAt"]),
 
   // ═══════════════════════════════════════════════
   // PUSH SUBSCRIPTIONS (Web Push)
@@ -688,10 +624,6 @@ export default defineSchema({
 
     respondedAt: v.optional(v.number()),
     autoResponseAt: v.number(),
-    accessType: v.optional(
-      v.union(v.literal("read"), v.literal("read_download")),
-    ),
-    accessExpiresAt: v.optional(v.number()),
 
     quorumRequired: v.optional(v.number()),
     quorumReached: v.optional(v.boolean()),
@@ -739,52 +671,6 @@ export default defineSchema({
     .index("by_request_submitter", ["accessRequestId", "submitterContactId"]),
 
   // ═══════════════════════════════════════════════
-  // CONDITIONAL MESSAGES
-  // ═══════════════════════════════════════════════
-
-  conditional_messages: defineTable({
-    userId: v.id("users"),
-    vaultItemId: v.id("vault_items"),
-
-    title: v.string(),
-    encryptedContent: v.string(),
-
-    recipients: v.array(v.id("trusted_contacts")),
-
-    triggerType: v.union(
-      v.literal("life_check_failure"),
-      v.literal("time_based"),
-      v.literal("age_based"),
-      v.literal("legal_event"),
-      v.literal("manual"),
-    ),
-    triggerConfig: v.object({
-      inactivityDays: v.optional(v.number()),
-      releaseDate: v.optional(v.number()),
-      recipientAge: v.optional(v.number()),
-      legalEventDesc: v.optional(v.string()),
-    }),
-
-    status: v.union(
-      v.literal("draft"),
-      v.literal("active"),
-      v.literal("sealed"),
-      v.literal("released"),
-      v.literal("cancelled"),
-    ),
-
-    encryptionType: v.literal("zero_knowledge"),
-    curatorsRequired: v.number(),
-
-    releasedAt: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"])
-    .index("by_status", ["userId", "status"])
-    .index("by_trigger", ["triggerType", "status"]),
-
-  // ═══════════════════════════════════════════════
   // AUDIT LOGS — IMMUTABLE
   // ═══════════════════════════════════════════════
 
@@ -809,7 +695,6 @@ export default defineSchema({
     // verified inside `auditedMutation` before being persisted here.
     ipAddress: v.optional(v.string()),
     country: v.optional(v.string()),
-    deviceInfo: v.optional(v.string()),
 
     previousLogHash: v.string(),
     logHash: v.string(),
@@ -828,7 +713,11 @@ export default defineSchema({
     userId: v.optional(v.id("users")),
 
     name: v.string(),
-    email: v.string(),
+    // Reply-to contact. Exactly one of these is set, depending on the channel
+    // the submitter chose (email account → email, phone/WhatsApp account →
+    // whatsapp). Both optional so either channel can be omitted.
+    email: v.optional(v.string()),
+    whatsapp: v.optional(v.string()),
     topic: v.union(
       v.literal("general"),
       v.literal("security"),

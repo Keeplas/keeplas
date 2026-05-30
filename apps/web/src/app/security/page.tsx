@@ -209,7 +209,7 @@ export default function SecurityPage() {
             lines: [
               "Convex Auth · scrypt password hashing server-side",
               "TOTP · RFC 6238 · 30s window · base32 secret never leaves the backend after enrollment",
-              "Reset path · SHA-256(phrase) verifier matches users.recoveryPhraseHash → modify scrypt hash",
+              "Reset path · salted Argon2id(phrase) verifier matches users.recoveryPhraseHash (constant-time) → modify scrypt hash",
             ],
           }}
           references={[
@@ -302,6 +302,7 @@ export default function SecurityPage() {
             "Biometric — Face ID, Touch ID, Windows Hello — via WebAuthn + PRF extension.",
             "Hardware security key — YubiKey or any FIDO2 authenticator with PRF.",
             "All three can coexist. Lose the device? Re-enter your 24 words on a new one.",
+            "Inactivity auto-lock: after 20 minutes with no activity the vault locks itself, wiping the in-memory and on-device keys until you unlock again.",
           ]}
           technical={{
             title: "How it works (technical)",
@@ -346,8 +347,8 @@ export default function SecurityPage() {
           technical={{
             title: "How it works (technical)",
             lines: [
-              "Shamir Secret Sharing · 5 shards · threshold 3 to reconstruct MasterKey",
-              "Shards · 1 local · 1 Keeplas custodian · 3 distributed to trusted contacts (ML-KEM-768 + AES-256-GCM wrapped to each contact's public key)",
+              "Shamir Secret Sharing · 4 shards · threshold 2–3 to reconstruct MasterKey",
+              "Shards · 1 local · 3 distributed to trusted contacts (ML-KEM-768 + AES-256-GCM wrapped to each contact's public key) · Keeplas holds NO shard",
               "Recovery phrase verification · SHA-256(phrase) compared server-side · phrase never sent",
               "No master key, no escrow, no employee or court-ordered access path",
             ],

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Loader } from "@keeplas/ui";
 import { generatePhrase } from "@keeplas/crypto/recovery";
+import { copySecretWithAutoClear } from "@/lib/clipboard";
 
 interface RecoveryPhraseStepProps {
   phrase: string[] | null;
@@ -34,7 +35,9 @@ export function RecoveryPhraseStep({
 
   async function handleCopyAll() {
     if (!phrase) return;
-    await navigator.clipboard.writeText(phrase.join(" "));
+    // Auto-clears the clipboard after a short delay so the phrase does not
+    // linger in the OS clipboard indefinitely.
+    await copySecretWithAutoClear(phrase.join(" "));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

@@ -117,8 +117,12 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
                 placeholder="Choose language"
               >
                 {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
+                  <SelectItem
+                    key={lang.value}
+                    value={lang.value}
+                    disabled={lang.upcoming}
+                  >
+                    {lang.upcoming ? `${lang.label} — upcoming` : lang.label}
                   </SelectItem>
                 ))}
               </Select>

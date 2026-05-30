@@ -3,7 +3,7 @@
 export {
   generatePhrase,
   entropyToPhrase,
-  phraseToKey,
-  phraseToHash,
   phraseToTotpResetVerifier,
+  derivePhraseVerifier,
+  generatePhraseVerifierSalt,
 } from "./bip39";

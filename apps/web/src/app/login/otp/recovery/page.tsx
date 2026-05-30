@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { phraseToHash } from "@keeplas/crypto";
+import { derivePhraseVerifier } from "@keeplas/crypto";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { Button, Icon, Label, Loader, Spinner, Textarea } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
@@ -75,10 +76,17 @@ export default function LoginOtpRecoveryPage() {
       setError("Please enter all 24 words of your recovery phrase.");
       return;
     }
+    if (!gate?.phraseSalt) {
+      setError("Recovery is not configured for this account.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const verifierHash = await phraseToHash(words);
+      const verifierHash = await derivePhraseVerifier(
+        words,
+        base64ToUint8(gate.phraseSalt),
+      );
       await submitRecovery({ verifierHash });
       router.push("/hub");
     } catch (err) {

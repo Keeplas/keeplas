@@ -23,6 +23,7 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import { getErrorMessage } from "@/lib/utils";
+import { copySecretWithAutoClear } from "@/lib/clipboard";
 
 type EnrollmentSession = {
   secret: string;
@@ -184,7 +185,9 @@ export function TotpManager() {
   async function handleCopySecret() {
     if (!session) return;
     try {
-      await navigator.clipboard.writeText(session.secret);
+      // Auto-clears the clipboard after a short delay so the TOTP secret does
+      // not linger in the OS clipboard indefinitely.
+      await copySecretWithAutoClear(session.secret);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

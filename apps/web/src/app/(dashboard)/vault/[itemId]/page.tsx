@@ -6,7 +6,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
-import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
+import {
+  useRecipientCrypto,
+  type WrapRecipient,
+} from "@/lib/use-recipient-crypto";
+import { toWrapRecipient } from "@/lib/verify-contact-key";
+import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
 import {
@@ -100,7 +105,6 @@ export default function VaultItemPage() {
     decryptContentWithKey,
     encryptContent,
     encryptContentWithKey,
-    computeHash,
     isReady,
   } = useVaultCrypto();
   const { enqueueAttachments } = useUploadQueue();
@@ -111,6 +115,7 @@ export default function VaultItemPage() {
     unwrapOwnerDek,
     isReady: cryptoReady,
   } = useRecipientCrypto();
+  const showBlockedWrapAlert = useBlockedWrapAlert();
 
   const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
   const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
@@ -374,18 +379,12 @@ export default function VaultItemPage() {
       const config = resolveEditRecipientConfig();
 
       const byId = new Map(allContacts.map((c) => [c._id, c]));
-      let resolvedRecipients: Array<{
-        contactId: string;
-        contactPublicKey?: string;
-      }> = [];
+      let resolvedRecipients: WrapRecipient[] = [];
       if (config.mode === "explicit") {
         resolvedRecipients = config.sharedWithContacts
           .map((id) => byId.get(id))
           .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map((c) => ({
-            contactId: c._id,
-            contactPublicKey: c.contactPublicKey,
-          }));
+          .map(toWrapRecipient);
       } else if (config.mode === "groups") {
         const groupSet = new Set(config.sharedWithGroups);
         const memberSet = new Set<string>();
@@ -396,10 +395,7 @@ export default function VaultItemPage() {
         resolvedRecipients = Array.from(memberSet)
           .map((id) => byId.get(id as Id<"trusted_contacts">))
           .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map((c) => ({
-            contactId: c._id,
-            contactPublicKey: c.contactPublicKey,
-          }));
+          .map(toWrapRecipient);
       }
 
       let encryptedContent: string;
@@ -415,6 +411,24 @@ export default function VaultItemPage() {
       // matching whatever the item currently lives under.
       let attachmentDek: CryptoKey | undefined;
 
+      // Verify-before-wrap (finding #2): re-run the wrap after an explicit
+      // re-pin, and ABORT if any recipient still can't be authenticated. Shared
+      // by both ZK branches so the blocking policy is identical.
+      const guardBlocked = async (
+        blocked: Awaited<ReturnType<typeof wrapExistingDek>>["blocked"],
+        retryWrap: () => Promise<{ blocked: typeof blocked }>,
+      ): Promise<boolean> => {
+        if (blocked.length === 0) return true;
+        const retry = await showBlockedWrapAlert(blocked);
+        if (!retry) return false;
+        const second = await retryWrap();
+        if (second.blocked.length > 0) {
+          await showBlockedWrapAlert(second.blocked);
+          return false;
+        }
+        return true;
+      };
+
       setSavingProgress("Encrypting content…");
       if (item.ownerWrappedDek) {
         const dek =
@@ -423,7 +437,18 @@ export default function VaultItemPage() {
         attachmentDek = dek;
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
-        const wraps = await wrapExistingDek(dek, resolvedRecipients);
+        let wraps = await wrapExistingDek(dek, resolvedRecipients);
+        if (wraps.blocked.length > 0) {
+          const ok = await guardBlocked(wraps.blocked, async () => {
+            wraps = await wrapExistingDek(dek, resolvedRecipients);
+            return wraps;
+          });
+          if (!ok) {
+            setSaving(false);
+            setSavingProgress("");
+            return;
+          }
+        }
         ownerWrappedDek = wraps.ownerWrap.wrappedDek;
         recipientKeysPayload = wraps.recipientWraps.map((rw) => ({
           contactId: rw.contactId as Id<"trusted_contacts">,
@@ -431,7 +456,18 @@ export default function VaultItemPage() {
         }));
       } else if (item.encryptionType === "zero_knowledge") {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
-        const fresh = await generateDekAndWrap(resolvedRecipients);
+        let fresh = await generateDekAndWrap(resolvedRecipients);
+        if (fresh.blocked.length > 0) {
+          const ok = await guardBlocked(fresh.blocked, async () => {
+            fresh = await generateDekAndWrap(resolvedRecipients);
+            return fresh;
+          });
+          if (!ok) {
+            setSaving(false);
+            setSavingProgress("");
+            return;
+          }
+        }
         attachmentDek = fresh.dek;
         encryptedContent = await encryptContentWithKey(
           contentPayload,
@@ -452,14 +488,11 @@ export default function VaultItemPage() {
         nextEncryptionType = "aes_256_gcm";
       }
 
-      const contentHash = await computeHash(contentPayload);
-
       await updateItem({
         itemId,
         title: editTitle.trim(),
         encryptedContent,
         encryptedLinks,
-        contentHash,
         category: editCategory,
         accessLevel: config.derivedAccessLevel,
         recipientMode: config.mode,

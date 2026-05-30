@@ -278,14 +278,14 @@ export default function InsightsDocPage() {
           continuity if you lose your phrase or become unreachable. They
           don&rsquo;t hold your phrase — they hold cryptographic <em>shards</em>{" "}
           of your master key, generated through Shamir secret sharing. A
-          configurable threshold (2-of-5 by default) must agree before recovery
-          proceeds, and reconstruction always happens on their devices, never on
-          Keeplas servers.
+          configurable threshold (2 trusted contacts by default) must agree
+          before recovery proceeds, and reconstruction always happens on their
+          devices, never on Keeplas servers.
         </p>
         <p>
-          Pick at least three. Pick people in different households, ideally
-          different cities. Pick the ones who would actually pick up the phone
-          in a hard week.
+          Pick at least two. A third contact adds resilience if you choose the
+          stricter threshold. Pick people in different households, ideally
+          different cities, who would actually pick up the phone in a hard week.
         </p>
         <Link
           href="/docs/trusted-contacts"

@@ -26,6 +26,9 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   );
   // The recovery phrase is held in memory only — never persisted to server
   const [phrase, setPhrase] = useState<string[] | null>(null);
+  // Per-user Argon2id salt (base64) generated at verification. Reused by key
+  // generation so the RootKey and the recovery-phrase verifier share one salt.
+  const [phraseSaltB64, setPhraseSaltB64] = useState<string | null>(null);
 
   const handleLegalInfoConfirmed = useCallback(() => {
     setStep("recovery_phrase");
@@ -43,7 +46,8 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     setStep("recovery_phrase");
   }, []);
 
-  const handleVerified = useCallback(() => {
+  const handleVerified = useCallback((saltB64: string) => {
+    setPhraseSaltB64(saltB64);
     setStep("key_generation");
   }, []);
 
@@ -132,8 +136,12 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
             onBack={handleBackToPhrase}
           />
         )}
-        {step === "key_generation" && phrase && (
-          <KeyGenerationStep phrase={phrase} onComplete={handleVaultReady} />
+        {step === "key_generation" && phrase && phraseSaltB64 && (
+          <KeyGenerationStep
+            phrase={phrase}
+            phraseSaltB64={phraseSaltB64}
+            onComplete={handleVaultReady}
+          />
         )}
         {step === "passkey" && <PasskeyStep />}
       </main>

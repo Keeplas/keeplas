@@ -17,6 +17,8 @@
  *   refresh. Cleared on sign-out via clearPersistedMasterKeys().
  */
 
+import { STORAGE_KEYS } from "./storage-keys";
+
 const DB_NAME = "keeplas-master-key";
 // v2: keyed by userId instead of email. The MasterKey is identifier-agnostic
 // (derived from the 24-word phrase, bound to the userId), and accounts can now
@@ -98,9 +100,18 @@ export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
 
 /**
  * Wipe every persisted MasterKey. Called on sign-out / session loss so a
- * logged-out browser never keeps a usable key on disk.
+ * logged-out browser never keeps a usable key on disk. This is the single
+ * chokepoint for clearing device-local crypto material, so it also removes the
+ * plaintext Shamir device shard — otherwise it would survive sign-out and an
+ * account switch on a shared browser, leaving the previous user's shard behind.
  */
 export async function clearPersistedMasterKeys(): Promise<void> {
+  // Remove the plaintext device shard first; it never depends on IndexedDB.
+  try {
+    localStorage.removeItem(STORAGE_KEYS.deviceShard);
+  } catch {
+    // localStorage may be unavailable (private mode, SSR) — non-fatal.
+  }
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {

@@ -92,23 +92,6 @@ export function useVaultCrypto() {
   );
 
   /**
-   * Compute SHA-256 hash of plaintext for integrity verification.
-   */
-  const computeHash = useCallback(
-    async (plaintext: string): Promise<string> => {
-      const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest(
-        "SHA-256",
-        encoder.encode(plaintext),
-      );
-      return Array.from(new Uint8Array(hashBuffer))
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-    },
-    [],
-  );
-
-  /**
    * Encrypt a Blob with the given AES-GCM key. Small blobs use a single
    * AES-GCM call; larger payloads fall back to chunked streaming.
    */
@@ -193,7 +176,6 @@ export function useVaultCrypto() {
     encryptBlobWithKey,
     decryptBlob,
     decryptBlobWithKey,
-    computeHash,
     isReady: masterKey !== null,
   };
 }

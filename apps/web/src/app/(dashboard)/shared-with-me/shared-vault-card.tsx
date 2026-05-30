@@ -25,11 +25,9 @@ interface SharedVault extends Doc<"trusted_contacts"> {
     | "running"
     | "awaiting_confirmation"
     | "validated"
-    | "escalating"
     | "triggered"
     | "cancelled"
     | null;
-  ownerCycleEscalatedAt: number | null;
   // The owner's vault has been released to this contact (an approved
   // access_request exists) — gates the "View memorial vault" entry point.
   released: boolean;

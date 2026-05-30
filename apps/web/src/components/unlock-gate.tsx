@@ -15,6 +15,7 @@ import {
 } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
+import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
 import { AuthHeroSection } from "@/app/(auth)/components/auth-hero-section";
@@ -50,32 +51,10 @@ export function UnlockGate({ children }: UnlockGateProps) {
   const [enrollOpen, setEnrollOpen] = useState(false);
 
   const bundleString = user?.encryptedKeyBundle ?? null;
-  const bundle = useMemo(() => {
-    if (!bundleString) return null;
-    try {
-      return JSON.parse(bundleString) as {
-        version?: number;
-        phraseSalt?: string;
-        wrappingKey?: string;
-        iv?: string;
-        encryptedMasterKey?: string;
-      };
-    } catch {
-      return null;
-    }
-  }, [bundleString]);
-
-  // Treat any bundle that carries phrase-derived material (phraseSalt + iv +
-  // encryptedMasterKey, with no plaintext wrappingKey) as needing the V2
-  // unlock flow — even if the explicit `version` field is missing or stored
-  // differently. The strict `version === 2` check lets V2-shaped bundles slip
-  // through and leaves the user with a disabled vault.
-  const isV2 = !!(
-    bundle?.phraseSalt &&
-    bundle.iv &&
-    bundle.encryptedMasterKey &&
-    !("wrappingKey" in (bundle ?? {}))
-  );
+  const bundle = useMemo(() => parseKeyBundle(bundleString), [bundleString]);
+  const bundleKind = classifyKeyBundle(bundle);
+  const isV2 = bundleKind === "v2";
+  const isLegacyV1 = bundleKind === "legacy-v1";
 
   // Reset the error when switching modes, adjusting during render instead of
   // syncing in an effect.
@@ -90,6 +69,13 @@ export function UnlockGate({ children }: UnlockGateProps) {
   }
 
   if (!user) return null;
+
+  // Legacy V1 bundle: no client-side unwrap path remains (it was
+  // server-decryptable). Block vault access with a clear re-key instruction
+  // rather than silently leaving the vault unusable.
+  if (isLegacyV1) {
+    return <LegacyBundleNotice />;
+  }
 
   // No bundle yet (e.g. user mid-onboarding) — let children render
   if (!bundle || !isV2) {
@@ -298,6 +284,12 @@ export function UnlockGate({ children }: UnlockGateProps) {
                     value={phrase}
                     onChange={(e) => setPhrase(e.target.value)}
                     placeholder="word1 word2 word3 ..."
+                    // Anti-cache: keep the recovery phrase out of browser
+                    // autofill, dictionaries, and spell-check suggestions.
+                    autoComplete="off"
+                    spellCheck={false}
+                    autoCapitalize="off"
+                    autoCorrect="off"
                     className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
                     required
                   />
@@ -338,6 +330,24 @@ export function UnlockGate({ children }: UnlockGateProps) {
         />
       ) : null}
     </>
+  );
+}
+
+function LegacyBundleNotice() {
+  return (
+    <main className="min-h-screen flex items-center justify-center p-8 bg-surface">
+      <div className="w-full max-w-md text-center">
+        <h1 className="text-headline-md text-primary mb-3">
+          Account needs re-keying
+        </h1>
+        <p className="text-body-md text-on-surface-variant">
+          Your vault was secured with a legacy key format that is no longer
+          supported. To restore zero-knowledge access, your account must be
+          re-keyed with your 24 recovery words. Please contact support to
+          migrate this account.
+        </p>
+      </div>
+    </main>
   );
 }
 

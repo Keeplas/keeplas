@@ -79,9 +79,11 @@ Don't ship parallel pages for overlapping features — favor variants / categori
 
 - Turborepo + pnpm. Apps: `apps/web` (Next.js App Router). Packages: `packages/crypto` (RESTRICTED — founders only via CODEOWNERS), `packages/convex`, `packages/ui`.
 - After editing anything under `packages/convex/`, run `npx convex dev` to regenerate types and sync the deployment.
+- **Before backend work in `packages/convex/`, load the `/convex-backend` skill** (`.claude/skills/convex-backend/SKILL.md`) — it encodes auth guards, the mandatory `auditedMutation` wrapper, `withIndex` rules, shared validators, helpers, and the test harness. Auto-triggers on `packages/convex/` edits; invoke `/convex-backend` manually otherwise.
 
 ## UI / design system
 
+- **Before any UI work, load the `/design-system` skill** (`.claude/skills/design-system/SKILL.md`) — it encodes the full "Digital Curator" spec: color tokens, surface tiers, typography scale, the no-border rule, button/input/card patterns, and the `@keeplas/ui` component list. It auto-triggers on `.tsx`/styling edits; invoke `/design-system` manually if not.
 - All interactive components must use the **shadcn/ui** pattern with Radix UI primitives. Do not write custom interactive components.
 - Follow `PRD/Design/` wireframes for exact tokens (radius, colors, fonts). Brand: editorial "Digital Curator" — Manrope + Inter, Vault Navy `#041632`, no 1px borders, tonal layering.
 - Standardize on Radix. Tooltip and DatePicker still use Base UI — migrate them when touched.
@@ -92,4 +94,9 @@ Don't ship parallel pages for overlapping features — favor variants / categori
 - 24 words = root crypto secret (Argon2id-derived). Password is pure auth (resettable via 24 words). No OAuth. No direct phrase recovery — trusted contacts only.
 - Per-device unlock: PIN, Biometric (PRF), Hardware key (PRF) coexist via local RootKey wraps in IndexedDB; the 24-word phrase is required on first login per device.
 - Post-quantum: ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and shards. Replaces RSA-OAEP.
-- Sensitive crypto code lives in `packages/crypto/` and is gated by CODEOWNERS.
+- Authenticated key distribution (TOFU): each user has an ML-DSA-65 (FIPS 204) identity key; ML-KEM public keys are signed with it. Clients MUST verify the signature and check the pinned fingerprint before wrapping a DEK/shard to a contact — never wrap to a server-provided pubkey unverified (blocks malicious-server key substitution). Identity secret key is wrapped under the master key, never sent in clear.
+- Recovery-phrase verifier is salted Argon2id (`derivePhraseVerifier`), computed client-side, compared server-side with `constantTimeStringEquals` (`packages/convex/lib/crypto.ts`). The phrase never reaches the server. No Shamir shard is held by the server in a way that counts toward the reconstruction threshold.
+- Sensitive Convex queries/mutations enforce the step-up gates via `requireFullAuth` (login-OTP + TOTP), not bare `requireAuth`. Auth/onboarding/public flows are intentionally exempt.
+- Vault auto-locks after inactivity (clears in-memory + persisted keys); CSP + strict security headers are set in `apps/web` middleware. The master key stays extractable by design (needed for Shamir `exportKey` + rotation) — auto-lock + CSP are its mitigations.
+- Framing: this is **client-side / zero-access** encryption (server is blind in normal operation), not zero-knowledge *proofs*. It is not infallible against a simultaneously malicious server + compromised client.
+- Sensitive crypto code lives in `packages/crypto/` and is gated by CODEOWNERS. Invariants are enforced by `pnpm check:zk` (`scripts/check-zk.mjs`).

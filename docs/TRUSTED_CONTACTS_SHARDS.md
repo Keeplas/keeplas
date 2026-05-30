@@ -13,11 +13,12 @@ A user's vault is encrypted under a single **master key** (AES-256, derived from
 recovery phrase via Argon2id). If that user dies or permanently loses access, the master key must
 be recoverable — but **without ever trusting the server** with it.
 
-"Distribute shards" solves this with threshold cryptography: the master key is split into 5
-Shamir shares, each share is sealed to a different holder, and any `N` of them can rebuild the
-key. The server only ever stores **ciphertext** — it can never read a raw share or the master key
-on its own. This is the zero-knowledge contract: a fully compromised Convex deployment still
-cannot reconstruct a vault.
+"Distribute shards" solves this with threshold cryptography: the master key is split into 4
+Shamir shares. One share stays on the owner's device, and up to 3 shares are sealed to trusted
+contacts. Any `N` shares, where `N` is the user's threshold, can rebuild the key. The server only
+ever stores **ciphertext** — it can never read a raw share or the master key on its own. This is
+the zero-access encryption contract: a fully compromised Convex deployment still cannot
+reconstruct a vault.
 
 Two things must happen for recovery to be possible, and they are deliberately separate:
 
@@ -28,7 +29,7 @@ Two things must happen for recovery to be possible, and they are deliberately se
 
 | Primitive                | Location                                    | Role                                                                                                              |
 | ------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Shamir `split`           | `packages/crypto/src/shamir/split.ts`       | `split(secret, totalShares=5, threshold=3)` → `Uint8Array[]`. Each share = `[x-coord, ...y-values]` over GF(256). |
+| Shamir `split`           | `packages/crypto/src/shamir/split.ts`       | `split(secret, totalShares=4, threshold=2)` in the app → `Uint8Array[]`. Each share = `[x-coord, ...y-values]` over GF(256). |
 | Shamir `reconstruct`     | `packages/crypto/src/shamir/reconstruct.ts` | `reconstruct(shares)` → secret. Needs ≥ `threshold` shares; Lagrange interpolation over GF(256).                  |
 | ML-KEM-768 `wrapBytes`   | `packages/crypto/src/kem/mlkem.ts`          | Encapsulate to a recipient's public key + AES-256-GCM the payload → one JSON envelope string.                     |
 | ML-KEM-768 `unwrapBytes` | `packages/crypto/src/kem/mlkem.ts`          | Reverse of `wrapBytes`, using the recipient's ML-KEM secret key.                                                  |
@@ -36,14 +37,15 @@ Two things must happen for recovery to be possible, and they are deliberately se
 The wrap envelope is self-contained JSON: `{ v, alg: "ml-kem-768+aes-256-gcm", kem, iv, ct }`
 (all base64). ML-KEM-768 (NIST FIPS 203) is post-quantum and replaced RSA-OAEP.
 
-> **Note on the threshold default.** The Shamir library defaults to `3-of-5`, but the app always
-> passes the user's chosen `vaultThreshold` (constrained to **2 or 3**, default **2** — see
-> `packages/convex/onboarding.ts:183`). So a freshly onboarded vault is **2-of-5** unless the user
-> picked 3.
+> **Note on the threshold default.** The Shamir library defaults are not the product contract. The
+> app always passes the user's chosen `vaultThreshold` (constrained to **2 or 3**, default **2** —
+> see `packages/convex/onboarding.ts`). So a freshly onboarded vault uses threshold **2**:
+> recovery works from 2 trusted contacts. A threshold of 3 is only operationally healthy once 3
+> trusted contacts are ready.
 
-## The 5-slot split
+## The 4-slot split
 
-Every distribution calls `split(rawMasterKey, 5, threshold)` and assigns the 5 shares to fixed
+Every distribution calls `split(rawMasterKey, 4, threshold)` and assigns the 4 shares to fixed
 slots (`apps/web/src/lib/use-distribute-shards.ts:96-113`):
 
 | Slot index  | Holder                         | Stored where                                               | Used in recovery?                          |
@@ -52,12 +54,11 @@ slots (`apps/web/src/lib/use-distribute-shards.ts:96-113`):
 | `shards[1]` | Trust contact (`shardIndex` 2) | Server, ML-KEM-wrapped (`trusted_contacts.encryptedShard`) | **Yes**                                    |
 | `shards[2]` | Trust contact (`shardIndex` 3) | Server, ML-KEM-wrapped                                     | **Yes**                                    |
 | `shards[3]` | Trust contact (`shardIndex` 4) | Server, ML-KEM-wrapped                                     | **Yes**                                    |
-| `shards[4]` | Keeplas custodian              | Server (`users.keeplasShard`, via `updateKeeplasShard`)    | No — safety net                            |
 
 `shardIndex` is 1-based in the data model; the client maps it to a slot with
-`slotIdx = shardIndex - 1`. The contact-driven recovery flow (§10) reconstructs from the **three
-contact slots** — the device and Keeplas slots are belt-and-suspenders backups, not part of the
-quorum.
+`slotIdx = shardIndex - 1`. The contact-driven recovery flow (§10) reconstructs from the trusted
+contact slots. With threshold 2, 2 trusted contacts are enough. With threshold 3, all 3 contact
+slots must be populated and available. Keeplas deliberately holds **no** Shamir share.
 
 ## Where a shard lives (three forms)
 
@@ -100,10 +101,9 @@ sequenceDiagram
     Owner->>UI: Click "Distribute now"
     UI->>Hook: distribute()
     Hook->>Hook: require unlocked masterKey + ≥2 targets
-    Hook->>Crypto: split(rawMasterKey, 5, vaultThreshold)
-    Crypto-->>Hook: shards[0..4]
+    Hook->>Crypto: split(rawMasterKey, 4, vaultThreshold)
+    Crypto-->>Hook: shards[0..3]
     Hook->>LS: store shards[0] (device shard)
-    Hook->>Convex: updateKeeplasShard(shards[4])
     loop each trust contact
         Hook->>Crypto: wrapBytes(shards[slot], contactPublicKey)
         Crypto-->>Hook: ML-KEM envelope
@@ -150,8 +150,9 @@ contact was offline: the server envelope changed, the cached fingerprint no long
 the shard is silently re-unwrapped.
 
 > **The one unrecoverable case:** a contact who loses **both** their device **and** their 24-word
-> phrase can no longer derive their ML-KEM secret key, so their shard is gone. The `N`-of-5
-> threshold absorbs this — recovery still succeeds as long as `N` contacts remain functional.
+> phrase can no longer derive their ML-KEM secret key, so their shard is gone. The threshold
+> absorbs this only when enough other contacts remain functional. With the default threshold 2,
+> 2 working trusted contacts are required.
 
 ## Re-distribution / reset
 
@@ -166,6 +167,10 @@ Re-distribute after:
 - a **threshold change** (`vaultThreshold` updated → all shards invalid),
 - onboarding a **new or replacement guardian**,
 - periodic **hygiene rotation**.
+
+If the vault has only 2 ready trusted contacts, keep `vaultThreshold = 2`. A threshold of 3 needs
+3 ready contacts; otherwise distribution/reset can run, but contacts-only reconstruction cannot
+reach quorum.
 
 Note: `revokeContact` clears a contact's `encryptedShard` and resets `shardConfirmed`, but does
 **not** auto re-distribute. To rebalance slots after a revocation, the owner re-runs distribution.
@@ -230,6 +235,8 @@ Relevant `access_requests.ts` functions:
 - Recovery requires an explicit **human gate** (unreachability quorum) **plus** a 72h
   owner-cancellable grace window — it cannot be triggered silently.
 - Distribution is refused below 2 trust contacts, on both client and server.
+- A server-held Shamir shard is forbidden; Keeplas must never count toward the reconstruction
+  threshold.
 
 See [`docs/TESTING-STRATEGY.md`](./TESTING-STRATEGY.md) for the shard-distribution test coverage
 (invite → accept → distribute → resubmit; assert no shard is ever readable in plaintext).
@@ -238,7 +245,7 @@ See [`docs/TESTING-STRATEGY.md`](./TESTING-STRATEGY.md) for the shard-distributi
 
 | Concern                                  | File                                                                                    |
 | ---------------------------------------- | --------------------------------------------------------------------------------------- |
-| Split + 5-slot fan-out                   | `apps/web/src/lib/use-distribute-shards.ts`                                             |
+| Split + 4-slot fan-out                   | `apps/web/src/lib/use-distribute-shards.ts`                                             |
 | Distribution UI (contacts)               | `apps/web/src/app/(dashboard)/trusted-contacts/distribute-shards-section.tsx`           |
 | Distribution UI (settings)               | `apps/web/src/app/(dashboard)/settings/sections/redistribute-shards-card.tsx`           |
 | Server: store/eligibility                | `packages/convex/trusted_contacts.ts` (`storeEncryptedShard`, `getDistributionTargets`) |

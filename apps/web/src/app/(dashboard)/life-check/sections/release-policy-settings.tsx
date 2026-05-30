@@ -25,7 +25,9 @@ export function ReleasePolicySettings() {
 
   const [threshold, setThreshold] = useState(2);
   const [windowDays, setWindowDays] = useState(7);
-  const [releaseAnyway, setReleaseAnyway] = useState(true);
+  // Default OFF (abort): releasing the vault with zero human confirmation must
+  // always be an explicit owner opt-in, never the preselected state.
+  const [releaseAnyway, setReleaseAnyway] = useState(false);
 
   // Seed the editable form from the server config the first time it resolves
   // (and again if it changes), without an effect. Tracking the seeded source
@@ -36,9 +38,8 @@ export function ReleasePolicySettings() {
     setSeededFrom(config);
     setThreshold(config.confirmationThreshold ?? 2);
     setWindowDays(config.confirmationWindowDays ?? 7);
-    setReleaseAnyway(
-      (config.fallbackBehavior ?? "release_anyway") === "release_anyway",
-    );
+    // Default OFF when unset — must match the server's "abort" default (H1).
+    setReleaseAnyway(config.fallbackBehavior === "release_anyway");
   }
 
   if (config === null) return null;

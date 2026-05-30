@@ -12,7 +12,12 @@ import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
-import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
+import {
+  useRecipientCrypto,
+  type WrapRecipient,
+} from "@/lib/use-recipient-crypto";
+import { toWrapRecipient } from "@/lib/verify-contact-key";
+import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { getErrorMessage } from "@/lib/utils";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -168,8 +173,9 @@ export function AddItemDialog({
 }: AddItemDialogProps) {
   const isIntroMode = mode === "release_introduction";
   const createItem = useAuditedMutation(api.vault_items.createItem);
-  const { encryptContentWithKey, computeHash, isReady } = useVaultCrypto();
+  const { encryptContentWithKey, isReady } = useVaultCrypto();
   const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
+  const showBlockedWrapAlert = useBlockedWrapAlert();
   const { enqueueAttachments } = useUploadQueue();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -483,27 +489,18 @@ export function AddItemDialog({
       const recipientConfig = resolveRecipientConfig();
 
       const allTrustedSelected = recipientSelection.includes(ALL_TRUSTED_VALUE);
-      let resolvedRecipients: Array<{
-        contactId: string;
-        contactPublicKey?: string;
-      }> = [];
+      let resolvedRecipients: WrapRecipient[] = [];
       if (allTrustedSelected) {
         // Wrap DEKs to every current trust contact so each one can decrypt
         // at release time. The recipientMode stays "default" on the item,
         // so future contacts also get the intro via the fan-out resolver.
-        resolvedRecipients = allContacts.map((c) => ({
-          contactId: c._id,
-          contactPublicKey: c.contactPublicKey,
-        }));
+        resolvedRecipients = allContacts.map(toWrapRecipient);
       } else if (recipientConfig.mode === "explicit") {
         const byId = new Map(allContacts.map((c) => [c._id, c]));
         resolvedRecipients = recipientConfig.sharedWithContacts
           .map((id) => byId.get(id))
           .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map((c) => ({
-            contactId: c._id,
-            contactPublicKey: c.contactPublicKey,
-          }));
+          .map(toWrapRecipient);
       } else if (recipientConfig.mode === "groups") {
         const byId = new Map(allContacts.map((c) => [c._id, c]));
         const groupSet = new Set(recipientConfig.sharedWithGroups);
@@ -515,10 +512,7 @@ export function AddItemDialog({
         resolvedRecipients = Array.from(memberSet)
           .map((id) => byId.get(id as Id<"trusted_contacts">))
           .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map((c) => ({
-            contactId: c._id,
-            contactPublicKey: c.contactPublicKey,
-          }));
+          .map(toWrapRecipient);
       } else {
         // mode "default" — empty selection. The item is private (no
         // recipients) so we don't need any wrapped DEKs beyond the owner's.
@@ -526,13 +520,33 @@ export function AddItemDialog({
       }
 
       setProgress("Generating per-item key…");
-      const { dek, ownerWrap, recipientWraps, skippedRecipientIds } =
-        await generateDekAndWrap(resolvedRecipients);
+      let wrap = await generateDekAndWrap(resolvedRecipients);
+
+      // Verify-before-wrap (finding #2): if a recipient's encryption key could
+      // not be authenticated, BLOCK the save. The owner may explicitly re-pin a
+      // deliberate identity change, after which we retry once; otherwise we
+      // abort so no item is created with a recipient the contacts can't safely
+      // decrypt.
+      if (wrap.blocked.length > 0) {
+        const retry = await showBlockedWrapAlert(wrap.blocked);
+        if (!retry) {
+          setSaving(false);
+          setProgress("");
+          return;
+        }
+        wrap = await generateDekAndWrap(resolvedRecipients);
+        if (wrap.blocked.length > 0) {
+          await showBlockedWrapAlert(wrap.blocked);
+          setSaving(false);
+          setProgress("");
+          return;
+        }
+      }
+      const { dek, ownerWrap, recipientWraps } = wrap;
 
       setProgress("Sealing vault entry…");
       const textPayload = body.trim();
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
-      const contentHash = await computeHash(textPayload);
       const encryptedLinks =
         cleanUrls.length > 0
           ? await encryptContentWithKey(serializeLinks(cleanUrls), dek)
@@ -559,7 +573,6 @@ export function AddItemDialog({
         title: title.trim(),
         encryptedContent,
         encryptedLinks,
-        contentHash,
         accessLevel: recipientConfig.derivedAccessLevel,
         encryptionType: "zero_knowledge",
         ownerWrappedDek: ownerWrap.wrappedDek,
@@ -588,13 +601,6 @@ export function AddItemDialog({
             durationSec: f.durationSec,
           })),
         });
-      }
-
-      if (skippedRecipientIds.length > 0) {
-        const skippedCount = skippedRecipientIds.length;
-        setProgress(
-          `Sealed. ${skippedCount} recipient${skippedCount === 1 ? "" : "s"} won't receive this item until they accept their invitation.`,
-        );
       }
 
       handleOpenChange(false);

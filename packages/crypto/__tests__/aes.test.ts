@@ -110,6 +110,38 @@ describe("AES-256-GCM", () => {
     expect(new Uint8Array(decrypted)).toEqual(plaintext);
   });
 
+  it("round-trips with additionalData (AAD)", async () => {
+    const key = await generateMasterKey();
+    const plaintext = new TextEncoder().encode("bound to header");
+    const aad = new TextEncoder().encode("item:123|v:1");
+
+    const { ciphertext, iv } = await encrypt(plaintext, key, aad);
+    const decrypted = await decrypt(ciphertext, key, iv, aad);
+
+    expect(new TextDecoder().decode(decrypted)).toBe("bound to header");
+  });
+
+  it("fails to decrypt when AAD does not match", async () => {
+    const key = await generateMasterKey();
+    const plaintext = new TextEncoder().encode("bound to header");
+    const aad = new TextEncoder().encode("item:123|v:1");
+
+    const { ciphertext, iv } = await encrypt(plaintext, key, aad);
+    const wrongAad = new TextEncoder().encode("item:999|v:1");
+
+    await expect(decrypt(ciphertext, key, iv, wrongAad)).rejects.toThrow();
+  });
+
+  it("fails to decrypt when AAD is omitted but was present at encryption", async () => {
+    const key = await generateMasterKey();
+    const plaintext = new TextEncoder().encode("bound to header");
+    const aad = new TextEncoder().encode("item:123|v:1");
+
+    const { ciphertext, iv } = await encrypt(plaintext, key, aad);
+
+    await expect(decrypt(ciphertext, key, iv)).rejects.toThrow();
+  });
+
   it("handles large data", async () => {
     const key = await generateMasterKey();
     const plaintext = new Uint8Array(1024 * 100); // 100KB

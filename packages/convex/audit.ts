@@ -77,7 +77,6 @@ export async function createAuditLog(
     metadata?: string;
     ipAddress?: string;
     country?: string;
-    deviceInfo?: string;
   },
 ) {
   const lastLog = await ctx.db
@@ -115,7 +114,6 @@ export async function createAuditLog(
     metadata: params.metadata,
     ipAddress: params.ipAddress,
     country: params.country,
-    deviceInfo: params.deviceInfo,
     previousLogHash,
     logHash,
     createdAt: Date.now(),

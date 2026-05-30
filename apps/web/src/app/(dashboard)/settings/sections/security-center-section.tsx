@@ -67,19 +67,17 @@ export function SecurityCenterSection() {
     return real ?? null;
   });
 
-  const hasKeeplasShard = !!user?.keeplasShard;
   const hasRecoveryHash = !!user?.recoveryPhraseHash;
 
   const lastAccessTs = user?.lastSeenAt ?? user?._creationTime ?? null;
   const lastAccessLog =
-    logs.find((l) => (l.country && l.country !== "XX") || l.deviceInfo) ?? null;
+    logs.find((l) => l.country && l.country !== "XX") ?? null;
 
   return (
     <div className="space-y-10">
       <LastAccessPanel
         lastSeenAt={lastAccessTs}
         country={lastAccessLog?.country ?? null}
-        deviceInfo={lastAccessLog?.deviceInfo ?? null}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -125,7 +123,6 @@ export function SecurityCenterSection() {
                       >
                         <UserAvatar
                           size="md"
-                          imageUrl={contact.avatarUrl}
                           initials={getInitials(contact.name)}
                           alt={contact.name}
                           fallbackClassName={
@@ -221,14 +218,15 @@ export function SecurityCenterSection() {
           </div>
           <p className="text-body-md text-on-surface-variant mb-6">
             Your master key is split into{" "}
-            <strong className="text-primary">5 cryptographic shards</strong>{" "}
-            using Shamir&apos;s Secret Sharing. You chose a threshold of{" "}
+            <strong className="text-primary">4 cryptographic shards</strong>{" "}
+            using Shamir&apos;s Secret Sharing — one on this device and three
+            held by your trusted contacts. You chose a threshold of{" "}
             <strong className="text-primary">
               {user?.vaultThreshold ?? 2}
             </strong>{" "}
             shards to reconstruct the vault. Any combination meeting that
             threshold works — your contacts collaborate on-device, never on the
-            server.
+            server. Keeplas holds no shard.
           </p>
 
           <div className="space-y-3">
@@ -240,21 +238,11 @@ export function SecurityCenterSection() {
               }
               verified={hasRecoveryHash}
             />
-            <ShardRow
-              icon={ICON_PATHS.cloud}
-              label="Keeplas backup shard"
-              hint={
-                hasKeeplasShard
-                  ? "Encrypted in trusted cloud"
-                  : "Awaiting key generation"
-              }
-              verified={hasKeeplasShard}
-            />
-            {accepted.slice(0, 2).map((c, i) => (
+            {accepted.slice(0, 3).map((c, i) => (
               <ShardRow
                 key={c._id}
                 icon={ICON_PATHS.users}
-                label={`Guardian shard #${i + 3}`}
+                label={`Guardian shard #${i + 2}`}
                 hint={`Held by ${c.name.split(" ")[0]}`}
                 verified
               />
@@ -413,11 +401,9 @@ function SummaryStat({
 function LastAccessPanel({
   lastSeenAt,
   country,
-  deviceInfo,
 }: {
   lastSeenAt: number | null;
   country: string | null;
-  deviceInfo: string | null;
 }) {
   if (!lastSeenAt) return null;
 
@@ -433,7 +419,6 @@ function LastAccessPanel({
 
   const subtitleParts = [
     country && country !== "XX" ? `from ${country}` : null,
-    deviceInfo,
   ].filter(Boolean) as string[];
   const subtitle =
     subtitleParts.length > 0

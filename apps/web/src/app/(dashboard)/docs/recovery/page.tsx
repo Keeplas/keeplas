@@ -106,20 +106,21 @@ export default function RecoveryDocPage() {
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          During onboarding, you split your Master Key into 5 Shamir shares and
-          choose the threshold — the minimum number that must collaborate to
-          reconstruct it. The choice is permanent unless you re-distribute
-          shards.
+          During onboarding, you split your Master Key into 4 Shamir shares:
+          one device shard and up to three trusted-contact shards. You choose
+          the threshold — the minimum number that must collaborate to
+          reconstruct it. With 2 trusted contacts, keep the threshold at 2; a
+          threshold of 3 needs 3 ready contacts.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {THRESHOLD_OPTIONS.map((option) => (
             <article
               key={option.value}
               className={`rounded-2xl p-4 ghost-border ${option.accent}`}
             >
               <p className="text-headline-md font-bold text-primary">
-                {option.value}/5
+                {option.value}
               </p>
               <p className="text-label-md text-secondary mt-1">
                 {option.label}
@@ -132,10 +133,11 @@ export default function RecoveryDocPage() {
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          Default is <strong className="text-primary">2-of-5</strong> — the
-          easiest recovery path while still requiring at least two distinct
-          people. If your contacts face a higher collusion risk (e.g. all from
-          the same family or workplace), increase it.
+          Default is <strong className="text-primary">2 trusted contacts</strong>{" "}
+          — the easiest recovery path while still requiring at least two
+          distinct people. If your contacts face a higher collusion risk (e.g.
+          all from the same family or workplace), use threshold 3 only after 3
+          contacts are ready.
         </p>
       </section>
 
@@ -385,20 +387,8 @@ const THRESHOLD_OPTIONS = [
   },
   {
     value: 3,
-    label: "Balanced",
-    body: "Three contacts. Resistant to a single colluding pair.",
-    accent: "bg-surface-container-low",
-  },
-  {
-    value: 4,
     label: "Strict",
-    body: "Four out of five. Strong, but recovery may stall.",
-    accent: "bg-surface-container-low",
-  },
-  {
-    value: 5,
-    label: "Maximum",
-    body: "All five. No collusion possible — and a single missing contact blocks recovery.",
+    body: "Requires three ready contacts. Stronger against a colluding pair, but less forgiving.",
     accent: "bg-surface-container-low",
   },
 ];

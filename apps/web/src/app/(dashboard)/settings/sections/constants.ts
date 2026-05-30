@@ -1,9 +1,8 @@
 export const LANGUAGES = [
   { value: "en-US", label: "English (United States)" },
   { value: "fr-FR", label: "French (Français)" },
-  { value: "es-ES", label: "Spanish (Español)" },
-  { value: "sw-KE", label: "Swahili (Kiswahili)" },
-  { value: "ja-JP", label: "Japanese (日本語)" },
+  { value: "es-ES", label: "Spanish (Español)", upcoming: true },
+  { value: "pt-PT", label: "Portuguese (Português)", upcoming: true },
 ];
 
 export const CURRENCIES = [

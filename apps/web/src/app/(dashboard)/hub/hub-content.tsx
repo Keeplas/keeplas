@@ -194,7 +194,6 @@ export function HubContent() {
                   <UserAvatar
                     key={c._id}
                     size="md"
-                    imageUrl={c.avatarUrl}
                     initials={getInitials(c.name)}
                     alt={c.name}
                     className="ring-2 ring-surface"

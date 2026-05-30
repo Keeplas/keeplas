@@ -1,7 +1,7 @@
 import { query, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
-import { requireAuth } from "./helpers";
+import { requireFullAuth } from "./helpers";
 import { getBlobDownloadUrl } from "./lib/storage";
 
 /**
@@ -35,7 +35,11 @@ async function resolveApprovedRelease(
   ctx: QueryCtx,
   contactId: Id<"trusted_contacts">,
 ): Promise<ApprovedRelease | null> {
-  const requesterId = await requireAuth(ctx);
+  // Single step-up chokepoint for every memorial read (5 queries route through
+  // here — DRY). The viewing contact is a long-established account by release
+  // time, so their login-OTP/TOTP gate is reliably clearable; this is steady-
+  // state sensitive access to released ciphertext, not a just-signed-up path.
+  const requesterId = await requireFullAuth(ctx);
 
   const contact = await ctx.db.get(contactId);
   if (!contact || contact.contactUserId !== requesterId) return null;
@@ -103,7 +107,6 @@ async function shapeItem(
     encryptionType: item.encryptionType,
     encryptedContent: item.encryptedContent,
     encryptedLinks: item.encryptedLinks ?? null,
-    contentHash: item.contentHash,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     wrappedDek: recRow?.wrappedDek ?? null,

@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { phraseToHash } from "@keeplas/crypto/recovery";
+import {
+  derivePhraseVerifier,
+  generatePhraseVerifierSalt,
+} from "@keeplas/crypto/recovery";
+import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { Button, Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
 
 function pickRandomIndices(): number[] {
@@ -27,7 +31,9 @@ function ordinal(n: number): string {
 
 interface VerificationStepProps {
   phrase: string[];
-  onVerified: () => void;
+  // The per-user salt generated here (base64) is forwarded so key generation
+  // reuses the SAME salt for the RootKey — one salt per user.
+  onVerified: (phraseSaltB64: string) => void;
   onBack: () => void;
 }
 
@@ -70,11 +76,17 @@ export function VerificationStep({
       }
     }
 
-    // All 3 match — compute hash and store
+    // All 3 match — derive the salted verifier and store it with its salt.
+    // The phrase never leaves the device; only the Argon2id digest is sent.
     try {
-      const hash = await phraseToHash(phrase);
-      await storeHash({ recoveryPhraseHash: hash });
-      onVerified();
+      const salt = generatePhraseVerifierSalt();
+      const phraseSaltB64 = uint8ToBase64(salt);
+      const verifier = await derivePhraseVerifier(phrase, salt);
+      await storeHash({
+        recoveryPhraseHash: verifier,
+        phraseSalt: phraseSaltB64,
+      });
+      onVerified(phraseSaltB64);
     } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);

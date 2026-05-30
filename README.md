@@ -184,7 +184,8 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 - **Master Key**, **Recovery Phrase (24 words)**, and **Shamir shards** never leave the client unencrypted.
 - The **24-word phrase** is the root crypto secret (Argon2id-derived). The **password is pure auth** and is resettable via the 24 words.
-- **No OAuth.** No direct phrase recovery — only trusted contacts (Shamir threshold) can rebuild it.
+- **No OAuth.** No direct phrase recovery — trusted contacts can rebuild the master key from Shamir shards once the recovery threshold is met. Default threshold is 2 contacts; threshold 3 requires 3 ready contacts.
+- Keeplas does not hold a server-side Shamir shard.
 - Per-device unlock combines **PIN**, **biometric (PRF)**, and **hardware key (PRF)** — RootKey wraps live in IndexedDB; the 24-word phrase is requested on first login per device.
 - All sensitive cryptography is implemented in [`packages/crypto/`](./packages/crypto), gated by CODEOWNERS and unit-tested.
 

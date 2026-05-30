@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useConvex } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { phraseToHash } from "@keeplas/crypto";
+import { derivePhraseVerifier } from "@keeplas/crypto";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import {
   Button,
   Icon,
@@ -48,6 +49,27 @@ export default function PasswordRecoveryPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Fetch the account's per-user salt then derive the salted recovery-phrase
+  // verifier client-side. The phrase never leaves the device — only the
+  // Argon2id digest is sent. Throws when no recovery is configured.
+  async function deriveVerifier(
+    words: string[],
+    account: { email: string } | { phoneNumber: string },
+  ): Promise<string> {
+    const saltResult =
+      "email" in account
+        ? await convex.query(api.passwordReset.getPhraseSaltByEmail, {
+            email: account.email,
+          })
+        : await convex.query(api.phone_auth.getPhraseSaltByPhone, {
+            phoneNumber: account.phoneNumber,
+          });
+    if (!saltResult?.phraseSalt) {
+      throw new Error("Recovery is not configured for this account.");
+    }
+    return derivePhraseVerifier(words, base64ToUint8(saltResult.phraseSalt));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -68,7 +90,7 @@ export default function PasswordRecoveryPage() {
       setBusy(true);
       setError(null);
       try {
-        const phraseHash = await phraseToHash(words);
+        const phraseHash = await deriveVerifier(words, { phoneNumber: phone });
         await signIn("phone-recovery", { phoneNumber: phone, phraseHash });
         router.push("/hub");
       } catch (err) {
@@ -102,7 +124,7 @@ export default function PasswordRecoveryPage() {
       setBusy(true);
       setError(null);
       try {
-        const phraseHash = await phraseToHash(words);
+        const phraseHash = await deriveVerifier(words, { email: email.trim() });
         await signIn("email-recovery", { email: email.trim(), phraseHash });
         router.push("/hub");
       } catch (err) {
@@ -129,7 +151,7 @@ export default function PasswordRecoveryPage() {
     setBusy(true);
     setError(null);
     try {
-      const phraseHash = await phraseToHash(words);
+      const phraseHash = await deriveVerifier(words, { email: email.trim() });
       await resetPassword({
         email: email.trim(),
         phraseHash,
@@ -257,7 +279,7 @@ export default function PasswordRecoveryPage() {
               ignored — you can paste directly from the PDF.
             </p>
             <p className="text-label-md text-on-surface-variant">
-              Words never leave this device — only a SHA-256 verifier is sent.
+              Words never leave this device — only a derived verifier is sent.
             </p>
           </div>
           {kind === "email" && emailMode === "email-otp" && (

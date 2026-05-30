@@ -81,7 +81,7 @@ export default function LifeCheckPage() {
               frequency={frequency}
               confirmationThreshold={config?.confirmationThreshold ?? 2}
               confirmationWindowDays={config?.confirmationWindowDays ?? 7}
-              fallbackBehavior={config?.fallbackBehavior ?? "release_anyway"}
+              fallbackBehavior={config?.fallbackBehavior ?? "abort"}
               travelModeEnabled={config?.travelModeEnabled ?? false}
               travelModeUntil={config?.travelModeUntil}
             />

@@ -48,7 +48,7 @@ const CORE_FEATURES: Feature[] = [
   {
     title: "Trusted Contacts",
     description:
-      "Up to five trust contacts hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately.",
+      "At least two trust contacts hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately.",
     iconPath: ICON_PATHS.users,
     href: "/docs/trusted-contacts",
     accent: "bg-primary/10 text-primary",
@@ -56,7 +56,7 @@ const CORE_FEATURES: Feature[] = [
   {
     title: "Recovery & Inheritance",
     description:
-      "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. Configurable threshold (2-of-5 default).",
+      "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. Default threshold: 2 trusted contacts.",
     iconPath: ICON_PATHS.key,
     href: "/docs/recovery",
     accent: "bg-tertiary/15 text-tertiary",
@@ -85,7 +85,7 @@ const SECURITY_POINTS: SecurityPoint[] = [
   },
   {
     title: "Shamir secret sharing",
-    body: "Your master key is split into 5 cryptographic shards. You choose the threshold at onboarding (2 to 5) — lower means easier recovery, higher means stronger collusion resistance. Reconstruction always happens on your contacts' devices, never on Keeplas servers.",
+    body: "Your master key is split into 4 cryptographic shards: one device shard and up to three trusted-contact shards. Recovery starts working from 2 trusted contacts with the default threshold. Reconstruction always happens on your contacts' devices, never on Keeplas servers.",
     iconPath: ICON_PATHS.hub,
   },
   {

@@ -5,7 +5,7 @@ import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
-import { uint8ToBase64 } from "@keeplas/crypto/encoding";
+import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { deriveRootKey } from "@keeplas/crypto/kdf";
 import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
@@ -15,6 +15,9 @@ import { Button, Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
   phrase: string[];
+  // Per-user Argon2id salt (base64) generated at the verification step and
+  // reused here so the RootKey and the recovery-phrase verifier share it.
+  phraseSaltB64: string;
   onComplete?: () => void;
 }
 
@@ -54,13 +57,19 @@ const VISIBLE_PHASES = [
 const MIN_THRESHOLD = 2;
 // Capped at 3: only the 3 trusted-contact shards (slots 2-4) participate in
 // the contacts-only recovery path. The device shard helps the owner locally
-// and the Keeplas custodian shard is never replayed, so a threshold of 4-5
-// would make the vault unrecoverable after the owner is gone.
+// but is cleared on logout, so a threshold of 4 would make the vault
+// unrecoverable after the owner is gone (the server holds NO shard).
 const MAX_THRESHOLD = 3;
 const DEFAULT_THRESHOLD = 2;
+// Total Shamir shares: 1 device + 3 trusted contacts. The server deliberately
+// holds NONE — a server-held shard plus one contact shard would reach a
+// threshold-2 quorum and let a malicious server reconstruct the master key,
+// breaking zero-knowledge. See finding #3.
+const TOTAL_SHARES = 4;
 
 export function KeyGenerationStep({
   phrase,
+  phraseSaltB64,
   onComplete,
 }: KeyGenerationStepProps) {
   const router = useRouter();
@@ -79,11 +88,11 @@ export function KeyGenerationStep({
 
     async function generateAndStore() {
       try {
-        // Phase 1: derive RootKey from the 24 words via Argon2id with a
-        // freshly generated user-specific salt. The phrase never leaves the
-        // client; the server stores only the salt.
+        // Phase 1: derive RootKey from the 24 words via Argon2id, reusing the
+        // SAME per-user salt minted at the verification step. The phrase never
+        // leaves the client; the server stores only the salt.
         setPhase("deriving_root");
-        const phraseSalt = crypto.getRandomValues(new Uint8Array(16));
+        const phraseSalt = base64ToUint8(phraseSaltB64);
         const rootKey = await deriveRootKey(phrase, phraseSalt, {
           extractable: false,
         });
@@ -99,7 +108,7 @@ export function KeyGenerationStep({
         );
 
         setPhase("splitting_shards");
-        const shards = await split(rawMasterKey, 5, chosenThreshold);
+        const shards = await split(rawMasterKey, TOTAL_SHARES, chosenThreshold);
 
         // Phase 3: wrap MasterKey with RootKey -> bundle stored on the server
         setPhase("wrapping_master_key");
@@ -110,7 +119,6 @@ export function KeyGenerationStep({
           rawMasterKey,
         );
 
-        const phraseSaltB64 = uint8ToBase64(phraseSalt);
         const bundle = {
           version: 2,
           phraseSalt: phraseSaltB64,
@@ -118,22 +126,20 @@ export function KeyGenerationStep({
           encryptedMasterKey: uint8ToBase64(new Uint8Array(wrapped)),
         };
 
-        // Shard 1 stays on this device; shard 5 is the Keeplas custodian
-        // shard. Shards 2–4 are reserved for trusted contacts (later step).
+        // Shard 1 stays on this device. Shards 2–4 are reserved for trusted
+        // contacts (distributed in a later step). The server holds NO shard.
         const shard1Base64 = uint8ToBase64(shards[0]);
         try {
           localStorage.setItem(STORAGE_KEYS.deviceShard, shard1Base64);
         } catch {
           // localStorage may be unavailable (private mode) — non-fatal.
         }
-        const keeplasShard = uint8ToBase64(shards[4]);
 
         // Phase 4: persist
         setPhase("storing");
         await storeKeyBundle({
           encryptedKeyBundle: JSON.stringify(bundle),
           phraseSalt: phraseSaltB64,
-          keeplasShard,
           vaultThreshold: chosenThreshold,
         });
 
@@ -162,7 +168,15 @@ export function KeyGenerationStep({
     }
 
     generateAndStore();
-  }, [phrase, storeKeyBundle, router, setMasterKey, onComplete, threshold]);
+  }, [
+    phrase,
+    phraseSaltB64,
+    storeKeyBundle,
+    router,
+    setMasterKey,
+    onComplete,
+    threshold,
+  ]);
 
   if (threshold === null) {
     return (
@@ -341,7 +355,7 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
               }`}
             >
               <div className="text-headline-md text-primary font-bold">{n}</div>
-              <div className="text-label-md text-on-surface-variant">of 5</div>
+              <div className="text-label-md text-on-surface-variant">of 4</div>
             </button>
           );
         })}
@@ -371,7 +385,7 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
         onClick={() => onSelect(value)}
         className="w-full cursor-pointer"
       >
-        Continue with {value}-of-5
+        Continue with {value}-of-4
       </Button>
     </div>
   );

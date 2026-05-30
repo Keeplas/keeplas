@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 
 async function assertContactsOwnedByUser(
@@ -19,7 +19,7 @@ async function assertContactsOwnedByUser(
 export const listGroups = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     return await ctx.db
       .query("recipient_groups")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -30,7 +30,7 @@ export const listGroups = query({
 export const getGroup = query({
   args: { groupId: v.id("recipient_groups") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) return null;
     return group;
@@ -50,7 +50,7 @@ export const createGroup = auditedMutation({
     isDefault: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     if (!args.name.trim()) throw new Error("Group name is required");
 
@@ -99,7 +99,7 @@ export const updateGroup = auditedMutation({
     memberContactIds: v.optional(v.array(v.id("trusted_contacts"))),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
 
@@ -133,7 +133,7 @@ export const setDefaultGroup = auditedMutation({
   getResourceId: (args) => args.groupId,
   args: { groupId: v.id("recipient_groups") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
 
@@ -164,7 +164,7 @@ export const deleteGroup = auditedMutation({
   getResourceId: (args) => args.groupId,
   args: { groupId: v.id("recipient_groups") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
 
@@ -189,7 +189,7 @@ export const addMember = auditedMutation({
     contactId: v.id("trusted_contacts"),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
 
@@ -217,7 +217,7 @@ export const removeMember = auditedMutation({
     contactId: v.id("trusted_contacts"),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const group = await ctx.db.get(args.groupId);
     if (!group || group.userId !== userId) throw new Error("Group not found");
 

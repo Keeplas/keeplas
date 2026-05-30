@@ -31,7 +31,6 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       if (existingUserId !== null) return;
       const method = INITIAL_AUTH_METHOD[provider.id];
       await ctx.db.patch(userId, {
-        isActive: true,
         ...(method ? { authProviders: [method] } : {}),
       });
     },

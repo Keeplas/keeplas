@@ -2,8 +2,7 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { categoryValidator, accessLevelValidator } from "./validators";
 import {
-  requireAuth,
-  optionalAuth,
+  requireFullAuth,
   getUserVault,
   getActiveItems,
   requireItemOwnership,
@@ -35,10 +34,8 @@ const recipientModeValidator = v.union(
 
 const recipientKeyValidator = v.object({
   contactId: v.id("trusted_contacts"),
+  // ML-KEM + AES-GCM envelope; the IV lives inside the wrappedDek JSON.
   wrappedDek: v.string(),
-  // Deprecated — kept optional for backward-compat with legacy clients.
-  // ML-KEM envelope carries the IV inside the wrappedDek JSON.
-  wrappedDekIv: v.optional(v.string()),
 });
 
 // ─── Queries ────────────────────────────────────────────
@@ -49,9 +46,7 @@ const recipientKeyValidator = v.object({
 export const getItems = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
-
+    const userId = await requireFullAuth(ctx);
     return await getActiveItems(ctx, userId);
   },
 });
@@ -62,8 +57,7 @@ export const getItems = query({
 export const getItemsByCategory = query({
   args: { category: categoryValidator },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
+    const userId = await requireFullAuth(ctx);
 
     const vault = await getUserVault(ctx, userId);
     if (!vault) return [];
@@ -95,8 +89,7 @@ export const getItemsByCategory = query({
 export const listReleaseIntroductions = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
+    const userId = await requireFullAuth(ctx);
 
     const items = await ctx.db
       .query("vault_items")
@@ -135,8 +128,7 @@ export const listReleaseIntroductions = query({
 export const getItem = query({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return null;
+    const userId = await requireFullAuth(ctx);
 
     const item = await ctx.db.get(args.itemId);
     if (!item || item.userId !== userId) return null;
@@ -151,8 +143,7 @@ export const getItem = query({
 export const getCategoryCounts = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return {};
+    const userId = await requireFullAuth(ctx);
 
     const items = await getActiveItems(ctx, userId);
 
@@ -170,8 +161,7 @@ export const getCategoryCounts = query({
 export const getItemFiles = query({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
+    const userId = await requireFullAuth(ctx);
 
     const item = await ctx.db.get(args.itemId);
     if (!item || item.userId !== userId) return [];
@@ -192,8 +182,7 @@ export const getItemFiles = query({
 export const getItemFileUrl = query({
   args: { fileId: v.id("vault_item_files") },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return null;
+    const userId = await requireFullAuth(ctx);
 
     const file = await ctx.db.get(args.fileId);
     if (!file || file.userId !== userId) return null;
@@ -213,7 +202,7 @@ export const generateUploadUrl = auditedMutation({
   resourceType: "vault",
   args: {},
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    await requireFullAuth(ctx);
     return await generateBlobUploadUrl(ctx);
   },
 });
@@ -260,16 +249,13 @@ export const createItem = auditedMutation({
     vaultId: v.id("vaults"),
     category: categoryValidator,
     title: v.string(),
-    description: v.optional(v.string()),
     encryptedContent: v.string(),
     encryptedLinks: v.optional(v.string()),
-    contentHash: v.string(),
     accessLevel: accessLevelValidator,
     encryptionType: v.optional(
       v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge")),
     ),
     ownerWrappedDek: v.optional(v.string()),
-    ownerWrappedDekIv: v.optional(v.string()),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
@@ -280,7 +266,7 @@ export const createItem = auditedMutation({
     isReleaseIntroduction: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const vault = await ctx.db.get(args.vaultId);
     if (!vault || vault.userId !== userId) {
@@ -324,16 +310,13 @@ export const createItem = auditedMutation({
       userId,
       category: args.category,
       title: args.title,
-      description: args.description,
       encryptedContent: args.encryptedContent,
       encryptedLinks: args.encryptedLinks,
       encryptionType: args.encryptionType ?? "aes_256_gcm",
-      contentHash: args.contentHash,
       sharedWithContacts,
       sharedWithGroups,
       recipientMode,
       ownerWrappedDek: args.ownerWrappedDek,
-      ownerWrappedDekIv: args.ownerWrappedDekIv,
       accessLevel,
       status: "active",
       triggerType: args.triggerType,
@@ -350,7 +333,6 @@ export const createItem = auditedMutation({
             itemId,
             contactId: rk.contactId,
             wrappedDek: rk.wrappedDek,
-            wrappedDekIv: rk.wrappedDekIv,
             createdAt: now,
           }),
         ),
@@ -404,10 +386,8 @@ export const updateItem = auditedMutation({
   args: {
     itemId: v.id("vault_items"),
     title: v.optional(v.string()),
-    description: v.optional(v.string()),
     encryptedContent: v.optional(v.string()),
     encryptedLinks: v.optional(v.string()),
-    contentHash: v.optional(v.string()),
     category: v.optional(categoryValidator),
     accessLevel: v.optional(accessLevelValidator),
     recipientMode: v.optional(recipientModeValidator),
@@ -416,11 +396,10 @@ export const updateItem = auditedMutation({
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
     // Re-keying a ZK item replaces its owner wrap; mirror createItem.
     ownerWrappedDek: v.optional(v.string()),
-    ownerWrappedDekIv: v.optional(v.string()),
     isReleaseIntroduction: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
 
     const { itemId, recipientKeys, ...updates } = args;
@@ -452,7 +431,6 @@ export const updateItem = auditedMutation({
             itemId,
             contactId: rk.contactId,
             wrappedDek: rk.wrappedDek,
-            wrappedDekIv: rk.wrappedDekIv,
             createdAt: now,
           }),
         ),
@@ -477,7 +455,7 @@ export const addItemFiles = auditedMutation({
     files: v.array(newFileValidator),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
     if (args.files.length === 0) return;
 
@@ -523,7 +501,7 @@ export const removeItemFile = auditedMutation({
     fileId: v.id("vault_item_files"),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
 
     const file = await ctx.db.get(args.fileId);
@@ -544,8 +522,7 @@ export const removeItemFile = auditedMutation({
 export const resolveRecipientsForItem = query({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return [];
+    const userId = await requireFullAuth(ctx);
 
     const item = await ctx.db.get(args.itemId);
     if (!item || item.userId !== userId) return [];
@@ -566,7 +543,7 @@ export const deleteItem = auditedMutation({
   getResourceId: (args) => args.itemId,
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const item = await requireItemOwnership(ctx, args.itemId, userId);
 
     const now = Date.now();
@@ -634,7 +611,7 @@ export const migrateAccessLevels = internalMutation({
 export const getDeadManStatus = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const config = await ctx.db
       .query("life_check_configs")

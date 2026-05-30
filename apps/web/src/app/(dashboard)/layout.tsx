@@ -7,8 +7,6 @@ import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
 import { UnlockGate } from "@/components/unlock-gate";
-import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
-import { usePassiveSignal } from "@/lib/use-passive-signal";
 import { UploadQueueProvider } from "@/lib/upload-queue";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -30,11 +28,6 @@ export default function DashboardLayout({
   const loginOtpGate = useQuery(
     api.login_otp.getMyLoginOtpGate,
     isAuthenticated ? {} : "skip",
-  );
-
-  useRestoreMasterKey();
-  usePassiveSignal(
-    isAuthenticated && onboardingState?.onboardingStep === "complete",
   );
 
   useEffect(() => {

@@ -46,8 +46,9 @@ export default function TrustedContactsDocPage() {
               re-opens your vault.
             </p>
             <ul className="text-body-md text-on-primary-container space-y-1 pt-2">
-              <li>· Maximum 5 trust contacts per vault</li>
-              <li>· Receives 1 Shamir shard (encrypted to their public key)</li>
+              <li>· Minimum 2 trust contacts for recovery</li>
+              <li>· Up to 3 shard holders in the current recovery model</li>
+              <li>· Receives 1 Shamir shard, encrypted to their public key</li>
               <li>
                 · Active role at three moments: invitation, escalation, recovery
               </li>
@@ -112,8 +113,9 @@ export default function TrustedContactsDocPage() {
           How many contacts must agree?
         </h2>
         <p className="text-body-md text-on-surface-variant">
-          You choose the recovery threshold during onboarding. Lower (2) = the
-          easiest path; higher (up to 5) = stronger against collusion.
+          You choose the recovery threshold during onboarding. Threshold 2 is
+          the default and works from 2 trusted contacts. Threshold 3 is stricter
+          and requires 3 ready contacts.
         </p>
         <Link
           href="/docs/recovery"

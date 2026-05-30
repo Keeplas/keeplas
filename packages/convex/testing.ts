@@ -125,7 +125,7 @@ async function loadTarget(ctx: QueryCtx, email?: string): Promise<Target> {
     frequency: config.frequency,
     isActive: config.isActive,
     whatsappEnabled,
-    fallbackBehavior: config.fallbackBehavior ?? "release_anyway",
+    fallbackBehavior: config.fallbackBehavior ?? "abort",
     trustContactId: (acceptedTrust[0] ?? trust[0] ?? contacts[0])?._id ?? null,
     trustContactCount: acceptedTrust.length,
     inFlightCycleId: inFlight?._id ?? null,

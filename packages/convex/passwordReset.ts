@@ -6,6 +6,7 @@ import {
 import { action, internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { constantTimeStringEquals } from "./lib/crypto";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -55,7 +56,11 @@ export const verifyRecoveryPhraseInternal = internalQuery({
       .withIndex("email", (q) => q.eq("email", email))
       .first();
     if (!user || !user.recoveryPhraseHash) return null;
-    if (user.recoveryPhraseHash !== args.phraseHash) return null;
+    // SECURITY: constant-time compare; `phraseHash` carries the client-computed
+    // salted Argon2id verifier (derivePhraseVerifier), never the raw phrase.
+    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+      return null;
+    }
     return user._id as Id<"users">;
   },
 });

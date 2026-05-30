@@ -38,7 +38,7 @@ export default function SettingsContactPage() {
   const submitTicket = useMutation(api.support.submitTicket);
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [contact, setContact] = useState("");
   const [topic, setTopic] = useState<Topic>("general");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -46,14 +46,16 @@ export default function SettingsContactPage() {
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  // Prefill name/email once the viewer resolves, without clobbering anything
+  // Prefill name/contact once the viewer resolves, without clobbering anything
   // the user has already typed. Adjusting during render (tracking the seeded
-  // source) avoids a setState-in-effect sync.
-  const [seededFrom, setSeededFrom] = useState(user);
+  // source) avoids a setState-in-effect sync. Falls back to the WhatsApp number
+  // for phone-only accounts that have no email.
+  const [seededFrom, setSeededFrom] = useState<typeof user>(undefined);
   if (user && user !== seededFrom) {
     setSeededFrom(user);
     if (user.name && !name) setName(user.name);
-    if (user.email && !email) setEmail(user.email);
+    const seedContact = user.email ?? user.phoneNumber;
+    if (seedContact && !contact) setContact(seedContact);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -61,7 +63,7 @@ export default function SettingsContactPage() {
     setSubmitting(true);
     setError("");
     try {
-      await submitTicket({ name, email, topic, subject, message });
+      await submitTicket({ name, contact, topic, subject, message });
       setSubmitted(true);
       setSubject("");
       setMessage("");
@@ -83,7 +85,8 @@ export default function SettingsContactPage() {
             <h2 className="text-headline-md text-primary">Message sent</h2>
             <p className="text-body-lg text-on-surface-variant">
               Our concierge team will reply at{" "}
-              <strong className="text-primary">{email}</strong> within one hour.
+              <strong className="text-primary">{contact}</strong> within one
+              hour.
             </p>
           </div>
           <div className="pt-2">
@@ -111,13 +114,13 @@ export default function SettingsContactPage() {
         <ErrorAlert message={error} />
 
         <div className="space-y-2">
-          <Label htmlFor="contact-email">Reply-to email</Label>
+          <Label htmlFor="contact-reply">Reply-to email or WhatsApp</Label>
           <Input
-            id="contact-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            id="contact-reply"
+            type="text"
+            value={contact}
+            onChange={(e) => setContact(e.target.value)}
+            placeholder="you@example.com or +1 555 000 0000"
             required
           />
         </div>
