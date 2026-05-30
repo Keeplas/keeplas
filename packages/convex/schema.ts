@@ -586,7 +586,6 @@ export default defineSchema({
     .index("by_status", ["userId", "status"])
     .index("by_scheduled", ["scheduledAt"]),
 
-
   // ═══════════════════════════════════════════════
   // PUSH SUBSCRIPTIONS (Web Push)
   // ═══════════════════════════════════════════════

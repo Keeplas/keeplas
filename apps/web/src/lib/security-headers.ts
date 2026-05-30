@@ -76,8 +76,7 @@ export function buildSecurityHeaders(nonce: string): Record<string, string> {
     "Content-Security-Policy": buildContentSecurityPolicy(nonce),
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
-    "Strict-Transport-Security":
-      "max-age=63072000; includeSubDomains; preload",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
     // Disable everything the app never uses. publickey-credentials-get=(self)
     // is kept so WebAuthn (PRF unlock with biometric / hardware key) works.
     "Permissions-Policy": [

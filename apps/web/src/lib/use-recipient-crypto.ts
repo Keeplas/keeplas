@@ -15,10 +15,7 @@ import {
 import { generateIdentityKeyPair, signBytes } from "@keeplas/crypto/sig";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import { useMasterKey } from "./master-key-context";
-import {
-  readInMemorySecrets,
-  setInMemorySecrets,
-} from "./in-memory-secrets";
+import { readInMemorySecrets, setInMemorySecrets } from "./in-memory-secrets";
 import { useAuditedMutation } from "./use-audited-mutation";
 import {
   verifyContactKey,

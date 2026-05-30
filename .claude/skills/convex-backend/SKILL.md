@@ -15,13 +15,13 @@ After editing **anything** under `packages/convex/`, run `npx convex dev` to reg
 
 Every query and mutation starts by resolving identity. Never read user data without a guard.
 
-| Function                          | Returns         | Use                                                            |
-| --------------------------------- | --------------- | ------------------------------------------------------------- |
-| `requireAuth(ctx)`                | `userId`, throws | **Mutations** — must be authenticated                        |
-| `optionalAuth(ctx)`               | `userId \| null` | **Queries** that can render empty when logged out            |
-| `requireAuthWithTotp(ctx)`        | `userId`, throws `"TOTP_REQUIRED"` | Sensitive reads when TOTP is enrolled but not cleared |
-| `requireAuthWithLoginOtp(ctx)`    | `userId`, throws `"LOGIN_OTP_REQUIRED"` | Always-on login-OTP step-up (password accounts only) |
-| `hasPasswordAccount(ctx, userId)` | `boolean`       | Branch on whether the OTP gate applies                        |
+| Function                          | Returns                                 | Use                                                   |
+| --------------------------------- | --------------------------------------- | ----------------------------------------------------- |
+| `requireAuth(ctx)`                | `userId`, throws                        | **Mutations** — must be authenticated                 |
+| `optionalAuth(ctx)`               | `userId \| null`                        | **Queries** that can render empty when logged out     |
+| `requireAuthWithTotp(ctx)`        | `userId`, throws `"TOTP_REQUIRED"`      | Sensitive reads when TOTP is enrolled but not cleared |
+| `requireAuthWithLoginOtp(ctx)`    | `userId`, throws `"LOGIN_OTP_REQUIRED"` | Always-on login-OTP step-up (password accounts only)  |
+| `hasPasswordAccount(ctx, userId)` | `boolean`                               | Branch on whether the OTP gate applies                |
 
 - **Query** → `optionalAuth` then early-return `[]` / `null` when null.
 - **Mutation** → `requireAuth` (or a step-up variant for sensitive operations). The `*_REQUIRED` throws are caught by the client to redirect to the challenge page — don't swallow them.

@@ -49,7 +49,9 @@ export function useBlockedWrapAlert(): (
       // Hard failures (unverifiable / signature_invalid) can never be accepted
       // here — they are not a deliberate, reviewable change. Surface them first.
       if (hardFail.length > 0) {
-        const unverifiable = hardFail.filter((c) => c.reason === "unverifiable");
+        const unverifiable = hardFail.filter(
+          (c) => c.reason === "unverifiable",
+        );
         const tampered = hardFail.filter(
           (c) => c.reason === "signature_invalid",
         );

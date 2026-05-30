@@ -27,12 +27,12 @@ Two things must happen for recovery to be possible, and they are deliberately se
 
 ## Crypto building blocks
 
-| Primitive                | Location                                    | Role                                                                                                              |
-| ------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Primitive                | Location                                    | Role                                                                                                                         |
+| ------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Shamir `split`           | `packages/crypto/src/shamir/split.ts`       | `split(secret, totalShares=4, threshold=2)` in the app → `Uint8Array[]`. Each share = `[x-coord, ...y-values]` over GF(256). |
-| Shamir `reconstruct`     | `packages/crypto/src/shamir/reconstruct.ts` | `reconstruct(shares)` → secret. Needs ≥ `threshold` shares; Lagrange interpolation over GF(256).                  |
-| ML-KEM-768 `wrapBytes`   | `packages/crypto/src/kem/mlkem.ts`          | Encapsulate to a recipient's public key + AES-256-GCM the payload → one JSON envelope string.                     |
-| ML-KEM-768 `unwrapBytes` | `packages/crypto/src/kem/mlkem.ts`          | Reverse of `wrapBytes`, using the recipient's ML-KEM secret key.                                                  |
+| Shamir `reconstruct`     | `packages/crypto/src/shamir/reconstruct.ts` | `reconstruct(shares)` → secret. Needs ≥ `threshold` shares; Lagrange interpolation over GF(256).                             |
+| ML-KEM-768 `wrapBytes`   | `packages/crypto/src/kem/mlkem.ts`          | Encapsulate to a recipient's public key + AES-256-GCM the payload → one JSON envelope string.                                |
+| ML-KEM-768 `unwrapBytes` | `packages/crypto/src/kem/mlkem.ts`          | Reverse of `wrapBytes`, using the recipient's ML-KEM secret key.                                                             |
 
 The wrap envelope is self-contained JSON: `{ v, alg: "ml-kem-768+aes-256-gcm", kem, iv, ct }`
 (all base64). ML-KEM-768 (NIST FIPS 203) is post-quantum and replaced RSA-OAEP.

@@ -76,7 +76,10 @@ export function useIdleTimer({
 
     arm();
     for (const type of IDLE_ACTIVITY_EVENTS) {
-      window.addEventListener(type, onActivity, { capture: true, passive: true });
+      window.addEventListener(type, onActivity, {
+        capture: true,
+        passive: true,
+      });
     }
 
     return () => {

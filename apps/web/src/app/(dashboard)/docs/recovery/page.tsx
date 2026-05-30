@@ -106,11 +106,11 @@ export default function RecoveryDocPage() {
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          During onboarding, you split your Master Key into 4 Shamir shares:
-          one device shard and up to three trusted-contact shards. You choose
-          the threshold — the minimum number that must collaborate to
-          reconstruct it. With 2 trusted contacts, keep the threshold at 2; a
-          threshold of 3 needs 3 ready contacts.
+          During onboarding, you split your Master Key into 4 Shamir shares: one
+          device shard and up to three trusted-contact shards. You choose the
+          threshold — the minimum number that must collaborate to reconstruct
+          it. With 2 trusted contacts, keep the threshold at 2; a threshold of 3
+          needs 3 ready contacts.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -133,11 +133,12 @@ export default function RecoveryDocPage() {
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          Default is <strong className="text-primary">2 trusted contacts</strong>{" "}
-          — the easiest recovery path while still requiring at least two
-          distinct people. If your contacts face a higher collusion risk (e.g.
-          all from the same family or workplace), use threshold 3 only after 3
-          contacts are ready.
+          Default is{" "}
+          <strong className="text-primary">2 trusted contacts</strong> — the
+          easiest recovery path while still requiring at least two distinct
+          people. If your contacts face a higher collusion risk (e.g. all from
+          the same family or workplace), use threshold 3 only after 3 contacts
+          are ready.
         </p>
       </section>
 

@@ -158,5 +158,4 @@ describe("BIP-39 Recovery Phrase", () => {
       expect(a).not.toEqual(b);
     });
   });
-
 });

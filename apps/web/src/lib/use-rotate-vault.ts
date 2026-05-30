@@ -215,7 +215,10 @@ export function useRotateVault() {
               fingerprint: outcome.pinFingerprint,
             });
           }
-          const envelope = await wrapBytes(shards[slot], outcome.contactPublicKey);
+          const envelope = await wrapBytes(
+            shards[slot],
+            outcome.contactPublicKey,
+          );
           await storeEncryptedShard({
             contactId: t.contactId,
             encryptedShard: envelope,

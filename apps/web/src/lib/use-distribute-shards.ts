@@ -152,14 +152,18 @@ export function useDistributeShards(): {
         const retry = await showBlockedWrapAlert(failures);
         if (!retry) {
           setStatus("error");
-          setError("Shard distribution blocked: a contact's key isn't trusted.");
+          setError(
+            "Shard distribution blocked: a contact's key isn't trusted.",
+          );
           return null;
         }
         failures = await verifyAll();
         if (failures.length > 0) {
           await showBlockedWrapAlert(failures);
           setStatus("error");
-          setError("Shard distribution blocked: a contact's key isn't trusted.");
+          setError(
+            "Shard distribution blocked: a contact's key isn't trusted.",
+          );
           return null;
         }
       }

@@ -122,9 +122,7 @@ describe("C1 — one person contributes at most one shard", () => {
       {
         accessRequestId: requestId,
         submitterContactId: rowA,
-        submissions: [
-          { recipientContactId: rowC, wrappedShard: "envelope" },
-        ],
+        submissions: [{ recipientContactId: rowC, wrappedShard: "envelope" }],
         _audit: await signedAudit(),
       },
     );
@@ -135,9 +133,7 @@ describe("C1 — one person contributes at most one shard", () => {
       asUser(t, personUser).mutation(api.access_requests.submitRecoveryShards, {
         accessRequestId: requestId,
         submitterContactId: rowB,
-        submissions: [
-          { recipientContactId: rowC, wrappedShard: "envelope" },
-        ],
+        submissions: [{ recipientContactId: rowC, wrappedShard: "envelope" }],
         _audit: await signedAudit(),
       }),
     ).rejects.toThrow(/already been submitted/);

@@ -40,13 +40,13 @@ CSS variables in `apps/web/src/app/globals.css` → `@theme inline {}`. Use dire
 
 ### Secondary — Reassurance Teal
 
-| Token                            | Hex     | Class                             |
-| -------------------------------- | ------- | --------------------------------- |
-| `--color-secondary`              | #28657a | `bg-secondary` / `text-secondary` |
-| `--color-secondary-container`    | #3a7d91 | `bg-secondary-container`          |
+| Token                            | Hex     | Class                                    |
+| -------------------------------- | ------- | ---------------------------------------- |
+| `--color-secondary`              | #28657a | `bg-secondary` / `text-secondary`        |
+| `--color-secondary-container`    | #3a7d91 | `bg-secondary-container`                 |
 | `--color-secondary-fixed`        | #b9eaff | `bg-secondary-fixed` (success/highlight) |
-| `--color-on-secondary`           | #ffffff | `text-on-secondary`               |
-| `--color-on-secondary-container` | #c5e4ed | `text-on-secondary-container`     |
+| `--color-on-secondary`           | #ffffff | `text-on-secondary`                      |
+| `--color-on-secondary-container` | #c5e4ed | `text-on-secondary-container`            |
 
 ### Tertiary — Deep Shadow
 
@@ -119,14 +119,14 @@ CSS variables in `apps/web/src/app/globals.css` → `@theme inline {}`. Use dire
 
 Real variants from `button.tsx` — pass via props, don't restyle:
 
-| `variant`     | Style                                                                 |
-| ------------- | --------------------------------------------------------------------- |
-| `default`     | `gradient-signature` + `text-on-primary`, `shadow-sm` (standard CTA)  |
-| `vault`       | `vault-gradient` + `font-headline font-bold`, lift on hover (hero CTA)|
-| `secondary`   | transparent, `text-secondary`, hover `bg-surface-container`           |
-| `outline`     | `ghost-border`, `text-on-surface`, hover `bg-surface-container-high`  |
-| `ghost`       | transparent, `text-on-surface`, hover `bg-surface-container`          |
-| `destructive` | `bg-error`, `text-on-error`                                           |
+| `variant`     | Style                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| `default`     | `gradient-signature` + `text-on-primary`, `shadow-sm` (standard CTA)   |
+| `vault`       | `vault-gradient` + `font-headline font-bold`, lift on hover (hero CTA) |
+| `secondary`   | transparent, `text-secondary`, hover `bg-surface-container`            |
+| `outline`     | `ghost-border`, `text-on-surface`, hover `bg-surface-container-high`   |
+| `ghost`       | transparent, `text-on-surface`, hover `bg-surface-container`           |
+| `destructive` | `bg-error`, `text-on-error`                                            |
 
 Sizes: `sm` (h-9), `md` (h-11, default), `lg` (h-13, `rounded-full`), `xl` (h-14), `icon` (10×10). Default = `default`/`md`.
 
@@ -153,11 +153,11 @@ Sizes: `sm` (h-9), `md` (h-11, default), `lg` (h-13, `rounded-full`), `xl` (h-14
 
 ## Border Radius Scale
 
-| Class          | Value    | Use                        |
-| -------------- | -------- | -------------------------- |
-| `rounded`      | 0.125rem | Subtle elements            |
-| `rounded-lg`   | 0.25rem  | Small interactive elements |
-| `rounded-xl`   | 0.5rem   | Inputs, most buttons       |
+| Class          | Value    | Use                                     |
+| -------------- | -------- | --------------------------------------- |
+| `rounded`      | 0.125rem | Subtle elements                         |
+| `rounded-lg`   | 0.25rem  | Small interactive elements              |
+| `rounded-xl`   | 0.5rem   | Inputs, most buttons                    |
 | `rounded-full` | 0.75rem  | Cards, primary containers, `lg` buttons |
 
 ## Don'ts

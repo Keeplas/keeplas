@@ -56,9 +56,7 @@ describe("ML-DSA-65 (post-quantum signatures)", () => {
     it("rejects when the message was tampered with", () => {
       const { publicKey, secretKey } = generateIdentityKeyPair();
       const sig = signBytes(secretKey, message);
-      const tampered = new TextEncoder().encode(
-        "bind this ML-KEM public key!",
-      );
+      const tampered = new TextEncoder().encode("bind this ML-KEM public key!");
       expect(verifyBytes(publicKey, tampered, sig)).toBe(false);
     });
 

@@ -42,7 +42,11 @@ describe("classifyKeyBundle", () => {
 
   it("classifies a V2-shaped bundle without an explicit version as v2", () => {
     const v2 = parseKeyBundle(
-      JSON.stringify({ phraseSalt: "salt", iv: "iv", encryptedMasterKey: "ct" }),
+      JSON.stringify({
+        phraseSalt: "salt",
+        iv: "iv",
+        encryptedMasterKey: "ct",
+      }),
     );
     expect(classifyKeyBundle(v2)).toBe("v2");
   });

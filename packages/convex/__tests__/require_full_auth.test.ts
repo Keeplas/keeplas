@@ -70,7 +70,10 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
         vaultId,
         category: "personal_document",
         title: "Secret",
-        encryptedContent: JSON.stringify({ ciphertext: "Y2lwaA==", iv: "aXY=" }),
+        encryptedContent: JSON.stringify({
+          ciphertext: "Y2lwaA==",
+          iv: "aXY=",
+        }),
         accessLevel: "private",
         _audit: await signedAudit(),
       }),
@@ -97,7 +100,10 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
         vaultId,
         category: "personal_document",
         title: "Secret",
-        encryptedContent: JSON.stringify({ ciphertext: "Y2lwaA==", iv: "aXY=" }),
+        encryptedContent: JSON.stringify({
+          ciphertext: "Y2lwaA==",
+          iv: "aXY=",
+        }),
         accessLevel: "private",
         _audit: await signedAudit(),
       },

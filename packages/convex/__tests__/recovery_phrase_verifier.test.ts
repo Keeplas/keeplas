@@ -108,7 +108,10 @@ describe("getPhraseSaltByEmail (passwordReset)", () => {
     const result = await t.query(api.passwordReset.getPhraseSaltByEmail, {
       email: "salt@example.com",
     });
-    expect(result).toEqual({ phraseSalt: SALT_B64, encryptedKeyBundle: BUNDLE });
+    expect(result).toEqual({
+      phraseSalt: SALT_B64,
+      encryptedKeyBundle: BUNDLE,
+    });
   });
 
   it("returns null until the key bundle exists (enumeration guard)", async () => {
