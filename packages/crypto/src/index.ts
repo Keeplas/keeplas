@@ -4,3 +4,4 @@ export * from "./kdf";
 export * from "./kem";
 export * from "./recovery";
 export * from "./shamir";
+export * from "./sig";

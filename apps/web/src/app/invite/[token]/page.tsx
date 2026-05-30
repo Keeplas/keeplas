@@ -10,14 +10,9 @@ import { getErrorMessage } from "@/lib/utils";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { AuthHeroSection } from "../../(auth)/components/auth-hero-section";
 import { MobileBrand } from "../../(auth)/components/mobile-brand";
+import { useTranslations } from "@/lib/i18n";
 
-const ROLE_LABELS: Record<string, string> = {
-  family: "Family member",
-  friend: "Friend",
-  lawyer: "Lawyer",
-  doctor: "Doctor",
-  other: "Trusted contact",
-};
+const KNOWN_ROLES = ["family", "friend", "lawyer", "doctor", "other"];
 
 interface InvitationShellProps {
   badgeLabel: string;
@@ -68,6 +63,7 @@ export default function InvitationPage({
 }) {
   const { token } = use(params);
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const t = useTranslations("invite");
   const invitation = useQuery(api.trusted_contacts.getInvitationByToken, {
     token,
   });
@@ -91,9 +87,9 @@ export default function InvitationPage({
   if (invitation === null) {
     return (
       <InvitationShell
-        badgeLabel="Invitation Link"
-        heading="Invalid invitation"
-        description="This invitation link is invalid or has expired. Ask the vault owner to send you a new one."
+        badgeLabel={t("invalid.badge")}
+        heading={t("invalid.heading")}
+        description={t("invalid.body")}
       >
         <Link
           href="/login"
@@ -103,7 +99,7 @@ export default function InvitationPage({
             className: "w-full",
           })}
         >
-          Go to Keeplas
+          {t("goToKeeplas")}
         </Link>
       </InvitationShell>
     );
@@ -113,12 +109,10 @@ export default function InvitationPage({
     const wasAccepted = invitation.invitationStatus === "accepted";
     return (
       <InvitationShell
-        badgeLabel="Invitation Status"
-        heading="Invitation already processed"
+        badgeLabel={t("processed.badge")}
+        heading={t("processed.heading")}
         description={
-          wasAccepted
-            ? "You have already accepted this invitation."
-            : "You have already declined this invitation."
+          wasAccepted ? t("processed.accepted") : t("processed.declined")
         }
       >
         <Link
@@ -129,7 +123,7 @@ export default function InvitationPage({
             className: "w-full",
           })}
         >
-          Go to Hub
+          {t("goToHub")}
         </Link>
       </InvitationShell>
     );
@@ -138,14 +132,13 @@ export default function InvitationPage({
   if (done) {
     return (
       <InvitationShell
-        badgeLabel="Confirmed"
-        heading="You're now a Trusted Contact"
+        badgeLabel={t("confirmed.badge")}
+        heading={t("confirmed.heading")}
         description={
           <>
-            You are now part of{" "}
+            {t("confirmed.bodyPre")}
             <strong className="text-primary">{invitation.inviterName}</strong>
-            &apos;s recovery network. You may receive a recovery fragment to
-            help protect their vault.
+            {t("confirmed.bodyPost")}
           </>
         }
       >
@@ -157,7 +150,7 @@ export default function InvitationPage({
             className: "w-full",
           })}
         >
-          Go to Hub
+          {t("goToHub")}
         </Link>
       </InvitationShell>
     );
@@ -176,7 +169,7 @@ export default function InvitationPage({
       await acceptInvitation({ token, contactPublicKey });
       setDone(true);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to accept invitation"));
+      setError(getErrorMessage(err, t("acceptFailed")));
     } finally {
       setAccepting(false);
     }
@@ -190,43 +183,44 @@ export default function InvitationPage({
       await declineInvitation({ token });
       setDone(true);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to decline invitation"));
+      setError(getErrorMessage(err, t("declineFailed")));
     } finally {
       setDeclining(false);
     }
   }
 
-  const roleLabel = ROLE_LABELS[invitation.role] ?? "trusted contact";
+  const roleLabel = KNOWN_ROLES.includes(invitation.role)
+    ? t(`roles.${invitation.role}`)
+    : t("roleFallback");
 
   return (
     <InvitationShell
-      badgeLabel="Trusted Contact Invitation"
-      heading={`${invitation.inviterName} invited you`}
+      badgeLabel={t("invite.badge")}
+      heading={t("invite.heading", { name: invitation.inviterName })}
       description={
         <>
-          You have been designated as a{" "}
-          <strong className="text-primary">{roleLabel}</strong> in{" "}
-          {invitation.inviterName}&apos;s Keeplas vault.
+          {t("invite.bodyPre")}
+          <strong className="text-primary">{roleLabel}</strong>
+          {t("invite.bodyPost", { name: invitation.inviterName })}
         </>
       }
     >
       <div className="bg-surface-container-low rounded-2xl p-5 mb-6 space-y-3">
         <p className="text-label-md text-secondary uppercase tracking-widest font-bold">
-          What this means
+          {t("meaning.title")}
         </p>
         <ul className="text-body-md text-on-surface-variant space-y-2">
           <li className="flex gap-2">
             <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
-            You will receive an encrypted recovery fragment.
+            {t("meaning.bullet1")}
           </li>
           <li className="flex gap-2">
             <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
-            You may be asked to help recover the vault in an emergency.
+            {t("meaning.bullet2")}
           </li>
           <li className="flex gap-2">
             <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
-            You will never see vault contents unless access is explicitly
-            granted.
+            {t("meaning.bullet3")}
           </li>
         </ul>
       </div>
@@ -236,7 +230,7 @@ export default function InvitationPage({
       {!isAuthenticated ? (
         <div className="space-y-3">
           <p className="text-body-md text-on-surface-variant text-center">
-            You need a Keeplas account to accept this invitation.
+            {t("needAccount")}
           </p>
           <Link
             href={`/signup?redirect=/invite/${token}`}
@@ -246,13 +240,13 @@ export default function InvitationPage({
               className: "w-full",
             })}
           >
-            Create Account
+            {t("createAccount")}
           </Link>
           <Link
             href={`/login?redirect=/invite/${token}`}
             className="bg-surface-container text-primary w-full py-3 rounded-xl font-headline font-bold block text-center hover:bg-surface-container-high transition-colors"
           >
-            Sign In
+            {t("signIn")}
           </Link>
         </div>
       ) : (
@@ -264,14 +258,14 @@ export default function InvitationPage({
             onClick={handleAccept}
             disabled={accepting || declining}
           >
-            {accepting ? "Accepting..." : "Accept Invitation"}
+            {accepting ? t("accepting") : t("accept")}
           </Button>
           <button
             onClick={handleDecline}
             disabled={accepting || declining}
             className="bg-surface-container text-on-surface-variant w-full py-3 rounded-xl font-headline font-bold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-60"
           >
-            {declining ? "Declining..." : "Decline"}
+            {declining ? t("declining") : t("decline")}
           </button>
         </div>
       )}

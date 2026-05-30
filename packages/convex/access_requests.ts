@@ -1,9 +1,30 @@
 import { v, ConvexError } from "convex/values";
-import { query } from "./_generated/server";
+import { query, type MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { createNotification, requireAuth } from "./helpers";
+import { createNotification, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
+
+/**
+ * Count the number of DISTINCT humans behind a set of trusted-contact rows.
+ * Quorum (and any participation count) must dedup by `contactUserId`, never by
+ * row id (C1): the same person invited via two channels gets two rows but must
+ * count as a single vote. A row with no `contactUserId` (not yet accepted)
+ * cannot have voted, so it is ignored.
+ */
+async function countDistinctContactPeople(
+  ctx: MutationCtx,
+  contactIds: Id<"trusted_contacts">[],
+): Promise<number> {
+  const people = new Set<string>();
+  for (const contactId of contactIds) {
+    const contact = await ctx.db.get(contactId);
+    if (contact?.contactUserId) {
+      people.add(contact.contactUserId);
+    }
+  }
+  return people.size;
+}
 
 /**
  * Get pending access requests for the vault owner.
@@ -11,7 +32,7 @@ import { auditedMutation } from "./audit";
 export const getPendingRequests = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const requests = await ctx.db
       .query("access_requests")
       .withIndex("by_status", (q) =>
@@ -38,7 +59,7 @@ export const getPendingRequests = query({
 export const getAccessRequests = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const requests = await ctx.db
       .query("access_requests")
       .withIndex("by_vault_user", (q) => q.eq("vaultUserId", userId))
@@ -80,7 +101,11 @@ export const markUserUnreachable = auditedMutation({
   },
   getResourceId: (_args, result) => (result as { requestId: string }).requestId,
   handler: async (ctx, args) => {
-    const requesterId = await requireAuth(ctx);
+    // Contact-side recovery op: step-up gated. By the time a contact confirms
+    // unreachability the owner's Life Check has fully escalated, so the
+    // contact is a long-established account whose login-OTP/TOTP gate is
+    // reliably clearable.
+    const requesterId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.contactUserId !== requesterId) {
@@ -150,12 +175,22 @@ export const markUserUnreachable = auditedMutation({
 
     if (existing) {
       const contactsInitiated = existing.contactsInitiated ?? [];
+      // Per-row replay guard: a single contact row can vote at most once.
       if (contactsInitiated.includes(args.contactId)) {
         throw new ConvexError("You have already confirmed unreachability");
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
-      const quorumReached = updatedContacts.length >= threshold;
+      // C1: quorum is reached by DISTINCT HUMANS, not distinct rows. Two rows
+      // backed by the same `contactUserId` (same person invited via two
+      // channels) count as ONE vote — otherwise one person could reach the
+      // unreachability quorum alone. Resolve every initiating row to its
+      // person and count the unique set.
+      const distinctPeople = await countDistinctContactPeople(
+        ctx,
+        updatedContacts,
+      );
+      const quorumReached = distinctPeople >= threshold;
       const newlyReached = quorumReached && !existing.quorumReached;
 
       await ctx.db.patch(existing._id, {
@@ -175,6 +210,7 @@ export const markUserUnreachable = auditedMutation({
       return { requestId: existing._id, quorumReached };
     }
 
+    // First initiator is one distinct person by definition.
     const quorumReached = 1 >= threshold;
     const requestId = await ctx.db.insert("access_requests", {
       vaultUserId: contact.userId,
@@ -206,7 +242,7 @@ export const markUserUnreachable = auditedMutation({
 export const getActiveAccessRequestForContact = query({
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const requesterId = await requireAuth(ctx);
+    const requesterId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.contactUserId !== requesterId) return null;
@@ -231,7 +267,7 @@ export const getActiveAccessRequestForContact = query({
 export const getRecoveryPeers = query({
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const requesterId = await requireAuth(ctx);
+    const requesterId = await requireFullAuth(ctx);
     const myRow = await ctx.db.get(args.contactId);
     if (!myRow || myRow.contactUserId !== requesterId) {
       throw new ConvexError("Not authorized");
@@ -254,6 +290,11 @@ export const getRecoveryPeers = query({
         contactId: p._id,
         name: p.name,
         contactPublicKey: p.contactPublicKey as string,
+        // Identity material so the recovering contact can verify each peer's
+        // ML-KEM key before wrapping their shard to it (finding #2). No pin
+        // here: pinning is the owner's responsibility, not a peer's.
+        contactIdentityPublicKey: p.contactIdentityPublicKey,
+        contactPublicKeySignature: p.contactPublicKeySignature,
       }));
   },
 });
@@ -292,7 +333,7 @@ export const submitRecoveryShards = auditedMutation({
   },
   getResourceId: (args) => args.accessRequestId,
   handler: async (ctx, args) => {
-    const requesterId = await requireAuth(ctx);
+    const requesterId = await requireFullAuth(ctx);
 
     const submitter = await ctx.db.get(args.submitterContactId);
     if (!submitter || submitter.contactUserId !== requesterId) {
@@ -330,6 +371,31 @@ export const submitRecoveryShards = auditedMutation({
       throw new ConvexError("You already submitted your shard");
     }
 
+    // C1 (defense in depth): one distinct HUMAN contributes at most ONE shard
+    // toward reconstruction. The same person holding two contact rows (two
+    // shard slots) must not be able to submit twice and single-handedly reach
+    // the Shamir threshold. Reject if any already-submitted row for this
+    // request is backed by the same `contactUserId` as the submitter.
+    if (submitter.contactUserId) {
+      const priorRows = await ctx.db
+        .query("recovery_shard_submissions")
+        .withIndex("by_request", (q) =>
+          q.eq("accessRequestId", args.accessRequestId),
+        )
+        .collect();
+      const priorSubmitterIds = new Set(
+        priorRows.map((r) => r.submitterContactId),
+      );
+      for (const priorId of priorSubmitterIds) {
+        const priorContact = await ctx.db.get(priorId);
+        if (priorContact?.contactUserId === submitter.contactUserId) {
+          throw new ConvexError(
+            "A shard from this person has already been submitted",
+          );
+        }
+      }
+    }
+
     const now = Date.now();
     let inserted = 0;
     for (const sub of args.submissions) {
@@ -364,7 +430,7 @@ export const getRecoveryShardsForMe = query({
     contactId: v.id("trusted_contacts"),
   },
   handler: async (ctx, args) => {
-    const requesterId = await requireAuth(ctx);
+    const requesterId = await requireFullAuth(ctx);
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.contactUserId !== requesterId) return [];
 
@@ -391,7 +457,7 @@ export const getRecoveryShardsForMe = query({
 export const getRecoverySubmissionCount = query({
   args: { accessRequestId: v.id("access_requests") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const request = await ctx.db.get(args.accessRequestId);
     if (!request) return 0;
 
@@ -427,7 +493,7 @@ export const cancelEmergencyAccess = auditedMutation({
   getResourceId: (args) => args.requestId,
   args: { requestId: v.id("access_requests") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const request = await ctx.db.get(args.requestId);
     if (!request || request.vaultUserId !== userId) {
@@ -488,7 +554,7 @@ export const revokeReleasedAccess = auditedMutation({
   args: {},
   getMetadata: (_args, result) => result as Record<string, unknown>,
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
 
     const approved = await ctx.db

@@ -17,3 +17,8 @@ export function normalizeE164(value: string | undefined): string | undefined {
   }
   return trimmed;
 }
+
+/** Non-throwing E.164 check, for branching on a contact's channel. */
+export function isE164(value: string): boolean {
+  return E164.test(value.trim());
+}

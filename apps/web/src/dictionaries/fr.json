@@ -1,0 +1,2649 @@
+{
+  "common": {
+    "language": "Langue",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "phoneNumber": "Numéro de téléphone",
+    "emailAddress": "Adresse e-mail",
+    "password": "Mot de passe",
+    "resendCode": "Renvoyer le code",
+    "resendIn": "Renvoyer le code dans {seconds}s",
+    "invalidCode": "Code invalide ou expiré.",
+    "codePlaceholder": "123456",
+    "learnMore": "En savoir plus",
+    "back": "Retour"
+  },
+  "auth": {
+    "hero": {
+      "eyebrow": "Le Curateur Numérique",
+      "titleLine1": "Protégez votre",
+      "titleLine2": "héritage numérique.",
+      "body": "Tout ce que vous ne pouvez emporter, gardé en sécurité pour le jour où vous ne serez plus là. Chiffré de bout en bout, transmis aux personnes que vous avez choisies lorsque vous ne le pourrez plus.",
+      "encryptionStandard": "Norme de chiffrement",
+      "architecture": "Architecture",
+      "quantumSafe": "Résistant au quantique (FIPS 203)"
+    },
+    "login": {
+      "badge": "Identification requise",
+      "heading": "Bon retour",
+      "description": "Accédez à vos archives chiffrées en vérifiant vos identifiants.",
+      "footerPrompt": "Nouveau curateur ?",
+      "footerLabel": "Créer un accès",
+      "sendCode": "Envoyer le code",
+      "sending": "Envoi…",
+      "unlock": "Déverrouiller le coffre",
+      "unlocking": "Déverrouillage…",
+      "emailCode": "Code e-mail",
+      "whatsappCode": "Code WhatsApp",
+      "lostAccess": "Accès perdu ? 24 mots",
+      "lostPhone": "Téléphone perdu ? 24 mots",
+      "resetWords": "Réinitialiser avec les 24 mots",
+      "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
+      "sendFailed": "Impossible d'envoyer le code. Réessayez.",
+      "resendFailed": "Impossible de renvoyer le code. Réessayez dans un instant.",
+      "invalidCredentials": "E-mail ou mot de passe invalide.",
+      "noEmailAccount": "Aucun compte trouvé pour cet e-mail. Inscrivez-vous pour en créer un.",
+      "emailOtpHint": "Ce compte se connecte avec un code e-mail, sans mot de passe.",
+      "protectedLink": "Comment vos données sont-elles protégées ?",
+      "passkey": "Connexion biométrique",
+      "passkeyFailed": "Impossible de vous authentifier avec votre clé d'accès."
+    },
+    "signup": {
+      "badge": "Chiffrement à connaissance nulle",
+      "heading": "Créez votre sanctuaire",
+      "description": "Renseignez vos informations pour commencer votre héritage numérique.",
+      "footerPrompt": "Vous avez déjà un coffre ?",
+      "footerLabel": "Accéder au coffre",
+      "fullName": "Nom complet",
+      "phoneOptional": "Téléphone (facultatif)",
+      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
+      "startFailed": "Impossible de démarrer l'inscription. Réessayez.",
+      "createFailed": "Impossible de créer le compte. Réessayez.",
+      "accountExists": "Un compte existe déjà avec cet e-mail. Connectez-vous.",
+      "verifyCode": "Code de vérification",
+      "verifying": "Vérification…",
+      "confirmNumber": "Confirmer le numéro",
+      "confirmEmail": "Confirmer l'e-mail",
+      "initializing": "Initialisation…",
+      "initializeVault": "Initialiser le coffre",
+      "whatsappConfirmation": "Confirmation WhatsApp",
+      "emailConfirmation": "Confirmation e-mail",
+      "confirmNumberHeading": "Confirmez votre numéro",
+      "confirmEmailHeading": "Confirmez votre e-mail",
+      "phoneCodeSent": "Nous avons envoyé un code à 6 chiffres sur votre WhatsApp au {phone}. Saisissez-le ci-dessous pour activer votre coffre.",
+      "emailCodeSent": "Nous avons envoyé un code à 6 chiffres à {email}. Saisissez-le ci-dessous pour activer votre coffre.",
+      "wrongNumber": "Mauvais numéro ?",
+      "wrongEmail": "Mauvais e-mail ?",
+      "startOver": "Recommencer",
+      "resendFailed": "Impossible de renvoyer le code. Réessayez dans un instant.",
+      "lockedEmail": "Verrouillé — c'est l'e-mail utilisé par votre invitant pour vous envoyer l'invitation.",
+      "lockedPhone": "Verrouillé — c'est le numéro utilisé par votre invitant pour vous envoyer l'invitation.",
+      "securityEyebrow": "Avant de vous inscrire · Chiffrement post-quantique",
+      "securityText": "Votre mot de passe sert à vous connecter. Les 24 mots de récupération générés à l'étape suivante chiffrent réellement votre coffre ; nous ne les voyons jamais.",
+      "readHow": "Lire le fonctionnement →",
+      "phoneHelp": "Utilisé pour la vérification WhatsApp et les alertes Life Check. Vous pouvez aussi répondre à un Life Check sur WhatsApp pour confirmer que vous allez bien.",
+      "phoneOnlyHelp": "Nous enverrons votre code de vérification et vos alertes Life Check à ce numéro WhatsApp."
+    },
+    "onboarding": {
+      "steps": {
+        "identity": "Identité",
+        "recoveryPhrase": "Mots de récupération",
+        "verification": "Vérification",
+        "keyGeneration": "Coffre sécurisé",
+        "passkey": "Biométrie"
+      },
+      "legalInfo": {
+        "badge": "Étape 1 · Identité légale",
+        "heading": "Confirmez qui vous êtes",
+        "description": "Votre âge détermine votre capacité juridique, et votre pays définit la juridiction successorale applicable à votre coffre. Les deux sont enregistrés dans le journal d'audit infalsifiable afin qu'un tribunal puisse vérifier ultérieurement qui vous étiez lors de la configuration.",
+        "birthday": "Date de naissance",
+        "birthdayPlaceholder": "Sélectionnez votre date de naissance",
+        "country": "Pays de résidence",
+        "saving": "Enregistrement…",
+        "securing": "Sécurisation de votre session…",
+        "submit": "Confirmer et continuer",
+        "invalidDate": "Veuillez choisir une date valide.",
+        "minAge": "Vous devez avoir au moins 18 ans pour utiliser Keeplas.",
+        "saveFailed": "Impossible d'enregistrer vos informations."
+      },
+      "recoveryPhrase": {
+        "badge": "Fondation cryptographique",
+        "heading": "Mots de récupération principaux",
+        "copyAll": "Tout copier",
+        "copied": "Copié !",
+        "download": "Télécharger",
+        "generatingPdf": "Génération du PDF…",
+        "generating": "Génération de vos mots de récupération",
+        "warningTitle": "Autorité de récupération absolue",
+        "warningBody": "Ces mots sont le seul moyen de récupérer votre coffre. Gardez-les hors ligne et en sécurité. Toute personne ayant accès à ces mots détient l'autorité complète sur votre héritage numérique. Nous recommandons de les écrire sur papier et de les conserver dans un endroit sûr et ignifuge.",
+        "offlineTitle": "Stockage hors ligne",
+        "offlineBody": "Ne stockez jamais ces mots numériquement — pas de captures d'écran, de notes cloud ni de brouillons d'e-mail.",
+        "legacyTitle": "Accès à l'héritage",
+        "legacyBody": "Envisagez de partager l'emplacement de ces mots avec un bénéficiaire de confiance.",
+        "verificationTitle": "Vérification",
+        "verificationBody": "Nous vous demanderons de vérifier ces mots pour confirmer que votre sauvegarde est sécurisée.",
+        "confirmLabel": "J'ai noté mes 24 mots de récupération et les ai rangés dans un endroit sûr. Je comprends que perdre ces mots signifie que je ne pourrai pas récupérer mon coffre.",
+        "continue": "J'ai sauvegardé mes mots — continuer",
+        "pdfTitle": "Keeplas — Mots de récupération principaux",
+        "pdfAccountLabel": "Compte",
+        "pdfWarning": "Ces 24 mots sont le seul moyen de récupérer votre coffre. Conservez ce document hors ligne, dans un endroit sûr et ignifuge. Toute personne possédant ces mots détient l'autorité complète sur votre héritage numérique.",
+        "pdfCopyLine": "Ligne à copier-coller"
+      },
+      "verification": {
+        "back": "Retour aux mots de récupération",
+        "badge": "Confirmation de sauvegarde",
+        "heading": "Vérifiez vos mots de récupération",
+        "description": "Pour vous assurer d'avoir correctement sauvegardé vos mots, saisissez les 3 mots ci-dessous parmi vos mots de récupération. Cela confirme que votre sauvegarde est complète et que vous pourrez récupérer votre coffre si nécessaire.",
+        "whyTitle": "Pourquoi est-ce important ?",
+        "whyBodyBefore": "Ces 24 mots sont la",
+        "whyKeyTerm": "seule clé",
+        "whyBodyAfter": "qui chiffre votre coffre — nous ne les voyons jamais. Votre mot de passe sert uniquement à vous authentifier et peut être réinitialisé avec ces mêmes 24 mots. Mais les mots eux-mêmes ne peuvent pas être réinitialisés : seuls vos contacts de confiance peuvent les récupérer plus tard via des fragments partagés. Conservez-les en lieu sûr dès maintenant.",
+        "wordLabel": "{ordinal} mot",
+        "wordPlaceholder": "Saisissez le {ordinal} mot",
+        "mismatch": "Le {ordinal} mot ne correspond pas. Veuillez vérifier et réessayer.",
+        "verifying": "Vérification…",
+        "verifyContinue": "Vérifier et continuer",
+        "seeAgain": "Je dois revoir mes mots de récupération",
+        "error": "Une erreur est survenue. Veuillez réessayer."
+      },
+      "keyGeneration": {
+        "phases": {
+          "derivingRoot": "Dérivation de votre clé racine à partir de vos 24 mots…",
+          "splittingShards": "Création des fragments de récupération…",
+          "wrappingMasterKey": "Scellement de votre clé maîtresse…",
+          "storing": "Sécurisation de votre coffre…",
+          "complete": "Coffre sécurisé !",
+          "error": "Une erreur est survenue"
+        },
+        "badge": "Sécurisation du coffre",
+        "headingComplete": "Votre coffre est prêt",
+        "heading": "Configuration de votre protection",
+        "descriptionComplete": "Votre clé maîtresse est scellée par vos 24 mots. Vous pouvez maintenant commencer à ajouter des éléments à votre coffre.",
+        "description": "Vos clés sont dérivées et scellées entièrement sur votre appareil. Nous ne voyons jamais votre phrase.",
+        "redirecting": "Redirection vers votre accueil…",
+        "tryAgain": "Réessayer",
+        "genericError": "La génération des clés a échoué. Veuillez réessayer.",
+        "thresholdHeading": "Seuil de récupération",
+        "thresholdDescription": "Combien de contacts de confiance doivent s'accorder pour reconstruire votre coffre lorsque vous devenez injoignable. Plus bas = récupération plus facile, plus haut = plus résistant à la collusion.",
+        "thresholdOf": "sur 4",
+        "thresholdEasiestStrong": "Récupération la plus facile.",
+        "thresholdEasiest": "Deux contacts quelconques peuvent collaborer. Recommandé sauf si vos contacts présentent un risque élevé de collusion.",
+        "thresholdBalancedStrong": "Équilibré.",
+        "thresholdBalanced": "Trois contacts quelconques doivent collaborer. Résistant à la collusion d'une seule paire.",
+        "thresholdContinue": "Continuer avec {value} sur 4"
+      },
+      "passkey": {
+        "badge": "Optionnel · Connexion plus rapide",
+        "headingDone": "Clé d'accès prête",
+        "heading": "Connectez-vous avec votre visage",
+        "descriptionDone": "Vous pouvez désormais déverrouiller Keeplas avec la biométrie de votre appareil.",
+        "description": "Utilisez Face ID, Touch ID ou la biométrie de votre appareil lors de votre prochaine connexion. Votre mot de passe reste disponible en secours.",
+        "unsupportedBefore": "Les clés d'accès ne sont pas prises en charge par ce navigateur. Vous pourrez les configurer plus tard depuis",
+        "unsupportedTerm": "Paramètres · Centre de sécurité",
+        "unsupportedAfter": "sur un appareil compatible.",
+        "enable": "Activer la connexion biométrique",
+        "redirecting": "Redirection…",
+        "skip": "Ignorer pour l'instant",
+        "registerFailed": "Impossible d'enregistrer votre clé d'accès."
+      }
+    },
+    "otp": {
+      "heading": "Confirmez votre identité",
+      "subtitle": "Saisissez le code à 6 chiffres pour terminer votre connexion.",
+      "subtitleChannel": "Saisissez le code à 6 chiffres que nous avons envoyé à {channel} pour terminer votre connexion.",
+      "noChannel": "Aucun canal de vérification disponible pour ce compte.",
+      "sendFailed": "Impossible d'envoyer le code.",
+      "verifyingSession": "Vérification de la session",
+      "verifyFailed": "La vérification a échoué.",
+      "resent": "Un nouveau code est en route.",
+      "resendFailed": "Impossible de renvoyer le code.",
+      "codeLabel": "Code à 6 chiffres",
+      "verify": "Vérifier",
+      "sending": "Envoi…",
+      "resend": "Pas reçu ? Renvoyer le code",
+      "useRecovery": "Impossible de recevoir le code ? Utilisez votre phrase de récupération",
+      "recoveryNotConfigured": "La récupération par phrase n'est pas configurée pour ce compte.",
+      "signOut": "Se déconnecter"
+    },
+    "totp": {
+      "verifyingSession": "Vérification de la session",
+      "verifyFailed": "La vérification a échoué.",
+      "heading": "Authentification à deux facteurs",
+      "subtitle": "Saisissez le code à 6 chiffres de votre application d'authentification pour terminer votre connexion.",
+      "codeLabel": "Code à 6 chiffres",
+      "verify": "Vérifier",
+      "useRecovery": "Téléphone perdu ? Utilisez votre phrase de récupération",
+      "recoveryNotConfigured": "La récupération par phrase n'est pas configurée pour ce compte.",
+      "signOut": "Se déconnecter"
+    },
+    "recovery": {
+      "notConfigured": "La récupération n'est pas configurée pour ce compte.",
+      "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
+      "validPhone": "Saisissez un numéro de téléphone valide pour votre compte.",
+      "phoneFailed": "Échec de la récupération. Vérifiez que votre numéro et vos 24 mots correspondent.",
+      "enterEmail": "Saisissez l'e-mail de votre compte.",
+      "emailFailed": "Échec de la récupération. Vérifiez que votre e-mail et vos 24 mots correspondent.",
+      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordsMismatch": "Les mots de passe ne correspondent pas.",
+      "successTitle": "Mot de passe réinitialisé",
+      "successBody": "Votre mot de passe a été réinitialisé. Vous allez être redirigé vers la connexion. Le contenu de votre coffre reste chiffré par vos 24 mots et demeure protégé.",
+      "heading": "Récupérez l'accès avec vos 24 mots",
+      "subtitle": "Les comptes e-mail réinitialisent leur mot de passe ; les comptes téléphone retrouvent l'accès directement. Dans tous les cas, votre coffre chiffré reste intact — vos 24 mots demeurent la racine cryptographique.",
+      "phraseLabel": "Phrase de récupération (24 mots)",
+      "phrasePlaceholder": "mot1 mot2 mot3…",
+      "phraseHint1": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
+      "phraseHint2": "Les mots ne quittent jamais cet appareil — seul un vérificateur dérivé est envoyé.",
+      "emailOtpHint": "Ce compte se connecte avec un code envoyé par e-mail — vos 24 mots restaurent l'accès directement, sans nouveau mot de passe.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmez le nouveau mot de passe",
+      "recoverAccess": "Récupérer l'accès",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "backToLogin": "Retour à la connexion"
+    },
+    "phraseRecovery": {
+      "verifyingSession": "Vérification de la session",
+      "notConfiguredTitle": "Récupération non configurée",
+      "backToCode": "Retour à la saisie du code",
+      "useHeading": "Utilisez votre phrase de récupération",
+      "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
+      "notConfigured": "La récupération n'est pas configurée pour ce compte.",
+      "recoveryFailed": "Échec de la récupération.",
+      "phraseLabel": "Phrase de récupération",
+      "phrasePlaceholder": "mot1 mot2 mot3…",
+      "phraseHint1": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
+      "phraseHint2": "La phrase ne quitte jamais votre appareil — seul un vérificateur dérivé est envoyé.",
+      "otp": {
+        "notConfiguredBody": "Ce compte n'a jamais associé de phrase de récupération. Contactez le support si vous ne pouvez pas recevoir le code de connexion.",
+        "subtitle": "Collez les 24 mots enregistrés lors de votre intégration pour terminer votre connexion sur cet appareil.",
+        "submit": "Déverrouiller cet appareil"
+      },
+      "totp": {
+        "notConfiguredBody": "Ce compte n'a jamais associé la phrase de récupération à son authentificateur. Contactez le support si vous ne pouvez pas accéder à votre application d'authentification.",
+        "subtitle": "Collez les 24 mots enregistrés lors de votre intégration. L'authentification à deux facteurs sera désactivée et vous pourrez la reconfigurer depuis les paramètres.",
+        "submit": "Réinitialiser la 2FA"
+      }
+    }
+  },
+  "chrome": {
+    "layout": {
+      "unlockingVault": "Déverrouillage de votre coffre"
+    },
+    "nav": {
+      "hub": "Accueil",
+      "vault": "Coffre numérique",
+      "trustedCircle": "Cercle de confiance",
+      "continuityProtocol": "Protocole de continuité",
+      "sharedWithMe": "Partagé avec moi",
+      "settings": "Paramètres",
+      "documentation": "Documentation",
+      "goToHub": "Aller à l'accueil",
+      "openSettings": "Ouvrir les paramètres"
+    },
+    "mobileNav": {
+      "hub": "Accueil",
+      "vault": "Coffre",
+      "trust": "Confiance"
+    },
+    "account": {
+      "curator": "Curateur",
+      "secureSession": "Session sécurisée",
+      "userAlt": "Utilisateur"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Tout marquer comme lu",
+      "close": "Fermer les notifications",
+      "empty": "Aucune notification pour le moment"
+    },
+    "fab": {
+      "addEntry": "Ajouter une nouvelle entrée"
+    },
+    "unlock": {
+      "loadingVault": "Chargement du coffre",
+      "unlockingVault": "Déverrouillage du coffre",
+      "checkingDeviceUnlock": "Vérification du déverrouillage de l'appareil",
+      "couldNotUnlock": "Déverrouillage impossible",
+      "authCancelled": "Authentification annulée",
+      "enterAll24": "Veuillez saisir les 24 mots",
+      "wrongPhrase": "Phrase de récupération incorrecte — le coffre n'a pas pu être déchiffré",
+      "phraseCouldNotUnlock": "La phrase de récupération n'a pas pu déverrouiller le coffre",
+      "heading": "Déverrouiller le coffre",
+      "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez votre méthode de déverrouillage.",
+      "noDeviceUnlock": "Aucun déverrouillage d'appareil n'est encore configuré sur cet appareil.",
+      "use24Words": "Utiliser les 24 mots de récupération",
+      "pinPlaceholder": "Au moins {min} chiffres",
+      "unlockButton": "Déverrouiller",
+      "back": "Retour",
+      "phraseLabel": "Saisissez vos 24 mots",
+      "phraseHint": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez les coller directement depuis le PDF.",
+      "unlockWithWords": "Déverrouiller avec les mots de récupération",
+      "legacyTitle": "Le compte doit être migré",
+      "legacyBody": "Votre coffre a été sécurisé avec un ancien format de clé qui n'est plus pris en charge. Pour rétablir l'accès à connaissance nulle, votre compte doit être rechiffré avec vos 24 mots de récupération. Veuillez contacter le support pour migrer ce compte.",
+      "unavailableSuffix": "(indisponible sur cet appareil)",
+      "methodPin": "Code PIN",
+      "methodBiometric": "Biométrie",
+      "methodHardwareKey": "Clé matérielle"
+    },
+    "emailVerify": {
+      "invalidEmail": "Saisissez une adresse e-mail valide",
+      "couldNotSend": "Impossible d'envoyer le code de vérification.",
+      "enterCode": "Saisissez le code à 6 chiffres",
+      "verificationFailed": "La vérification a échoué.",
+      "couldNotResend": "Impossible de renvoyer le code.",
+      "titleChange": "Modifier votre e-mail",
+      "titleAdd": "Ajouter un e-mail",
+      "descChange": "Nous enverrons un code à 6 chiffres à votre nouvelle adresse. Confirmez-le pour remplacer votre e-mail actuel — les connexions via l'ancienne adresse cesseront de fonctionner.",
+      "descAdd": "Nous vous enverrons un code à 6 chiffres par e-mail. Confirmez-le pour ajouter cet e-mail — vous pourrez ensuite vous connecter avec un code envoyé par e-mail, sans mot de passe.",
+      "emailLabel": "Adresse e-mail",
+      "cancel": "Annuler",
+      "sending": "Envoi…",
+      "sendCode": "Envoyer le code",
+      "codeLabel": "Code à 6 chiffres",
+      "sentTo": "Envoyé à {email}. Le code expire dans 10 minutes.",
+      "resendIn": "Renvoyer le code dans {seconds} s",
+      "resendCode": "Renvoyer le code",
+      "changeEmail": "Modifier l'e-mail",
+      "verifying": "Vérification…",
+      "verify": "Vérifier"
+    },
+    "phoneVerify": {
+      "invalidPhone": "Saisissez un numéro de téléphone valide",
+      "couldNotSend": "Impossible d'envoyer le code de vérification.",
+      "enterCode": "Saisissez le code à 6 chiffres",
+      "verificationFailed": "La vérification a échoué.",
+      "couldNotResend": "Impossible de renvoyer le code.",
+      "titleChange": "Modifier votre numéro WhatsApp",
+      "titleAdd": "Vérifier votre numéro WhatsApp",
+      "descChange": "Nous enverrons un code à 6 chiffres à votre nouveau numéro sur WhatsApp. Confirmez-le pour remplacer votre numéro actuel — les connexions via l'ancien cesseront de fonctionner.",
+      "descAdd": "Nous enverrons un code à 6 chiffres sur votre WhatsApp. Saisissez-le ci-dessous pour confirmer que ce numéro vous appartient.",
+      "phoneLabel": "Numéro WhatsApp",
+      "cancel": "Annuler",
+      "sending": "Envoi…",
+      "sendCode": "Envoyer le code",
+      "codeLabel": "Code à 6 chiffres",
+      "sentTo": "Envoyé à {phone}. Le code expire dans 10 minutes.",
+      "resendIn": "Renvoyer le code dans {seconds} s",
+      "resendCode": "Renvoyer le code",
+      "changeNumber": "Modifier le numéro",
+      "verifying": "Vérification…",
+      "verify": "Vérifier"
+    },
+    "recorder": {
+      "errorPermission": "Autorisation refusée. Activez l'accès {devices} dans les paramètres de votre navigateur.",
+      "errorNotFound": "Aucun {devices} détecté sur cet appareil.",
+      "errorBusy": "{device} est utilisé(e) par une autre application.",
+      "errorGeneric": "Impossible d'accéder aux périphériques de capture.",
+      "devicesCameraMic": "à la caméra et au microphone",
+      "devicesCameraOrMic": "caméra ou microphone",
+      "deviceMic": "au microphone",
+      "deviceCameraCapitalized": "La caméra",
+      "deviceMicCapitalized": "Le microphone",
+      "notAvailable": "La capture multimédia n'est pas disponible dans ce navigateur.",
+      "deviceNotReady": "Le périphérique de capture n'est pas encore prêt. Veuillez patienter.",
+      "notSupported": "L'enregistrement n'est pas pris en charge dans ce navigateur.",
+      "initFailed": "L'initialisation de MediaRecorder a échoué.",
+      "subPreparing": "Préparation du périphérique de capture…",
+      "subUnavailable": "Capture indisponible. Ajustez les autorisations et réessayez.",
+      "subRecording": "Enregistrement — {elapsed} / max {max}",
+      "subPreview": "Aperçu — {duration}",
+      "subIdle": "Chiffré sur votre appareil. Max {max}.",
+      "titleAudio": "Enregistrement vocal",
+      "titleVideo": "Enregistrement vidéo",
+      "cancelRecording": "Annuler l'enregistrement",
+      "tryAgain": "Réessayer",
+      "turningOnCamera": "Activation de la caméra…",
+      "enablingMic": "Activation du microphone…",
+      "statusRecording": "Enregistrement",
+      "statusLivePreview": "Aperçu en direct",
+      "statusMicLive": "Micro actif",
+      "timeLeft": "{time} restant",
+      "cancel": "Annuler",
+      "startRecording": "Démarrer l'enregistrement",
+      "stop": "Arrêter",
+      "reRecord": "Réenregistrer",
+      "attachToVault": "Joindre au coffre"
+    }
+  },
+  "hub": {
+    "loading": "Chargement de l'accueil",
+    "title": "Accueil",
+    "subtitle": {
+      "line1": "Votre poste de commande central pour un héritage protégé",
+      "line2": "et une continuité prête à toute épreuve."
+    },
+    "jumpToPriorityActions": "Aller aux actions prioritaires",
+    "actionsRequired": "Actions requises",
+    "score": {
+      "strong": "Protection solide",
+      "partial": "Couverture partielle",
+      "actionRequired": "Action requise"
+    },
+    "centerNode": {
+      "title": "Votre héritage",
+      "subtitle": "Nœud central"
+    },
+    "nodes": {
+      "empty": "Vide",
+      "protected": "Protégé",
+      "assets": {
+        "title": "Actifs",
+        "empty": "Aucun actif enregistré pour le moment."
+      },
+      "contacts": {
+        "title": "Contacts",
+        "empty": "Aucun contact de confiance lié pour le moment.",
+        "guardianLinked": "{count} contact de confiance principal lié",
+        "guardiansLinked": "{count} contacts de confiance principaux liés"
+      },
+      "directives": {
+        "title": "Directives",
+        "empty": "Aucune directive enregistrée pour le moment."
+      },
+      "documents": {
+        "title": "Documents",
+        "empty": "Aucun document conservé pour le moment."
+      }
+    },
+    "priorityActions": "Actions prioritaires",
+    "hints": {
+      "add_item": "Conservez votre premier actif, document ou identifiant dans le coffre. Tout est chiffré de bout en bout — vous seul et les personnes que vous choisissez pourrez jamais le lire.",
+      "invite_contact": "Les contacts de confiance sont les gardiens qui peuvent aider à récupérer votre coffre. Invitez une personne de confiance ; elle accepte avec sa propre clé Keeplas.",
+      "distribute_shards": "Divisez votre clé maîtresse en parts chiffrées et scellez-en une à chaque contact de confiance. La récupération exige un seuil de parts, afin qu'aucun contact ne puisse déverrouiller votre coffre à lui seul. Redistribuez après avoir ajouté un nouveau gardien.",
+      "life_check": "Life Check prend régulièrement de vos nouvelles. Si vous cessez de répondre, Keeplas amorce le processus de continuité et prévient vos gardiens.",
+      "release_policy": "Décidez de ce qui se passe si vous cessez de répondre : combien de contacts de confiance doivent confirmer votre indisponibilité, de combien de temps ils disposent, et s'il faut libérer malgré tout ou tout garder scellé si personne ne confirme.",
+      "welcome_message": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'ils ne consultent les éléments.",
+      "two_factor": "Ajoutez une clé d'accès ou une application d'authentification afin qu'un mot de passe dérobé ne suffise pas à atteindre votre compte.",
+      "verify_whatsapp": "Vérifiez votre numéro WhatsApp pour que les contrôles de Life Check et les alertes de sécurité vous parviennent de façon fiable.",
+      "more_categories": "Répartissez votre héritage entre plusieurs catégories — finances, directives de santé, documents juridiques, identifiants — afin que rien d'essentiel ne soit oublié."
+    },
+    "recentActivity": {
+      "title": "Activité récente",
+      "viewAll": "Tout voir",
+      "empty": "Aucun élément dans votre coffre pour le moment.",
+      "addFirst": "Ajouter votre premier élément"
+    },
+    "reflect": {
+      "title": "Réfléchir et préparer",
+      "subtitle": "Quelques questions honnêtes, de vraies difficultés et des étapes concrètes pour la continuité — au sein de Keeplas et au-delà."
+    },
+    "terminate": {
+      "hero": {
+        "line1": "Destruction",
+        "line2": "irréversible",
+        "description": "Une fois détruite, votre archive chiffrée ne peut être reconstituée. Il n'existe aucune sauvegarde, aucun accès administrateur, aucune voie de récupération. L'accès à connaissance nulle signifie qu'il n'y a aucune récupération côté serveur."
+      },
+      "stats": {
+        "archiveStatus": "Statut de l'archive",
+        "active": "Active",
+        "empty": "Vide",
+        "encryptionKey": "Clé de chiffrement",
+        "heldByYou": "Détenue par vous seul"
+      },
+      "heading": "Supprimer définitivement votre plan de continuité ?",
+      "description": "Cette action efface le coffre, chaque protocole, contact, message, entrée d'audit ainsi que le dossier utilisateur lui-même.",
+      "warning": {
+        "label": "⚠ Avertissement",
+        "body": "Cette action est irréversible. Nous recommandons d'exporter votre kit de récupération et de mettre Life Check en pause d'abord si vous ne souhaitez qu'un arrêt temporaire."
+      },
+      "cards": {
+        "vaultData": "Données du coffre",
+        "encryptedItems": "{count} éléments chiffrés",
+        "protocols": "Protocoles",
+        "protocolsValue": "Life Check, Scénario, Messages"
+      },
+      "confirmLabel": {
+        "before": "Saisissez",
+        "after": "pour confirmer"
+      },
+      "submitting": "Suppression…",
+      "confirm": "Confirmer la suppression définitive",
+      "keep": "Conserver mon plan",
+      "requestId": "ID de requête : {id}",
+      "errors": {
+        "typeDelete": "Saisissez DELETE exactement pour confirmer.",
+        "failed": "Échec de la suppression du plan."
+      }
+    }
+  },
+  "lifeCheck": {
+    "toasts": {
+      "saveConfigError": "Impossible d'enregistrer la configuration",
+      "travelToggleError": "Impossible de modifier le mode voyage",
+      "checkInTitle": "Présence confirmée",
+      "checkInDescription": "Votre compte à rebours a été réinitialisé.",
+      "validateError": "Impossible de valider votre présence",
+      "postponeError": "Impossible de reporter la vérification",
+      "toggleActiveError": "Impossible de modifier l'état du Life Check"
+    },
+    "page": {
+      "intro": "Keeplas vous demande régulièrement de confirmer que vous allez bien. Si vous cessez de répondre, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis. Mettez tout en pause depuis",
+      "introLink": "Paramètres → Protocole de continuité"
+    },
+    "nextCheckIn": {
+      "label": "Prochaine vérification",
+      "description": "Nous vous demanderons de confirmer que vous allez bien. Seule votre réponse explicite réinitialise le compte à rebours — utiliser l'application ne suffit pas.",
+      "reset": "Je vais bien — réinitialiser le compte à rebours"
+    },
+    "activeCycle": {
+      "title": "Vérification requise",
+      "runningDescription": "Confirmez que vous allez bien — appuyez ci-dessous, cliquez sur le bouton dans votre e-mail ou répondez sur WhatsApp. Nous continuerons à vous le rappeler jusqu'à la fermeture de la fenêtre.",
+      "escalatingDescription": "Nous confirmons votre statut auprès de vos contacts de confiance.",
+      "imWell": "Je vais bien",
+      "postpone48h": "Reporter de 48 h"
+    },
+    "history": {
+      "title": "Historique des vérifications",
+      "status": {
+        "running": "En cours",
+        "validated": "Confirmée",
+        "escalating": "En escalade",
+        "triggered": "Déclenchée",
+        "cancelled": "Annulée"
+      },
+      "method": {
+        "tap": "Confirmation dans l'application",
+        "email_link": "Confirmation par e-mail",
+        "auto": "Confirmée automatiquement"
+      }
+    },
+    "channels": {
+      "title": "Canaux de vérification",
+      "help": "Les canaux que Keeplas utilise pour vous joindre lors d'une vérification — tous envoyés ensemble, pas l'un après l'autre. Désactivez ceux que vous n'utilisez pas. À noter : seuls le bouton de l'e-mail et une réponse sur WhatsApp permettent de confirmer que vous allez bien.",
+      "comingSoon": "Bientôt disponible",
+      "notVerified": "Non vérifié",
+      "noEmail": "Aucun e-mail",
+      "noEmailLinked": "Aucun e-mail n'est associé à ce compte.",
+      "verify": "Vérifier",
+      "items": {
+        "whatsapp": {
+          "label": "Message WhatsApp",
+          "description": "Répondez pour confirmer que vous allez bien"
+        },
+        "push": {
+          "label": "Notification push de l'application",
+          "description": "Ping mobile chiffré — appuyez pour confirmer"
+        },
+        "email": {
+          "label": "Vérification par e-mail",
+          "description": "Un bouton en un clic pour confirmer que vous allez bien"
+        }
+      }
+    },
+    "countdown": {
+      "days": "Jours",
+      "hours": "Heures",
+      "minutes": "Minutes",
+      "seconds": "Secondes"
+    },
+    "frequency": {
+      "title": "Fréquence des vérifications",
+      "help": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Plus court = des vérifications plus fréquentes ; plus long = moins d'interruptions mais une transmission plus lente.",
+      "description": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Seule une réponse explicite — depuis l'application, le bouton de l'e-mail ou WhatsApp — réinitialise le compte à rebours ; utiliser l'application ne suffit pas.",
+      "unit": {
+        "test": "Secondes",
+        "weekly": "Jours",
+        "monthly": "Jours",
+        "quarterly": "Jours"
+      },
+      "tag": {
+        "test": "Test",
+        "weekly": "Actif",
+        "monthly": "Recommandé",
+        "quarterly": "Détendu"
+      }
+    },
+    "timeline": {
+      "title": "Protocole d'escalade",
+      "help": "À chaque période de fréquence, Keeplas vous demande de confirmer que vous allez bien. Vous disposez ensuite d'une fenêtre de 15 jours, avec des rappels, pour répondre — en appuyant dans l'application, en cliquant sur le bouton de l'e-mail ou en répondant sur WhatsApp. Seule une réponse explicite réinitialise le compte à rebours ; utiliser l'application ne suffit pas. Si toute la fenêtre s'écoule sans réponse, Keeplas demande à vos contacts de confiance de confirmer votre indisponibilité avant toute transmission.",
+      "subtitle": "Ce qui se passe après une vérification manquée.",
+      "cadence": "Keeplas vous demande de confirmer tous les {cadence}.",
+      "cadenceFallback": "30 jours",
+      "noChannelInline": "aucun canal",
+      "contactsSingular": "{count} contact",
+      "contactsPlural": "{count} contacts",
+      "trustedContactsSingular": "{count} contact de confiance",
+      "trustedContactsPlural": "{count} contacts de confiance",
+      "travelPaused": "Protocole en pause — le mode voyage est activé. Aucune vérification n'est envoyée tant qu'il est actif.",
+      "travelPausedUntil": "Protocole en pause — le mode voyage est activé jusqu'au {date}. Aucune vérification n'est envoyée tant qu'il est actif.",
+      "footer": "Keeplas utilise un chiffrement à connaissance nulle. Seule une réponse explicite de votre part — appui, bouton de l'e-mail ou WhatsApp — met le protocole en pause.",
+      "steps": {
+        "sent": {
+          "title": "Vérification envoyée",
+          "description": "{channels} sont envoyés ensemble. Confirmez d'un seul appui, via le bouton de l'e-mail ou par une réponse sur WhatsApp.",
+          "descriptionNoChannel": "Aucun canal activé — activez-en un pour que nous puissions vous joindre."
+        },
+        "reminder": {
+          "title": "Rappel",
+          "titleFinal": "Dernier rappel",
+          "description": "Toujours pas de réponse — Keeplas vous recontacte sur chaque canal."
+        },
+        "protocolBegins": {
+          "title": "Début du protocole de continuité",
+          "description": "Aucune réponse sur l'ensemble de la fenêtre. Keeplas demande désormais à vos contacts de confiance de confirmer votre indisponibilité — rien n'est encore transmis.",
+          "help": "La fenêtre de vérification s'est entièrement écoulée sans réponse de votre part. Vos contacts de confiance sont désormais invités à confirmer votre indisponibilité. Rien n'est déchiffré ni transmis à ce stade.",
+          "badge": "Contacts de confiance notifiés"
+        },
+        "contactsConfirm": {
+          "dayLabel": "Ensuite",
+          "title": "Confirmation des contacts de confiance",
+          "description": "Au moins {contacts} doit confirmer qu'il ne parvient pas à vous joindre, dans un délai de {days} jours.",
+          "help": "Défini dans la politique de transmission : « Contacts qui doivent confirmer votre indisponibilité » ({threshold}) et « Jours dont ils disposent pour confirmer » ({days} jours). Les contacts disposent de ce délai pour atteindre le nombre requis."
+        },
+        "lastChance": {
+          "title": "Dernière chance d'annuler",
+          "description": "Une fois le nombre requis atteint, il vous reste {hours} heures pour annuler avant toute transmission.",
+          "help": "Une fenêtre de sécurité fixe de {hours} heures — ce n'est PAS le réglage « Jours dont ils disposent pour confirmer ». Elle débute dès qu'un nombre suffisant de contacts confirme, et confirmer que vous allez bien (appui, e-mail ou WhatsApp) pendant ce délai annule la transmission."
+        },
+        "released": {
+          "dayLabel": "Résultat",
+          "title": "Coffre transmis",
+          "descriptionAnyway": "Une fois que {contacts} confirment, votre coffre leur est transmis — et transmis quand même si la fenêtre s'écoule sans aucune confirmation.",
+          "descriptionAbort": "Une fois que {contacts} confirment, votre coffre leur est transmis. Si personne ne confirme à temps, rien n'est transmis.",
+          "help": "Contrôlé par l'option « Transmettre quand même si personne ne confirme » dans la politique de transmission. Activée (recommandé) : transmission même si personne ne confirme une fois la fenêtre écoulée. Désactivée : transmission uniquement si vos contacts confirment."
+        }
+      },
+      "recap": {
+        "text": "{contacts} pour confirmer · fenêtre de {days} jours · {fallback}",
+        "fallbackAnyway": "transmis quand même après la fenêtre",
+        "fallbackAbort": "rien n'est transmis sans confirmation"
+      }
+    },
+    "welcome": {
+      "title": "Message d'accueil",
+      "help": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'il ne consulte les éléments.",
+      "description": "Accueillez vos contacts de confiance avant qu'ils ne découvrent ce que vous leur avez laissé.",
+      "newMessage": "Nouveau message",
+      "loading": "Chargement…",
+      "empty": "Aucun message d'accueil pour l'instant. Les contacts arriveront sur une liste d'éléments sans contexte.",
+      "everyone": "Tout le monde",
+      "noOneYet": "Personne pour l'instant",
+      "kindWithRecording": "Texte + enregistrement",
+      "kindText": "Texte",
+      "targetingPrefix": "· Pour {targeting}",
+      "deleteAria": "Supprimer {title}",
+      "deleteTitle": "Supprimer « {title} » ?",
+      "deleteDescription": "Les contacts ne verront plus ce message d'accueil.",
+      "deleteConfirm": "Supprimer",
+      "deleteError": "Échec de la suppression du message d'accueil"
+    },
+    "overview": {
+      "title": "Qui reçoit quoi",
+      "description": "Si votre Life Check est confirmé, chaque contact de confiance obtient un accès en lecture aux éléments que vous avez partagés avec lui.",
+      "empty": "Rien n'est encore prévu pour la transmission. Partagez des éléments de votre coffre avec vos contacts pour construire votre héritage.",
+      "readOnly": "Lecture seule",
+      "itemCountSingular": "{count} élément",
+      "itemCountPlural": "{count} éléments",
+      "role": {
+        "family": "Famille",
+        "friend": "Ami",
+        "lawyer": "Juridique",
+        "doctor": "Médical",
+        "other": "Contact"
+      }
+    },
+    "policy": {
+      "title": "Politique de transmission",
+      "help": "Si vous cessez de répondre aux vérifications, vos contacts de confiance sont invités à confirmer votre indisponibilité avant toute transmission. Définissez combien doivent confirmer, de combien de temps ils disposent et ce qui se passe si personne ne le fait.",
+      "description": "La sauvegarde humaine avant toute transmission de votre coffre.",
+      "thresholdLabel": "Contacts qui doivent confirmer votre indisponibilité",
+      "thresholdHelp": "Le nombre minimum de contacts de confiance qui doivent confirmer de façon indépendante qu'ils ne parviennent pas à vous joindre avant que votre coffre puisse être transmis. Un nombre plus élevé protège contre toute action d'un seul contact isolé.",
+      "windowLabel": "Jours dont ils disposent pour confirmer",
+      "windowHelp": "De combien de temps disposent vos contacts de confiance pour atteindre le nombre requis une fois que Keeplas les alerte. C'est distinct de la fenêtre de grâce fixe de 72 heures dont vous bénéficiez pour annuler la transmission après leur confirmation.",
+      "windowDays": "{count} jours",
+      "releaseAnywayLabel": "Transmettre quand même si personne ne confirme",
+      "releaseAnywayOn": "Recommandé : si aucun contact ne confirme, votre coffre est tout de même transmis après la fenêtre, afin que vos bénéficiaires soient atteints.",
+      "releaseAnywayOff": "Si aucun contact ne confirme, rien n'est transmis.",
+      "saveError": "Échec de l'enregistrement de la politique de transmission"
+    },
+    "travel": {
+      "title": "Mode voyage",
+      "help": "Met en pause l'escalade du Life Check pendant que vous êtes injoignable. Les messages conditionnels restent chiffrés et non déclenchés. Limité à 180 jours par sécurité.",
+      "description": "Suspendez le Life Check jusqu'à 180 jours pendant vos déplacements.",
+      "active": "Mode voyage actif",
+      "activeUntil": "Mode voyage actif jusqu'au {date}",
+      "disable": "Désactiver le mode voyage",
+      "returnDate": "Date de retour",
+      "returnDatePlaceholder": "Choisissez votre date de retour",
+      "enable": "Activer"
+    },
+    "controls": {
+      "toggleError": "Échec de la mise à jour du Life Check",
+      "travelError": "Échec de l'activation du mode voyage",
+      "statusTravel": "Mode voyage",
+      "statusActive": "Actif",
+      "statusPaused": "En pause",
+      "notConfigured": "Le Life Check n'est pas encore configuré. Rendez-vous sur",
+      "notConfiguredLink": "Life Check",
+      "notConfiguredSuffix": "pour le configurer.",
+      "pauseDescription": "Mettez entièrement en pause votre Life Check — aucune vérification, aucune transmission. Statut :"
+    },
+    "badge": {
+      "status": {
+        "active": "Actif",
+        "paused": "En pause",
+        "travel": "Mode voyage",
+        "unconfigured": "Non configuré"
+      },
+      "resumes": "Reprend le {date}",
+      "helpLabel": "Aide sur le statut du Life Check",
+      "help": {
+        "intro": "Le statut de votre Life Check.",
+        "activeLabel": "Actif",
+        "activeText": "Les vérifications se déroulent selon le calendrier prévu.",
+        "pausedLabel": "En pause",
+        "pausedText": "Suspension indéfinie — rien ne s'exécute jusqu'à ce que vous repreniez.",
+        "travelLabel": "Mode voyage",
+        "travelText": "Identique à En pause, mais avec une date de retour qui relance tout automatiquement. Appuyez sur le badge pour gérer."
+      }
+    },
+    "return": {
+      "phraseError": "Saisissez les 24 mots de votre phrase de récupération.",
+      "successTitle": "Coffre sécurisé",
+      "successDescription": "L'accès a été révoqué et votre coffre a été rechiffré avec une nouvelle clé.",
+      "bannerTitleResume": "Terminez la sécurisation de votre coffre",
+      "bannerTitleReleased": "Votre coffre a été transmis",
+      "bannerBodyResume": "Une rotation de clé a été lancée mais non terminée. Reprenez-la pour retirer entièrement les anciennes clés.",
+      "bannerBodyReleased": "Des contacts de confiance ont obtenu un accès. Si vous êtes de retour, révoquez cet accès et rechiffrez votre coffre avec une nouvelle clé. Cela protège tout à partir de maintenant — cela ne peut pas récupérer ce qui a déjà été consulté.",
+      "resumeCta": "Reprendre la rotation de clé",
+      "secureCta": "Je suis de retour — sécuriser mon coffre",
+      "dialogTitle": "Sécuriser mon coffre",
+      "dialogDescription": "Saisissez votre phrase de récupération de 24 mots. Nous révoquerons l'accès transmis et générerons une nouvelle clé maîtresse, en rechiffrant chaque élément. Les éléments qu'un contact a déjà ouverts pendant la transmission ne peuvent pas être repris — cela sécurise tout pour l'avenir.",
+      "phrasePlaceholder": "Collez ou saisissez vos 24 mots…",
+      "cancel": "Annuler",
+      "working": "Sécurisation…",
+      "submit": "Révoquer et changer de clé",
+      "status": {
+        "validating": "Vérification de votre phrase de récupération…",
+        "rotatingKeys": "Génération d'une nouvelle clé maîtresse…",
+        "redistributing": "Rescellement des parts de récupération…",
+        "reencrypting": "Rechiffrement de votre coffre…",
+        "finalizing": "Finalisation…",
+        "done": "Terminé"
+      }
+    }
+  },
+  "settings": {
+    "header": {
+      "openNav": "Ouvrir la navigation des paramètres",
+      "close": "Fermer les paramètres",
+      "identity": {
+        "title": "Identité",
+        "description": "Mettez à jour les informations de votre compte et la façon dont les autres vous voient sur la plateforme."
+      },
+      "security": {
+        "title": "Centre de sécurité",
+        "description": "Récupération sociale, parts Shamir, biométrie et journal d'audit chaîné par hachage."
+      },
+      "preferences": {
+        "title": "Préférences",
+        "description": "Préférences de localisation et d'alertes pour votre système de continuité."
+      },
+      "recoveryKit": {
+        "title": "Kit de récupération",
+        "description": "Exportez le kit imprimable qui reconstruit votre coffre en cas de perte d'accès."
+      },
+      "subscription": {
+        "title": "Abonnement",
+        "description": "Forfaits, facturation et offre à vie pour votre continuité."
+      },
+      "contact": {
+        "title": "Nous contacter",
+        "description": "Questions, retours ou préoccupations de sécurité — notre équipe est là pour vous aider."
+      },
+      "fallback": {
+        "title": "Paramètres",
+        "description": "Configurez votre sanctuaire numérique."
+      }
+    },
+    "sidebar": {
+      "userAlt": "Utilisateur",
+      "defaultName": "Curateur",
+      "secureSession": "Session sécurisée",
+      "closeNav": "Fermer la navigation",
+      "documentation": "Documentation",
+      "contact": "Nous contacter",
+      "signOut": "Se déconnecter",
+      "groups": {
+        "account": "Compte",
+        "security": "Sécurité",
+        "plansBilling": "Forfaits et facturation"
+      },
+      "items": {
+        "identity": "Identité",
+        "preferences": "Préférences",
+        "securityCenter": "Centre de sécurité",
+        "recoveryKit": "Kit de récupération",
+        "continuityProtocol": "Protocole de continuité",
+        "usage": "Utilisation",
+        "subscription": "Abonnement"
+      }
+    },
+    "preferences": {
+      "saveError": "Échec de l'enregistrement des préférences",
+      "localization": {
+        "title": "Localisation de la plateforme",
+        "description": "Définissez la manière dont votre continuité est présentée à travers les régions du monde."
+      },
+      "interfaceLanguage": "Langue de l'interface",
+      "chooseLanguage": "Choisir une langue",
+      "languageUpcoming": "{label} — à venir",
+      "timezone": "Fuseau horaire",
+      "chooseTimezone": "Choisir un fuseau horaire",
+      "currencyDisplay": "Affichage de la devise",
+      "chooseCurrency": "Choisir une devise",
+      "alerts": {
+        "title": "Préférences d'alertes",
+        "description": "Contrôlez la fréquence des Life Checks et des alertes de synchronisation du coffre."
+      },
+      "notifications": {
+        "lifeCheckReminders": {
+          "label": "Rappels Life Check",
+          "description": "Vérification de signe de vie bimensuelle."
+        },
+        "vaultAccessAlerts": {
+          "label": "Alertes d'accès au coffre",
+          "description": "Notification push instantanée à la connexion."
+        },
+        "newsletterUpdates": {
+          "label": "Newsletter et actualités",
+          "description": "Conseils occasionnels sur la planification de votre continuité."
+        }
+      },
+      "saved": "Préférences enregistrées ✓",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer les préférences"
+    },
+    "contact": {
+      "submitError": "Échec de l'envoi de votre message.",
+      "success": {
+        "title": "Message envoyé",
+        "intro": "Notre équipe vous répondra à",
+        "outro": "sous une heure.",
+        "sendAnother": "Envoyer un autre message"
+      },
+      "form": {
+        "replyTo": "E-mail ou WhatsApp de réponse",
+        "topic": "Sujet",
+        "topicPlaceholder": "Sélectionnez un sujet",
+        "subject": "Objet",
+        "subjectPlaceholder": "ex. : Impossible de terminer le Life Check",
+        "message": "Message",
+        "messagePlaceholder": "Donnez autant de détails que possible. N'incluez pas votre phrase de récupération.",
+        "seedWarning": "Ne partagez jamais votre phrase de récupération avec qui que ce soit, y compris notre équipe.",
+        "sending": "Envoi…",
+        "send": "Envoyer le message",
+        "responseTime": "Délai de réponse habituel : sous une heure."
+      },
+      "topics": {
+        "general": "Question générale",
+        "security": "Préoccupation de sécurité",
+        "billing": "Facturation et abonnement",
+        "recovery": "Récupération et accès au coffre",
+        "feature_request": "Demande de fonctionnalité",
+        "other": "Autre"
+      }
+    },
+    "subscription": {
+      "title": "Une architecture de continuité. Sécurisée pour toujours.",
+      "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
+      "popular": "Populaire",
+      "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
+      "priceSuffix": {
+        "forever": "/pour toujours",
+        "oneTime": "paiement unique"
+      },
+      "plans": {
+        "free": {
+          "name": "Gratuit",
+          "tagline": "Le stockage numérique essentiel.",
+          "cta": "Commencer gratuitement"
+        },
+        "lifetime": {
+          "name": "À vie",
+          "tagline": "Tout ce dont vous avez besoin, pour toujours, en un seul paiement.",
+          "cta": "Obtenir l'accès à vie"
+        }
+      },
+      "features": {
+        "freeVault": "Coffre à connaissance nulle de 100 Mo",
+        "basicLifeCheck": "Life Check de base (mensuel)",
+        "oneEmergencyContact": "1 contact d'urgence",
+        "emergencyCardDigital": "Carte d'urgence (numérique)",
+        "dataHostingCountry": "Choix du pays d'hébergement des données (bientôt disponible)",
+        "notarialCompliance": "Conformité notariale et juridique (bientôt disponible)",
+        "lifetimeVault": "Coffre à connaissance nulle de 10 Go",
+        "moreStorageAddon": "Stockage supplémentaire disponible en option",
+        "fullScenarioEngine": "Moteur de scénarios complet",
+        "fiveEmergencyContacts": "5 contacts d'urgence",
+        "prioritySocialRecovery": "Récupération sociale prioritaire",
+        "emergencyCardPhysical": "Carte d'urgence (physique)",
+        "videoLegacyMessages": "Messages vidéo de continuité",
+        "weeklyLifeCheck": "Life Check hebdomadaire",
+        "earlyAdopterBadge": "Badge des premiers adoptants",
+        "prioritySupport": "Support prioritaire"
+      }
+    },
+    "usage": {
+      "title": "Ressources et utilisation",
+      "description": "Suivez le stockage chiffré et les éléments consommés par votre coffre. Lorsque vous approchez de la capacité de votre forfait, passez à un forfait supérieur pour continuer à ajouter des éléments sans interruption.",
+      "encryptedStorage": "Stockage chiffré",
+      "ofQuota": "sur {quota}",
+      "remainingPrefix": "{amount} restants sur le forfait",
+      "planNameFree": "Gratuit",
+      "remainingSuffix": "",
+      "percentUsed": "{percent}% utilisé",
+      "nearLimit": "Vous approchez de votre limite de stockage. Passez à l'offre À vie pour 10 Go de capacité chiffrée et des outils de continuité supplémentaires.",
+      "upgradePlan": "Mettre à niveau le forfait",
+      "cards": {
+        "activeItems": {
+          "label": "Éléments actifs",
+          "hint": "Éléments du coffre non archivés"
+        },
+        "encryptedFiles": {
+          "label": "Fichiers chiffrés",
+          "hint": "Fichiers stockés dans votre coffre"
+        },
+        "categoriesUsed": {
+          "label": "Catégories utilisées",
+          "hint": "Catégories distinctes renseignées"
+        }
+      },
+      "itemsByCategory": "Éléments par catégorie",
+      "filesByType": "Fichiers par type",
+      "total": "{count} au total",
+      "noItems": "Aucun élément pour l'instant. Commencez à constituer votre coffre depuis l'accueil.",
+      "noFiles": "Aucun fichier chiffré joint pour l'instant.",
+      "categories": {
+        "personal_document": "Documents personnels",
+        "financial_asset": "Actifs financiers",
+        "digital_asset": "Actifs numériques",
+        "health_directive": "Directives de santé",
+        "legal_document": "Documents juridiques",
+        "business_continuity": "Continuité d'activité",
+        "conditional_message": "Messages conditionnels",
+        "credential": "Identifiants"
+      },
+      "fileKinds": {
+        "document": "Documents",
+        "image": "Images",
+        "audio": "Audio",
+        "video": "Vidéo"
+      },
+      "needCapacity": {
+        "title": "Besoin de plus de capacité ?",
+        "description": "L'offre À vie débloque 10 Go de stockage à connaissance nulle, des messages vidéo de continuité et le moteur de scénarios complet — pour toujours, en un seul paiement."
+      },
+      "comparePlans": "Comparer les forfaits"
+    },
+    "identity": {
+      "updateError": "Échec de la mise à jour du profil",
+      "unknown": "Inconnu",
+      "profileAlt": "Profil",
+      "unnamedCurator": "Curateur sans nom",
+      "curatorSince": "Curateur depuis {date}",
+      "verifiedIdentity": "Identité vérifiée",
+      "recoverySet": "Récupération configurée",
+      "verified": "Vérifié",
+      "verify": "Vérifier",
+      "updated": "Profil mis à jour ✓",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer l'identité",
+      "displayName": "Nom affiché",
+      "displayNamePlaceholder": "Votre nom",
+      "avatar": {
+        "change": "Changer la photo de profil",
+        "notImage": "Veuillez choisir un fichier image.",
+        "tooLarge": "L'image doit faire 5 Mo ou moins.",
+        "uploadError": "Échec du téléversement de l'image",
+        "removeError": "Échec de la suppression de l'image",
+        "uploading": "Téléversement…",
+        "changePhoto": "Changer la photo",
+        "uploadPhoto": "Téléverser une photo",
+        "remove": "Supprimer"
+      },
+      "email": {
+        "label": "E-mail principal",
+        "change": "Changer l'e-mail",
+        "add": "Ajouter un e-mail",
+        "none": "Aucun e-mail lié",
+        "hintVerified": "Connectez-vous avec cet e-mail et un code à usage unique. Changez-le à tout moment — nous vérifierons la nouvelle adresse avec un code.",
+        "hintOnFile": "Enregistré depuis votre invitation — vérifiez-le pour vous connecter avec un code envoyé par e-mail.",
+        "hintNone": "Ajoutez un e-mail pour vous connecter aussi avec un code envoyé par e-mail."
+      },
+      "phone": {
+        "label": "Numéro WhatsApp",
+        "change": "Changer le numéro",
+        "add": "Ajouter un numéro",
+        "none": "Aucun numéro lié",
+        "hint": "Utilisé pour les escalades de Life Check et les notifications importantes."
+      },
+      "legal": {
+        "title": "Identité légale",
+        "description": "Enregistrée lors de l'intégration comme votre déclaration d'identité signée. La date de naissance est figée ; la résidence peut changer si vous changez de juridiction. Chaque mise à jour est ajoutée à la chaîne d'audit — votre déclaration d'origine n'est jamais écrasée.",
+        "updateResidence": "Mettre à jour la résidence",
+        "residenceNotSet": "Résidence non définie",
+        "residenceNotSetHint": "La juridiction successorale ne peut pas être déterminée tant que vous n'avez pas déclaré votre pays de résidence. Définissez-le maintenant pour que votre plan de succession reste recevable.",
+        "setResidence": "Définir la résidence",
+        "countryOfResidence": "Pays de résidence",
+        "dateOfBirth": "Date de naissance",
+        "declaredOn": "Déclaré le",
+        "notSet": "Non défini",
+        "notDeclared": "Non déclaré"
+      }
+    }
+  },
+  "settingsSecurity": {
+    "countryCombobox": {
+      "placeholder": "Rechercher un pays…",
+      "empty": "Aucun pays ne correspond à votre recherche."
+    },
+    "continuity": {
+      "title": "Protocole de continuité",
+      "description": "Pause générale et mode voyage pour l'ensemble du protocole de continuité. Le désactiver ici suspend simultanément l'escalade du Life Check et le moteur de scénarios — idéal pour les séjours hors réseau. Utilisez le mode voyage lorsque vous avez une date de retour, afin que tout reprenne automatiquement."
+    },
+    "residence": {
+      "error": "Échec de la mise à jour de la résidence légale",
+      "title": "Mettre à jour la résidence légale",
+      "description": "Changez le pays dont la juridiction successorale s'applique à votre coffre. Votre déclaration initiale est conservée intacte dans le journal d'audit — cette mise à jour est enregistrée comme une nouvelle entrée infalsifiable.",
+      "countryLabel": "Nouveau pays de résidence",
+      "countryHint": "Choisissez le pays où vous résidez actuellement. La date de naissance ne peut pas être modifiée.",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "confirm": "Confirmer la mise à jour"
+    },
+    "redistribute": {
+      "title": "Redistribuer les fragments de récupération",
+      "help": "Recalcule le partage de votre clé maîtresse selon le seuil choisi et rescelle le fragment de chaque contact de confiance avec sa clé publique. Tout fragment détenu précédemment devient obsolète dès que vous cliquez — c'est voulu. Utilisez cette action après avoir intégré un contact de confiance de remplacement, ou comme tâche d'entretien périodique.",
+      "statusNone": "Invitez au moins 2 contacts de confiance et attendez qu'ils acceptent avant de pouvoir distribuer.",
+      "statusBelowMin": "Un seul contact de confiance éligible. La récupération en exige au moins 2 — invitez-en un autre et faites-le confirmer avant de distribuer.",
+      "statusReady": "{count} contacts de confiance éligibles · seuil actuel {threshold}.",
+      "distributing": "Distribution…",
+      "distribute": "Distribuer maintenant",
+      "success": "Fragments redistribués. Vos contacts récupéreront les nouvelles enveloppes lors de leur prochaine visite sur /shared-with-me.",
+      "missingMasterKey": "Déverrouillez d'abord votre coffre, puis réessayez."
+    },
+    "enroll": {
+      "pinMismatch": "Les codes PIN ne correspondent pas",
+      "pinTooShort": "Le code PIN doit comporter au moins {min} chiffres",
+      "pinError": "Impossible d'enregistrer le code PIN",
+      "authenticatorError": "Impossible d'enregistrer l'authentificateur",
+      "title": "Accélérez vos prochains déverrouillages",
+      "description": "Choisissez au moins une méthode pour ne pas avoir à saisir vos 24 mots sur cet appareil la prochaine fois.",
+      "pinOption": "Code PIN",
+      "pinOptionHint": "Un code d'au moins {min} chiffres conservé uniquement sur cet appareil",
+      "biometricOption": "Biométrie (Face ID / Touch ID / Windows Hello)",
+      "biometricAvailable": "Utilisez l'authentificateur de votre appareil",
+      "biometricUnavailable": "Indisponible sur cet appareil",
+      "hardwareOption": "Clé de sécurité matérielle",
+      "hardwareAvailable": "YubiKey ou autre authentificateur amovible",
+      "hardwareUnavailable": "WebAuthn non pris en charge",
+      "skip": "Ignorer pour l'instant",
+      "newPinLabel": "Nouveau code PIN",
+      "pinPlaceholder": "Au moins {min} chiffres",
+      "confirmPinLabel": "Confirmer le code PIN",
+      "savePin": "Enregistrer le code PIN",
+      "back": "Retour"
+    },
+    "deviceUnlock": {
+      "loading": "Chargement du déverrouillage de l'appareil",
+      "method": {
+        "pin": "Code PIN",
+        "biometric": "Biométrie",
+        "hardwareKey": "Clé matérielle"
+      },
+      "removeLastTitle": "Supprimer le seul déverrouillage de cet appareil ?",
+      "removeTitle": "Supprimer {label} ?",
+      "removeLastDescription": "Vous devrez ressaisir vos 24 mots la prochaine fois.",
+      "removeConfirm": "Supprimer",
+      "removeError": "Impossible de supprimer cette méthode",
+      "removeAria": "Supprimer {label}",
+      "title": "Déverrouillage de l'appareil",
+      "subtitle": "Méthodes conservées uniquement sur cet appareil. Elles déverrouillent votre coffre ici sans ressaisir vos 24 mots.",
+      "locked": "Le coffre est verrouillé. Déverrouillez-le d'abord pour ajouter ou modifier les méthodes de déverrouillage de l'appareil.",
+      "empty": "Aucun déverrouillage d'appareil pour l'instant — vos 24 mots sont requis à chaque connexion sur cet appareil.",
+      "subtitlePin": "{label} · ajouté {time}",
+      "subtitleBiometric": "{label} · {state}",
+      "subtitleHardware": "{label} · {state}",
+      "biometricReady": "prête",
+      "biometricUnavailable": "indisponible sur cet appareil",
+      "hardwareReady": "WebAuthn prêt",
+      "hardwareUnsupported": "non pris en charge",
+      "addMethod": "Ajouter une méthode",
+      "footer": "Le déverrouillage de l'appareil est local à ce navigateur. Les autres appareils nécessitent leur propre configuration. Si vous perdez l'appareil, vos 24 mots permettent toujours de tout récupérer."
+    },
+    "passkey": {
+      "loading": "Chargement des clés d'accès",
+      "addError": "Impossible d'ajouter la clé d'accès.",
+      "removeTitle": "Supprimer cette clé d'accès ?",
+      "removeDescription": "Il vous faudra un autre moyen de vous connecter.",
+      "removeConfirm": "Supprimer",
+      "removeError": "Impossible de supprimer la clé d'accès.",
+      "title": "Accès biométrique",
+      "subtitle": "Connectez-vous avec Face ID, Touch ID ou la biométrie de votre appareil.",
+      "unsupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur. Utilisez une version récente de Chrome, Safari ou Edge sur un appareil doté d'un capteur biométrique.",
+      "lastUsed": "Dernière utilisation {time}",
+      "synced": " · Synchronisée",
+      "thisDeviceOnly": " · Cet appareil uniquement",
+      "removeAria": "Supprimer {name}",
+      "empty": "Aucune clé d'accès enregistrée pour l'instant.",
+      "addAnother": "Ajouter une autre clé d'accès",
+      "addFirst": "Ajouter une clé d'accès",
+      "footer": "La biométrie est pratique, mais elle ne doit jamais être votre seule méthode de récupération. Assurez-vous que votre kit physique est imprimé."
+    },
+    "totp": {
+      "loading": "Chargement de l'application d'authentification",
+      "startError": "Impossible de démarrer l'inscription.",
+      "verifyError": "Échec de la vérification.",
+      "phraseIncomplete": "Veuillez saisir les 24 mots de votre phrase de récupération.",
+      "bindError": "Impossible de lier la phrase de récupération.",
+      "disableTitle": "Désactiver l'application d'authentification ?",
+      "disableDescription": "Vous perdrez ce second facteur et devrez peut-être le reconfigurer.",
+      "disableConfirm": "Désactiver",
+      "disableError": "Impossible de désactiver l'authentificateur.",
+      "title": "Application d'authentification",
+      "subtitle": "Utilisez une application TOTP (Google Authenticator, 1Password, Authy) en alternative à la clé d'accès.",
+      "enrolled": "Authentificateur enregistré",
+      "verifiedAt": "Vérifié {time}",
+      "verified": "Vérifié",
+      "disableAria": "Désactiver l'application d'authentification",
+      "recoveryOn": "Récupération par phrase de récupération : ACTIVÉE",
+      "recoveryOff": "Récupération par phrase de récupération : DÉSACTIVÉE — vous ne pourrez pas réinitialiser la 2FA si vous perdez votre téléphone.",
+      "setUp": "Configurer",
+      "empty": "Aucune application d'authentification configurée.",
+      "active": "Authentificateur actif",
+      "setUpAuthenticator": "Configurer l'authentificateur",
+      "footer": "Les codes sont générés sur votre appareil et changent toutes les 30 secondes. Associez-les à un kit de récupération imprimé pour conserver l'accès en cas de perte du téléphone.",
+      "dialogTitleCode": "Configurer l'application d'authentification",
+      "dialogTitleBind": "Lier la 2FA à votre phrase de récupération",
+      "dialogDescriptionCode": "Ouvrez votre application d'authentification, scannez le QR code ci-dessous, puis saisissez le code à 6 chiffres pour confirmer.",
+      "hideSecret": "Masquer",
+      "showSecret": "Impossible de scanner ? Saisissez la clé manuellement",
+      "copied": "Copié",
+      "copy": "Copier",
+      "codeLabel": "Code à 6 chiffres",
+      "cancel": "Annuler",
+      "verifyButton": "Vérifier",
+      "bindDescriptionEnrollment": "Authentificateur activé. Vous pouvez, en option, lier votre phrase de récupération afin de pouvoir désactiver la 2FA si vous perdez un jour votre téléphone.",
+      "bindDescriptionPostHoc": "Liez votre phrase de récupération afin de pouvoir désactiver la 2FA si vous perdez un jour votre téléphone.",
+      "recoveryPhraseLabel": "Phrase de récupération",
+      "phraseHint": "La phrase ne quitte jamais votre appareil — seul un vérificateur dérivé est envoyé.",
+      "skip": "Ignorer",
+      "bindButton": "Lier la récupération",
+      "skipHint": "Ignorer est sans risque. Sans liaison, perdre votre téléphone signifie que vous devrez contacter le support pour réinitialiser la 2FA."
+    },
+    "center": {
+      "loading": "Chargement du Centre de sécurité"
+    },
+    "socialRecovery": {
+      "title": "Récupération sociale",
+      "statusActive": "Statut : active et sécurisée",
+      "statusAwaiting": "Statut : en attente de gardiens",
+      "guardiansVerified": "{count} gardiens vérifiés sur {total}",
+      "pending": "En attente…",
+      "resendInvites": "Renvoyer les invitations",
+      "inviteGuardian": "Inviter un gardien",
+      "manageRules": "Gérer les règles des gardiens"
+    },
+    "recoveryKitShortcut": {
+      "title": "Kit de récupération",
+      "description": "Générez une feuille de récupération physique et hors ligne contenant des fragments chiffrés des métadonnées de votre coffre.",
+      "cta": "Imprimer le kit physique"
+    },
+    "masterRecovery": {
+      "title": "Récupération maîtresse",
+      "descriptionBefore": "Votre clé maîtresse est divisée en",
+      "shardsEmphasis": "4 fragments cryptographiques",
+      "descriptionMiddle": "grâce au partage de secret de Shamir — un sur cet appareil et trois détenus par vos contacts de confiance. Vous avez choisi un seuil de",
+      "descriptionAfter": "fragments pour reconstruire le coffre. Toute combinaison atteignant ce seuil fonctionne — vos contacts collaborent sur l'appareil, jamais sur le serveur. Keeplas ne détient aucun fragment.",
+      "recoveryPhraseLabel": "Phrase de récupération",
+      "recoveryPhraseHashed": "Hachée et vérifiée",
+      "recoveryPhraseNotGenerated": "Pas encore générée",
+      "guardianShardLabel": "Fragment de gardien n°{index}",
+      "guardianShardHint": "Détenu par {name}",
+      "configureAdditional": "Configurer un fragment supplémentaire"
+    },
+    "activityLog": {
+      "title": "Journal d'activité",
+      "hashChained": "Chaîné par hachage · {count} entrées",
+      "totalEvents": "Total des événements",
+      "lastActivity": "Dernière activité",
+      "pendingAccess": "Accès en attente",
+      "approvedAccess": "Accès approuvés",
+      "empty": "Aucun événement enregistré pour l'instant.",
+      "actor": "acteur : {actor}"
+    },
+    "lastAccess": {
+      "today": "Aujourd'hui, {time}",
+      "from": "depuis {country}",
+      "verifiedSession": "Appareil vérifié · session à connaissance nulle",
+      "label": "Dernier accès"
+    },
+    "recoveryKit": {
+      "loading": "Chargement du kit de récupération",
+      "title": "Clé de récupération maîtresse",
+      "intro": "Ce document est l'unique moyen de récupérer votre Keeplas Architectural Vault en cas de perte d'accès. Conservez-le dans un lieu physiquement sécurisé et ignifuge. Ne partagez ces identifiants avec personne.",
+      "relock": "Reverrouiller",
+      "printSecureCopy": "Imprimer une copie sécurisée",
+      "generatingPdf": "Génération du PDF…",
+      "downloadPdf": "Télécharger le PDF",
+      "architecturalVault": "The Architectural Vault",
+      "identityTitle": "Vérification d'identité",
+      "identityDescription": "Cette clé est liée cryptographiquement à votre empreinte biométrique et à votre registre de vie vérifié.",
+      "coldStorageTitle": "Stockage à froid",
+      "coldStorageDescription": "Recommandé pour un stockage physique uniquement. Les sauvegardes hors ligne empêchent toute extraction numérique.",
+      "documentId": "Identifiant du document",
+      "account": "Compte",
+      "step01": "Étape 01",
+      "step02": "Étape 02",
+      "qrTitle": "QR code de récupération",
+      "qrDescription": "Scannez ce code à l'aide du portail de récupération Keeplas ou de tout appareil sécurisé compatible Material pour lancer le processus de restauration du coffre.",
+      "checkE2e": "Protocole chiffré de bout en bout",
+      "checkSingleUse": "Jeton de récupération à usage unique",
+      "seedTitle": "Phrase de récupération",
+      "finalWarningTitle": "Avertissement final",
+      "finalWarningDescription": "Perdre ce document signifie la perte définitive de tous les actifs hérités. Keeplas ne conserve aucune copie de votre phrase de récupération.",
+      "userValidationTitle": "Validation de l'utilisateur",
+      "generatedOn": "Généré le {date}.",
+      "qrSealed": "QR scellé jusqu'au déverrouillage",
+      "secureScanPoint": "Point de scan sécurisé",
+      "phraseLengthError": "Votre phrase de récupération doit comporter exactement 12 ou 24 mots.",
+      "unlockReveal": "Déverrouiller et révéler",
+      "unlockDescription": "Saisissez votre phrase de récupération pour afficher le QR code et la grille de mots. Votre phrase est traitée localement et n'est jamais envoyée à Keeplas.",
+      "pasteHint": "Collez les 24 mots (ou 12 si votre phrase en compte 12). La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
+      "revealCta": "Révéler le kit de récupération"
+    }
+  },
+  "sharedWithMe": {
+    "list": {
+      "empty": {
+        "title": "Aucun coffre ne vous est encore confié",
+        "description": "Lorsqu'une personne vous ajoute comme contact de confiance et que vous acceptez l'invitation, le coffre qu'elle protège apparaîtra ici."
+      },
+      "restoring": "Restauration de vos fragments sur cet appareil — vos fragments chiffrés sont déchiffrés localement et ne quittent jamais votre navigateur."
+    },
+    "card": {
+      "phase": {
+        "released": "Ouvert",
+        "recovery": "Récupération",
+        "actionNeeded": "Action requise",
+        "guarding": "En garde",
+        "awaitingRelease": "En attente d'ouverture"
+      },
+      "relative": {
+        "justNow": "à l'instant",
+        "minutes": "il y a {count} min",
+        "hours": "il y a {count} h",
+        "days": "il y a {count} j",
+        "months": "il y a {count} mois",
+        "years": "il y a {count} ans"
+      },
+      "verifiedAt": "Vérifié {relative}",
+      "verifying": "Vérification…",
+      "type": {
+        "recipient": "Bénéficiaire",
+        "trust": "Confiance"
+      },
+      "role": {
+        "family": "Famille",
+        "friend": "Ami",
+        "lawyer": "Juridique",
+        "doctor": "Médical",
+        "other": "Autre",
+        "contact": "Contact"
+      },
+      "fragmentHeld": "Fragment conservé · {status}",
+      "noFragment": "Aucun fragment pour l'instant",
+      "fragmentHint": "Un fragment de récupération chiffré de ce coffre est scellé avec votre clé publique et stocké sur cet appareil. Avec les autres contacts de confiance (seuil défini par le propriétaire), vous pouvez aider à rouvrir le coffre — seul, vous ne le pouvez pas. Il est revérifié automatiquement à chaque ouverture de cette page, pour que le propriétaire sache que vous pouvez toujours le déchiffrer.",
+      "guarding": {
+        "recipient": "Vous recevrez ici ce que {ownerName} vous a laissé si son coffre venait à être ouvert.",
+        "trust": "Rien à faire pour le moment — on ne vous sollicitera que si {ownerName} cesse de répondre à ses vérifications d'activité."
+      },
+      "released": {
+        "cta": "Voir le coffre mémoriel",
+        "itemCountOne": "{count} élément",
+        "itemCountOther": "{count} éléments"
+      },
+      "actionNeeded": {
+        "prompt": "{ownerName} a cessé de répondre à ses vérifications d'activité. Si vous ne parvenez vraiment pas à le/la joindre, confirmez-le.",
+        "hint": "Deux contacts de confiance doivent confirmer avant l'ouverture d'une fenêtre de grâce de 72 heures. Pendant cette fenêtre, le propriétaire peut encore annuler en se manifestant. Ce n'est qu'une fois écoulée que le coffre peut être récupéré ou ouvert.",
+        "confirm": "Confirmer — cette personne est injoignable",
+        "cancel": "Annuler",
+        "done": "Confirmation enregistrée. Les autres contacts de confiance seront prévenus.",
+        "submitting": "Envoi…",
+        "mark": "Signaler comme injoignable",
+        "error": "Impossible de confirmer l'impossibilité de joindre la personne."
+      },
+      "recovery": {
+        "title": "Récupération en cours",
+        "hint": "La fenêtre de grâce de 72 h s'est écoulée sans que le propriétaire annule. Vous et les autres contacts de confiance pouvez désormais soumettre vos fragments. Une fois le seuil atteint, n'importe quel participant peut reconstruire la clé maîtresse entièrement sur son appareil — le serveur ne voit jamais les fragments en clair.",
+        "submissionCountOne": "{count} soumission",
+        "submissionCountOther": "{count} soumissions",
+        "sealing": "Scellement de votre fragment pour les pairs…",
+        "submit": "Soumettre mon fragment",
+        "submittedToPeersOne": "Votre fragment a été transmis à {count} pair.",
+        "submittedToPeersOther": "Votre fragment a été transmis à {count} pairs.",
+        "reconstructed": "Clé maîtresse reconstruite sur cet appareil. L'accès au coffre mémoriel est disponible.",
+        "reconstructing": "Reconstruction…",
+        "awaitingPeers": "En attente des soumissions des pairs…",
+        "reconstruct": "Reconstruire la clé maîtresse"
+      }
+    },
+    "memorial": {
+      "noAccess": {
+        "title": "Aucun accès mémoriel",
+        "description": "Ce coffre ne vous a pas été ouvert, ou vous n'en êtes pas l'un des bénéficiaires."
+      },
+      "back": "Retour à Partagé avec moi",
+      "backShort": "Partagé avec moi",
+      "title": "À la mémoire de {ownerName}",
+      "subtitleOne": "Accès en lecture seule au {count} élément que {ownerName} vous a laissé. Tout est déchiffré sur votre appareil.",
+      "subtitleOther": "Accès en lecture seule aux {count} éléments que {ownerName} vous a laissés. Tout est déchiffré sur votre appareil.",
+      "messageFrom": "Un message de {ownerName}",
+      "rereadMessage": "Relire le message",
+      "noReadableItems": "Aucun élément lisible ne vous a été ouvert.",
+      "includesAttachments": "Contient des pièces jointes · ",
+      "read": "Lire",
+      "unavailableLegacy": "Indisponible (format hérité)"
+    },
+    "item": {
+      "decryptFailedLegacy": "[Déchiffrement impossible — cet élément a été stocké dans un format hérité]",
+      "decryptFailed": "[Déchiffrement impossible]",
+      "notAvailable": {
+        "title": "Élément indisponible",
+        "description": "Cet élément ne vous a pas été ouvert."
+      },
+      "backToMemorial": "Coffre mémoriel de {ownerName}",
+      "categoryInMemory": "{category} · À la mémoire de {ownerName}",
+      "decrypting": "Déchiffrement…",
+      "linkedUrls": "URL associées"
+    },
+    "introCard": {
+      "decryptFailedLegacy": "[Déchiffrement impossible — format hérité]",
+      "decryptFailed": "[Déchiffrement impossible]",
+      "decrypting": "Déchiffrement du message…"
+    },
+    "introDialog": {
+      "title": "Un message de {ownerName}",
+      "description": "Prenez un instant — ceci vous a été laissé.",
+      "continue": "Accéder au coffre"
+    },
+    "attachments": {
+      "loading": "Chargement des pièces jointes sécurisées…",
+      "title": "Pièces jointes sécurisées · {count}",
+      "downloadFailed": "Échec du téléchargement ({status})",
+      "decryptFailed": "Impossible de déchiffrer la pièce jointe.",
+      "encrypted": "Chiffré",
+      "download": "Télécharger",
+      "decrypting": "Déchiffrement…",
+      "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
+      "open": "Ouvrir"
+    }
+  },
+  "trustedContacts": {
+    "header": {
+      "titleLine1": "Cercle de confiance &",
+      "titleLine2": "transmission",
+      "subtitle": "Désignez les personnes qui protègent votre héritage et décidez qui reçoit quels éléments du coffre lors d'un déclenchement. Gérez ici vos gardiens et vos bénéficiaires, puis regroupez-les en groupes de transmission.",
+      "howItWorks": "Comment fonctionnent les contacts de confiance",
+      "medicalIdCallout": "Pour les urgences aiguës (accident, malaise soudain), configurez l'ID médical intégré à votre téléphone — les secouristes le consultent en premier.",
+      "learnHow": "Découvrir comment →"
+    },
+    "tabs": {
+      "contacts": "Contacts",
+      "releaseGroups": "Groupes de transmission"
+    },
+    "guardians": {
+      "heading": "Le rôle des gardiens",
+      "roles": {
+        "holdsShard": {
+          "title": "Détient un fragment de récupération",
+          "description": "Chaque contact de confiance conserve un fragment chiffré de votre clé maîtresse. La confirmation par deux d'entre eux, puis la soumission de leurs fragments, est ce qui déverrouille le coffre."
+        },
+        "confirmsUnreachable": {
+          "title": "Confirme que vous êtes injoignable",
+          "description": "Une fois que Life Check a épuisé tous les canaux, vos contacts de confiance sont notifiés. Deux d'entre eux doivent confirmer que vous êtes injoignable pour ouvrir la fenêtre de grâce de 72 heures."
+        },
+        "releasesVault": {
+          "title": "Libère le coffre et les bénéficiaires",
+          "description": "Une fois la fenêtre de grâce écoulée sans réponse de votre part, les soumissions de fragments atteignent le quorum et le coffre se déverrouille. Les bénéficiaires reçoivent alors les éléments qui leur ont été attribués."
+        }
+      }
+    },
+    "recoveryNetwork": {
+      "title": "Réseau de récupération",
+      "help": "Indique si votre récupération sociale est opérationnelle. Le grand nombre correspond au nombre de gardiens ayant accepté, sur les {threshold} nécessaires pour déverrouiller le coffre (votre quorum, défini lors de l'intégration). En dessous du quorum, la récupération est impossible. Au quorum, elle fonctionne mais un seul gardien manquant la compromet. Au-dessus du quorum, vous disposez d'une marge. Les invitations en attente et la distribution des fragments sont affichées pour que vous sachiez exactement ce qu'il reste à faire.",
+      "quorum": "quorum",
+      "stepLabel": "Étape 2 · Fragments Shamir nécessaires pour déverrouiller le coffre",
+      "state": {
+        "unprotected": "Non protégé — invitez votre premier gardien",
+        "atRisk": "À risque — {count} de plus pour atteindre le quorum",
+        "quorumMet": "Quorum atteint — ajoutez-en pour plus de redondance",
+        "resilientOne": "Résilient — {count} gardien de marge",
+        "resilientMany": "Résilient — {count} gardiens de marge"
+      },
+      "accepted": "Acceptés",
+      "pendingInvites": "Invitations en attente",
+      "shardsDistributed": "Fragments distribués",
+      "maxGuardians": "Gardiens maximum"
+    },
+    "oneGuardianWarning": {
+      "title": "Un seul gardien ne suffit pas",
+      "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. La récupération ne peut pas fonctionner avec un seul gardien pour deux raisons : au moins 2 contacts de confiance doivent voter que vous êtes injoignable avant l'ouverture de la fenêtre de grâce, et un gardien isolé n'a aucun pair avec qui échanger des fragments, de sorte que le coffre ne peut jamais atteindre les 2 fragments nécessaires pour reconstituer votre clé."
+    },
+    "emptyState": {
+      "title": "Invitez votre premier gardien",
+      "description": "Invitez au moins 2 gardiens de confiance pour la récupération. Le modèle de fragments actuel utilise jusqu'à 3 détenteurs de fragments ; les bénéficiaires ne sont soumis à aucune limite."
+    },
+    "trustContacts": {
+      "heading": "Contacts de confiance",
+      "help": "Chaque contact de confiance détient un fragment chiffré de votre clé de récupération. Ils peuvent collectivement vous aider à retrouver l'accès à votre coffre. Limité à 5 par conception — moins convient, davantage affaiblirait le modèle de sécurité.",
+      "inviteNext": "Inviter le prochain contact de confiance",
+      "slotsRemaining": "{count} places restantes"
+    },
+    "recipientsOnly": {
+      "heading": "Bénéficiaires",
+      "help": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement (message conditionnel, libération du coffre). Elles ne détiennent pas de fragment de récupération, il n'y a donc aucune limite au nombre que vous pouvez ajouter.",
+      "addTitle": "Ajouter un bénéficiaire",
+      "addDescription": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement — aucun rôle de récupération, aucun fragment, aucune limite.",
+      "addButton": "Ajouter un bénéficiaire"
+    },
+    "howGroups": {
+      "heading": "Fonctionnement des groupes",
+      "intro": "Lorsque vous ajoutez un élément au coffre, vous pouvez choisir un ou plusieurs groupes. Lors d'un déclenchement, seuls les contacts de ces groupes reçoivent cet élément. Les éléments sans groupe sont par défaut destinés à tous les contacts de confiance.",
+      "step1": "Créez des groupes par contexte (Famille, Juridique…)",
+      "step2": "Ajoutez des contacts de confiance et des bénéficiaires aux groupes",
+      "step3": "Choisissez des groupes lors du scellement des éléments dans le coffre"
+    },
+    "groups": {
+      "newGroup": "Nouveau groupe",
+      "newGroupHint": "Ajouter un autre contexte de transmission"
+    },
+    "accessRequests": {
+      "heading": "Accès d'urgence",
+      "help": "Les contacts de confiance ouvrent cette demande lorsque Life Check a épuisé tous les canaux et que vous ne pouvez plus être joint. Une fois que le quorum confirme votre indisponibilité, une fenêtre de grâce de 72 heures s'ouvre — connectez-vous et cliquez sur Je vais bien pour l'annuler. Passé ce délai, les contacts soumettent leurs fragments et le coffre s'ouvre en mode mémorial en lecture seule.",
+      "status": {
+        "pending": "En attente",
+        "approved": "Approuvé",
+        "denied": "Refusé",
+        "autoDenied": "Refusé automatiquement",
+        "expired": "Expiré",
+        "revoked": "Révoqué"
+      },
+      "initiatedTitle": "Accès d'urgence initié",
+      "confirmedCount": "{confirmations} contacts sur {quorumRequired} ont confirmé que vous êtes injoignable.",
+      "quorumReached": "Quorum atteint",
+      "unlockWindowOpen": "La fenêtre de déverrouillage du coffre est ouverte. Annulez maintenant si vous allez bien.",
+      "gracePeriodEnds": "Fin de la période de grâce : {date}",
+      "cancelling": "Annulation…",
+      "cancelButton": "Je vais bien — annuler l'accès d'urgence",
+      "history": "Historique"
+    },
+    "contactCard": {
+      "recipient": "Bénéficiaire",
+      "trust": "Confiance",
+      "fragmentAssigned": "Fragment attribué"
+    },
+    "detail": {
+      "close": "Fermer les détails du contact",
+      "details": "Détails",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "role": "Rôle",
+      "invited": "Invité",
+      "accepted": "Accepté",
+      "recoveryRole": "Rôle de récupération",
+      "recipientOnlyDescription": "Bénéficiaire uniquement — ne détient aucun fragment de récupération. Cette personne reçoit uniquement les éléments du coffre qui lui sont destinés lors d'un déclenchement.",
+      "shardIndex": "Index du fragment",
+      "fragmentAssigned": "Fragment attribué",
+      "fragmentAssignedHelp": "Un fragment Shamir chiffré de votre clé maîtresse a été enveloppé avec la clé publique de ce contact, puis stocké. Cette personne devra le soumettre avec le seuil de récupération pour que le coffre puisse être reconstitué.",
+      "verificationHelp": "Vérification cryptographique aller-retour confirmant que la paire de clés du contact est fonctionnelle. Le propriétaire enveloppe un texte clair connu avec la clé publique du contact, et le contact le déchiffre sur son appareil — prouvant qu'il détient la clé privée correspondante sans exposer aucun contenu du coffre.",
+      "lastVerified": "Dernière vérification {relative} ({date}).",
+      "itemsReleased": "Éléments libérés vers ce contact",
+      "noItemsRouted": "Aucun élément du coffre n'est encore acheminé vers ce contact.",
+      "recipientMode": {
+        "explicit": "Partagé directement",
+        "groups": "Via un groupe de transmission",
+        "default": "Par défaut · tous les contacts de confiance"
+      },
+      "releaseGroups": "Groupes de transmission",
+      "notMemberOfGroup": "Membre d'aucun groupe de transmission.",
+      "resending": "Renvoi en cours…",
+      "invitationResent": "Invitation renvoyée ✓",
+      "resendInvitation": "Renvoyer l'invitation",
+      "revoking": "Révocation…",
+      "confirmRevoke": "Confirmer la révocation",
+      "cancel": "Annuler",
+      "revokeContact": "Révoquer le contact"
+    },
+    "createGroup": {
+      "error": "Échec de la création du groupe",
+      "title": "Créer un groupe de transmission",
+      "description": "Un ensemble réutilisable de bénéficiaires que vous pouvez attribuer aux éléments du coffre.",
+      "nameLabel": "Nom du groupe *",
+      "namePlaceholder": "ex. Famille, Juridique, Professionnel",
+      "descriptionLabel": "Description (facultatif)",
+      "descriptionPlaceholder": "Quel type d'éléments ce groupe recevra-t-il ?",
+      "membersLabel": "Membres",
+      "membersPlaceholder": "Ajouter des contacts à ce groupe",
+      "cancel": "Annuler",
+      "creating": "Création…",
+      "submit": "Créer le groupe"
+    },
+    "editGroup": {
+      "error": "Échec de la mise à jour du groupe",
+      "title": "Modifier le groupe",
+      "description": "Mettez à jour le nom, la description et les membres de ce groupe de transmission.",
+      "nameLabel": "Nom du groupe",
+      "defaultNameFixed": "Le nom du groupe par défaut est fixe.",
+      "descriptionLabel": "Description",
+      "membersLabel": "Membres",
+      "membersPlaceholder": "Ajouter des contacts",
+      "membersEmptyPlaceholder": "Aucun membre sélectionné",
+      "membersEmptyMessage": "Aucun contact disponible.",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "submit": "Enregistrer les modifications"
+    },
+    "distribute": {
+      "heading": "Distribuer les fragments",
+      "help": "Divise votre clé maîtresse en 5 fragments Shamir selon le seuil que vous avez choisi et scelle chaque fragment avec la clé publique d'un contact de confiance. Relancer cette opération redivise la clé et invalide tout fragment précédemment distribué — par conception.",
+      "belowMin": "La récupération nécessite au moins 2 contacts de confiance. Invitez-en et confirmez-en un de plus avant de distribuer.",
+      "pendingOne": "{pending} contact de confiance sur {total} a encore besoin d'un fragment.",
+      "pendingMany": "{pending} contacts de confiance sur {total} ont encore besoin d'un fragment.",
+      "allCurrent": "Tous les contacts de confiance disposent d'un fragment à jour.",
+      "distributing": "Distribution…",
+      "distributeNow": "Distribuer maintenant",
+      "success": "Fragments distribués à tous les contacts éligibles.",
+      "missingMasterKey": "Déverrouillez d'abord votre coffre, puis réessayez."
+    },
+    "invite": {
+      "errorMissingContact": "Ajoutez un e-mail ou un numéro de téléphone",
+      "errorInvalidEmail": "Veuillez saisir un e-mail valide",
+      "errorInvalidPhone": "Veuillez saisir un numéro de téléphone valide",
+      "errorSend": "Échec de l'envoi de l'invitation",
+      "titleRecipient": "Ajouter un bénéficiaire",
+      "titleTrust": "Inviter un contact de confiance",
+      "descriptionRecipient": "Cette personne recevra des éléments du coffre uniquement lorsqu'un de vos déclencheurs s'active. Elle ne détient aucun fragment de récupération.",
+      "descriptionTrust": "Cette personne recevra un fragment de récupération et pourra vous aider à retrouver l'accès à votre coffre.",
+      "fullNameLabel": "Nom complet *",
+      "fullNamePlaceholder": "Saisissez son nom complet",
+      "emailLabel": "E-mail",
+      "phoneLabel": "Téléphone",
+      "contactHint": "Ajoutez un e-mail, un numéro de téléphone, ou les deux — au moins un est requis.",
+      "roleLabel": "Rôle",
+      "roleHelp": "Sa relation avec vous. Keeplas l'utilise pour faire ressortir le bon contact selon les scénarios (médical, juridique, familial) et dans l'accueil.",
+      "rolePlaceholder": "Sélectionnez un rôle",
+      "roles": {
+        "family": "Membre de la famille",
+        "friend": "Ami(e)",
+        "lawyer": "Avocat(e)",
+        "doctor": "Médecin",
+        "other": "Autre"
+      },
+      "roleInKeeplasLabel": "Rôle dans Keeplas",
+      "roleInKeeplasHelp": "Contact de confiance = détient un fragment de récupération, compte dans votre limite de 5 contacts de confiance, peut aider à récupérer votre compte. Bénéficiaire uniquement = reçoit des éléments lors d'un déclenchement mais sans rôle de récupération ni limite.",
+      "trustOption": {
+        "title": "Contact de confiance",
+        "description": "Détient un fragment de récupération. Compte dans votre limite de 5 contacts de confiance."
+      },
+      "recipientOption": {
+        "title": "Bénéficiaire uniquement",
+        "description": "Reçoit des éléments lors d'un déclenchement. Aucun fragment, aucune limite, aucun rôle de récupération."
+      },
+      "cancel": "Annuler",
+      "sending": "Envoi…",
+      "submitRecipient": "Ajouter un bénéficiaire",
+      "submitTrust": "Envoyer l'invitation"
+    },
+    "groupCard": {
+      "default": "Par défaut",
+      "memberCountOne": "{count} membre",
+      "memberCountMany": "{count} membres",
+      "noMembers": "Aucun membre pour l'instant",
+      "manageMembers": "Gérer les membres",
+      "more": "Plus",
+      "setDefault": "Définir comme groupe par défaut",
+      "deleting": "Suppression…",
+      "confirmDelete": "Confirmer la suppression",
+      "cancel": "Annuler",
+      "deleteGroup": "Supprimer le groupe"
+    },
+    "membersSelect": {
+      "placeholder": "Ajouter des contacts",
+      "searchPlaceholder": "Rechercher des contacts…",
+      "emptyMessage": "Invitez d'abord des contacts pour pouvoir les ajouter ici.",
+      "addNew": "Ajouter un nouveau contact"
+    },
+    "multiSelect": {
+      "placeholder": "Sélectionner…",
+      "emptyMessage": "Aucune option trouvée.",
+      "searchPlaceholder": "Rechercher…",
+      "selectedCount": "{count} sélectionné(s)"
+    }
+  },
+  "vault": {
+    "upload": {
+      "savingTitle": "Enregistrement de {count} pièce jointe",
+      "savingTitlePlural": "Enregistrement de {count} pièces jointes",
+      "encrypting": "{label} — chiffrement…",
+      "progress": "{label} — {completed}/{total} fichiers traités · {done} / {totalBytes}",
+      "savedTitle": "Pièces jointes enregistrées",
+      "savedDescription": "{label} — {count} fichier chiffré et téléversé",
+      "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
+      "failedTitle": "Échec de certaines pièces jointes",
+      "failedDescription": "{label} — {completed}/{total} fichiers enregistrés · {failed} en échec ({error})",
+      "retryAltText": "Réessayer l'envoi des pièces jointes en échec",
+      "retry": "Réessayer"
+    },
+    "page": {
+      "loading": "Chargement de votre coffre",
+      "allSections": "Toutes les sections du coffre",
+      "title": "Coffre numérique",
+      "subtitle": "La documentation essentielle de votre vie, protégée par un chiffrement de bout en bout à connaissance nulle.",
+      "countOne": "Affichage de l'unique élément de cette catégorie.",
+      "countOther": "Affichage des {count} éléments de cette catégorie."
+    },
+    "sections": {
+      "documents": {
+        "label": "Documents personnels",
+        "empty": "Aucun document personnel pour l'instant. Ajoutez le premier."
+      },
+      "health": {
+        "label": "Directives médicales",
+        "empty": "Aucune directive médicale pour l'instant. Ajoutez la première."
+      },
+      "legal": {
+        "label": "Documents juridiques",
+        "empty": "Aucun document juridique pour l'instant. Ajoutez le premier."
+      },
+      "business": {
+        "label": "Continuité d'activité",
+        "empty": "Aucun plan de continuité d'activité pour l'instant. Ajoutez le premier."
+      },
+      "financial": {
+        "label": "Actifs financiers",
+        "empty": "Aucun actif financier pour l'instant. Ajoutez le premier."
+      },
+      "credentials": {
+        "label": "Identifiants",
+        "empty": "Aucun identifiant pour l'instant. Ajoutez le premier."
+      },
+      "digital": {
+        "label": "Actifs numériques",
+        "empty": "Aucun actif numérique pour l'instant. Ajoutez le premier."
+      },
+      "messages": {
+        "label": "Messages conditionnels",
+        "empty": "Aucun message conditionnel pour l'instant."
+      }
+    },
+    "section": {
+      "viewAll": "Tout voir",
+      "addEntry": "Ajouter une entrée",
+      "viewAllCount": "Voir les {count} éléments"
+    },
+    "card": {
+      "updated": "Mis à jour le {date}"
+    },
+    "transmission": {
+      "private": "Privé",
+      "groups": "{count} groupes",
+      "allContacts": "Tous les contacts de confiance"
+    },
+    "recipients": {
+      "label": "Qui reçoit cet élément au déclenchement ?",
+      "labelIntro": "Choisissez les contacts qui verront ce message de bienvenue",
+      "placeholderPrivate": "Personne — garder privé",
+      "placeholderIntro": "Choisissez au moins un bénéficiaire",
+      "searchPlaceholder": "Rechercher des groupes ou des contacts…",
+      "emptyMessage": "Aucun groupe ni contact pour l'instant.",
+      "helper": "Choisissez un ou plusieurs groupes (vos contacts de confiance forment déjà un groupe), ou des personnes précises. Vide = l'élément reste privé.",
+      "helperIntro": "Diffusez à tous vos contacts de confiance, ciblez un groupe, ou choisissez des personnes précises. Les combinaisons de groupes et d'individus sont autorisées.",
+      "allContacts": "Tous les contacts de confiance",
+      "allContactsHint": "Tous ceux qui ont accepté votre invitation",
+      "broadcastLabel": "Diffusion",
+      "groupsLabel": "Groupes",
+      "individualsLabel": "Contacts individuels",
+      "contactCountOne": "{count} contact",
+      "contactCountOther": "{count} contacts"
+    },
+    "links": {
+      "empty": "Aucun lien enregistré.",
+      "urlLabel": "URL du lien",
+      "hiddenLabel": "URL du lien masquée",
+      "hide": "Masquer le lien",
+      "reveal": "Révéler le lien",
+      "openNewTab": "Ouvrir le lien dans un nouvel onglet"
+    },
+    "linkInput": {
+      "label": "Liens enregistrés",
+      "description": "Les URL sont chiffrées avant de quitter votre appareil. Aucune n'est récupérée ni prévisualisée.",
+      "invalid": "Saisissez une URL valide (avec https://).",
+      "remove": "Supprimer le lien",
+      "addAnother": "Ajouter un autre lien"
+    },
+    "attachments": {
+      "loading": "Chargement des pièces jointes sécurisées…",
+      "heading": "Pièces jointes sécurisées · {count}",
+      "encrypted": "Chiffré",
+      "download": "Télécharger",
+      "decrypting": "Déchiffrement…",
+      "decryptError": "Impossible de déchiffrer la pièce jointe.",
+      "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
+      "open": "Ouvrir"
+    },
+    "detail": {
+      "notFound": "Élément introuvable",
+      "backToVault": "Retour au coffre",
+      "edit": "Modifier",
+      "deletePermanently": "Supprimer définitivement",
+      "summaryPrivate": "Privé",
+      "summaryReleasedTo": "Transmis à {names}",
+      "summaryReleasedAll": "Transmis à tous les contacts de confiance",
+      "decryptedContent": "Contenu déchiffré",
+      "decrypting": "Déchiffrement…",
+      "linkedUrls": "URL liées",
+      "timestamps": "Créé le {created} · Mis à jour le {updated}"
+    },
+    "editor": {
+      "title": "Modifier l'élément",
+      "fieldTitle": "Titre",
+      "fieldCategory": "Catégorie",
+      "fieldContent": "Contenu sécurisé",
+      "contentPlaceholder": "Rédigez le contenu sécurisé de cet élément…",
+      "fieldAttachments": "Pièces jointes sécurisées",
+      "noAttachments": "Aucune pièce jointe pour l'instant.",
+      "addFile": "Ajouter un fichier",
+      "fileHint": "PDF, JPG ou PNG jusqu'à 50 Mo. Les fichiers sont chiffrés côté client avant l'envoi.",
+      "cancel": "Annuler",
+      "encrypting": "Chiffrement…",
+      "saveChanges": "Enregistrer les modifications",
+      "errorUnsupportedType": "{name} — type de fichier non pris en charge. PDF, JPG ou PNG uniquement.",
+      "errorTooLarge": "{name} — dépasse la limite de 50 Mo.",
+      "errorInvalidUrl": "URL invalide : {url}",
+      "errorNoKey": "Clé de chiffrement indisponible pour les nouvelles pièces jointes.",
+      "errorUpdate": "Échec de la mise à jour.",
+      "progressEncrypting": "Chiffrement du contenu…",
+      "progressRemoving": "Suppression des pièces jointes…",
+      "willBeDeleted": "Sera supprimé",
+      "willBeEncrypted": "Sera chiffré à l'enregistrement",
+      "undo": "Annuler",
+      "remove": "Supprimer"
+    },
+    "delete": {
+      "title": "Supprimer définitivement cet élément ?",
+      "description": "Cette action effacera l'élément, chaque pièce jointe sécurisée et toutes les clés chiffrées des bénéficiaires. Elle est irréversible — il n'y a ni archive, ni corbeille, ni récupération possible, même avec votre phrase de récupération.",
+      "confirmPrefix": "Saisissez",
+      "confirmSuffix": "pour confirmer",
+      "cancel": "Annuler",
+      "deleting": "Suppression…",
+      "deleteForever": "Supprimer définitivement"
+    },
+    "dialog": {
+      "breadcrumbVault": "Coffre",
+      "breadcrumbWelcome": "Message de bienvenue",
+      "breadcrumbNewAsset": "Sécuriser un nouvel actif",
+      "titleIntro": "Enregistrer un message de bienvenue",
+      "titleVault": "Ajouter au coffre",
+      "descriptionIntro": "Un message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Chiffré sur votre appareil avant de le quitter.",
+      "descriptionVault": "Déposez un actif essentiel. Les fichiers sont chiffrés sur votre appareil avant de le quitter. AES-256-GCM.",
+      "section01": "Identité de l'actif",
+      "section01Intro": "Identité du message",
+      "section02": "Documentation sécurisée",
+      "section03": "URL liées",
+      "section04": "Logique de transmission",
+      "section04Intro": "Qui voit ce message ?",
+      "fieldTitle": "Titre",
+      "fieldName": "Nom de l'actif",
+      "titlePlaceholder": "ex. Quelques mots de ma part",
+      "namePlaceholder": "ex. Compte de courtage principal",
+      "fieldCategory": "Catégorie",
+      "categoryPlaceholder": "Choisissez une catégorie",
+      "fieldYourMessage": "Votre message",
+      "fieldMessage": "Message",
+      "fieldDescription": "Description de l'actif",
+      "optional": "(facultatif)",
+      "bodyPlaceholderIntro": "Adressez quelques mots à vos contacts de confiance. Ils les verront au-dessus des éléments que vous leur avez laissés…",
+      "bodyPlaceholderLetter": "Rédigez le message qui sera transmis…",
+      "bodyPlaceholderAsset": "Décrivez l'importance et l'emplacement de cet actif…",
+      "releaseOn": "Transmettre le",
+      "releaseDatePlaceholder": "Choisissez une date de transmission",
+      "lifeCheckCalloutPrefix": "Utilise la cadence et l'escalade globales de votre Life Check. Ajustez le seuil d'inactivité une seule fois dans les",
+      "lifeCheckCalloutLink": "paramètres Life Check",
+      "lifeCheckCalloutSuffix": "— ils s'appliquent à chaque lettre dotée de ce déclencheur.",
+      "introCallout": "Transmis avec votre coffre lorsque Life Check confirme que vous êtes injoignable. Affiché aux bénéficiaires en haut de leur vue commémorative.",
+      "recordAudio": "Enregistrer un audio",
+      "recordVideo": "Enregistrer une vidéo",
+      "orDropFile": "ou déposez un fichier ci-dessous",
+      "dropTitle": "Glissez-déposez des fichiers sécurisés",
+      "dropHint": "PDF, JPG ou PNG jusqu'à 50 Mo par fichier. Chiffrés dès leur arrivée.",
+      "browseSystem": "Parcourir le système",
+      "removeFile": "Supprimer {name}",
+      "cancel": "Annuler",
+      "sealing": "Scellement…",
+      "saveWelcome": "Enregistrer le message de bienvenue",
+      "secureToVault": "Sécuriser l'actif dans le coffre",
+      "errorNoKey": "Clé de chiffrement indisponible. Veuillez vous reconnecter.",
+      "errorNameRequired": "Le nom de l'actif est requis.",
+      "errorReleaseDate": "Choisissez une date de transmission pour le déclencheur basé sur le temps.",
+      "errorIntroRecipient": "Choisissez au moins un bénéficiaire — un message de bienvenue sans audience n'est jamais affiché.",
+      "errorSave": "Échec de l'enregistrement de l'élément.",
+      "progressGenKey": "Génération de la clé propre à l'élément…",
+      "progressSealing": "Scellement de l'entrée du coffre…"
+    },
+    "triggers": {
+      "label": "Déclencheur",
+      "placeholder": "Choisissez un déclencheur",
+      "lifeCheck": {
+        "label": "Échec vérifié du Life Check",
+        "hint": "Transmis lorsque vous cessez de répondre aux Life Checks pendant le nombre de jours configuré."
+      },
+      "timeBased": {
+        "label": "Transmission planifiée",
+        "hint": "Transmis à une date précise du calendrier — utile pour les anniversaires, les commémorations ou les lettres de majorité."
+      },
+      "manual": {
+        "label": "Déclencheur manuel",
+        "hint": "Transmis uniquement lorsque vous (ou un curateur) l'approuvez explicitement depuis l'accueil."
+      }
+    },
+    "recorder": {
+      "videoMessage": "Message vidéo",
+      "voiceMessage": "Message vocal"
+    }
+  },
+  "docs": {
+    "breadcrumb": "Documentation",
+    "hub": {
+      "eyebrow": "Documentation",
+      "title": "Comment Keeplas protège votre héritage.",
+      "intro": "Keeplas est une plateforme de continuité de vie. Nous combinons un coffre à connaissance nulle, une vérification de vie multicanale et un réseau de récupération sociale pour que votre héritage numérique vous survive — selon vos conditions.",
+      "hero": {
+        "badge": "À connaissance nulle par conception",
+        "title": "Votre clé ne quitte jamais votre appareil.",
+        "body": "La clé maîtresse qui déverrouille votre coffre est générée et stockée uniquement sur vos appareils. Les serveurs Keeplas ne détiennent que des données chiffrées et les métadonnées publiques nécessaires à l'orchestration des vérifications de vie — rien de plus. Même nous ne pouvons pas lire votre coffre.",
+        "exportKit": "Exporter le kit de récupération",
+        "securityCenter": "Centre de sécurité"
+      },
+      "coreFeatures": {
+        "heading": "Fonctionnalités principales",
+        "read": "Lire"
+      },
+      "features": {
+        "vault": {
+          "title": "Coffre numérique",
+          "description": "Stockage à connaissance nulle pour documents, identifiants, actifs financiers et héritage numérique. Tout est chiffré sur votre appareil avant de le quitter."
+        },
+        "lifeCheck": {
+          "title": "Life Check",
+          "description": "Preuve de vie automatisée via WhatsApp et e-mail — vérifiez chaque canal une fois pour que nous puissions vous joindre (notification dans l'application bientôt disponible). Cadence configurable, fenêtre de réponse de 15 jours avec rappels, et un mode voyage pour mettre en pause pendant vos déplacements."
+        },
+        "letters": {
+          "title": "Lettres & Messages",
+          "description": "Lettres scellées libérées par des événements de vie ou des dates précises. Composez-les comme un élément Lettre / Message depuis votre coffre — les bénéficiaires les reçoivent une fois le déclencheur validé par vos curateurs."
+        },
+        "emergency": {
+          "title": "Urgences aiguës",
+          "description": "Pour les accidents et maladies soudaines, l'ID médical natif de votre téléphone est sur l'écran de verrouillage, reconnu par les secouristes et fonctionne hors ligne. Voici comment le configurer."
+        },
+        "trustedContacts": {
+          "title": "Contacts de confiance",
+          "description": "Au moins deux contacts de confiance détiennent des parts chiffrées de votre clé maîtresse. Ils confirment votre indisponibilité et reconstruisent le coffre si nécessaire. Les bénéficiaires reçoivent séparément le contenu que vous leur avez attribué."
+        },
+        "recovery": {
+          "title": "Récupération & Héritage",
+          "description": "Deux voies : la phrase de 24 mots pour une récupération en autonomie, et la récupération sociale Shamir via les contacts de confiance lorsque la phrase est perdue ou que vous devenez injoignable. Seuil par défaut : 2 contacts de confiance."
+        },
+        "insights": {
+          "title": "Réfléchir & Préparer",
+          "description": "Neuf cas honnêtes — questions de réflexion, points de douleur réels, essentiels d'urgence, et les fondations cryptographiques de Keeplas. ~10 minutes de lecture."
+        }
+      },
+      "securityModel": {
+        "heading": "Modèle de sécurité"
+      },
+      "security": {
+        "zeroKnowledge": {
+          "title": "Chiffrement à connaissance nulle",
+          "body": "Votre clé maîtresse est dérivée localement et jamais envoyée à Keeplas. Chaque élément du coffre est chiffré en AES-256-GCM avant l'envoi. Les serveurs Keeplas ne voient que du texte chiffré."
+        },
+        "shamir": {
+          "title": "Partage de secret Shamir",
+          "body": "Votre clé maîtresse est divisée en 4 parts cryptographiques : une part appareil et jusqu'à trois parts de contacts de confiance. La récupération fonctionne dès 2 contacts de confiance avec le seuil par défaut. La reconstruction a toujours lieu sur les appareils de vos contacts, jamais sur les serveurs Keeplas."
+        },
+        "auditLog": {
+          "title": "Journal d'audit chaîné par hachage",
+          "body": "Chaque action écrit une entrée immuable et infalsifiable. Le hachage de chaque entrée est lié au précédent ; réécrire l'historique briserait la chaîne."
+        },
+        "recoveryKit": {
+          "title": "Kit de récupération sur papier",
+          "body": "Exportez un document imprimable contenant votre phrase de 24 mots. Stockage à froid uniquement — Keeplas ne stocke ni la phrase ni aucun de ses hachages. La phrase dérive votre clé racine localement via Argon2id."
+        }
+      },
+      "lifecycle": {
+        "heading": "Que se passe-t-il après une inactivité",
+        "readMore": "Lire le déroulé complet de récupération & héritage",
+        "steps": {
+          "cadence": {
+            "value": "La cadence expire",
+            "title": "Une vérification s'ouvre",
+            "body": "Votre cadence s'écoule sans un « Je vais bien » explicite. Keeplas ouvre un cycle Life Check et démarre une fenêtre de réponse de 15 jours. Utiliser l'application ne compte pas — seule une réponse explicite compte."
+          },
+          "window": {
+            "value": "Jours 0–15",
+            "title": "Chaque canal vous joint",
+            "body": "WhatsApp et e-mail partent ensemble au jour 0, avec des rappels aux jours 3, 7 et 10 (notification dans l'application bientôt disponible). Une touche, le bouton de l'e-mail, ou une réponse WhatsApp réinitialise le compte à rebours."
+          },
+          "confirmation": {
+            "value": "Jour 15 · Confirmation",
+            "title": "Les contacts de confiance confirment l'injoignabilité",
+            "body": "Aucune réponse sur toute la fenêtre. Vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre — dans la fenêtre que vous avez fixée (7 jours par défaut) et selon le nombre que vous exigez. Rien n'est encore libéré."
+          },
+          "grace": {
+            "value": "Délai de grâce 72 h",
+            "title": "Dernière chance de revenir",
+            "body": "Une fois que suffisamment de contacts confirment, un délai de grâce fixe de 72 heures s'ouvre — distinct de la fenêtre de confirmation. Connectez-vous et cliquez sur Je vais bien : le cycle est annulé. Rien ne quitte le coffre."
+          },
+          "release": {
+            "value": "Libération",
+            "title": "Le coffre s'ouvre pour l'héritage",
+            "body": "À l'expiration du délai de grâce, les contacts soumettent leurs parts. Seuil atteint → clé maîtresse reconstruite sur leur appareil → coffre ouvert en lecture seule → les bénéficiaires reçoivent les éléments qui leur sont attribués."
+          }
+        }
+      },
+      "quickLinks": {
+        "heading": "Accéder à une fonctionnalité",
+        "subtitle": "Toute la documentation est intégrée au produit — chaque écran a son propre état vide guidé et ses info-bulles.",
+        "items": {
+          "hub": "Accueil",
+          "security": "Centre de sécurité",
+          "recoveryKit": "Kit de récupération",
+          "subscription": "Abonnement"
+        }
+      },
+      "footer": "Keeplas — Protocole de continuité de vie · Version 0.1"
+    },
+    "vault": {
+      "title": "Coffre numérique",
+      "eyebrow": "Stockage chiffré",
+      "intro": "Stockage à connaissance nulle pour vos documents, identifiants, actifs financiers et votre héritage numérique. Tout est chiffré sur votre appareil avant même de le quitter — Keeplas ne détient jamais que du texte chiffré.",
+      "encryption": {
+        "heading": "Comment fonctionne le chiffrement",
+        "onDevice": {
+          "title": "Chiffré sur l'appareil",
+          "body": "Chaque élément est chiffré en AES-256-GCM dans votre navigateur avant l'envoi. Le texte en clair ne circule jamais sur le réseau."
+        },
+        "yourKey": {
+          "title": "Votre clé, rien qu'à vous",
+          "body": "La clé maîtresse qui déverrouille votre coffre est dérivée localement de votre phrase de 24 mots et jamais envoyée à Keeplas."
+        },
+        "blind": {
+          "title": "Les serveurs restent aveugles",
+          "body": "Keeplas ne stocke que des données chiffrées et les métadonnées publiques nécessaires à l'orchestration de la récupération. Même nous ne pouvons pas lire votre coffre."
+        }
+      },
+      "store": {
+        "heading": "Ce que vous pouvez stocker",
+        "documents": {
+          "title": "Documents",
+          "body": "Papiers d'identité, contrats, testaments, polices d'assurance — tout fichier qui compte pour votre succession."
+        },
+        "credentials": {
+          "title": "Identifiants",
+          "body": "Mots de passe, codes d'accès et détails de compte, scellés derrière votre clé maîtresse."
+        },
+        "financial": {
+          "title": "Actifs financiers",
+          "body": "Comptes bancaires, placements et avoirs en crypto, avec le contexte dont vos héritiers ont besoin pour agir."
+        },
+        "letters": {
+          "title": "Lettres & Messages",
+          "body": "Lettres à libération différée, scellées jusqu'à une date ou un événement de vie. Voir le guide Lettres & Messages."
+        }
+      },
+      "storage": {
+        "heading": "Stockage inclus",
+        "body": "Le plan Gratuit inclut 100 Mo de stockage chiffré. Le plan À vie le porte à 10 Go. Le surcoût lié au chiffrement est décompté de votre quota.",
+        "comparePlans": "Comparer les plans"
+      },
+      "openVault": "Ouvrir votre coffre",
+      "lettersLink": "Lettres & Messages"
+    },
+    "lifeCheck": {
+      "title": "Life Check",
+      "eyebrow": "Preuve de vie",
+      "intro": "Un système de preuve de vie transparent. Keeplas vous joint via WhatsApp et e-mail à une cadence que vous fixez ; une réponse explicite réinitialise le compte à rebours. Seul un silence prolongé fait avancer votre coffre vers la récupération.",
+      "howItWorks": "Comment ça marche",
+      "details": {
+        "verifyChannel": {
+          "title": "Vérifiez chaque canal une fois",
+          "body": "Confirmez votre numéro WhatsApp et votre e-mail pour que nous puissions vous joindre de manière fiable. La notification dans l'application arrive bientôt."
+        },
+        "cadence": {
+          "title": "Définissez votre cadence",
+          "body": "Choisissez la fréquence d'ouverture d'une vérification. Entre les cycles, Keeplas reste silencieux."
+        },
+        "window": {
+          "title": "Une fenêtre de 15 jours avec rappels",
+          "body": "À l'ouverture d'un cycle, WhatsApp et e-mail partent au jour 0, avec des rappels aux jours 3, 7 et 10."
+        },
+        "reply": {
+          "title": "Une réponse explicite réinitialise",
+          "body": "Une touche dans l'e-mail, ou une réponse WhatsApp, réinitialise le compte à rebours. Naviguer dans l'application ne compte pas — seul un « Je vais bien » explicite compte."
+        },
+        "travel": {
+          "title": "Mode voyage",
+          "body": "Mettez les vérifications en pause pour un voyage afin qu'un message manqué ne déclenche jamais d'escalade en votre absence."
+        },
+        "visible": {
+          "title": "Toujours visible",
+          "body": "Un compte à rebours en direct montre exactement où vous en êtes. Aucun minuteur caché, aucune réinitialisation silencieuse."
+        }
+      },
+      "afterInactivity": {
+        "heading": "Que se passe-t-il si vous ne répondez pas",
+        "body": "Si toute la fenêtre de 15 jours s'écoule sans réponse, vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre. Ce n'est qu'alors — après une fenêtre de confirmation supplémentaire et un délai de grâce de 72 heures — que la récupération commence. Vous pouvez annuler à tout moment en vous connectant et en cliquant sur Je vais bien.",
+        "readMore": "Lire le déroulé complet de récupération & héritage"
+      },
+      "goToLifeCheck": "Aller à Life Check",
+      "trustedContactsLink": "Contacts de confiance"
+    },
+    "letters": {
+      "title": "Lettres & Messages",
+      "eyebrow": "Messages à libération différée",
+      "intro": "Des lettres scellées libérées à une date précise ou par un événement de vie. Vous les composez comme un élément du coffre — chiffré comme tout le reste — et les bénéficiaires ne les reçoivent qu'une fois le déclencheur validé par vos curateurs.",
+      "howItWorks": "Comment ça marche",
+      "details": {
+        "compose": {
+          "title": "Composez depuis votre coffre",
+          "body": "Créez un élément Lettre / Message aux côtés de vos documents. Il est chiffré sur l'appareil, comme tout autre élément du coffre."
+        },
+        "recipients": {
+          "title": "Attribuez des bénéficiaires",
+          "body": "Attribuez à l'avance chaque lettre aux personnes qui doivent la recevoir. Les bénéficiaires n'ont besoin d'aucune part ni d'aucune action de leur part."
+        },
+        "trigger": {
+          "title": "Définissez le déclencheur",
+          "body": "Libération à une date fixe, ou lors d'un événement de vie comme l'ouverture de votre coffre pour l'héritage."
+        },
+        "validated": {
+          "title": "Libérée après validation",
+          "body": "Les bénéficiaires reçoivent la lettre une fois que vos curateurs confirment que le déclencheur est rempli — jamais avant."
+        }
+      },
+      "privacy": {
+        "heading": "Scellée jusqu'au moment voulu",
+        "body": "Une lettre reste chiffrée dans votre coffre jusqu'au déclenchement. Les serveurs Keeplas ne détiennent que du texte chiffré, donc personne — ni nous, ni le bénéficiaire, ni vos curateurs — ne peut la lire à l'avance.",
+        "link": "Comment les curateurs valident les déclencheurs"
+      },
+      "openVault": "Ouvrir votre coffre",
+      "vaultLink": "Coffre numérique"
+    },
+    "trustedContacts": {
+      "title": "Contacts de confiance",
+      "eyebrow": "Réseau de récupération",
+      "intro": "Les personnes que vous désignez pour protéger votre coffre — de votre vivant (en cas de perte d'accès) et après (pour votre succession numérique). Un rôle unifié, un seul modèle mental.",
+      "roles": {
+        "heading": "Deux rôles, c'est tout",
+        "trust": {
+          "title": "Contact de confiance",
+          "body": "Détient une part chiffrée de votre clé maîtresse. Peut confirmer que vous êtes injoignable. Participe au quorum cryptographique qui rouvre votre coffre.",
+          "bullets": {
+            "min": "Minimum 2 contacts de confiance pour la récupération",
+            "max": "Jusqu'à 3 détenteurs de part dans le modèle de récupération actuel",
+            "shard": "Reçoit 1 part Shamir, chiffrée pour sa clé publique",
+            "moments": "Rôle actif à trois moments : invitation, escalade, récupération"
+          }
+        },
+        "recipient": {
+          "title": "Bénéficiaire",
+          "body": "Reçoit les éléments précis que vous lui avez attribués (lettres, documents, détails de compte) une fois votre coffre ouvert post-mortem. Rôle passif : aucune part, aucune validation, aucune action requise de sa part.",
+          "bullets": {
+            "noCap": "Aucune limite — invitez-en autant que nécessaire",
+            "noResponsibility": "Aucune responsabilité cryptographique",
+            "afterUnlock": "Reçoit le contenu uniquement après l'ouverture du coffre"
+          }
+        }
+      },
+      "steps": {
+        "heading": "Ce que fait un contact de confiance",
+        "accept": {
+          "title": "Accepte l'invitation",
+          "body": "Pour l'inviter, vous fournissez son nom, son e-mail et, en option, son numéro de téléphone. Il reçoit un e-mail avec un lien à usage unique. Lorsqu'il accepte et crée son propre coffre, ces identifiants sont pré-remplis et verrouillés sur le formulaire d'inscription, afin que son compte corresponde à l'identité que vous avez enregistrée. Il se connecte à Keeplas, qui génère sa propre paire de clés ML-KEM sur l'appareil ; la clé publique est envoyée pour que vous puissiez y chiffrer sa part."
+        },
+        "receive": {
+          "title": "Reçoit sa part (silencieusement)",
+          "body": "Lorsque vous cliquez sur Distribuer maintenant, votre client chiffre sa part Shamir pour sa clé publique et stocke le texte chiffré sur le serveur. La prochaine fois qu'il ouvre /shared-with-me, son navigateur la déchiffre sur l'appareil, conserve les octets bruts dans son IndexedDB et inscrit lastVerifiedAt comme preuve cryptographique que le déchiffrement a réussi. Aucun clic manuel, aucun copier-coller — et les serveurs Keeplas ne voient jamais la part brute."
+        },
+        "confirm": {
+          "title": "Confirme l'injoignabilité (si nécessaire)",
+          "body": "Si votre Life Check s'intensifie et que vous cessez de répondre, tous vos contacts de confiance sont notifiés. Chacun peut vous marquer comme injoignable depuis son accueil. Une fois le seuil atteint, un délai de grâce de 72 heures s'ouvre — pendant lequel vous pouvez encore annuler en vous connectant."
+        },
+        "submit": {
+          "title": "Soumet sa part lors de la récupération",
+          "body": "Après l'expiration du délai de grâce (ou si vous déclenchez manuellement la récupération sociale), les contacts ouvrent /shared-with-me et cliquent sur Soumettre ma part. Leur navigateur récupère leur part depuis l'IndexedDB, chiffre une copie pour la clé publique de chaque pair et envoie les enveloppes — le contact ne voit, ne saisit ni n'exporte jamais les octets bruts. Une fois le seuil atteint, n'importe quel soumetteur peut cliquer sur Reconstruire la clé maîtresse : son appareil récupère les enveloppes qui lui sont destinées, les déchiffre, les combine avec sa propre part brute et reconstruit la clé maîtresse entièrement sur l'appareil. Les serveurs ne voient que du texte chiffré tout du long."
+        }
+      },
+      "threshold": {
+        "heading": "Combien de contacts doivent être d'accord ?",
+        "body": "Vous choisissez le seuil de récupération lors de l'intégration. Le seuil 2 est la valeur par défaut et fonctionne dès 2 contacts de confiance. Le seuil 3 est plus strict et exige 3 contacts prêts.",
+        "link": "Modèle de récupération"
+      },
+      "manageLink": "Gérer vos contacts",
+      "recoveryLink": "Déroulé de récupération & héritage"
+    },
+    "emergencyInfo": {
+      "eyebrow": "Urgences aiguës",
+      "title": "Utilisez l'ID médical intégré de votre téléphone.",
+      "intro": "Keeplas se concentre sur la continuité à long terme — héritage, vérification de vie, récupération par parts. Pour les accidents et maladies soudaines, l'outil le plus rapide et le plus fiable est déjà sur l'écran de verrouillage de votre téléphone, fonctionne hors ligne et est reconnu par les secouristes formés. Deux minutes pour le configurer.",
+      "why": {
+        "heading": "Pourquoi pas une carte Keeplas ?",
+        "body": "Une carte QR avec vos informations médicales devrait être lisible sans clé — donc non chiffrée sur nos serveurs. Cela contredit notre promesse de connaissance nulle. Apple et Google ont déjà résolu cela sur l'appareil lui-même : les données vivent sur votre téléphone, accessibles depuis l'écran de verrouillage sans le déverrouiller, et n'atteignent jamais un serveur tiers."
+      },
+      "ios": {
+        "heading": "iPhone — ID médical",
+        "steps": {
+          "open": {
+            "title": "Ouvrez l'application Santé",
+            "body": "Préinstallée sur chaque iPhone (icône blanche, cœur rouge). Si vous l'avez supprimée, réinstallez-la depuis l'App Store."
+          },
+          "profile": {
+            "title": "Touchez votre profil, puis ID médical",
+            "body": "Coin supérieur droit de Santé → vos initiales → ID médical."
+          },
+          "fill": {
+            "title": "Renseignez les informations essentielles",
+            "body": "Nom, date de naissance, groupe sanguin, allergies, médicaments, pathologies, taille, poids, statut de donneur d'organes. Ajoutez au moins un contact d'urgence (avec le lien — Mère, Conjoint…)."
+          },
+          "showLocked": {
+            "title": "Activez Afficher si verrouillé",
+            "body": "Activez Afficher si verrouillé — c'est l'étape clé. Sans cela, les données restent derrière votre code et sont inutiles pour un premier intervenant."
+          },
+          "shareCall": {
+            "title": "Activez Partager pendant un appel d'urgence",
+            "body": "Optionnel mais recommandé : activez Partager pendant un appel d'urgence. Lorsque vous appelez le 911 (ou l'équivalent local), votre ID médical est partagé automatiquement avec les secours."
+          }
+        },
+        "verify": {
+          "p1": "Pour vérifier : verrouillez votre téléphone, puis sur l'écran de verrouillage maintenez le bouton latéral + un bouton de volume. Vous devriez voir un curseur ",
+          "em1": "Urgence",
+          "p2": " — faites-le glisser, puis touchez ",
+          "em2": "ID médical",
+          "p3": " en bas à gauche. Vos informations devraient apparaître sans déverrouillage."
+        }
+      },
+      "android": {
+        "heading": "Android — Informations d'urgence",
+        "intro": "La formulation varie légèrement selon le fabricant (Samsung, Pixel, Xiaomi…), mais l'emplacement reste cohérent.",
+        "steps": {
+          "open": {
+            "title": "Ouvrez Paramètres → Sécurité & urgence",
+            "body": "Sur les anciennes versions d'Android : Paramètres → À propos du téléphone → Informations d'urgence. Sur Samsung : Paramètres → Sécurité et urgence → Infos médicales."
+          },
+          "medical": {
+            "title": "Ajoutez les informations médicales",
+            "body": "Touchez Infos médicales. Renseignez le groupe sanguin, les allergies, les médicaments, le don d'organes, l'adresse, les notes médicales. Mêmes essentiels que sur iPhone."
+          },
+          "contacts": {
+            "title": "Ajoutez des contacts d'urgence",
+            "body": "Retour à Sécurité & urgence → Contacts d'urgence. Choisissez des personnes dans votre carnet d'adresses ; le lien de parenté est montré aux premiers intervenants."
+          },
+          "lockScreen": {
+            "title": "Activez l'accès depuis l'écran de verrouillage",
+            "body": "La plupart des téléphones Android exposent les infos d'urgence via le bouton Urgence de l'écran de verrouillage par défaut — aucun réglage nécessaire. Sur Samsung, vérifiez que Paramètres → Écran de verrouillage → Coordonnées / Infos médicales est activé."
+          },
+          "sos": {
+            "title": "Activez SOS d'urgence (optionnel)",
+            "body": "Paramètres → Sécurité & urgence → SOS d'urgence. Permet de déclencher un appel aux services d'urgence locaux et de partager votre position avec vos contacts en appuyant 5 fois sur le bouton d'alimentation."
+          }
+        },
+        "verify": {
+          "p1": "Pour vérifier : verrouillez votre téléphone, puis sur l'écran du code/schéma touchez ",
+          "em1": "Urgence",
+          "p2": " (ou ",
+          "em2": "Appel d'urgence",
+          "p3": ") en bas. Vous devriez voir Afficher les infos d'urgence ou Infos médicales sans saisir votre code."
+        }
+      },
+      "covers": {
+        "heading": "Ce que Keeplas couvre, donc",
+        "body": "L'ID médical natif résout le cas aigu. Keeplas résout le cas plus lent : ce qu'il advient de vos documents, comptes, messages et actifs lorsque vous devenez injoignable pendant des jours, des semaines ou définitivement. Deux problèmes différents, deux outils différents — les deux valent la peine d'être configurés.",
+        "trustedLink": "Configurer les contacts de confiance",
+        "lifeCheckLink": "Configurer Life Check"
+      }
+    },
+    "recovery": {
+      "title": "Récupération & Héritage",
+      "eyebrow": "Continuité",
+      "intro": "Deux scénarios, deux voies. Vous perdez l'accès de votre vivant — votre phrase de 24 mots ou vos contacts de confiance vous y ramènent. Vous devenez définitivement injoignable — vos contacts de confiance ouvrent le coffre pour vos bénéficiaires.",
+      "paths": {
+        "alive": {
+          "title": "Vous êtes en vie",
+          "pathA": "Voie A : phrase de 24 mots → dérive votre clé racine localement → déchiffre votre clé maîtresse. En autonomie, sans aucun contact impliqué.",
+          "pathB": "Voie B : phrase perdue aussi ? Vos contacts de confiance peuvent collaborer pour reconstruire la clé maîtresse (récupération sociale Shamir)."
+        },
+        "unreachable": {
+          "title": "Vous êtes injoignable",
+          "body": "Le Life Check échoue sur tous les canaux → les contacts confirment l'injoignabilité → délai de grâce de 72 h → les contacts soumettent leurs parts → le coffre s'ouvre en mode mémorial → les bénéficiaires reçoivent leur contenu."
+        }
+      },
+      "words": {
+        "heading": "Les 24 mots : ce qu'ils sont vraiment",
+        "p1": "Lors de l'intégration, votre appareil génère une nouvelle phrase BIP-39 de 24 mots. Ces mots ne sont jamais envoyés à Keeplas — pas même hachés. Ils n'existent qu'à trois endroits : dans votre tête, sur votre kit de récupération imprimé, et (brièvement) dans la mémoire de votre navigateur pendant l'intégration.",
+        "p2": "La phrase alimente Argon2id (une dérivation de clé gourmande en mémoire) avec un sel propre à chaque utilisateur, produisant votre clé racine. La clé racine chiffre votre clé maîtresse, qui est ce qui déchiffre réellement votre coffre. La clé maîtresse chiffrée (encryptedKeyBundle) est la seule partie que Keeplas stocke — et sans votre phrase, c'est un bloc opaque.",
+        "callout": "Si vous perdez vos 24 mots, vos contacts de confiance ne peuvent pas les récupérer — Keeplas non plus. Ce que les contacts peuvent faire, c'est reconstruire directement votre clé maîtresse via le quorum Shamir. Ensuite, vous générez 24 nouveaux mots et le coffre continue, inchangé, avec une nouvelle phrase."
+      },
+      "threshold": {
+        "heading": "Le seuil de récupération",
+        "intro": "Lors de l'intégration, vous divisez votre clé maîtresse en 4 parts Shamir : une part appareil et jusqu'à trois parts de contacts de confiance. Vous choisissez le seuil — le nombre minimum qui doit collaborer pour la reconstruire. Avec 2 contacts de confiance, gardez le seuil à 2 ; un seuil de 3 nécessite 3 contacts prêts.",
+        "options": {
+          "two": {
+            "label": "Le plus simple",
+            "body": "N'importe quels deux contacts. Recommandation par défaut."
+          },
+          "three": {
+            "label": "Strict",
+            "body": "Nécessite trois contacts prêts. Plus solide contre une paire qui colluderait, mais moins indulgent."
+          }
+        },
+        "note": "La valeur par défaut est 2 contacts de confiance — la voie de récupération la plus simple tout en exigeant au moins deux personnes distinctes. Si vos contacts présentent un risque de collusion plus élevé (par ex. tous de la même famille ou du même lieu de travail), n'utilisez le seuil 3 qu'une fois 3 contacts prêts."
+      },
+      "postmortem": {
+        "heading": "Déroulé post-mortem, étape par étape",
+        "steps": {
+          "detection": {
+            "stage": "Détection",
+            "title": "Le Life Check épuise tous les canaux",
+            "body": "Les signaux passifs échouent (aucune activité dans l'application, aucun déverrouillage d'appareil, aucun signe de vie tiers). Les canaux actifs que vous avez configurés se déclenchent un par un — notification, e-mail, WhatsApp, SMS, appel vocal — avec les délais que vous avez fixés. Le statut du cycle passe à « en escalade »."
+          },
+          "confirmation": {
+            "stage": "Confirmation",
+            "title": "Les contacts de confiance vous marquent injoignable",
+            "body": "Tous vos contacts de confiance reçoivent une notification leur demandant s'ils peuvent vous joindre. Depuis leur accueil, ils voient un bouton Marquer comme injoignable (visible uniquement pendant l'escalade du cycle). Le nombre de confirmations correspondant au seuil ouvre le délai de grâce de 72 h."
+          },
+          "grace": {
+            "stage": "Délai de grâce",
+            "title": "72 heures pour revenir",
+            "body": "Si vous réapparaissez pendant ces 72 heures et cliquez sur Je vais bien, le cycle est annulé, la demande d'accès est close et chaque contact est notifié. Rien ne quitte jamais votre coffre."
+          },
+          "reconstruction": {
+            "stage": "Reconstruction",
+            "title": "Les contacts soumettent leurs parts",
+            "body": "À l'expiration du délai de grâce, les contacts soumettent les parts qu'ils détiennent. La reconstruction a lieu entièrement sur l'appareil — les serveurs Keeplas ne voient que des parts chiffrées, jamais la clé maîtresse. Le coffre s'ouvre en mode mémorial en lecture seule."
+          },
+          "distribution": {
+            "stage": "Distribution",
+            "title": "Les bénéficiaires reçoivent leur contenu",
+            "body": "Les éléments que vous avez attribués aux bénéficiaires (lettres, documents, identifiants de comptes, contacts) leur sont libérés selon votre routage. Quiconque n'a pas été désigné ne voit rien."
+          }
+        }
+      },
+      "zk": {
+        "heading": "Pourquoi cela reste à connaissance nulle",
+        "intro": "Tout au long du cycle de vie — distribution, réception, vérification, récupération — les serveurs Keeplas ne voient jamais une part brute ni votre clé maîtresse. Ils ne stockent que des blocs chiffrés pour des clés publiques précises, plus des métadonnées publiques (horodatages, journaux d'audit, valeurs de seuil).",
+        "bullets": {
+          "distribution": {
+            "label": "Distribution",
+            "body": "chaque part est chiffrée pour la clé publique ML-KEM du contact cible avant de quitter votre appareil. Le serveur ne stocke que l'enveloppe."
+          },
+          "reception": {
+            "label": "Réception",
+            "body": "le navigateur du contact déchiffre l'enveloppe avec sa clé privée détenue localement et conserve la part brute dans l'IndexedDB. Rien des octets bruts n'est jamais renvoyé."
+          },
+          "verification": {
+            "label": "Vérification",
+            "body": "le déchiffrement réussi de la part inscrit automatiquement lastVerifiedAt sur la ligne du contact. Cet horodatage n'est qu'une attestation ; le serveur ne peut pas et n'inspecte pas la part."
+          },
+          "submission": {
+            "label": "Soumission de récupération",
+            "body": "lorsque les contacts soumettent leur part, chacun chiffre une copie pour la clé publique de chaque pair (fan-out). Le serveur stocke les enveloppes du fan-out — toujours uniquement du texte chiffré."
+          },
+          "reconstruction": {
+            "label": "Reconstruction",
+            "body": "l'interpolation Shamir qui reconstruit la clé maîtresse a lieu entièrement dans le navigateur du contact. La clé maîtresse ne touche jamais un serveur, par construction."
+          }
+        },
+        "callout": "Compromis à connaître : avec un seuil = 2, deux contacts qui colluderaient peuvent à la fois confirmer l'injoignabilité ET ouvrir le coffre. L'escalade du Life Check + le délai de grâce de 72 h sont les seules protections supplémentaires. Si vous anticipez ce risque (par ex. tous vos contacts vivent sous le même toit), relevez votre seuil lors de l'intégration."
+      },
+      "shardUse": {
+        "heading": "Comment un contact utilise sa part",
+        "intro": "Les contacts de confiance n'ont jamais à saisir, copier, exporter ni sauvegarder leur part. Le navigateur gère les octets de façon invisible. Voici ce qu'un contact voit et fait réellement :",
+        "steps": {
+          "accept": {
+            "stage": "Jour 0",
+            "title": "Il accepte votre invitation",
+            "body": "Il se connecte à Keeplas, génère sa propre paire de clés ML-KEM sur l'appareil, et la moitié publique est envoyée pour que vous puissiez y chiffrer les parts."
+          },
+          "distribution": {
+            "stage": "Distribution",
+            "title": "Il visite /shared-with-me une fois",
+            "body": "Son navigateur déchiffre automatiquement la part chiffrée que vous avez distribuée et stocke les octets bruts dans son IndexedDB. La carte affiche Empreinte vérifiée [à l'instant]. Aucun bouton à cliquer."
+          },
+          "recoveryTime": {
+            "stage": "Moment de la récupération",
+            "title": "Il clique sur Soumettre ma part",
+            "body": "Soit après l'expiration du délai de grâce post-mortem, soit après que vous déclenchez une récupération sociale de votre vivant. Son navigateur lit la part locale, chiffre une copie pour chaque pair, envoie les enveloppes du fan-out."
+          },
+          "reconstruction": {
+            "stage": "Reconstruction",
+            "title": "Il clique sur Reconstruire la clé maîtresse",
+            "body": "Une fois que le seuil a soumis, son navigateur récupère les enveloppes qui lui sont adressées, les déchiffre avec sa clé privée, les combine avec sa propre part brute et reconstruit la clé maîtresse localement. À partir de là, le coffre peut être déchiffré en mode mémorial lecture seule."
+          }
+        }
+      },
+      "crossDevice": {
+        "heading": "Que se passe-t-il si un contact change d'appareil",
+        "intro": "Un contact de confiance qui change de téléphone, réinitialise son appareil, ouvre une fenêtre de navigation privée ou se connecte sur un nouvel ordinateur ne perd pas sa part. L'architecture gère cela sans aucun export manuel, copier-coller ni action particulière.",
+        "keypair": {
+          "label": "La paire de clés ML-KEM du contact est portable.",
+          "body": "Sa clé privée est stockée sur le serveur, chiffrée en AES-GCM sous sa propre clé maîtresse. Dès qu'il déverrouille son coffre sur le nouvel appareil — avec sa phrase de 24 mots ou via le déverrouillage d'appareil — la clé privée est déchiffrée dans son navigateur, prête à l'emploi."
+        },
+        "shard": {
+          "label": "La part chiffrée est toujours sur le serveur.",
+          "body": "Votre client l'a chiffrée pour sa clé publique lors de la distribution ; le texte chiffré réside dans votre ligne trusted_contacts. Elle n'a jamais dépendu d'un appareil particulier."
+        },
+        "restore": {
+          "label": "La restauration automatique s'exécute à la visite suivante.",
+          "body": "Lorsque le contact ouvre /shared-with-me sur le nouvel appareil, une brève bannière « Restauration de vos parts… » apparaît pendant que le navigateur déchiffre l'enveloppe du serveur et conserve les octets bruts dans l'IndexedDB du nouvel appareil. À partir de là, chaque action de récupération fonctionne exactement comme avant."
+        },
+        "failure": {
+          "title": "Le seul mode d'échec : un contact perd À LA FOIS son appareil ET sa phrase de 24 mots.",
+          "body": "Sans la phrase, il ne peut pas déverrouiller sa clé maîtresse — donc il ne peut pas déchiffrer sa clé privée ML-KEM — donc il ne peut pas déchiffrer sa part. Son emplacement devient un poids mort permanent. En tant que propriétaire du coffre, vous devriez le révoquer, inviter un remplaçant, puis cliquer sur Distribuer maintenant pour émettre de nouvelles parts à tous les contacts de confiance actuels."
+        }
+      },
+      "trustedLink": "Les contacts de confiance en détail",
+      "recoveryKitLink": "Exporter votre kit de récupération"
+    },
+    "insights": {
+      "eyebrow": "Réfléchir & Préparer",
+      "title": "Neuf cas honnêtes pour la continuité numérique.",
+      "intro": "Trois réflexions, un point de douleur, deux essentiels d'urgence et trois fondations. Parcourez la table des matières ou lisez de haut en bas — chaque section se suffit à elle-même.",
+      "toc": "Dans ce guide",
+      "toneLabels": {
+        "warning": "Réflexion",
+        "success": "Pratique",
+        "info": "Comment Keeplas fonctionne"
+      },
+      "tips": {
+        "if-you-died-today": {
+          "title": "Si vous mouriez aujourd'hui, qui accéderait à quoi ?"
+        },
+        "secrets-die-with-you": {
+          "title": "Ne laissez pas vos secrets mourir avec vous"
+        },
+        "probate-vs-grief": {
+          "title": "La succession se compte en mois. Les familles ont besoin de jours."
+        },
+        "medical-id": {
+          "title": "Configurez l'ID médical de votre téléphone dès aujourd'hui"
+        },
+        "emergency-card": {
+          "title": "Gardez une carte d'urgence sur vous"
+        },
+        "twenty-four-words": {
+          "title": "Vos 24 mots sont la clé racine"
+        },
+        "zero-knowledge": {
+          "title": "À connaissance nulle par conception"
+        },
+        "trusted-contacts": {
+          "title": "Les contacts de confiance débloquent la continuité"
+        },
+        "quantum-safe": {
+          "title": "Chiffrement résistant au quantique"
+        }
+      },
+      "diedToday": {
+        "p1": "Prenez quatre-vingt-dix secondes. Imaginez chaque compte, fichier et clé de votre vie — puis imaginez-les disparus. Le code de votre téléphone. La clé maîtresse de votre gestionnaire de mots de passe. Le disque avec les photos des enfants. La phrase de récupération crypto que vous avez notée quelque part « en sécurité ». L'accès à la petite messagerie professionnelle redirigée vers votre domicile. La plupart des adultes gèrent plus d'une centaine de comptes en ligne, et presque aucun n'est cartographié, nommé ou transmissible.",
+        "p2": "Le but de cette question n'est pas d'être morbide — c'est de transformer une inquiétude vague en une liste concrète. Vous ne pouvez pas protéger ce que vous n'avez pas nommé. Alors avant toute chose, notez les catégories qui comptent pour votre vie :",
+        "items": {
+          "identity": "Documents d'identité & juridiques (passeport, pièce d'identité, actes de naissance)",
+          "money": "Argent (banques, courtage, portefeuilles crypto, retraite)",
+          "cloud": "Cloud (photos, drive, gestionnaire de mots de passe, e-mail)",
+          "people": "Personnes (qui doit être contacté, qui prendrait le relais)",
+          "wishes": "Volontés (directives médicales, statut de donneur d'organes, notes funéraires)"
+        },
+        "p3": "Cartographier est l'acte. Choisir qui reçoit quoi est le cadeau. Le reste de ce guide explique comment Keeplas — et quelques habitudes en dehors de Keeplas — rendent ce cadeau durable."
+      },
+      "secrets": {
+        "p1": "Quand quelqu'un meurt sans plan numérique, trois schémas se répètent. Le compte iCloud se gèle discrètement — Apple propose désormais un Contact légataire, mais seulement s'il est configuré avant le décès ; sinon, la famille fait face à une décision de justice ou à un verrouillage définitif. Les portefeuilles crypto deviennent des tombeaux dès qu'une phrase de récupération manque — pas de service client, pas de « mot de passe oublié », pas de récupération. Les photos et documents d'un téléphone protégé par Face ID et un code inconnu sont de fait perdus.",
+        "p2": "Aucun de ces échecs ne nécessite un attaquant sophistiqué. Ils surviennent parce que les systèmes dont nous dépendons chaque jour sont conçus pour un seul utilisateur vivant, pas pour la transmission. Le remède est modeste : une phrase que vous pouvez noter, un contact qui sait où elle se trouve, et un outil capable de la libérer aux bonnes conditions.",
+        "p3": "C'est la version en dix minutes de ce que fait Keeplas. Ajoutez les quelques choses que vous ne voudriez pas perdre, désignez un ou deux contacts de confiance, et la falaise devient une pente.",
+        "link": "Ouvrir votre coffre"
+      },
+      "probate": {
+        "p1": "La succession — le processus légal qui confère à quelqu'un l'autorité sur le patrimoine d'une personne décédée — prend généralement six à dix-huit mois, selon la juridiction et la complexité du patrimoine. Dans certains pays c'est plus rapide, dans beaucoup c'est plus lent. Aucun de ces délais ne correspond au rythme de la vie.",
+        "p2": "Dans les trente premiers jours après un décès, la famille doit généralement : payer le prêt immobilier, maintenir les polices d'assurance à jour, contester ou confirmer des abonnements, déclarer le décès aux banques, et retrouver une douzaine de mots de passe de comptes que personne n'a notés. Sans accès préparé, tout cela retombe sur un proche épuisé ou attend — accumulant des pénalités de retard, laissant des couvertures expirer, verrouillant des comptes.",
+        "p3": "Documenter vos essentiels maintenant ne remplace pas un testament. C'est le pont qui aide votre famille à traverser le premier mois pendant que la machinerie juridique se met en marche. Keeplas libère les informations que vous avez sélectionnées — pas toute votre vie, juste ce que vous avez choisi — aux personnes que vous avez choisies, selon le calendrier que vous avez choisi.",
+        "link": "Lire le guide de récupération & héritage"
+      },
+      "medicalId": {
+        "p1": "Pour les accidents et maladies soudaines, l'outil le plus rapide est déjà sur votre téléphone : l'ID médical intégré. Il vit sur votre écran de verrouillage, fonctionne hors ligne, ne nécessite aucune application, et c'est ce que les secouristes formés cherchent en premier. Deux minutes pour le configurer sur iPhone ou Android.",
+        "callout": "Nous ne reproduisons délibérément pas l'ID médical dans Keeplas — une carte QR lisible sans clé briserait notre promesse de connaissance nulle, et le système d'exploitation a déjà résolu ce problème sur l'appareil lui-même.",
+        "link": "Configuration pas à pas pour iPhone & Android"
+      },
+      "card": {
+        "p1": "L'ID médical est excellent. Le papier le surpasse encore dans quelques situations précises : une batterie de téléphone à plat, des urgences à l'étranger où les secouristes ne cherchent pas le flux de l'écran de verrouillage iOS, un téléphone laissé dans une autre pièce, un proche qui doit lire votre groupe sanguin à voix haute au téléphone.",
+        "p2": "Une carte d'urgence imprimée est le complément hors ligne. Elle ne contient que le strict minimum dont un premier intervenant ou une personne de confiance a besoin dans les dix premières minutes — et rien d'autre. À savoir :",
+        "items": {
+          "identity": "Votre nom, date de naissance, groupe sanguin",
+          "medical": "Allergies, médicaments actuels, pathologies critiques",
+          "contacts": "Deux contacts d'urgence avec leur lien de parenté avec vous",
+          "directives": "Une phrase sur les directives anticipées ou le statut de donneur d'organes"
+        },
+        "p3": "Surtout, rien de votre coffre — aucun document, aucun identifiant, aucune instruction d'héritage — n'apparaît sur cette carte. La carte ouvre la première porte ; le reste reste scellé derrière vos clés à connaissance nulle.",
+        "link": "Choisir les contacts qui figurent sur votre carte"
+      },
+      "words": {
+        "p1": "Votre phrase de récupération de 24 mots n'est pas un mot de passe — c'est la graine mathématique dont chaque clé de chiffrement de votre compte est dérivée. Nous utilisons le standard BIP-39 que vous avez peut-être vu dans les portefeuilles crypto, associé à la dérivation de clé Argon2id qui transforme la phrase en votre clé racine localement, sur votre appareil. La phrase elle-même ne quitte jamais votre appareil, et les serveurs Keeplas ne la stockent jamais, ni aucun de ses hachages.",
+        "p2": "C'est là la force : le système n'a aucun recours qui contourne la phrase, ce qui est exactement ce qui rend impossible pour nous — ou pour quiconque nous serions contraints de partager — de lire vos données. C'est aussi la responsabilité : si vous perdez la phrase et que vous n'avez pas configuré de contacts de confiance, le coffre est perdu.",
+        "p3": "La bonne façon de conserver 24 mots est hors ligne, sur papier ou acier, idéalement dans deux lieux physiques distincts (une boîte ignifuge et une enveloppe scellée chez un proche, par exemple). Ne les stockez jamais dans une capture d'écran, une application de notes, un brouillon d'e-mail ou un gestionnaire de mots de passe — cela anéantit tout l'intérêt.",
+        "link": "Générer ou imprimer votre kit de récupération"
+      },
+      "zeroKnowledge": {
+        "p1": "La connaissance nulle est la garantie cryptographique qu'un service peut stocker vos données sans jamais pouvoir les lire. Dans Keeplas, votre clé maîtresse est dérivée localement de votre phrase de 24 mots et ne quitte jamais votre appareil. Chaque élément du coffre est chiffré en AES-256-GCM sur votre appareil avant l'envoi. Ce que nous détenons sur nos serveurs est un texte chiffré mathématiquement opaque.",
+        "p2": "La comparaison pratique : avec le stockage cloud traditionnel (ou la plupart des gestionnaires de mots de passe grand public), le service détient une clé capable de déverrouiller vos données — sous une décision de justice, un identifiant fuité ou un employé malveillant, ces données deviennent lisibles. Avec la connaissance nulle, le texte chiffré reste chiffré jusqu'à ce que votre appareil le déverrouille.",
+        "p3": "L'implication à bien comprendre : il n'existe aucune voie de « réinitialiser le mot de passe et récupérer ». Les deux vraies voies de récupération sont la phrase de 24 mots (en autonomie) et la récupération sociale Shamir via vos contacts de confiance (quand la phrase est perdue). C'est toute la forme du système."
+      },
+      "trustedContacts": {
+        "p1": "Les contacts de confiance sont les personnes qui peuvent collectivement débloquer votre continuité si vous perdez votre phrase ou devenez injoignable. Ils ne détiennent pas votre phrase — ils détiennent des parts cryptographiques de votre clé maîtresse, générées par le partage de secret Shamir. Un seuil configurable (2 contacts de confiance par défaut) doit être d'accord avant que la récupération ne se poursuive, et la reconstruction a toujours lieu sur leurs appareils, jamais sur les serveurs Keeplas.",
+        "p2": "Choisissez-en au moins deux. Un troisième contact ajoute de la résilience si vous optez pour le seuil plus strict. Choisissez des personnes de foyers différents, idéalement de villes différentes, qui décrocheraient vraiment le téléphone lors d'une semaine difficile.",
+        "link": "Lire l'analyse approfondie des contacts de confiance"
+      },
+      "quantumSafe": {
+        "p1": "Le plus grand risque cryptographique pour les données d'héritage n'est pas celui des attaquants d'aujourd'hui — c'est celui de demain. Le schéma s'appelle « récolter maintenant, déchiffrer plus tard » : des adversaires bien financés enregistrent aujourd'hui le trafic chiffré et le texte chiffré stocké, pariant qu'un futur ordinateur quantique cassera les algorithmes sous-jacents et leur permettra de lire ce qui a été capté des années plus tôt.",
+        "p2": "Pour la messagerie grand public ou les sessions de courte durée, c'est surtout théorique. Pour les données d'héritage et de continuité — qui doivent rester confidentielles pendant des décennies — c'est un véritable horizon de planification. C'est pourquoi Keeplas chiffre chaque clé de chiffrement de données par bénéficiaire, et chaque part Shamir, avec ML-KEM-768 (NIST FIPS 203), le standard post-quantique d'encapsulation de clé ratifié en 2024. Il remplace RSA-OAEP sur la couche de chiffrement.",
+        "p3": "L'impact visible pour l'utilisateur est essentiellement nul : mêmes flux, mêmes performances. L'impact visible dans le futur est que le texte chiffré capté aujourd'hui devrait rester illisible lorsque le déchiffrement post-quantique deviendra possible."
+      },
+      "footer": {
+        "heading": "Lecture terminée ?",
+        "body": "Retournez à votre accueil et transformez l'un de ces cas en action.",
+        "link": "Retour à l'accueil"
+      }
+    }
+  },
+  "notFound": {
+    "message": "Page introuvable",
+    "goHome": "Retour à l'accueil"
+  },
+  "lifeCheckConfirm": {
+    "badge": "Life Check",
+    "okTitle": "Merci — vous êtes confirmé",
+    "okBody": "Nous avons enregistré que vous allez bien et réinitialisé votre compte à rebours. Vous pouvez fermer cet onglet en toute sécurité.",
+    "invalidTitle": "Ce lien est invalide ou expiré",
+    "invalidBody": "Ce lien de confirmation est invalide ou a expiré. Ouvrez Keeplas pour confirmer depuis la page Life Check, ou attendez la prochaine vérification.",
+    "openApp": "Ouvrir Keeplas"
+  },
+  "invite": {
+    "invalid": {
+      "badge": "Lien d'invitation",
+      "heading": "Invitation invalide",
+      "body": "Ce lien d'invitation est invalide ou a expiré. Demandez au propriétaire du coffre de vous en envoyer un nouveau."
+    },
+    "goToKeeplas": "Aller sur Keeplas",
+    "processed": {
+      "badge": "Statut de l'invitation",
+      "heading": "Invitation déjà traitée",
+      "accepted": "Vous avez déjà accepté cette invitation.",
+      "declined": "Vous avez déjà refusé cette invitation."
+    },
+    "goToHub": "Aller à l'accueil",
+    "confirmed": {
+      "badge": "Confirmé",
+      "heading": "Vous êtes désormais contact de confiance",
+      "bodyPre": "Vous faites désormais partie du réseau de récupération de ",
+      "bodyPost": ". Vous pourrez recevoir un fragment de récupération pour aider à protéger son coffre."
+    },
+    "invite": {
+      "badge": "Invitation de contact de confiance",
+      "heading": "{name} vous a invité",
+      "bodyPre": "Vous avez été désigné comme ",
+      "bodyPost": " dans le coffre Keeplas de {name}."
+    },
+    "roles": {
+      "family": "Membre de la famille",
+      "friend": "Ami(e)",
+      "lawyer": "Avocat(e)",
+      "doctor": "Médecin",
+      "other": "Contact de confiance"
+    },
+    "roleFallback": "contact de confiance",
+    "meaning": {
+      "title": "Ce que cela signifie",
+      "bullet1": "Vous recevrez un fragment de récupération chiffré.",
+      "bullet2": "Il pourra vous être demandé d'aider à récupérer le coffre en cas d'urgence.",
+      "bullet3": "Vous ne verrez jamais le contenu du coffre, sauf si l'accès vous est explicitement accordé."
+    },
+    "needAccount": "Vous avez besoin d'un compte Keeplas pour accepter cette invitation.",
+    "createAccount": "Créer un compte",
+    "signIn": "Se connecter",
+    "accepting": "Acceptation…",
+    "accept": "Accepter l'invitation",
+    "declining": "Refus…",
+    "decline": "Refuser",
+    "acceptFailed": "Échec de l'acceptation de l'invitation",
+    "declineFailed": "Échec du refus de l'invitation"
+  },
+  "security": {
+    "badge1": "Sécurité & Confidentialité",
+    "badge2": "Résistant au quantique, de bout en bout",
+    "title": "Comment Keeplas protège votre coffre",
+    "intro": "Cinq piliers : comment vous vous connectez, comment vos données sont chiffrées, comment vous déverrouillez au quotidien, ce qu'il se passe si vous perdez l'accès, et le journal d'audit infalsifiable qui rend Keeplas utilisable comme preuve dans une procédure de succession. Nous voyons des octets chiffrés — jamais vos données. Chaque clé par bénéficiaire est chiffrée avec un KEM post-quantique du NIST, afin qu'un futur ordinateur quantique ne puisse pas casser rétroactivement ce que nous détenons aujourd'hui.",
+    "externalRefs": "Références externes",
+    "technicalTitle": "Comment ça marche (technique)",
+    "faqHeading": "Questions fréquentes",
+    "pillars": {
+      "auth": {
+        "badge": "Pilier 1",
+        "title": "Authentification",
+        "intro": "L'e-mail et le mot de passe vous connectent — rien de plus. L'authentification à deux facteurs optionnelle bloque le hameçonnage. Votre mot de passe ne participe jamais au chiffrement, donc le réinitialiser ne met pas vos données en danger.",
+        "bullets": [
+          "E-mail + mot de passe pour se connecter.",
+          "TOTP optionnel (Google Authenticator, 1Password, Authy…) pour la 2FA.",
+          "Mot de passe perdu ? Réinitialisez-le avec vos 24 mots de récupération. Votre coffre reste intact.",
+          "Authentificateur perdu ? Réinitialisez la 2FA avec vos 24 mots de récupération."
+        ]
+      },
+      "zk": {
+        "badge": "Pilier 2",
+        "title": "Chiffrement à connaissance nulle",
+        "intro": "Votre coffre est chiffré sur votre appareil, avant que quoi que ce soit n'atteigne nos serveurs. Les clés sont dérivées de 24 mots de récupération que vous seul détenez — nous ne les voyons jamais, ne les stockons jamais et ne les transmettons jamais. Le partage par bénéficiaire utilise un KEM post-quantique du NIST, afin que même un futur adversaire quantique ne puisse pas déchiffrer rétroactivement ce que nous détenons.",
+        "bullets": [
+          "24 mots BIP-39 générés localement lors de l'intégration.",
+          "Argon2id dérive une clé racine de vos mots + un sel public propre à l'utilisateur.",
+          "La clé racine chiffre une clé maîtresse par coffre (AES-256-GCM).",
+          "Le chiffrement des clés par bénéficiaire utilise ML-KEM-768 (NIST FIPS 203) — résistant aux futurs ordinateurs quantiques.",
+          "Nous ne voyons que des enveloppes chiffrées et le sel public. Même en cas de fuite de notre base de données, vos données restent opaques."
+        ]
+      },
+      "device": {
+        "badge": "Pilier 3",
+        "title": "Déverrouillage de l'appareil",
+        "intro": "Saisir 24 mots à chaque connexion est pénible. Après votre première connexion sur un appareil, vous pouvez enregistrer un déverrouillage local plus rapide — choisissez n'importe quelle combinaison. Chaque méthode reste sur cet appareil uniquement et ne se synchronise jamais.",
+        "bullets": [
+          "Code PIN (6 chiffres ou plus) protégé par Argon2id avec verrouillage anti-force brute.",
+          "Biométrie — Face ID, Touch ID, Windows Hello — via WebAuthn + extension PRF.",
+          "Clé de sécurité matérielle — YubiKey ou tout authentificateur FIDO2 avec PRF.",
+          "Les trois peuvent coexister. Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
+          "Verrouillage auto en cas d'inactivité : après 20 minutes sans activité, le coffre se verrouille et efface les clés en mémoire et sur l'appareil jusqu'au prochain déverrouillage."
+        ]
+      },
+      "recovery": {
+        "badge": "Pilier 4",
+        "title": "Récupération",
+        "intro": "Vos 24 mots sont le seul secret sans voie de réinitialisation côté serveur. Si vous les perdez, seuls vos contacts de confiance peuvent vous aider — via le partage de secret Shamir chiffré avec un KEM post-quantique. Nous n'avons aucune clé maîtresse. Aucune porte dérobée.",
+        "bullets": [
+          "Mot de passe perdu → réinitialisez-le avec vos 24 mots. Coffre intact.",
+          "2FA perdue → réinitialisez-la avec vos 24 mots.",
+          "24 mots perdus → vos contacts de confiance détiennent des parts chiffrées. Un quorum peut reconstruire.",
+          "Les parts des contacts de confiance sont chiffrées avec ML-KEM-768, de sorte que même les attaques « récolter maintenant, déchiffrer plus tard » échouent des décennies plus tard.",
+          "Continuité posthume → les contacts de confiance obtiennent l'accès via des échecs de vérification de vie configurables."
+        ]
+      },
+      "audit": {
+        "badge": "Pilier 5",
+        "title": "Journal d'audit à valeur juridique",
+        "intro": "Pour qu'un tribunal accepte Keeplas comme preuve dans une affaire de succession, il faut prouver qui a agi, quand et d'où — sans que nous puissions le falsifier ni le réécrire. Chaque action modifiant l'état est ajoutée à un journal immuable, chaîné par hachage, avec une IP et un pays attestés côté serveur ; la chaîne se brise dès que quiconque altère une seule entrée.",
+        "bullets": [
+          "Chaque mutation produit une entrée d'audit avec action, ressource, horodatage, IP et pays.",
+          "L'IP et le pays sont signés côté serveur avec HMAC-SHA256 — les clients ne peuvent pas falsifier leur propre localisation.",
+          "Chaque entrée porte le hachage de l'entrée précédente, de sorte que la chaîne peut être rejouée et vérifiée hors ligne.",
+          "À l'inscription, nous recueillons votre date de naissance (capacité juridique) et votre pays de résidence (droit successoral applicable) — tous deux stockés sur votre fiche utilisateur et consignés dans la chaîne d'audit.",
+          "Nous conservons les journaux d'audit même après la suppression du compte : la trace immuable survit à l'utilisateur, ce qui est exactement la propriété dont un tribunal des successions a besoin."
+        ]
+      }
+    },
+    "cta": {
+      "prompt": "Prêt à configurer votre coffre ?",
+      "create": "Créer votre coffre",
+      "have": "J'en ai déjà un"
+    },
+    "faq": [
+      {
+        "q": "Que se passe-t-il si Keeplas est piraté ?",
+        "a": "Les attaquants verraient des paquets chiffrés, des sels publics et des hachages de mots de passe scrypt côté serveur. Aucun de ces éléments ne révèle votre coffre à lui seul. Sans vos 24 mots (que vous seul détenez) ou un quorum de parts de vos contacts de confiance, les données restent illisibles."
+      },
+      {
+        "q": "Que se passe-t-il si Keeplas ferme ?",
+        "a": "Votre coffre sur l'appareil contient votre clé maîtresse déchiffrée tant que vous êtes connecté — vous pouvez tout exporter. Nous publierons le format de chiffrement afin que n'importe quel développeur puisse déchiffrer votre paquet à partir de vos seuls 24 mots, sans aucune intervention de Keeplas."
+      },
+      {
+        "q": "Que se passe-t-il si je décède ou deviens incapable ?",
+        "a": "C'est la mission première. Vous configurez des contacts de confiance et un protocole de vérification de vie. Après une inactivité confirmée, vos contacts de confiance peuvent récupérer le coffre à l'aide de leurs parts distribuées. Vous décidez qui, quoi et quand."
+      },
+      {
+        "q": "Un tribunal peut-il vous forcer à remettre mes données ?",
+        "a": "Nous pouvons remettre ce que nous avons : des paquets chiffrés. Nous ne pouvons pas les déchiffrer. Nous ne détenons ni votre voie de réinitialisation de mot de passe, ni vos 24 mots, ni votre clé maîtresse. L'architecture supprime la possibilité de nous conformer."
+      },
+      {
+        "q": "Pourquoi ai-je besoin d'un mot de passe si mes données sont chiffrées par 24 mots ?",
+        "a": "Deux couches. Le mot de passe vous authentifie auprès de nos serveurs (pour que des attaquants ne puissent pas simplement deviner des e-mails pour accéder aux paquets chiffrés). Les 24 mots chiffrent les données elles-mêmes. Les deux sont nécessaires lors de la première connexion sur un nouvel appareil — ensuite, le déverrouillage de l'appareil prend le relais."
+      },
+      {
+        "q": "Quels algorithmes de chiffrement utilisez-vous ?",
+        "a": "Argon2id (paramètres OWASP 2024) pour la dérivation de clé, AES-256-GCM pour le chiffrement symétrique, ML-KEM-768 (NIST FIPS 203, le KEM post-quantique normalisé en août 2024) pour chiffrer les clés par bénéficiaire, SHA-256 pour les vérificateurs, et le partage de secret Shamir sur GF(256) pour la récupération par contacts de confiance. La cryptographie s'exécute côté client via la Web Crypto API et @noble/post-quantum."
+      },
+      {
+        "q": "Êtes-vous résistant au quantique ?",
+        "a": "Oui, de bout en bout. Les primitives symétriques (AES-256-GCM, Argon2id, SHA-256, partage de secret Shamir) sont toutes résistantes au quantique par construction. La couche asymétrique — utilisée pour chiffrer les clés par bénéficiaire et les parts des contacts de confiance — utilise ML-KEM-768, le KEM post-quantique normalisé par le NIST (FIPS 203, août 2024). Cela bloque la menace « récolter maintenant, déchiffrer plus tard » : les données que nous stockons aujourd'hui restent opaques même pour un futur adversaire exécutant l'algorithme de Shor sur un grand ordinateur quantique. La plupart des gestionnaires de mots de passe (Bitwarden, 1Password) n'ont pas encore migré ; nous avons conçu Keeplas post-quantique dès le premier jour, car les données d'un coffre doivent rester confidentielles pendant des décennies."
+      },
+      {
+        "q": "Pourquoi demandez-vous ma date de naissance et mon pays ?",
+        "a": "Deux raisons juridiques. La date de naissance prouve la capacité civile (vous devez avoir au moins 18 ans pour engager votre patrimoine) et vous identifie dans les procédures de succession. Le pays de résidence détermine le droit successoral applicable — les règles de succession françaises, belges, québécoises et américaines diffèrent considérablement. Ces deux champs ne sont stockés que sur votre fiche utilisateur et dans la chaîne d'audit infalsifiable ; ils ne sont jamais utilisés à des fins marketing ni partagés avec des tiers."
+      },
+      {
+        "q": "J'ai été invité comme contact de confiance — pourquoi mon e-mail et mon téléphone sont-ils déjà remplis ?",
+        "a": "Parce que la personne qui vous a invité les a saisis. Pour vous ajouter, elle fournit votre nom, votre e-mail et éventuellement votre numéro de téléphone afin que Keeplas puisse vous envoyer le lien d'invitation à usage unique et, plus tard, les alertes Life Check. Lorsque vous acceptez et créez votre propre coffre, ces identifiants sont pré-remplis et verrouillés sur le formulaire d'inscription afin que votre compte corresponde à l'identité enregistrée, ce qui évite un e-mail ou un numéro incohérent. C'est la seule information partagée à votre sujet ; rien de son coffre n'est exposé, et vous seul détenez vos 24 mots et vos clés."
+      },
+      {
+        "q": "Le journal d'audit tiendra-t-il devant un tribunal ?",
+        "a": "C'est précisément ce pour quoi il est conçu. Chaque action modifiant l'état est ajoutée à un journal immuable chaîné par hachage, avec une IP et un pays attestés côté serveur (signés via HMAC-SHA256 afin qu'un client ne puisse pas falsifier sa propre localisation). Les auditeurs et les juges peuvent rejouer la chaîne hors ligne et détecter toute altération : modifier une seule entrée brise tous les hachages suivants. Combiné à votre identité déclarée (date de naissance, pays), c'est ce qui permet à un notaire ou à un tribunal des successions d'accepter l'activité Keeplas comme preuve d'intention et d'authenticité. Le cadre complet des documents électroniques juridiquement reconnus dans l'UE est eIDAS."
+      },
+      {
+        "q": "Et le RGPD ?",
+        "a": "Les entrées d'audit ne stockent que des métadonnées d'action — jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment, mais la chaîne d'audit elle-même est conservée (anonymisée vers votre identifiant utilisateur désormais supprimé) afin que la garantie d'immuabilité sur laquelle un futur tribunal des successions pourrait s'appuyer ne soit pas détruite rétroactivement. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime combiné à l'article 17.3.b obligation légale)."
+      }
+    ]
+  }
+}

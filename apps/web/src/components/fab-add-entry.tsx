@@ -5,8 +5,10 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button } from "@keeplas/ui";
 import { AddItemDialog } from "@/components/add-item-dialog";
+import { useTranslations } from "@/lib/i18n";
 
 export function FabAddEntry() {
+  const t = useTranslations("chrome");
   const vault = useQuery(api.vaults.getVault);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const [open, setOpen] = useState(false);
@@ -24,7 +26,7 @@ export function FabAddEntry() {
       <Button
         variant="vault"
         size="icon"
-        aria-label="Add new entry"
+        aria-label={t("fab.addEntry")}
         onClick={() => setOpen(true)}
         className="fixed right-6 bottom-24 md:bottom-6 z-40 h-16 w-16 rounded-full shadow-2xl shadow-primary/30 cursor-pointer"
       >

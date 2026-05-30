@@ -21,6 +21,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { useTranslations } from "@/lib/i18n";
 
 type Step = "email" | "code";
 type Mode = "add" | "change";
@@ -50,6 +51,7 @@ export function EmailVerificationDialog({
   mode = "add",
   onVerified,
 }: EmailVerificationDialogProps) {
+  const t = useTranslations("chrome");
   const status = useQuery(api.email_verification.getMyStatus);
   const requestVerification = useMutation(
     api.email_verification.requestVerification,
@@ -89,7 +91,7 @@ export function EmailVerificationDialog({
 
   async function handleSendCode() {
     if (!isValidEmail(email)) {
-      setError("Enter a valid email address");
+      setError(t("emailVerify.invalidEmail"));
       return;
     }
     setBusy(true);
@@ -99,7 +101,7 @@ export function EmailVerificationDialog({
       cooldown.start();
       setStep("code");
     } catch (err) {
-      setError(getErrorMessage(err, "Could not send verification code."));
+      setError(getErrorMessage(err, t("emailVerify.couldNotSend")));
     } finally {
       setBusy(false);
     }
@@ -109,7 +111,7 @@ export function EmailVerificationDialog({
     e.preventDefault();
     if (busy) return;
     if (!/^\d{6}$/.test(code.trim())) {
-      setError("Enter the 6-digit code");
+      setError(t("emailVerify.enterCode"));
       return;
     }
     setBusy(true);
@@ -119,7 +121,7 @@ export function EmailVerificationDialog({
       onVerified?.();
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Verification failed."));
+      setError(getErrorMessage(err, t("emailVerify.verificationFailed")));
     } finally {
       setBusy(false);
     }
@@ -134,7 +136,7 @@ export function EmailVerificationDialog({
       cooldown.start();
       setCode("");
     } catch (err) {
-      setError(getErrorMessage(err, "Could not resend code."));
+      setError(getErrorMessage(err, t("emailVerify.couldNotResend")));
     } finally {
       setBusy(false);
     }
@@ -146,12 +148,14 @@ export function EmailVerificationDialog({
         <DialogHeader className="px-6 py-5 items-start static">
           <div className="space-y-1.5">
             <DialogTitle>
-              {mode === "change" ? "Change your email" : "Add an email"}
+              {mode === "change"
+                ? t("emailVerify.titleChange")
+                : t("emailVerify.titleAdd")}
             </DialogTitle>
             <DialogDescription>
               {mode === "change"
-                ? "We'll email a 6-digit code to your new address. Confirm it to replace your current email — sign-ins via the old address will stop working."
-                : "We will email you a 6-digit code. Confirm it to add this email — you can then sign in with an emailed code, no password."}
+                ? t("emailVerify.descChange")
+                : t("emailVerify.descAdd")}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
@@ -169,7 +173,9 @@ export function EmailVerificationDialog({
           {step === "email" ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="verify-email">Email address</Label>
+                <Label htmlFor="verify-email">
+                  {t("emailVerify.emailLabel")}
+                </Label>
                 <Input
                   id="verify-email"
                   type="email"
@@ -187,20 +193,22 @@ export function EmailVerificationDialog({
                   onClick={() => onOpenChange(false)}
                   disabled={busy}
                 >
-                  Cancel
+                  {t("emailVerify.cancel")}
                 </Button>
                 <Button
                   onClick={handleSendCode}
                   disabled={busy || !isValidEmail(email)}
                 >
-                  {busy ? "Sending…" : "Send code"}
+                  {busy ? t("emailVerify.sending") : t("emailVerify.sendCode")}
                 </Button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="verify-email-code">6-digit code</Label>
+                <Label htmlFor="verify-email-code">
+                  {t("emailVerify.codeLabel")}
+                </Label>
                 <Input
                   id="verify-email-code"
                   inputMode="numeric"
@@ -213,7 +221,7 @@ export function EmailVerificationDialog({
                   autoFocus
                 />
                 <p className="text-label-md text-on-surface-variant">
-                  Sent to {email}. The code expires in 10 minutes.
+                  {t("emailVerify.sentTo", { email })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -225,8 +233,8 @@ export function EmailVerificationDialog({
                   disabled={busy || cooldown.active}
                 >
                   {cooldown.active
-                    ? `Resend code in ${cooldown.remaining}s`
-                    : "Resend code"}
+                    ? t("emailVerify.resendIn", { seconds: cooldown.remaining })
+                    : t("emailVerify.resendCode")}
                 </Button>
                 <div className="flex gap-2">
                   <Button
@@ -235,10 +243,12 @@ export function EmailVerificationDialog({
                     onClick={() => setStep("email")}
                     disabled={busy}
                   >
-                    Change email
+                    {t("emailVerify.changeEmail")}
                   </Button>
                   <Button type="submit" disabled={busy || code.length !== 6}>
-                    {busy ? "Verifying…" : "Verify"}
+                    {busy
+                      ? t("emailVerify.verifying")
+                      : t("emailVerify.verify")}
                   </Button>
                 </div>
               </div>

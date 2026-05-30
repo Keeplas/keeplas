@@ -8,60 +8,61 @@ import { api } from "@keeplas/backend/_generated/api";
 import { cn, Icon, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getInitials } from "@/lib/user";
+import { useTranslations } from "@/lib/i18n";
 
 export interface SettingsNavItem {
-  label: string;
+  labelKey: string;
   href: string;
   iconPath: string;
 }
 
 interface SettingsNavGroup {
-  label: string;
+  labelKey: string;
   items: SettingsNavItem[];
 }
 
 export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
   {
-    label: "Account",
+    labelKey: "account",
     items: [
-      { label: "Identity", href: "/settings", iconPath: ICON_PATHS.person },
+      { labelKey: "identity", href: "/settings", iconPath: ICON_PATHS.person },
       {
-        label: "Preferences",
+        labelKey: "preferences",
         href: "/settings/preferences",
         iconPath: ICON_PATHS.bell,
       },
     ],
   },
   {
-    label: "Security",
+    labelKey: "security",
     items: [
       {
-        label: "Security Center",
+        labelKey: "securityCenter",
         href: "/settings/security",
         iconPath: ICON_PATHS.shieldCheck,
       },
       {
-        label: "Recovery Kit",
+        labelKey: "recoveryKit",
         href: "/settings/recovery-kit",
         iconPath: ICON_PATHS.key,
       },
       {
-        label: "Continuity Protocol",
+        labelKey: "continuityProtocol",
         href: "/settings/continuity",
         iconPath: ICON_PATHS.heartbeat,
       },
     ],
   },
   {
-    label: "Plans & Billing",
+    labelKey: "plansBilling",
     items: [
       {
-        label: "Usage",
+        labelKey: "usage",
         href: "/settings/usage",
         iconPath: ICON_PATHS.cloud,
       },
       {
-        label: "Subscription",
+        labelKey: "subscription",
         href: "/settings/subscription",
         iconPath: ICON_PATHS.creditCard,
       },
@@ -82,6 +83,7 @@ export function SettingsSidebar({
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }) {
+  const t = useTranslations("settings");
   const user = useQuery(api.users.viewer);
   const pathname = usePathname();
   const { signOut } = useAuthActions();
@@ -116,21 +118,21 @@ export function SettingsSidebar({
             size="md"
             imageUrl={user?.avatarUrl}
             initials={getInitials(user?.name || user?.email)}
-            alt={user?.name ?? "User"}
+            alt={user?.name ?? t("sidebar.userAlt")}
             fallbackClassName="bg-primary text-on-primary"
           />
           <div className="min-w-0 flex-1">
             <p className="text-headline-sm text-primary truncate">
-              {user?.name || "Curator"}
+              {user?.name || t("sidebar.defaultName")}
             </p>
             <p className="text-body-md text-on-surface-variant truncate">
-              {user?.email ?? "Secure session"}
+              {user?.email ?? t("sidebar.secureSession")}
             </p>
           </div>
           <button
             type="button"
             onClick={onCloseMobile}
-            aria-label="Close navigation"
+            aria-label={t("sidebar.closeNav")}
             className="lg:hidden shrink-0 p-1.5 rounded-lg hover:bg-surface-container text-on-surface-variant cursor-pointer"
           >
             <Icon path={ICON_PATHS.close} className="w-4 h-4" />
@@ -140,9 +142,9 @@ export function SettingsSidebar({
         {/* Navigation groups */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
           {SETTINGS_NAV_GROUPS.map((group) => (
-            <div key={group.label} className="space-y-1">
+            <div key={group.labelKey} className="space-y-1">
               <p className="px-3 text-label-md text-on-surface-variant/60">
-                {group.label}
+                {t(`sidebar.groups.${group.labelKey}`)}
               </p>
               <ul className="space-y-0.5">
                 {group.items.map((item) => {
@@ -165,7 +167,9 @@ export function SettingsSidebar({
                           path={item.iconPath}
                           className="w-4 h-4 shrink-0"
                         />
-                        <span className="truncate">{item.label}</span>
+                        <span className="truncate">
+                          {t(`sidebar.items.${item.labelKey}`)}
+                        </span>
                       </Link>
                     </li>
                   );
@@ -184,7 +188,9 @@ export function SettingsSidebar({
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
           >
             <Icon path={ICON_PATHS.book} className="w-4 h-4 shrink-0" />
-            <span className="flex-1 truncate">Documentation</span>
+            <span className="flex-1 truncate">
+              {t("sidebar.documentation")}
+            </span>
             <Icon
               path={ICON_PATHS.openInNew}
               className="w-3 h-3 text-outline-variant shrink-0"
@@ -205,7 +211,7 @@ export function SettingsSidebar({
             )}
           >
             <Icon path={ICON_PATHS.mail} className="w-4 h-4 shrink-0" />
-            <span className="flex-1 truncate">Contact Us</span>
+            <span className="flex-1 truncate">{t("sidebar.contact")}</span>
           </Link>
           <button
             type="button"
@@ -213,7 +219,7 @@ export function SettingsSidebar({
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md text-error hover:bg-error-container/40 transition-colors cursor-pointer"
           >
             <Icon path={ICON_PATHS.signOut} className="w-4 h-4 shrink-0" />
-            <span>Sign Out</span>
+            <span>{t("sidebar.signOut")}</span>
           </button>
         </div>
       </aside>

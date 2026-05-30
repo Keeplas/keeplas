@@ -1,8 +1,14 @@
 "use client";
 
 import { HelpHint, Icon } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { FREQUENCIES, type ChannelConfig, type Frequency } from "./constants";
+
+type Translator = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
 // Mirrors CHECK_IN_WINDOW_DAYS / REMINDER_DAYS in
 // packages/convex/life_check.ts. Keep in sync.
@@ -45,31 +51,40 @@ interface PhaseStep {
   help?: string;
 }
 
-function cadenceLabel(frequency: Frequency): string {
+function cadenceLabel(frequency: Frequency, t: Translator): string {
   const freq = FREQUENCIES.find((f) => f.value === frequency);
-  if (!freq) return "30 days";
-  return `${freq.label} ${freq.unit.toLowerCase()}`;
+  if (!freq) return t("timeline.cadenceFallback");
+  return `${freq.label} ${t(`frequency.unit.${freq.value}`).toLowerCase()}`;
 }
 
-function joinChannelLabels(channels: ChannelConfig[]): string {
-  if (channels.length === 0) return "no channel";
-  if (channels.length === 1) return channels[0].label;
-  if (channels.length === 2)
-    return `${channels[0].label} & ${channels[1].label}`;
-  const head = channels
-    .slice(0, -1)
-    .map((c) => c.label)
-    .join(", ");
-  return `${head} & ${channels[channels.length - 1].label}`;
+function joinChannelLabels(channels: ChannelConfig[], t: Translator): string {
+  const labels = channels.map((c) => t(`channels.items.${c.type}.label`));
+  if (labels.length === 0) return t("timeline.noChannelInline");
+  if (labels.length === 1) return labels[0];
+  if (labels.length === 2) return `${labels[0]} & ${labels[1]}`;
+  const head = labels.slice(0, -1).join(", ");
+  return `${head} & ${labels[labels.length - 1]}`;
 }
 
-function plural(n: number, word: string): string {
-  return `${n} ${word}${n > 1 ? "s" : ""}`;
+function contactsLabel(n: number, t: Translator): string {
+  return t(n > 1 ? "timeline.contactsPlural" : "timeline.contactsSingular", {
+    count: n,
+  });
+}
+
+function trustedContactsLabel(n: number, t: Translator): string {
+  return t(
+    n > 1
+      ? "timeline.trustedContactsPlural"
+      : "timeline.trustedContactsSingular",
+    { count: n },
+  );
 }
 
 function buildSteps(
   channels: ChannelConfig[],
   policy: ReleasePolicy,
+  t: Translator,
 ): PhaseStep[] {
   // Only channels that are enabled AND verified actually go out — an
   // unverified email/phone can't be reached, so keep it out of the timeline.
@@ -80,78 +95,100 @@ function buildSteps(
   return [
     {
       dayLabel: "D+0",
-      title: "Check-in sent",
+      title: t("timeline.steps.sent.title"),
       titleClass: "text-on-primary",
       description: enabled.length
-        ? `${joinChannelLabels(enabled)} go out together. Confirm with one tap, the email button, or a WhatsApp reply.`
-        : "No channel enabled — turn one on so we can reach you.",
+        ? t("timeline.steps.sent.description", {
+            channels: joinChannelLabels(enabled, t),
+          })
+        : t("timeline.steps.sent.descriptionNoChannel"),
       tone: "active",
     },
     ...REMINDER_DAYS.map((day, i) => ({
       dayLabel: `D+${day}`,
-      title: i === REMINDER_DAYS.length - 1 ? "Final reminder" : "Reminder",
+      title:
+        i === REMINDER_DAYS.length - 1
+          ? t("timeline.steps.reminder.titleFinal")
+          : t("timeline.steps.reminder.title"),
       titleClass: "text-on-primary/90",
-      description:
-        "Still no reply — Keeplas reaches out again on every channel.",
+      description: t("timeline.steps.reminder.description"),
       tone: "reminder" as Tone,
     })),
     {
       dayLabel: `D+${CHECK_IN_WINDOW_DAYS}`,
-      title: "Continuity protocol begins",
+      title: t("timeline.steps.protocolBegins.title"),
       titleClass: "text-on-primary text-headline-sm",
-      description:
-        "No reply across the whole window. Keeplas now asks your trusted contacts to confirm you're unavailable — nothing is released yet.",
+      description: t("timeline.steps.protocolBegins.description"),
       tone: "confirm",
-      help: "The check-in window has fully elapsed with no reply from you. Your trusted contacts are now asked to confirm you're unavailable. Nothing is decrypted or released at this point.",
+      help: t("timeline.steps.protocolBegins.help"),
       extra: (
         <div className="flex gap-2 flex-wrap mt-3">
           <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-full">
-            Trusted contacts notified
+            {t("timeline.steps.protocolBegins.badge")}
           </span>
         </div>
       ),
     },
     {
-      dayLabel: "Then",
-      title: "Trusted contacts confirm",
+      dayLabel: t("timeline.steps.contactsConfirm.dayLabel"),
+      title: t("timeline.steps.contactsConfirm.title"),
       titleClass: "text-on-primary/90",
-      description: `At least ${plural(confirmationThreshold, "trusted contact")} must confirm they can't reach you, within ${confirmationWindowDays} days.`,
+      description: t("timeline.steps.contactsConfirm.description", {
+        contacts: trustedContactsLabel(confirmationThreshold, t),
+        days: confirmationWindowDays,
+      }),
       tone: "confirm",
-      help: `Set in Release policy: "Contacts that must confirm you're unavailable" (${confirmationThreshold}) and "Days they have to confirm" (${confirmationWindowDays} days). The contacts have that long to reach the required number.`,
+      help: t("timeline.steps.contactsConfirm.help", {
+        threshold: confirmationThreshold,
+        days: confirmationWindowDays,
+      }),
     },
     {
       dayLabel: `+${GRACE_HOURS}h`,
-      title: "Last chance to cancel",
+      title: t("timeline.steps.lastChance.title"),
       titleClass: "text-on-primary/90",
-      description: `Once enough confirm, you still have ${GRACE_HOURS} hours to cancel before anything is released.`,
+      description: t("timeline.steps.lastChance.description", {
+        hours: GRACE_HOURS,
+      }),
       tone: "confirm",
-      help: `A fixed ${GRACE_HOURS}-hour safety window — it is NOT the "Days they have to confirm" setting. It starts the moment enough contacts confirm, and confirming you're well (tap, email, or WhatsApp) during it cancels the release.`,
+      help: t("timeline.steps.lastChance.help", { hours: GRACE_HOURS }),
     },
     {
-      dayLabel: "Outcome",
-      title: "Vault released",
+      dayLabel: t("timeline.steps.released.dayLabel"),
+      title: t("timeline.steps.released.title"),
       titleClass: "text-on-primary text-headline-sm",
       description:
         fallbackBehavior === "release_anyway"
-          ? `Once ${plural(confirmationThreshold, "trusted contact")} confirm, your vault is released to them — and released anyway if the window passes without any confirmation.`
-          : `Once ${plural(confirmationThreshold, "trusted contact")} confirm, your vault is released to them. If no one confirms in time, nothing is released.`,
+          ? t("timeline.steps.released.descriptionAnyway", {
+              contacts: trustedContactsLabel(confirmationThreshold, t),
+            })
+          : t("timeline.steps.released.descriptionAbort", {
+              contacts: trustedContactsLabel(confirmationThreshold, t),
+            }),
       tone: "triggered",
       isFinal: true,
-      help: 'Controlled by the "Release anyway if no one confirms" toggle in Release policy. On (recommended): release even if none confirm once the window passes. Off: release only if your contacts confirm.',
+      help: t("timeline.steps.released.help"),
     },
   ];
 }
 
-function policyRecap({
-  confirmationThreshold,
-  confirmationWindowDays,
-  fallbackBehavior,
-}: ReleasePolicy): string {
+function policyRecap(
+  {
+    confirmationThreshold,
+    confirmationWindowDays,
+    fallbackBehavior,
+  }: ReleasePolicy,
+  t: Translator,
+): string {
   const fallback =
     fallbackBehavior === "release_anyway"
-      ? "released anyway after the window"
-      : "nothing released without confirmation";
-  return `${plural(confirmationThreshold, "contact")} to confirm · ${confirmationWindowDays}-day window · ${fallback}`;
+      ? t("timeline.recap.fallbackAnyway")
+      : t("timeline.recap.fallbackAbort");
+  return t("timeline.recap.text", {
+    contacts: contactsLabel(confirmationThreshold, t),
+    days: confirmationWindowDays,
+    fallback,
+  });
 }
 
 export function EscalationTimeline({
@@ -163,29 +200,30 @@ export function EscalationTimeline({
   travelModeEnabled,
   travelModeUntil,
 }: EscalationTimelineProps) {
+  const t = useTranslations("lifeCheck");
   const policy: ReleasePolicy = {
     confirmationThreshold,
     confirmationWindowDays,
     fallbackBehavior,
   };
-  const steps = buildSteps(channels, policy);
-  const cadence = cadenceLabel(frequency);
+  const steps = buildSteps(channels, policy, t);
+  const cadence = cadenceLabel(frequency, t);
 
   return (
     <aside className="lg:col-span-5">
       <div className="vault-gradient rounded-2xl p-8 text-on-primary h-full shadow-2xl relative overflow-hidden">
         <h3 className="text-headline-md mb-1.5 flex items-center gap-2">
-          Escalation Protocol
+          {t("timeline.title")}
           <HelpHint
-            content="Every cadence period Keeplas asks you to confirm you're well. You then have a 15-day window with reminders to reply — by tapping in the app, clicking the email button, or replying on WhatsApp. Only an explicit reply resets the countdown; using the app does not. If the whole window passes in silence, Keeplas asks your trusted contacts to confirm you're unavailable before anything is released."
+            content={t("timeline.help")}
             className="text-on-primary/60 hover:text-secondary-fixed"
           />
         </h3>
         <p className="text-body-md text-on-primary-container mb-2">
-          What happens after a missed check-in.
+          {t("timeline.subtitle")}
         </p>
         <p className="text-label-md text-on-primary-container/80 mb-8">
-          Keeplas asks you to confirm every {cadence}.
+          {t("timeline.cadence", { cadence })}
         </p>
 
         {travelModeEnabled && (
@@ -195,11 +233,11 @@ export function EscalationTimeline({
               className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
             />
             <p className="text-body-md text-on-primary-container">
-              Protocol paused — travel mode is on
               {travelModeUntil
-                ? ` until ${new Date(travelModeUntil).toLocaleDateString()}`
-                : ""}
-              . No check-ins go out while it&apos;s active.
+                ? t("timeline.travelPausedUntil", {
+                    date: new Date(travelModeUntil).toLocaleDateString(),
+                  })
+                : t("timeline.travelPaused")}
             </p>
           </div>
         )}
@@ -263,11 +301,10 @@ export function EscalationTimeline({
             />
             <div>
               <p className="text-label-md text-on-primary-container/80 mb-1">
-                {policyRecap(policy)}
+                {policyRecap(policy, t)}
               </p>
               <p className="text-body-md text-on-primary-container italic">
-                Keeplas uses zero-knowledge encryption. Only an explicit reply
-                from you — tap, email button, or WhatsApp — pauses the protocol.
+                {t("timeline.footer")}
               </p>
             </div>
           </div>

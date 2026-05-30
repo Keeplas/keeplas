@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { requireAuth } from "./helpers";
+import { requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 
 /**
@@ -33,6 +33,11 @@ export const rotateKeyMaterial = auditedMutation({
     encryptedKeyBundle: v.string(),
     // New owner ML-KEM public key.
     publicKey: v.string(),
+    // New ML-DSA signature over the new ML-KEM public-key bytes (finding #2).
+    // Rotation changes `publicKey`, so the old signature would be stale —
+    // contacts verify-before-wrap against this, so it must be re-signed
+    // atomically with the new key, never left dangling.
+    publicKeySignature: v.string(),
     // New owner secret key, AES-GCM wrapped under the NEW master key.
     encryptedAsymmetricSecretKey: v.string(),
     // OLD owner secret key, AES-GCM wrapped under the NEW master key — keeps
@@ -40,10 +45,11 @@ export const rotateKeyMaterial = auditedMutation({
     encryptedAsymmetricSecretKeyPrev: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       publicKey: args.publicKey,
+      publicKeySignature: args.publicKeySignature,
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: args.encryptedAsymmetricSecretKeyPrev,
       updatedAt: Date.now(),
@@ -61,7 +67,7 @@ export const finalizeRotation = auditedMutation({
   resourceType: "user",
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await ctx.db.patch(userId, {
       encryptedAsymmetricSecretKeyPrev: undefined,
       updatedAt: Date.now(),
@@ -78,7 +84,7 @@ export const finalizeRotation = auditedMutation({
 export const getRotatableItems = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     return await ctx.db
       .query("vault_items")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -95,7 +101,7 @@ export const getRotatableItems = query({
 export const getItemRecipients = query({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const item = await ctx.db.get(args.itemId);
     if (!item || item.userId !== userId) return [];
@@ -108,6 +114,11 @@ export const getItemRecipients = query({
     const result: Array<{
       contactId: Id<"trusted_contacts">;
       contactPublicKey: string;
+      // Identity material for verify-before-wrap (finding #2). These are the
+      // owner's own rows, so the pin (if any) travels with them.
+      contactIdentityPublicKey?: string;
+      contactPublicKeySignature?: string;
+      pinnedIdentityFingerprint?: string;
     }> = [];
     for (const row of rows) {
       const contact = await ctx.db.get(row.contactId);
@@ -115,6 +126,9 @@ export const getItemRecipients = query({
         result.push({
           contactId: row.contactId,
           contactPublicKey: contact.contactPublicKey,
+          contactIdentityPublicKey: contact.contactIdentityPublicKey,
+          contactPublicKeySignature: contact.contactPublicKeySignature,
+          pinnedIdentityFingerprint: contact.pinnedIdentityFingerprint,
         });
       }
     }

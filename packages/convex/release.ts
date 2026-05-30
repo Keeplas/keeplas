@@ -1,7 +1,7 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { requireAuth, resolveItemRecipients } from "./helpers";
+import { requireAuth, requireFullAuth, resolveItemRecipients } from "./helpers";
 import { createAuditLog } from "./audit";
 import { createNotification } from "./helpers";
 
@@ -73,7 +73,6 @@ async function fanOutRelease(
       status: "approved",
       respondedAt: now,
       autoResponseAt: now,
-      accessType: "read",
       createdAt: now,
       updatedAt: now,
       reason,
@@ -127,12 +126,17 @@ export const triggerRelease = internalMutation({
 });
 
 /**
- * Test-only: lets the vault owner manually fire a release on themselves
- * to verify the fan-out. Useful for QA before wiring into the real trigger.
+ * Test-only: fires a real release on the given vault owner to verify the
+ * fan-out. Internal-only so it never reaches the public `api.*` surface — a
+ * public release trigger would let any authenticated caller bypass Life
+ * Check / quorum / grace. Callable from testing/QA code via `internal.*`.
  */
-export const simulateEmergencyTrigger = mutation({
+export const simulateEmergencyTrigger = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // Internal-only (never on the public api surface), so it is not the
+    // direct-call attack surface the step-up gate defends — left on
+    // requireAuth. requireFullAuth would over-gate this QA helper.
     const userId = await requireAuth(ctx);
     return await fanOutRelease(ctx, userId, "manual_simulation");
   },
@@ -147,7 +151,7 @@ export const simulateEmergencyTrigger = mutation({
 export const getReleasePreview = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const items = await ctx.db
       .query("vault_items")
@@ -180,8 +184,6 @@ export const getReleasePreview = query({
         role: contact.role,
         itemCount: titles.length,
         itemTitles: titles.slice(0, 5),
-        // The release fan-out grants read access (read-only) to each recipient.
-        accessType: "read" as const,
       });
     }
     return result;

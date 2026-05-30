@@ -7,6 +7,7 @@ import { CountryCombobox } from "@/components/country-combobox";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRequestContext } from "@/lib/use-request-context";
 import { isValidCountryCode } from "@/lib/countries";
+import { useTranslations } from "@/lib/i18n";
 
 const ISO_MIN = (() => {
   const d = new Date();
@@ -25,6 +26,7 @@ interface LegalInfoStepProps {
 }
 
 export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
+  const t = useTranslations("auth.onboarding.legalInfo");
   const requestCtx = useRequestContext();
   const completeLegalInfo = useAuditedMutation(api.users.completeLegalInfo);
 
@@ -53,12 +55,12 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
   const ageError = useMemo(() => {
     if (!birthday) return null;
     const ts = Date.parse(birthday);
-    if (Number.isNaN(ts)) return "Please pick a valid date.";
+    if (Number.isNaN(ts)) return t("invalidDate");
     const ageMs = now - ts;
     const eighteenMs = 18 * 365.25 * 24 * 60 * 60 * 1000;
-    if (ageMs < eighteenMs) return "You must be at least 18 to use Keeplas.";
+    if (ageMs < eighteenMs) return t("minAge");
     return null;
-  }, [birthday, now]);
+  }, [birthday, now, t]);
 
   const canSubmit =
     !!birthday && !!country && !ageError && !submitting && !!requestCtx;
@@ -74,8 +76,7 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
       await completeLegalInfo({ birthday: ts, country });
       onComplete();
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Could not save your information.";
+      const msg = err instanceof Error ? err.message : t("saveFailed");
       setError(msg);
       setSubmitting(false);
     }
@@ -86,17 +87,14 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg mb-6">
           <span className="text-label-md uppercase tracking-widest">
-            Step 1 · Legal identity
+            {t("badge")}
           </span>
         </div>
         <h2 className="text-headline-lg text-primary mb-3 text-balance">
-          Confirm who you&nbsp;are
+          {t("heading")}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">
-          Your age determines legal capacity, and your country sets the
-          inheritance jurisdiction that will apply to your vault. Both are
-          recorded in the tamper-evident audit log so a court can later verify
-          who you were when you set this up.
+          {t("description")}
         </p>
       </div>
 
@@ -104,20 +102,20 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="birthday">Date of birth</Label>
+          <Label htmlFor="birthday">{t("birthday")}</Label>
           <DatePicker
             id="birthday"
             value={birthday}
             onChange={setBirthday}
             min={ISO_MIN}
             max={ISO_MAX_FOR_18}
-            placeholder="Select your date of birth"
+            placeholder={t("birthdayPlaceholder")}
           />
           {ageError && <p className="text-body-sm text-error">{ageError}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="country">Country of residence</Label>
+          <Label htmlFor="country">{t("country")}</Label>
           <CountryCombobox id="country" value={country} onChange={setCountry} />
         </div>
 
@@ -129,10 +127,10 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
           className="w-full justify-center"
         >
           {submitting
-            ? "Saving…"
+            ? t("saving")
             : !requestCtx && !!birthday && !!country && !ageError
-              ? "Securing your session…"
-              : "Confirm and continue"}
+              ? t("securing")
+              : t("submit")}
         </Button>
       </form>
     </div>

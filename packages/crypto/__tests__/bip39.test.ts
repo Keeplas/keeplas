@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   generatePhrase,
   entropyToPhrase,
-  phraseToKey,
-  phraseToHash,
+  derivePhraseVerifier,
+  generatePhraseVerifierSalt,
 } from "../src/recovery";
 import { WORDLIST } from "../src/recovery/wordlist";
 
@@ -84,121 +84,78 @@ describe("BIP-39 Recovery Phrase", () => {
     });
   });
 
-  describe("phraseToKey", () => {
-    it("derives a 256-bit AES-GCM key", async () => {
+  describe("derivePhraseVerifier", () => {
+    it("returns a 64-character hex string (32-byte Argon2id digest)", async () => {
       const words = await generatePhrase();
-      const key = await phraseToKey(words);
+      const salt = generatePhraseVerifierSalt();
+      const verifier = await derivePhraseVerifier(words, salt);
 
-      expect(key.algorithm).toMatchObject({ name: "AES-GCM", length: 256 });
-      expect(key.extractable).toBe(true);
-      expect(key.usages).toContain("encrypt");
-      expect(key.usages).toContain("decrypt");
+      expect(verifier).toMatch(/^[0-9a-f]{64}$/);
     });
 
-    it("same phrase always produces the same key", async () => {
+    it("same phrase + same salt always produces the same verifier", async () => {
+      const entropy = new Uint8Array(32).fill(42);
+      const words = await entropyToPhrase(entropy);
+      const salt = new Uint8Array(16).fill(7);
+
+      const v1 = await derivePhraseVerifier(words, salt);
+      const v2 = await derivePhraseVerifier(words, salt);
+
+      expect(v1).toBe(v2);
+    });
+
+    it("same phrase + different salt produces different verifiers", async () => {
       const entropy = new Uint8Array(32).fill(42);
       const words = await entropyToPhrase(entropy);
 
-      const key1 = await phraseToKey(words);
-      const key2 = await phraseToKey(words);
+      const v1 = await derivePhraseVerifier(words, new Uint8Array(16).fill(1));
+      const v2 = await derivePhraseVerifier(words, new Uint8Array(16).fill(2));
 
-      const raw1 = new Uint8Array(await crypto.subtle.exportKey("raw", key1));
-      const raw2 = new Uint8Array(await crypto.subtle.exportKey("raw", key2));
-
-      expect(raw1).toEqual(raw2);
+      expect(v1).not.toBe(v2);
     });
 
-    it("different phrases produce different keys", async () => {
+    it("different phrases + same salt produce different verifiers (wrong phrase rejected)", async () => {
+      const salt = new Uint8Array(16).fill(9);
       const words1 = await entropyToPhrase(new Uint8Array(32).fill(0));
       const words2 = await entropyToPhrase(new Uint8Array(32).fill(1));
 
-      const key1 = await phraseToKey(words1);
-      const key2 = await phraseToKey(words2);
+      const v1 = await derivePhraseVerifier(words1, salt);
+      const v2 = await derivePhraseVerifier(words2, salt);
 
-      const raw1 = new Uint8Array(await crypto.subtle.exportKey("raw", key1));
-      const raw2 = new Uint8Array(await crypto.subtle.exportKey("raw", key2));
-
-      expect(raw1).not.toEqual(raw2);
+      expect(v1).not.toBe(v2);
     });
 
     it("is case-insensitive", async () => {
       const words = await generatePhrase();
       const upper = words.map((w) => w.toUpperCase());
+      const salt = new Uint8Array(16).fill(3);
 
-      const key1 = await phraseToKey(words);
-      const key2 = await phraseToKey(upper);
+      const v1 = await derivePhraseVerifier(words, salt);
+      const v2 = await derivePhraseVerifier(upper, salt);
 
-      const raw1 = new Uint8Array(await crypto.subtle.exportKey("raw", key1));
-      const raw2 = new Uint8Array(await crypto.subtle.exportKey("raw", key2));
-
-      expect(raw1).toEqual(raw2);
+      expect(v1).toBe(v2);
     });
 
     it("rejects phrases that are not 24 words", async () => {
-      await expect(phraseToKey(["abandon"])).rejects.toThrow("24 words");
-      await expect(phraseToKey([])).rejects.toThrow("24 words");
+      const salt = generatePhraseVerifierSalt();
+      await expect(derivePhraseVerifier(["abandon"], salt)).rejects.toThrow(
+        "24 words",
+      );
     });
-  });
 
-  describe("phraseToHash", () => {
-    it("returns a 64-character hex string (SHA-256)", async () => {
+    it("rejects salts shorter than 16 bytes", async () => {
       const words = await generatePhrase();
-      const hash = await phraseToHash(words);
-
-      expect(hash).toMatch(/^[0-9a-f]{64}$/);
+      await expect(
+        derivePhraseVerifier(words, new Uint8Array(8)),
+      ).rejects.toThrow(/salt/i);
     });
 
-    it("same phrase always produces the same hash", async () => {
-      const entropy = new Uint8Array(32).fill(42);
-      const words = await entropyToPhrase(entropy);
-
-      const hash1 = await phraseToHash(words);
-      const hash2 = await phraseToHash(words);
-
-      expect(hash1).toBe(hash2);
-    });
-
-    it("different phrases produce different hashes", async () => {
-      const words1 = await entropyToPhrase(new Uint8Array(32).fill(0));
-      const words2 = await entropyToPhrase(new Uint8Array(32).fill(1));
-
-      const hash1 = await phraseToHash(words1);
-      const hash2 = await phraseToHash(words2);
-
-      expect(hash1).not.toBe(hash2);
-    });
-
-    it("is case-insensitive", async () => {
-      const words = await generatePhrase();
-      const upper = words.map((w) => w.toUpperCase());
-
-      const hash1 = await phraseToHash(words);
-      const hash2 = await phraseToHash(upper);
-
-      expect(hash1).toBe(hash2);
-    });
-
-    it("rejects phrases that are not 24 words", async () => {
-      await expect(phraseToHash(["abandon"])).rejects.toThrow("24 words");
-    });
-  });
-
-  describe("full roundtrip: phrase → key → encrypt → decrypt", () => {
-    it("works end to end", async () => {
-      const words = await generatePhrase();
-      const key = await phraseToKey(words);
-
-      // Import encrypt/decrypt
-      const { encrypt, decrypt } = await import("../src/aes");
-
-      const data = { vault: "my secrets", critical: true };
-      const plaintext = new TextEncoder().encode(JSON.stringify(data));
-
-      const { ciphertext, iv } = await encrypt(plaintext, key);
-      const decrypted = await decrypt(ciphertext, key, iv);
-      const result = JSON.parse(new TextDecoder().decode(decrypted));
-
-      expect(result).toEqual(data);
+    it("generatePhraseVerifierSalt returns 16 random bytes", () => {
+      const a = generatePhraseVerifierSalt();
+      const b = generatePhraseVerifierSalt();
+      expect(a.length).toBe(16);
+      expect(b.length).toBe(16);
+      expect(a).not.toEqual(b);
     });
   });
 });

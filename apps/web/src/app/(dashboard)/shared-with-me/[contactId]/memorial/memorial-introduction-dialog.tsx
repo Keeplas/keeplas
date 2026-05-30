@@ -9,6 +9,7 @@ import {
   Button,
 } from "@keeplas/ui";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { useTranslations } from "@/lib/i18n";
 import {
   MemorialIntroductionCard,
   type MemorialIntroductionData,
@@ -29,14 +30,15 @@ export function MemorialIntroductionDialog({
   contactId,
   introductions,
 }: MemorialIntroductionDialogProps) {
+  const t = useTranslations("sharedWithMe");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-surface max-w-2xl w-[calc(100%-2rem)] max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>A message from {ownerName}</DialogTitle>
+            <DialogTitle>{t("introDialog.title", { ownerName })}</DialogTitle>
             <DialogDescription className="mt-1">
-              Take a moment — this was left for you.
+              {t("introDialog.description")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -59,7 +61,7 @@ export function MemorialIntroductionDialog({
             onClick={() => onOpenChange(false)}
             className="w-full cursor-pointer"
           >
-            Continue to the vault
+            {t("introDialog.continue")}
           </Button>
         </div>
       </DialogContent>

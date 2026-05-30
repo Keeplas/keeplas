@@ -7,6 +7,7 @@ import { useQuery } from "convex/react";
 import { Loader, Icon } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { useTranslations } from "@/lib/i18n";
 import { CATEGORIES } from "@/lib/vault-categories";
 import { MemorialIntroductionCard } from "./memorial-introduction-card";
 import { MemorialIntroductionDialog } from "./memorial-introduction-dialog";
@@ -45,6 +46,7 @@ function markIntrosSeen(contactId: string, introIds: string[]) {
 }
 
 export default function MemorialVaultPage() {
+  const t = useTranslations("sharedWithMe");
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const data = useQuery(api.memorial.getReleasedVaultForMe, { contactId });
@@ -82,16 +84,17 @@ export default function MemorialVaultPage() {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl">
-          <h3 className="text-headline-sm text-primary">No memorial access</h3>
+          <h3 className="text-headline-sm text-primary">
+            {t("memorial.noAccess.title")}
+          </h3>
           <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-md">
-            This vault has not been released to you, or you are not one of its
-            recipients.
+            {t("memorial.noAccess.description")}
           </p>
           <Link
             href="/shared-with-me"
             className="text-body-md font-bold text-secondary hover:underline mt-4"
           >
-            Back to Shared with me
+            {t("memorial.back")}
           </Link>
         </div>
       </div>
@@ -107,15 +110,21 @@ export default function MemorialVaultPage() {
           href="/shared-with-me"
           className="text-label-md text-on-surface-variant hover:text-primary"
         >
-          ← Shared with me
+          ← {t("memorial.backShort")}
         </Link>
         <h1 className="text-headline-lg text-primary mt-3 mb-2">
-          In memory of {owner.name}
+          {t("memorial.title", { ownerName: owner.name })}
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          Read-only access to the {items.length} item
-          {items.length === 1 ? "" : "s"} {owner.name} left for you. Everything
-          is decrypted on your device.
+          {items.length === 1
+            ? t("memorial.subtitleOne", {
+                count: items.length,
+                ownerName: owner.name,
+              })
+            : t("memorial.subtitleOther", {
+                count: items.length,
+                ownerName: owner.name,
+              })}
         </p>
       </header>
 
@@ -124,14 +133,14 @@ export default function MemorialVaultPage() {
           <div>
             <div className="flex items-center justify-between gap-3 mb-1">
               <p className="text-label-md text-secondary">
-                A message from {owner.name}
+                {t("memorial.messageFrom", { ownerName: owner.name })}
               </p>
               <button
                 type="button"
                 onClick={() => setIntroOpen(true)}
                 className="text-label-md font-bold text-secondary hover:underline cursor-pointer"
               >
-                Re-read message
+                {t("memorial.rereadMessage")}
               </button>
             </div>
             <div className="h-px bg-outline-variant/30" />
@@ -148,7 +157,7 @@ export default function MemorialVaultPage() {
 
       {items.length === 0 ? (
         <p className="text-body-md text-on-surface-variant">
-          No readable items were released to you.
+          {t("memorial.noReadableItems")}
         </p>
       ) : (
         <div className="space-y-10">
@@ -173,7 +182,10 @@ export default function MemorialVaultPage() {
                           {item.title}
                         </p>
                         <p className="text-label-md text-on-surface-variant mt-1">
-                          {item.hasFiles ? "Includes attachments · " : ""}Read →
+                          {item.hasFiles
+                            ? t("memorial.includesAttachments")
+                            : ""}
+                          {t("memorial.read")} →
                         </p>
                       </Link>
                     ) : (
@@ -185,7 +197,7 @@ export default function MemorialVaultPage() {
                           {item.title}
                         </p>
                         <p className="text-label-md text-on-surface-variant mt-1">
-                          Unavailable (legacy format)
+                          {t("memorial.unavailableLegacy")}
                         </p>
                       </div>
                     ),

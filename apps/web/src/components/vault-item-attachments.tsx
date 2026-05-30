@@ -8,6 +8,7 @@ import { Icon, Spinner, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 type AttachmentFile = Doc<"vault_item_files">;
 
@@ -47,13 +48,14 @@ export function VaultItemAttachments({
   // and fall back to the master key.
   itemDek?: CryptoKey | null;
 }) {
+  const t = useTranslations("vault");
   const files = useQuery(api.vault_items.getItemFiles, { itemId });
 
   if (files === undefined) {
     return (
       <div className="bg-surface-container-low rounded-2xl p-6 flex items-center gap-3 text-body-md text-on-surface-variant">
         <Spinner size="sm" />
-        Loading secure attachments…
+        {t("attachments.loading")}
       </div>
     );
   }
@@ -65,7 +67,7 @@ export function VaultItemAttachments({
       <div className="flex items-center gap-2">
         <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
         <span className="text-label-md text-secondary">
-          Secure Attachments · {files.length}
+          {t("attachments.heading", { count: files.length })}
         </span>
       </div>
       <div className="grid grid-cols-1 gap-4">
@@ -84,6 +86,7 @@ function AttachmentCard({
   file: AttachmentFile;
   itemDek?: CryptoKey | null;
 }) {
+  const t = useTranslations("vault");
   const signedUrl = useQuery(api.vault_items.getItemFileUrl, {
     fileId: file._id,
   });
@@ -118,7 +121,7 @@ function AttachmentCard({
         if (!cancelled) setPlainUrl(createdUrl);
       } catch (err) {
         if (!cancelled) {
-          setError(getErrorMessage(err, "Unable to decrypt attachment."));
+          setError(getErrorMessage(err, t("attachments.decryptError")));
         }
       } finally {
         if (!cancelled) setDecrypting(false);
@@ -138,9 +141,9 @@ function AttachmentCard({
   const meta = useMemo(() => {
     const parts: string[] = [formatFileSize(file.size)];
     if (duration) parts.push(duration);
-    parts.push("Encrypted");
+    parts.push(t("attachments.encrypted"));
     return parts.join(" · ");
-  }, [file.size, duration]);
+  }, [file.size, duration, t]);
 
   return (
     <article className="bg-surface-container-low rounded-2xl p-5 space-y-4">
@@ -174,7 +177,7 @@ function AttachmentCard({
             className="flex items-center gap-2 text-label-md text-secondary hover:text-primary transition-colors cursor-pointer"
           >
             <Icon path={ICON_PATHS.download} className="w-4 h-4" />
-            Download
+            {t("attachments.download")}
           </a>
         )}
       </header>
@@ -182,7 +185,7 @@ function AttachmentCard({
       {decrypting && !plainUrl && (
         <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
           <Spinner size="sm" />
-          Decrypting…
+          {t("attachments.decrypting")}
         </div>
       )}
 
@@ -221,14 +224,14 @@ function AttachmentCard({
             path={ICON_PATHS.pictureAsPdf}
             className="w-4 h-4 text-secondary"
           />
-          Document ready — open or download to view.
+          {t("attachments.documentReady")}
           <a
             href={plainUrl}
             target="_blank"
             rel="noreferrer"
             className="ml-auto font-bold text-secondary hover:underline"
           >
-            Open
+            {t("attachments.open")}
           </a>
         </div>
       )}

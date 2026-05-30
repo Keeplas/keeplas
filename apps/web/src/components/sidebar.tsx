@@ -8,6 +8,7 @@ import { cn, Icon, UserAvatar } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getInitials } from "@/lib/user";
+import { useTranslations } from "@/lib/i18n";
 import { ContinuityStatusBadge } from "./continuity-status-badge";
 
 const SETTINGS_OUTER =
@@ -15,31 +16,36 @@ const SETTINGS_OUTER =
 const SETTINGS_INNER = "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z";
 const CHEVRON_EXPAND = "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9";
 
-const navItems: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
-  { label: "Digital Vault", href: "/vault", iconPath: ICON_PATHS.lock },
+const navItems: Array<{ labelKey: string; href: string; iconPath: string }> = [
+  { labelKey: "nav.hub", href: "/hub", iconPath: ICON_PATHS.hub },
+  { labelKey: "nav.vault", href: "/vault", iconPath: ICON_PATHS.lock },
   {
-    label: "Trusted Circle",
+    labelKey: "nav.trustedCircle",
     href: "/trusted-contacts",
     iconPath: ICON_PATHS.users,
   },
   {
-    label: "Continuity Protocol",
+    labelKey: "nav.continuityProtocol",
     href: "/life-check",
     iconPath: ICON_PATHS.heartbeat,
   },
   {
-    label: "Shared with me",
+    labelKey: "nav.sharedWithMe",
     href: "/shared-with-me",
     iconPath: ICON_PATHS.share,
   },
 ];
 
-const MOBILE_NAV: Array<{ label: string; href: string; iconPath: string }> = [
-  { label: "Hub", href: "/hub", iconPath: ICON_PATHS.hub },
-  { label: "Vault", href: "/vault", iconPath: ICON_PATHS.lock },
-  { label: "Trust", href: "/trusted-contacts", iconPath: ICON_PATHS.users },
-];
+const MOBILE_NAV: Array<{ labelKey: string; href: string; iconPath: string }> =
+  [
+    { labelKey: "mobileNav.hub", href: "/hub", iconPath: ICON_PATHS.hub },
+    { labelKey: "mobileNav.vault", href: "/vault", iconPath: ICON_PATHS.lock },
+    {
+      labelKey: "mobileNav.trust",
+      href: "/trusted-contacts",
+      iconPath: ICON_PATHS.users,
+    },
+  ];
 
 function SettingsIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
@@ -57,6 +63,7 @@ function SettingsIcon({ className = "w-5 h-5" }: { className?: string }) {
 }
 
 export function Sidebar() {
+  const t = useTranslations("chrome");
   const pathname = usePathname();
   const user = useQuery(api.users.viewer);
 
@@ -69,7 +76,7 @@ export function Sidebar() {
       <aside className="hidden md:flex flex-col w-72 h-screen sticky top-0 bg-surface-container-low p-6">
         <Link
           href="/hub"
-          aria-label="Go to Hub"
+          aria-label={t("nav.goToHub")}
           className="flex items-center gap-3 mb-8 outline-none rounded-xl"
         >
           <Image
@@ -99,7 +106,7 @@ export function Sidebar() {
                     )}
                   >
                     <Icon path={path} />
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate">{t(item.labelKey)}</span>
                   </Link>
                 </li>
               );
@@ -119,7 +126,7 @@ export function Sidebar() {
             )}
           >
             <SettingsIcon />
-            <span>Settings</span>
+            <span>{t("nav.settings")}</span>
           </Link>
 
           <a
@@ -129,7 +136,7 @@ export function Sidebar() {
             className="flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
           >
             <Icon path={ICON_PATHS.book} />
-            <span className="flex-1 truncate">Documentation</span>
+            <span className="flex-1 truncate">{t("nav.documentation")}</span>
             <Icon
               path={ICON_PATHS.openInNew}
               className="w-3 h-3 text-outline-variant shrink-0"
@@ -144,15 +151,15 @@ export function Sidebar() {
               size="md"
               imageUrl={user?.avatarUrl}
               initials={initials}
-              alt={user?.name ?? "User"}
+              alt={user?.name ?? t("account.userAlt")}
               fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
             />
             <div className="min-w-0 flex-1 text-left">
               <p className="text-headline-sm text-primary truncate">
-                {user?.name || "Curator"}
+                {user?.name || t("account.curator")}
               </p>
               <p className="text-label-md text-secondary truncate">
-                {user?.email ?? "Secure session"}
+                {user?.email ?? t("account.secureSession")}
               </p>
             </div>
             <Icon
@@ -167,7 +174,7 @@ export function Sidebar() {
       <header className="md:hidden sticky top-0 z-40 bg-surface/80 backdrop-blur-xl flex items-center justify-between px-6 py-3">
         <Link
           href="/hub"
-          aria-label="Go to Hub"
+          aria-label={t("nav.goToHub")}
           className="flex items-center gap-2 outline-none rounded-xl"
         >
           <Image
@@ -181,14 +188,14 @@ export function Sidebar() {
         <div className="flex items-center gap-2">
           <Link
             href="/settings"
-            aria-label="Open settings"
+            aria-label={t("nav.openSettings")}
             className="p-1 rounded-xl outline-none cursor-pointer"
           >
             <UserAvatar
               size="sm"
               imageUrl={user?.avatarUrl}
               initials={initials}
-              alt={user?.name ?? "User"}
+              alt={user?.name ?? t("account.userAlt")}
               fallbackClassName="bg-secondary-fixed text-on-secondary-fixed"
             />
           </Link>
@@ -213,7 +220,7 @@ export function Sidebar() {
                 >
                   <Icon path={item.iconPath} />
                   <span className="truncate max-w-[60px]">
-                    {item.label.split(" ")[0]}
+                    {t(item.labelKey).split(" ")[0]}
                   </span>
                 </Link>
               </li>
@@ -230,7 +237,7 @@ export function Sidebar() {
               )}
             >
               <SettingsIcon />
-              <span>Settings</span>
+              <span>{t("nav.settings")}</span>
             </Link>
           </li>
         </ul>

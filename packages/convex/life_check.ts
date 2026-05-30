@@ -8,7 +8,7 @@ import {
   MutationCtx,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { createNotification, requireAuth } from "./helpers";
+import { createNotification, requireFullAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
@@ -57,7 +57,7 @@ export function resolveThresholdDays(config: {
 export const getConfig = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     return await ctx.db
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -85,12 +85,11 @@ export const saveConfig = mutation({
         ),
         order: v.number(),
         isEnabled: v.boolean(),
-        delayHours: v.optional(v.number()),
       }),
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
     const thresholdDays = FREQUENCY_DAYS[args.frequency];
     const nextCheckAt = now + thresholdDays * DAY_MS;
@@ -128,21 +127,10 @@ export const saveConfig = mutation({
       frequency: args.frequency,
       inactivityThresholdDays: thresholdDays,
       lastActivityAt: now,
-      passiveSignals: {
-        appActivity: true,
-        deviceActivity: false,
-        gpsMovement: false,
-        whatsappActivity: false,
-        googleActivity: false,
-        healthData: false,
-        appleWatch: false,
-      },
       activeChannels: args.activeChannels,
       travelModeEnabled: false,
-      expeditionMode: false,
       isActive: true,
       nextCheckAt,
-      confidenceThreshold: 50,
       createdAt: now,
       updatedAt: now,
     });
@@ -169,7 +157,7 @@ export const toggleTravelMode = mutation({
     until: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const config = await ctx.db
       .query("life_check_configs")
@@ -216,7 +204,7 @@ export const validateCycle = mutation({
     method: v.union(v.literal("tap"), v.literal("email_link")),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     await confirmAlive(ctx, userId, Date.now(), args.method);
     return { success: true };
   },
@@ -231,7 +219,7 @@ export const postponeCycle = mutation({
     customDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const config = await ctx.db
       .query("life_check_configs")
@@ -297,7 +285,7 @@ export const postponeCycle = mutation({
 export const getCycleHistory = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const limit = args.limit ?? 20;
 
     return await ctx.db
@@ -314,7 +302,7 @@ export const getCycleHistory = query({
 export const getActiveCycle = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const running = await ctx.db
       .query("life_check_cycles")
@@ -338,7 +326,6 @@ type ChannelEntry = {
   type: "push" | "email" | "whatsapp";
   order: number;
   isEnabled: boolean;
-  delayHours?: number;
 };
 
 function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
@@ -380,9 +367,6 @@ async function startCycleForConfig(
     userId: config.userId,
     configId,
     status: "running",
-    passiveScore: 0,
-    currentLevel: 1,
-    levelReachedAt: now,
     channelsAttempted: [],
     pendingScheduleIds: [],
     scheduledAt: now,
@@ -509,13 +493,10 @@ export async function cancelPendingSchedules(
 }
 
 /**
- * Find the user's in-flight Life Check cycle, if any. ("escalating" is a
- * legacy status retained only so cycles created before the redesign are still
- * recognised until the Phase-7 migration converts them.)
+ * Find the user's in-flight Life Check cycle, if any.
  */
 async function findInFlightCycle(ctx: MutationCtx, userId: Id<"users">) {
-  // "escalating" is legacy (pre-redesign); kept until the Phase-7 migration.
-  const statuses = ["running", "awaiting_confirmation", "escalating"] as const;
+  const statuses = ["running", "awaiting_confirmation"] as const;
   for (const status of statuses) {
     const cycle = await ctx.db
       .query("life_check_cycles")
@@ -828,7 +809,6 @@ export const enterConfirmationStage = internalMutation({
     const now = Date.now();
     await ctx.db.patch(cycle._id, {
       status: "awaiting_confirmation",
-      levelReachedAt: now,
     });
 
     const owner = await ctx.db.get(cycle.userId);
@@ -880,8 +860,10 @@ export const enterConfirmationStage = internalMutation({
 /**
  * Confirmation window elapsed. If contacts reached the confirmation threshold,
  * a release is already pending behind its owner-cancel grace — do nothing.
- * Otherwise apply the owner's fallback: "abort" (release nothing) or
- * "release_anyway".
+ * Otherwise apply the owner's fallback: "abort" (release nothing, notify the
+ * owner) or "release_anyway" (release without human confirmation). The default
+ * when unset is "abort" — releasing on cron timers alone must be an explicit
+ * owner opt-in (see finding H1).
  */
 export const resolveConfirmationWindow = internalMutation({
   args: { cycleId: v.id("life_check_cycles") },
@@ -899,7 +881,11 @@ export const resolveConfirmationWindow = internalMutation({
     if (confirmed) return; // release will fire after its grace window
 
     const config = await ctx.db.get(cycle.configId);
-    const fallback = config?.fallbackBehavior ?? "release_anyway";
+    // Safe default: when the owner never explicitly opted into "release_anyway",
+    // a confirmation window that elapses without human quorum must NOT release
+    // the vault. An attacker who suppresses the owner's check-ins must not be
+    // able to force a release purely on cron timers. Absent config => "abort".
+    const fallback = config?.fallbackBehavior ?? "abort";
 
     if (fallback === "release_anyway") {
       await markCycleTriggered(ctx, cycle._id, "life_check_fallback_release");
@@ -923,6 +909,20 @@ export const resolveConfirmationWindow = internalMutation({
     for (const req of pending) {
       await ctx.db.patch(req._id, { status: "expired", updatedAt: now });
     }
+
+    // Notify the owner: the vault stayed locked because no human confirmed
+    // unreachability within the window. If they are in fact away, this is the
+    // signal to add/re-confirm trusted contacts or switch to "release_anyway".
+    await createNotification(ctx, {
+      userId: cycle.userId,
+      type: "security_alert",
+      title: "Life Check closed without release",
+      body: "Your check-in window ended without enough trusted contacts confirming you were unavailable, so your vault stayed locked. No data was released.",
+      actionUrl: "/life-check",
+      channels: ["push", "email"],
+      relatedId: cycle._id,
+      relatedType: "life_check_cycle",
+    });
 
     await createAuditLog(ctx, {
       userId: cycle.userId,
@@ -975,7 +975,7 @@ export const releaseAfterConfirmation = internalMutation({
 export const toggleActive = mutation({
   args: { isActive: v.boolean() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const config = await ctx.db
       .query("life_check_configs")
@@ -1005,7 +1005,7 @@ export const saveReleasePolicy = mutation({
     fallbackBehavior: v.union(v.literal("abort"), v.literal("release_anyway")),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     if (args.confirmationThreshold < 1 || args.confirmationThreshold > 10) {
       throw new Error("Confirmation threshold must be between 1 and 10");
     }

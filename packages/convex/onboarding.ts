@@ -21,16 +21,6 @@ const DEFAULT_ACTIVE_CHANNELS = [
   { type: "email" as const, order: 3, isEnabled: true },
 ];
 
-const DEFAULT_PASSIVE_SIGNALS = {
-  appActivity: true,
-  deviceActivity: false,
-  gpsMovement: false,
-  whatsappActivity: false,
-  googleActivity: false,
-  healthData: false,
-  appleWatch: false,
-};
-
 const DEFAULT_THRESHOLD_DAYS = 30;
 
 /**
@@ -57,13 +47,10 @@ export async function seedDefaults(
       frequency: "monthly",
       inactivityThresholdDays: DEFAULT_THRESHOLD_DAYS,
       lastActivityAt: now,
-      passiveSignals: DEFAULT_PASSIVE_SIGNALS,
       activeChannels: DEFAULT_ACTIVE_CHANNELS,
       travelModeEnabled: false,
-      expeditionMode: false,
       isActive: true,
       nextCheckAt: now + DEFAULT_THRESHOLD_DAYS * DAY_MS,
-      confidenceThreshold: 50,
       createdAt: now,
       updatedAt: now,
     });
@@ -174,6 +161,7 @@ export const getOnboardingState = query({
       recoveryVerified: user.recoveryVerified ?? false,
       hasEncryptedKeyBundle: !!user.encryptedKeyBundle,
       vaultThreshold: user.vaultThreshold ?? null,
+      language: user.language ?? null,
     };
   },
 });
@@ -225,18 +213,24 @@ export const advanceOnboardingStep = mutation({
 });
 
 /**
- * Store the recovery phrase hash after user verifies their words.
- * Only the SHA-256 hash is stored — NEVER the phrase itself.
+ * Store the salted recovery-phrase verifier after the user verifies their
+ * words. The verifier is a salted Argon2id digest (derivePhraseVerifier),
+ * computed client-side — NEVER the phrase itself. The `phraseSalt` is the
+ * same per-user salt later reused by storeKeyBundle for the RootKey: it is
+ * persisted here so the salted verifier can be recomputed on later recovery,
+ * since verification precedes key generation in the onboarding flow.
  */
 export const storeRecoveryPhraseHash = mutation({
   args: {
     recoveryPhraseHash: v.string(),
+    phraseSalt: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
 
     await ctx.db.patch(userId, {
       recoveryPhraseHash: args.recoveryPhraseHash,
+      phraseSalt: args.phraseSalt,
       recoveryVerified: true,
       onboardingStep: "verification",
       updatedAt: Date.now(),
@@ -245,15 +239,19 @@ export const storeRecoveryPhraseHash = mutation({
 });
 
 /**
- * Store the encrypted key bundle, the Argon2id phrase salt, and the Keeplas
- * Shamir shard after key generation. All values are produced client-side —
+ * Store the encrypted key bundle, the Argon2id phrase salt, and the chosen
+ * Shamir threshold after key generation. All values are produced client-side —
  * the server never sees plaintext keys nor the recovery phrase.
+ *
+ * The server deliberately holds NO Shamir shard (finding #3): a server-held
+ * shard plus one trusted-contact shard would reach a threshold-2 quorum and
+ * let a malicious server reconstruct the master key on its own, breaking
+ * zero-knowledge. Only the device (client) and trusted contacts hold shards.
  */
 export const storeKeyBundle = mutation({
   args: {
     encryptedKeyBundle: v.string(),
     phraseSalt: v.string(),
-    keeplasShard: v.string(),
     vaultThreshold: v.number(),
   },
   handler: async (ctx, args) => {
@@ -265,10 +263,8 @@ export const storeKeyBundle = mutation({
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       phraseSalt: args.phraseSalt,
-      keeplasShard: args.keeplasShard,
       vaultThreshold: args.vaultThreshold,
       onboardingStep: "complete",
-      vaultIntegrityScore: 0,
       updatedAt: Date.now(),
     });
 

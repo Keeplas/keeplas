@@ -1,19 +1,18 @@
 "use client";
 
 import { ContinuityControls } from "@/components/continuity-controls";
+import { useTranslations } from "@/lib/i18n";
 
 export default function SettingsContinuityPage() {
+  const t = useTranslations("settingsSecurity");
   return (
     <div className="space-y-6">
       <header>
         <h2 className="text-headline-md text-primary mb-2">
-          Continuity Protocol
+          {t("continuity.title")}
         </h2>
         <p className="text-body-md text-on-surface-variant max-w-2xl">
-          Master pause and Travel Mode for the entire Continuity Protocol.
-          Disabling here suspends Life Check escalation and the Scenario Engine
-          in lock-step — perfect for off-grid trips. Use Travel Mode when you
-          have a return date so everything resumes automatically.
+          {t("continuity.description")}
         </p>
       </header>
 

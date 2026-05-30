@@ -3,6 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+import { constantTimeStringEquals } from "./lib/crypto";
 import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -22,15 +23,6 @@ function generateOtp(): string {
   const arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
   return (arr[0] % 1_000_000).toString().padStart(6, "0");
-}
-
-function constantTimeStringEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return mismatch === 0;
 }
 
 type Channel = "email" | "whatsapp";
@@ -76,10 +68,14 @@ export const getMyLoginOtpGate = query({
         required: false,
         channelMasked: null as string | null,
         recoveryBound: false,
+        phraseSalt: null as string | null,
       };
     }
     const user = await ctx.db.get(userId);
     const recoveryBound = !!user?.recoveryPhraseHash;
+    // Non-sensitive per-user salt — needed client-side to derive the salted
+    // recovery-phrase verifier. Only exposed to the authenticated owner.
+    const phraseSalt = user?.phraseSalt ?? null;
     const resolved = user ? resolveChannel(user) : null;
     const channelMasked = resolved
       ? maskDestination(resolved.channel, resolved.destination)
@@ -94,6 +90,7 @@ export const getMyLoginOtpGate = query({
         required: false,
         channelMasked,
         recoveryBound,
+        phraseSalt,
       };
     }
 
@@ -104,6 +101,7 @@ export const getMyLoginOtpGate = query({
         required: true,
         channelMasked,
         recoveryBound,
+        phraseSalt,
       };
     }
     const cleared = await ctx.db
@@ -115,6 +113,7 @@ export const getMyLoginOtpGate = query({
       required: !cleared,
       channelMasked,
       recoveryBound,
+      phraseSalt,
     };
   },
 });
@@ -169,11 +168,13 @@ export const requestLoginOtp = mutation({
       await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
         phoneNumber: resolved.destination,
         code,
+        language: user.language,
       });
     } else {
       await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
         email: resolved.destination,
         code,
+        language: user.language,
       });
     }
 

@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { mutation, MutationCtx, query } from "./_generated/server";
+import {
+  internalQuery,
+  mutation,
+  MutationCtx,
+  query,
+} from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
@@ -9,6 +14,7 @@ import {
   getBlobDownloadUrl,
   storageRefValidator,
 } from "./lib/storage";
+import { normalizeUserLanguage } from "./lib/locale";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 130 * 365.25 * 24 * 60 * 60 * 1000;
@@ -20,6 +26,24 @@ export const viewer = query({
     if (userId === null) return null;
 
     return await ctx.db.get(userId);
+  },
+});
+
+/**
+ * Resolve a user's stored UI language by email (BCP-47 tag like "fr-FR", or
+ * undefined). Internal-only — used by the auth Email provider to send the
+ * signup/verification email in the recipient's chosen language. Matches the
+ * exact email string via the `email` index, mirroring the Password provider.
+ */
+export const getLanguageByEmail = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.email) return undefined;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", args.email))
+      .first();
+    return user?.language ?? undefined;
   },
 });
 
@@ -278,6 +302,14 @@ export const updateLegalResidence = auditedMutation({
  * Idempotent: re-running with the same keypair is a no-op; calling with a
  * different public key is rejected to avoid silently invalidating prior
  * wrapped DEKs.
+ *
+ * Identity-key fields (finding #2 — malicious-server key substitution) are
+ * accepted alongside the ML-KEM keypair: `identityPublicKey` (ML-DSA-65 public
+ * key), `encryptedIdentitySecretKey` (identity secret key wrapped under the
+ * MasterKey, mirroring `encryptedAsymmetricSecretKey`), and
+ * `publicKeySignature` (ML-DSA signature binding the ML-KEM public key to the
+ * identity). They are optional to keep existing rows and callers valid; step 2
+ * starts verifying `publicKeySignature` before wrapping to this user.
  */
 export const setPublicKey = auditedMutation({
   action: "user.public_key.set",
@@ -285,6 +317,9 @@ export const setPublicKey = auditedMutation({
   args: {
     publicKey: v.string(),
     encryptedAsymmetricSecretKey: v.string(),
+    identityPublicKey: v.optional(v.string()),
+    encryptedIdentitySecretKey: v.optional(v.string()),
+    publicKeySignature: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -298,6 +333,9 @@ export const setPublicKey = auditedMutation({
     await ctx.db.patch(userId, {
       publicKey: args.publicKey,
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
+      identityPublicKey: args.identityPublicKey,
+      encryptedIdentitySecretKey: args.encryptedIdentitySecretKey,
+      publicKeySignature: args.publicKeySignature,
       updatedAt: Date.now(),
     });
   },
@@ -317,7 +355,9 @@ export const updatePreferences = auditedMutation({
     const userId = await requireAuth(ctx);
 
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.language !== undefined) patch.language = args.language;
+    if (args.language !== undefined) {
+      patch.language = normalizeUserLanguage(args.language);
+    }
     if (args.timezone !== undefined) patch.timezone = args.timezone;
 
     await ctx.db.patch(userId, patch);
@@ -351,8 +391,6 @@ export async function wipeUserData(
     "trusted_contacts",
     "life_check_configs",
     "life_check_cycles",
-    "passive_signals",
-    "conditional_messages",
     "notifications",
     "vaults",
   ] as const;

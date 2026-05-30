@@ -56,6 +56,38 @@ const RULES = [
 			"Do not import Id<\"_storage\"> outside packages/convex/lib/storage.ts.",
 		allow: (relPath) => relPath === STORAGE_WRAPPER_REL,
 	},
+	{
+		// Convex server code must use the local ./lib/crypto helper, never the
+		// browser crypto package (it pulls WebCrypto-only modules and breaks the
+		// convex bundle/typecheck). See packages/convex/lib/crypto.ts.
+		pattern: /from\s+["']@keeplas\/crypto["']/,
+		message:
+			"Convex server code must not import @keeplas/crypto. Use packages/convex/lib/crypto.ts.",
+		allow: (relPath) => !relPath.startsWith("packages/convex"),
+	},
+	{
+		// WebAuthn must demand user verification (finding #6) — no possession-only.
+		pattern: /userVerification\s*:\s*["']preferred["']/,
+		message:
+			'WebAuthn userVerification must be "required", not "preferred" (finding #6).',
+	},
+	{
+		pattern: /requireUserVerification\s*:\s*false/,
+		message:
+			"WebAuthn requireUserVerification must be true (finding #6).",
+	},
+	{
+		// Life Check must default to "abort", never auto-release on silence (H1).
+		pattern: /\?\?\s*["']release_anyway["']/,
+		message:
+			'fallbackBehavior must default to "abort", never "release_anyway" (finding H1).',
+	},
+	{
+		// The recovery-phrase verifier must be compared in constant time (M1).
+		pattern: /recoveryPhraseHash\s*[!=]==|[!=]==\s*args\.phraseHash/,
+		message:
+			"Compare the recovery-phrase verifier with constantTimeStringEquals, not == / !== (finding M1).",
+	},
 ];
 
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs"]);

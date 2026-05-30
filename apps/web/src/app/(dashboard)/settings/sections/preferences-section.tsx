@@ -11,6 +11,8 @@ import {
   useLocalStorageString,
 } from "@/lib/use-local-storage-state";
 import { getErrorMessage } from "@/lib/utils";
+import { normalizeUserLanguage, resolveLocale } from "@/lib/locale";
+import { useSetLocale, useTranslations } from "@/lib/i18n";
 import {
   CURRENCIES,
   DEFAULT_NOTIFICATIONS,
@@ -26,30 +28,20 @@ interface PreferencesSectionProps {
 
 const NOTIFICATION_ITEMS: Array<{
   key: keyof NotificationPrefs;
-  label: string;
-  description: string;
 }> = [
-  {
-    key: "lifeCheckReminders",
-    label: "Life Check Reminders",
-    description: "Bi-weekly proof-of-life verification.",
-  },
-  {
-    key: "vaultAccessAlerts",
-    label: "Vault Access Alerts",
-    description: "Instant push notification on login.",
-  },
-  {
-    key: "newsletterUpdates",
-    label: "Newsletter & Updates",
-    description: "Occasional legacy planning insights.",
-  },
+  { key: "lifeCheckReminders" },
+  { key: "vaultAccessAlerts" },
+  { key: "newsletterUpdates" },
 ];
 
 export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   const updatePreferences = useAuditedMutation(api.users.updatePreferences);
+  const setLocale = useSetLocale();
+  const t = useTranslations("settings");
 
-  const [language, setLanguage] = useState(user.language ?? "en-US");
+  const [language, setLanguage] = useState(
+    normalizeUserLanguage(user.language),
+  );
   const [timezone, setTimezone] = useState(user.timezone ?? "UTC");
   const [currency, setCurrency] = useLocalStorageString(
     STORAGE_KEYS.currency,
@@ -68,7 +60,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   const [seededFrom, setSeededFrom] = useState(user);
   if (user !== seededFrom) {
     setSeededFrom(user);
-    setLanguage(user.language ?? "en-US");
+    setLanguage(normalizeUserLanguage(user.language));
     setTimezone(user.timezone ?? "UTC");
   }
 
@@ -79,9 +71,12 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
     setSaved(false);
     try {
       await updatePreferences({ language, timezone });
+      // Apply the new locale immediately (also persists to localStorage);
+      // ViewerLocaleSync keeps it in sync from the stored preference too.
+      setLocale(resolveLocale(language));
       setSaved(true);
     } catch (err) {
-      onError(getErrorMessage(err, "Failed to save preferences"));
+      onError(getErrorMessage(err, t("preferences.saveError")));
     } finally {
       setSaving(false);
     }
@@ -100,35 +95,43 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
             <h2 className="text-headline-sm text-primary">
-              Platform Localization
+              {t("preferences.localization.title")}
             </h2>
             <p className="text-body-md text-on-surface-variant">
-              Define how your legacy is presented across global regions.
+              {t("preferences.localization.description")}
             </p>
           </div>
           <div className="space-y-5">
             <div className="space-y-2">
               <Label className="text-label-md text-secondary">
-                Interface Language
+                {t("preferences.interfaceLanguage")}
               </Label>
               <Select
                 value={language}
                 onValueChange={setLanguage}
-                placeholder="Choose language"
+                placeholder={t("preferences.chooseLanguage")}
               >
                 {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
+                  <SelectItem
+                    key={lang.value}
+                    value={lang.value}
+                    disabled={lang.upcoming}
+                  >
+                    {lang.upcoming
+                      ? t("preferences.languageUpcoming", { label: lang.label })
+                      : lang.label}
                   </SelectItem>
                 ))}
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-label-md text-secondary">Timezone</Label>
+              <Label className="text-label-md text-secondary">
+                {t("preferences.timezone")}
+              </Label>
               <Select
                 value={timezone}
                 onValueChange={setTimezone}
-                placeholder="Choose timezone"
+                placeholder={t("preferences.chooseTimezone")}
               >
                 {TIMEZONES.map((tz) => (
                   <SelectItem key={tz.value} value={tz.value}>
@@ -139,12 +142,12 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
             </div>
             <div className="space-y-2">
               <Label className="text-label-md text-secondary">
-                Currency Display
+                {t("preferences.currencyDisplay")}
               </Label>
               <Select
                 value={currency}
                 onValueChange={setCurrency}
-                placeholder="Choose currency"
+                placeholder={t("preferences.chooseCurrency")}
               >
                 {CURRENCIES.map((c) => (
                   <SelectItem key={c.value} value={c.value}>
@@ -158,10 +161,11 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
 
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
-            <h2 className="text-headline-sm text-primary">Alert Preferences</h2>
+            <h2 className="text-headline-sm text-primary">
+              {t("preferences.alerts.title")}
+            </h2>
             <p className="text-body-md text-on-surface-variant">
-              Control the frequency of Life Checks and vault synchronization
-              alerts.
+              {t("preferences.alerts.description")}
             </p>
           </div>
           <div className="space-y-5">
@@ -172,10 +176,10 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               >
                 <div className="space-y-0.5 min-w-0">
                   <p className="text-body-md font-bold text-primary truncate">
-                    {item.label}
+                    {t(`preferences.notifications.${item.key}.label`)}
                   </p>
                   <p className="text-body-md text-on-surface-variant">
-                    {item.description}
+                    {t(`preferences.notifications.${item.key}.description`)}
                   </p>
                 </div>
                 <Switch
@@ -190,7 +194,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
         <div className="col-span-full flex items-center justify-end gap-4">
           {saved && (
             <span className="text-body-md text-secondary font-medium">
-              Preferences saved ✓
+              {t("preferences.saved")}
             </span>
           )}
           <Button
@@ -200,7 +204,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
             disabled={saving}
             className="cursor-pointer"
           >
-            {saving ? "Saving..." : "Save Preferences"}
+            {saving ? t("preferences.saving") : t("preferences.save")}
           </Button>
         </div>
       </form>

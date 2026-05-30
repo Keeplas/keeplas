@@ -4,17 +4,21 @@ import {
   internalMutation,
   internalQuery,
   query,
+  type MutationCtx,
 } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   createNotification,
   requireAuth,
+  requireFullAuth,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
+import { resolveLocale, type Locale } from "./lib/locale";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -38,7 +42,7 @@ const contactTypeValidator = v.union(
 export const getContacts = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     return await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -53,7 +57,7 @@ export const getContacts = query({
 export const getContact = query({
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.userId !== userId) {
       throw new Error("Contact not found");
@@ -74,7 +78,7 @@ export const getContact = query({
 export const getContactAccessSummary = query({
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.userId !== userId) {
       throw new Error("Contact not found");
@@ -125,7 +129,7 @@ export const getContactAccessSummary = query({
 export const getContactCount = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -162,7 +166,7 @@ export const inviteContact = auditedMutation({
     contactType: v.optional(contactTypeValidator),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const contactType = args.contactType ?? "trust";
 
     // A contact is reachable by email, phone, or both — but at least one
@@ -200,6 +204,23 @@ export const inviteContact = auditedMutation({
       existing.some((c) => normalizeE164(c.phoneNumber) === phoneNumber)
     ) {
       throw new Error("A contact with this phone number already exists");
+    }
+
+    // C1: dedup by the distinct HUMAN, not just by channel. If this invitee
+    // already has a Keeplas account whose verified email/phone backs a
+    // non-revoked contact row for this owner, the same person is being invited
+    // through a second channel. Block it — otherwise one person would hold two
+    // rows (two shard slots + two quorum votes) and could reach the
+    // unreachability quorum and reconstruct the master key alone.
+    const inviteeUserId = await resolveInviteePersonId(ctx, {
+      email,
+      phoneNumber,
+    });
+    if (
+      inviteeUserId &&
+      existing.some((c) => c.contactUserId === inviteeUserId)
+    ) {
+      throw new Error("This person is already one of your contacts");
     }
 
     const tokenBytes = new Uint8Array(32);
@@ -304,6 +325,7 @@ export const inviteContact = auditedMutation({
           phoneNumber: baseFields.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
           invitationToken,
+          language: inviter?.language,
         },
       );
     }
@@ -318,6 +340,7 @@ export const inviteContact = auditedMutation({
         {
           phoneNumber: baseFields.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
+          language: inviter?.language,
         },
       );
     }
@@ -358,6 +381,41 @@ export const getInvitationByToken = query({
   },
 });
 
+/**
+ * Resolve an invitee's identifiers to an existing Keeplas account, if any.
+ * Used to dedup quorum/shard participation by the distinct human (C1): two
+ * contact rows must never resolve to the same `contactUserId` for one owner.
+ * Matches only on a VERIFIED identifier (a user must have proven ownership of
+ * the email/phone) so an unverified backfilled identifier can't be used to
+ * shadow-claim someone else's account. Returns null when no account matches.
+ */
+async function resolveInviteePersonId(
+  ctx: MutationCtx,
+  identifiers: { email?: string; phoneNumber?: string },
+): Promise<Id<"users"> | null> {
+  if (identifiers.email) {
+    const byEmail = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", identifiers.email))
+      .first();
+    if (byEmail && byEmail.emailVerificationTime !== undefined) {
+      return byEmail._id;
+    }
+  }
+  if (identifiers.phoneNumber) {
+    const byPhone = await ctx.db
+      .query("users")
+      .withIndex("by_phone", (q) =>
+        q.eq("phoneNumber", identifiers.phoneNumber),
+      )
+      .first();
+    if (byPhone && byPhone.phoneNumberVerifiedAt !== undefined) {
+      return byPhone._id;
+    }
+  }
+  return null;
+}
+
 function resolveInviterName(
   inviter: { name?: string; email?: string } | null,
 ): string {
@@ -396,6 +454,10 @@ export const acceptInvitation = auditedMutation({
   getResourceId: (_args, result) =>
     (result as { contactRecordId: string }).contactRecordId,
   handler: async (ctx, args) => {
+    // Intentionally NOT step-up gated (requireAuth, not requireFullAuth): a
+    // contact often accepts in the same breath as creating their account, so
+    // their session may not have cleared the login-OTP gate yet. Gating here
+    // would deadlock a just-signed-up contact out of accepting.
     const contactUserId = await requireAuth(ctx);
 
     const contact = await ctx.db
@@ -419,13 +481,65 @@ export const acceptInvitation = auditedMutation({
       throw new Error("You cannot accept your own invitation");
     }
 
+    // #5: bind acceptance to the invited recipient. A token leaked/forwarded
+    // to anyone else must not let an unrelated account become the trusted
+    // contact. The accepting account must own (verified) the email OR phone the
+    // invite was addressed to. Unverified identifiers don't count — they'd let
+    // an attacker self-assert the invited channel.
+    const accepter = await ctx.db.get(contactUserId);
+    if (!accepter) throw new Error("Invalid invitation token");
+
+    const invitedEmailNorm = contact.email?.trim().toLowerCase() || undefined;
+    const invitedPhoneNorm = normalizeE164(contact.phoneNumber);
+    const accepterEmail =
+      accepter.emailVerificationTime !== undefined
+        ? accepter.email?.trim().toLowerCase() || undefined
+        : undefined;
+    const accepterPhone =
+      accepter.phoneNumberVerifiedAt !== undefined
+        ? normalizeE164(accepter.phoneNumber)
+        : undefined;
+
+    const emailMatches =
+      invitedEmailNorm !== undefined && accepterEmail === invitedEmailNorm;
+    const phoneMatches =
+      invitedPhoneNorm !== undefined && accepterPhone === invitedPhoneNorm;
+    if (!emailMatches && !phoneMatches) {
+      throw new Error(
+        "This invitation was sent to a different email or phone number.",
+      );
+    }
+
+    // C1: never attach a `contactUserId` that already backs another non-revoked
+    // contact row for the same owner. A single human must map to at most one
+    // row (one shard slot, one quorum vote). Guards the path where two distinct
+    // invites (e.g. one by email, one by phone) only resolve to the same person
+    // at acceptance time.
+    const ownerRows = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", contact.userId))
+      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+      .collect();
+    if (
+      ownerRows.some(
+        (r) => r._id !== contact._id && r.contactUserId === contactUserId,
+      )
+    ) {
+      throw new Error("You are already a contact for this vault owner");
+    }
+
     const now = Date.now();
 
+    // Mirror the accepting contact's identity material onto the row so the
+    // owner can verify `contactPublicKey` before wrapping (finding #2). The
+    // accepter IS the contact user, so we copy from their own user record.
     await ctx.db.patch(contact._id, {
       contactUserId,
       invitationStatus: "accepted",
       acceptedAt: now,
       contactPublicKey: args.contactPublicKey,
+      contactIdentityPublicKey: accepter.identityPublicKey,
+      contactPublicKeySignature: accepter.publicKeySignature,
       updatedAt: now,
     });
 
@@ -437,9 +551,9 @@ export const acceptInvitation = auditedMutation({
     // — so it is contact info only, never a login method until the contact
     // proves ownership themselves. Skipped if it would collide with another
     // user's identifier.
-    const user = await ctx.db.get(contactUserId);
-    const invitedEmail = contact.email?.trim().toLowerCase() || undefined;
-    const invitedPhone = normalizeE164(contact.phoneNumber);
+    const user = accepter;
+    const invitedEmail = invitedEmailNorm;
+    const invitedPhone = invitedPhoneNorm;
     const backfill: { email?: string; phoneNumber?: string } = {};
 
     if (user && !user.email && invitedEmail) {
@@ -500,6 +614,9 @@ export const declineInvitation = auditedMutation({
   getResourceId: (_args, result) =>
     (result as { contactRecordId: string }).contactRecordId,
   handler: async (ctx, args) => {
+    // Same rationale as acceptInvitation: a contact may decline right after
+    // signing up, before clearing the login-OTP gate — left on requireAuth so
+    // the gate can't lock them out of responding to the invitation.
     await requireAuth(ctx);
 
     const contact = await ctx.db
@@ -550,7 +667,7 @@ export const storeEncryptedShard = auditedMutation({
     shardPublicKeyUsed: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.userId !== userId) {
@@ -583,7 +700,6 @@ export const storeEncryptedShard = auditedMutation({
       encryptedShard: args.encryptedShard,
       shardPublicKeyUsed: args.shardPublicKeyUsed,
       shardConfirmed: true,
-      shardConfirmedAt: Date.now(),
       updatedAt: Date.now(),
     });
 
@@ -631,7 +747,11 @@ export const confirmShardVerified = auditedMutation({
   },
   getResourceId: (args) => args.contactId,
   handler: async (ctx, args) => {
-    const contactUserId = await requireAuth(ctx);
+    // Contact-side recovery op: step-up gated. The contact has long since
+    // accepted the invitation by the time they re-verify a shard, so the gate
+    // is reliably clearable for them (unlike acceptInvitation, which can run
+    // in the same breath as their signup).
+    const contactUserId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.contactUserId !== contactUserId) {
@@ -665,7 +785,7 @@ export const revokeContact = auditedMutation({
   getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.userId !== userId) {
@@ -709,7 +829,7 @@ export const resendInvitation = auditedMutation({
   getResourceId: (args) => args.contactId,
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
     if (!contact || contact.userId !== userId) {
@@ -751,6 +871,7 @@ export const resendInvitation = auditedMutation({
           phoneNumber: contact.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
           invitationToken,
+          language: inviter?.language,
         },
       );
     }
@@ -765,31 +886,12 @@ export const resendInvitation = auditedMutation({
         {
           phoneNumber: contact.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
+          language: inviter?.language,
         },
       );
     }
 
     return { invitationToken };
-  },
-});
-
-/**
- * Replace the user's keeplas-side shard. Used during shard redistribution
- * (when the vault threshold changes, or when shards are first distributed
- * to a freshly-invited contact and the master key has to be re-split).
- */
-export const updateKeeplasShard = auditedMutation({
-  action: "user.keeplas_shard_updated",
-  resourceType: "user",
-  getResourceId: () => "self",
-  args: { keeplasShard: v.string() },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-    await ctx.db.patch(userId, {
-      keeplasShard: args.keeplasShard,
-      updatedAt: Date.now(),
-    });
-    return { success: true };
   },
 });
 
@@ -800,7 +902,7 @@ export const updateKeeplasShard = auditedMutation({
 export const getDistributionTargets = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -819,6 +921,11 @@ export const getDistributionTargets = query({
         name: c.name,
         shardIndex: c.shardIndex as number,
         contactPublicKey: c.contactPublicKey as string,
+        // Identity material for verify-before-wrap (finding #2). Optional so
+        // legacy rows still resolve; the client blocks a wrap when missing.
+        contactIdentityPublicKey: c.contactIdentityPublicKey,
+        contactPublicKeySignature: c.contactPublicKeySignature,
+        pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
         shardConfirmed: c.shardConfirmed ?? false,
       }));
   },
@@ -839,7 +946,16 @@ export const republishContactPublicKey = auditedMutation({
   getResourceId: () => "self",
   args: { contactPublicKey: v.string() },
   handler: async (ctx, args) => {
+    // Intentionally NOT step-up gated: this runs as part of a contact bringing
+    // their crypto online right after accepting (often same session as signup),
+    // mirroring the acceptInvitation rationale. Gating it would block a fresh
+    // contact from publishing the public key the owner needs to wrap to them.
     const userId = await requireAuth(ctx);
+    // The republishing caller IS the contact user, so we mirror their identity
+    // material (finding #2) onto every owner's row alongside the ML-KEM key.
+    const me = await ctx.db.get(userId);
+    const identityPublicKey = me?.identityPublicKey;
+    const publicKeySignature = me?.publicKeySignature;
     const rows = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_contact_user", (q) => q.eq("contactUserId", userId))
@@ -848,9 +964,17 @@ export const republishContactPublicKey = auditedMutation({
 
     let patched = 0;
     for (const row of rows) {
-      if (row.contactPublicKey === args.contactPublicKey) continue;
+      if (
+        row.contactPublicKey === args.contactPublicKey &&
+        row.contactIdentityPublicKey === identityPublicKey &&
+        row.contactPublicKeySignature === publicKeySignature
+      ) {
+        continue;
+      }
       await ctx.db.patch(row._id, {
         contactPublicKey: args.contactPublicKey,
+        contactIdentityPublicKey: identityPublicKey,
+        contactPublicKeySignature: publicKeySignature,
         updatedAt: Date.now(),
       });
       patched++;
@@ -860,11 +984,78 @@ export const republishContactPublicKey = auditedMutation({
 });
 
 /**
+ * TOFU pin (finding #2). The OWNER pins a contact's identity-key fingerprint
+ * the first time the client successfully verifies it for wrapping. The
+ * fingerprint is computed client-side (`identityKeyFingerprint`) so the server
+ * never decides what is trusted — it only persists the owner's decision.
+ *
+ * First-pin only: refuses if the row already carries a pin. A deliberate
+ * key change goes through the separate, explicit `repinContactIdentity`, so a
+ * silent server substitution can never overwrite an existing pin.
+ */
+export const pinContactIdentity = auditedMutation({
+  action: "trusted_contact.identity_pinned",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
+  args: {
+    contactId: v.id("trusted_contacts"),
+    fingerprint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.userId !== userId) {
+      throw new Error("Contact not found");
+    }
+    if (contact.pinnedIdentityFingerprint) {
+      throw new Error("Contact identity is already pinned");
+    }
+    await ctx.db.patch(args.contactId, {
+      pinnedIdentityFingerprint: args.fingerprint,
+      updatedAt: Date.now(),
+    });
+    return { pinned: true };
+  },
+});
+
+/**
+ * Explicit re-pin (finding #2). Used ONLY when the owner deliberately accepts
+ * a contact's identity-key change after the blocking alert — never automatic.
+ * Overwrites the existing pin with the new fingerprint the owner reviewed.
+ */
+export const repinContactIdentity = auditedMutation({
+  action: "trusted_contact.identity_repinned",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
+  args: {
+    contactId: v.id("trusted_contacts"),
+    fingerprint: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (!contact || contact.userId !== userId) {
+      throw new Error("Contact not found");
+    }
+    await ctx.db.patch(args.contactId, {
+      pinnedIdentityFingerprint: args.fingerprint,
+      updatedAt: Date.now(),
+    });
+    return { repinned: true };
+  },
+});
+
+/**
  * Get contacts where the current user is the invited contact (for contact's hub).
  */
 export const getVaultsWhereIAmContact = query({
   args: {},
   handler: async (ctx) => {
+    // Contact's own hub view. Intentionally NOT step-up gated: it is the
+    // landing surface a contact may hit right after signing up to accept an
+    // invitation, before clearing their login-OTP gate. It exposes only the
+    // contact's own relationship rows (never the owner's vault content), so
+    // leaving it on requireAuth keeps the contact onboarding path unblocked.
     const userId = await requireAuth(ctx);
     const contacts = await ctx.db
       .query("trusted_contacts")
@@ -911,7 +1102,6 @@ export const getVaultsWhereIAmContact = query({
         ownerName: displayName,
         ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
-        ownerCycleEscalatedAt: activeCycle?.levelReachedAt ?? null,
         released: !!releaseReq,
         releasedItemCount,
       });
@@ -945,12 +1135,15 @@ export const sendInvitationEmail = internalAction({
     const from = requireEnv("RESEND_FROM_EMAIL");
     const appUrl = requireEnv("APP_URL");
     const acceptUrl = `${appUrl}/invite/${data.invitationToken}`;
-    const inviterName = data.inviterName?.trim() || "A Keeplas user";
+    const locale = resolveLocale(data.inviterLanguage);
+    const inviterName =
+      data.inviterName?.trim() ||
+      (locale === "fr" ? "Un utilisateur Keeplas" : "A Keeplas user");
 
     const isTrust = (data.contactType ?? "trust") === "trust";
     const subject = isTrust
-      ? `${inviterName} invited you as a trusted contact on Keeplas`
-      : `${inviterName} added you as a recipient on Keeplas`;
+      ? INVITE_EMAIL_COPY[locale].trustSubject(inviterName)
+      : INVITE_EMAIL_COPY[locale].recipientSubject(inviterName);
 
     const html = isTrust
       ? trustInvitationHtml({
@@ -958,8 +1151,9 @@ export const sendInvitationEmail = internalAction({
           recipientName: data.name,
           inviterName,
           acceptUrl,
+          locale,
         })
-      : recipientIntroHtml({ appUrl, inviterName });
+      : recipientIntroHtml({ appUrl, inviterName, locale });
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -1000,37 +1194,95 @@ export const getInvitationEmailContext = internalQuery({
       invitationStatus: contact.invitationStatus,
       invitationToken: contact.invitationToken,
       inviterName: inviter?.name ?? null,
+      // Drive the invite email's language off the inviter's preference — the
+      // invitee has no account (hence no locale) until they accept.
+      inviterLanguage: inviter?.language ?? null,
     };
   },
 });
+
+// Email copy mirrors the Infobip WhatsApp templates (`keeplas_invite_tc_*`,
+// `keeplas_invite_recipient_only_*`) so the two channels carry matching wording.
+const INVITE_EMAIL_COPY = {
+  en: {
+    trustSubject: (inviter: string) =>
+      `${inviter} invited you as a trusted contact on Keeplas`,
+    recipientSubject: (inviter: string) =>
+      `${inviter} added you as a recipient on Keeplas`,
+    greeting: (name: string) => `Hi ${name},`,
+    trustBody: (inviter: string) =>
+      `<strong>${inviter}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.`,
+    trustExplain:
+      "As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.",
+    accept: "Accept invitation",
+    expiry: (url: string) =>
+      `This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+    ignoreInvite:
+      "If you weren't expecting this invitation, you can ignore this email.",
+    recipientHi: "Hi!",
+    recipientBody: (inviter: string) =>
+      `<strong>${inviter}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.`,
+    recipientThanks: "Thanks for being there.",
+    discover: "Discover Keeplas",
+    ignoreMistake: "If this email reached you by mistake, you can ignore it.",
+  },
+  fr: {
+    trustSubject: (inviter: string) =>
+      `${inviter} vous a désigné comme contact de confiance sur Keeplas`,
+    recipientSubject: (inviter: string) =>
+      `${inviter} vous a ajouté comme bénéficiaire sur Keeplas`,
+    greeting: (name: string) => `Bonjour ${name},`,
+    trustBody: (inviter: string) =>
+      `<strong>${inviter}</strong> vous a choisi comme contact de confiance sur Keeplas, la plateforme de continuité de vie à connaissance nulle.`,
+    trustExplain:
+      "En tant que contact de confiance, vous conserverez un fragment chiffré de sa clé de récupération. Avec ses autres contacts, vous pourrez l'aider à retrouver l'accès à son coffre si cette personne perd ses identifiants. Vous n'aurez accès à aucune de ses données.",
+    accept: "Accepter l'invitation",
+    expiry: (url: string) =>
+      `Ce lien est valable 72 h. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+    ignoreInvite:
+      "Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.",
+    recipientHi: "Bonjour !",
+    recipientBody: (inviter: string) =>
+      `<strong>${inviter}</strong> vous a ajouté comme bénéficiaire de son coffre Keeplas. Aucune action n'est nécessaire pour le moment — Keeplas ne vous contactera que si un événement spécifique configuré par cette personne est déclenché.`,
+    recipientThanks: "Merci d'être là.",
+    discover: "Découvrir Keeplas",
+    ignoreMistake:
+      "Si cet e-mail vous est parvenu par erreur, vous pouvez l'ignorer.",
+  },
+} satisfies Record<Locale, Record<string, string | ((arg: string) => string)>>;
 
 function trustInvitationHtml(opts: {
   appUrl: string;
   recipientName: string;
   inviterName: string;
   acceptUrl: string;
+  locale: Locale;
 }) {
+  const copy = INVITE_EMAIL_COPY[opts.locale];
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
 <p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
-<p>Hi ${escapeHtml(opts.recipientName)},</p>
-<p><strong>${escapeHtml(opts.inviterName)}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.</p>
-<p>As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.</p>
-<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Accept invitation</a></p>
-<p style="color:#666;font-size:13px">This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${opts.acceptUrl}" style="color:#041632;word-break:break-all">${opts.acceptUrl}</a></p>
-<p style="color:#666;font-size:13px;margin-top:24px">If you weren't expecting this invitation, you can ignore this email.</p>
+<p>${copy.greeting(escapeHtml(opts.recipientName))}</p>
+<p>${copy.trustBody(escapeHtml(opts.inviterName))}</p>
+<p>${copy.trustExplain}</p>
+<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.accept}</a></p>
+<p style="color:#666;font-size:13px">${copy.expiry(opts.acceptUrl)}</p>
+<p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreInvite}</p>
 </body></html>`;
 }
 
-function recipientIntroHtml(opts: { appUrl: string; inviterName: string }) {
-  // Body mirrors the Infobip WhatsApp template `keeplas_invite_recipient_only_en`
-  // so the two channels carry identical wording.
+function recipientIntroHtml(opts: {
+  appUrl: string;
+  inviterName: string;
+  locale: Locale;
+}) {
+  const copy = INVITE_EMAIL_COPY[opts.locale];
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
 <p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
-<p>Hi!</p>
-<p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.</p>
-<p>Thanks for being there.</p>
-<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Discover Keeplas</a></p>
-<p style="color:#666;font-size:13px;margin-top:24px">If this email reached you by mistake, you can ignore it.</p>
+<p>${copy.recipientHi}</p>
+<p>${copy.recipientBody(escapeHtml(opts.inviterName))}</p>
+<p>${copy.recipientThanks}</p>
+<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.discover}</a></p>
+<p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreMistake}</p>
 </body></html>`;
 }
 
@@ -1138,10 +1390,17 @@ export const runAvailabilityReconfirm = internalMutation({
       });
 
       if (c.phoneNumber) {
+        const contactUser = c.contactUserId
+          ? await ctx.db.get(c.contactUserId)
+          : null;
         await ctx.scheduler.runAfter(
           0,
           internal.dispatch.sendReconfirmWhatsApp,
-          { phoneNumber: c.phoneNumber, ownerName },
+          {
+            phoneNumber: c.phoneNumber,
+            ownerName,
+            language: contactUser?.language ?? owner?.language,
+          },
         );
       }
 

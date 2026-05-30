@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { phraseToHash } from "@keeplas/crypto";
+import { derivePhraseVerifier } from "@keeplas/crypto";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { Button, Icon, Label, Loader, Spinner, Textarea } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default function LoginOtpRecoveryPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const t = useTranslations("auth.phraseRecovery");
   const gate = useQuery(
     api.login_otp.getMyLoginOtpGate,
     isAuthenticated ? {} : "skip",
@@ -37,7 +40,7 @@ export default function LoginOtpRecoveryPage() {
   }, [gate, router]);
 
   if (isLoading || gate === undefined) {
-    return <Loader fullscreen label="Verifying session" />;
+    return <Loader fullscreen label={t("verifyingSession")} />;
   }
   if (!isAuthenticated || !gate.authenticated) return null;
   if (!gate.required) return null;
@@ -50,17 +53,16 @@ export default function LoginOtpRecoveryPage() {
             className="w-10 h-10 mx-auto text-error"
           />
           <h1 className="text-headline-md text-primary">
-            Recovery not configured
+            {t("notConfiguredTitle")}
           </h1>
           <p className="text-body-md text-on-surface-variant">
-            This account never bound a recovery phrase. Contact support if you
-            cannot receive the login code.
+            {t("otp.notConfiguredBody")}
           </p>
           <Link
             href="/login/otp"
             className="text-body-md text-secondary hover:underline"
           >
-            Back to code entry
+            {t("backToCode")}
           </Link>
         </div>
       </main>
@@ -72,17 +74,24 @@ export default function LoginOtpRecoveryPage() {
     if (busy) return;
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
-      setError("Please enter all 24 words of your recovery phrase.");
+      setError(t("allWords"));
+      return;
+    }
+    if (!gate?.phraseSalt) {
+      setError(t("notConfigured"));
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const verifierHash = await phraseToHash(words);
+      const verifierHash = await derivePhraseVerifier(
+        words,
+        base64ToUint8(gate.phraseSalt),
+      );
       await submitRecovery({ verifierHash });
       router.push("/hub");
     } catch (err) {
-      setError(getErrorMessage(err, "Recovery failed."));
+      setError(getErrorMessage(err, t("recoveryFailed")));
     } finally {
       setBusy(false);
     }
@@ -95,12 +104,9 @@ export default function LoginOtpRecoveryPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.key} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">
-            Use your recovery phrase
-          </h1>
+          <h1 className="text-headline-md text-primary">{t("useHeading")}</h1>
           <p className="text-body-md text-on-surface-variant">
-            Paste the 24 words you saved during onboarding to finish signing in
-            on this device.
+            {t("otp.subtitle")}
           </p>
         </div>
 
@@ -115,24 +121,22 @@ export default function LoginOtpRecoveryPage() {
           className="bg-surface-container-lowest p-6 rounded-2xl space-y-4 ghost-border"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="recovery-phrase">Recovery phrase</Label>
+            <Label htmlFor="recovery-phrase">{t("phraseLabel")}</Label>
             <Textarea
               id="recovery-phrase"
               value={phrase}
               onChange={(e) => setPhrase(e.target.value)}
-              placeholder="word1 word2 word3 ..."
+              placeholder={t("phrasePlaceholder")}
               rows={4}
               autoComplete="off"
               spellCheck={false}
               autoFocus
             />
             <p className="text-label-md text-on-surface-variant">
-              Paste all 24 words. Case, spacing, numbers and punctuation are
-              ignored — you can paste directly from the PDF.
+              {t("phraseHint1")}
             </p>
             <p className="text-label-md text-on-surface-variant">
-              The phrase never leaves your device — only a derived verifier is
-              sent.
+              {t("phraseHint2")}
             </p>
           </div>
           <Button
@@ -142,7 +146,7 @@ export default function LoginOtpRecoveryPage() {
             disabled={busy || phrase.trim().length === 0}
             className="w-full justify-center"
           >
-            {busy ? <Spinner size="sm" /> : "Unlock this device"}
+            {busy ? <Spinner size="sm" /> : t("otp.submit")}
           </Button>
         </form>
 
@@ -151,7 +155,7 @@ export default function LoginOtpRecoveryPage() {
             href="/login/otp"
             className="text-body-md text-secondary hover:underline"
           >
-            Back to code entry
+            {t("backToCode")}
           </Link>
         </div>
       </div>

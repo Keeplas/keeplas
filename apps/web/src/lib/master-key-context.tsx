@@ -15,6 +15,8 @@ import {
   loadMasterKey,
   clearPersistedMasterKeys,
 } from "./master-key-store";
+import { clearInMemorySecrets } from "./in-memory-secrets";
+import { useIdleTimer } from "./use-idle-timer";
 
 interface MasterKeyContextValue {
   masterKey: CryptoKey | null;
@@ -55,10 +57,22 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
+  // Lock the vault: wipe the in-memory MasterKey, the persisted copy + device
+  // shard (clearPersistedMasterKeys chokepoint), AND the cached decrypted owner
+  // secret keys (ML-KEM + ML-DSA identity). Used for explicit clears, sign-out,
+  // and the inactivity auto-lock below. Leaving masterKey null re-shows the
+  // UnlockGate, forcing a re-unlock.
   const clearMasterKey = useCallback(() => {
     setMasterKeyState(null);
+    clearInMemorySecrets();
     void clearPersistedMasterKeys();
   }, []);
+
+  // Inactivity auto-lock: bounds how long the extractable, persisted MasterKey
+  // sits available on this device (defense-in-depth — the key stays extractable
+  // + persisted by design so sharding/rotation can export it). Only armed while
+  // the vault is actually unlocked; genuine activity resets the countdown.
+  useIdleTimer({ onIdle: clearMasterKey, enabled: masterKey !== null });
 
   // The vault is "restoring" while auth/viewer are resolving, or while we still
   // have a persisted key to read for the current user. Derived (not stored) so
@@ -101,6 +115,7 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
       if (restoredUserId !== null) {
         setRestoredUserId(null);
       }
+      clearInMemorySecrets();
       void clearPersistedMasterKeys();
     }
   }, [isAuthenticated, isLoading, masterKey, restoredUserId]);

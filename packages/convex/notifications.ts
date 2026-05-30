@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuth } from "./helpers";
+import { requireFullAuth } from "./helpers";
 
 /**
  * Get all notifications for the authenticated user (most recent first).
@@ -8,7 +8,7 @@ import { requireAuth } from "./helpers";
 export const getNotifications = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const limit = args.limit ?? 20;
 
     const notifications = await ctx.db
@@ -27,7 +27,7 @@ export const getNotifications = query({
 export const getUnreadCount = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const unread = await ctx.db
       .query("notifications")
       .withIndex("by_unread", (q) => q.eq("userId", userId).eq("isRead", false))
@@ -42,7 +42,7 @@ export const getUnreadCount = query({
 export const markAsRead = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const notification = await ctx.db.get(args.notificationId);
     if (!notification || notification.userId !== userId) {
       throw new Error("Notification not found");
@@ -61,7 +61,7 @@ export const markAsRead = mutation({
 export const markAllAsRead = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const unread = await ctx.db
       .query("notifications")
       .withIndex("by_unread", (q) => q.eq("userId", userId).eq("isRead", false))

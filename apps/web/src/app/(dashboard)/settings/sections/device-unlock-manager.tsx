@@ -15,11 +15,12 @@ import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { EnrollDeviceUnlockDialog } from "@/components/enroll-device-unlock-dialog";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
-const METHOD_LABEL: Record<DeviceUnlockEntry["method"], string> = {
-  pin: "PIN",
-  biometric: "Biometric",
-  "hardware-key": "Hardware key",
+const METHOD_LABEL_KEY: Record<DeviceUnlockEntry["method"], string> = {
+  pin: "deviceUnlock.method.pin",
+  biometric: "deviceUnlock.method.biometric",
+  "hardware-key": "deviceUnlock.method.hardwareKey",
 };
 
 const METHOD_ICON: Record<DeviceUnlockEntry["method"], string> = {
@@ -29,6 +30,7 @@ const METHOD_ICON: Record<DeviceUnlockEntry["method"], string> = {
 };
 
 export function DeviceUnlockManager() {
+  const t = useTranslations("settingsSecurity");
   const user = useQuery(api.users.viewer);
   const userEmail = user?.email ?? null;
   const { masterKey } = useMasterKey();
@@ -47,7 +49,7 @@ export function DeviceUnlockManager() {
   if (user === undefined || loading) {
     return (
       <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
-        <Loader label="Loading device unlock" />
+        <Loader label={t("deviceUnlock.loading")} />
       </section>
     );
   }
@@ -56,12 +58,10 @@ export function DeviceUnlockManager() {
     const last = entries.length === 1;
     const ok = await confirm({
       title: last
-        ? "Remove the only unlock on this device?"
-        : `Remove ${entry.label}?`,
-      description: last
-        ? "You will need to re-enter your 24 words next time."
-        : undefined,
-      confirmLabel: "Remove",
+        ? t("deviceUnlock.removeLastTitle")
+        : t("deviceUnlock.removeTitle", { label: entry.label }),
+      description: last ? t("deviceUnlock.removeLastDescription") : undefined,
+      confirmLabel: t("deviceUnlock.removeConfirm"),
       variant: "destructive",
     });
     if (!ok) return;
@@ -70,7 +70,7 @@ export function DeviceUnlockManager() {
     try {
       await remove(entry.id);
     } catch (err) {
-      setError(getErrorMessage(err, "Could not remove this method"));
+      setError(getErrorMessage(err, t("deviceUnlock.removeError")));
     } finally {
       setBusyId(null);
     }
@@ -82,10 +82,11 @@ export function DeviceUnlockManager() {
     <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-headline-md text-primary">Device unlock</h2>
+          <h2 className="text-headline-md text-primary">
+            {t("deviceUnlock.title")}
+          </h2>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Methods stored on this device only. They unlock your vault here
-            without re-entering your 24 words.
+            {t("deviceUnlock.subtitle")}
           </p>
         </div>
         <Icon
@@ -103,8 +104,7 @@ export function DeviceUnlockManager() {
       {!canEnroll ? (
         <div className="bg-error-container/30 p-4 rounded-xl">
           <p className="text-body-md text-on-error-container">
-            Vault is locked. Unlock first to add or change device unlock
-            methods.
+            {t("deviceUnlock.locked")}
           </p>
         </div>
       ) : null}
@@ -116,20 +116,33 @@ export function DeviceUnlockManager() {
             className="w-10 h-10 mx-auto mb-3 text-outline-variant"
           />
           <p className="text-body-md text-on-surface-variant">
-            No device unlock yet — your 24 words are required at every login on
-            this device.
+            {t("deviceUnlock.empty")}
           </p>
         </div>
       ) : (
         <ul className="space-y-3">
           {entries.map((entry) => {
             const removing = busyId === entry.id;
+            const methodLabel = t(METHOD_LABEL_KEY[entry.method]);
             const subtitle =
               entry.method === "pin"
-                ? `${METHOD_LABEL[entry.method]} · added ${formatTimeAgo(entry.createdAt)}`
+                ? t("deviceUnlock.subtitlePin", {
+                    label: methodLabel,
+                    time: formatTimeAgo(entry.createdAt),
+                  })
                 : entry.method === "biometric"
-                  ? `${METHOD_LABEL[entry.method]} · ${biometricAvailable ? "ready" : "unavailable on this device"}`
-                  : `${METHOD_LABEL[entry.method]} · ${hardwareSupported ? "WebAuthn ready" : "unsupported"}`;
+                  ? t("deviceUnlock.subtitleBiometric", {
+                      label: methodLabel,
+                      state: biometricAvailable
+                        ? t("deviceUnlock.biometricReady")
+                        : t("deviceUnlock.biometricUnavailable"),
+                    })
+                  : t("deviceUnlock.subtitleHardware", {
+                      label: methodLabel,
+                      state: hardwareSupported
+                        ? t("deviceUnlock.hardwareReady")
+                        : t("deviceUnlock.hardwareUnsupported"),
+                    });
             return (
               <li
                 key={entry.id}
@@ -156,7 +169,9 @@ export function DeviceUnlockManager() {
                   onClick={() => handleRemove(entry)}
                   disabled={busyId !== null}
                   className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-40 shrink-0"
-                  aria-label={`Remove ${entry.label}`}
+                  aria-label={t("deviceUnlock.removeAria", {
+                    label: entry.label,
+                  })}
                 >
                   {removing ? (
                     <Spinner size="sm" />
@@ -179,7 +194,7 @@ export function DeviceUnlockManager() {
         className="w-full justify-center gap-2"
       >
         <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
-        <span>Add a method</span>
+        <span>{t("deviceUnlock.addMethod")}</span>
       </Button>
 
       <div className="flex items-start gap-3 bg-surface-container/40 p-4 rounded-xl">
@@ -188,8 +203,7 @@ export function DeviceUnlockManager() {
           className="w-5 h-5 text-on-surface-variant shrink-0 mt-0.5"
         />
         <p className="text-body-md text-on-surface-variant">
-          Device unlock is local to this browser. Other devices need their own
-          setup. If you lose the device, your 24 words still recover everything.
+          {t("deviceUnlock.footer")}
         </p>
       </div>
 

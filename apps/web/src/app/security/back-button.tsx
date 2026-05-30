@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 
 export function BackButton() {
   const router = useRouter();
+  const c = useTranslations("common");
 
   const handleClick = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -25,7 +27,7 @@ export function BackButton() {
         path={ICON_PATHS.arrowLeft}
         className="w-4 h-4 transition-transform group-hover:-translate-x-1"
       />
-      Back
+      {c("back")}
     </button>
   );
 }

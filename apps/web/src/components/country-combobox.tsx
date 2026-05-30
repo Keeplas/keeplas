@@ -13,6 +13,7 @@ import {
   cn,
 } from "@keeplas/ui";
 import { COUNTRIES, getCountry } from "@/lib/countries";
+import { useTranslations } from "@/lib/i18n";
 
 interface CountryComboboxProps {
   value: string;
@@ -28,11 +29,13 @@ export function CountryCombobox({
   onChange,
   id,
   disabled,
-  placeholder = "Search a country…",
+  placeholder,
   className,
 }: CountryComboboxProps) {
+  const t = useTranslations("settingsSecurity");
   const [open, setOpen] = React.useState(false);
   const selected = getCountry(value);
+  const resolvedPlaceholder = placeholder ?? t("countryCombobox.placeholder");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,7 +61,7 @@ export function CountryCombobox({
               <span className="truncate">{selected.name}</span>
             </>
           ) : (
-            <span>{placeholder}</span>
+            <span>{resolvedPlaceholder}</span>
           )}
         </span>
         <svg
@@ -87,9 +90,9 @@ export function CountryCombobox({
             return itemValue.toLowerCase().includes(needle) ? 1 : 0;
           }}
         >
-          <CommandInput placeholder={placeholder} autoFocus />
+          <CommandInput placeholder={resolvedPlaceholder} autoFocus />
           <CommandList>
-            <CommandEmpty>No country matches your search.</CommandEmpty>
+            <CommandEmpty>{t("countryCombobox.empty")}</CommandEmpty>
             {COUNTRIES.map((country) => (
               <CommandItem
                 key={country.code}

@@ -7,9 +7,8 @@ import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
 import { UnlockGate } from "@/components/unlock-gate";
-import { useRestoreMasterKey } from "@/lib/use-restore-master-key";
-import { usePassiveSignal } from "@/lib/use-passive-signal";
 import { UploadQueueProvider } from "@/lib/upload-queue";
+import { useTranslations } from "@/lib/i18n";
 import { api } from "@keeplas/backend/_generated/api";
 
 export default function DashboardLayout({
@@ -17,6 +16,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("chrome");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
   const onboardingState = useQuery(
@@ -30,11 +30,6 @@ export default function DashboardLayout({
   const loginOtpGate = useQuery(
     api.login_otp.getMyLoginOtpGate,
     isAuthenticated ? {} : "skip",
-  );
-
-  useRestoreMasterKey();
-  usePassiveSignal(
-    isAuthenticated && onboardingState?.onboardingStep === "complete",
   );
 
   useEffect(() => {
@@ -69,7 +64,7 @@ export default function DashboardLayout({
     totpGate === undefined ||
     loginOtpGate === undefined
   ) {
-    return <Loader fullscreen label="Unlocking your vault" />;
+    return <Loader fullscreen label={t("layout.unlockingVault")} />;
   }
 
   if (!isAuthenticated) {

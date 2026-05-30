@@ -3,8 +3,14 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { phraseToHash } from "@keeplas/crypto/recovery";
+import {
+  derivePhraseVerifier,
+  generatePhraseVerifierSalt,
+} from "@keeplas/crypto/recovery";
+import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { Button, Input, Label, ErrorAlert, Spinner } from "@keeplas/ui";
+import { useLocale, useTranslations } from "@/lib/i18n";
+import type { Locale } from "@/lib/locale";
 
 function pickRandomIndices(): number[] {
   const available = Array.from({ length: 24 }, (_, i) => i);
@@ -17,17 +23,22 @@ function pickRandomIndices(): number[] {
   return picked.sort((a, b) => a - b);
 }
 
-function ordinal(n: number): string {
+function ordinal(n: number, locale: Locale): string {
   const pos = n + 1;
-  if (pos === 1) return "1st";
-  if (pos === 2) return "2nd";
-  if (pos === 3) return "3rd";
+  if (locale === "fr") return pos === 1 ? "1er" : `${pos}e`;
+  const mod10 = pos % 10;
+  const mod100 = pos % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${pos}st`;
+  if (mod10 === 2 && mod100 !== 12) return `${pos}nd`;
+  if (mod10 === 3 && mod100 !== 13) return `${pos}rd`;
   return `${pos}th`;
 }
 
 interface VerificationStepProps {
   phrase: string[];
-  onVerified: () => void;
+  // The per-user salt generated here (base64) is forwarded so key generation
+  // reuses the SAME salt for the RootKey — one salt per user.
+  onVerified: (phraseSaltB64: string) => void;
   onBack: () => void;
 }
 
@@ -36,6 +47,8 @@ export function VerificationStep({
   onVerified,
   onBack,
 }: VerificationStepProps) {
+  const t = useTranslations("auth.onboarding.verification");
+  const locale = useLocale();
   const storeHash = useMutation(api.onboarding.storeRecoveryPhraseHash);
 
   // Pick 3 random unique indices (stable across re-renders)
@@ -62,21 +75,25 @@ export function VerificationStep({
       const expected = phrase[indices[i]].toLowerCase();
       const actual = inputs[i].trim().toLowerCase();
       if (actual !== expected) {
-        setError(
-          `The ${ordinal(indices[i])} word does not match. Please check and try again.`,
-        );
+        setError(t("mismatch", { ordinal: ordinal(indices[i], locale) }));
         setLoading(false);
         return;
       }
     }
 
-    // All 3 match — compute hash and store
+    // All 3 match — derive the salted verifier and store it with its salt.
+    // The phrase never leaves the device; only the Argon2id digest is sent.
     try {
-      const hash = await phraseToHash(phrase);
-      await storeHash({ recoveryPhraseHash: hash });
-      onVerified();
+      const salt = generatePhraseVerifierSalt();
+      const phraseSaltB64 = uint8ToBase64(salt);
+      const verifier = await derivePhraseVerifier(phrase, salt);
+      await storeHash({
+        recoveryPhraseHash: verifier,
+        phraseSalt: phraseSaltB64,
+      });
+      onVerified(phraseSaltB64);
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("error"));
       setLoading(false);
     }
   }
@@ -101,21 +118,19 @@ export function VerificationStep({
             d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
           />
         </svg>
-        Back to Recovery Words
+        {t("back")}
       </button>
 
       {/* Header */}
       <div className="mb-8 md:mb-10">
         <span className="text-label-md text-secondary mb-2 md:mb-3 block">
-          Backup Confirmation
+          {t("badge")}
         </span>
         <h2 className="text-headline-lg text-primary mb-3 md:mb-4 break-words">
-          Verify your Recovery Words
+          {t("heading")}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-lg">
-          To make sure you saved your words correctly, enter the 3 words below
-          from your Recovery Words. This confirms your backup is complete and
-          you will be able to recover your vault if needed.
+          {t("description")}
         </p>
       </div>
 
@@ -136,15 +151,14 @@ export function VerificationStep({
         </svg>
         <div>
           <h4 className="font-headline text-surface-container-lowest font-bold mb-1">
-            Why is this important?
+            {t("whyTitle")}
           </h4>
           <p className="text-sm text-on-primary-container leading-relaxed">
-            These 24 words are the{" "}
-            <strong className="text-surface-container-lowest">only key</strong>{" "}
-            that encrypts your vault — we never see them. Your password just
-            authenticates you and can be reset with these same 24 words. But the
-            words themselves cannot be reset: only your trusted contacts can
-            recover them later via shared shards. Save them somewhere safe now.
+            {t("whyBodyBefore")}{" "}
+            <strong className="text-surface-container-lowest">
+              {t("whyKeyTerm")}
+            </strong>{" "}
+            {t("whyBodyAfter")}
           </p>
         </div>
       </div>
@@ -155,14 +169,16 @@ export function VerificationStep({
         {indices.map((wordIndex, i) => (
           <div key={wordIndex} className="space-y-2">
             <Label htmlFor={`word-${wordIndex}`}>
-              {ordinal(wordIndex)} word
+              {t("wordLabel", { ordinal: ordinal(wordIndex, locale) })}
             </Label>
             <Input
               id={`word-${wordIndex}`}
               type="text"
               value={inputs[i]}
               onChange={(e) => handleInputChange(i, e.target.value)}
-              placeholder={`Enter the ${ordinal(wordIndex)} word`}
+              placeholder={t("wordPlaceholder", {
+                ordinal: ordinal(wordIndex, locale),
+              })}
               required
               autoComplete="off"
               className="font-mono uppercase tracking-wider"
@@ -184,11 +200,11 @@ export function VerificationStep({
                   size="md"
                   className="border-on-primary border-t-transparent"
                 />
-                Verifying...
+                {t("verifying")}
               </>
             ) : (
               <>
-                Verify and continue
+                {t("verifyContinue")}
                 <svg
                   className="w-5 h-5 transition-transform group-hover:translate-x-1"
                   fill="none"
@@ -211,7 +227,7 @@ export function VerificationStep({
             onClick={onBack}
             className="w-full text-center text-sm text-on-surface-variant hover:text-primary font-label font-semibold py-3 transition-colors cursor-pointer"
           >
-            I need to see my Recovery Words again
+            {t("seeAgain")}
           </button>
         </div>
       </form>

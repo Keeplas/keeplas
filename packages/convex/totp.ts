@@ -3,6 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
+import { constantTimeStringEquals } from "./lib/crypto";
 
 const ISSUER = "Keeplas";
 const STEP_SECONDS = 30;
@@ -409,15 +410,6 @@ export const submitTotpRecovery = mutation({
     return { success: true };
   },
 });
-
-function constantTimeStringEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return mismatch === 0;
-}
 
 export const disable = mutation({
   args: {},

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
+import { buildSecurityHeaders } from "./lib/security-headers";
+
+/** Header carrying the per-request CSP nonce to the rendering layer. */
+const NONCE_HEADER = "x-nonce";
 
 /**
  * Cookie name carrying the sealed audit context. HttpOnly + SameSite=Strict
@@ -40,8 +44,30 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);
 
+  // Generate the CSP nonce and the full security header set for this request.
+  const nonce = uint8ToBase64(crypto.getRandomValues(new Uint8Array(16)));
+  const securityHeaders = buildSecurityHeaders(nonce);
+
+  // Next.js auto-stamps this nonce onto its own framework <script> tags ONLY
+  // when it finds the policy on the *forwarded request* headers — it reads
+  // `headers["content-security-policy"]` and pulls the `'nonce-...'` token from
+  // script-src (see app-render.js / get-script-nonce-from-header.js). With
+  // `'strict-dynamic'` in the policy those scripts would otherwise be blocked.
+  // We also expose the raw nonce via `x-nonce` for any Server Component that
+  // needs to stamp an inline <script> itself. Both must be set BEFORE
+  // NextResponse.next() snapshots the request headers.
+  requestHeaders.set(NONCE_HEADER, nonce);
+  requestHeaders.set(
+    "content-security-policy",
+    securityHeaders["Content-Security-Policy"],
+  );
+
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set(REQUEST_ID_HEADER, requestId);
+  response.headers.set(NONCE_HEADER, nonce);
+  for (const [name, value] of Object.entries(securityHeaders)) {
+    response.headers.set(name, value);
+  }
 
   const secret = process.env.KEEPLAS_CTX_SECRET;
   if (!secret) {

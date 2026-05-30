@@ -7,6 +7,8 @@ import { RecoveryPhraseStep } from "./steps/recovery-phrase-step";
 import { VerificationStep } from "./steps/verification-step";
 import { KeyGenerationStep } from "./steps/key-generation-step";
 import { PasskeyStep } from "./steps/passkey-step";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslations } from "@/lib/i18n";
 
 type OnboardingStep =
   | "auth_complete"
@@ -24,8 +26,12 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   const [step, setStep] = useState<OnboardingStep>(
     (initialStep as OnboardingStep) || "auth_complete",
   );
+  const t = useTranslations("auth.onboarding.steps");
   // The recovery phrase is held in memory only — never persisted to server
   const [phrase, setPhrase] = useState<string[] | null>(null);
+  // Per-user Argon2id salt (base64) generated at verification. Reused by key
+  // generation so the RootKey and the recovery-phrase verifier share one salt.
+  const [phraseSaltB64, setPhraseSaltB64] = useState<string | null>(null);
 
   const handleLegalInfoConfirmed = useCallback(() => {
     setStep("recovery_phrase");
@@ -43,7 +49,8 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     setStep("recovery_phrase");
   }, []);
 
-  const handleVerified = useCallback(() => {
+  const handleVerified = useCallback((saltB64: string) => {
+    setPhraseSaltB64(saltB64);
     setStep("key_generation");
   }, []);
 
@@ -53,11 +60,11 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
   // Step indicator
   const steps = [
-    { key: "legal_info", label: "Identity" },
-    { key: "recovery_phrase", label: "Recovery Words" },
-    { key: "verification", label: "Verification" },
-    { key: "key_generation", label: "Secure Vault" },
-    { key: "passkey", label: "Biometrics" },
+    { key: "legal_info", label: t("identity") },
+    { key: "recovery_phrase", label: t("recoveryPhrase") },
+    { key: "verification", label: t("verification") },
+    { key: "key_generation", label: t("keyGeneration") },
+    { key: "passkey", label: t("passkey") },
   ];
 
   // `auth_complete` is the post-signup landing state — treat it as the first
@@ -79,37 +86,40 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
             className="h-9 md:h-11 w-auto"
           />
         </div>
-        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-          {steps.map((s, i) => (
-            <div
-              key={s.key}
-              className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0"
-            >
+        <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 w-full sm:w-auto overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {steps.map((s, i) => (
               <div
-                className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg font-label transition-colors ${
-                  i <= currentStepIndex
-                    ? "bg-secondary text-on-secondary font-bold"
-                    : "bg-surface-container text-on-surface-variant"
-                }`}
+                key={s.key}
+                className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0"
               >
-                <span className="text-[10px] md:text-xs font-bold">
-                  {i + 1}
-                </span>
-                <span className="text-[10px] md:text-xs tracking-wide whitespace-nowrap">
-                  {s.label}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
                 <div
-                  className={`w-3 sm:w-5 md:w-8 h-px shrink-0 ${
-                    i < currentStepIndex
-                      ? "bg-secondary"
-                      : "bg-outline-variant/30"
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg font-label transition-colors ${
+                    i <= currentStepIndex
+                      ? "bg-secondary text-on-secondary font-bold"
+                      : "bg-surface-container text-on-surface-variant"
                   }`}
-                />
-              )}
-            </div>
-          ))}
+                >
+                  <span className="text-[10px] md:text-xs font-bold">
+                    {i + 1}
+                  </span>
+                  <span className="text-[10px] md:text-xs tracking-wide whitespace-nowrap">
+                    {s.label}
+                  </span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div
+                    className={`w-3 sm:w-5 md:w-8 h-px shrink-0 ${
+                      i < currentStepIndex
+                        ? "bg-secondary"
+                        : "bg-outline-variant/30"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <LanguageSwitcher className="shrink-0" />
         </div>
       </header>
 
@@ -132,8 +142,12 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
             onBack={handleBackToPhrase}
           />
         )}
-        {step === "key_generation" && phrase && (
-          <KeyGenerationStep phrase={phrase} onComplete={handleVaultReady} />
+        {step === "key_generation" && phrase && phraseSaltB64 && (
+          <KeyGenerationStep
+            phrase={phrase}
+            phraseSaltB64={phraseSaltB64}
+            onComplete={handleVaultReady}
+          />
         )}
         {step === "passkey" && <PasskeyStep />}
       </main>

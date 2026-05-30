@@ -10,6 +10,7 @@ import { internal } from "./_generated/api";
 import { verifyAssertionAndGetUserId } from "./webauthn";
 import { normalizeE164 } from "./lib/phone";
 import { normalizeEmail } from "./lib/email";
+import { normalizeUserLanguage } from "./lib/locale";
 
 // Maps the sign-up provider id to the initial auth method recorded on the
 // user. The passkey + recovery credential providers never create a user, so
@@ -31,7 +32,6 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       if (existingUserId !== null) return;
       const method = INITIAL_AUTH_METHOD[provider.id];
       await ctx.db.patch(userId, {
-        isActive: true,
         ...(method ? { authProviders: [method] } : {}),
       });
     },
@@ -50,10 +50,14 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           phoneNumber = undefined;
         }
         const name = params.name as string | undefined;
+        const language = normalizeUserLanguage(
+          params.language as string | undefined,
+        );
         return {
           email: params.email as string,
           ...(name ? { name } : {}),
           ...(phoneNumber ? { phoneNumber } : {}),
+          language,
         };
       },
     }),
@@ -76,12 +80,16 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
         if (credentials.flow === "signUp") {
           const name = (credentials.name as string | undefined)?.trim();
+          const language = normalizeUserLanguage(
+            credentials.language as string | undefined,
+          );
           const { user } = await createAccount(ctx, {
             provider: "phone-otp",
             account: { id: phone },
             profile: {
               phoneNumber: phone,
               phoneNumberVerifiedAt: Date.now(),
+              language,
               ...(name ? { name } : {}),
             },
           });
@@ -114,12 +122,16 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
         if (credentials.flow === "signUp") {
           const name = (credentials.name as string | undefined)?.trim();
+          const language = normalizeUserLanguage(
+            credentials.language as string | undefined,
+          );
           const { user } = await createAccount(ctx, {
             provider: "email-otp",
             account: { id: email },
             profile: {
               email,
               emailVerificationTime: Date.now(),
+              language,
               ...(name ? { name } : {}),
             },
           });

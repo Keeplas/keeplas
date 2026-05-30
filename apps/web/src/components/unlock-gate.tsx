@@ -15,8 +15,10 @@ import {
 } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
+import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 import { AuthHeroSection } from "@/app/(auth)/components/auth-hero-section";
 import { MobileBrand } from "@/app/(auth)/components/mobile-brand";
 import { EnrollDeviceUnlockDialog } from "./enroll-device-unlock-dialog";
@@ -28,6 +30,7 @@ interface UnlockGateProps {
 type Mode = "list" | "pin" | "phrase";
 
 export function UnlockGate({ children }: UnlockGateProps) {
+  const t = useTranslations("chrome");
   const { masterKey, setMasterKey, restoring } = useMasterKey();
   const user = useQuery(api.users.viewer);
   const userEmail = user?.email ?? null;
@@ -50,32 +53,10 @@ export function UnlockGate({ children }: UnlockGateProps) {
   const [enrollOpen, setEnrollOpen] = useState(false);
 
   const bundleString = user?.encryptedKeyBundle ?? null;
-  const bundle = useMemo(() => {
-    if (!bundleString) return null;
-    try {
-      return JSON.parse(bundleString) as {
-        version?: number;
-        phraseSalt?: string;
-        wrappingKey?: string;
-        iv?: string;
-        encryptedMasterKey?: string;
-      };
-    } catch {
-      return null;
-    }
-  }, [bundleString]);
-
-  // Treat any bundle that carries phrase-derived material (phraseSalt + iv +
-  // encryptedMasterKey, with no plaintext wrappingKey) as needing the V2
-  // unlock flow — even if the explicit `version` field is missing or stored
-  // differently. The strict `version === 2` check lets V2-shaped bundles slip
-  // through and leaves the user with a disabled vault.
-  const isV2 = !!(
-    bundle?.phraseSalt &&
-    bundle.iv &&
-    bundle.encryptedMasterKey &&
-    !("wrappingKey" in (bundle ?? {}))
-  );
+  const bundle = useMemo(() => parseKeyBundle(bundleString), [bundleString]);
+  const bundleKind = classifyKeyBundle(bundle);
+  const isV2 = bundleKind === "v2";
+  const isLegacyV1 = bundleKind === "legacy-v1";
 
   // Reset the error when switching modes, adjusting during render instead of
   // syncing in an effect.
@@ -86,10 +67,17 @@ export function UnlockGate({ children }: UnlockGateProps) {
   }
 
   if (user === undefined) {
-    return <Loader fullscreen label="Loading vault" />;
+    return <Loader fullscreen label={t("unlock.loadingVault")} />;
   }
 
   if (!user) return null;
+
+  // Legacy V1 bundle: no client-side unwrap path remains (it was
+  // server-decryptable). Block vault access with a clear re-key instruction
+  // rather than silently leaving the vault unusable.
+  if (isLegacyV1) {
+    return <LegacyBundleNotice />;
+  }
 
   // No bundle yet (e.g. user mid-onboarding) — let children render
   if (!bundle || !isV2) {
@@ -110,7 +98,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
       setMasterKey(key);
       setPin("");
     } catch (err) {
-      setError(getErrorMessage(err, "Could not unlock"));
+      setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
     } finally {
       setBusy(false);
     }
@@ -124,9 +112,9 @@ export function UnlockGate({ children }: UnlockGateProps) {
       setMasterKey(key);
     } catch (err) {
       if (err instanceof DeviceUnlockError && err.code === "cancelled") {
-        setError("Authentication cancelled");
+        setError(t("unlock.authCancelled"));
       } else {
-        setError(getErrorMessage(err, "Could not unlock"));
+        setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
       }
     } finally {
       setBusy(false);
@@ -144,7 +132,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
       return;
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
-      setError("Please enter all 24 words");
+      setError(t("unlock.enterAll24"));
       return;
     }
     setBusy(true);
@@ -175,8 +163,8 @@ export function UnlockGate({ children }: UnlockGateProps) {
     } catch (err) {
       setError(
         err instanceof Error && err.name === "OperationError"
-          ? "Wrong recovery phrase — vault could not be decrypted"
-          : getErrorMessage(err, "Recovery phrase could not unlock the vault"),
+          ? t("unlock.wrongPhrase")
+          : getErrorMessage(err, t("unlock.phraseCouldNotUnlock")),
       );
     } finally {
       setBusy(false);
@@ -186,11 +174,11 @@ export function UnlockGate({ children }: UnlockGateProps) {
   // Still reading the persisted key from IndexedDB — show a loader instead of
   // flashing the unlock screen for a vault that's about to restore itself.
   if (restoring) {
-    return <Loader fullscreen label="Unlocking vault" />;
+    return <Loader fullscreen label={t("unlock.unlockingVault")} />;
   }
 
   if (entriesLoading) {
-    return <Loader fullscreen label="Checking device unlock" />;
+    return <Loader fullscreen label={t("unlock.checkingDeviceUnlock")} />;
   }
 
   return (
@@ -204,10 +192,10 @@ export function UnlockGate({ children }: UnlockGateProps) {
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
               <h1 className="text-headline-md text-primary mb-2">
-                Unlock vault
+                {t("unlock.heading")}
               </h1>
               <p className="text-body-md text-on-surface-variant">
-                Your vault is encrypted on this device. Choose how to unlock.
+                {t("unlock.subheading")}
               </p>
             </div>
 
@@ -221,7 +209,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
               <div className="space-y-3">
                 {entries.length === 0 ? (
                   <p className="text-body-md text-on-surface-variant text-center py-4">
-                    No device unlock set up yet on this device.
+                    {t("unlock.noDeviceUnlock")}
                   </p>
                 ) : null}
                 {entries.map((entry) => (
@@ -245,7 +233,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy}
                   className="w-full p-4 rounded-xl border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
                 >
-                  Use 24 recovery words
+                  {t("unlock.use24Words")}
                 </button>
               </div>
             ) : null}
@@ -262,7 +250,9 @@ export function UnlockGate({ children }: UnlockGateProps) {
                     autoComplete="off"
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder={`At least ${PIN_MIN_LENGTH} digits`}
+                    placeholder={t("unlock.pinPlaceholder", {
+                      min: PIN_MIN_LENGTH,
+                    })}
                     required
                   />
                 </div>
@@ -273,7 +263,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy || pin.length < PIN_MIN_LENGTH}
                   className="w-full"
                 >
-                  {busy ? <Spinner size="sm" /> : "Unlock"}
+                  {busy ? <Spinner size="sm" /> : t("unlock.unlockButton")}
                 </Button>
                 <button
                   type="button"
@@ -284,7 +274,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy}
                   className="w-full text-sm text-on-surface-variant hover:underline"
                 >
-                  Back
+                  {t("unlock.back")}
                 </button>
               </form>
             ) : null}
@@ -292,18 +282,25 @@ export function UnlockGate({ children }: UnlockGateProps) {
             {mode === "phrase" ? (
               <form onSubmit={handlePhraseUnlock} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="unlock-phrase">Enter your 24 words</Label>
+                  <Label htmlFor="unlock-phrase">
+                    {t("unlock.phraseLabel")}
+                  </Label>
                   <textarea
                     id="unlock-phrase"
                     value={phrase}
                     onChange={(e) => setPhrase(e.target.value)}
                     placeholder="word1 word2 word3 ..."
+                    // Anti-cache: keep the recovery phrase out of browser
+                    // autofill, dictionaries, and spell-check suggestions.
+                    autoComplete="off"
+                    spellCheck={false}
+                    autoCapitalize="off"
+                    autoCorrect="off"
                     className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
                     required
                   />
                   <p className="text-label-md text-on-surface-variant">
-                    Paste all 24 words. Case, spacing, numbers and punctuation
-                    are ignored — you can paste directly from the PDF.
+                    {t("unlock.phraseHint")}
                   </p>
                 </div>
                 <Button
@@ -313,7 +310,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy || !phrase.trim()}
                   className="w-full"
                 >
-                  {busy ? <Spinner size="sm" /> : "Unlock with recovery words"}
+                  {busy ? <Spinner size="sm" /> : t("unlock.unlockWithWords")}
                 </Button>
                 <button
                   type="button"
@@ -324,7 +321,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy}
                   className="w-full text-sm text-on-surface-variant hover:underline"
                 >
-                  Back
+                  {t("unlock.back")}
                 </button>
               </form>
             ) : null}
@@ -341,6 +338,22 @@ export function UnlockGate({ children }: UnlockGateProps) {
   );
 }
 
+function LegacyBundleNotice() {
+  const t = useTranslations("chrome");
+  return (
+    <main className="min-h-screen flex items-center justify-center p-8 bg-surface">
+      <div className="w-full max-w-md text-center">
+        <h1 className="text-headline-md text-primary mb-3">
+          {t("unlock.legacyTitle")}
+        </h1>
+        <p className="text-body-md text-on-surface-variant">
+          {t("unlock.legacyBody")}
+        </p>
+      </div>
+    </main>
+  );
+}
+
 function UnlockMethodButton({
   entry,
   disabled,
@@ -350,6 +363,7 @@ function UnlockMethodButton({
   disabled: boolean;
   onClick: () => void;
 }) {
+  const t = useTranslations("chrome");
   const [available, setAvailable] = useState(true);
   useEffect(() => {
     let cancelled = false;
@@ -370,7 +384,7 @@ function UnlockMethodButton({
   if (!available) {
     return (
       <div className="p-4 rounded-xl bg-surface-container-low text-on-surface-variant text-sm">
-        {entry.label} (unavailable on this device)
+        {entry.label} {t("unlock.unavailableSuffix")}
       </div>
     );
   }
@@ -384,10 +398,10 @@ function UnlockMethodButton({
       <div className="font-bold text-on-surface">{entry.label}</div>
       <div className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
         {entry.method === "pin"
-          ? "PIN"
+          ? t("unlock.methodPin")
           : entry.method === "biometric"
-            ? "Biometric"
-            : "Hardware key"}
+            ? t("unlock.methodBiometric")
+            : t("unlock.methodHardwareKey")}
       </div>
     </button>
   );

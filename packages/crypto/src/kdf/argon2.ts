@@ -57,6 +57,26 @@ async function runArgon2id(
 }
 
 /**
+ * Run Argon2id with the OWASP baseline params and return the raw 32-byte
+ * digest. Shared, side-effect-free primitive so other modules (e.g. the
+ * salted recovery-phrase verifier) reuse one tuned Argon2id rather than
+ * reimplementing it. Enforces the same minimum salt length as the key
+ * derivations above.
+ */
+export async function argon2idRaw(
+  password: string,
+  salt: Uint8Array,
+): Promise<Uint8Array> {
+  if (salt.length < MIN_SALT_BYTES) {
+    throw new Error(`salt must be at least ${MIN_SALT_BYTES} bytes`);
+  }
+  if (!password) {
+    throw new Error("password must not be empty");
+  }
+  return runArgon2id(password, salt);
+}
+
+/**
  * Derive the user's RootKey from their 24-word recovery phrase.
  *
  * The RootKey wraps the MasterKey which in turn encrypts all vault content.

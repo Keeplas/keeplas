@@ -11,6 +11,7 @@ describe("rotateKeyMaterial", () => {
     await t.run((ctx) =>
       ctx.db.patch(owner, {
         publicKey: "old-public-key",
+        publicKeySignature: "old-signature",
         encryptedKeyBundle: "old-bundle",
         encryptedAsymmetricSecretKey: "old-secret",
       }),
@@ -19,6 +20,7 @@ describe("rotateKeyMaterial", () => {
     await asUser(t, owner).mutation(api.rotation.rotateKeyMaterial, {
       encryptedKeyBundle: "new-bundle",
       publicKey: "new-public-key",
+      publicKeySignature: "new-signature",
       encryptedAsymmetricSecretKey: "new-secret",
       encryptedAsymmetricSecretKeyPrev: "old-secret-rewrapped",
       _audit: await signedAudit(),
@@ -30,6 +32,9 @@ describe("rotateKeyMaterial", () => {
     expect(user?.encryptedKeyBundle).toBe("new-bundle");
     expect(user?.encryptedAsymmetricSecretKey).toBe("new-secret");
     expect(user?.encryptedAsymmetricSecretKeyPrev).toBe("old-secret-rewrapped");
+    // Finding #2: the public-key signature must be re-persisted atomically with
+    // the new key — never left stale, or contacts' verify-before-wrap fails.
+    expect(user?.publicKeySignature).toBe("new-signature");
   });
 });
 

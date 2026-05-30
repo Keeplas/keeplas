@@ -20,6 +20,15 @@ import { requireEnv } from "./lib/require_env";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * Require user verification (PIN / biometric / device passcode) on every
+ * passkey ceremony — registration and authentication alike. Without this an
+ * attacker with mere possession of an unlocked authenticator could register or
+ * sign in, defeating the second factor. Exported so tests can assert the value
+ * stays "required" and never silently regresses to "preferred".
+ */
+export const REQUIRED_USER_VERIFICATION = "required" as const;
+
 function getRpId(): string {
   return requireEnv("WEBAUTHN_RP_ID");
 }
@@ -94,7 +103,8 @@ export const startRegistration = mutation({
       })),
       authenticatorSelection: {
         residentKey: "preferred",
-        userVerification: "preferred",
+        // Require user verification (PIN/biometric), not just possession.
+        userVerification: REQUIRED_USER_VERIFICATION,
       },
     });
 
@@ -131,7 +141,8 @@ export const finishRegistration = mutation({
       expectedChallenge: challenge,
       expectedOrigin: getExpectedOrigin(),
       expectedRPID: getRpId(),
-      requireUserVerification: false,
+      // Reject possession-only registrations missing user verification.
+      requireUserVerification: true,
     });
 
     if (!verification.verified || !verification.registrationInfo) {
@@ -201,7 +212,8 @@ export const startAuthentication = mutation({
 
     const options = await generateAuthenticationOptions({
       rpID: getRpId(),
-      userVerification: "preferred",
+      // Require user verification (PIN/biometric), not just possession.
+      userVerification: REQUIRED_USER_VERIFICATION,
       allowCredentials:
         allowCredentials.length > 0 ? allowCredentials : undefined,
     });
@@ -288,7 +300,8 @@ export async function verifyAssertionAndGetUserId(
         | AuthenticatorTransportFuture[]
         | undefined,
     },
-    requireUserVerification: false,
+    // Reject possession-only assertions missing user verification.
+    requireUserVerification: true,
   });
 
   if (!verification.verified) {

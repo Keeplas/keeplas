@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { cn, Icon, Loader } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { AddItemDialog } from "@/components/add-item-dialog";
 import { ReleaseIntroductionEditor } from "@/app/(dashboard)/life-check/sections/release-introduction-editor";
 import { ICON_PATHS } from "@/lib/icons";
@@ -14,71 +15,54 @@ import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 interface SectionConfig {
   key: string;
-  label: string;
   category: VaultCategory;
   accent: string;
-  emptyMessage: string;
 }
 
 // One section per category. Health Directives, Legal Documents, and Business
 // Continuity are top-level here so they don't collapse into "Personal
 // Documents" — each category has its own intent and own UI affordances.
+// Labels and empty-state messages resolve via t("sections.<key>.*") in render.
 const SECTIONS: SectionConfig[] = [
   {
     key: "documents",
-    label: "Personal Documents",
     category: "personal_document",
     accent: "bg-secondary",
-    emptyMessage: "No personal documents yet. Add your first.",
   },
   {
     key: "health",
-    label: "Health Directives",
     category: "health_directive",
     accent: "bg-error",
-    emptyMessage: "No health directives yet. Add your first.",
   },
   {
     key: "legal",
-    label: "Legal Documents",
     category: "legal_document",
     accent: "bg-primary",
-    emptyMessage: "No legal documents yet. Add your first.",
   },
   {
     key: "business",
-    label: "Business Continuity",
     category: "business_continuity",
     accent: "bg-tertiary",
-    emptyMessage: "No business continuity plans yet. Add your first.",
   },
   {
     key: "financial",
-    label: "Financial Assets",
     category: "financial_asset",
     accent: "bg-secondary",
-    emptyMessage: "No financial assets yet. Add your first.",
   },
   {
     key: "credentials",
-    label: "Credentials",
     category: "credential",
     accent: "bg-primary",
-    emptyMessage: "No credentials yet. Add your first.",
   },
   {
     key: "digital",
-    label: "Digital Assets",
     category: "digital_asset",
     accent: "bg-tertiary",
-    emptyMessage: "No digital assets yet. Add your first.",
   },
   {
     key: "messages",
-    label: "Conditional Messages",
     category: "conditional_message",
     accent: "bg-error",
-    emptyMessage: "No conditional messages yet.",
   },
 ];
 
@@ -95,13 +79,19 @@ function formatDate(ts: number): string {
 
 export default function VaultPage() {
   return (
-    <Suspense fallback={<Loader fullscreen label="Loading your vault" />}>
+    <Suspense fallback={<VaultLoader />}>
       <VaultPageContent />
     </Suspense>
   );
 }
 
+function VaultLoader() {
+  const t = useTranslations("vault");
+  return <Loader fullscreen label={t("page.loading")} />;
+}
+
 function VaultPageContent() {
+  const t = useTranslations("vault");
   const searchParams = useSearchParams();
   const rawSection = searchParams.get("section");
   const activeSection = rawSection
@@ -142,7 +132,7 @@ function VaultPageContent() {
   }, [items]);
 
   if (items === undefined || vault === undefined) {
-    return <Loader fullscreen label="Loading your vault" />;
+    return <Loader fullscreen label={t("page.loading")} />;
   }
 
   const sectionsToRender = activeSection ? [activeSection] : SECTIONS;
@@ -163,16 +153,20 @@ function VaultPageContent() {
               path={ICON_PATHS.chevronRight}
               className="w-4 h-4 rotate-180"
             />
-            All vault sections
+            {t("page.allSections")}
           </Link>
         )}
         <h1 className="text-headline-lg text-primary">
-          {activeSection ? activeSection.label : "Digital Vault"}
+          {activeSection
+            ? t(`sections.${activeSection.key}.label`)
+            : t("page.title")}
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-md">
           {activeSection
-            ? `Showing all ${activeCount} item${activeCount === 1 ? "" : "s"} in this category.`
-            : "Your life's core documentation, secured with end-to-end zero-knowledge encryption."}
+            ? t(activeCount === 1 ? "page.countOne" : "page.countOther", {
+                count: activeCount,
+              })
+            : t("page.subtitle")}
         </p>
       </header>
 
@@ -191,7 +185,7 @@ function VaultPageContent() {
           return (
             <VaultSection
               key={section.key}
-              title={section.label}
+              title={t(`sections.${section.key}.label`)}
               count={sectionItems.length}
               accent={section.accent}
               viewAllHref={
@@ -200,7 +194,7 @@ function VaultPageContent() {
                   : undefined
               }
               isEmpty={sectionItems.length === 0}
-              emptyMessage={section.emptyMessage}
+              emptyMessage={t(`sections.${section.key}.empty`)}
               onAdd={() => openAddDialog(section)}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -249,6 +243,7 @@ function VaultSection({
   emptyMessage?: string;
   onAdd?: () => void;
 }) {
+  const t = useTranslations("vault");
   return (
     <section className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -264,7 +259,7 @@ function VaultSection({
             href={viewAllHref}
             className="shrink-0 text-secondary text-body-md font-bold hover:underline cursor-pointer"
           >
-            View All
+            {t("section.viewAll")}
           </Link>
         )}
       </div>
@@ -278,7 +273,7 @@ function VaultSection({
               onClick={onAdd}
               className="text-secondary text-body-md font-bold hover:underline cursor-pointer"
             >
-              Add entry
+              {t("section.addEntry")}
             </button>
           )}
         </div>
@@ -290,7 +285,7 @@ function VaultSection({
               href={viewAllHref}
               className="md:hidden flex items-center justify-center gap-2 mt-4 py-3 px-4 rounded-full bg-surface-container-low hover:bg-surface-container-high text-secondary font-label font-bold text-body-md transition-colors cursor-pointer"
             >
-              View all {count} items
+              {t("section.viewAllCount", { count: count ?? 0 })}
               <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />
             </Link>
           )}
@@ -309,9 +304,10 @@ function transmissionSummary(
   item: Doc<"vault_items">,
   groups: Doc<"recipient_groups">[],
   contacts: Doc<"trusted_contacts">[],
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): { label: string; tone: "private" | "shared" } {
   if (item.accessLevel === "private") {
-    return { label: "Private", tone: "private" };
+    return { label: t("transmission.private"), tone: "private" };
   }
 
   const mode = item.recipientMode ?? "default";
@@ -319,7 +315,8 @@ function transmissionSummary(
     const names = (item.sharedWithContacts ?? [])
       .map((id) => contacts.find((c) => c._id === id)?.name)
       .filter((n): n is string => Boolean(n));
-    if (names.length === 0) return { label: "Private", tone: "private" };
+    if (names.length === 0)
+      return { label: t("transmission.private"), tone: "private" };
     if (names.length === 1) return { label: names[0], tone: "shared" };
     if (names.length === 2) return { label: names.join(" & "), tone: "shared" };
     return { label: `${names[0]} +${names.length - 1}`, tone: "shared" };
@@ -329,14 +326,18 @@ function transmissionSummary(
     const names = (item.sharedWithGroups ?? [])
       .map((id) => groups.find((g) => g._id === id)?.name)
       .filter((n): n is string => Boolean(n));
-    if (names.length === 0) return { label: "Private", tone: "private" };
+    if (names.length === 0)
+      return { label: t("transmission.private"), tone: "private" };
     if (names.length === 1) return { label: names[0], tone: "shared" };
-    return { label: `${names.length} groups`, tone: "shared" };
+    return {
+      label: t("transmission.groups", { count: names.length }),
+      tone: "shared",
+    };
   }
 
   // mode === "default" with non-private accessLevel: legacy "all trust
   // contacts" semantics.
-  return { label: "All trust contacts", tone: "shared" };
+  return { label: t("transmission.allContacts"), tone: "shared" };
 }
 
 // Single card used for every category. Top-right pill shows the
@@ -350,8 +351,9 @@ function VaultItemCard({
   groups: Doc<"recipient_groups">[];
   contacts: Doc<"trusted_contacts">[];
 }) {
+  const t = useTranslations("vault");
   const category = getCategoryConfig(item.category as VaultCategory);
-  const transmission = transmissionSummary(item, groups, contacts);
+  const transmission = transmissionSummary(item, groups, contacts, t);
 
   return (
     <Link
@@ -379,7 +381,7 @@ function VaultItemCard({
       </div>
       <h4 className="text-headline-sm text-primary truncate">{item.title}</h4>
       <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
-        Updated {formatDate(item.updatedAt)}
+        {t("card.updated", { date: formatDate(item.updatedAt) })}
       </p>
     </Link>
   );

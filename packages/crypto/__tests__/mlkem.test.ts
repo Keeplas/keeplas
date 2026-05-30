@@ -156,4 +156,48 @@ describe("ML-KEM-768 (post-quantum)", () => {
       expect(restored).toEqual(payload);
     });
   });
+
+  describe("AAD binding", () => {
+    it("round-trips a DEK with matching AAD", async () => {
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      const dek = await generateTestDek();
+      const aad = new TextEncoder().encode("envelope-header-v1");
+      const envelope = await wrapDek(dek, serializePublicKey(publicKey), aad);
+      const restored = await unwrapDek(envelope, secretKey, aad);
+      expect(await exportRaw(restored)).toEqual(await exportRaw(dek));
+    });
+
+    it("fails to unwrap a DEK when AAD does not match", async () => {
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      const dek = await generateTestDek();
+      const aad = new TextEncoder().encode("envelope-header-v1");
+      const envelope = await wrapDek(dek, serializePublicKey(publicKey), aad);
+      const wrongAad = new TextEncoder().encode("envelope-header-v2");
+      await expect(unwrapDek(envelope, secretKey, wrongAad)).rejects.toThrow();
+    });
+
+    it("fails to unwrap a DEK when AAD is omitted but was set", async () => {
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      const dek = await generateTestDek();
+      const aad = new TextEncoder().encode("envelope-header-v1");
+      const envelope = await wrapDek(dek, serializePublicKey(publicKey), aad);
+      await expect(unwrapDek(envelope, secretKey)).rejects.toThrow();
+    });
+
+    it("round-trips raw bytes with matching AAD and rejects a mismatch", async () => {
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      const payload = crypto.getRandomValues(new Uint8Array(48));
+      const aad = new TextEncoder().encode("shard:owner:1");
+      const envelope = await wrapBytes(
+        payload,
+        serializePublicKey(publicKey),
+        aad,
+      );
+      expect(await unwrapBytes(envelope, secretKey, aad)).toEqual(payload);
+      const wrongAad = new TextEncoder().encode("shard:owner:2");
+      await expect(
+        unwrapBytes(envelope, secretKey, wrongAad),
+      ).rejects.toThrow();
+    });
+  });
 });

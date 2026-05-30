@@ -15,6 +15,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { useVaultCrypto } from "./use-vault-crypto";
+import { useTranslations } from "./i18n";
 
 type AttachmentKind = "document" | "audio" | "video" | "image";
 
@@ -86,6 +87,7 @@ function uploadWithProgress(
 }
 
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
+  const t = useTranslations("vault.upload");
   const { encryptBlobWithKey } = useVaultCrypto();
   const generateUploadUrl = useAuditedMutation(
     api.vault_items.generateUploadUrl,
@@ -106,8 +108,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
 
       const handle = toast({
         variant: "info",
-        title: `Saving ${files.length} attachment${files.length === 1 ? "" : "s"}`,
-        description: `${label} — encrypting…`,
+        title: t(files.length === 1 ? "savingTitle" : "savingTitlePlural", {
+          count: files.length,
+        }),
+        description: t("encrypting", { label }),
         duration: PERSISTENT_DURATION_MS,
       });
 
@@ -119,9 +123,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         const done = fileBytesUploaded.reduce((a, b) => a + b, 0);
         handle.update({
           id: handle.id,
-          description: `${label} — ${completed}/${files.length} done · ${formatBytes(
-            done,
-          )} / ${formatBytes(totalBytes)}`,
+          description: t("progress", {
+            label,
+            completed,
+            total: files.length,
+            done: formatBytes(done),
+            totalBytes: formatBytes(totalBytes),
+          }),
         });
       };
 
@@ -175,8 +183,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         handle.update({
           id: handle.id,
           variant: "success",
-          title: "Attachments saved",
-          description: `${label} — ${completed} file${completed === 1 ? "" : "s"} encrypted and uploaded`,
+          title: t("savedTitle"),
+          description: t(
+            completed === 1 ? "savedDescription" : "savedDescriptionPlural",
+            { label, count: completed },
+          ),
           duration: 5000,
         });
         // Let the success state breathe before auto-dismiss.
@@ -187,12 +198,18 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         handle.update({
           id: handle.id,
           variant: "error",
-          title: "Some attachments failed",
-          description: `${label} — ${completed}/${files.length} saved · ${failed.length} failed (${firstError})`,
+          title: t("failedTitle"),
+          description: t("failedDescription", {
+            label,
+            completed,
+            total: files.length,
+            failed: failed.length,
+            error: firstError,
+          }),
           duration: PERSISTENT_DURATION_MS,
           action: (
             <ToastAction
-              altText="Retry failed attachments"
+              altText={t("retryAltText")}
               onClick={() => {
                 handle.dismiss();
                 void runJobRef.current?.({
@@ -203,13 +220,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
                 });
               }}
             >
-              Retry
+              {t("retry")}
             </ToastAction>
           ),
         });
       }
     },
-    [encryptBlobWithKey, generateUploadUrl, addItemFiles],
+    [encryptBlobWithKey, generateUploadUrl, addItemFiles, t],
   );
 
   useEffect(() => {

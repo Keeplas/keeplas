@@ -25,13 +25,14 @@ import {
   cn,
 } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 const ROLES = [
-  { value: "family", label: "Family member" },
-  { value: "friend", label: "Friend" },
-  { value: "lawyer", label: "Lawyer" },
-  { value: "doctor", label: "Doctor" },
-  { value: "other", label: "Other" },
+  { value: "family", key: "family" },
+  { value: "friend", key: "friend" },
+  { value: "lawyer", key: "lawyer" },
+  { value: "doctor", key: "doctor" },
+  { value: "other", key: "other" },
 ] as const;
 
 type Role = (typeof ROLES)[number]["value"];
@@ -50,6 +51,7 @@ export function InviteContactDialog({
   onContactInvited,
   initialContactType = "trust",
 }: InviteContactDialogProps) {
+  const t = useTranslations("trustedContacts");
   const inviteContact = useAuditedMutation(api.trusted_contacts.inviteContact);
 
   const [name, setName] = useState("");
@@ -75,15 +77,15 @@ export function InviteContactDialog({
     e.preventDefault();
     if (!name.trim()) return;
     if (!email.trim() && !phone) {
-      setError("Add an email or a phone number");
+      setError(t("invite.errorMissingContact"));
       return;
     }
     if (email.trim() && !isValidEmail(email)) {
-      setError("Please enter a valid email");
+      setError(t("invite.errorInvalidEmail"));
       return;
     }
     if (phone && !isValidPhone(phone)) {
-      setError("Please enter a valid phone number");
+      setError(t("invite.errorInvalidPhone"));
       return;
     }
 
@@ -108,7 +110,7 @@ export function InviteContactDialog({
         (result as { contactId: Id<"trusted_contacts"> }).contactId,
       );
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to send invitation"));
+      setError(getErrorMessage(err, t("invite.errorSend")));
     } finally {
       setSaving(false);
     }
@@ -121,13 +123,13 @@ export function InviteContactDialog({
           <div className="flex-1 min-w-0">
             <DialogTitle>
               {contactType === "recipient_only"
-                ? "Add Recipient"
-                : "Invite Trusted Contact"}
+                ? t("invite.titleRecipient")
+                : t("invite.titleTrust")}
             </DialogTitle>
             <DialogDescription className="mt-1">
               {contactType === "recipient_only"
-                ? "This person will receive vault items only when one of your triggers fires. They don't hold a recovery shard."
-                : "This person will receive a recovery fragment and can help you regain access to your vault."}
+                ? t("invite.descriptionRecipient")
+                : t("invite.descriptionTrust")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -137,18 +139,18 @@ export function InviteContactDialog({
           className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
         >
           <div className="space-y-2">
-            <Label htmlFor="contact-name">Full Name *</Label>
+            <Label htmlFor="contact-name">{t("invite.fullNameLabel")}</Label>
             <Input
               id="contact-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter their full name"
+              placeholder={t("invite.fullNamePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-email">Email</Label>
+            <Label htmlFor="contact-email">{t("invite.emailLabel")}</Label>
             <Input
               id="contact-email"
               type="email"
@@ -159,27 +161,27 @@ export function InviteContactDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact-phone">Phone</Label>
+            <Label htmlFor="contact-phone">{t("invite.phoneLabel")}</Label>
             <PhoneInput id="contact-phone" value={phone} onChange={setPhone} />
             <p className="text-label-md text-on-surface-variant">
-              Add an email, a phone number, or both — at least one is required.
+              {t("invite.contactHint")}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="contact-role" className="flex items-center gap-1.5">
-              Role
-              <HelpHint content="Their relationship to you. Used by Keeplas to surface the right contact in scenarios (medical, legal, family) and on hubs." />
+              {t("invite.roleLabel")}
+              <HelpHint content={t("invite.roleHelp")} />
             </Label>
             <Select<Role>
               id="contact-role"
               value={role}
               onValueChange={setRole}
-              placeholder="Select a role"
+              placeholder={t("invite.rolePlaceholder")}
             >
               {ROLES.map((r) => (
                 <SelectItem key={r.value} value={r.value}>
-                  {r.label}
+                  {t(`invite.roles.${r.key}`)}
                 </SelectItem>
               ))}
             </Select>
@@ -187,8 +189,8 @@ export function InviteContactDialog({
 
           <div className="space-y-2">
             <Label className="flex items-center gap-1.5">
-              Role in Keeplas
-              <HelpHint content="Trust contact = holds a recovery shard, counts toward your 5-trust cap, can help recover your account. Recipient only = receives items at trigger but no recovery role and no cap." />
+              {t("invite.roleInKeeplasLabel")}
+              <HelpHint content={t("invite.roleInKeeplasHelp")} />
             </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
@@ -202,11 +204,10 @@ export function InviteContactDialog({
                 )}
               >
                 <p className="text-headline-sm text-primary mb-1">
-                  Trust contact
+                  {t("invite.trustOption.title")}
                 </p>
                 <p className="text-label-md text-on-surface-variant">
-                  Holds a recovery shard. Counts toward your 5-trust-contacts
-                  cap.
+                  {t("invite.trustOption.description")}
                 </p>
               </button>
               <button
@@ -220,10 +221,10 @@ export function InviteContactDialog({
                 )}
               >
                 <p className="text-headline-sm text-primary mb-1">
-                  Recipient only
+                  {t("invite.recipientOption.title")}
                 </p>
                 <p className="text-label-md text-on-surface-variant">
-                  Receives items at trigger. No shard, no cap, no recovery role.
+                  {t("invite.recipientOption.description")}
                 </p>
               </button>
             </div>
@@ -239,7 +240,7 @@ export function InviteContactDialog({
               onClick={() => onOpenChange(false)}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Cancel
+              {t("invite.cancel")}
             </Button>
             <Button
               type="submit"
@@ -249,10 +250,10 @@ export function InviteContactDialog({
               className="flex-1 cursor-pointer"
             >
               {saving
-                ? "Sending..."
+                ? t("invite.sending")
                 : contactType === "recipient_only"
-                  ? "Add Recipient"
-                  : "Send Invitation"}
+                  ? t("invite.submitRecipient")
+                  : t("invite.submitTrust")}
             </Button>
           </div>
         </form>

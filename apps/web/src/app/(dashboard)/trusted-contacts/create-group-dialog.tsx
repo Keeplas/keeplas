@@ -18,6 +18,7 @@ import {
 } from "@keeplas/ui";
 import { ContactMembersSelect } from "@/components/contact-members-select";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function CreateGroupDialog({
   onOpenChange,
   contacts,
 }: CreateGroupDialogProps) {
+  const t = useTranslations("trustedContacts");
   const createGroup = useAuditedMutation(api.recipient_groups.createGroup);
 
   const [name, setName] = useState("");
@@ -66,7 +68,7 @@ export function CreateGroupDialog({
       });
       handleOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to create group"));
+      setError(getErrorMessage(err, t("createGroup.error")));
       setSaving(false);
     }
   }
@@ -76,9 +78,9 @@ export function CreateGroupDialog({
       <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>Create Release Group</DialogTitle>
+            <DialogTitle>{t("createGroup.title")}</DialogTitle>
             <DialogDescription className="mt-1">
-              A reusable bundle of recipients you can assign to vault items.
+              {t("createGroup.description")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -88,34 +90,36 @@ export function CreateGroupDialog({
           className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
         >
           <div className="space-y-2">
-            <Label htmlFor="group-name">Group name *</Label>
+            <Label htmlFor="group-name">{t("createGroup.nameLabel")}</Label>
             <Input
               id="group-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Family, Legal, Business"
+              placeholder={t("createGroup.namePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="group-description">Description (optional)</Label>
+            <Label htmlFor="group-description">
+              {t("createGroup.descriptionLabel")}
+            </Label>
             <Textarea
               id="group-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What kind of items will this group receive?"
+              placeholder={t("createGroup.descriptionPlaceholder")}
               rows={2}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Members</Label>
+            <Label>{t("createGroup.membersLabel")}</Label>
             <ContactMembersSelect
               contacts={contacts}
               selected={members}
               onChange={setMembers}
-              placeholder="Add contacts to this group"
+              placeholder={t("createGroup.membersPlaceholder")}
             />
           </div>
 
@@ -129,7 +133,7 @@ export function CreateGroupDialog({
               onClick={() => handleOpenChange(false)}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Cancel
+              {t("createGroup.cancel")}
             </Button>
             <Button
               type="submit"
@@ -138,7 +142,7 @@ export function CreateGroupDialog({
               disabled={saving || !name.trim()}
               className="flex-1 cursor-pointer"
             >
-              {saving ? "Creating…" : "Create Group"}
+              {saving ? t("createGroup.creating") : t("createGroup.submit")}
             </Button>
           </div>
         </form>

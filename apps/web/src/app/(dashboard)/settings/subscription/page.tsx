@@ -2,21 +2,21 @@
 
 import { Button, cn, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 
 interface PlanFeature {
-  label: string;
+  /** i18n key suffix under settings.subscription.features. */
+  key: string;
   included: boolean;
 }
 
 interface Plan {
   id: "free" | "lifetime";
-  name: string;
-  tagline: string;
   priceMonthly?: string;
   priceOneTime?: string;
-  priceSuffix: string;
+  /** i18n key suffix under settings.subscription.priceSuffix. */
+  priceSuffixKey: string;
   features: PlanFeature[];
-  cta: string;
   popular?: boolean;
   dark?: boolean;
 }
@@ -24,47 +24,42 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     id: "free",
-    name: "Free",
-    tagline: "Essential digital storage.",
     priceMonthly: "$0",
-    priceSuffix: "/forever",
+    priceSuffixKey: "forever",
     features: [
-      { label: "100 MB Zero-Knowledge Vault", included: true },
-      { label: "Basic Life Check (Monthly)", included: true },
-      { label: "1 Emergency Contact", included: true },
-      { label: "Emergency Card (Digital)", included: true },
-      { label: "Data Hosting Country Choice (Coming Soon)", included: false },
-      { label: "Notarial & Legal Compliance (Coming Soon)", included: false },
+      { key: "freeVault", included: true },
+      { key: "basicLifeCheck", included: true },
+      { key: "oneEmergencyContact", included: true },
+      { key: "emergencyCardDigital", included: true },
+      { key: "dataHostingCountry", included: false },
+      { key: "notarialCompliance", included: false },
     ],
-    cta: "Start Free",
   },
   {
     id: "lifetime",
-    name: "Lifetime",
-    tagline: "Everything you need, forever, in a single payment.",
     priceOneTime: "$199",
-    priceSuffix: "one-time",
+    priceSuffixKey: "oneTime",
     features: [
-      { label: "10 GB Zero-Knowledge Vault", included: true },
-      { label: "More Storage Available as Add-on", included: true },
-      { label: "Full Scenario Engine", included: true },
-      { label: "5 Emergency Contacts", included: true },
-      { label: "Priority Social Recovery", included: true },
-      { label: "Emergency Card (Physical)", included: true },
-      { label: "Video Legacy Messages", included: true },
-      { label: "Weekly Life Check", included: true },
-      { label: "Early Adopter Badge", included: true },
-      { label: "Priority Support", included: true },
-      { label: "Data Hosting Country Choice (Coming Soon)", included: false },
-      { label: "Notarial & Legal Compliance (Coming Soon)", included: false },
+      { key: "lifetimeVault", included: true },
+      { key: "moreStorageAddon", included: true },
+      { key: "fullScenarioEngine", included: true },
+      { key: "fiveEmergencyContacts", included: true },
+      { key: "prioritySocialRecovery", included: true },
+      { key: "emergencyCardPhysical", included: true },
+      { key: "videoLegacyMessages", included: true },
+      { key: "weeklyLifeCheck", included: true },
+      { key: "earlyAdopterBadge", included: true },
+      { key: "prioritySupport", included: true },
+      { key: "dataHostingCountry", included: false },
+      { key: "notarialCompliance", included: false },
     ],
-    cta: "Get Lifetime Access",
     popular: true,
     dark: true,
   },
 ];
 
 function PriceDisplay({ plan }: { plan: Plan }) {
+  const t = useTranslations("settings");
   const display =
     plan.id === "lifetime" ? plan.priceOneTime : plan.priceMonthly;
 
@@ -84,23 +79,22 @@ function PriceDisplay({ plan }: { plan: Plan }) {
           plan.dark ? "text-white/70" : "text-on-surface-variant",
         )}
       >
-        {plan.priceSuffix}
+        {t(`subscription.priceSuffix.${plan.priceSuffixKey}`)}
       </span>
     </div>
   );
 }
 
 export default function SubscriptionPage() {
+  const t = useTranslations("settings");
   return (
     <div className="max-w-screen-xl mx-auto space-y-10">
       <header className="space-y-3 text-center md:text-left">
         <h1 className="text-headline-lg text-primary">
-          Legacy Architecture. Secured Forever.
+          {t("subscription.title")}
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
-          Choose the protection level that fits your continuity plan. Both tiers
-          run the same zero-knowledge encryption — only the surface area
-          changes.
+          {t("subscription.description")}
         </p>
       </header>
 
@@ -117,7 +111,7 @@ export default function SubscriptionPage() {
           >
             {plan.popular && (
               <span className="absolute top-6 right-6 text-label-md bg-secondary text-on-secondary px-3 py-1 rounded-full">
-                Popular
+                {t("subscription.popular")}
               </span>
             )}
 
@@ -129,7 +123,7 @@ export default function SubscriptionPage() {
                     plan.dark ? "text-white" : "text-primary",
                   )}
                 >
-                  {plan.name}
+                  {t(`subscription.plans.${plan.id}.name`)}
                 </h2>
                 <p
                   className={cn(
@@ -137,7 +131,7 @@ export default function SubscriptionPage() {
                     plan.dark ? "text-white/70" : "text-on-surface-variant",
                   )}
                 >
-                  {plan.tagline}
+                  {t(`subscription.plans.${plan.id}.tagline`)}
                 </p>
               </div>
 
@@ -145,7 +139,7 @@ export default function SubscriptionPage() {
 
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
-                  <li key={feature.label} className="flex items-start gap-3">
+                  <li key={feature.key} className="flex items-start gap-3">
                     <span
                       className={cn(
                         "shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
@@ -179,7 +173,7 @@ export default function SubscriptionPage() {
                             : "text-on-surface-variant/60",
                       )}
                     >
-                      {feature.label}
+                      {t(`subscription.features.${feature.key}`)}
                     </span>
                   </li>
                 ))}
@@ -197,7 +191,7 @@ export default function SubscriptionPage() {
                     : "",
                 )}
               >
-                {plan.cta}
+                {t(`subscription.plans.${plan.id}.cta`)}
               </Button>
             </div>
           </article>
@@ -205,7 +199,7 @@ export default function SubscriptionPage() {
       </section>
 
       <footer className="text-center text-body-md text-on-surface-variant pt-6">
-        Pricing displayed in USD. Switching plans never deletes your vault.
+        {t("subscription.footer")}
       </footer>
     </div>
   );

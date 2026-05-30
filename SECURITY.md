@@ -25,11 +25,11 @@ Please include:
 
 ## Security Model
 
-Keeplas uses a zero-knowledge architecture:
+Keeplas uses client-side, zero-access encryption:
 
 - **Master Key** is generated and stays client-side only
 - **Recovery Phrase** is displayed once, never stored in plaintext
-- **Shamir shards** are encrypted with each contact's public key
+- **Shamir shards** are encrypted with each contact's public key; recovery works from 2 trusted contacts by default, and Keeplas holds no server-side shard
 - **Vault items** are AES-256-GCM encrypted before leaving the browser
 - **Convex** (our backend) never sees any secret in plaintext
 

@@ -23,6 +23,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { useTranslations } from "@/lib/i18n";
 
 type Step = "phone" | "code";
 type Mode = "add" | "change";
@@ -48,6 +49,7 @@ export function PhoneVerificationDialog({
   mode = "add",
   onVerified,
 }: PhoneVerificationDialogProps) {
+  const t = useTranslations("chrome");
   const status = useQuery(api.phone_verification.getMyStatus);
   const requestVerification = useMutation(
     api.phone_verification.requestVerification,
@@ -88,7 +90,7 @@ export function PhoneVerificationDialog({
 
   async function handleSendCode() {
     if (!phone || !isValidPhone(phone)) {
-      setError("Enter a valid phone number");
+      setError(t("phoneVerify.invalidPhone"));
       return;
     }
     setBusy(true);
@@ -98,7 +100,7 @@ export function PhoneVerificationDialog({
       cooldown.start();
       setStep("code");
     } catch (err) {
-      setError(getErrorMessage(err, "Could not send verification code."));
+      setError(getErrorMessage(err, t("phoneVerify.couldNotSend")));
     } finally {
       setBusy(false);
     }
@@ -108,7 +110,7 @@ export function PhoneVerificationDialog({
     e.preventDefault();
     if (busy) return;
     if (!/^\d{6}$/.test(code.trim())) {
-      setError("Enter the 6-digit code");
+      setError(t("phoneVerify.enterCode"));
       return;
     }
     setBusy(true);
@@ -118,7 +120,7 @@ export function PhoneVerificationDialog({
       onVerified?.();
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Verification failed."));
+      setError(getErrorMessage(err, t("phoneVerify.verificationFailed")));
     } finally {
       setBusy(false);
     }
@@ -133,7 +135,7 @@ export function PhoneVerificationDialog({
       cooldown.start();
       setCode("");
     } catch (err) {
-      setError(getErrorMessage(err, "Could not resend code."));
+      setError(getErrorMessage(err, t("phoneVerify.couldNotResend")));
     } finally {
       setBusy(false);
     }
@@ -146,13 +148,13 @@ export function PhoneVerificationDialog({
           <div className="space-y-1.5">
             <DialogTitle>
               {mode === "change"
-                ? "Change your WhatsApp number"
-                : "Verify your WhatsApp number"}
+                ? t("phoneVerify.titleChange")
+                : t("phoneVerify.titleAdd")}
             </DialogTitle>
             <DialogDescription>
               {mode === "change"
-                ? "We'll send a 6-digit code to your new number on WhatsApp. Confirm it to replace your current number — sign-ins via the old one will stop working."
-                : "We will send a 6-digit code to your WhatsApp. Enter it below to confirm ownership of this number."}
+                ? t("phoneVerify.descChange")
+                : t("phoneVerify.descAdd")}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
@@ -170,7 +172,9 @@ export function PhoneVerificationDialog({
           {step === "phone" ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="verify-phone">WhatsApp number</Label>
+                <Label htmlFor="verify-phone">
+                  {t("phoneVerify.phoneLabel")}
+                </Label>
                 <PhoneInput
                   id="verify-phone"
                   value={phone}
@@ -184,20 +188,22 @@ export function PhoneVerificationDialog({
                   onClick={() => onOpenChange(false)}
                   disabled={busy}
                 >
-                  Cancel
+                  {t("phoneVerify.cancel")}
                 </Button>
                 <Button
                   onClick={handleSendCode}
                   disabled={busy || !phone || !isValidPhone(phone)}
                 >
-                  {busy ? "Sending…" : "Send code"}
+                  {busy ? t("phoneVerify.sending") : t("phoneVerify.sendCode")}
                 </Button>
               </div>
             </div>
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="verify-code">6-digit code</Label>
+                <Label htmlFor="verify-code">
+                  {t("phoneVerify.codeLabel")}
+                </Label>
                 <Input
                   id="verify-code"
                   inputMode="numeric"
@@ -210,7 +216,7 @@ export function PhoneVerificationDialog({
                   autoFocus
                 />
                 <p className="text-label-md text-on-surface-variant">
-                  Sent to {phone}. The code expires in 10 minutes.
+                  {t("phoneVerify.sentTo", { phone })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -222,8 +228,8 @@ export function PhoneVerificationDialog({
                   disabled={busy || cooldown.active}
                 >
                   {cooldown.active
-                    ? `Resend code in ${cooldown.remaining}s`
-                    : "Resend code"}
+                    ? t("phoneVerify.resendIn", { seconds: cooldown.remaining })
+                    : t("phoneVerify.resendCode")}
                 </Button>
                 <div className="flex gap-2">
                   <Button
@@ -232,10 +238,12 @@ export function PhoneVerificationDialog({
                     onClick={() => setStep("phone")}
                     disabled={busy}
                   >
-                    Change number
+                    {t("phoneVerify.changeNumber")}
                   </Button>
                   <Button type="submit" disabled={busy || code.length !== 6}>
-                    {busy ? "Verifying…" : "Verify"}
+                    {busy
+                      ? t("phoneVerify.verifying")
+                      : t("phoneVerify.verify")}
                   </Button>
                 </div>
               </div>

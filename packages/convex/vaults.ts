@@ -1,10 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import {
-  requireAuth,
-  optionalAuth,
-  getUserVault,
-  getActiveItems,
-} from "./helpers";
+import { requireFullAuth, getUserVault, getActiveItems } from "./helpers";
 
 /**
  * Get or create the user's vault.
@@ -12,7 +7,7 @@ import {
 export const getOrCreateVault = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
 
     const existing = await getUserVault(ctx, userId);
     if (existing) return existing._id;
@@ -20,14 +15,8 @@ export const getOrCreateVault = mutation({
     const now = Date.now();
     return await ctx.db.insert("vaults", {
       userId,
-      status: "active",
-      securityLevel: "standard",
-      integrityScore: 0,
       encryptedItemsCount: 0,
-      secureNodesCount: 0,
       lastVerifiedAt: now,
-      syncHash: "",
-      lastSyncAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -40,8 +29,7 @@ export const getOrCreateVault = mutation({
 export const getVault = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return null;
+    const userId = await requireFullAuth(ctx);
 
     return await getUserVault(ctx, userId);
   },
@@ -61,8 +49,7 @@ export const getVault = query({
 export const getUsageStats = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return null;
+    const userId = await requireFullAuth(ctx);
 
     const items = await getActiveItems(ctx, userId);
     const activeItemIds = new Set(items.map((item) => item._id));

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { HelpHint, Switch, toast } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
 
 const THRESHOLDS = [1, 2, 3];
@@ -20,12 +21,15 @@ const UNSELECTED_CLS =
  * each change (mirrors the cadence selector's pattern).
  */
 export function ReleasePolicySettings() {
+  const t = useTranslations("lifeCheck");
   const config = useQuery(api.life_check.getConfig);
   const save = useMutation(api.life_check.saveReleasePolicy);
 
   const [threshold, setThreshold] = useState(2);
   const [windowDays, setWindowDays] = useState(7);
-  const [releaseAnyway, setReleaseAnyway] = useState(true);
+  // Default OFF (abort): releasing the vault with zero human confirmation must
+  // always be an explicit owner opt-in, never the preselected state.
+  const [releaseAnyway, setReleaseAnyway] = useState(false);
 
   // Seed the editable form from the server config the first time it resolves
   // (and again if it changes), without an effect. Tracking the seeded source
@@ -36,9 +40,8 @@ export function ReleasePolicySettings() {
     setSeededFrom(config);
     setThreshold(config.confirmationThreshold ?? 2);
     setWindowDays(config.confirmationWindowDays ?? 7);
-    setReleaseAnyway(
-      (config.fallbackBehavior ?? "release_anyway") === "release_anyway",
-    );
+    // Default OFF when unset — must match the server's "abort" default (H1).
+    setReleaseAnyway(config.fallbackBehavior === "release_anyway");
   }
 
   if (config === null) return null;
@@ -57,7 +60,7 @@ export function ReleasePolicySettings() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to save release policy"),
+        title: getErrorMessage(err, t("policy.saveError")),
       });
     }
   }
@@ -66,18 +69,18 @@ export function ReleasePolicySettings() {
     <section className="bg-surface-container-low rounded-2xl p-6 space-y-6">
       <div>
         <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
-          Release policy
-          <HelpHint content="If you stop responding to check-ins, your trusted contacts are asked to confirm you're unavailable before anything is released. Set how many must confirm, how long they have, and what happens if none do." />
+          {t("policy.title")}
+          <HelpHint content={t("policy.help")} />
         </h3>
         <p className="text-body-md text-on-surface-variant">
-          The human safeguard before your vault is ever released.
+          {t("policy.description")}
         </p>
       </div>
 
       <div>
         <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
-          Contacts that must confirm you&apos;re unavailable
-          <HelpHint content="The minimum number of trusted contacts who must independently confirm they can't reach you before your vault can be released. A higher number guards against any single contact acting alone." />
+          {t("policy.thresholdLabel")}
+          <HelpHint content={t("policy.thresholdHelp")} />
         </p>
         <div className="grid grid-cols-3 gap-3">
           {THRESHOLDS.map((n) => (
@@ -97,8 +100,8 @@ export function ReleasePolicySettings() {
 
       <div>
         <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
-          Days they have to confirm
-          <HelpHint content="How long your trusted contacts have to reach the required number once Keeplas alerts them. This is separate from the fixed 72-hour grace window you get to cancel the release after they confirm." />
+          {t("policy.windowLabel")}
+          <HelpHint content={t("policy.windowHelp")} />
         </p>
         <div className="grid grid-cols-3 gap-3">
           {WINDOWS.map((n) => (
@@ -110,7 +113,7 @@ export function ReleasePolicySettings() {
               }}
               className={windowDays === n ? SELECTED_CLS : UNSELECTED_CLS}
             >
-              {n} days
+              {t("policy.windowDays", { count: n })}
             </button>
           ))}
         </div>
@@ -119,12 +122,12 @@ export function ReleasePolicySettings() {
       <div className="flex items-start justify-between gap-4 pt-1">
         <div>
           <p className="text-body-md font-bold text-primary">
-            Release anyway if no one confirms
+            {t("policy.releaseAnywayLabel")}
           </p>
           <p className="text-label-md text-on-surface-variant">
             {releaseAnyway
-              ? "Recommended: if no contact confirms, your vault is still released after the window, so your recipients are reached."
-              : "If no contact confirms, nothing is released."}
+              ? t("policy.releaseAnywayOn")
+              : t("policy.releaseAnywayOff")}
           </p>
         </div>
         <Switch

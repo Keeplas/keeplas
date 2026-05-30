@@ -6,6 +6,7 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 import { EditGroupDialog } from "./edit-group-dialog";
 
 interface RecipientGroupCardProps {
@@ -17,6 +18,7 @@ export function RecipientGroupCard({
   group,
   contacts,
 }: RecipientGroupCardProps) {
+  const t = useTranslations("trustedContacts");
   const [showActions, setShowActions] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -71,7 +73,7 @@ export function RecipientGroupCard({
         </div>
         {group.isDefault && (
           <span className="px-3 py-1 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
-            Default
+            {t("groupCard.default")}
           </span>
         )}
       </div>
@@ -84,14 +86,15 @@ export function RecipientGroupCard({
       )}
 
       <p className="text-label-md text-on-surface-variant mt-4 mb-3">
-        {memberContacts.length}{" "}
-        {memberContacts.length === 1 ? "member" : "members"}
+        {memberContacts.length === 1
+          ? t("groupCard.memberCountOne", { count: memberContacts.length })
+          : t("groupCard.memberCountMany", { count: memberContacts.length })}
       </p>
 
       <div className="flex flex-wrap gap-1.5 mb-6 min-h-[28px]">
         {memberContacts.length === 0 ? (
           <span className="text-label-md text-on-surface-variant/60 italic">
-            No members yet
+            {t("groupCard.noMembers")}
           </span>
         ) : (
           memberContacts.slice(0, 5).map((c) => (
@@ -115,13 +118,13 @@ export function RecipientGroupCard({
           onClick={() => setShowEdit(true)}
           className="text-body-md font-bold text-secondary hover:underline cursor-pointer"
         >
-          Manage members
+          {t("groupCard.manageMembers")}
         </button>
         {!group.isDefault && (
           <button
             onClick={() => setShowActions(!showActions)}
             className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-            aria-label="More"
+            aria-label={t("groupCard.more")}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="5" r="2" />
@@ -139,7 +142,7 @@ export function RecipientGroupCard({
             disabled={busy}
             className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
           >
-            Set as default group
+            {t("groupCard.setDefault")}
           </button>
           {confirmDelete ? (
             <div className="flex gap-2">
@@ -148,13 +151,13 @@ export function RecipientGroupCard({
                 disabled={busy}
                 className="flex-1 text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
               >
-                {busy ? "Deleting…" : "Confirm Delete"}
+                {busy ? t("groupCard.deleting") : t("groupCard.confirmDelete")}
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="flex-1 text-sm px-3 py-2 rounded-lg bg-surface-container-high text-on-surface cursor-pointer"
               >
-                Cancel
+                {t("groupCard.cancel")}
               </button>
             </div>
           ) : (
@@ -162,7 +165,7 @@ export function RecipientGroupCard({
               onClick={handleDelete}
               className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-error/10 transition-colors cursor-pointer text-error"
             >
-              Delete group
+              {t("groupCard.deleteGroup")}
             </button>
           )}
         </div>

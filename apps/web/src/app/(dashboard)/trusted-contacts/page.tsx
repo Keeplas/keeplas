@@ -16,6 +16,7 @@ import {
   TabsTrigger,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 import { ContactCard } from "./contact-card";
 import { ContactDetailSheet } from "./contact-detail-sheet";
 import { InviteContactDialog } from "./invite-contact-dialog";
@@ -30,25 +31,20 @@ const MAX_TRUST_CONTACTS = 5;
 const GUARDIAN_ROLES = [
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    title: "Holds a recovery shard",
-    description:
-      "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault.",
+    key: "holdsShard",
   },
   {
     icon: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
-    title: "Confirms you are unreachable",
-    description:
-      "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window.",
+    key: "confirmsUnreachable",
   },
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    title: "Releases vault & recipients",
-    description:
-      "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items.",
+    key: "releasesVault",
   },
 ];
 
 export default function TrustedContactsPage() {
+  const t = useTranslations("trustedContacts");
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const me = useQuery(api.onboarding.getOnboardingState);
@@ -144,19 +140,18 @@ export default function TrustedContactsPage() {
     <div className="max-w-screen-2xl mx-auto">
       <header className="mb-8 max-w-3xl">
         <h1 className="text-headline-lg text-primary mb-4">
-          Trusted Circle &<br />
-          <span className="text-secondary">Release Routing</span>
+          {t("header.titleLine1")}
+          <br />
+          <span className="text-secondary">{t("header.titleLine2")}</span>
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          Designate the people who protect your legacy and decide who receives
-          which vault items at trigger. Manage guardians and recipient-only
-          contacts here, then bundle them into release groups.
+          {t("header.subtitle")}
         </p>
         <Link
           href="/docs/trusted-contacts"
           className="inline-flex items-center gap-2 text-secondary font-bold text-body-md hover:underline mt-3"
         >
-          How trust contacts work
+          {t("header.howItWorks")}
           <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
         </Link>
         <InfoCallout
@@ -164,13 +159,12 @@ export default function TrustedContactsPage() {
           tone="info"
           className="mt-6"
         >
-          For acute emergencies (accident, sudden illness), set up your
-          phone&rsquo;s built-in Medical ID — paramedics check it first.{" "}
+          {t("header.medicalIdCallout")}{" "}
           <Link
             href="/docs/emergency-info"
             className="font-bold text-secondary hover:underline"
           >
-            Learn how →
+            {t("header.learnHow")}
           </Link>
         </InfoCallout>
       </header>
@@ -178,13 +172,13 @@ export default function TrustedContactsPage() {
       <Tabs defaultValue="contacts" className="space-y-8">
         <TabsList>
           <TabsTrigger value="contacts">
-            Contacts
+            {t("tabs.contacts")}
             <span className="text-label-md opacity-70">
               ({activeContacts.length})
             </span>
           </TabsTrigger>
           <TabsTrigger value="groups">
-            Release Groups
+            {t("tabs.releaseGroups")}
             <span className="text-label-md opacity-70">({groups.length})</span>
           </TabsTrigger>
         </TabsList>
@@ -194,11 +188,11 @@ export default function TrustedContactsPage() {
             <aside className="lg:col-span-4 space-y-6">
               <section className="bg-surface-container-low p-6 rounded-2xl">
                 <h3 className="text-headline-sm text-primary mb-5">
-                  The Role of Guardians
+                  {t("guardians.heading")}
                 </h3>
                 <div className="space-y-6">
                   {GUARDIAN_ROLES.map((role) => (
-                    <div key={role.title} className="flex gap-4">
+                    <div key={role.key} className="flex gap-4">
                       <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center shrink-0">
                         <svg
                           className="w-5 h-5 text-secondary-fixed"
@@ -216,10 +210,10 @@ export default function TrustedContactsPage() {
                       </div>
                       <div>
                         <p className="text-label-md text-primary mb-1">
-                          {role.title}
+                          {t(`guardians.roles.${role.key}.title`)}
                         </p>
                         <p className="text-body-md text-on-surface-variant">
-                          {role.description}
+                          {t(`guardians.roles.${role.key}.description`)}
                         </p>
                       </div>
                     </div>
@@ -237,9 +231,9 @@ export default function TrustedContactsPage() {
                 </svg>
 
                 <p className="text-label-md uppercase tracking-wider text-on-primary-container/70 mb-2 inline-flex items-center gap-1.5">
-                  Recovery Network
+                  {t("recoveryNetwork.title")}
                   <HelpHint
-                    content={`Tracks whether your social recovery is operational. The big number is how many guardians have accepted out of the ${threshold} needed to unlock the vault (your quorum, set during onboarding). Below quorum, recovery is impossible. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer. Pending invites and shard distribution are shown so you know exactly what's left to do.`}
+                    content={t("recoveryNetwork.help", { threshold })}
                   />
                 </p>
 
@@ -251,25 +245,31 @@ export default function TrustedContactsPage() {
                     / {threshold}
                   </span>
                   <span className="text-label-md text-on-primary-container/60 ml-1">
-                    quorum
+                    {t("recoveryNetwork.quorum")}
                   </span>
                 </div>
 
                 <p className="text-label-md text-on-primary-container/60 mb-3">
-                  Step 2 · Shamir shards needed to unlock the vault
+                  {t("recoveryNetwork.stepLabel")}
                 </p>
 
                 <p className="text-label-md font-bold text-on-primary mb-4">
                   {networkState === "unprotected" &&
-                    "Unprotected — invite your first guardian"}
+                    t("recoveryNetwork.state.unprotected")}
                   {networkState === "atRisk" &&
-                    `At risk — ${threshold - acceptedCount} more to reach quorum`}
+                    t("recoveryNetwork.state.atRisk", {
+                      count: threshold - acceptedCount,
+                    })}
                   {networkState === "quorumMet" &&
-                    "Quorum met — add more for redundancy"}
+                    t("recoveryNetwork.state.quorumMet")}
                   {networkState === "resilient" &&
-                    `Resilient — ${acceptedCount - threshold} guardian${
-                      acceptedCount - threshold === 1 ? "" : "s"
-                    } of buffer`}
+                    (acceptedCount - threshold === 1
+                      ? t("recoveryNetwork.state.resilientOne", {
+                          count: acceptedCount - threshold,
+                        })
+                      : t("recoveryNetwork.state.resilientMany", {
+                          count: acceptedCount - threshold,
+                        }))}
                 </p>
 
                 <div className="h-1.5 w-full bg-primary rounded-full overflow-hidden flex mb-4">
@@ -285,26 +285,26 @@ export default function TrustedContactsPage() {
 
                 <ul className="space-y-1 text-label-md text-on-primary-container/80">
                   <li className="flex justify-between">
-                    <span>Accepted</span>
+                    <span>{t("recoveryNetwork.accepted")}</span>
                     <span className="font-bold text-on-primary">
                       {acceptedCount}
                     </span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Pending invites</span>
+                    <span>{t("recoveryNetwork.pendingInvites")}</span>
                     <span className="font-bold text-on-primary">
                       {pendingTrustCount}
                     </span>
                   </li>
                   <li className="flex justify-between">
-                    <span>Shards distributed</span>
+                    <span>{t("recoveryNetwork.shardsDistributed")}</span>
                     <span className="font-bold text-on-primary">
                       {shardsConfirmedCount} / {acceptedCount}
                     </span>
                   </li>
                   <li className="flex justify-between pt-1 border-t border-on-primary/10 mt-1">
                     <span className="text-on-primary-container/60">
-                      Max guardians
+                      {t("recoveryNetwork.maxGuardians")}
                     </span>
                     <span className="text-on-primary-container/60">
                       {MAX_TRUST_CONTACTS}
@@ -319,16 +319,12 @@ export default function TrustedContactsPage() {
                 acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
                   <div className="p-4 bg-error-container/30 rounded-xl">
                     <p className="text-label-md uppercase tracking-wider text-error mb-1">
-                      One guardian is not enough
+                      {t("oneGuardianWarning.title")}
                     </p>
                     <p className="text-body-md text-on-surface font-medium">
-                      Only {acceptedTrustContacts[0].name} is accepted so far —
-                      invite at least one more. Recovery cannot work with a
-                      single guardian for two reasons: at least 2 trust contacts
-                      must vote that you are unreachable before the grace window
-                      opens, and a lone guardian has no peer to exchange shards
-                      with, so the vault can never reach the 2 shards needed to
-                      reconstruct your key.
+                      {t("oneGuardianWarning.body", {
+                        name: acceptedTrustContacts[0].name,
+                      })}
                     </p>
                   </div>
                 )}
@@ -356,11 +352,10 @@ export default function TrustedContactsPage() {
                     </svg>
                   </div>
                   <h3 className="text-headline-sm text-primary">
-                    Invite Your First Guardian
+                    {t("emptyState.title")}
                   </h3>
                   <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    Up to {MAX_TRUST_CONTACTS} trusted guardians can receive
-                    recovery fragments. Recipient-only contacts have no cap.
+                    {t("emptyState.description")}
                   </p>
                 </div>
               ) : (
@@ -368,11 +363,11 @@ export default function TrustedContactsPage() {
                   <section>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
-                        Trust Contacts
+                        {t("trustContacts.heading")}
                         <span className="text-label-md text-on-surface-variant ml-2">
                           ({trustContacts.length}/{MAX_TRUST_CONTACTS})
                         </span>
-                        <HelpHint content="Trust contacts each hold one encrypted shard of your recovery key. They can collectively help you regain vault access. Capped at 5 by design — fewer is fine, more would weaken the security model." />
+                        <HelpHint content={t("trustContacts.help")} />
                       </h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -404,11 +399,12 @@ export default function TrustedContactsPage() {
                             </svg>
                           </div>
                           <p className="text-headline-sm text-primary">
-                            Invite Next Trust Contact
+                            {t("trustContacts.inviteNext")}
                           </p>
                           <p className="text-label-md text-on-surface-variant mt-1">
-                            {MAX_TRUST_CONTACTS - trustContacts.length} slots
-                            remaining
+                            {t("trustContacts.slotsRemaining", {
+                              count: MAX_TRUST_CONTACTS - trustContacts.length,
+                            })}
                           </p>
                         </button>
                       )}
@@ -420,11 +416,11 @@ export default function TrustedContactsPage() {
                     <section>
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
-                          Recipients Only
+                          {t("recipientsOnly.heading")}
                           <span className="text-label-md text-on-surface-variant ml-2">
                             ({recipientContacts.length})
                           </span>
-                          <HelpHint content="People who only receive items when a trigger fires (conditional message, vault release). They don't hold a recovery shard, so there's no cap on how many you can add." />
+                          <HelpHint content={t("recipientsOnly.help")} />
                         </h2>
                       </div>
                       {recipientContacts.length === 0 ? (
@@ -433,11 +429,10 @@ export default function TrustedContactsPage() {
                           className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
                           <p className="text-headline-sm text-primary">
-                            Add a Recipient
+                            {t("recipientsOnly.addTitle")}
                           </p>
                           <p className="text-label-md text-on-surface-variant mt-1 text-center max-w-md">
-                            People who only receive items at trigger — no
-                            recovery role, no shard, no cap.
+                            {t("recipientsOnly.addDescription")}
                           </p>
                         </button>
                       ) : (
@@ -469,7 +464,7 @@ export default function TrustedContactsPage() {
                               </svg>
                             </div>
                             <p className="text-headline-sm text-primary">
-                              Add Recipient
+                              {t("recipientsOnly.addButton")}
                             </p>
                           </button>
                         </div>
@@ -491,33 +486,29 @@ export default function TrustedContactsPage() {
             <aside className="lg:col-span-4 space-y-6">
               <section className="bg-surface-container-low p-6 rounded-2xl">
                 <h3 className="text-headline-sm text-primary mb-3">
-                  How groups work
+                  {t("howGroups.heading")}
                 </h3>
                 <p className="text-body-md text-on-surface-variant mb-4">
-                  When you add a vault item, you can pick one or more groups. At
-                  trigger, only the contacts in those groups receive that item.
-                  Items with no group default to all trust contacts.
+                  {t("howGroups.intro")}
                 </p>
                 <ul className="space-y-3 text-body-md text-on-surface-variant">
                   <li className="flex gap-3">
                     <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       1
                     </span>
-                    <span>Create groups by context (Family, Legal…)</span>
+                    <span>{t("howGroups.step1")}</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       2
                     </span>
-                    <span>
-                      Add trust contacts and recipient-only people to groups
-                    </span>
+                    <span>{t("howGroups.step2")}</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       3
                     </span>
-                    <span>Pick groups when sealing items in the vault</span>
+                    <span>{t("howGroups.step3")}</span>
                   </li>
                 </ul>
               </section>
@@ -550,9 +541,11 @@ export default function TrustedContactsPage() {
                         strokeWidth={1.5}
                       />
                     </div>
-                    <p className="text-headline-sm text-primary">New Group</p>
+                    <p className="text-headline-sm text-primary">
+                      {t("groups.newGroup")}
+                    </p>
                     <p className="text-label-md text-on-surface-variant mt-1">
-                      Add another release context
+                      {t("groups.newGroupHint")}
                     </p>
                   </button>
                 </div>

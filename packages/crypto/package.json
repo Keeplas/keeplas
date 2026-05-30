@@ -11,7 +11,8 @@
     "./kdf": "./src/kdf/index.ts",
     "./kem": "./src/kem/index.ts",
     "./recovery": "./src/recovery/index.ts",
-    "./shamir": "./src/shamir/index.ts"
+    "./shamir": "./src/shamir/index.ts",
+    "./sig": "./src/sig/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

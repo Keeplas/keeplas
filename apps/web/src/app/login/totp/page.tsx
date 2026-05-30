@@ -9,6 +9,7 @@ import { Button, Icon, Input, Label, Loader, Spinner } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default function TotpLoginPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
+  const t = useTranslations("auth.totp");
   const gate = useQuery(api.totp.getMyTotpGate, isAuthenticated ? {} : "skip");
   const submit = useMutation(api.totp.submitTotpForSession);
 
@@ -34,7 +36,7 @@ export default function TotpLoginPage() {
   }, [gate, router]);
 
   if (isLoading || gate === undefined) {
-    return <Loader fullscreen label="Verifying session" />;
+    return <Loader fullscreen label={t("verifyingSession")} />;
   }
   if (!isAuthenticated || !gate.authenticated) return null;
   if (!gate.required) return null;
@@ -48,7 +50,7 @@ export default function TotpLoginPage() {
       await submit({ code: code.trim() });
       router.push("/hub");
     } catch (err) {
-      setError(getErrorMessage(err, "Verification failed."));
+      setError(getErrorMessage(err, t("verifyFailed")));
     } finally {
       setBusy(false);
     }
@@ -61,12 +63,9 @@ export default function TotpLoginPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.lockClock} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">
-            Two-factor authentication
-          </h1>
+          <h1 className="text-headline-md text-primary">{t("heading")}</h1>
           <p className="text-body-md text-on-surface-variant">
-            Enter the 6-digit code from your authenticator app to finish signing
-            in.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -81,7 +80,7 @@ export default function TotpLoginPage() {
           className="bg-surface-container-lowest p-6 rounded-2xl space-y-4 ghost-border"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="totp-code">6-digit code</Label>
+            <Label htmlFor="totp-code">{t("codeLabel")}</Label>
             <Input
               id="totp-code"
               inputMode="numeric"
@@ -103,7 +102,7 @@ export default function TotpLoginPage() {
             disabled={code.length !== 6 || busy}
             className="w-full justify-center"
           >
-            {busy ? <Spinner size="sm" /> : "Verify"}
+            {busy ? <Spinner size="sm" /> : t("verify")}
           </Button>
         </form>
 
@@ -113,11 +112,11 @@ export default function TotpLoginPage() {
               href="/login/totp/recovery"
               className="text-body-md text-secondary hover:underline"
             >
-              Lost your phone? Use your recovery phrase
+              {t("useRecovery")}
             </Link>
           ) : (
             <p className="text-body-md text-on-surface-variant">
-              Recovery via seed is not configured for this account.
+              {t("recoveryNotConfigured")}
             </p>
           )}
           <button
@@ -125,7 +124,7 @@ export default function TotpLoginPage() {
             onClick={() => signOut()}
             className="text-label-md text-on-surface-variant hover:underline"
           >
-            Sign out
+            {t("signOut")}
           </button>
         </div>
       </div>

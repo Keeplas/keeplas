@@ -4,46 +4,29 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { cn, HelpHint, Icon } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 
 type Status = "active" | "paused" | "travel" | "unconfigured";
 
-const STATUS_META: Record<
-  Status,
-  { label: string; dot: string; icon: string }
-> = {
+const STATUS_META: Record<Status, { dot: string; icon: string }> = {
   active: {
-    label: "Active",
     dot: "bg-secondary",
     icon: ICON_PATHS.shieldCheck,
   },
   paused: {
-    label: "Paused",
     dot: "bg-on-surface-variant",
     icon: ICON_PATHS.warning,
   },
   travel: {
-    label: "Travel Mode",
     dot: "bg-tertiary-fixed",
     icon: ICON_PATHS.shieldCheck,
   },
   unconfigured: {
-    label: "Not configured",
     dot: "bg-outline-variant",
     icon: ICON_PATHS.warning,
   },
 };
-
-const HELP_CONTENT = (
-  <span>
-    Your Life Check status.
-    <strong className="block mt-1">Active</strong> Check-ins run on schedule.
-    <strong className="block mt-1">Paused</strong> Indefinite suspension —
-    nothing runs until you resume.
-    <strong className="block mt-1">Travel Mode</strong> Same as Paused but with
-    a return date that auto-resumes everything. Tap the badge to manage.
-  </span>
-);
 
 /**
  * Sidebar pill that surfaces the Life Check state at all times. Click → routes
@@ -51,6 +34,7 @@ const HELP_CONTENT = (
  * controls.
  */
 export function ContinuityStatusBadge() {
+  const t = useTranslations("lifeCheck");
   const config = useQuery(api.life_check.getConfig);
 
   let status: Status = "unconfigured";
@@ -70,6 +54,17 @@ export function ContinuityStatusBadge() {
   }
 
   const meta = STATUS_META[status];
+  const helpContent = (
+    <span>
+      {t("badge.help.intro")}
+      <strong className="block mt-1">{t("badge.help.activeLabel")}</strong>{" "}
+      {t("badge.help.activeText")}
+      <strong className="block mt-1">{t("badge.help.pausedLabel")}</strong>{" "}
+      {t("badge.help.pausedText")}
+      <strong className="block mt-1">{t("badge.help.travelLabel")}</strong>{" "}
+      {t("badge.help.travelText")}
+    </span>
+  );
   const formattedReturn = returnDate
     ? new Date(returnDate).toLocaleDateString(undefined, {
         month: "short",
@@ -87,17 +82,19 @@ export function ContinuityStatusBadge() {
         <Icon path={meta.icon} className="w-4 h-4 text-secondary shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-label-md text-primary truncate group-hover:underline">
-            {meta.label}
+            {t(`badge.status.${status}`)}
           </p>
           <p className="text-[10px] text-on-surface-variant truncate">
-            {formattedReturn ? `Resumes ${formattedReturn}` : "Life Check"}
+            {formattedReturn
+              ? t("badge.resumes", { date: formattedReturn })
+              : "Life Check"}
           </p>
         </div>
       </Link>
       <HelpHint
-        content={HELP_CONTENT}
+        content={helpContent}
         side="right"
-        label="Life Check status help"
+        label={t("badge.helpLabel")}
       />
     </div>
   );

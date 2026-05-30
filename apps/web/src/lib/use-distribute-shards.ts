@@ -9,6 +9,12 @@ import { api } from "@keeplas/backend/_generated/api";
 import { split } from "@keeplas/crypto/shamir";
 import { wrapBytes } from "@keeplas/crypto/kem";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
+import {
+  verifyContactKey,
+  type BlockedContact,
+} from "@/lib/verify-contact-key";
+import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 /**
  * Minimum trust contacts required before recovery shards can be distributed.
@@ -39,9 +45,11 @@ interface DistributeResult {
  * distributed shard is invalidated — that's by design: the threshold is the
  * crypto contract, not a per-contact setting.
  *
- * Flow: split → device shard to localStorage → keeplas shard to server →
- * for each contact, wrap their slot's share to their public key and store
- * via storeEncryptedShard.
+ * Flow: split (4 shares: device + 3 contacts) → device shard to localStorage
+ * → for each contact, wrap their slot's share to their public key and store
+ * via storeEncryptedShard. The server holds NO shard (finding #3): a
+ * server-held shard plus one contact shard would reach a threshold-2 quorum
+ * and let a malicious server reconstruct the master key, breaking ZK.
  */
 export function useDistributeShards(): {
   distribute: () => Promise<DistributeResult | null>;
@@ -51,12 +59,13 @@ export function useDistributeShards(): {
   const { masterKey } = useMasterKey();
   const me = useQuery(api.onboarding.getOnboardingState);
   const targets = useQuery(api.trusted_contacts.getDistributionTargets);
-  const updateKeeplasShard = useAuditedMutation(
-    api.trusted_contacts.updateKeeplasShard,
-  );
   const storeEncryptedShard = useAuditedMutation(
     api.trusted_contacts.storeEncryptedShard,
   );
+  const pinContactIdentity = useAuditedMutation(
+    api.trusted_contacts.pinContactIdentity,
+  );
+  const showBlockedWrapAlert = useBlockedWrapAlert();
 
   const [status, setStatus] = useState<DistributeStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -93,11 +102,11 @@ export function useDistributeShards(): {
         await crypto.subtle.exportKey("raw", masterKey),
       );
 
-      // Re-split: 5 total shares, current threshold. Slots:
+      // Re-split: 4 total shares, current threshold. Slots:
       //   shards[0] → device (localStorage)
       //   shards[1..3] → trust contacts at shardIndex 2..4
-      //   shards[4] → Keeplas custodian (server)
-      const shards = await split(rawMasterKey, 5, threshold);
+      // The server holds NO shard (finding #3).
+      const shards = await split(rawMasterKey, 4, threshold);
 
       try {
         localStorage.setItem(
@@ -105,12 +114,59 @@ export function useDistributeShards(): {
           uint8ToBase64(shards[0]),
         );
       } catch {
-        // Private mode etc — non-fatal; the contact + keeplas shards still
-        // satisfy the threshold without the device shard.
+        // Private mode etc — non-fatal; the contact shards alone satisfy the
+        // threshold without the device shard.
       }
 
-      const keeplasShardB64 = uint8ToBase64(shards[4]);
-      await updateKeeplasShard({ keeplasShard: keeplasShardB64 });
+      // Verify-before-wrap (finding #2): authenticate EVERY target's encryption
+      // key before wrapping a shard to it, and pin on first trust. If any target
+      // can't be verified we BLOCK the whole distribution — a partial shard set
+      // could silently exclude a contact or hand a shard to a server-substituted
+      // key. The owner may explicitly re-pin a deliberate change and retry.
+      const verifyAll = async (): Promise<BlockedContact[]> => {
+        const failures: BlockedContact[] = [];
+        for (const target of targets) {
+          const outcome = await verifyContactKey(target);
+          if (outcome.status !== "ok") {
+            failures.push({
+              contactId: target.contactId,
+              name: target.name,
+              reason: outcome.status,
+              newFingerprint:
+                outcome.status === "fingerprint_changed"
+                  ? outcome.newFingerprint
+                  : undefined,
+            });
+          } else if (outcome.pinFingerprint) {
+            await pinContactIdentity({
+              contactId: target.contactId as Id<"trusted_contacts">,
+              fingerprint: outcome.pinFingerprint,
+            });
+          }
+        }
+        return failures;
+      };
+
+      let failures = await verifyAll();
+      if (failures.length > 0) {
+        const retry = await showBlockedWrapAlert(failures);
+        if (!retry) {
+          setStatus("error");
+          setError(
+            "Shard distribution blocked: a contact's key isn't trusted.",
+          );
+          return null;
+        }
+        failures = await verifyAll();
+        if (failures.length > 0) {
+          await showBlockedWrapAlert(failures);
+          setStatus("error");
+          setError(
+            "Shard distribution blocked: a contact's key isn't trusted.",
+          );
+          return null;
+        }
+      }
 
       let distributed = 0;
       for (const target of targets) {
@@ -136,7 +192,14 @@ export function useDistributeShards(): {
     } finally {
       if (rawMasterKey) rawMasterKey.fill(0);
     }
-  }, [masterKey, me, targets, updateKeeplasShard, storeEncryptedShard]);
+  }, [
+    masterKey,
+    me,
+    targets,
+    storeEncryptedShard,
+    pinContactIdentity,
+    showBlockedWrapAlert,
+  ]);
 
   return { distribute, status, error };
 }

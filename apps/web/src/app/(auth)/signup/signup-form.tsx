@@ -20,6 +20,8 @@ import { AuthFormShell } from "../components/auth-form-shell";
 import { AuthSubmitButton } from "../components/auth-submit-button";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { getErrorMessage } from "@/lib/utils";
+import { userLanguageForLocale } from "@/lib/locale";
+import { useLocale, useTranslations } from "@/lib/i18n";
 
 type Step = "details" | "verify";
 
@@ -58,9 +60,13 @@ export function SignupForm() {
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const locale = useLocale();
+  const language = userLanguageForLocale(locale);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const cooldown = useResendCooldown(30);
+  const t = useTranslations("auth.signup");
+  const c = useTranslations("common");
 
   // Email/phone tabs show when there's no invitation, or when the invitation
   // carries both identifiers; an email-only invitation hides them.
@@ -93,17 +99,21 @@ export function SignupForm() {
     if (kind === "phone") {
       // Passwordless: request a WhatsApp OTP, then verify it in step 2.
       if (!phone || !isValidPhone(phone)) {
-        setError("Please enter a valid phone number.");
+        setError(t("phoneInvalid"));
         return;
       }
       setLoading(true);
       setError("");
       try {
-        await requestPhoneOtp({ phoneNumber: phone, intent: "signup" });
+        await requestPhoneOtp({
+          phoneNumber: phone,
+          intent: "signup",
+          language,
+        });
         cooldown.start();
         setStep("verify");
       } catch (err) {
-        setError(getErrorMessage(err, "Could not start signup. Try again."));
+        setError(getErrorMessage(err, t("startFailed")));
       } finally {
         setLoading(false);
       }
@@ -111,11 +121,11 @@ export function SignupForm() {
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("passwordMin"));
       return;
     }
     if (phone && !isValidPhone(phone)) {
-      setError("Please enter a valid phone number.");
+      setError(t("phoneInvalid"));
       return;
     }
     setLoading(true);
@@ -125,6 +135,7 @@ export function SignupForm() {
         name,
         email,
         password,
+        language,
         ...(phone ? { phoneNumber: phone } : {}),
         flow: "signUp",
       });
@@ -136,11 +147,7 @@ export function SignupForm() {
       const exists = await convex
         .query(api.users.accountExistsByEmail, { email })
         .catch(() => false);
-      setError(
-        exists
-          ? "An account with this email already exists. Sign in instead."
-          : "Could not create account. Try again.",
-      );
+      setError(exists ? t("accountExists") : t("createFailed"));
     } finally {
       setLoading(false);
     }
@@ -158,12 +165,14 @@ export function SignupForm() {
           phoneNumber: phone as string,
           code,
           name,
+          language,
           flow: "signUp",
         });
       } else {
         await signIn("password", {
           email,
           code,
+          language,
           flow: "email-verification",
         });
         // Signup already proved channel ownership — credit the fresh session
@@ -171,7 +180,7 @@ export function SignupForm() {
         await creditSignupSession({}).catch(() => undefined);
       }
     } catch {
-      setError("Invalid or expired code.");
+      setError(c("invalidCode"));
       setLoading(false);
     }
   }
@@ -185,13 +194,18 @@ export function SignupForm() {
         await requestPhoneOtp({
           phoneNumber: phone as string,
           intent: "signup",
+          language,
         });
       } else {
-        await signIn("password", { email, flow: "email-verification" });
+        await signIn("password", {
+          email,
+          language,
+          flow: "email-verification",
+        });
       }
       cooldown.start();
     } catch {
-      setError("Could not resend the code. Try again in a moment.");
+      setError(t("resendFailed"));
     } finally {
       setLoading(false);
     }
@@ -201,19 +215,21 @@ export function SignupForm() {
     return (
       <AuthFormShell
         badgeLabel={
-          kind === "phone" ? "WhatsApp Confirmation" : "Email Confirmation"
+          kind === "phone" ? t("whatsappConfirmation") : t("emailConfirmation")
         }
         heading={
-          kind === "phone" ? "Confirm your number" : "Confirm your email"
+          kind === "phone"
+            ? t("confirmNumberHeading")
+            : t("confirmEmailHeading")
         }
         description={
           kind === "phone"
-            ? `We sent a 6-digit code to your WhatsApp at ${phone}. Enter it below to activate your vault.`
-            : `We sent a 6-digit code to ${email}. Enter it below to activate your vault.`
+            ? t("phoneCodeSent", { phone: phone ?? "" })
+            : t("emailCodeSent", { email })
         }
         footer={{
-          prompt: kind === "phone" ? "Wrong number?" : "Wrong email?",
-          label: "Start over",
+          prompt: kind === "phone" ? t("wrongNumber") : t("wrongEmail"),
+          label: t("startOver"),
           onClick: () => {
             setStep("details");
             setCode("");
@@ -225,7 +241,7 @@ export function SignupForm() {
       >
         <form onSubmit={handleVerifyCode} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="signup-code">Verification Code</Label>
+            <Label htmlFor="signup-code">{t("verifyCode")}</Label>
             <Input
               id="signup-code"
               type="text"
@@ -242,10 +258,10 @@ export function SignupForm() {
 
           <AuthSubmitButton disabled={loading || code.length !== 6}>
             {loading
-              ? "Verifying..."
+              ? t("verifying")
               : kind === "phone"
-                ? "Confirm Number"
-                : "Confirm Email"}
+                ? t("confirmNumber")
+                : t("confirmEmail")}
           </AuthSubmitButton>
 
           <button
@@ -255,8 +271,8 @@ export function SignupForm() {
             className="w-full text-center text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
           >
             {cooldown.active
-              ? `Resend code in ${cooldown.remaining}s`
-              : "Resend code"}
+              ? c("resendIn", { seconds: cooldown.remaining })
+              : c("resendCode")}
           </button>
         </form>
       </AuthFormShell>
@@ -265,12 +281,12 @@ export function SignupForm() {
 
   return (
     <AuthFormShell
-      badgeLabel="Zero-Knowledge Encryption"
-      heading="Create your sanctuary"
-      description="Enter your details to begin your digital legacy."
+      badgeLabel={t("badge")}
+      heading={t("heading")}
+      description={t("description")}
       footer={{
-        prompt: "Already an owner?",
-        label: "Access Vault",
+        prompt: t("footerPrompt"),
+        label: t("footerLabel"),
         href: "/login",
         accent: "primary",
       }}
@@ -282,22 +298,20 @@ export function SignupForm() {
         className="block mb-5 p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
       >
         <p className="text-label-md text-secondary uppercase tracking-widest mb-1.5">
-          Before you sign up · Quantum-safe end-to-end
+          {t("securityEyebrow")}
         </p>
         <p className="text-body-sm text-on-surface leading-snug">
-          Your password lets you sign in. The <strong>24 recovery words</strong>{" "}
-          generated in the next step are what actually encrypt your vault, we
-          never see them.
+          {t("securityText")}
         </p>
         <span className="inline-flex items-center gap-1 mt-1.5 text-label-md text-secondary font-bold group-hover:underline">
-          Read how it works →
+          {t("readHow")}
         </span>
       </Link>
 
       <form onSubmit={handlePasswordSignUp} className="space-y-5">
         <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t("fullName")}</Label>
             <Input
               id="name"
               type="text"
@@ -315,10 +329,10 @@ export function SignupForm() {
             >
               <TabsList className="w-full">
                 <TabsTrigger value="phone" className="flex-1">
-                  Phone
+                  {c("phone")}
                 </TabsTrigger>
                 <TabsTrigger value="email" className="flex-1">
-                  Email
+                  {c("email")}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -327,7 +341,7 @@ export function SignupForm() {
           {kind === "email" ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email Address</Label>
+                <Label htmlFor="signup-email">{c("emailAddress")}</Label>
                 <Input
                   id="signup-email"
                   type="email"
@@ -340,15 +354,14 @@ export function SignupForm() {
                 />
                 {lockedEmail && (
                   <p className="text-label-md text-on-surface-variant">
-                    Locked — this is the email your inviter used to send you the
-                    invitation.
+                    {t("lockedEmail")}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="signup-phone">
-                  {lockedPhone ? "Phone Number" : "Phone (optional)"}
+                  {lockedPhone ? c("phoneNumber") : t("phoneOptional")}
                 </Label>
                 <PhoneInput
                   id="signup-phone"
@@ -358,19 +371,16 @@ export function SignupForm() {
                 />
                 {lockedPhone ? (
                   <p className="text-label-md text-on-surface-variant">
-                    Locked — this is the number your inviter used to send you
-                    the invitation.
+                    {t("lockedPhone")}
                   </p>
                 ) : (
                   <p className="text-label-md text-on-surface-variant">
-                    Used for WhatsApp verification and Life Check alerts. You
-                    can also reply to a Life Check on WhatsApp to confirm you
-                    are well.{" "}
+                    {t("phoneHelp")}{" "}
                     <Link
                       href="/security"
                       className="text-secondary font-bold hover:underline"
                     >
-                      Learn more
+                      {c("learnMore")}
                     </Link>
                   </p>
                 )}
@@ -378,7 +388,7 @@ export function SignupForm() {
             </>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="signup-phone">Phone Number</Label>
+              <Label htmlFor="signup-phone">{c("phoneNumber")}</Label>
               <PhoneInput
                 id="signup-phone"
                 value={phone}
@@ -387,18 +397,16 @@ export function SignupForm() {
               />
               {lockedPhone ? (
                 <p className="text-label-md text-on-surface-variant">
-                  Locked — this is the number your inviter used to send you the
-                  invitation.
+                  {t("lockedPhone")}
                 </p>
               ) : (
                 <p className="text-label-md text-on-surface-variant">
-                  We&apos;ll send your verification code and Life Check alerts
-                  to this WhatsApp number.{" "}
+                  {t("phoneOnlyHelp")}{" "}
                   <Link
                     href="/security"
                     className="text-secondary font-bold hover:underline"
                   >
-                    Learn more
+                    {c("learnMore")}
                   </Link>
                 </p>
               )}
@@ -407,7 +415,7 @@ export function SignupForm() {
 
           {kind === "email" && (
             <div className="space-y-2">
-              <Label htmlFor="signup-password">Password</Label>
+              <Label htmlFor="signup-password">{c("password")}</Label>
               <PasswordInput
                 id="signup-password"
                 value={password}
@@ -422,10 +430,10 @@ export function SignupForm() {
 
         <AuthSubmitButton disabled={loading}>
           {loading ? (
-            "Initializing..."
+            t("initializing")
           ) : (
             <>
-              Initialize Vault
+              {t("initializeVault")}
               <svg
                 className="w-5 h-5 transition-transform group-hover:translate-x-1"
                 fill="none"

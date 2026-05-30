@@ -18,6 +18,7 @@ import {
 } from "@keeplas/ui";
 import { ContactMembersSelect } from "@/components/contact-members-select";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 interface EditGroupDialogProps {
   open: boolean;
@@ -32,6 +33,7 @@ export function EditGroupDialog({
   group,
   contacts,
 }: EditGroupDialogProps) {
+  const t = useTranslations("trustedContacts");
   const updateGroup = useAuditedMutation(api.recipient_groups.updateGroup);
 
   const [name, setName] = useState(group.name);
@@ -73,7 +75,7 @@ export function EditGroupDialog({
       });
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to update group"));
+      setError(getErrorMessage(err, t("editGroup.error")));
     } finally {
       setSaving(false);
     }
@@ -84,9 +86,9 @@ export function EditGroupDialog({
       <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>Edit Group</DialogTitle>
+            <DialogTitle>{t("editGroup.title")}</DialogTitle>
             <DialogDescription className="mt-1">
-              Update name, description and members of this release group.
+              {t("editGroup.description")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -96,7 +98,7 @@ export function EditGroupDialog({
           className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
         >
           <div className="space-y-2">
-            <Label htmlFor="edit-group-name">Group name</Label>
+            <Label htmlFor="edit-group-name">{t("editGroup.nameLabel")}</Label>
             <Input
               id="edit-group-name"
               value={name}
@@ -107,13 +109,15 @@ export function EditGroupDialog({
             />
             {group.isDefault && (
               <p className="text-label-md text-on-surface-variant">
-                The default group name is fixed.
+                {t("editGroup.defaultNameFixed")}
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-group-description">Description</Label>
+            <Label htmlFor="edit-group-description">
+              {t("editGroup.descriptionLabel")}
+            </Label>
             <Textarea
               id="edit-group-description"
               value={description}
@@ -123,14 +127,14 @@ export function EditGroupDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Members</Label>
+            <Label>{t("editGroup.membersLabel")}</Label>
             <ContactMembersSelect
               contacts={contacts}
               selected={members}
               onChange={setMembers}
-              placeholder="Add contacts"
-              emptyPlaceholder="No members selected"
-              emptyMessage="No contacts available."
+              placeholder={t("editGroup.membersPlaceholder")}
+              emptyPlaceholder={t("editGroup.membersEmptyPlaceholder")}
+              emptyMessage={t("editGroup.membersEmptyMessage")}
             />
           </div>
 
@@ -144,7 +148,7 @@ export function EditGroupDialog({
               onClick={() => onOpenChange(false)}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Cancel
+              {t("editGroup.cancel")}
             </Button>
             <Button
               type="submit"
@@ -153,7 +157,7 @@ export function EditGroupDialog({
               disabled={saving || !name.trim()}
               className="flex-1 cursor-pointer"
             >
-              {saving ? "Saving…" : "Save Changes"}
+              {saving ? t("editGroup.saving") : t("editGroup.submit")}
             </Button>
           </div>
         </form>

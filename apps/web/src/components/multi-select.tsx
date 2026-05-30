@@ -15,6 +15,7 @@ import {
   cn,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 
 export interface MultiSelectOption {
   value: string;
@@ -59,15 +60,21 @@ export function MultiSelect({
   options,
   selected,
   onChange,
-  placeholder = "Select…",
-  emptyMessage = "No options found.",
-  searchPlaceholder = "Search…",
+  placeholder,
+  emptyMessage,
+  searchPlaceholder,
   triggerClassName,
   renderTrigger,
   disabled,
   footer,
 }: MultiSelectProps) {
+  const t = useTranslations("trustedContacts");
   const [open, setOpen] = useState(false);
+
+  const resolvedPlaceholder = placeholder ?? t("multiSelect.placeholder");
+  const resolvedEmptyMessage = emptyMessage ?? t("multiSelect.emptyMessage");
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t("multiSelect.searchPlaceholder");
 
   const selectedSet = new Set(selected);
 
@@ -98,9 +105,11 @@ export function MultiSelect({
           {renderTrigger ? (
             renderTrigger(selected, options)
           ) : selected.length === 0 ? (
-            <span className="text-outline-variant">{placeholder}</span>
+            <span className="text-outline-variant">{resolvedPlaceholder}</span>
           ) : (
-            <span className="truncate">{selected.length} selected</span>
+            <span className="truncate">
+              {t("multiSelect.selectedCount", { count: selected.length })}
+            </span>
           )}
         </div>
         <Icon
@@ -114,9 +123,9 @@ export function MultiSelect({
         className="w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden"
       >
         <Command className="rounded-2xl">
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={resolvedSearchPlaceholder} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
             {groups.map(([groupLabel, items]) => (
               <CommandGroup
                 key={groupLabel || "_root"}

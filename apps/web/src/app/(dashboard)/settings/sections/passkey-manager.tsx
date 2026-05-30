@@ -11,8 +11,10 @@ import {
   registerPasskey,
   usePasskeySupport,
 } from "@/lib/passkey";
+import { useTranslations } from "@/lib/i18n";
 
 export function PasskeyManager() {
+  const t = useTranslations("settingsSecurity");
   const credentials = useQuery(api.webauthn.listMyCredentials);
   const startRegistration = useMutation(api.webauthn.startRegistration);
   const finishRegistration = useMutation(api.webauthn.finishRegistration);
@@ -26,7 +28,7 @@ export function PasskeyManager() {
   if (credentials === undefined) {
     return (
       <section className="md:col-span-6 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
-        <Loader label="Loading passkeys" />
+        <Loader label={t("passkey.loading")} />
       </section>
     );
   }
@@ -40,7 +42,7 @@ export function PasskeyManager() {
         finishRegistration: (args) => finishRegistration(args),
       });
     } catch (err) {
-      setError(getPasskeyErrorMessage(err, "Could not add passkey."));
+      setError(getPasskeyErrorMessage(err, t("passkey.addError")));
     } finally {
       setBusy(null);
     }
@@ -48,9 +50,9 @@ export function PasskeyManager() {
 
   async function handleRemove(id: string) {
     const ok = await confirm({
-      title: "Remove this passkey?",
-      description: "You will need another way to sign in.",
-      confirmLabel: "Remove",
+      title: t("passkey.removeTitle"),
+      description: t("passkey.removeDescription"),
+      confirmLabel: t("passkey.removeConfirm"),
       variant: "destructive",
     });
     if (!ok) return;
@@ -59,7 +61,7 @@ export function PasskeyManager() {
     try {
       await removeCredential({ credentialId: id as never });
     } catch (err) {
-      setError(getPasskeyErrorMessage(err, "Could not remove passkey."));
+      setError(getPasskeyErrorMessage(err, t("passkey.removeError")));
     } finally {
       setBusy(null);
     }
@@ -71,9 +73,11 @@ export function PasskeyManager() {
     <section className="md:col-span-6 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-headline-md text-primary">Biometric Access</h2>
+          <h2 className="text-headline-md text-primary">
+            {t("passkey.title")}
+          </h2>
           <p className="text-body-md text-on-surface-variant mt-1">
-            Sign in with Face ID, Touch ID, or your device biometrics.
+            {t("passkey.subtitle")}
           </p>
         </div>
         <Icon
@@ -85,8 +89,7 @@ export function PasskeyManager() {
       {!supported && (
         <div className="bg-error-container/30 p-4 rounded-xl">
           <p className="text-body-md text-on-error-container">
-            Passkeys are not supported on this browser. Use a recent version of
-            Chrome, Safari, or Edge on a device with a biometric sensor.
+            {t("passkey.unsupported")}
           </p>
         </div>
       )}
@@ -115,8 +118,12 @@ export function PasskeyManager() {
                       {c.deviceName}
                     </p>
                     <p className="text-body-md text-on-surface-variant truncate">
-                      Last used {formatTimeAgo(c.lastUsedAt)}
-                      {c.backedUp ? " · Synced" : " · This device only"}
+                      {t("passkey.lastUsed", {
+                        time: formatTimeAgo(c.lastUsedAt),
+                      })}
+                      {c.backedUp
+                        ? t("passkey.synced")
+                        : t("passkey.thisDeviceOnly")}
                     </p>
                   </div>
                 </div>
@@ -125,7 +132,7 @@ export function PasskeyManager() {
                   onClick={() => handleRemove(c._id)}
                   disabled={busy !== null}
                   className="text-on-surface-variant hover:text-error transition-colors disabled:opacity-40 shrink-0"
-                  aria-label={`Remove ${c.deviceName}`}
+                  aria-label={t("passkey.removeAria", { name: c.deviceName })}
                 >
                   {removing ? (
                     <Spinner size="sm" />
@@ -144,7 +151,7 @@ export function PasskeyManager() {
             className="w-10 h-10 mx-auto mb-3 text-outline-variant"
           />
           <p className="text-body-md text-on-surface-variant">
-            No passkeys registered yet.
+            {t("passkey.empty")}
           </p>
         </div>
       )}
@@ -162,7 +169,9 @@ export function PasskeyManager() {
         ) : (
           <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
         )}
-        <span>{hasPasskeys ? "Add another passkey" : "Add a passkey"}</span>
+        <span>
+          {hasPasskeys ? t("passkey.addAnother") : t("passkey.addFirst")}
+        </span>
       </Button>
 
       <div className="flex items-start gap-3 bg-error-container/30 p-4 rounded-xl mt-auto">
@@ -171,9 +180,7 @@ export function PasskeyManager() {
           className="w-5 h-5 text-error shrink-0 mt-0.5"
         />
         <p className="text-body-md text-on-error-container">
-          Biometrics are convenient but should never be your{" "}
-          <strong>only</strong> recovery method. Ensure your physical kit is
-          printed.
+          {t("passkey.footer")}
         </p>
       </div>
     </section>

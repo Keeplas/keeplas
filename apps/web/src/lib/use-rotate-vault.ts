@@ -18,10 +18,12 @@ import {
   wrapBytes,
 } from "@keeplas/crypto/kem";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
+import { parsePublicKey } from "@keeplas/crypto/kem";
 import { useMasterKey } from "./master-key-context";
 import { useVaultCrypto } from "./use-vault-crypto";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useAuditedMutation } from "./use-audited-mutation";
+import { verifyContactKey } from "./verify-contact-key";
 import { STORAGE_KEYS } from "./storage-keys";
 
 /**
@@ -125,7 +127,10 @@ async function buildKeyBundle(
 export function useRotateVault() {
   const convex = useConvex();
   const { masterKey, setMasterKey } = useMasterKey();
-  const { ensureOwnerKeypair } = useRecipientCrypto();
+  const { ensureOwnerKeypair, signWithIdentityKey } = useRecipientCrypto();
+  const pinContactIdentity = useAuditedMutation(
+    api.trusted_contacts.pinContactIdentity,
+  );
   const {
     encryptContentWithKey,
     decryptContentWithKey,
@@ -141,9 +146,6 @@ export function useRotateVault() {
   );
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
-  const updateKeeplasShard = useAuditedMutation(
-    api.trusted_contacts.updateKeeplasShard,
-  );
   const storeEncryptedShard = useAuditedMutation(
     api.trusted_contacts.storeEncryptedShard,
   );
@@ -169,13 +171,14 @@ export function useRotateVault() {
     [],
   );
 
-  /** Re-split the new master key and hand new shards to device/Keeplas/contacts. */
+  /** Re-split the new master key and hand new shards to device/contacts. */
   const redistribute = useCallback(
     async (masterKey: CryptoKey, threshold: number) => {
       const rawMasterKey = new Uint8Array(
         await crypto.subtle.exportKey("raw", masterKey),
       );
-      const shards = await split(rawMasterKey, 5, threshold);
+      // 4 shares: device + 3 contacts. The server holds NO shard (finding #3).
+      const shards = await split(rawMasterKey, 4, threshold);
       rawMasterKey.fill(0);
       try {
         localStorage.setItem(
@@ -185,28 +188,46 @@ export function useRotateVault() {
       } catch {
         // Private mode etc — non-fatal.
       }
-      await updateKeeplasShard({ keeplasShard: uint8ToBase64(shards[4]) });
 
       const targets = await convex.query(
         api.trusted_contacts.getDistributionTargets,
         {},
       );
       // storeEncryptedShard enforces a 2-contact floor; skip contact shards
-      // when the trusted circle is too small (device + Keeplas still rotate).
+      // when the trusted circle is too small (the device shard still rotates).
       if (targets.length >= 2) {
         for (const t of targets) {
           const slot = t.shardIndex - 1;
           if (slot < 0 || slot >= shards.length) continue;
-          const envelope = await wrapBytes(shards[slot], t.contactPublicKey);
+          // Verify-before-wrap (finding #2): authenticate the contact's key and
+          // honour the TOFU pin before handing them a shard. A failure throws
+          // and aborts the rotation (surfaced via the rotate error state) — we
+          // never wrap a shard to an unauthenticated / changed key.
+          const outcome = await verifyContactKey(t);
+          if (outcome.status !== "ok") {
+            throw new Error(
+              `Can't verify ${t.name}'s encryption key (${outcome.status}). Resolve this from your contacts before rotating.`,
+            );
+          }
+          if (outcome.pinFingerprint) {
+            await pinContactIdentity({
+              contactId: t.contactId,
+              fingerprint: outcome.pinFingerprint,
+            });
+          }
+          const envelope = await wrapBytes(
+            shards[slot],
+            outcome.contactPublicKey,
+          );
           await storeEncryptedShard({
             contactId: t.contactId,
             encryptedShard: envelope,
-            shardPublicKeyUsed: t.contactPublicKey,
+            shardPublicKeyUsed: outcome.contactPublicKey,
           });
         }
       }
     },
-    [convex, updateKeeplasShard, storeEncryptedShard],
+    [convex, storeEncryptedShard, pinContactIdentity],
   );
 
   /** Re-encrypt a single ZK item under a fresh DEK and re-wrap it. */
@@ -302,15 +323,31 @@ export function useRotateVault() {
         await addItemFiles({ itemId: item._id, files: newFileRows });
       }
 
-      // Re-wrap the new DEK to the owner + the same recipient set.
+      // Re-wrap the new DEK to the owner + the same recipient set. Each
+      // recipient's key is authenticated before wrapping (finding #2); a
+      // failure throws and aborts the rotation.
       const recipients = await convex.query(api.rotation.getItemRecipients, {
         itemId: item._id,
       });
       const recipientKeys = await Promise.all(
-        recipients.map(async (r) => ({
-          contactId: r.contactId,
-          wrappedDek: await wrapDek(newDek, r.contactPublicKey),
-        })),
+        recipients.map(async (r) => {
+          const outcome = await verifyContactKey(r);
+          if (outcome.status !== "ok") {
+            throw new Error(
+              `Can't verify a recipient's encryption key (${outcome.status}) while re-wrapping. Resolve this from your contacts before rotating.`,
+            );
+          }
+          if (outcome.pinFingerprint) {
+            await pinContactIdentity({
+              contactId: r.contactId,
+              fingerprint: outcome.pinFingerprint,
+            });
+          }
+          return {
+            contactId: r.contactId,
+            wrappedDek: await wrapDek(newDek, outcome.contactPublicKey),
+          };
+        }),
       );
       const ownerWrap = await wrapDek(newDek, keys.newOwnerPubB64);
 
@@ -338,6 +375,7 @@ export function useRotateVault() {
       removeItemFile,
       updateItem,
       postBlob,
+      pinContactIdentity,
     ],
   );
 
@@ -427,6 +465,15 @@ export function useRotateVault() {
           newOwnerPubB64 = serializePublicKey(kp.publicKey);
           newOwnerSecret = kp.secretKey;
 
+          // Re-sign the NEW ML-KEM public key with the (unchanged) identity
+          // secret key (finding #2). Rotation changes `publicKey`, so the old
+          // `publicKeySignature` is stale and would fail every contact's
+          // verify-before-wrap. Persist the fresh signature atomically with the
+          // new key in `rotateKeyMaterial`.
+          const newPublicKeySignature = await signWithIdentityKey(
+            parsePublicKey(newOwnerPubB64),
+          );
+
           await rotateKeyMaterial({
             encryptedKeyBundle: await buildKeyBundle(
               rawNew,
@@ -434,6 +481,7 @@ export function useRotateVault() {
               phraseSaltB64,
             ),
             publicKey: newOwnerPubB64,
+            publicKeySignature: newPublicKeySignature,
             encryptedAsymmetricSecretKey: await wrapSecretUnderKey(
               newOwnerSecret,
               newMasterKey,
@@ -481,6 +529,7 @@ export function useRotateVault() {
       masterKey,
       convex,
       ensureOwnerKeypair,
+      signWithIdentityKey,
       rotateKeyMaterial,
       setMasterKey,
       redistribute,

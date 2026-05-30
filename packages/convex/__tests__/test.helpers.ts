@@ -28,6 +28,100 @@ export function asUser(t: TestConvex, userId: Id<"users">) {
   return t.withIdentity({ subject: `${userId}|test-session` });
 }
 
+/**
+ * Act as a given user on a SPECIFIC session id — `getAuthSessionId` reads
+ * `subject.split("|")[1]`. Used by the step-up gate tests where the cleared
+ * `auth_session_login_otp` / `auth_session_totp` rows are keyed by that
+ * session id.
+ */
+export function asUserSession(
+  t: TestConvex,
+  userId: Id<"users">,
+  sessionId: Id<"authSessions">,
+) {
+  return t.withIdentity({ subject: `${userId}|${sessionId}` });
+}
+
+/**
+ * Seed a real `authSessions` row so the test has a concrete
+ * `Id<"authSessions">` to key the step-up gate rows on (the gate tables use
+ * `v.id("authSessions")`, so a literal string id won't validate).
+ */
+export async function seedSession(
+  t: TestConvex,
+  userId: Id<"users">,
+): Promise<Id<"authSessions">> {
+  return await t.run((ctx) =>
+    ctx.db.insert("authSessions", {
+      userId,
+      expirationTime: Date.now() + 60 * 60 * 1000,
+    }),
+  );
+}
+
+/**
+ * Attach a `password` auth account to a user so `hasPasswordAccount` (and thus
+ * the always-on login-OTP gate) applies. Passwordless accounts skip the gate.
+ */
+export async function seedPasswordAccount(
+  t: TestConvex,
+  userId: Id<"users">,
+): Promise<void> {
+  await t.run((ctx) =>
+    ctx.db.insert("authAccounts", {
+      userId,
+      provider: "password",
+      providerAccountId: `pwd-${userId}`,
+    }),
+  );
+}
+
+/** Mark a session as having cleared the always-on login-OTP step. */
+export async function clearLoginOtp(
+  t: TestConvex,
+  userId: Id<"users">,
+  sessionId: Id<"authSessions">,
+): Promise<void> {
+  await t.run((ctx) =>
+    ctx.db.insert("auth_session_login_otp", {
+      sessionId,
+      userId,
+      verifiedAt: Date.now(),
+    }),
+  );
+}
+
+/** Enroll (verified) TOTP for a user so the TOTP gate applies. */
+export async function seedVerifiedTotp(
+  t: TestConvex,
+  userId: Id<"users">,
+): Promise<void> {
+  const now = Date.now();
+  await t.run((ctx) =>
+    ctx.db.insert("totp_secrets", {
+      userId,
+      secret: "JBSWY3DPEHPK3PXP",
+      verifiedAt: now,
+      createdAt: now,
+    }),
+  );
+}
+
+/** Mark a session as having cleared the TOTP step. */
+export async function clearTotp(
+  t: TestConvex,
+  userId: Id<"users">,
+  sessionId: Id<"authSessions">,
+): Promise<void> {
+  await t.run((ctx) =>
+    ctx.db.insert("auth_session_totp", {
+      sessionId,
+      userId,
+      verifiedAt: Date.now(),
+    }),
+  );
+}
+
 /** Build a fresh, HMAC-signed audit envelope accepted by `verifyAuditContext`. */
 export async function signedAudit() {
   const ip = "127.0.0.1";

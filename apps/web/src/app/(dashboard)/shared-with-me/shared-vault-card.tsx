@@ -6,16 +6,17 @@ import { useQuery } from "convex/react";
 import { cn, HelpHint } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useTranslations } from "@/lib/i18n";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { useRecoveryFlow } from "./use-recovery-flow";
 
-const ROLE_LABELS: Record<string, string> = {
-  family: "Family",
-  friend: "Friend",
-  lawyer: "Legal",
-  doctor: "Medical",
-  other: "Other",
+const ROLE_KEYS: Record<string, string> = {
+  family: "family",
+  friend: "friend",
+  lawyer: "lawyer",
+  doctor: "doctor",
+  other: "other",
 };
 
 interface SharedVault extends Doc<"trusted_contacts"> {
@@ -25,11 +26,9 @@ interface SharedVault extends Doc<"trusted_contacts"> {
     | "running"
     | "awaiting_confirmation"
     | "validated"
-    | "escalating"
     | "triggered"
     | "cancelled"
     | null;
-  ownerCycleEscalatedAt: number | null;
   // The owner's vault has been released to this contact (an approved
   // access_request exists) — gates the "View memorial vault" entry point.
   released: boolean;
@@ -44,7 +43,7 @@ type PhaseKey = "guarding" | "action_needed" | "recovery" | "released";
 
 interface Phase {
   key: PhaseKey;
-  label: string;
+  labelKey: string;
   pillClass: string;
   dotClass: string;
 }
@@ -64,7 +63,7 @@ function getVaultPhase(opts: {
   if (opts.released) {
     return {
       key: "released",
-      label: "Released",
+      labelKey: "card.phase.released",
       pillClass: "bg-primary/10 text-primary",
       dotClass: "bg-primary",
     };
@@ -72,7 +71,7 @@ function getVaultPhase(opts: {
   if (opts.showRecovery) {
     return {
       key: "recovery",
-      label: "Recovery",
+      labelKey: "card.phase.recovery",
       pillClass: "bg-error text-on-error",
       dotClass: "bg-on-error",
     };
@@ -80,33 +79,38 @@ function getVaultPhase(opts: {
   if (opts.canMarkUnreachable) {
     return {
       key: "action_needed",
-      label: "Action needed",
+      labelKey: "card.phase.actionNeeded",
       pillClass: "bg-error-container/60 text-on-error-container",
       dotClass: "bg-error",
     };
   }
   return {
     key: "guarding",
-    label: opts.isRecipientOnly ? "Awaiting release" : "Guarding",
+    labelKey: opts.isRecipientOnly
+      ? "card.phase.awaitingRelease"
+      : "card.phase.guarding",
     pillClass: "bg-surface-container-highest text-on-surface-variant",
     dotClass: "bg-secondary",
   };
 }
 
-function formatRelative(ts: number): string {
+function formatRelative(
+  ts: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
   const diff = Date.now() - ts;
   const sec = Math.round(diff / 1000);
-  if (sec < 60) return "just now";
+  if (sec < 60) return t("card.relative.justNow");
   const min = Math.round(sec / 60);
-  if (min < 60) return `${min}m ago`;
+  if (min < 60) return t("card.relative.minutes", { count: min });
   const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
+  if (hr < 24) return t("card.relative.hours", { count: hr });
   const day = Math.round(hr / 24);
-  if (day < 30) return `${day}d ago`;
+  if (day < 30) return t("card.relative.days", { count: day });
   const month = Math.round(day / 30);
-  if (month < 12) return `${month}mo ago`;
+  if (month < 12) return t("card.relative.months", { count: month });
   const year = Math.round(month / 12);
-  return `${year}y ago`;
+  return t("card.relative.years", { count: year });
 }
 
 function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
@@ -115,6 +119,7 @@ function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
 }
 
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
+  const t = useTranslations("sharedWithMe");
   const markUnreachable = useAuditedMutation(
     api.access_requests.markUserUnreachable,
   );
@@ -177,8 +182,10 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   // and stamps lastVerifiedAt. The label just reflects that server state.
   const verifiedLabel =
     vault.lastVerifiedAt !== undefined
-      ? `Verified ${formatRelative(vault.lastVerifiedAt)}`
-      : "Verifying…";
+      ? t("card.verifiedAt", {
+          relative: formatRelative(vault.lastVerifiedAt, t),
+        })
+      : t("card.verifying");
 
   async function handleMarkUnreachable() {
     if (unreachableState !== "confirming") {
@@ -191,9 +198,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       await markUnreachable({ contactId: vault._id as Id<"trusted_contacts"> });
       setUnreachableState("done");
     } catch (err) {
-      setUnreachableError(
-        getErrorMessage(err, "Could not confirm unreachability."),
-      );
+      setUnreachableError(getErrorMessage(err, t("card.actionNeeded.error")));
       setUnreachableState("error");
     }
   }
@@ -216,7 +221,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           )}
         >
           <span className={cn("w-1.5 h-1.5 rounded-full", phase.dotClass)} />
-          {phase.label}
+          {t(phase.labelKey)}
         </span>
       </div>
 
@@ -234,10 +239,12 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
               : "bg-primary/10 text-primary",
           )}
         >
-          {isRecipientOnly ? "Recipient" : "Trust"}
+          {isRecipientOnly ? t("card.type.recipient") : t("card.type.trust")}
         </span>
         <span className="px-2.5 py-0.5 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
-          {ROLE_LABELS[vault.role] ?? "Contact"}
+          {ROLE_KEYS[vault.role]
+            ? t(`card.role.${ROLE_KEYS[vault.role]}`)
+            : t("card.role.contact")}
         </span>
       </div>
 
@@ -246,10 +253,10 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         <div className="flex items-center gap-1.5 mt-4 min-w-0">
           <span className="text-label-md text-on-surface-variant truncate">
             {vault.shardConfirmed
-              ? `Fragment held · ${verifiedLabel}`
-              : "No fragment yet"}
+              ? t("card.fragmentHeld", { status: verifiedLabel })
+              : t("card.noFragment")}
           </span>
-          <HelpHint content="An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. With the other trust contacts (threshold set by the owner) you can help reopen the vault — alone you cannot. It re-verifies automatically each time you open this page, so the owner knows you can still unwrap it." />
+          <HelpHint content={t("card.fragmentHint")} />
         </div>
       )}
 
@@ -258,8 +265,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       {phase.key === "guarding" && (
         <p className="text-label-md text-on-surface-variant mt-5">
           {isRecipientOnly
-            ? `You'll receive what ${vault.ownerName} left you here if their vault is ever released.`
-            : `Nothing to do for now — you'll be asked to help only if ${vault.ownerName} stops responding to their check-ins.`}
+            ? t("card.guarding.recipient", { ownerName: vault.ownerName })
+            : t("card.guarding.trust", { ownerName: vault.ownerName })}
         </p>
       )}
 
@@ -268,10 +275,16 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           href={`/shared-with-me/${vault._id}/memorial`}
           className="vault-gradient text-on-primary flex items-center justify-between gap-3 mt-5 px-4 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
         >
-          <span>View memorial vault</span>
+          <span>{t("card.released.cta")}</span>
           <span className="text-label-md opacity-80">
-            {vault.releasedItemCount} item
-            {vault.releasedItemCount === 1 ? "" : "s"} →
+            {vault.releasedItemCount === 1
+              ? t("card.released.itemCountOne", {
+                  count: vault.releasedItemCount,
+                })
+              : t("card.released.itemCountOther", {
+                  count: vault.releasedItemCount,
+                })}{" "}
+            →
           </span>
         </Link>
       )}
@@ -280,10 +293,9 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         <div className="mt-5 space-y-2">
           <p className="text-label-md text-on-surface-variant inline-flex items-start gap-1.5">
             <span>
-              {vault.ownerName} stopped responding to their check-ins. If you
-              genuinely can&apos;t reach them, confirm it.
+              {t("card.actionNeeded.prompt", { ownerName: vault.ownerName })}
             </span>
-            <HelpHint content="Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes can the vault be recovered/released." />
+            <HelpHint content={t("card.actionNeeded.hint")} />
           </p>
           {unreachableState === "confirming" ? (
             <div className="flex gap-2">
@@ -291,18 +303,18 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
                 onClick={handleMarkUnreachable}
                 className="flex-1 text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer"
               >
-                Confirm — they are unreachable
+                {t("card.actionNeeded.confirm")}
               </button>
               <button
                 onClick={() => setUnreachableState("idle")}
                 className="flex-1 text-sm px-3 py-2 rounded-lg bg-surface-container-high text-on-surface cursor-pointer"
               >
-                Cancel
+                {t("card.actionNeeded.cancel")}
               </button>
             </div>
           ) : unreachableState === "done" ? (
             <p className="text-label-md text-secondary font-medium">
-              Confirmation recorded. Other trust contacts will be notified.
+              {t("card.actionNeeded.done")}
             </p>
           ) : (
             <button
@@ -311,8 +323,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
               className="w-full text-sm px-3 py-2 rounded-lg bg-error/10 hover:bg-error/15 text-error font-medium transition-colors cursor-pointer disabled:opacity-60"
             >
               {unreachableState === "running"
-                ? "Submitting…"
-                : "Mark as unreachable"}
+                ? t("card.actionNeeded.submitting")
+                : t("card.actionNeeded.mark")}
             </button>
           )}
           {unreachableState === "error" && unreachableError && (
@@ -333,12 +345,17 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         >
           <div className="flex items-center justify-between">
             <h4 className="text-label-md font-bold uppercase tracking-wide text-error inline-flex items-center gap-2">
-              Recovery in progress
-              <HelpHint content="The 72h grace window passed without the owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards." />
+              {t("card.recovery.title")}
+              <HelpHint content={t("card.recovery.hint")} />
             </h4>
             <span className="text-label-md text-on-surface-variant">
-              {recovery.submissionCount} submission
-              {recovery.submissionCount === 1 ? "" : "s"}
+              {recovery.submissionCount === 1
+                ? t("card.recovery.submissionCountOne", {
+                    count: recovery.submissionCount,
+                  })
+                : t("card.recovery.submissionCountOther", {
+                    count: recovery.submissionCount,
+                  })}
             </span>
           </div>
 
@@ -350,13 +367,18 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
               className="w-full text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
             >
               {recovery.submitStatus === "running"
-                ? "Sealing your shard for peers…"
-                : "Submit my shard"}
+                ? t("card.recovery.sealing")
+                : t("card.recovery.submit")}
             </button>
           ) : (
             <p className="text-label-md text-secondary font-medium">
-              Your shard was submitted to {recovery.peerCount} peer
-              {recovery.peerCount === 1 ? "" : "s"}.
+              {recovery.peerCount === 1
+                ? t("card.recovery.submittedToPeersOne", {
+                    count: recovery.peerCount,
+                  })
+                : t("card.recovery.submittedToPeersOther", {
+                    count: recovery.peerCount,
+                  })}
             </p>
           )}
 
@@ -372,8 +394,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
             <div className="pt-2">
               {recovery.reconstructStatus === "ok" ? (
                 <p className="text-label-md text-secondary font-medium">
-                  Master key reconstructed on this device. Memorial vault access
-                  available.
+                  {t("card.recovery.reconstructed")}
                 </p>
               ) : (
                 <button
@@ -385,10 +406,10 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
                   className="w-full text-sm px-3 py-2 rounded-lg bg-primary text-on-primary font-medium cursor-pointer disabled:opacity-60"
                 >
                   {recovery.reconstructStatus === "running"
-                    ? "Reconstructing…"
+                    ? t("card.recovery.reconstructing")
                     : recovery.wrappedForMeCount === 0
-                      ? "Awaiting peer submissions…"
-                      : "Reconstruct master key"}
+                      ? t("card.recovery.awaitingPeers")
+                      : t("card.recovery.reconstruct")}
                 </button>
               )}
               {recovery.reconstructStatus === "error" &&

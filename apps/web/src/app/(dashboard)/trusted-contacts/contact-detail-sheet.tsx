@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 import { getCategoryConfig } from "@/lib/vault-categories";
 import {
   computeVerificationBadge,
@@ -28,10 +29,10 @@ import {
 } from "./contact-display";
 
 // How an item reaches this contact, mirroring vault_items.recipientMode.
-const RECIPIENT_MODE_LABELS: Record<string, string> = {
-  explicit: "Directly shared",
-  groups: "Via release group",
-  default: "Default · all trust contacts",
+const RECIPIENT_MODE_KEYS: Record<string, string> = {
+  explicit: "explicit",
+  groups: "groups",
+  default: "default",
 };
 
 interface ContactDetailSheetProps {
@@ -71,6 +72,7 @@ function ContactDetailBody({
   contact: Doc<"trusted_contacts">;
   onClose: () => void;
 }) {
+  const t = useTranslations("trustedContacts");
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [resending, setResending] = useState(false);
@@ -146,7 +148,9 @@ function ContactDetailBody({
                     : "bg-primary/10 text-primary",
                 )}
               >
-                {isRecipientOnly ? "Recipient" : "Trust"}
+                {isRecipientOnly
+                  ? t("contactCard.recipient")
+                  : t("contactCard.trust")}
               </span>
               <span
                 className={cn(
@@ -160,7 +164,7 @@ function ContactDetailBody({
           </div>
         </div>
         <SheetClose
-          aria-label="Close contact details"
+          aria-label={t("detail.close")}
           className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer shrink-0"
         >
           <Icon path={ICON_PATHS.close} className="w-5 h-5" />
@@ -170,23 +174,28 @@ function ContactDetailBody({
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
         {/* Details */}
         <section>
-          <SectionLabel>Details</SectionLabel>
+          <SectionLabel>{t("detail.details")}</SectionLabel>
           <dl className="space-y-2.5">
-            {contact.email && <DetailRow label="Email" value={contact.email} />}
+            {contact.email && (
+              <DetailRow label={t("detail.email")} value={contact.email} />
+            )}
             {contact.phoneNumber && (
-              <DetailRow label="Phone" value={contact.phoneNumber} />
+              <DetailRow
+                label={t("detail.phone")}
+                value={contact.phoneNumber}
+              />
             )}
             <DetailRow
-              label="Role"
+              label={t("detail.role")}
               value={ROLE_LABELS[contact.role] ?? "Contact"}
             />
             <DetailRow
-              label="Invited"
+              label={t("detail.invited")}
               value={formatRelative(contact.invitedAt)}
             />
             {contact.acceptedAt && (
               <DetailRow
-                label="Accepted"
+                label={t("detail.accepted")}
                 value={formatRelative(contact.acceptedAt)}
               />
             )}
@@ -195,18 +204,17 @@ function ContactDetailBody({
 
         {/* Recovery role */}
         <section>
-          <SectionLabel>Recovery role</SectionLabel>
+          <SectionLabel>{t("detail.recoveryRole")}</SectionLabel>
           {isRecipientOnly ? (
             <p className="text-body-md text-on-surface-variant">
-              Recipient only — holds no recovery shard. They only receive the
-              vault items routed to them when a trigger fires.
+              {t("detail.recipientOnlyDescription")}
             </p>
           ) : (
             <div className="space-y-3">
               {typeof contact.shardIndex === "number" && (
                 <dl>
                   <DetailRow
-                    label="Shard index"
+                    label={t("detail.shardIndex")}
                     value={`#${contact.shardIndex}`}
                   />
                 </dl>
@@ -215,8 +223,8 @@ function ContactDetailBody({
                 <div className="flex flex-wrap items-center gap-2">
                   {contact.shardConfirmed && (
                     <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center gap-1.5">
-                      Fragment assigned
-                      <HelpHint content="An encrypted Shamir share of your master key has been wrapped to this contact's public key and stored. They will need to submit it together with the recovery threshold for the vault to be reconstructible." />
+                      {t("detail.fragmentAssigned")}
+                      <HelpHint content={t("detail.fragmentAssignedHelp")} />
                     </span>
                   )}
                   {verificationBadge && (
@@ -230,25 +238,17 @@ function ContactDetailBody({
                       <HelpHint
                         content={
                           <>
-                            <p>
-                              Round-trip cryptographic check that the
-                              contact&apos;s keypair is functional. The owner
-                              wraps a known plaintext to the contact&apos;s
-                              public key, and the contact unwraps it on-device —
-                              proving they hold the matching private key without
-                              exposing any vault content.
-                            </p>
+                            <p>{t("detail.verificationHelp")}</p>
                             {verificationBadge.lastVerifiedAt !== undefined && (
                               <p className="mt-2">
-                                Last verified{" "}
-                                {formatRelative(
-                                  verificationBadge.lastVerifiedAt,
-                                )}{" "}
-                                (
-                                {new Date(
-                                  verificationBadge.lastVerifiedAt,
-                                ).toLocaleDateString()}
-                                ).
+                                {t("detail.lastVerified", {
+                                  relative: formatRelative(
+                                    verificationBadge.lastVerifiedAt,
+                                  ),
+                                  date: new Date(
+                                    verificationBadge.lastVerifiedAt,
+                                  ).toLocaleDateString(),
+                                })}
                               </p>
                             )}
                           </>
@@ -264,12 +264,12 @@ function ContactDetailBody({
 
         {/* Items released to this contact */}
         <section>
-          <SectionLabel>Items released to this contact</SectionLabel>
+          <SectionLabel>{t("detail.itemsReleased")}</SectionLabel>
           {summary === undefined ? (
             <Loader size="sm" />
           ) : summary.releasedItems.length === 0 ? (
             <p className="text-body-md text-on-surface-variant">
-              No vault items are routed to this contact yet.
+              {t("detail.noItemsRouted")}
             </p>
           ) : (
             <ul className="space-y-2">
@@ -289,7 +289,9 @@ function ContactDetailBody({
                       </p>
                       <p className="text-label-md text-on-surface-variant">
                         {getCategoryConfig(item.category).label} ·{" "}
-                        {RECIPIENT_MODE_LABELS[item.recipientMode]}
+                        {t(
+                          `detail.recipientMode.${RECIPIENT_MODE_KEYS[item.recipientMode]}`,
+                        )}
                       </p>
                     </div>
                     <Icon
@@ -305,12 +307,12 @@ function ContactDetailBody({
 
         {/* Release groups */}
         <section>
-          <SectionLabel>Release groups</SectionLabel>
+          <SectionLabel>{t("detail.releaseGroups")}</SectionLabel>
           {summary === undefined ? (
             <Loader size="sm" />
           ) : summary.memberGroups.length === 0 ? (
             <p className="text-body-md text-on-surface-variant">
-              Not a member of any release group.
+              {t("detail.notMemberOfGroup")}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -337,10 +339,10 @@ function ContactDetailBody({
               className="w-full text-body-md font-bold text-secondary px-3 py-2.5 rounded-xl hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {resending
-                ? "Resending..."
+                ? t("detail.resending")
                 : resentAt
-                  ? "Invitation resent ✓"
-                  : "Resend invitation"}
+                  ? t("detail.invitationResent")
+                  : t("detail.resendInvitation")}
             </button>
           )}
           {confirmRevoke ? (
@@ -351,14 +353,14 @@ function ContactDetailBody({
                 disabled={revoking}
                 className="flex-1 text-body-md px-3 py-2.5 rounded-xl bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
               >
-                {revoking ? "Revoking..." : "Confirm revoke"}
+                {revoking ? t("detail.revoking") : t("detail.confirmRevoke")}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmRevoke(false)}
                 className="flex-1 text-body-md px-3 py-2.5 rounded-xl bg-surface-container-high text-on-surface cursor-pointer"
               >
-                Cancel
+                {t("detail.cancel")}
               </button>
             </div>
           ) : (
@@ -367,7 +369,7 @@ function ContactDetailBody({
               onClick={handleRevoke}
               className="w-full text-left text-body-md text-error px-3 py-2.5 rounded-xl hover:bg-error/10 transition-colors cursor-pointer"
             >
-              Revoke contact
+              {t("detail.revokeContact")}
             </button>
           )}
         </div>

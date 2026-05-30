@@ -1,11 +1,15 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { useTranslations } from "@/lib/i18n";
 
 interface AuthHeroSectionProps {
   decoration?: ReactNode;
 }
 
 export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
+  const t = useTranslations("auth.hero");
   return (
     <section className="hidden md:flex w-1/2 vault-gradient relative overflow-hidden flex-col justify-between p-10 lg:p-12 xl:p-16">
       {/* Decorative grain texture */}
@@ -35,16 +39,14 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
       {/* Center: Hero text */}
       <div className="relative z-10 max-w-lg">
         <span className="text-label-md text-secondary-fixed mb-4 block">
-          The Digital Curator
+          {t("eyebrow")}
         </span>
         <h2 className="text-display-md xl:text-display-lg text-surface-container-lowest mb-6">
-          Secure Your <br />
-          Digital Legacy.
+          {t("titleLine1")} <br />
+          {t("titleLine2")}
         </h2>
         <p className="text-body-md xl:text-body-lg text-on-primary-container font-light">
-          Everything you cannot take with you, kept safe for the day you are no
-          longer here. Encrypted end-to-end, delivered when death makes it yours
-          to give.
+          {t("body")}
         </p>
       </div>
 
@@ -55,7 +57,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
             AES-256
           </span>
           <span className="text-label-md text-on-primary-container">
-            Encryption Standard
+            {t("encryptionStandard")}
           </span>
         </div>
         <div className="flex flex-col">
@@ -63,7 +65,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
             Zero-Knowledge
           </span>
           <span className="text-label-md text-on-primary-container">
-            Architecture
+            {t("architecture")}
           </span>
         </div>
         <div className="flex flex-col">
@@ -71,7 +73,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
             ML-KEM-768
           </span>
           <span className="text-label-md text-on-primary-container">
-            Quantum-Safe (FIPS 203)
+            {t("quantumSafe")}
           </span>
         </div>
       </div>

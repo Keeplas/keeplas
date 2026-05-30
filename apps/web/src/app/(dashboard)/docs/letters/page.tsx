@@ -3,29 +3,36 @@
 import Link from "next/link";
 import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
+
+const DETAILS = [
+  { key: "compose", iconPath: ICON_PATHS.editNote },
+  { key: "recipients", iconPath: ICON_PATHS.person },
+  { key: "trigger", iconPath: ICON_PATHS.timer },
+  { key: "validated", iconPath: ICON_PATHS.verifiedFill },
+];
 
 export default function LettersDocPage() {
+  const t = useTranslations("docs");
   return (
     <div className="max-w-screen-md mx-auto space-y-12">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-label-md text-on-surface-variant">
         <Link href="/docs" className="hover:text-secondary">
-          Documentation
+          {t("breadcrumb")}
         </Link>
         <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
-        <span className="text-primary">Letters & Messages</span>
+        <span className="text-primary">{t("letters.title")}</span>
       </nav>
 
       {/* Header */}
       <header className="space-y-4">
         <span className="text-label-md text-secondary">
-          Time-released messages
+          {t("letters.eyebrow")}
         </span>
-        <h1 className="text-headline-lg text-primary">Letters & Messages</h1>
+        <h1 className="text-headline-lg text-primary">{t("letters.title")}</h1>
         <p className="text-body-lg text-on-surface-variant">
-          Sealed letters released by a specific date or life event. You compose
-          them as a vault item — encrypted like everything else — and recipients
-          receive them only once your curators validate the trigger.
+          {t("letters.intro")}
         </p>
       </header>
 
@@ -33,48 +40,36 @@ export default function LettersDocPage() {
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-tertiary rounded-full" />
-          <h2 className="text-headline-md text-primary">How it works</h2>
+          <h2 className="text-headline-md text-primary">
+            {t("letters.howItWorks")}
+          </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Detail
-            iconPath={ICON_PATHS.editNote}
-            title="Compose from your vault"
-            body="Create a Letter / Message item alongside your documents. It is encrypted on-device, like any other vault item."
-          />
-          <Detail
-            iconPath={ICON_PATHS.person}
-            title="Assign recipients"
-            body="Pre-assign each letter to the people who should receive it. Recipients need no shard and no action of their own."
-          />
-          <Detail
-            iconPath={ICON_PATHS.timer}
-            title="Set the trigger"
-            body="Release on a fixed date, or on a life event such as your vault opening for inheritance."
-          />
-          <Detail
-            iconPath={ICON_PATHS.verifiedFill}
-            title="Released after validation"
-            body="Recipients receive the letter once your curators confirm the trigger has been met — never before."
-          />
+          {DETAILS.map((detail) => (
+            <Detail
+              key={detail.key}
+              iconPath={detail.iconPath}
+              title={t(`letters.details.${detail.key}.title`)}
+              body={t(`letters.details.${detail.key}.body`)}
+            />
+          ))}
         </div>
       </section>
 
       {/* Privacy note */}
       <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
         <h2 className="text-headline-sm text-primary">
-          Sealed until the moment
+          {t("letters.privacy.heading")}
         </h2>
         <p className="text-body-md text-on-surface-variant">
-          A letter stays encrypted in your vault until its trigger fires.
-          Keeplas servers only ever hold ciphertext, so no one — not us, not the
-          recipient, not your curators — can read it ahead of time.
+          {t("letters.privacy.body")}
         </p>
         <Link
           href="/docs/trusted-contacts"
           className="inline-flex items-center gap-2 text-secondary font-bold text-body-md hover:underline"
         >
-          How curators validate triggers
+          {t("letters.privacy.link")}
           <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
         </Link>
       </section>
@@ -87,7 +82,7 @@ export default function LettersDocPage() {
         >
           <Icon path={ICON_PATHS.lock} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
-            Open your vault
+            {t("letters.openVault")}
           </span>
         </Link>
         <Link
@@ -99,7 +94,7 @@ export default function LettersDocPage() {
             className="w-5 h-5 text-secondary"
           />
           <span className="text-body-md font-medium text-primary">
-            Digital Vault
+            {t("letters.vaultLink")}
           </span>
         </Link>
       </section>

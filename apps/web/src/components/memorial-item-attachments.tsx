@@ -8,6 +8,7 @@ import { Icon, Spinner, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 // Contact-facing copy of VaultItemAttachments. Reads files through the
 // memorial-authorized queries (gated on the contact's approved release) and
@@ -52,6 +53,7 @@ export function MemorialItemAttachments({
   itemId: Id<"vault_items">;
   itemDek: CryptoKey;
 }) {
+  const t = useTranslations("sharedWithMe");
   const files = useQuery(api.memorial.getMemorialItemFiles, {
     contactId,
     itemId,
@@ -61,7 +63,7 @@ export function MemorialItemAttachments({
     return (
       <div className="bg-surface-container-low rounded-2xl p-6 flex items-center gap-3 text-body-md text-on-surface-variant">
         <Spinner size="sm" />
-        Loading secure attachments…
+        {t("attachments.loading")}
       </div>
     );
   }
@@ -73,7 +75,7 @@ export function MemorialItemAttachments({
       <div className="flex items-center gap-2">
         <Icon path={ICON_PATHS.lock} className="w-4 h-4 text-secondary" />
         <span className="text-label-md text-secondary">
-          Secure Attachments · {files.length}
+          {t("attachments.title", { count: files.length })}
         </span>
       </div>
       <div className="grid grid-cols-1 gap-4">
@@ -99,6 +101,7 @@ function AttachmentCard({
   file: AttachmentFile;
   itemDek: CryptoKey;
 }) {
+  const t = useTranslations("sharedWithMe");
   const signedUrl = useQuery(api.memorial.getMemorialItemFileUrl, {
     contactId,
     fileId: file._id,
@@ -119,7 +122,10 @@ function AttachmentCard({
       setError("");
       try {
         const res = await fetch(signedUrl);
-        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+        if (!res.ok)
+          throw new Error(
+            t("attachments.downloadFailed", { status: res.status }),
+          );
         const cipherBlob = await res.blob();
         const plainBlob = await decryptBlobWithKey(
           cipherBlob,
@@ -133,7 +139,7 @@ function AttachmentCard({
         if (!cancelled) setPlainUrl(createdUrl);
       } catch (err) {
         if (!cancelled) {
-          setError(getErrorMessage(err, "Unable to decrypt attachment."));
+          setError(getErrorMessage(err, t("attachments.decryptFailed")));
         }
       } finally {
         if (!cancelled) setDecrypting(false);
@@ -153,9 +159,9 @@ function AttachmentCard({
   const meta = useMemo(() => {
     const parts: string[] = [formatFileSize(file.size)];
     if (duration) parts.push(duration);
-    parts.push("Encrypted");
+    parts.push(t("attachments.encrypted"));
     return parts.join(" · ");
-  }, [file.size, duration]);
+  }, [file.size, duration, t]);
 
   return (
     <article className="bg-surface-container-low rounded-2xl p-5 space-y-4">
@@ -189,7 +195,7 @@ function AttachmentCard({
             className="flex items-center gap-2 text-label-md text-secondary hover:text-primary transition-colors cursor-pointer"
           >
             <Icon path={ICON_PATHS.download} className="w-4 h-4" />
-            Download
+            {t("attachments.download")}
           </a>
         )}
       </header>
@@ -197,7 +203,7 @@ function AttachmentCard({
       {decrypting && !plainUrl && (
         <div className="flex items-center gap-2 text-body-md text-on-surface-variant">
           <Spinner size="sm" />
-          Decrypting…
+          {t("attachments.decrypting")}
         </div>
       )}
 
@@ -236,14 +242,14 @@ function AttachmentCard({
             path={ICON_PATHS.pictureAsPdf}
             className="w-4 h-4 text-secondary"
           />
-          Document ready — open or download to view.
+          {t("attachments.documentReady")}
           <a
             href={plainUrl}
             target="_blank"
             rel="noreferrer"
             className="ml-auto font-bold text-secondary hover:underline"
           >
-            Open
+            {t("attachments.open")}
           </a>
         </div>
       )}

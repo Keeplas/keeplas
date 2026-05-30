@@ -99,6 +99,7 @@ async function importAesKeyFromSharedSecret(
 export async function wrapDek(
   dek: CryptoKey,
   recipientPublicKeyB64: string,
+  additionalData?: BufferSource,
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
   const { cipherText, sharedSecret } =
@@ -111,11 +112,11 @@ export async function wrapDek(
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const buf = new Uint8Array(rawDek.byteLength);
     buf.set(rawDek);
-    const ciphertext = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      wrapKey,
-      buf,
-    );
+    const params: AesGcmParams = { name: "AES-GCM", iv, tagLength: 128 };
+    if (additionalData !== undefined) {
+      params.additionalData = additionalData;
+    }
+    const ciphertext = await crypto.subtle.encrypt(params, wrapKey, buf);
     const envelope: DekEnvelope = {
       v: 1,
       alg: "ml-kem-768+aes-256-gcm",
@@ -132,6 +133,7 @@ export async function wrapDek(
 export async function wrapBytes(
   raw: Uint8Array,
   recipientPublicKeyB64: string,
+  additionalData?: BufferSource,
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
   const { cipherText, sharedSecret } =
@@ -142,11 +144,11 @@ export async function wrapBytes(
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const buf = new Uint8Array(raw.byteLength);
   buf.set(raw);
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    wrapKey,
-    buf,
-  );
+  const params: AesGcmParams = { name: "AES-GCM", iv, tagLength: 128 };
+  if (additionalData !== undefined) {
+    params.additionalData = additionalData;
+  }
+  const ciphertext = await crypto.subtle.encrypt(params, wrapKey, buf);
   const envelope: DekEnvelope = {
     v: 1,
     alg: "ml-kem-768+aes-256-gcm",
@@ -185,6 +187,7 @@ function parseEnvelope(envelopeStr: string): DekEnvelope {
 export async function unwrapDek(
   envelopeStr: string,
   secretKey: Uint8Array,
+  additionalData?: BufferSource,
 ): Promise<CryptoKey> {
   if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
@@ -204,11 +207,11 @@ export async function unwrapDek(
     const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
     const iv = base64ToUint8(envelope.iv);
     const ct = base64ToUint8(envelope.ct);
-    const rawDekBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      wrapKey,
-      ct,
-    );
+    const params: AesGcmParams = { name: "AES-GCM", iv, tagLength: 128 };
+    if (additionalData !== undefined) {
+      params.additionalData = additionalData;
+    }
+    const rawDekBuf = await crypto.subtle.decrypt(params, wrapKey, ct);
     const rawDek = new Uint8Array(rawDekBuf);
     try {
       return await crypto.subtle.importKey(
@@ -229,6 +232,7 @@ export async function unwrapDek(
 export async function unwrapBytes(
   envelopeStr: string,
   secretKey: Uint8Array,
+  additionalData?: BufferSource,
 ): Promise<Uint8Array> {
   if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
     throw new Error(
@@ -243,11 +247,11 @@ export async function unwrapBytes(
     const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
     const iv = base64ToUint8(envelope.iv);
     const ct = base64ToUint8(envelope.ct);
-    const rawBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      wrapKey,
-      ct,
-    );
+    const params: AesGcmParams = { name: "AES-GCM", iv, tagLength: 128 };
+    if (additionalData !== undefined) {
+      params.additionalData = additionalData;
+    }
+    const rawBuf = await crypto.subtle.decrypt(params, wrapKey, ct);
     return new Uint8Array(rawBuf);
   } finally {
     sharedSecret.fill(0);

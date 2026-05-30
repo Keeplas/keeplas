@@ -19,6 +19,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { getInitials } from "@/lib/user";
 import { getCountry } from "@/lib/countries";
+import { useTranslations } from "@/lib/i18n";
 import { UpdateResidenceDialog } from "./update-residence-dialog";
 import { PhoneVerificationDialog } from "@/components/phone-verification-dialog";
 import { EmailVerificationDialog } from "@/components/email-verification-dialog";
@@ -31,6 +32,7 @@ interface IdentitySectionProps {
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export function IdentitySection({ user, onError }: IdentitySectionProps) {
+  const t = useTranslations("settings");
   const updateProfile = useAuditedMutation(api.users.updateProfile);
   const generateAvatarUploadUrl = useMutation(
     api.users.generateAvatarUploadUrl,
@@ -89,7 +91,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       await updateProfile({ name });
       setSaved(true);
     } catch (err) {
-      onError(getErrorMessage(err, "Failed to update profile"));
+      onError(getErrorMessage(err, t("identity.updateError")));
     } finally {
       setSaving(false);
     }
@@ -99,11 +101,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   // is sent straight to storage, then persisted and previewed immediately.
   async function handleAvatarFile(file: File) {
     if (!file.type.startsWith("image/")) {
-      onError("Please choose an image file.");
+      onError(t("identity.avatar.notImage"));
       return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
-      onError("Image must be 5 MB or smaller.");
+      onError(t("identity.avatar.tooLarge"));
       return;
     }
     setUploadingAvatar(true);
@@ -120,7 +122,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       const url = await setAvatarImage({ storageId });
       setAvatarUrl(url);
     } catch (err) {
-      onError(getErrorMessage(err, "Failed to upload image"));
+      onError(getErrorMessage(err, t("identity.avatar.uploadError")));
     } finally {
       setUploadingAvatar(false);
     }
@@ -132,7 +134,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       await removeAvatar();
       setAvatarUrl("");
     } catch (err) {
-      onError(getErrorMessage(err, "Failed to remove image"));
+      onError(getErrorMessage(err, t("identity.avatar.removeError")));
     }
   }
 
@@ -143,7 +145,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         month: "long",
         year: "numeric",
       })
-    : "Unknown";
+    : t("identity.unknown");
 
   return (
     <section>
@@ -156,14 +158,14 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             disabled={uploadingAvatar}
-            aria-label="Change profile photo"
+            aria-label={t("identity.avatar.change")}
             className="group relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-wait cursor-pointer"
           >
             <UserAvatar
               size="xl"
               imageUrl={avatarUrl || null}
               initials={initials}
-              alt={name || "Profile"}
+              alt={name || t("identity.profileAlt")}
               imageClassName="shadow-xl border-4 border-surface"
               className="shadow-xl border-4 border-surface"
               onImageError={() => setAvatarUrl("")}
@@ -191,18 +193,18 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           />
           <div className="space-y-1 flex-1 min-w-0">
             <h3 className="text-headline-sm text-primary truncate">
-              {name || "Unnamed Curator"}
+              {name || t("identity.unnamedCurator")}
             </h3>
             <p className="text-body-md text-on-surface-variant truncate">
-              Curator since {curatorSince}
+              {t("identity.curatorSince", { date: curatorSince })}
             </p>
             <div className="pt-2 flex flex-wrap gap-2">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
-                Verified Identity
+                {t("identity.verifiedIdentity")}
               </span>
               {user.recoveryVerified && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-primary-container text-on-primary-container">
-                  Recovery Set
+                  {t("identity.recoverySet")}
                 </span>
               )}
             </div>
@@ -214,10 +216,10 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 className="text-secondary underline cursor-pointer disabled:opacity-60"
               >
                 {uploadingAvatar
-                  ? "Uploading…"
+                  ? t("identity.avatar.uploading")
                   : avatarUrl
-                    ? "Change photo"
-                    : "Upload photo"}
+                    ? t("identity.avatar.changePhoto")
+                    : t("identity.avatar.uploadPhoto")}
               </button>
               {avatarUrl && !uploadingAvatar && (
                 <button
@@ -225,7 +227,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                   onClick={handleRemoveAvatar}
                   className="text-on-surface-variant underline cursor-pointer"
                 >
-                  Remove
+                  {t("identity.avatar.remove")}
                 </button>
               )}
             </div>
@@ -237,26 +239,26 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             htmlFor="display-name"
             className="text-label-md text-secondary"
           >
-            Display Name
+            {t("identity.displayName")}
           </Label>
           <Input
             id="display-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder={t("identity.displayNamePlaceholder")}
           />
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="email" className="text-label-md text-secondary">
-              Primary Email
+              {t("identity.email.label")}
             </Label>
             <div className="flex items-center gap-2">
               {user.emailVerificationTime && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
                   <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
-                  Verified
+                  {t("identity.verified")}
                 </span>
               )}
               <Button
@@ -266,10 +268,10 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 onClick={() => setEmailDialogOpen(true)}
               >
                 {user.emailVerificationTime
-                  ? "Change email"
+                  ? t("identity.email.change")
                   : user.email
-                    ? "Verify"
-                    : "Add email"}
+                    ? t("identity.verify")
+                    : t("identity.email.add")}
               </Button>
             </div>
           </div>
@@ -277,29 +279,29 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             id="email"
             type="email"
             value={user.email ?? ""}
-            placeholder={user.email ? undefined : "No email linked"}
+            placeholder={user.email ? undefined : t("identity.email.none")}
             disabled
             className="opacity-70"
           />
           <p className="text-label-md text-on-surface-variant mt-1">
             {user.emailVerificationTime
-              ? "Sign in with this email and a one-time code. Change it any time — we'll verify the new address with a code."
+              ? t("identity.email.hintVerified")
               : user.email
-                ? "On file from your invitation — verify it to sign in with an emailed code."
-                : "Add an email to also sign in with an emailed code."}
+                ? t("identity.email.hintOnFile")
+                : t("identity.email.hintNone")}
           </p>
         </div>
 
         <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="phone" className="text-label-md text-secondary">
-              WhatsApp Number
+              {t("identity.phone.label")}
             </Label>
             <div className="flex items-center gap-2">
               {phoneStatus?.verifiedAt && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
                   <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
-                  Verified
+                  {t("identity.verified")}
                 </span>
               )}
               <Button
@@ -309,10 +311,10 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 onClick={() => setVerifyDialogOpen(true)}
               >
                 {phoneStatus?.verifiedAt
-                  ? "Change number"
+                  ? t("identity.phone.change")
                   : user.phoneNumber
-                    ? "Verify"
-                    : "Add number"}
+                    ? t("identity.verify")
+                    : t("identity.phone.add")}
               </Button>
             </div>
           </div>
@@ -320,19 +322,21 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             id="phone"
             type="tel"
             value={user.phoneNumber ?? ""}
-            placeholder={user.phoneNumber ? undefined : "No number linked"}
+            placeholder={
+              user.phoneNumber ? undefined : t("identity.phone.none")
+            }
             disabled
             className="opacity-70"
           />
           <p className="text-label-md text-on-surface-variant">
-            Used for Life Check escalations and important notifications.
+            {t("identity.phone.hint")}
           </p>
         </div>
 
         <div className="col-span-full flex items-center justify-start gap-4">
           {saved && (
             <span className="text-body-md text-secondary font-medium">
-              Profile updated ✓
+              {t("identity.updated")}
             </span>
           )}
           <Button
@@ -342,7 +346,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             disabled={saving}
             className="cursor-pointer"
           >
-            {saving ? "Saving..." : "Save Identity"}
+            {saving ? t("identity.saving") : t("identity.save")}
           </Button>
         </div>
       </form>
@@ -350,12 +354,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       <div className="mt-10 bg-surface-container-low rounded-2xl p-6 space-y-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
-            <h3 className="text-title-lg text-primary">Legal identity</h3>
+            <h3 className="text-title-lg text-primary">
+              {t("identity.legal.title")}
+            </h3>
             <p className="text-body-md text-on-surface-variant max-w-xl">
-              Recorded during onboarding as your signed declaration of identity.
-              Birthday is fixed; residence may change if you move jurisdictions.
-              Every update is appended to the audit chain — your original
-              declaration is never overwritten.
+              {t("identity.legal.description")}
             </p>
           </div>
           {user.country && (
@@ -366,7 +369,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               onClick={() => setResidenceDialogOpen(true)}
               className="bg-surface-container hover:bg-surface-container-high cursor-pointer"
             >
-              Update residence
+              {t("identity.legal.updateResidence")}
             </Button>
           )}
         </div>
@@ -393,11 +396,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                 </svg>
               </span>
               <div className="space-y-1 min-w-0">
-                <p className="text-title-md text-error">Residence not set</p>
+                <p className="text-title-md text-error">
+                  {t("identity.legal.residenceNotSet")}
+                </p>
                 <p className="text-body-md text-on-surface-variant">
-                  Inheritance jurisdiction can&apos;t be determined until you
-                  declare your country of residence. Set it now to keep your
-                  succession plan admissible.
+                  {t("identity.legal.residenceNotSetHint")}
                 </p>
               </div>
             </div>
@@ -408,7 +411,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               onClick={() => setResidenceDialogOpen(true)}
               className="shrink-0 cursor-pointer"
             >
-              Set residence
+              {t("identity.legal.setResidence")}
             </Button>
           </div>
         )}
@@ -416,7 +419,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-body-md">
           <div className="space-y-1">
             <dt className="text-label-md text-secondary uppercase tracking-wide">
-              Country of residence
+              {t("identity.legal.countryOfResidence")}
             </dt>
             <dd className="text-on-surface flex items-center gap-2">
               {country ? (
@@ -430,30 +433,34 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
                   </span>
                 </>
               ) : (
-                <span className="text-on-surface-variant italic">Not set</span>
+                <span className="text-on-surface-variant italic">
+                  {t("identity.legal.notSet")}
+                </span>
               )}
             </dd>
           </div>
 
           <div className="space-y-1">
             <dt className="text-label-md text-secondary uppercase tracking-wide">
-              Date of birth
+              {t("identity.legal.dateOfBirth")}
             </dt>
             <dd className="text-on-surface">
               {birthdayLabel ?? (
-                <span className="text-on-surface-variant italic">Not set</span>
+                <span className="text-on-surface-variant italic">
+                  {t("identity.legal.notSet")}
+                </span>
               )}
             </dd>
           </div>
 
           <div className="space-y-1">
             <dt className="text-label-md text-secondary uppercase tracking-wide">
-              Declared on
+              {t("identity.legal.declaredOn")}
             </dt>
             <dd className="text-on-surface">
               {confirmedAtLabel ?? (
                 <span className="text-on-surface-variant italic">
-                  Not declared
+                  {t("identity.legal.notDeclared")}
                 </span>
               )}
             </dd>

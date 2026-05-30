@@ -10,6 +10,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
+import { useTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export default function LoginOtpPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
+  const t = useTranslations("auth.otp");
+  const c = useTranslations("common");
   const gate = useQuery(
     api.login_otp.getMyLoginOtpGate,
     isAuthenticated ? {} : "skip",
@@ -53,16 +56,16 @@ export default function LoginOtpPage() {
     request()
       .then((r) => {
         if (r.sent === false && !("alreadyCleared" in r)) {
-          setError("No verification channel available for this account.");
+          setError(t("noChannel"));
         } else {
           startCooldown();
         }
       })
-      .catch((err) => setError(getErrorMessage(err, "Could not send code.")));
-  }, [gate?.required, request, startCooldown]);
+      .catch((err) => setError(getErrorMessage(err, t("sendFailed"))));
+  }, [gate?.required, request, startCooldown, t]);
 
   if (isLoading || gate === undefined) {
-    return <Loader fullscreen label="Verifying session" />;
+    return <Loader fullscreen label={t("verifyingSession")} />;
   }
   if (!isAuthenticated || !gate.authenticated) return null;
   if (!gate.required) return null;
@@ -76,7 +79,7 @@ export default function LoginOtpPage() {
       await submit({ code: code.trim() });
       router.push("/hub");
     } catch (err) {
-      setError(getErrorMessage(err, "Verification failed."));
+      setError(getErrorMessage(err, t("verifyFailed")));
     } finally {
       setBusy(false);
     }
@@ -90,9 +93,9 @@ export default function LoginOtpPage() {
     try {
       await request();
       startCooldown();
-      setNotice("A new code is on its way.");
+      setNotice(t("resent"));
     } catch (err) {
-      setError(getErrorMessage(err, "Could not resend the code."));
+      setError(getErrorMessage(err, t("resendFailed")));
     } finally {
       setResending(false);
     }
@@ -105,13 +108,11 @@ export default function LoginOtpPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.lockClock} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">
-            Confirm it&apos;s you
-          </h1>
+          <h1 className="text-headline-md text-primary">{t("heading")}</h1>
           <p className="text-body-md text-on-surface-variant">
             {gate.channelMasked
-              ? `Enter the 6-digit code we sent to ${gate.channelMasked} to finish signing in.`
-              : "Enter the 6-digit code to finish signing in."}
+              ? t("subtitleChannel", { channel: gate.channelMasked })
+              : t("subtitle")}
           </p>
         </div>
 
@@ -131,7 +132,7 @@ export default function LoginOtpPage() {
           className="bg-surface-container-lowest p-6 rounded-2xl space-y-4 ghost-border"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="login-otp-code">6-digit code</Label>
+            <Label htmlFor="login-otp-code">{t("codeLabel")}</Label>
             <Input
               id="login-otp-code"
               inputMode="numeric"
@@ -153,7 +154,7 @@ export default function LoginOtpPage() {
             disabled={code.length !== 6 || busy}
             className="w-full justify-center"
           >
-            {busy ? <Spinner size="sm" /> : "Verify"}
+            {busy ? <Spinner size="sm" /> : t("verify")}
           </Button>
         </form>
 
@@ -165,21 +166,21 @@ export default function LoginOtpPage() {
             className="text-body-md text-secondary hover:underline disabled:opacity-60"
           >
             {resending
-              ? "Sending…"
+              ? t("sending")
               : cooldownActive
-                ? `Resend code in ${cooldownRemaining}s`
-                : "Didn't get it? Resend code"}
+                ? c("resendIn", { seconds: cooldownRemaining })
+                : t("resend")}
           </button>
           {gate.recoveryBound ? (
             <Link
               href="/login/otp/recovery"
               className="block text-body-md text-secondary hover:underline"
             >
-              Can&apos;t receive the code? Use your recovery phrase
+              {t("useRecovery")}
             </Link>
           ) : (
             <p className="text-body-md text-on-surface-variant">
-              Recovery via seed is not configured for this account.
+              {t("recoveryNotConfigured")}
             </p>
           )}
           <button
@@ -187,7 +188,7 @@ export default function LoginOtpPage() {
             onClick={() => signOut()}
             className="text-label-md text-on-surface-variant hover:underline"
           >
-            Sign out
+            {t("signOut")}
           </button>
         </div>
       </div>

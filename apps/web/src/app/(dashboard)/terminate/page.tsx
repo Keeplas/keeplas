@@ -8,9 +8,11 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { Button, ErrorAlert, Icon, Input, Label } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
 
 export default function TerminatePage() {
+  const t = useTranslations("hub");
   const router = useRouter();
   const deleteAccount = useAuditedMutation(api.users.deleteAccount);
   const { signOut } = useAuthActions();
@@ -25,7 +27,7 @@ export default function TerminatePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (confirmation !== "DELETE") {
-      setError("Type DELETE exactly to confirm.");
+      setError(t("terminate.errors.typeDelete"));
       return;
     }
     setSubmitting(true);
@@ -35,7 +37,7 @@ export default function TerminatePage() {
       await signOut();
       router.push("/login");
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to terminate plan."));
+      setError(getErrorMessage(err, t("terminate.errors.failed")));
       setSubmitting(false);
     }
   }
@@ -51,25 +53,27 @@ export default function TerminatePage() {
               <Icon path={ICON_PATHS.warning} className="w-7 h-7" />
             </span>
             <h1 className="text-headline-lg mt-6">
-              Irreversible
+              {t("terminate.hero.line1")}
               <br />
-              Destruction
+              {t("terminate.hero.line2")}
             </h1>
             <p className="mt-4 text-body-lg opacity-90 max-w-sm">
-              Once destroyed, your encrypted archive cannot be reconstructed.
-              There is no backup, no admin override, no recovery path.
-              Zero-knowledge means zero recovery.
+              {t("terminate.hero.description")}
             </p>
           </div>
 
           <dl className="space-y-3 text-label-md opacity-80">
             <div className="flex justify-between">
-              <dt>Archive status</dt>
-              <dd>{vault ? "Active" : "Empty"}</dd>
+              <dt>{t("terminate.stats.archiveStatus")}</dt>
+              <dd>
+                {vault
+                  ? t("terminate.stats.active")
+                  : t("terminate.stats.empty")}
+              </dd>
             </div>
             <div className="flex justify-between">
-              <dt>Encryption key</dt>
-              <dd>Held only by you</dd>
+              <dt>{t("terminate.stats.encryptionKey")}</dt>
+              <dd>{t("terminate.stats.heldByYou")}</dd>
             </div>
           </dl>
         </aside>
@@ -77,33 +81,33 @@ export default function TerminatePage() {
         <section className="bg-surface p-10 space-y-6">
           <div>
             <h2 className="text-headline-md text-primary">
-              Terminate Your Continuity Plan?
+              {t("terminate.heading")}
             </h2>
             <p className="text-body-md text-on-surface-variant mt-2">
-              This wipes the vault, every protocol, contact, message, audit
-              entry and the user record itself.
+              {t("terminate.description")}
             </p>
           </div>
 
           <div className="bg-error/10 border border-error/20 rounded-2xl p-4 text-body-md text-error">
-            <p className="text-label-md mb-1">⚠ Warning</p>
-            This action cannot be undone. We recommend exporting your Recovery
-            Kit and pausing Life Check first if you only need a temporary stop.
+            <p className="text-label-md mb-1">{t("terminate.warning.label")}</p>
+            {t("terminate.warning.body")}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-surface-container-low rounded-2xl p-4">
               <p className="text-label-md text-on-surface-variant">
-                Vault data
+                {t("terminate.cards.vaultData")}
               </p>
               <p className="text-headline-sm text-on-surface mt-1">
-                {itemCount} encrypted items
+                {t("terminate.cards.encryptedItems", { count: itemCount })}
               </p>
             </div>
             <div className="bg-surface-container-low rounded-2xl p-4">
-              <p className="text-label-md text-on-surface-variant">Protocols</p>
+              <p className="text-label-md text-on-surface-variant">
+                {t("terminate.cards.protocols")}
+              </p>
               <p className="text-headline-sm text-on-surface mt-1">
-                Life Check, Scenario, Messages
+                {t("terminate.cards.protocolsValue")}
               </p>
             </div>
           </div>
@@ -112,8 +116,9 @@ export default function TerminatePage() {
             <ErrorAlert message={error} />
             <div className="space-y-2">
               <Label>
-                Type <span className="font-mono text-error">DELETE</span> to
-                confirm
+                {t("terminate.confirmLabel.before")}{" "}
+                <span className="font-mono text-error">DELETE</span>{" "}
+                {t("terminate.confirmLabel.after")}
               </Label>
               <Input
                 value={confirmation}
@@ -132,7 +137,9 @@ export default function TerminatePage() {
                 disabled={submitting}
                 className="flex-1"
               >
-                {submitting ? "Terminating..." : "Confirm Permanent Deletion"}
+                {submitting
+                  ? t("terminate.submitting")
+                  : t("terminate.confirm")}
               </Button>
               <Button
                 type="button"
@@ -141,13 +148,13 @@ export default function TerminatePage() {
                 onClick={() => router.push("/settings")}
                 className="flex-1"
               >
-                Keep My Plan
+                {t("terminate.keep")}
               </Button>
             </div>
           </form>
 
           <p className="text-label-md text-outline-variant font-mono">
-            Request ID: {requestId || "—"}
+            {t("terminate.requestId", { id: requestId || "—" })}
           </p>
         </section>
       </div>

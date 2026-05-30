@@ -1,20 +1,12 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { constantTimeStringEquals } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 
 // Sibling of phone_auth.ts for the passwordless `email-otp` provider. Mirrors
 // its hashing/expiry/attempts/rate-limit semantics; the only difference is the
 // channel (emailed code via Resend instead of WhatsApp).
-
-function constantTimeStringEquals(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i++) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return mismatch === 0;
-}
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -46,6 +38,7 @@ export const requestEmailAuthOtp = mutation({
   args: {
     email: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
+    language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email);
@@ -92,6 +85,7 @@ export const requestEmailAuthOtp = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
       email,
       code,
+      language: args.language,
     });
 
     return { sent: true };
