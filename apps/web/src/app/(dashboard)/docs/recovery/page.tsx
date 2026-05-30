@@ -25,7 +25,13 @@ const SHARD_STEPS = [
   { key: "reconstruction", accent: "bg-error" },
 ];
 
-const ZK_BULLETS = ["distribution", "reception", "verification", "submission", "reconstruction"];
+const ZK_BULLETS = [
+  "distribution",
+  "reception",
+  "verification",
+  "submission",
+  "reconstruction",
+];
 
 export default function RecoveryDocPage() {
   const t = useTranslations("docs");

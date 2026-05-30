@@ -32,7 +32,8 @@ function escapeHtml(value: string): string {
 const OTP_EMAIL_COPY = {
   en: {
     subject: "Confirm your Keeplas email",
-    intro: "Welcome to Keeplas. Use the code below to confirm your email address:",
+    intro:
+      "Welcome to Keeplas. Use the code below to confirm your email address:",
     expiry:
       "This code expires in 15 minutes. If you didn't request it, you can ignore this email.",
     text: (code: string) =>
@@ -49,7 +50,12 @@ const OTP_EMAIL_COPY = {
   },
 } satisfies Record<
   Locale,
-  { subject: string; intro: string; expiry: string; text: (code: string) => string }
+  {
+    subject: string;
+    intro: string;
+    expiry: string;
+    text: (code: string) => string;
+  }
 >;
 
 function otpEmailHtml(appUrl: string, code: string, locale: Locale) {

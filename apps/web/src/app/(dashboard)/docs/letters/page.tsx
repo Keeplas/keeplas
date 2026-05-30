@@ -89,7 +89,10 @@ export default function LettersDocPage() {
           href="/docs/vault"
           className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
         >
-          <Icon path={ICON_PATHS.encrypted} className="w-5 h-5 text-secondary" />
+          <Icon
+            path={ICON_PATHS.encrypted}
+            className="w-5 h-5 text-secondary"
+          />
           <span className="text-body-md font-medium text-primary">
             {t("letters.vaultLink")}
           </span>

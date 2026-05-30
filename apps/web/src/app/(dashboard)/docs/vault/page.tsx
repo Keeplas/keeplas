@@ -37,7 +37,9 @@ export default function VaultDocPage() {
           {t("vault.eyebrow")}
         </span>
         <h1 className="text-headline-lg text-primary">{t("vault.title")}</h1>
-        <p className="text-body-lg text-on-surface-variant">{t("vault.intro")}</p>
+        <p className="text-body-lg text-on-surface-variant">
+          {t("vault.intro")}
+        </p>
       </header>
 
       {/* How encryption works */}

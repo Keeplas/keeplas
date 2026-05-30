@@ -1217,7 +1217,8 @@ const INVITE_EMAIL_COPY = {
     accept: "Accept invitation",
     expiry: (url: string) =>
       `This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
-    ignoreInvite: "If you weren't expecting this invitation, you can ignore this email.",
+    ignoreInvite:
+      "If you weren't expecting this invitation, you can ignore this email.",
     recipientHi: "Hi!",
     recipientBody: (inviter: string) =>
       `<strong>${inviter}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.`,

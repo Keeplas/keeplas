@@ -60,9 +60,7 @@ export function DeviceUnlockManager() {
       title: last
         ? t("deviceUnlock.removeLastTitle")
         : t("deviceUnlock.removeTitle", { label: entry.label }),
-      description: last
-        ? t("deviceUnlock.removeLastDescription")
-        : undefined,
+      description: last ? t("deviceUnlock.removeLastDescription") : undefined,
       confirmLabel: t("deviceUnlock.removeConfirm"),
       variant: "destructive",
     });

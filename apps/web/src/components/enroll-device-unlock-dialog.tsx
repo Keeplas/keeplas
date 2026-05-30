@@ -166,7 +166,9 @@ export function EnrollDeviceUnlockDialog({
                 inputMode="numeric"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                placeholder={t("enroll.pinPlaceholder", { min: PIN_MIN_LENGTH })}
+                placeholder={t("enroll.pinPlaceholder", {
+                  min: PIN_MIN_LENGTH,
+                })}
                 required
               />
             </div>

@@ -36,9 +36,7 @@ export function MemorialIntroductionDialog({
       <DialogContent className="bg-surface max-w-2xl w-[calc(100%-2rem)] max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>
-              {t("introDialog.title", { ownerName })}
-            </DialogTitle>
+            <DialogTitle>{t("introDialog.title", { ownerName })}</DialogTitle>
             <DialogDescription className="mt-1">
               {t("introDialog.description")}
             </DialogDescription>

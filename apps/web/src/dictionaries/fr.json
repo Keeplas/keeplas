@@ -471,7 +471,7 @@
       "hero": {
         "line1": "Destruction",
         "line2": "irréversible",
-      "description": "Une fois détruite, votre archive chiffrée ne peut être reconstituée. Il n'existe aucune sauvegarde, aucun accès administrateur, aucune voie de récupération. L'accès à connaissance nulle signifie qu'il n'y a aucune récupération côté serveur."
+        "description": "Une fois détruite, votre archive chiffrée ne peut être reconstituée. Il n'existe aucune sauvegarde, aucun accès administrateur, aucune voie de récupération. L'accès à connaissance nulle signifie qu'il n'y a aucune récupération côté serveur."
       },
       "stats": {
         "archiveStatus": "Statut de l'archive",

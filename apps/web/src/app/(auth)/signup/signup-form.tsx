@@ -215,9 +215,7 @@ export function SignupForm() {
     return (
       <AuthFormShell
         badgeLabel={
-          kind === "phone"
-            ? t("whatsappConfirmation")
-            : t("emailConfirmation")
+          kind === "phone" ? t("whatsappConfirmation") : t("emailConfirmation")
         }
         heading={
           kind === "phone"

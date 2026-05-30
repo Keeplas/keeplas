@@ -194,9 +194,7 @@ export function PhoneVerificationDialog({
                   onClick={handleSendCode}
                   disabled={busy || !phone || !isValidPhone(phone)}
                 >
-                  {busy
-                    ? t("phoneVerify.sending")
-                    : t("phoneVerify.sendCode")}
+                  {busy ? t("phoneVerify.sending") : t("phoneVerify.sendCode")}
                 </Button>
               </div>
             </div>

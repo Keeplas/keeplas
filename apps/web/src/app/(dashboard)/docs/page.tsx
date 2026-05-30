@@ -97,9 +97,7 @@ export default function DocsPage() {
     <div className="max-w-screen-2xl mx-auto space-y-16">
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-label-md text-secondary">
-          {t("hub.eyebrow")}
-        </span>
+        <span className="text-label-md text-secondary">{t("hub.eyebrow")}</span>
         <h1 className="text-headline-lg text-primary">{t("hub.title")}</h1>
         <p className="text-body-lg text-on-surface-variant max-w-2xl">
           {t("hub.intro")}

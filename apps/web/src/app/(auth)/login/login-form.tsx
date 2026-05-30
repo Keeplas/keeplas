@@ -156,7 +156,9 @@ export function LoginForm() {
       });
     } catch (err) {
       setError(
-        phoneCodeSent ? c("invalidCode") : getErrorMessage(err, t("sendFailed")),
+        phoneCodeSent
+          ? c("invalidCode")
+          : getErrorMessage(err, t("sendFailed")),
       );
       setLoading(false);
     }

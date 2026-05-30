@@ -198,9 +198,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       await markUnreachable({ contactId: vault._id as Id<"trusted_contacts"> });
       setUnreachableState("done");
     } catch (err) {
-      setUnreachableError(
-        getErrorMessage(err, t("card.actionNeeded.error")),
-      );
+      setUnreachableError(getErrorMessage(err, t("card.actionNeeded.error")));
       setUnreachableState("error");
     }
   }

@@ -310,11 +310,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   disabled={busy || !phrase.trim()}
                   className="w-full"
                 >
-                  {busy ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    t("unlock.unlockWithWords")
-                  )}
+                  {busy ? <Spinner size="sm" /> : t("unlock.unlockWithWords")}
                 </Button>
                 <button
                   type="button"

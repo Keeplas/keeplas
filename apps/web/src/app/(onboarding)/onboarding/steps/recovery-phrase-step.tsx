@@ -73,7 +73,11 @@ export function RecoveryPhraseStep({
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
       pdf.setTextColor(60);
-      pdf.text(`${t("pdfAccountLabel")}: ${accountId ?? "—"}`, marginX, cursorY);
+      pdf.text(
+        `${t("pdfAccountLabel")}: ${accountId ?? "—"}`,
+        marginX,
+        cursorY,
+      );
 
       cursorY += 10;
       pdf.setFont("helvetica", "normal");

@@ -621,9 +621,7 @@ export function AddItemDialog({
               </span>
             </div>
             <DialogTitle className="text-headline-md">
-              {isIntroMode
-                ? t("dialog.titleIntro")
-                : t("dialog.titleVault")}
+              {isIntroMode ? t("dialog.titleIntro") : t("dialog.titleVault")}
             </DialogTitle>
             <DialogDescription className="text-body-md max-w-md">
               {isIntroMode
@@ -652,9 +650,7 @@ export function AddItemDialog({
             <SectionHeading
               step="01"
               title={
-                isIntroMode
-                  ? t("dialog.section01Intro")
-                  : t("dialog.section01")
+                isIntroMode ? t("dialog.section01Intro") : t("dialog.section01")
               }
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -936,9 +932,7 @@ export function AddItemDialog({
             <SectionHeading
               step={isIntroMode ? "03" : "04"}
               title={
-                isIntroMode
-                  ? t("dialog.section04Intro")
-                  : t("dialog.section04")
+                isIntroMode ? t("dialog.section04Intro") : t("dialog.section04")
               }
             />
             <div className="space-y-4">

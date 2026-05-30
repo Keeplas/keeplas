@@ -232,7 +232,9 @@ export default function TrustedContactsPage() {
 
                 <p className="text-label-md uppercase tracking-wider text-on-primary-container/70 mb-2 inline-flex items-center gap-1.5">
                   {t("recoveryNetwork.title")}
-                  <HelpHint content={t("recoveryNetwork.help", { threshold })} />
+                  <HelpHint
+                    content={t("recoveryNetwork.help", { threshold })}
+                  />
                 </p>
 
                 <div className="flex items-baseline gap-2 mb-1">

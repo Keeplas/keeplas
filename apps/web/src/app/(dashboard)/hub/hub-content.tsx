@@ -601,9 +601,7 @@ function ContinuityScoreBadge({
         </span>
       </div>
       <div>
-        <p className="text-label-md text-on-surface-variant">
-          {actionsLabel}
-        </p>
+        <p className="text-label-md text-on-surface-variant">{actionsLabel}</p>
         <p className="text-body-md font-bold text-error">{label}</p>
       </div>
     </div>

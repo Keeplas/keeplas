@@ -274,9 +274,7 @@ export function TotpManager() {
                 }
               />
               <p className="text-body-md text-on-surface-variant">
-                {recoveryBound
-                  ? t("totp.recoveryOn")
-                  : t("totp.recoveryOff")}
+                {recoveryBound ? t("totp.recoveryOn") : t("totp.recoveryOff")}
               </p>
             </div>
             {!recoveryBound && (

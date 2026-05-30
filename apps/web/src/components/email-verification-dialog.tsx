@@ -199,9 +199,7 @@ export function EmailVerificationDialog({
                   onClick={handleSendCode}
                   disabled={busy || !isValidEmail(email)}
                 >
-                  {busy
-                    ? t("emailVerify.sending")
-                    : t("emailVerify.sendCode")}
+                  {busy ? t("emailVerify.sending") : t("emailVerify.sendCode")}
                 </Button>
               </div>
             </div>

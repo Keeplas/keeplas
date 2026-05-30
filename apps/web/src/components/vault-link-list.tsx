@@ -34,9 +34,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
 
   if (urls.length === 0) {
     return (
-      <p className="text-body-md text-on-surface-variant">
-        {t("links.empty")}
-      </p>
+      <p className="text-body-md text-on-surface-variant">{t("links.empty")}</p>
     );
   }
 

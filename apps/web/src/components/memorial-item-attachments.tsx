@@ -123,7 +123,9 @@ function AttachmentCard({
       try {
         const res = await fetch(signedUrl);
         if (!res.ok)
-          throw new Error(t("attachments.downloadFailed", { status: res.status }));
+          throw new Error(
+            t("attachments.downloadFailed", { status: res.status }),
+          );
         const cipherBlob = await res.blob();
         const plainBlob = await decryptBlobWithKey(
           cipherBlob,

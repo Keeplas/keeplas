@@ -30,9 +30,21 @@ const PILLARS: Array<{
       "Reset path · salted Argon2id(phrase) verifier matches users.recoveryPhraseHash (constant-time) → modify scrypt hash",
     ],
     references: [
-      { label: "Convex Auth", url: "https://labs.convex.dev/auth", note: "Open-source auth library used for password + TOTP + WebAuthn" },
-      { label: "RFC 6238 — TOTP", url: "https://datatracker.ietf.org/doc/html/rfc6238", note: "Time-based One-Time Password algorithm" },
-      { label: "RFC 7914 — scrypt", url: "https://datatracker.ietf.org/doc/html/rfc7914", note: "Memory-hard password hashing function" },
+      {
+        label: "Convex Auth",
+        url: "https://labs.convex.dev/auth",
+        note: "Open-source auth library used for password + TOTP + WebAuthn",
+      },
+      {
+        label: "RFC 6238 — TOTP",
+        url: "https://datatracker.ietf.org/doc/html/rfc6238",
+        note: "Time-based One-Time Password algorithm",
+      },
+      {
+        label: "RFC 7914 — scrypt",
+        url: "https://datatracker.ietf.org/doc/html/rfc7914",
+        note: "Memory-hard password hashing function",
+      },
     ],
   },
   {
@@ -46,13 +58,41 @@ const PILLARS: Array<{
       "Vault items · per-item DEK wrapped by MasterKey · all encryption in WebCrypto + @noble/post-quantum client-side",
     ],
     references: [
-      { label: "BIP-39 — Mnemonic recovery phrases", url: "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki", note: "The 24-word format and English wordlist we use" },
-      { label: "RFC 9106 — Argon2", url: "https://www.rfc-editor.org/rfc/rfc9106.html", note: "Memory-hard KDF (Argon2id is the Password Hashing Competition winner)" },
-      { label: "OWASP — Argon2id parameter guidance", url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id", note: "Source of our 19 MiB / 2 iterations / 1 parallelism settings" },
-      { label: "NIST FIPS 203 — ML-KEM", url: "https://csrc.nist.gov/pubs/fips/203/final", note: "Post-quantum KEM standard (finalized August 2024)" },
-      { label: "NIST SP 800-38D — AES-GCM", url: "https://csrc.nist.gov/pubs/sp/800/38/d/final", note: "Authenticated symmetric encryption mode" },
-      { label: "@noble/post-quantum", url: "https://github.com/paulmillr/noble-post-quantum", note: "Audited TypeScript implementation of ML-KEM-768" },
-      { label: "W3C Web Crypto API", url: "https://www.w3.org/TR/WebCryptoAPI/", note: "Browser-native primitives we rely on for AES-GCM and HKDF" },
+      {
+        label: "BIP-39 — Mnemonic recovery phrases",
+        url: "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki",
+        note: "The 24-word format and English wordlist we use",
+      },
+      {
+        label: "RFC 9106 — Argon2",
+        url: "https://www.rfc-editor.org/rfc/rfc9106.html",
+        note: "Memory-hard KDF (Argon2id is the Password Hashing Competition winner)",
+      },
+      {
+        label: "OWASP — Argon2id parameter guidance",
+        url: "https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id",
+        note: "Source of our 19 MiB / 2 iterations / 1 parallelism settings",
+      },
+      {
+        label: "NIST FIPS 203 — ML-KEM",
+        url: "https://csrc.nist.gov/pubs/fips/203/final",
+        note: "Post-quantum KEM standard (finalized August 2024)",
+      },
+      {
+        label: "NIST SP 800-38D — AES-GCM",
+        url: "https://csrc.nist.gov/pubs/sp/800/38/d/final",
+        note: "Authenticated symmetric encryption mode",
+      },
+      {
+        label: "@noble/post-quantum",
+        url: "https://github.com/paulmillr/noble-post-quantum",
+        note: "Audited TypeScript implementation of ML-KEM-768",
+      },
+      {
+        label: "W3C Web Crypto API",
+        url: "https://www.w3.org/TR/WebCryptoAPI/",
+        note: "Browser-native primitives we rely on for AES-GCM and HKDF",
+      },
     ],
   },
   {
@@ -65,9 +105,21 @@ const PILLARS: Array<{
       "Lockout · 5 wrong PIN attempts → 60s freeze · 10 → entry wiped, 24-word re-entry required",
     ],
     references: [
-      { label: "W3C WebAuthn Level 3", url: "https://www.w3.org/TR/webauthn-3/", note: "The browser API behind passkeys and security keys" },
-      { label: "WebAuthn PRF extension", url: "https://www.w3.org/TR/webauthn-3/#prf-extension", note: "Lets a passkey deterministically derive an unlock key without exposing the credential" },
-      { label: "FIDO2", url: "https://fidoalliance.org/fido2/", note: "The alliance behind the hardware-key standards we support" },
+      {
+        label: "W3C WebAuthn Level 3",
+        url: "https://www.w3.org/TR/webauthn-3/",
+        note: "The browser API behind passkeys and security keys",
+      },
+      {
+        label: "WebAuthn PRF extension",
+        url: "https://www.w3.org/TR/webauthn-3/#prf-extension",
+        note: "Lets a passkey deterministically derive an unlock key without exposing the credential",
+      },
+      {
+        label: "FIDO2",
+        url: "https://fidoalliance.org/fido2/",
+        note: "The alliance behind the hardware-key standards we support",
+      },
     ],
   },
   {
@@ -80,8 +132,16 @@ const PILLARS: Array<{
       "No master key, no escrow, no employee or court-ordered access path",
     ],
     references: [
-      { label: "Shamir — How to Share a Secret (1979)", url: "https://dl.acm.org/doi/10.1145/359168.359176", note: "The original paper on threshold secret sharing" },
-      { label: "Harvest now, decrypt later", url: "https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later", note: "Why we encrypt every shard with ML-KEM-768 today" },
+      {
+        label: "Shamir — How to Share a Secret (1979)",
+        url: "https://dl.acm.org/doi/10.1145/359168.359176",
+        note: "The original paper on threshold secret sharing",
+      },
+      {
+        label: "Harvest now, decrypt later",
+        url: "https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later",
+        note: "Why we encrypt every shard with ML-KEM-768 today",
+      },
     ],
   },
   {
@@ -95,10 +155,26 @@ const PILLARS: Array<{
       "Cross-user actions (e.g. trusted contact accepts an invitation) are logged on the vault owner's chain with actorType=trusted_contact",
     ],
     references: [
-      { label: "RFC 2104 — HMAC", url: "https://datatracker.ietf.org/doc/html/rfc2104", note: "The construction we use to seal the IP/country envelope" },
-      { label: "EU eIDAS Regulation", url: "https://eur-lex.europa.eu/eli/reg/2014/910/oj", note: "Framework for legally-recognized electronic records in the EU" },
-      { label: "GDPR", url: "https://gdpr-info.eu/", note: "We log metadata only (actions, IP, country) — never plaintext content" },
-      { label: "Vercel geolocation headers", url: "https://vercel.com/docs/edge-network/headers/request-headers", note: "Source of the country/IP we sign — replaceable for self-hosted deployments" },
+      {
+        label: "RFC 2104 — HMAC",
+        url: "https://datatracker.ietf.org/doc/html/rfc2104",
+        note: "The construction we use to seal the IP/country envelope",
+      },
+      {
+        label: "EU eIDAS Regulation",
+        url: "https://eur-lex.europa.eu/eli/reg/2014/910/oj",
+        note: "Framework for legally-recognized electronic records in the EU",
+      },
+      {
+        label: "GDPR",
+        url: "https://gdpr-info.eu/",
+        note: "We log metadata only (actions, IP, country) — never plaintext content",
+      },
+      {
+        label: "Vercel geolocation headers",
+        url: "https://vercel.com/docs/edge-network/headers/request-headers",
+        note: "Source of the country/IP we sign — replaceable for self-hosted deployments",
+      },
     ],
   },
 ];

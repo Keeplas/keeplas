@@ -182,7 +182,9 @@ export default function MemorialVaultPage() {
                           {item.title}
                         </p>
                         <p className="text-label-md text-on-surface-variant mt-1">
-                          {item.hasFiles ? t("memorial.includesAttachments") : ""}
+                          {item.hasFiles
+                            ? t("memorial.includesAttachments")
+                            : ""}
                           {t("memorial.read")} →
                         </p>
                       </Link>

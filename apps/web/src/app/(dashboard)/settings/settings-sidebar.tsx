@@ -188,7 +188,9 @@ export function SettingsSidebar({
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-body-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors"
           >
             <Icon path={ICON_PATHS.book} className="w-4 h-4 shrink-0" />
-            <span className="flex-1 truncate">{t("sidebar.documentation")}</span>
+            <span className="flex-1 truncate">
+              {t("sidebar.documentation")}
+            </span>
             <Icon
               path={ICON_PATHS.openInNew}
               className="w-3 h-3 text-outline-variant shrink-0"

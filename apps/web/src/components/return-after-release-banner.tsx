@@ -136,9 +136,7 @@ export function ReturnAfterReleaseBanner() {
           className="shrink-0"
           onClick={() => setOpen(true)}
         >
-          {rotationInProgress
-            ? t("return.resumeCta")
-            : t("return.secureCta")}
+          {rotationInProgress ? t("return.resumeCta") : t("return.secureCta")}
         </Button>
       </div>
 
@@ -179,7 +177,9 @@ export function ReturnAfterReleaseBanner() {
                   value={progressPercent(status, progress.done, progress.total)}
                 />
                 <p className="text-label-md text-on-surface-variant">
-                  {STATUS_LABEL_KEYS[status] ? t(STATUS_LABEL_KEYS[status]) : ""}
+                  {STATUS_LABEL_KEYS[status]
+                    ? t(STATUS_LABEL_KEYS[status])
+                    : ""}
                   {status === "reencrypting" && progress.total > 0
                     ? ` (${progress.done}/${progress.total})`
                     : ""}

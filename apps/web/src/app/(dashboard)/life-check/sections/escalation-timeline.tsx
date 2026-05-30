@@ -5,7 +5,10 @@ import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { FREQUENCIES, type ChannelConfig, type Frequency } from "./constants";
 
-type Translator = (key: string, params?: Record<string, string | number>) => string;
+type Translator = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
 // Mirrors CHECK_IN_WINDOW_DAYS / REMINDER_DAYS in
 // packages/convex/life_check.ts. Keep in sync.
@@ -71,7 +74,9 @@ function contactsLabel(n: number, t: Translator): string {
 
 function trustedContactsLabel(n: number, t: Translator): string {
   return t(
-    n > 1 ? "timeline.trustedContactsPlural" : "timeline.trustedContactsSingular",
+    n > 1
+      ? "timeline.trustedContactsPlural"
+      : "timeline.trustedContactsSingular",
     { count: n },
   );
 }
@@ -168,7 +173,11 @@ function buildSteps(
 }
 
 function policyRecap(
-  { confirmationThreshold, confirmationWindowDays, fallbackBehavior }: ReleasePolicy,
+  {
+    confirmationThreshold,
+    confirmationWindowDays,
+    fallbackBehavior,
+  }: ReleasePolicy,
   t: Translator,
 ): string {
   const fallback =

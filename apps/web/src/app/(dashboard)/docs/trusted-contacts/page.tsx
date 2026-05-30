@@ -57,7 +57,9 @@ export default function TrustedContactsDocPage() {
             </p>
             <ul className="text-body-md text-on-primary-container space-y-1 pt-2">
               {TRUST_BULLETS.map((b) => (
-                <li key={b}>· {t(`trustedContacts.roles.trust.bullets.${b}`)}</li>
+                <li key={b}>
+                  · {t(`trustedContacts.roles.trust.bullets.${b}`)}
+                </li>
               ))}
             </ul>
           </article>
