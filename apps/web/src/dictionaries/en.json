@@ -1,0 +1,2649 @@
+{
+  "common": {
+    "language": "Language",
+    "phone": "Phone",
+    "email": "Email",
+    "phoneNumber": "Phone Number",
+    "emailAddress": "Email Address",
+    "password": "Password",
+    "resendCode": "Resend code",
+    "resendIn": "Resend code in {seconds}s",
+    "invalidCode": "Invalid or expired code.",
+    "codePlaceholder": "123456",
+    "learnMore": "Learn more",
+    "back": "Back"
+  },
+  "auth": {
+    "hero": {
+      "eyebrow": "The Digital Curator",
+      "titleLine1": "Secure Your",
+      "titleLine2": "Digital Legacy.",
+      "body": "Everything you cannot take with you, kept safe for the day you are no longer here. Encrypted end-to-end, and passed on to the people you choose when you no longer can.",
+      "encryptionStandard": "Encryption Standard",
+      "architecture": "Architecture",
+      "quantumSafe": "Quantum-Safe (FIPS 203)"
+    },
+    "login": {
+      "badge": "Identification Required",
+      "heading": "Welcome back, Curator",
+      "description": "Access your encrypted archives by verifying your credentials.",
+      "footerPrompt": "New Curator?",
+      "footerLabel": "Request Access",
+      "sendCode": "Send code",
+      "sending": "Sending...",
+      "unlock": "Unlock Vault",
+      "unlocking": "Unlocking...",
+      "emailCode": "Email code",
+      "whatsappCode": "WhatsApp code",
+      "lostAccess": "Lost access? 24 words",
+      "lostPhone": "Lost phone? 24 words",
+      "resetWords": "Reset with 24 words",
+      "phoneInvalid": "Please enter a valid phone number.",
+      "sendFailed": "Could not send the code. Try again.",
+      "resendFailed": "Could not resend the code. Try again in a moment.",
+      "invalidCredentials": "Invalid email or password.",
+      "noEmailAccount": "No account found for this email. Sign up to create one.",
+      "emailOtpHint": "This account signs in with an emailed code — no password.",
+      "protectedLink": "How is your data protected?",
+      "passkey": "Biometric Authorization",
+      "passkeyFailed": "Could not authenticate with your passkey."
+    },
+    "signup": {
+      "badge": "Zero-Knowledge Encryption",
+      "heading": "Create your sanctuary",
+      "description": "Enter your details to begin your digital legacy.",
+      "footerPrompt": "Already an owner?",
+      "footerLabel": "Access Vault",
+      "fullName": "Full Name",
+      "phoneOptional": "Phone (optional)",
+      "passwordMin": "Password must be at least 8 characters.",
+      "phoneInvalid": "Please enter a valid phone number.",
+      "startFailed": "Could not start signup. Try again.",
+      "createFailed": "Could not create account. Try again.",
+      "accountExists": "An account with this email already exists. Sign in instead.",
+      "verifyCode": "Verification Code",
+      "verifying": "Verifying...",
+      "confirmNumber": "Confirm Number",
+      "confirmEmail": "Confirm Email",
+      "initializing": "Initializing...",
+      "initializeVault": "Initialize Vault",
+      "whatsappConfirmation": "WhatsApp Confirmation",
+      "emailConfirmation": "Email Confirmation",
+      "confirmNumberHeading": "Confirm your number",
+      "confirmEmailHeading": "Confirm your email",
+      "phoneCodeSent": "We sent a 6-digit code to your WhatsApp at {phone}. Enter it below to activate your vault.",
+      "emailCodeSent": "We sent a 6-digit code to {email}. Enter it below to activate your vault.",
+      "wrongNumber": "Wrong number?",
+      "wrongEmail": "Wrong email?",
+      "startOver": "Start over",
+      "resendFailed": "Could not resend the code. Try again in a moment.",
+      "lockedEmail": "Locked — this is the email your inviter used to send you the invitation.",
+      "lockedPhone": "Locked — this is the number your inviter used to send you the invitation.",
+      "securityEyebrow": "Before you sign up · Quantum-safe end-to-end",
+      "securityText": "Your password lets you sign in. The 24 recovery words generated in the next step are what actually encrypt your vault, we never see them.",
+      "readHow": "Read how it works →",
+      "phoneHelp": "Used for WhatsApp verification and Life Check alerts. You can also reply to a Life Check on WhatsApp to confirm you are well.",
+      "phoneOnlyHelp": "We'll send your verification code and Life Check alerts to this WhatsApp number."
+    },
+    "onboarding": {
+      "steps": {
+        "identity": "Identity",
+        "recoveryPhrase": "Recovery Words",
+        "verification": "Verification",
+        "keyGeneration": "Secure Vault",
+        "passkey": "Biometrics"
+      },
+      "legalInfo": {
+        "badge": "Step 1 · Legal identity",
+        "heading": "Confirm who you are",
+        "description": "Your age determines legal capacity, and your country sets the inheritance jurisdiction that will apply to your vault. Both are recorded in the tamper-evident audit log so a court can later verify who you were when you set this up.",
+        "birthday": "Date of birth",
+        "birthdayPlaceholder": "Select your date of birth",
+        "country": "Country of residence",
+        "saving": "Saving…",
+        "securing": "Securing your session…",
+        "submit": "Confirm and continue",
+        "invalidDate": "Please pick a valid date.",
+        "minAge": "You must be at least 18 to use Keeplas.",
+        "saveFailed": "Could not save your information."
+      },
+      "recoveryPhrase": {
+        "badge": "Cryptographic Foundation",
+        "heading": "Master Recovery Words",
+        "copyAll": "Copy all",
+        "copied": "Copied!",
+        "download": "Download",
+        "generatingPdf": "Generating PDF…",
+        "generating": "Generating your Recovery Words",
+        "warningTitle": "Absolute Recovery Authority",
+        "warningBody": "These words are the only way to recover your vault. Keep them offline and safe. Anyone with access to these words possesses full authority over your digital legacy. We recommend writing them on paper and storing in a secure, fireproof location.",
+        "offlineTitle": "Offline Storage",
+        "offlineBody": "Never store these words digitally — no screenshots, cloud notes, or email drafts.",
+        "legacyTitle": "Legacy Access",
+        "legacyBody": "Consider sharing the location of these words with a trusted beneficiary.",
+        "verificationTitle": "Verification",
+        "verificationBody": "We will ask you to verify these words to confirm your backup is secure.",
+        "confirmLabel": "I have written down my 24 Recovery Words and stored them in a safe place. I understand that losing these words means I cannot recover my vault.",
+        "continue": "I saved my words — continue",
+        "pdfTitle": "Keeplas — Master Recovery Words",
+        "pdfAccountLabel": "Account",
+        "pdfWarning": "These 24 words are the only way to recover your vault. Keep this document offline and in a secure, fireproof location. Anyone with these words has full authority over your digital legacy.",
+        "pdfCopyLine": "Copy-paste line"
+      },
+      "verification": {
+        "back": "Back to Recovery Words",
+        "badge": "Backup Confirmation",
+        "heading": "Verify your Recovery Words",
+        "description": "To make sure you saved your words correctly, enter the 3 words below from your Recovery Words. This confirms your backup is complete and you will be able to recover your vault if needed.",
+        "whyTitle": "Why is this important?",
+        "whyBodyBefore": "These 24 words are the",
+        "whyKeyTerm": "only key",
+        "whyBodyAfter": "that encrypts your vault — we never see them. Your password just authenticates you and can be reset with these same 24 words. But the words themselves cannot be reset: only your trusted contacts can recover them later via shared shards. Save them somewhere safe now.",
+        "wordLabel": "{ordinal} word",
+        "wordPlaceholder": "Enter the {ordinal} word",
+        "mismatch": "The {ordinal} word does not match. Please check and try again.",
+        "verifying": "Verifying...",
+        "verifyContinue": "Verify and continue",
+        "seeAgain": "I need to see my Recovery Words again",
+        "error": "An error occurred. Please try again."
+      },
+      "keyGeneration": {
+        "phases": {
+          "derivingRoot": "Deriving your Root Key from your 24 words...",
+          "splittingShards": "Creating recovery fragments...",
+          "wrappingMasterKey": "Sealing your Master Key...",
+          "storing": "Securing your vault...",
+          "complete": "Vault secured!",
+          "error": "An error occurred"
+        },
+        "badge": "Securing Vault",
+        "headingComplete": "Your vault is ready",
+        "heading": "Setting up your protection",
+        "descriptionComplete": "Your Master Key is sealed by your 24 words. You can now start adding items to your vault.",
+        "description": "Your keys are derived and sealed entirely on your device. We never see your phrase.",
+        "redirecting": "Redirecting to your hub...",
+        "tryAgain": "Try again",
+        "genericError": "Key generation failed. Please try again.",
+        "thresholdHeading": "Recovery threshold",
+        "thresholdDescription": "How many trusted contacts must agree to reconstruct your vault when you become unreachable. Lower = easier recovery, higher = stronger against collusion.",
+        "thresholdOf": "of 4",
+        "thresholdEasiestStrong": "Easiest recovery.",
+        "thresholdEasiest": "Any two contacts can collaborate. Recommended unless your contacts face a high collusion risk.",
+        "thresholdBalancedStrong": "Balanced.",
+        "thresholdBalanced": "Any three contacts must collaborate. Resistant to single-pair collusion.",
+        "thresholdContinue": "Continue with {value}-of-4"
+      },
+      "passkey": {
+        "badge": "Optional · Faster sign in",
+        "headingDone": "Passkey ready",
+        "heading": "Sign in with your face",
+        "descriptionDone": "You can now unlock Keeplas with your device biometrics.",
+        "description": "Use Face ID, Touch ID, or your device biometrics next time you sign in. Your password still works as a backup.",
+        "unsupportedBefore": "Passkeys are not supported on this browser. You can set this up later from",
+        "unsupportedTerm": "Settings · Security Center",
+        "unsupportedAfter": "on a compatible device.",
+        "enable": "Enable biometric sign in",
+        "redirecting": "Redirecting...",
+        "skip": "Skip for now",
+        "registerFailed": "Could not register your passkey."
+      }
+    },
+    "otp": {
+      "heading": "Confirm it's you",
+      "subtitle": "Enter the 6-digit code to finish signing in.",
+      "subtitleChannel": "Enter the 6-digit code we sent to {channel} to finish signing in.",
+      "noChannel": "No verification channel available for this account.",
+      "sendFailed": "Could not send code.",
+      "verifyingSession": "Verifying session",
+      "verifyFailed": "Verification failed.",
+      "resent": "A new code is on its way.",
+      "resendFailed": "Could not resend the code.",
+      "codeLabel": "6-digit code",
+      "verify": "Verify",
+      "sending": "Sending…",
+      "resend": "Didn't get it? Resend code",
+      "useRecovery": "Can't receive the code? Use your recovery phrase",
+      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
+      "signOut": "Sign out"
+    },
+    "totp": {
+      "verifyingSession": "Verifying session",
+      "verifyFailed": "Verification failed.",
+      "heading": "Two-factor authentication",
+      "subtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
+      "codeLabel": "6-digit code",
+      "verify": "Verify",
+      "useRecovery": "Lost your phone? Use your recovery phrase",
+      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
+      "signOut": "Sign out"
+    },
+    "recovery": {
+      "notConfigured": "Recovery is not configured for this account.",
+      "allWords": "Please enter all 24 words of your recovery phrase.",
+      "validPhone": "Enter a valid phone number for your account.",
+      "phoneFailed": "Recovery failed. Check that your number and 24 words match.",
+      "enterEmail": "Enter the email for your account.",
+      "emailFailed": "Recovery failed. Check that your email and 24 words match.",
+      "passwordMin": "Password must be at least 8 characters.",
+      "passwordsMismatch": "Passwords do not match.",
+      "successTitle": "Password reset successful",
+      "successBody": "Your password was reset. You will be redirected to login. Your vault contents remain encrypted by your 24 words and stay safe.",
+      "heading": "Recover access with your 24 words",
+      "subtitle": "Email accounts reset their password; phone accounts regain access directly. Either way your encrypted vault is untouched — your 24 words remain the crypto root.",
+      "phraseLabel": "Recovery phrase (24 words)",
+      "phrasePlaceholder": "word1 word2 word3 ...",
+      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
+      "phraseHint2": "Words never leave this device — only a derived verifier is sent.",
+      "emailOtpHint": "This account signs in with an emailed code — your 24 words restore access directly, no new password needed.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "recoverAccess": "Recover access",
+      "resetPassword": "Reset password",
+      "backToLogin": "Back to login"
+    },
+    "phraseRecovery": {
+      "verifyingSession": "Verifying session",
+      "notConfiguredTitle": "Recovery not configured",
+      "backToCode": "Back to code entry",
+      "useHeading": "Use your recovery phrase",
+      "allWords": "Please enter all 24 words of your recovery phrase.",
+      "notConfigured": "Recovery is not configured for this account.",
+      "recoveryFailed": "Recovery failed.",
+      "phraseLabel": "Recovery phrase",
+      "phrasePlaceholder": "word1 word2 word3 ...",
+      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
+      "phraseHint2": "The phrase never leaves your device — only a derived verifier is sent.",
+      "otp": {
+        "notConfiguredBody": "This account never bound a recovery phrase. Contact support if you cannot receive the login code.",
+        "subtitle": "Paste the 24 words you saved during onboarding to finish signing in on this device.",
+        "submit": "Unlock this device"
+      },
+      "totp": {
+        "notConfiguredBody": "This account never bound the recovery phrase to its authenticator. Contact support if you cannot access your authenticator app.",
+        "subtitle": "Paste the 24 words you saved during onboarding. Two-factor authentication will be disabled and you can set it up again from settings.",
+        "submit": "Reset two-factor"
+      }
+    }
+  },
+  "chrome": {
+    "layout": {
+      "unlockingVault": "Unlocking your vault"
+    },
+    "nav": {
+      "hub": "Hub",
+      "vault": "Digital Vault",
+      "trustedCircle": "Trusted Circle",
+      "continuityProtocol": "Continuity Protocol",
+      "sharedWithMe": "Shared with me",
+      "settings": "Settings",
+      "documentation": "Documentation",
+      "goToHub": "Go to Hub",
+      "openSettings": "Open settings"
+    },
+    "mobileNav": {
+      "hub": "Hub",
+      "vault": "Vault",
+      "trust": "Trust"
+    },
+    "account": {
+      "curator": "Curator",
+      "secureSession": "Secure session",
+      "userAlt": "User"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Mark all as read",
+      "close": "Close notifications",
+      "empty": "No notifications yet"
+    },
+    "fab": {
+      "addEntry": "Add new entry"
+    },
+    "unlock": {
+      "loadingVault": "Loading vault",
+      "unlockingVault": "Unlocking vault",
+      "checkingDeviceUnlock": "Checking device unlock",
+      "couldNotUnlock": "Could not unlock",
+      "authCancelled": "Authentication cancelled",
+      "enterAll24": "Please enter all 24 words",
+      "wrongPhrase": "Wrong recovery phrase — vault could not be decrypted",
+      "phraseCouldNotUnlock": "Recovery phrase could not unlock the vault",
+      "heading": "Unlock vault",
+      "subheading": "Your vault is encrypted on this device. Choose how to unlock.",
+      "noDeviceUnlock": "No device unlock set up yet on this device.",
+      "use24Words": "Use 24 recovery words",
+      "pinPlaceholder": "At least {min} digits",
+      "unlockButton": "Unlock",
+      "back": "Back",
+      "phraseLabel": "Enter your 24 words",
+      "phraseHint": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
+      "unlockWithWords": "Unlock with recovery words",
+      "legacyTitle": "Account needs re-keying",
+      "legacyBody": "Your vault was secured with a legacy key format that is no longer supported. To restore zero-knowledge access, your account must be re-keyed with your 24 recovery words. Please contact support to migrate this account.",
+      "unavailableSuffix": "(unavailable on this device)",
+      "methodPin": "PIN",
+      "methodBiometric": "Biometric",
+      "methodHardwareKey": "Hardware key"
+    },
+    "emailVerify": {
+      "invalidEmail": "Enter a valid email address",
+      "couldNotSend": "Could not send verification code.",
+      "enterCode": "Enter the 6-digit code",
+      "verificationFailed": "Verification failed.",
+      "couldNotResend": "Could not resend code.",
+      "titleChange": "Change your email",
+      "titleAdd": "Add an email",
+      "descChange": "We'll email a 6-digit code to your new address. Confirm it to replace your current email — sign-ins via the old address will stop working.",
+      "descAdd": "We will email you a 6-digit code. Confirm it to add this email — you can then sign in with an emailed code, no password.",
+      "emailLabel": "Email address",
+      "cancel": "Cancel",
+      "sending": "Sending…",
+      "sendCode": "Send code",
+      "codeLabel": "6-digit code",
+      "sentTo": "Sent to {email}. The code expires in 10 minutes.",
+      "resendIn": "Resend code in {seconds}s",
+      "resendCode": "Resend code",
+      "changeEmail": "Change email",
+      "verifying": "Verifying…",
+      "verify": "Verify"
+    },
+    "phoneVerify": {
+      "invalidPhone": "Enter a valid phone number",
+      "couldNotSend": "Could not send verification code.",
+      "enterCode": "Enter the 6-digit code",
+      "verificationFailed": "Verification failed.",
+      "couldNotResend": "Could not resend code.",
+      "titleChange": "Change your WhatsApp number",
+      "titleAdd": "Verify your WhatsApp number",
+      "descChange": "We'll send a 6-digit code to your new number on WhatsApp. Confirm it to replace your current number — sign-ins via the old one will stop working.",
+      "descAdd": "We will send a 6-digit code to your WhatsApp. Enter it below to confirm ownership of this number.",
+      "phoneLabel": "WhatsApp number",
+      "cancel": "Cancel",
+      "sending": "Sending…",
+      "sendCode": "Send code",
+      "codeLabel": "6-digit code",
+      "sentTo": "Sent to {phone}. The code expires in 10 minutes.",
+      "resendIn": "Resend code in {seconds}s",
+      "resendCode": "Resend code",
+      "changeNumber": "Change number",
+      "verifying": "Verifying…",
+      "verify": "Verify"
+    },
+    "recorder": {
+      "errorPermission": "Permission refused. Enable {devices} access in your browser settings.",
+      "errorNotFound": "No {devices} detected on this device.",
+      "errorBusy": "{device} is busy in another app.",
+      "errorGeneric": "Unable to access capture devices.",
+      "devicesCameraMic": "camera and microphone",
+      "devicesCameraOrMic": "camera or microphone",
+      "deviceMic": "microphone",
+      "deviceCameraCapitalized": "Camera",
+      "deviceMicCapitalized": "Microphone",
+      "notAvailable": "Media capture is not available in this browser.",
+      "deviceNotReady": "Capture device is not ready yet. Please wait.",
+      "notSupported": "Recording is not supported in this browser.",
+      "initFailed": "MediaRecorder initialization failed.",
+      "subPreparing": "Preparing capture device…",
+      "subUnavailable": "Capture unavailable. Adjust permissions and retry.",
+      "subRecording": "Recording — {elapsed} / max {max}",
+      "subPreview": "Preview — {duration}",
+      "subIdle": "Encrypted on your device. Max {max}.",
+      "titleAudio": "Voice recording",
+      "titleVideo": "Video recording",
+      "cancelRecording": "Cancel recording",
+      "tryAgain": "Try again",
+      "turningOnCamera": "Turning on camera…",
+      "enablingMic": "Enabling microphone…",
+      "statusRecording": "Recording",
+      "statusLivePreview": "Live preview",
+      "statusMicLive": "Mic live",
+      "timeLeft": "{time} left",
+      "cancel": "Cancel",
+      "startRecording": "Start recording",
+      "stop": "Stop",
+      "reRecord": "Re-record",
+      "attachToVault": "Attach to vault"
+    }
+  },
+  "hub": {
+    "loading": "Loading Hub",
+    "title": "Hub",
+    "subtitle": {
+      "line1": "Your central command for protected legacy",
+      "line2": "and continuity readiness."
+    },
+    "jumpToPriorityActions": "Jump to priority actions",
+    "actionsRequired": "Actions required",
+    "score": {
+      "strong": "Strong Protection",
+      "partial": "Partial Coverage",
+      "actionRequired": "Action Required"
+    },
+    "centerNode": {
+      "title": "Your Legacy",
+      "subtitle": "Central Node"
+    },
+    "nodes": {
+      "empty": "Empty",
+      "protected": "Protected",
+      "assets": {
+        "title": "Assets",
+        "empty": "No assets recorded yet."
+      },
+      "contacts": {
+        "title": "Contacts",
+        "empty": "No guardians linked yet.",
+        "guardianLinked": "{count} Primary Guardian Linked",
+        "guardiansLinked": "{count} Primary Guardians Linked"
+      },
+      "directives": {
+        "title": "Directives",
+        "empty": "No directives recorded yet."
+      },
+      "documents": {
+        "title": "Documents",
+        "empty": "No documents stored yet."
+      }
+    },
+    "priorityActions": "Priority Actions",
+    "hints": {
+      "add_item": "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
+      "invite_contact": "Trust contacts are the guardians who can help recover your vault. Invite someone you trust; they accept with their own Keeplas key.",
+      "distribute_shards": "Split your master key into encrypted shards and seal one to each trust contact. Recovery needs a threshold of shards, so no single contact can unlock your vault alone. Re-distribute after adding a new guardian.",
+      "life_check": "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
+      "release_policy": "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable, how long they have, and whether to release anyway or keep everything sealed if no one confirms.",
+      "welcome_message": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
+      "two_factor": "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
+      "verify_whatsapp": "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
+      "more_categories": "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out."
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "viewAll": "View all",
+      "empty": "No items in your vault yet.",
+      "addFirst": "Add your first item"
+    },
+    "reflect": {
+      "title": "Reflect & Prepare",
+      "subtitle": "A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond."
+    },
+    "terminate": {
+      "hero": {
+        "line1": "Irreversible",
+        "line2": "Destruction",
+        "description": "Once destroyed, your encrypted archive cannot be reconstructed. There is no backup, no admin override, no recovery path. Zero-knowledge means zero recovery."
+      },
+      "stats": {
+        "archiveStatus": "Archive status",
+        "active": "Active",
+        "empty": "Empty",
+        "encryptionKey": "Encryption key",
+        "heldByYou": "Held only by you"
+      },
+      "heading": "Terminate Your Continuity Plan?",
+      "description": "This wipes the vault, every protocol, contact, message, audit entry and the user record itself.",
+      "warning": {
+        "label": "⚠ Warning",
+        "body": "This action cannot be undone. We recommend exporting your Recovery Kit and pausing Life Check first if you only need a temporary stop."
+      },
+      "cards": {
+        "vaultData": "Vault data",
+        "encryptedItems": "{count} encrypted items",
+        "protocols": "Protocols",
+        "protocolsValue": "Life Check, Scenario, Messages"
+      },
+      "confirmLabel": {
+        "before": "Type",
+        "after": "to confirm"
+      },
+      "submitting": "Terminating...",
+      "confirm": "Confirm Permanent Deletion",
+      "keep": "Keep My Plan",
+      "requestId": "Request ID: {id}",
+      "errors": {
+        "typeDelete": "Type DELETE exactly to confirm.",
+        "failed": "Failed to terminate plan."
+      }
+    }
+  },
+  "lifeCheck": {
+    "toasts": {
+      "saveConfigError": "Failed to save configuration",
+      "travelToggleError": "Failed to toggle travel mode",
+      "checkInTitle": "Check-in confirmed",
+      "checkInDescription": "Your countdown has been reset.",
+      "validateError": "Failed to validate",
+      "postponeError": "Failed to postpone",
+      "toggleActiveError": "Failed to toggle Life Check"
+    },
+    "page": {
+      "intro": "Keeplas periodically asks you to confirm you're well. If you stop responding, your trusted contacts confirm you're unavailable before your vault is released to them. Pause everything from",
+      "introLink": "Settings → Continuity Protocol"
+    },
+    "nextCheckIn": {
+      "label": "Next check-in",
+      "description": "We'll ask you to confirm you're well. Only your explicit reply resets the countdown — using the app doesn't.",
+      "reset": "I'm well — reset countdown"
+    },
+    "activeCycle": {
+      "title": "Check-in needed",
+      "runningDescription": "Confirm you're well — tap below, click the button in your email, or reply on WhatsApp. We'll keep reminding you until the window closes.",
+      "escalatingDescription": "We're confirming your status with your trusted contacts.",
+      "imWell": "I'm well",
+      "postpone48h": "Postpone 48h"
+    },
+    "history": {
+      "title": "Check History",
+      "status": {
+        "running": "Running",
+        "validated": "Validated",
+        "escalating": "Escalating",
+        "triggered": "Triggered",
+        "cancelled": "Cancelled"
+      },
+      "method": {
+        "tap": "App confirmation",
+        "email_link": "Email confirmation",
+        "auto": "Auto-validated"
+      }
+    },
+    "channels": {
+      "title": "Check-in channels",
+      "help": "Channels Keeplas uses to reach you for a check-in — all sent together, not in sequence. Disable any you don't have. Note: only the email button and a WhatsApp reply can confirm you're well.",
+      "comingSoon": "Coming soon",
+      "notVerified": "Not verified",
+      "noEmail": "No email",
+      "noEmailLinked": "No email is linked to this account.",
+      "verify": "Verify",
+      "items": {
+        "whatsapp": {
+          "label": "WhatsApp Message",
+          "description": "Reply to confirm you're well"
+        },
+        "push": {
+          "label": "App Push Notification",
+          "description": "Encrypted mobile ping — tap to confirm"
+        },
+        "email": {
+          "label": "Email Verification",
+          "description": "One-click button to confirm you're well"
+        }
+      }
+    },
+    "countdown": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds"
+    },
+    "frequency": {
+      "title": "Check-in cadence",
+      "help": "How often Keeplas asks you to confirm you're well. Shorter = more frequent check-ins; longer = fewer interruptions but slower release.",
+      "description": "How often Keeplas asks you to confirm you're well. Only an explicit reply — in-app tap, email button, or WhatsApp — resets the countdown; using the app does not.",
+      "unit": {
+        "test": "Seconds",
+        "weekly": "Days",
+        "monthly": "Days",
+        "quarterly": "Days"
+      },
+      "tag": {
+        "test": "Test",
+        "weekly": "Active",
+        "monthly": "Recommended",
+        "quarterly": "Relaxed"
+      }
+    },
+    "timeline": {
+      "title": "Escalation Protocol",
+      "help": "Every cadence period Keeplas asks you to confirm you're well. You then have a 15-day window with reminders to reply — by tapping in the app, clicking the email button, or replying on WhatsApp. Only an explicit reply resets the countdown; using the app does not. If the whole window passes in silence, Keeplas asks your trusted contacts to confirm you're unavailable before anything is released.",
+      "subtitle": "What happens after a missed check-in.",
+      "cadence": "Keeplas asks you to confirm every {cadence}.",
+      "cadenceFallback": "30 days",
+      "noChannelInline": "no channel",
+      "contactsSingular": "{count} contact",
+      "contactsPlural": "{count} contacts",
+      "trustedContactsSingular": "{count} trusted contact",
+      "trustedContactsPlural": "{count} trusted contacts",
+      "travelPaused": "Protocol paused — travel mode is on. No check-ins go out while it's active.",
+      "travelPausedUntil": "Protocol paused — travel mode is on until {date}. No check-ins go out while it's active.",
+      "footer": "Keeplas uses zero-knowledge encryption. Only an explicit reply from you — tap, email button, or WhatsApp — pauses the protocol.",
+      "steps": {
+        "sent": {
+          "title": "Check-in sent",
+          "description": "{channels} go out together. Confirm with one tap, the email button, or a WhatsApp reply.",
+          "descriptionNoChannel": "No channel enabled — turn one on so we can reach you."
+        },
+        "reminder": {
+          "title": "Reminder",
+          "titleFinal": "Final reminder",
+          "description": "Still no reply — Keeplas reaches out again on every channel."
+        },
+        "protocolBegins": {
+          "title": "Continuity protocol begins",
+          "description": "No reply across the whole window. Keeplas now asks your trusted contacts to confirm you're unavailable — nothing is released yet.",
+          "help": "The check-in window has fully elapsed with no reply from you. Your trusted contacts are now asked to confirm you're unavailable. Nothing is decrypted or released at this point.",
+          "badge": "Trusted contacts notified"
+        },
+        "contactsConfirm": {
+          "dayLabel": "Then",
+          "title": "Trusted contacts confirm",
+          "description": "At least {contacts} must confirm they can't reach you, within {days} days.",
+          "help": "Set in Release policy: \"Contacts that must confirm you're unavailable\" ({threshold}) and \"Days they have to confirm\" ({days} days). The contacts have that long to reach the required number."
+        },
+        "lastChance": {
+          "title": "Last chance to cancel",
+          "description": "Once enough confirm, you still have {hours} hours to cancel before anything is released.",
+          "help": "A fixed {hours}-hour safety window — it is NOT the \"Days they have to confirm\" setting. It starts the moment enough contacts confirm, and confirming you're well (tap, email, or WhatsApp) during it cancels the release."
+        },
+        "released": {
+          "dayLabel": "Outcome",
+          "title": "Vault released",
+          "descriptionAnyway": "Once {contacts} confirm, your vault is released to them — and released anyway if the window passes without any confirmation.",
+          "descriptionAbort": "Once {contacts} confirm, your vault is released to them. If no one confirms in time, nothing is released.",
+          "help": "Controlled by the \"Release anyway if no one confirms\" toggle in Release policy. On (recommended): release even if none confirm once the window passes. Off: release only if your contacts confirm."
+        }
+      },
+      "recap": {
+        "text": "{contacts} to confirm · {days}-day window · {fallback}",
+        "fallbackAnyway": "released anyway after the window",
+        "fallbackAbort": "nothing released without confirmation"
+      }
+    },
+    "welcome": {
+      "title": "Welcome message",
+      "help": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
+      "description": "Greet your trusted contacts before they read what you left them.",
+      "newMessage": "New message",
+      "loading": "Loading…",
+      "empty": "No welcome message yet. Contacts will land on a list of items with no context.",
+      "everyone": "Everyone",
+      "noOneYet": "No one yet",
+      "kindWithRecording": "Text + recording",
+      "kindText": "Text",
+      "targetingPrefix": "· For {targeting}",
+      "deleteAria": "Delete {title}",
+      "deleteTitle": "Delete \"{title}\"?",
+      "deleteDescription": "Contacts will no longer see this welcome message.",
+      "deleteConfirm": "Delete",
+      "deleteError": "Failed to delete introduction"
+    },
+    "overview": {
+      "title": "Who receives what",
+      "description": "If your Life Check is confirmed, each trusted contact gets read access to the items you've shared with them.",
+      "empty": "Nothing is set to release yet. Share vault items with your contacts to build your legacy.",
+      "readOnly": "Read-only",
+      "itemCountSingular": "{count} item",
+      "itemCountPlural": "{count} items",
+      "role": {
+        "family": "Family",
+        "friend": "Friend",
+        "lawyer": "Legal",
+        "doctor": "Medical",
+        "other": "Contact"
+      }
+    },
+    "policy": {
+      "title": "Release policy",
+      "help": "If you stop responding to check-ins, your trusted contacts are asked to confirm you're unavailable before anything is released. Set how many must confirm, how long they have, and what happens if none do.",
+      "description": "The human safeguard before your vault is ever released.",
+      "thresholdLabel": "Contacts that must confirm you're unavailable",
+      "thresholdHelp": "The minimum number of trusted contacts who must independently confirm they can't reach you before your vault can be released. A higher number guards against any single contact acting alone.",
+      "windowLabel": "Days they have to confirm",
+      "windowHelp": "How long your trusted contacts have to reach the required number once Keeplas alerts them. This is separate from the fixed 72-hour grace window you get to cancel the release after they confirm.",
+      "windowDays": "{count} days",
+      "releaseAnywayLabel": "Release anyway if no one confirms",
+      "releaseAnywayOn": "Recommended: if no contact confirms, your vault is still released after the window, so your recipients are reached.",
+      "releaseAnywayOff": "If no contact confirms, nothing is released.",
+      "saveError": "Failed to save release policy"
+    },
+    "travel": {
+      "title": "Travel Mode",
+      "help": "Pauses Life Check escalation while you're off-grid. Conditional messages remain encrypted and untriggered. Capped at 180 days for safety.",
+      "description": "Suspend Life Check for up to 180 days when traveling.",
+      "active": "Travel mode active",
+      "activeUntil": "Travel mode active until {date}",
+      "disable": "Disable Travel Mode",
+      "returnDate": "Return date",
+      "returnDatePlaceholder": "Pick your return date",
+      "enable": "Enable"
+    },
+    "controls": {
+      "toggleError": "Failed to update Life Check",
+      "travelError": "Failed to toggle Travel Mode",
+      "statusTravel": "Travel Mode",
+      "statusActive": "Active",
+      "statusPaused": "Paused",
+      "notConfigured": "Life Check is not configured yet. Visit",
+      "notConfiguredLink": "Life Check",
+      "notConfiguredSuffix": "to set it up.",
+      "pauseDescription": "Pause your Life Check entirely — no check-ins, no release. Status:"
+    },
+    "badge": {
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "travel": "Travel Mode",
+        "unconfigured": "Not configured"
+      },
+      "resumes": "Resumes {date}",
+      "helpLabel": "Life Check status help",
+      "help": {
+        "intro": "Your Life Check status.",
+        "activeLabel": "Active",
+        "activeText": "Check-ins run on schedule.",
+        "pausedLabel": "Paused",
+        "pausedText": "Indefinite suspension — nothing runs until you resume.",
+        "travelLabel": "Travel Mode",
+        "travelText": "Same as Paused but with a return date that auto-resumes everything. Tap the badge to manage."
+      }
+    },
+    "return": {
+      "phraseError": "Enter all 24 words of your recovery phrase.",
+      "successTitle": "Vault secured",
+      "successDescription": "Access was revoked and your vault was re-keyed.",
+      "bannerTitleResume": "Finish securing your vault",
+      "bannerTitleReleased": "Your vault was released",
+      "bannerBodyResume": "A re-keying was started but not finished. Resume it to fully retire the old keys.",
+      "bannerBodyReleased": "Trusted contacts were granted access. If you are back, revoke that access and re-key your vault. This protects everything from now on — it cannot recover what was already read.",
+      "resumeCta": "Resume re-keying",
+      "secureCta": "I'm back — secure my vault",
+      "dialogTitle": "Secure my vault",
+      "dialogDescription": "Enter your 24-word recovery phrase. We'll revoke the released access and generate a fresh master key, re-encrypting every item. Items a contact already opened during the release cannot be taken back — this secures everything going forward.",
+      "phrasePlaceholder": "Paste or type your 24 words…",
+      "cancel": "Cancel",
+      "working": "Securing…",
+      "submit": "Revoke & re-key",
+      "status": {
+        "validating": "Verifying your recovery phrase…",
+        "rotatingKeys": "Generating a new master key…",
+        "redistributing": "Re-sealing recovery shards…",
+        "reencrypting": "Re-encrypting your vault…",
+        "finalizing": "Finalizing…",
+        "done": "Done"
+      }
+    }
+  },
+  "settings": {
+    "header": {
+      "openNav": "Open settings navigation",
+      "close": "Close settings",
+      "identity": {
+        "title": "Identity",
+        "description": "Update your account information and how others see you on the platform."
+      },
+      "security": {
+        "title": "Security Center",
+        "description": "Social recovery, Shamir shards, biometrics and hash-chained audit log."
+      },
+      "preferences": {
+        "title": "Preferences",
+        "description": "Localization and alert preferences for your legacy system."
+      },
+      "recoveryKit": {
+        "title": "Recovery Kit",
+        "description": "Export the printable kit that rebuilds your vault if access is lost."
+      },
+      "subscription": {
+        "title": "Subscription",
+        "description": "Plans, billing, and the lifetime tier for your legacy."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "description": "Questions, feedback or security concerns — our concierge team is here to help."
+      },
+      "fallback": {
+        "title": "Settings",
+        "description": "Configure your digital sanctuary."
+      }
+    },
+    "sidebar": {
+      "userAlt": "User",
+      "defaultName": "Curator",
+      "secureSession": "Secure session",
+      "closeNav": "Close navigation",
+      "documentation": "Documentation",
+      "contact": "Contact Us",
+      "signOut": "Sign Out",
+      "groups": {
+        "account": "Account",
+        "security": "Security",
+        "plansBilling": "Plans & Billing"
+      },
+      "items": {
+        "identity": "Identity",
+        "preferences": "Preferences",
+        "securityCenter": "Security Center",
+        "recoveryKit": "Recovery Kit",
+        "continuityProtocol": "Continuity Protocol",
+        "usage": "Usage",
+        "subscription": "Subscription"
+      }
+    },
+    "preferences": {
+      "saveError": "Failed to save preferences",
+      "localization": {
+        "title": "Platform Localization",
+        "description": "Define how your legacy is presented across global regions."
+      },
+      "interfaceLanguage": "Interface Language",
+      "chooseLanguage": "Choose language",
+      "languageUpcoming": "{label} — upcoming",
+      "timezone": "Timezone",
+      "chooseTimezone": "Choose timezone",
+      "currencyDisplay": "Currency Display",
+      "chooseCurrency": "Choose currency",
+      "alerts": {
+        "title": "Alert Preferences",
+        "description": "Control the frequency of Life Checks and vault synchronization alerts."
+      },
+      "notifications": {
+        "lifeCheckReminders": {
+          "label": "Life Check Reminders",
+          "description": "Bi-weekly proof-of-life verification."
+        },
+        "vaultAccessAlerts": {
+          "label": "Vault Access Alerts",
+          "description": "Instant push notification on login."
+        },
+        "newsletterUpdates": {
+          "label": "Newsletter & Updates",
+          "description": "Occasional legacy planning insights."
+        }
+      },
+      "saved": "Preferences saved ✓",
+      "saving": "Saving...",
+      "save": "Save Preferences"
+    },
+    "contact": {
+      "submitError": "Failed to submit your message.",
+      "success": {
+        "title": "Message sent",
+        "intro": "Our concierge team will reply at",
+        "outro": "within one hour.",
+        "sendAnother": "Send another message"
+      },
+      "form": {
+        "replyTo": "Reply-to email or WhatsApp",
+        "topic": "Topic",
+        "topicPlaceholder": "Select a topic",
+        "subject": "Subject",
+        "subjectPlaceholder": "e.g., Cannot complete life check",
+        "message": "Message",
+        "messagePlaceholder": "Share as much detail as possible. Do not include your recovery phrase.",
+        "seedWarning": "Never share your seed phrase with anyone, including our team.",
+        "sending": "Sending...",
+        "send": "Send Message",
+        "responseTime": "Typical response time: within one hour."
+      },
+      "topics": {
+        "general": "General question",
+        "security": "Security concern",
+        "billing": "Billing & subscription",
+        "recovery": "Recovery & vault access",
+        "feature_request": "Feature request",
+        "other": "Other"
+      }
+    },
+    "subscription": {
+      "title": "Legacy Architecture. Secured Forever.",
+      "description": "Choose the protection level that fits your continuity plan. Both tiers run the same zero-knowledge encryption — only the surface area changes.",
+      "popular": "Popular",
+      "footer": "Pricing displayed in USD. Switching plans never deletes your vault.",
+      "priceSuffix": {
+        "forever": "/forever",
+        "oneTime": "one-time"
+      },
+      "plans": {
+        "free": {
+          "name": "Free",
+          "tagline": "Essential digital storage.",
+          "cta": "Start Free"
+        },
+        "lifetime": {
+          "name": "Lifetime",
+          "tagline": "Everything you need, forever, in a single payment.",
+          "cta": "Get Lifetime Access"
+        }
+      },
+      "features": {
+        "freeVault": "100 MB Zero-Knowledge Vault",
+        "basicLifeCheck": "Basic Life Check (Monthly)",
+        "oneEmergencyContact": "1 Emergency Contact",
+        "emergencyCardDigital": "Emergency Card (Digital)",
+        "dataHostingCountry": "Data Hosting Country Choice (Coming Soon)",
+        "notarialCompliance": "Notarial & Legal Compliance (Coming Soon)",
+        "lifetimeVault": "10 GB Zero-Knowledge Vault",
+        "moreStorageAddon": "More Storage Available as Add-on",
+        "fullScenarioEngine": "Full Scenario Engine",
+        "fiveEmergencyContacts": "5 Emergency Contacts",
+        "prioritySocialRecovery": "Priority Social Recovery",
+        "emergencyCardPhysical": "Emergency Card (Physical)",
+        "videoLegacyMessages": "Video Legacy Messages",
+        "weeklyLifeCheck": "Weekly Life Check",
+        "earlyAdopterBadge": "Early Adopter Badge",
+        "prioritySupport": "Priority Support"
+      }
+    },
+    "usage": {
+      "title": "Resources & Usage",
+      "description": "Monitor the encrypted storage and items consumed by your vault. When you approach your plan's capacity, upgrade to keep adding items without interruption.",
+      "encryptedStorage": "Encrypted Storage",
+      "ofQuota": "of {quota}",
+      "remainingPrefix": "{amount} remaining on the",
+      "planNameFree": "Free",
+      "remainingSuffix": "plan",
+      "percentUsed": "{percent}% used",
+      "nearLimit": "You're close to your storage limit. Upgrade to Lifetime for 10 GB of encrypted capacity and additional continuity tools.",
+      "upgradePlan": "Upgrade plan",
+      "cards": {
+        "activeItems": {
+          "label": "Active Items",
+          "hint": "Non-archived vault items"
+        },
+        "encryptedFiles": {
+          "label": "Encrypted Files",
+          "hint": "Blobs stored in your vault"
+        },
+        "categoriesUsed": {
+          "label": "Categories Used",
+          "hint": "Distinct categories populated"
+        }
+      },
+      "itemsByCategory": "Items by Category",
+      "filesByType": "Files by Type",
+      "total": "{count} total",
+      "noItems": "No items yet. Start building your vault from the Hub.",
+      "noFiles": "No encrypted files attached yet.",
+      "categories": {
+        "personal_document": "Personal Documents",
+        "financial_asset": "Financial Assets",
+        "digital_asset": "Digital Assets",
+        "health_directive": "Health Directives",
+        "legal_document": "Legal Documents",
+        "business_continuity": "Business Continuity",
+        "conditional_message": "Conditional Messages",
+        "credential": "Credentials"
+      },
+      "fileKinds": {
+        "document": "Documents",
+        "image": "Images",
+        "audio": "Audio",
+        "video": "Video"
+      },
+      "needCapacity": {
+        "title": "Need more capacity?",
+        "description": "Lifetime unlocks 10 GB of zero-knowledge storage, video legacy messages, and the full scenario engine — forever, in a single payment."
+      },
+      "comparePlans": "Compare plans"
+    },
+    "identity": {
+      "updateError": "Failed to update profile",
+      "unknown": "Unknown",
+      "profileAlt": "Profile",
+      "unnamedCurator": "Unnamed Curator",
+      "curatorSince": "Curator since {date}",
+      "verifiedIdentity": "Verified Identity",
+      "recoverySet": "Recovery Set",
+      "verified": "Verified",
+      "verify": "Verify",
+      "updated": "Profile updated ✓",
+      "saving": "Saving...",
+      "save": "Save Identity",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Your name",
+      "avatar": {
+        "change": "Change profile photo",
+        "notImage": "Please choose an image file.",
+        "tooLarge": "Image must be 5 MB or smaller.",
+        "uploadError": "Failed to upload image",
+        "removeError": "Failed to remove image",
+        "uploading": "Uploading…",
+        "changePhoto": "Change photo",
+        "uploadPhoto": "Upload photo",
+        "remove": "Remove"
+      },
+      "email": {
+        "label": "Primary Email",
+        "change": "Change email",
+        "add": "Add email",
+        "none": "No email linked",
+        "hintVerified": "Sign in with this email and a one-time code. Change it any time — we'll verify the new address with a code.",
+        "hintOnFile": "On file from your invitation — verify it to sign in with an emailed code.",
+        "hintNone": "Add an email to also sign in with an emailed code."
+      },
+      "phone": {
+        "label": "WhatsApp Number",
+        "change": "Change number",
+        "add": "Add number",
+        "none": "No number linked",
+        "hint": "Used for Life Check escalations and important notifications."
+      },
+      "legal": {
+        "title": "Legal identity",
+        "description": "Recorded during onboarding as your signed declaration of identity. Birthday is fixed; residence may change if you move jurisdictions. Every update is appended to the audit chain — your original declaration is never overwritten.",
+        "updateResidence": "Update residence",
+        "residenceNotSet": "Residence not set",
+        "residenceNotSetHint": "Inheritance jurisdiction can't be determined until you declare your country of residence. Set it now to keep your succession plan admissible.",
+        "setResidence": "Set residence",
+        "countryOfResidence": "Country of residence",
+        "dateOfBirth": "Date of birth",
+        "declaredOn": "Declared on",
+        "notSet": "Not set",
+        "notDeclared": "Not declared"
+      }
+    }
+  },
+  "settingsSecurity": {
+    "countryCombobox": {
+      "placeholder": "Search a country…",
+      "empty": "No country matches your search."
+    },
+    "continuity": {
+      "title": "Continuity Protocol",
+      "description": "Master pause and Travel Mode for the entire Continuity Protocol. Disabling here suspends Life Check escalation and the Scenario Engine in lock-step — perfect for off-grid trips. Use Travel Mode when you have a return date so everything resumes automatically."
+    },
+    "residence": {
+      "error": "Failed to update legal residence",
+      "title": "Update legal residence",
+      "description": "Change the country whose inheritance jurisdiction applies to your vault. Your original declaration is preserved unchanged in the audit log — this update is recorded as a new tamper-evident entry.",
+      "countryLabel": "New country of residence",
+      "countryHint": "Pick the country where you currently reside. Birthday cannot be changed.",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "confirm": "Confirm update"
+    },
+    "redistribute": {
+      "title": "Re-distribute recovery shards",
+      "help": "Re-splits your master key with your chosen threshold and re-seals every trust contact's shard to their public key. Any previously held shard becomes obsolete the moment you click — by design. Use this after onboarding a replacement guardian, or as a periodic hygiene task.",
+      "statusNone": "Invite at least 2 trust contacts and wait for them to accept before you can distribute.",
+      "statusBelowMin": "Only 1 eligible trust contact. Recovery needs at least 2 — invite and confirm one more before distributing.",
+      "statusReady": "{count} eligible trust contacts · current threshold {threshold}.",
+      "distributing": "Distributing…",
+      "distribute": "Distribute now",
+      "success": "Shards re-distributed. Contacts will pick up the new envelopes on their next visit to /shared-with-me.",
+      "missingMasterKey": "Unlock your vault first, then retry."
+    },
+    "enroll": {
+      "pinMismatch": "PINs do not match",
+      "pinTooShort": "PIN must be at least {min} digits",
+      "pinError": "Could not enroll PIN",
+      "authenticatorError": "Could not enroll authenticator",
+      "title": "Speed up future unlocks",
+      "description": "Choose at least one method so you don't have to type your 24 words on this device next time.",
+      "pinOption": "PIN",
+      "pinOptionHint": "A {min}+ digit code stored only on this device",
+      "biometricOption": "Biometric (Face ID / Touch ID / Windows Hello)",
+      "biometricAvailable": "Use your platform authenticator",
+      "biometricUnavailable": "Not available on this device",
+      "hardwareOption": "Hardware security key",
+      "hardwareAvailable": "YubiKey or other roaming authenticator",
+      "hardwareUnavailable": "WebAuthn not supported",
+      "skip": "Skip for now",
+      "newPinLabel": "New PIN",
+      "pinPlaceholder": "At least {min} digits",
+      "confirmPinLabel": "Confirm PIN",
+      "savePin": "Save PIN",
+      "back": "Back"
+    },
+    "deviceUnlock": {
+      "loading": "Loading device unlock",
+      "method": {
+        "pin": "PIN",
+        "biometric": "Biometric",
+        "hardwareKey": "Hardware key"
+      },
+      "removeLastTitle": "Remove the only unlock on this device?",
+      "removeTitle": "Remove {label}?",
+      "removeLastDescription": "You will need to re-enter your 24 words next time.",
+      "removeConfirm": "Remove",
+      "removeError": "Could not remove this method",
+      "removeAria": "Remove {label}",
+      "title": "Device unlock",
+      "subtitle": "Methods stored on this device only. They unlock your vault here without re-entering your 24 words.",
+      "locked": "Vault is locked. Unlock first to add or change device unlock methods.",
+      "empty": "No device unlock yet — your 24 words are required at every login on this device.",
+      "subtitlePin": "{label} · added {time}",
+      "subtitleBiometric": "{label} · {state}",
+      "subtitleHardware": "{label} · {state}",
+      "biometricReady": "ready",
+      "biometricUnavailable": "unavailable on this device",
+      "hardwareReady": "WebAuthn ready",
+      "hardwareUnsupported": "unsupported",
+      "addMethod": "Add a method",
+      "footer": "Device unlock is local to this browser. Other devices need their own setup. If you lose the device, your 24 words still recover everything."
+    },
+    "passkey": {
+      "loading": "Loading passkeys",
+      "addError": "Could not add passkey.",
+      "removeTitle": "Remove this passkey?",
+      "removeDescription": "You will need another way to sign in.",
+      "removeConfirm": "Remove",
+      "removeError": "Could not remove passkey.",
+      "title": "Biometric Access",
+      "subtitle": "Sign in with Face ID, Touch ID, or your device biometrics.",
+      "unsupported": "Passkeys are not supported on this browser. Use a recent version of Chrome, Safari, or Edge on a device with a biometric sensor.",
+      "lastUsed": "Last used {time}",
+      "synced": " · Synced",
+      "thisDeviceOnly": " · This device only",
+      "removeAria": "Remove {name}",
+      "empty": "No passkeys registered yet.",
+      "addAnother": "Add another passkey",
+      "addFirst": "Add a passkey",
+      "footer": "Biometrics are convenient but should never be your only recovery method. Ensure your physical kit is printed."
+    },
+    "totp": {
+      "loading": "Loading authenticator app",
+      "startError": "Could not start enrollment.",
+      "verifyError": "Verification failed.",
+      "phraseIncomplete": "Please enter all 24 words of your recovery phrase.",
+      "bindError": "Could not bind the recovery phrase.",
+      "disableTitle": "Disable the authenticator app?",
+      "disableDescription": "You will lose this second factor and may need to set it up again.",
+      "disableConfirm": "Disable",
+      "disableError": "Could not disable authenticator.",
+      "title": "Authenticator App",
+      "subtitle": "Use a TOTP app (Google Authenticator, 1Password, Authy) as an alternative to passkey.",
+      "enrolled": "Authenticator enrolled",
+      "verifiedAt": "Verified {time}",
+      "verified": "Verified",
+      "disableAria": "Disable authenticator app",
+      "recoveryOn": "Recovery via seed phrase: ON",
+      "recoveryOff": "Recovery via seed phrase: OFF — you cannot reset 2FA if you lose your phone.",
+      "setUp": "Set up",
+      "empty": "No authenticator app configured.",
+      "active": "Authenticator active",
+      "setUpAuthenticator": "Set up authenticator",
+      "footer": "Codes are generated on your device and rotate every 30 seconds. Pair this with a printed recovery kit so you keep access if the phone is lost.",
+      "dialogTitleCode": "Set up authenticator app",
+      "dialogTitleBind": "Tie 2FA to your recovery phrase",
+      "dialogDescriptionCode": "Open your authenticator app, scan the QR code below, then enter the 6-digit code to confirm.",
+      "hideSecret": "Hide",
+      "showSecret": "Can't scan? Enter the key manually",
+      "copied": "Copied",
+      "copy": "Copy",
+      "codeLabel": "6-digit code",
+      "cancel": "Cancel",
+      "verifyButton": "Verify",
+      "bindDescriptionEnrollment": "Authenticator enabled. Optionally bind your recovery phrase so you can disable 2FA if you ever lose your phone.",
+      "bindDescriptionPostHoc": "Bind your recovery phrase so you can disable 2FA if you ever lose your phone.",
+      "recoveryPhraseLabel": "Recovery phrase",
+      "phraseHint": "The phrase never leaves your device — only a derived verifier is sent.",
+      "skip": "Skip",
+      "bindButton": "Bind recovery",
+      "skipHint": "Skipping is fine. Without binding, losing your phone means you must contact support to reset 2FA."
+    },
+    "center": {
+      "loading": "Loading Security Center"
+    },
+    "socialRecovery": {
+      "title": "Social Recovery",
+      "statusActive": "Status: Active & Secure",
+      "statusAwaiting": "Status: Awaiting Guardians",
+      "guardiansVerified": "{count} of {total} Guardians Verified",
+      "pending": "Pending...",
+      "resendInvites": "Resend Invites",
+      "inviteGuardian": "Invite Guardian",
+      "manageRules": "Manage Guardian Rules"
+    },
+    "recoveryKitShortcut": {
+      "title": "Recovery Kit",
+      "description": "Generate a physical, offline recovery sheet containing encrypted metadata shards for your vault.",
+      "cta": "Print Physical Kit"
+    },
+    "masterRecovery": {
+      "title": "Master Recovery",
+      "descriptionBefore": "Your master key is split into",
+      "shardsEmphasis": "4 cryptographic shards",
+      "descriptionMiddle": "using Shamir's Secret Sharing — one on this device and three held by your trusted contacts. You chose a threshold of",
+      "descriptionAfter": "shards to reconstruct the vault. Any combination meeting that threshold works — your contacts collaborate on-device, never on the server. Keeplas holds no shard.",
+      "recoveryPhraseLabel": "Recovery phrase",
+      "recoveryPhraseHashed": "Hashed and verified",
+      "recoveryPhraseNotGenerated": "Not generated yet",
+      "guardianShardLabel": "Guardian shard #{index}",
+      "guardianShardHint": "Held by {name}",
+      "configureAdditional": "Configure Additional Shard"
+    },
+    "activityLog": {
+      "title": "Activity Log",
+      "hashChained": "Hash-chained · {count} entries",
+      "totalEvents": "Total events",
+      "lastActivity": "Last activity",
+      "pendingAccess": "Pending access",
+      "approvedAccess": "Approved access",
+      "empty": "No events recorded yet.",
+      "actor": "actor: {actor}"
+    },
+    "lastAccess": {
+      "today": "Today, {time}",
+      "from": "from {country}",
+      "verifiedSession": "Verified device · Zero-Knowledge session",
+      "label": "Last access"
+    },
+    "recoveryKit": {
+      "loading": "Loading recovery kit",
+      "title": "Master Recovery Key",
+      "intro": "This document is the sole method for recovering your Keeplas Architectural Vault should you lose access. Keep it in a physically secure, fireproof location. Do not share these credentials with anyone.",
+      "relock": "Re-lock",
+      "printSecureCopy": "Print Secure Copy",
+      "generatingPdf": "Generating PDF…",
+      "downloadPdf": "Download PDF",
+      "architecturalVault": "The Architectural Vault",
+      "identityTitle": "Identity Verification",
+      "identityDescription": "This key is cryptographically bound to your biometric footprint and verified life-ledger.",
+      "coldStorageTitle": "Cold Storage",
+      "coldStorageDescription": "Recommended for physical storage only. Offline backups prevent digital extraction.",
+      "documentId": "Document ID",
+      "account": "Account",
+      "step01": "Step 01",
+      "step02": "Step 02",
+      "qrTitle": "Recovery QR Code",
+      "qrDescription": "Scan this code using the Keeplas Recovery portal or any secure Material-compatible device to initiate the vault restoration process.",
+      "checkE2e": "End-to-end encrypted protocol",
+      "checkSingleUse": "Single-use recovery token",
+      "seedTitle": "Recovery Seed Phrase",
+      "finalWarningTitle": "Final Warning",
+      "finalWarningDescription": "Losing this document means permanent loss of all legacy assets. Keeplas does not store copies of your recovery phrase.",
+      "userValidationTitle": "User Validation",
+      "generatedOn": "Generated on {date}.",
+      "qrSealed": "QR sealed until unlock",
+      "secureScanPoint": "Secure Scan Point",
+      "phraseLengthError": "Your recovery phrase must be exactly 12 or 24 words.",
+      "unlockReveal": "Unlock & Reveal",
+      "unlockDescription": "Enter your recovery phrase to render the QR and seed grid. Your phrase is processed locally and never sent to Keeplas.",
+      "pasteHint": "Paste all 24 words (or 12 if your phrase is 12-word). Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
+      "revealCta": "Reveal Recovery Kit"
+    }
+  },
+  "sharedWithMe": {
+    "list": {
+      "empty": {
+        "title": "No vaults entrusted to you yet",
+        "description": "When someone adds you as a trusted contact and you accept the invitation, the vault they protect will appear here."
+      },
+      "restoring": "Restoring your shards on this device — your encrypted fragments are being unwrapped locally and never leave your browser."
+    },
+    "card": {
+      "phase": {
+        "released": "Released",
+        "recovery": "Recovery",
+        "actionNeeded": "Action needed",
+        "guarding": "Guarding",
+        "awaitingRelease": "Awaiting release"
+      },
+      "relative": {
+        "justNow": "just now",
+        "minutes": "{count}m ago",
+        "hours": "{count}h ago",
+        "days": "{count}d ago",
+        "months": "{count}mo ago",
+        "years": "{count}y ago"
+      },
+      "verifiedAt": "Verified {relative}",
+      "verifying": "Verifying…",
+      "type": {
+        "recipient": "Recipient",
+        "trust": "Trust"
+      },
+      "role": {
+        "family": "Family",
+        "friend": "Friend",
+        "lawyer": "Legal",
+        "doctor": "Medical",
+        "other": "Other",
+        "contact": "Contact"
+      },
+      "fragmentHeld": "Fragment held · {status}",
+      "noFragment": "No fragment yet",
+      "fragmentHint": "An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. With the other trust contacts (threshold set by the owner) you can help reopen the vault — alone you cannot. It re-verifies automatically each time you open this page, so the owner knows you can still unwrap it.",
+      "guarding": {
+        "recipient": "You'll receive what {ownerName} left you here if their vault is ever released.",
+        "trust": "Nothing to do for now — you'll be asked to help only if {ownerName} stops responding to their check-ins."
+      },
+      "released": {
+        "cta": "View memorial vault",
+        "itemCountOne": "{count} item",
+        "itemCountOther": "{count} items"
+      },
+      "actionNeeded": {
+        "prompt": "{ownerName} stopped responding to their check-ins. If you genuinely can't reach them, confirm it.",
+        "hint": "Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes can the vault be recovered/released.",
+        "confirm": "Confirm — they are unreachable",
+        "cancel": "Cancel",
+        "done": "Confirmation recorded. Other trust contacts will be notified.",
+        "submitting": "Submitting…",
+        "mark": "Mark as unreachable",
+        "error": "Could not confirm unreachability."
+      },
+      "recovery": {
+        "title": "Recovery in progress",
+        "hint": "The 72h grace window passed without the owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards.",
+        "submissionCountOne": "{count} submission",
+        "submissionCountOther": "{count} submissions",
+        "sealing": "Sealing your shard for peers…",
+        "submit": "Submit my shard",
+        "submittedToPeersOne": "Your shard was submitted to {count} peer.",
+        "submittedToPeersOther": "Your shard was submitted to {count} peers.",
+        "reconstructed": "Master key reconstructed on this device. Memorial vault access available.",
+        "reconstructing": "Reconstructing…",
+        "awaitingPeers": "Awaiting peer submissions…",
+        "reconstruct": "Reconstruct master key"
+      }
+    },
+    "memorial": {
+      "noAccess": {
+        "title": "No memorial access",
+        "description": "This vault has not been released to you, or you are not one of its recipients."
+      },
+      "back": "Back to Shared with me",
+      "backShort": "Shared with me",
+      "title": "In memory of {ownerName}",
+      "subtitleOne": "Read-only access to the {count} item {ownerName} left for you. Everything is decrypted on your device.",
+      "subtitleOther": "Read-only access to the {count} items {ownerName} left for you. Everything is decrypted on your device.",
+      "messageFrom": "A message from {ownerName}",
+      "rereadMessage": "Re-read message",
+      "noReadableItems": "No readable items were released to you.",
+      "includesAttachments": "Includes attachments · ",
+      "read": "Read",
+      "unavailableLegacy": "Unavailable (legacy format)"
+    },
+    "item": {
+      "decryptFailedLegacy": "[Unable to decrypt — this item was stored in a legacy format]",
+      "decryptFailed": "[Unable to decrypt]",
+      "notAvailable": {
+        "title": "Item not available",
+        "description": "This item was not released to you."
+      },
+      "backToMemorial": "{ownerName}'s memorial vault",
+      "categoryInMemory": "{category} · In memory of {ownerName}",
+      "decrypting": "Decrypting…",
+      "linkedUrls": "Linked URLs"
+    },
+    "introCard": {
+      "decryptFailedLegacy": "[Unable to decrypt — legacy format]",
+      "decryptFailed": "[Unable to decrypt]",
+      "decrypting": "Decrypting message…"
+    },
+    "introDialog": {
+      "title": "A message from {ownerName}",
+      "description": "Take a moment — this was left for you.",
+      "continue": "Continue to the vault"
+    },
+    "attachments": {
+      "loading": "Loading secure attachments…",
+      "title": "Secure Attachments · {count}",
+      "downloadFailed": "Download failed ({status})",
+      "decryptFailed": "Unable to decrypt attachment.",
+      "encrypted": "Encrypted",
+      "download": "Download",
+      "decrypting": "Decrypting…",
+      "documentReady": "Document ready — open or download to view.",
+      "open": "Open"
+    }
+  },
+  "trustedContacts": {
+    "header": {
+      "titleLine1": "Trusted Circle &",
+      "titleLine2": "Release Routing",
+      "subtitle": "Designate the people who protect your legacy and decide who receives which vault items at trigger. Manage guardians and recipient-only contacts here, then bundle them into release groups.",
+      "howItWorks": "How trust contacts work",
+      "medicalIdCallout": "For acute emergencies (accident, sudden illness), set up your phone’s built-in Medical ID — paramedics check it first.",
+      "learnHow": "Learn how →"
+    },
+    "tabs": {
+      "contacts": "Contacts",
+      "releaseGroups": "Release Groups"
+    },
+    "guardians": {
+      "heading": "The Role of Guardians",
+      "roles": {
+        "holdsShard": {
+          "title": "Holds a recovery shard",
+          "description": "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault."
+        },
+        "confirmsUnreachable": {
+          "title": "Confirms you are unreachable",
+          "description": "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window."
+        },
+        "releasesVault": {
+          "title": "Releases vault & recipients",
+          "description": "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items."
+        }
+      }
+    },
+    "recoveryNetwork": {
+      "title": "Recovery Network",
+      "help": "Tracks whether your social recovery is operational. The big number is how many guardians have accepted out of the {threshold} needed to unlock the vault (your quorum, set during onboarding). Below quorum, recovery is impossible. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer. Pending invites and shard distribution are shown so you know exactly what's left to do.",
+      "quorum": "quorum",
+      "stepLabel": "Step 2 · Shamir shards needed to unlock the vault",
+      "state": {
+        "unprotected": "Unprotected — invite your first guardian",
+        "atRisk": "At risk — {count} more to reach quorum",
+        "quorumMet": "Quorum met — add more for redundancy",
+        "resilientOne": "Resilient — {count} guardian of buffer",
+        "resilientMany": "Resilient — {count} guardians of buffer"
+      },
+      "accepted": "Accepted",
+      "pendingInvites": "Pending invites",
+      "shardsDistributed": "Shards distributed",
+      "maxGuardians": "Max guardians"
+    },
+    "oneGuardianWarning": {
+      "title": "One guardian is not enough",
+      "body": "Only {name} is accepted so far — invite at least one more. Recovery cannot work with a single guardian for two reasons: at least 2 trust contacts must vote that you are unreachable before the grace window opens, and a lone guardian has no peer to exchange shards with, so the vault can never reach the 2 shards needed to reconstruct your key."
+    },
+    "emptyState": {
+      "title": "Invite Your First Guardian",
+      "description": "Invite at least 2 trusted guardians for recovery. The current shard model uses up to 3 shard holders; recipients have no cap."
+    },
+    "trustContacts": {
+      "heading": "Trust Contacts",
+      "help": "Trust contacts each hold one encrypted shard of your recovery key. They can collectively help you regain vault access. Capped at 5 by design — fewer is fine, more would weaken the security model.",
+      "inviteNext": "Invite Next Trust Contact",
+      "slotsRemaining": "{count} slots remaining"
+    },
+    "recipientsOnly": {
+      "heading": "Recipients Only",
+      "help": "People who only receive items when a trigger fires (conditional message, vault release). They don't hold a recovery shard, so there's no cap on how many you can add.",
+      "addTitle": "Add a Recipient",
+      "addDescription": "People who only receive items at trigger — no recovery role, no shard, no cap.",
+      "addButton": "Add Recipient"
+    },
+    "howGroups": {
+      "heading": "How groups work",
+      "intro": "When you add a vault item, you can pick one or more groups. At trigger, only the contacts in those groups receive that item. Items with no group default to all trust contacts.",
+      "step1": "Create groups by context (Family, Legal…)",
+      "step2": "Add trust contacts and recipient-only people to groups",
+      "step3": "Pick groups when sealing items in the vault"
+    },
+    "groups": {
+      "newGroup": "New Group",
+      "newGroupHint": "Add another release context"
+    },
+    "accessRequests": {
+      "heading": "Emergency Access",
+      "help": "Trust contacts open this request when Life Check has exhausted every channel and you can no longer be reached. Once the quorum confirms your unavailability, a 72-hour grace window opens — sign in and click I am well to cancel. After the window, contacts submit their shards and the vault opens in read-only memorial mode.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "denied": "Denied",
+        "autoDenied": "Auto-denied",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "initiatedTitle": "Emergency Access initiated",
+      "confirmedCount": "{confirmations} of {quorumRequired} contacts have confirmed you are unreachable.",
+      "quorumReached": "Quorum reached",
+      "unlockWindowOpen": "Vault unlock window is open. Cancel now if you are well.",
+      "gracePeriodEnds": "Grace period ends: {date}",
+      "cancelling": "Cancelling...",
+      "cancelButton": "I am well — cancel emergency access",
+      "history": "History"
+    },
+    "contactCard": {
+      "recipient": "Recipient",
+      "trust": "Trust",
+      "fragmentAssigned": "Fragment Assigned"
+    },
+    "detail": {
+      "close": "Close contact details",
+      "details": "Details",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "invited": "Invited",
+      "accepted": "Accepted",
+      "recoveryRole": "Recovery role",
+      "recipientOnlyDescription": "Recipient only — holds no recovery shard. They only receive the vault items routed to them when a trigger fires.",
+      "shardIndex": "Shard index",
+      "fragmentAssigned": "Fragment assigned",
+      "fragmentAssignedHelp": "An encrypted Shamir share of your master key has been wrapped to this contact's public key and stored. They will need to submit it together with the recovery threshold for the vault to be reconstructible.",
+      "verificationHelp": "Round-trip cryptographic check that the contact's keypair is functional. The owner wraps a known plaintext to the contact's public key, and the contact unwraps it on-device — proving they hold the matching private key without exposing any vault content.",
+      "lastVerified": "Last verified {relative} ({date}).",
+      "itemsReleased": "Items released to this contact",
+      "noItemsRouted": "No vault items are routed to this contact yet.",
+      "recipientMode": {
+        "explicit": "Directly shared",
+        "groups": "Via release group",
+        "default": "Default · all trust contacts"
+      },
+      "releaseGroups": "Release groups",
+      "notMemberOfGroup": "Not a member of any release group.",
+      "resending": "Resending...",
+      "invitationResent": "Invitation resent ✓",
+      "resendInvitation": "Resend invitation",
+      "revoking": "Revoking...",
+      "confirmRevoke": "Confirm revoke",
+      "cancel": "Cancel",
+      "revokeContact": "Revoke contact"
+    },
+    "createGroup": {
+      "error": "Failed to create group",
+      "title": "Create Release Group",
+      "description": "A reusable bundle of recipients you can assign to vault items.",
+      "nameLabel": "Group name *",
+      "namePlaceholder": "e.g. Family, Legal, Business",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "What kind of items will this group receive?",
+      "membersLabel": "Members",
+      "membersPlaceholder": "Add contacts to this group",
+      "cancel": "Cancel",
+      "creating": "Creating…",
+      "submit": "Create Group"
+    },
+    "editGroup": {
+      "error": "Failed to update group",
+      "title": "Edit Group",
+      "description": "Update name, description and members of this release group.",
+      "nameLabel": "Group name",
+      "defaultNameFixed": "The default group name is fixed.",
+      "descriptionLabel": "Description",
+      "membersLabel": "Members",
+      "membersPlaceholder": "Add contacts",
+      "membersEmptyPlaceholder": "No members selected",
+      "membersEmptyMessage": "No contacts available.",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "submit": "Save Changes"
+    },
+    "distribute": {
+      "heading": "Distribute shards",
+      "help": "Splits your master key into 5 Shamir shares with your chosen threshold and seals each share to a trust contact's public key. Re-running this re-splits and invalidates any previously distributed shard — by design.",
+      "belowMin": "Recovery needs at least 2 trusted contacts. Invite and confirm one more before distributing.",
+      "pendingOne": "{pending} of {total} trust contact still needs a shard.",
+      "pendingMany": "{pending} of {total} trust contacts still needs a shard.",
+      "allCurrent": "All trust contacts have a current shard.",
+      "distributing": "Distributing…",
+      "distributeNow": "Distribute now",
+      "success": "Shards distributed to all eligible contacts.",
+      "missingMasterKey": "Unlock your vault first, then retry."
+    },
+    "invite": {
+      "errorMissingContact": "Add an email or a phone number",
+      "errorInvalidEmail": "Please enter a valid email",
+      "errorInvalidPhone": "Please enter a valid phone number",
+      "errorSend": "Failed to send invitation",
+      "titleRecipient": "Add Recipient",
+      "titleTrust": "Invite Trusted Contact",
+      "descriptionRecipient": "This person will receive vault items only when one of your triggers fires. They don't hold a recovery shard.",
+      "descriptionTrust": "This person will receive a recovery fragment and can help you regain access to your vault.",
+      "fullNameLabel": "Full Name *",
+      "fullNamePlaceholder": "Enter their full name",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "contactHint": "Add an email, a phone number, or both — at least one is required.",
+      "roleLabel": "Role",
+      "roleHelp": "Their relationship to you. Used by Keeplas to surface the right contact in scenarios (medical, legal, family) and on hubs.",
+      "rolePlaceholder": "Select a role",
+      "roles": {
+        "family": "Family member",
+        "friend": "Friend",
+        "lawyer": "Lawyer",
+        "doctor": "Doctor",
+        "other": "Other"
+      },
+      "roleInKeeplasLabel": "Role in Keeplas",
+      "roleInKeeplasHelp": "Trust contact = holds a recovery shard, counts toward your 5-trust cap, can help recover your account. Recipient only = receives items at trigger but no recovery role and no cap.",
+      "trustOption": {
+        "title": "Trust contact",
+        "description": "Holds a recovery shard. Counts toward your 5-trust-contacts cap."
+      },
+      "recipientOption": {
+        "title": "Recipient only",
+        "description": "Receives items at trigger. No shard, no cap, no recovery role."
+      },
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "submitRecipient": "Add Recipient",
+      "submitTrust": "Send Invitation"
+    },
+    "groupCard": {
+      "default": "Default",
+      "memberCountOne": "{count} member",
+      "memberCountMany": "{count} members",
+      "noMembers": "No members yet",
+      "manageMembers": "Manage members",
+      "more": "More",
+      "setDefault": "Set as default group",
+      "deleting": "Deleting…",
+      "confirmDelete": "Confirm Delete",
+      "cancel": "Cancel",
+      "deleteGroup": "Delete group"
+    },
+    "membersSelect": {
+      "placeholder": "Add contacts",
+      "searchPlaceholder": "Search contacts…",
+      "emptyMessage": "Invite contacts first to add them here.",
+      "addNew": "Add new contact"
+    },
+    "multiSelect": {
+      "placeholder": "Select…",
+      "emptyMessage": "No options found.",
+      "searchPlaceholder": "Search…",
+      "selectedCount": "{count} selected"
+    }
+  },
+  "vault": {
+    "upload": {
+      "savingTitle": "Saving {count} attachment",
+      "savingTitlePlural": "Saving {count} attachments",
+      "encrypting": "{label} — encrypting…",
+      "progress": "{label} — {completed}/{total} done · {done} / {totalBytes}",
+      "savedTitle": "Attachments saved",
+      "savedDescription": "{label} — {count} file encrypted and uploaded",
+      "savedDescriptionPlural": "{label} — {count} files encrypted and uploaded",
+      "failedTitle": "Some attachments failed",
+      "failedDescription": "{label} — {completed}/{total} saved · {failed} failed ({error})",
+      "retryAltText": "Retry failed attachments",
+      "retry": "Retry"
+    },
+    "page": {
+      "loading": "Loading your vault",
+      "allSections": "All vault sections",
+      "title": "Digital Vault",
+      "subtitle": "Your life's core documentation, secured with end-to-end zero-knowledge encryption.",
+      "countOne": "Showing all {count} item in this category.",
+      "countOther": "Showing all {count} items in this category."
+    },
+    "sections": {
+      "documents": {
+        "label": "Personal Documents",
+        "empty": "No personal documents yet. Add your first."
+      },
+      "health": {
+        "label": "Health Directives",
+        "empty": "No health directives yet. Add your first."
+      },
+      "legal": {
+        "label": "Legal Documents",
+        "empty": "No legal documents yet. Add your first."
+      },
+      "business": {
+        "label": "Business Continuity",
+        "empty": "No business continuity plans yet. Add your first."
+      },
+      "financial": {
+        "label": "Financial Assets",
+        "empty": "No financial assets yet. Add your first."
+      },
+      "credentials": {
+        "label": "Credentials",
+        "empty": "No credentials yet. Add your first."
+      },
+      "digital": {
+        "label": "Digital Assets",
+        "empty": "No digital assets yet. Add your first."
+      },
+      "messages": {
+        "label": "Conditional Messages",
+        "empty": "No conditional messages yet."
+      }
+    },
+    "section": {
+      "viewAll": "View All",
+      "addEntry": "Add entry",
+      "viewAllCount": "View all {count} items"
+    },
+    "card": {
+      "updated": "Updated {date}"
+    },
+    "transmission": {
+      "private": "Private",
+      "groups": "{count} groups",
+      "allContacts": "All trust contacts"
+    },
+    "recipients": {
+      "label": "Who receives this at trigger?",
+      "labelIntro": "Pick the contacts who'll see this welcome",
+      "placeholderPrivate": "No one — keep private",
+      "placeholderIntro": "Pick at least one recipient",
+      "searchPlaceholder": "Search groups or contacts…",
+      "emptyMessage": "No groups or contacts yet.",
+      "helper": "Pick one or more groups (your trust contacts are already a group), or specific people. Empty = the item stays private.",
+      "helperIntro": "Broadcast to every trusted contact, target a group, or pick specific people. Combinations of groups and individuals are allowed.",
+      "allContacts": "All trust contacts",
+      "allContactsHint": "Everyone who's accepted your invite",
+      "broadcastLabel": "Broadcast",
+      "groupsLabel": "Groups",
+      "individualsLabel": "Individual contacts",
+      "contactCountOne": "{count} contact",
+      "contactCountOther": "{count} contacts"
+    },
+    "links": {
+      "empty": "No links saved.",
+      "urlLabel": "Link URL",
+      "hiddenLabel": "Hidden link URL",
+      "hide": "Hide link",
+      "reveal": "Reveal link",
+      "openNewTab": "Open link in new tab"
+    },
+    "linkInput": {
+      "label": "Saved links",
+      "description": "URLs are encrypted before they leave your device. Nothing is fetched or previewed.",
+      "invalid": "Enter a valid URL (including https://).",
+      "remove": "Remove link",
+      "addAnother": "Add another link"
+    },
+    "attachments": {
+      "loading": "Loading secure attachments…",
+      "heading": "Secure Attachments · {count}",
+      "encrypted": "Encrypted",
+      "download": "Download",
+      "decrypting": "Decrypting…",
+      "decryptError": "Unable to decrypt attachment.",
+      "documentReady": "Document ready — open or download to view.",
+      "open": "Open"
+    },
+    "detail": {
+      "notFound": "Item not found",
+      "backToVault": "Back to Vault",
+      "edit": "Edit",
+      "deletePermanently": "Delete permanently",
+      "summaryPrivate": "Private",
+      "summaryReleasedTo": "Released to {names}",
+      "summaryReleasedAll": "Released to all trust contacts",
+      "decryptedContent": "Decrypted Content",
+      "decrypting": "Decrypting...",
+      "linkedUrls": "Linked URLs",
+      "timestamps": "Created {created} · Updated {updated}"
+    },
+    "editor": {
+      "title": "Edit Item",
+      "fieldTitle": "Title",
+      "fieldCategory": "Category",
+      "fieldContent": "Secure Content",
+      "contentPlaceholder": "Write the secure content for this item…",
+      "fieldAttachments": "Secure Attachments",
+      "noAttachments": "No attachments yet.",
+      "addFile": "Add file",
+      "fileHint": "PDF, JPG or PNG up to 50 MB. Files are encrypted client-side before upload.",
+      "cancel": "Cancel",
+      "encrypting": "Encrypting…",
+      "saveChanges": "Save Changes",
+      "errorUnsupportedType": "{name} — unsupported file type. PDF, JPG or PNG only.",
+      "errorTooLarge": "{name} — exceeds 50 MB limit.",
+      "errorInvalidUrl": "Invalid URL: {url}",
+      "errorNoKey": "Encryption key unavailable for new attachments.",
+      "errorUpdate": "Failed to update.",
+      "progressEncrypting": "Encrypting content…",
+      "progressRemoving": "Removing attachments…",
+      "willBeDeleted": "Will be deleted",
+      "willBeEncrypted": "Will be encrypted on save",
+      "undo": "Undo",
+      "remove": "Remove"
+    },
+    "delete": {
+      "title": "Delete this item permanently?",
+      "description": "This will erase the item, every secure attachment, and all wrapped recipient keys. The action cannot be undone — there is no archive, no trash, and no recovery, even with your recovery phrase.",
+      "confirmPrefix": "Type",
+      "confirmSuffix": "to confirm",
+      "cancel": "Cancel",
+      "deleting": "Deleting…",
+      "deleteForever": "Delete forever"
+    },
+    "dialog": {
+      "breadcrumbVault": "Vault",
+      "breadcrumbWelcome": "Welcome message",
+      "breadcrumbNewAsset": "Secure New Asset",
+      "titleIntro": "Record a welcome message",
+      "titleVault": "Add to Vault",
+      "descriptionIntro": "A text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Encrypted on your device before it leaves.",
+      "descriptionVault": "Deposit a critical asset. Files are encrypted on your device before they leave. AES-256-GCM.",
+      "section01": "Asset Identity",
+      "section01Intro": "Message identity",
+      "section02": "Secure Documentation",
+      "section03": "Linked URLs",
+      "section04": "Transmission Logic",
+      "section04Intro": "Who sees this message?",
+      "fieldTitle": "Title",
+      "fieldName": "Asset Name",
+      "titlePlaceholder": "e.g. A few words from me",
+      "namePlaceholder": "e.g. Primary Brokerage Account",
+      "fieldCategory": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "fieldYourMessage": "Your message",
+      "fieldMessage": "Message",
+      "fieldDescription": "Asset Description",
+      "optional": "(optional)",
+      "bodyPlaceholderIntro": "Write a few words for your trusted contacts. They'll see this above the items you left them…",
+      "bodyPlaceholderLetter": "Write the message that will be released…",
+      "bodyPlaceholderAsset": "Describe the significance and location of this asset…",
+      "releaseOn": "Release on",
+      "releaseDatePlaceholder": "Pick a release date",
+      "lifeCheckCalloutPrefix": "Uses your global Life Check cadence and escalation. Adjust the inactivity threshold once in",
+      "lifeCheckCalloutLink": "Life Check settings",
+      "lifeCheckCalloutSuffix": "— it applies to every letter with this trigger.",
+      "introCallout": "Released alongside your vault when Life Check confirms you're unreachable. Shown to recipients at the top of their memorial view.",
+      "recordAudio": "Record audio",
+      "recordVideo": "Record video",
+      "orDropFile": "or drop a file below",
+      "dropTitle": "Drag and drop secure files",
+      "dropHint": "PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.",
+      "browseSystem": "Browse System",
+      "removeFile": "Remove {name}",
+      "cancel": "Cancel",
+      "sealing": "Sealing…",
+      "saveWelcome": "Save welcome message",
+      "secureToVault": "Secure Asset to Vault",
+      "errorNoKey": "Encryption key not available. Please sign in again.",
+      "errorNameRequired": "Asset name is required.",
+      "errorReleaseDate": "Pick a release date for the time-based trigger.",
+      "errorIntroRecipient": "Pick at least one recipient — an introduction with no audience is never shown.",
+      "errorSave": "Failed to save item.",
+      "progressGenKey": "Generating per-item key…",
+      "progressSealing": "Sealing vault entry…"
+    },
+    "triggers": {
+      "label": "Trigger",
+      "placeholder": "Choose a trigger",
+      "lifeCheck": {
+        "label": "Verified Life-Check Failure",
+        "hint": "Released when you stop responding to Life Checks for the configured number of days."
+      },
+      "timeBased": {
+        "label": "Time-based Release",
+        "hint": "Released on a specific calendar date — useful for birthdays, anniversaries, or coming-of-age letters."
+      },
+      "manual": {
+        "label": "Manual Trigger",
+        "hint": "Released only when you (or a curator) explicitly approve from the hub."
+      }
+    },
+    "recorder": {
+      "videoMessage": "Video message",
+      "voiceMessage": "Voice message"
+    }
+  },
+  "docs": {
+    "breadcrumb": "Documentation",
+    "hub": {
+      "eyebrow": "Documentation",
+      "title": "How Keeplas protects your legacy.",
+      "intro": "Keeplas is a life-continuity platform. We combine a zero-knowledge vault, a multi-channel life check and a social recovery network so your digital legacy outlives you — on your terms.",
+      "hero": {
+        "badge": "Zero-knowledge by design",
+        "title": "Your key never leaves your device.",
+        "body": "The master key that unlocks your vault is generated and stored only on your devices. Keeplas servers hold encrypted blobs plus the public metadata needed to orchestrate life checks — nothing more. Even we cannot read your vault.",
+        "exportKit": "Export Recovery Kit",
+        "securityCenter": "Security Center"
+      },
+      "coreFeatures": {
+        "heading": "Core Features",
+        "read": "Read"
+      },
+      "features": {
+        "vault": {
+          "title": "Digital Vault",
+          "description": "Zero-knowledge storage for documents, credentials, financial assets and digital legacy. Everything is encrypted on your device before it leaves."
+        },
+        "lifeCheck": {
+          "title": "Life Check",
+          "description": "Automated proof-of-life over WhatsApp and email — verify each channel once so we can reach you (app push coming soon). Configurable cadence, a 15-day response window with reminders, and a travel-mode pause for trips."
+        },
+        "letters": {
+          "title": "Letters & Messages",
+          "description": "Sealed letters released by specific life events or dates. Compose them as a Letter / Message item from your vault — recipients receive them once curators validate the trigger."
+        },
+        "emergency": {
+          "title": "Acute emergencies",
+          "description": "For accidents and sudden illness, your phone's native Medical ID is on the lock screen, recognized by paramedics, and works offline. Here is how to set it up."
+        },
+        "trustedContacts": {
+          "title": "Trusted Contacts",
+          "description": "At least two trust contacts hold encrypted shards of your master key. They confirm your unavailability and reconstruct the vault when needed. Recipients receive your pre-assigned content separately."
+        },
+        "recovery": {
+          "title": "Recovery & Inheritance",
+          "description": "Two paths: 24-word phrase for self-service recovery, Shamir social recovery via trust contacts when the phrase is lost or after you become unreachable. Default threshold: 2 trusted contacts."
+        },
+        "insights": {
+          "title": "Reflect & Prepare",
+          "description": "Nine honest cases — reflective questions, real pain points, emergency essentials, and the cryptographic foundations behind Keeplas. ~10 minutes to read."
+        }
+      },
+      "securityModel": {
+        "heading": "Security Model"
+      },
+      "security": {
+        "zeroKnowledge": {
+          "title": "Zero-knowledge encryption",
+          "body": "Your master key is derived locally and never sent to Keeplas. Every vault item is encrypted with AES-256-GCM before upload. Keeplas servers see only ciphertext."
+        },
+        "shamir": {
+          "title": "Shamir secret sharing",
+          "body": "Your master key is split into 4 cryptographic shards: one device shard and up to three trusted-contact shards. Recovery starts working from 2 trusted contacts with the default threshold. Reconstruction always happens on your contacts' devices, never on Keeplas servers."
+        },
+        "auditLog": {
+          "title": "Hash-chained audit log",
+          "body": "Every action writes an immutable tamper-evident entry. Each log hash links to the previous one; rewriting history would break the chain."
+        },
+        "recoveryKit": {
+          "title": "Recovery kit on paper",
+          "body": "Export a printable document with your 24-word phrase. Cold-storage only — Keeplas does not store the phrase nor any hash of it. The phrase derives your Root Key locally via Argon2id."
+        }
+      },
+      "lifecycle": {
+        "heading": "What happens after inactivity",
+        "readMore": "Read the full recovery & inheritance flow",
+        "steps": {
+          "cadence": {
+            "value": "Cadence elapses",
+            "title": "A check-in opens",
+            "body": "Your cadence passes without an explicit 'I'm well'. Keeplas opens a Life Check cycle and starts a 15-day response window. Using the app does not count — only an explicit reply does."
+          },
+          "window": {
+            "value": "Days 0–15",
+            "title": "Every channel reaches you",
+            "body": "WhatsApp and email fire together at day 0, with reminders at day 3, 7 and 10 (app push coming soon). One tap, the email button, or a WhatsApp reply resets the countdown."
+          },
+          "confirmation": {
+            "value": "Day 15 · Confirmation",
+            "title": "Trust contacts confirm unreachability",
+            "body": "No reply across the whole window. Your trust contacts are asked to confirm they can't reach you — within the window you set (default 7 days) and to the number you require. Nothing is released yet."
+          },
+          "grace": {
+            "value": "Grace 72h",
+            "title": "Last chance to come back",
+            "body": "Once enough contacts confirm, a fixed 72-hour grace window opens — separate from the confirmation window. Sign in and click I am well and the cycle is cancelled. Nothing leaves the vault."
+          },
+          "release": {
+            "value": "Release",
+            "title": "Vault opens for inheritance",
+            "body": "When the grace expires, contacts submit their shards. Threshold reached → master key reconstructed on their device → vault opens read-only → recipients receive their pre-assigned items."
+          }
+        }
+      },
+      "quickLinks": {
+        "heading": "Jump to a feature",
+        "subtitle": "All documentation is inline with the product — each screen has its own guided empty state and tooltips.",
+        "items": {
+          "hub": "Hub",
+          "security": "Security Center",
+          "recoveryKit": "Recovery Kit",
+          "subscription": "Subscription"
+        }
+      },
+      "footer": "Keeplas — Life Continuity Protocol · Version 0.1"
+    },
+    "vault": {
+      "title": "Digital Vault",
+      "eyebrow": "Encrypted storage",
+      "intro": "Zero-knowledge storage for documents, credentials, financial assets and your digital legacy. Everything is encrypted on your device before it ever leaves it — Keeplas only ever holds ciphertext.",
+      "encryption": {
+        "heading": "How encryption works",
+        "onDevice": {
+          "title": "Encrypted on-device",
+          "body": "Each item is encrypted with AES-256-GCM in your browser before upload. Plaintext never travels over the network."
+        },
+        "yourKey": {
+          "title": "Your key, your key",
+          "body": "The master key that unlocks your vault is derived locally from your 24-word phrase and never sent to Keeplas."
+        },
+        "blind": {
+          "title": "Servers stay blind",
+          "body": "Keeplas stores only encrypted blobs plus the public metadata needed to orchestrate recovery. Even we cannot read your vault."
+        }
+      },
+      "store": {
+        "heading": "What you can store",
+        "documents": {
+          "title": "Documents",
+          "body": "Identity papers, contracts, wills, insurance policies — any file that matters to your succession."
+        },
+        "credentials": {
+          "title": "Credentials",
+          "body": "Passwords, access codes and account details, sealed behind your master key."
+        },
+        "financial": {
+          "title": "Financial assets",
+          "body": "Bank accounts, investments and crypto holdings, with the context your heirs need to act."
+        },
+        "letters": {
+          "title": "Letters & Messages",
+          "body": "Time-released letters sealed until a date or life event. See the Letters & Messages guide."
+        }
+      },
+      "storage": {
+        "heading": "Storage included",
+        "body": "The Free plan includes 100 MB of encrypted storage. The Lifetime plan raises it to 10 GB. Encryption overhead is counted against your quota.",
+        "comparePlans": "Compare plans"
+      },
+      "openVault": "Open your vault",
+      "lettersLink": "Letters & Messages"
+    },
+    "lifeCheck": {
+      "title": "Life Check",
+      "eyebrow": "Proof of life",
+      "intro": "A transparent proof-of-life system. Keeplas reaches you over WhatsApp and email on a cadence you set; an explicit reply resets the countdown. Only prolonged silence ever moves your vault toward recovery.",
+      "howItWorks": "How it works",
+      "details": {
+        "verifyChannel": {
+          "title": "Verify each channel once",
+          "body": "Confirm your WhatsApp number and email so we can reliably reach you. App push is coming soon."
+        },
+        "cadence": {
+          "title": "Set your cadence",
+          "body": "Choose how often a check-in opens. Between cycles, Keeplas stays silent."
+        },
+        "window": {
+          "title": "A 15-day window with reminders",
+          "body": "When a cycle opens, WhatsApp and email fire at day 0, with reminders at day 3, 7 and 10."
+        },
+        "reply": {
+          "title": "An explicit reply resets it",
+          "body": "One tap in the email, or a WhatsApp reply, resets the countdown. Browsing the app does not count — only an explicit 'I'm well'."
+        },
+        "travel": {
+          "title": "Travel mode",
+          "body": "Pause checks for a trip so a missed message never escalates while you're away."
+        },
+        "visible": {
+          "title": "Always visible",
+          "body": "A live countdown shows exactly where you stand. No hidden timers, no silent resets."
+        }
+      },
+      "afterInactivity": {
+        "heading": "What happens if you don't respond",
+        "body": "If the whole 15-day window passes with no reply, your trust contacts are asked to confirm they can't reach you. Only then — after a further confirmation window and a 72-hour grace period — does recovery begin. You can cancel at any point by signing in and clicking I am well.",
+        "readMore": "Read the full recovery & inheritance flow"
+      },
+      "goToLifeCheck": "Go to Life Check",
+      "trustedContactsLink": "Trusted contacts"
+    },
+    "letters": {
+      "title": "Letters & Messages",
+      "eyebrow": "Time-released messages",
+      "intro": "Sealed letters released by a specific date or life event. You compose them as a vault item — encrypted like everything else — and recipients receive them only once your curators validate the trigger.",
+      "howItWorks": "How it works",
+      "details": {
+        "compose": {
+          "title": "Compose from your vault",
+          "body": "Create a Letter / Message item alongside your documents. It is encrypted on-device, like any other vault item."
+        },
+        "recipients": {
+          "title": "Assign recipients",
+          "body": "Pre-assign each letter to the people who should receive it. Recipients need no shard and no action of their own."
+        },
+        "trigger": {
+          "title": "Set the trigger",
+          "body": "Release on a fixed date, or on a life event such as your vault opening for inheritance."
+        },
+        "validated": {
+          "title": "Released after validation",
+          "body": "Recipients receive the letter once your curators confirm the trigger has been met — never before."
+        }
+      },
+      "privacy": {
+        "heading": "Sealed until the moment",
+        "body": "A letter stays encrypted in your vault until its trigger fires. Keeplas servers only ever hold ciphertext, so no one — not us, not the recipient, not your curators — can read it ahead of time.",
+        "link": "How curators validate triggers"
+      },
+      "openVault": "Open your vault",
+      "vaultLink": "Digital Vault"
+    },
+    "trustedContacts": {
+      "title": "Trusted Contacts",
+      "eyebrow": "Recovery network",
+      "intro": "The people you designate to protect your vault — both during your life (in case you lose access) and after (for your digital succession). One unified role, one mental model.",
+      "roles": {
+        "heading": "Two roles, only",
+        "trust": {
+          "title": "Trust contact",
+          "body": "Holds an encrypted shard of your master key. Can confirm you are unreachable. Participates in the cryptographic quorum that re-opens your vault.",
+          "bullets": {
+            "min": "Minimum 2 trust contacts for recovery",
+            "max": "Up to 3 shard holders in the current recovery model",
+            "shard": "Receives 1 Shamir shard, encrypted to their public key",
+            "moments": "Active role at three moments: invitation, escalation, recovery"
+          }
+        },
+        "recipient": {
+          "title": "Recipient",
+          "body": "Receives specific items you pre-assigned (letters, documents, account details) once your vault is opened post-mortem. Passive role: no shard, no validation, no action required of them.",
+          "bullets": {
+            "noCap": "No cap — invite as many as you need",
+            "noResponsibility": "No cryptographic responsibility",
+            "afterUnlock": "Receives content only after the vault unlocks"
+          }
+        }
+      },
+      "steps": {
+        "heading": "What a trust contact does",
+        "accept": {
+          "title": "Accepts the invitation",
+          "body": "To invite them you provide their name, email, and optionally their phone number. They receive an email with a one-time link. When they accept and create their own vault, those identifiers are pre-filled and locked on the signup form, so their account matches the identity you registered. They sign in to Keeplas, which generates their own ML-KEM keypair on-device; the public key is uploaded so you can wrap their shard to it."
+        },
+        "receive": {
+          "title": "Receives their shard (silently)",
+          "body": "When you click Distribute now, your client wraps their Shamir share to their public key and stores the ciphertext on the server. The next time they open /shared-with-me, their browser unwraps it on-device, persists the raw bytes in their IndexedDB, and stamps lastVerifiedAt as cryptographic proof that the unwrap worked. No manual click, no copy-paste — and Keeplas servers never see the raw shard."
+        },
+        "confirm": {
+          "title": "Confirms unreachability (if needed)",
+          "body": "If your Life Check escalates and you stop responding, all your trust contacts are notified. Each can mark you as unreachable from their hub. Once the threshold is reached, a 72-hour grace window opens — during which you can still cancel by signing in."
+        },
+        "submit": {
+          "title": "Submits their shard at recovery",
+          "body": "After the grace window expires (or you manually trigger social recovery), contacts open /shared-with-me and click Submit my shard. Their browser pulls their shard from IndexedDB, wraps a copy for every peer's public key, and uploads the envelopes — the contact never sees, types, or exports the raw bytes. Once the threshold is reached, any submitter can click Reconstruct master key: their device fetches the wrapped-for-them envelopes, unwraps them, combines with its own raw shard, and rebuilds the master key entirely on-device. Servers see only ciphertext throughout."
+        }
+      },
+      "threshold": {
+        "heading": "How many contacts must agree?",
+        "body": "You choose the recovery threshold during onboarding. Threshold 2 is the default and works from 2 trusted contacts. Threshold 3 is stricter and requires 3 ready contacts.",
+        "link": "Recovery model"
+      },
+      "manageLink": "Manage your contacts",
+      "recoveryLink": "Recovery & inheritance flow"
+    },
+    "emergencyInfo": {
+      "eyebrow": "Acute emergencies",
+      "title": "Use your phone's built-in Medical ID.",
+      "intro": "Keeplas focuses on long-term continuity — inheritance, life check, shard-based recovery. For accidents and sudden illness, the fastest and most reliable tool is already on your phone's lock screen, works offline, and is recognized by trained paramedics. Two minutes to set up.",
+      "why": {
+        "heading": "Why not a Keeplas card?",
+        "body": "A QR card with your medical info would have to be readable without a key — meaning unencrypted on our servers. That contradicts our zero-knowledge promise. Apple and Google already solved this on the device itself: the data lives on your phone, accessible from the lock screen without unlocking, and never reaches a third-party server."
+      },
+      "ios": {
+        "heading": "iPhone — Medical ID",
+        "steps": {
+          "open": {
+            "title": "Open the Health app",
+            "body": "Pre-installed on every iPhone (white icon, red heart). If you removed it, reinstall from the App Store."
+          },
+          "profile": {
+            "title": "Tap your profile, then Medical ID",
+            "body": "Top-right corner of Health → your initials → Medical ID."
+          },
+          "fill": {
+            "title": "Fill in the essentials",
+            "body": "Name, date of birth, blood type, allergies, medications, conditions, height, weight, organ donor status. Add at least one emergency contact (with the relationship — Mother, Spouse…)."
+          },
+          "showLocked": {
+            "title": "Enable Show When Locked",
+            "body": "Toggle Show When Locked ON — this is the key step. Without it, the data stays behind your passcode and is useless to a first responder."
+          },
+          "shareCall": {
+            "title": "Enable Share During Emergency Call",
+            "body": "Optional but recommended: toggle Share During Emergency Call ON. When you call 911 (or your local equivalent), your Medical ID is shared automatically with dispatch."
+          }
+        },
+        "verify": {
+          "p1": "To verify: lock your phone, then on the lock screen press and hold the side button + a volume button. You should see an ",
+          "em1": "Emergency",
+          "p2": " slider — slide it, then tap ",
+          "em2": "Medical ID",
+          "p3": " at the bottom-left. Your info should appear without unlocking."
+        }
+      },
+      "android": {
+        "heading": "Android — Emergency information",
+        "intro": "Wording varies slightly by manufacturer (Samsung, Pixel, Xiaomi…), but the location is consistent.",
+        "steps": {
+          "open": {
+            "title": "Open Settings → Safety & emergency",
+            "body": "On older Android versions: Settings → About phone → Emergency information. On Samsung: Settings → Safety and emergency → Medical info."
+          },
+          "medical": {
+            "title": "Add medical information",
+            "body": "Tap Medical info. Fill in blood type, allergies, medications, organ donor, address, medical notes. Same essentials as iPhone."
+          },
+          "contacts": {
+            "title": "Add emergency contacts",
+            "body": "Back to Safety & emergency → Emergency contacts. Pick people from your address book; the relationship is shown to first responders."
+          },
+          "lockScreen": {
+            "title": "Enable lock-screen access",
+            "body": "Most Android phones expose emergency info via the lock screen Emergency button by default — no toggle needed. On Samsung, double-check Settings → Lock screen → Contact information / Medical info is enabled."
+          },
+          "sos": {
+            "title": "Enable Emergency SOS (optional)",
+            "body": "Settings → Safety & emergency → Emergency SOS. Lets you trigger a call to local emergency services and share location with your contacts by pressing the power button 5 times."
+          }
+        },
+        "verify": {
+          "p1": "To verify: lock your phone, then on the PIN/pattern screen tap ",
+          "em1": "Emergency",
+          "p2": " (or ",
+          "em2": "Emergency call",
+          "p3": ") at the bottom. You should see View emergency info or Medical info without entering your PIN."
+        }
+      },
+      "covers": {
+        "heading": "What Keeplas covers, then",
+        "body": "Native Medical ID solves the acute case. Keeplas solves the slower one: what happens to your documents, accounts, messages and assets when you become unreachable for days, weeks, or permanently. Two different problems, two different tools — both worth setting up.",
+        "trustedLink": "Set up trusted contacts",
+        "lifeCheckLink": "Configure Life Check"
+      }
+    },
+    "recovery": {
+      "title": "Recovery & Inheritance",
+      "eyebrow": "Continuity",
+      "intro": "Two scenarios, two paths. You lose access while alive — your 24-word phrase or your trust contacts get you back in. You become permanently unreachable — your trust contacts unlock the vault for your recipients.",
+      "paths": {
+        "alive": {
+          "title": "You are alive",
+          "pathA": "Path A: 24-word phrase → derives your Root Key locally → unwraps your master key. Self-service, no contacts involved.",
+          "pathB": "Path B: Phrase lost too? Your trust contacts can collaborate to reconstruct the master key (Shamir social recovery)."
+        },
+        "unreachable": {
+          "title": "You are unreachable",
+          "body": "Life Check fails on every channel → contacts confirm unreachability → 72h grace window → contacts submit their shards → vault opens in memorial mode → recipients receive their content."
+        }
+      },
+      "words": {
+        "heading": "The 24 words: what they really are",
+        "p1": "At onboarding, your device generates a fresh BIP-39 24-word phrase. Those words are never sent to Keeplas — not even hashed. They exist in three places only: your head, your printed Recovery Kit, and (briefly) your browser memory during onboarding.",
+        "p2": "The phrase feeds Argon2id (a memory-hard key derivation) along with a per-user salt, producing your Root Key. The Root Key wraps your Master Key, which is what actually decrypts your vault. The wrapped Master Key (encryptedKeyBundle) is the only part Keeplas stores — and without your phrase, it's an opaque blob.",
+        "callout": "If you lose your 24 words, your trust contacts cannot recover them — Keeplas cannot recover them either. What contacts can do is rebuild your Master Key directly via Shamir quorum. After that, you generate fresh 24 words and the vault continues unchanged with a new phrase."
+      },
+      "threshold": {
+        "heading": "The recovery threshold",
+        "intro": "During onboarding, you split your Master Key into 4 Shamir shares: one device shard and up to three trusted-contact shards. You choose the threshold — the minimum number that must collaborate to reconstruct it. With 2 trusted contacts, keep the threshold at 2; a threshold of 3 needs 3 ready contacts.",
+        "options": {
+          "two": {
+            "label": "Easiest",
+            "body": "Any two contacts. Default recommendation."
+          },
+          "three": {
+            "label": "Strict",
+            "body": "Requires three ready contacts. Stronger against a colluding pair, but less forgiving."
+          }
+        },
+        "note": "Default is 2 trusted contacts — the easiest recovery path while still requiring at least two distinct people. If your contacts face a higher collusion risk (e.g. all from the same family or workplace), use threshold 3 only after 3 contacts are ready."
+      },
+      "postmortem": {
+        "heading": "Post-mortem flow, step by step",
+        "steps": {
+          "detection": {
+            "stage": "Detection",
+            "title": "Life Check exhausts every channel",
+            "body": "Passive signals fail (no app activity, no device unlock, no third-party signal of life). The active channels you configured fire one by one — push, email, WhatsApp, SMS, IVR — with the delays you set. The cycle status moves to escalating."
+          },
+          "confirmation": {
+            "stage": "Confirmation",
+            "title": "Trust contacts mark you unreachable",
+            "body": "All your trust contacts receive a notification asking whether they can reach you. From their hub they see a Mark as unreachable button (only visible while the cycle is escalating). The threshold number of confirmations opens the 72h grace window."
+          },
+          "grace": {
+            "stage": "Grace window",
+            "title": "72 hours to come back",
+            "body": "If you reappear during these 72 hours and click I am well, the cycle is cancelled, the access request is closed and every contact is notified. Nothing ever leaves your vault."
+          },
+          "reconstruction": {
+            "stage": "Reconstruction",
+            "title": "Contacts submit their shards",
+            "body": "When the grace window expires, contacts submit their stored shards. Reconstruction happens entirely on-device — Keeplas servers see only encrypted shards, never the master key. The vault opens in read-only memorial mode."
+          },
+          "distribution": {
+            "stage": "Distribution",
+            "title": "Recipients receive their content",
+            "body": "Items you pre-assigned to recipients (letters, documents, account credentials, contacts) are released to them according to your routing. Anyone you didn't designate sees nothing."
+          }
+        }
+      },
+      "zk": {
+        "heading": "Why this stays zero-knowledge",
+        "intro": "Throughout the entire lifecycle — distribution, reception, verification, recovery — Keeplas servers never see a raw shard and never see your master key. They store only ciphertext blobs wrapped to specific public keys, plus public metadata (timestamps, audit logs, threshold values).",
+        "bullets": {
+          "distribution": {
+            "label": "Distribution",
+            "body": "each shard is wrapped to its target contact's ML-KEM public key before it leaves your device. The server stores only the envelope."
+          },
+          "reception": {
+            "label": "Reception",
+            "body": "the contact's browser unwraps the envelope using its locally held private key and persists the raw shard in IndexedDB. Nothing about the raw bytes is ever sent back."
+          },
+          "verification": {
+            "label": "Verification",
+            "body": "successfully unwrapping the shard automatically stamps lastVerifiedAt on the contact's row. That timestamp is just an attestation; the server can't and doesn't inspect the shard."
+          },
+          "submission": {
+            "label": "Recovery submission",
+            "body": "when contacts submit their shard, each one wraps a copy for every peer's public key (fan-out). The server stores the fan-out envelopes — still ciphertext only."
+          },
+          "reconstruction": {
+            "label": "Reconstruction",
+            "body": "the Shamir interpolation that rebuilds the master key happens entirely in the contact's browser. The master key never touches a server, by construction."
+          }
+        },
+        "callout": "Trade-off worth knowing: with threshold = 2, two colluding contacts can both confirm unreachability AND open the vault. The Life Check escalation + the 72h grace window are the only extra safeguards. If you anticipate that risk (e.g. all your contacts share a household), raise your threshold at onboarding."
+      },
+      "shardUse": {
+        "heading": "How a contact uses their shard",
+        "intro": "Trust contacts never have to type, copy, export or back up their shard. The browser handles the bytes invisibly. Here's what a contact actually sees and does:",
+        "steps": {
+          "accept": {
+            "stage": "Day 0",
+            "title": "They accept your invitation",
+            "body": "They sign in to Keeplas, generate their own ML-KEM keypair on-device, and the public half is uploaded so you can wrap shards to it."
+          },
+          "distribution": {
+            "stage": "Distribution",
+            "title": "They visit /shared-with-me once",
+            "body": "Their browser auto-unwraps the encrypted shard you distributed and stores the raw bytes in their IndexedDB. The card shows Hash verified [just now]. No button to click."
+          },
+          "recoveryTime": {
+            "stage": "Recovery time",
+            "title": "They click Submit my shard",
+            "body": "Either after the post-mortem grace window expires, or after you trigger a social recovery while alive. Their browser reads the local shard, wraps a copy for each peer, uploads the fan-out envelopes."
+          },
+          "reconstruction": {
+            "stage": "Reconstruction",
+            "title": "They click Reconstruct master key",
+            "body": "Once the threshold has submitted, their browser fetches the envelopes addressed to them, unwraps them with their private key, combines with its own raw shard, and rebuilds the master key locally. From there the vault can be decrypted in memorial read-only mode."
+          }
+        }
+      },
+      "crossDevice": {
+        "heading": "What happens if a contact changes device",
+        "intro": "A trust contact who switches phones, factory-resets their device, opens an incognito window, or signs in on a new laptop does not lose their shard. The architecture handles this without any manual export, copy-paste or special action.",
+        "keypair": {
+          "label": "The contact's ML-KEM keypair is portable.",
+          "body": "Their secret key is stored on the server, AES-GCM-encrypted under their own master key. As soon as they unlock their vault on the new device — with their 24-word phrase or via Device Unlock — the secret key is decrypted in their browser, ready to use."
+        },
+        "shard": {
+          "label": "The encrypted shard is still on the server.",
+          "body": "Your client wrapped it to their public key during distribution; the ciphertext lives in your trusted_contacts row. It never depended on a specific device."
+        },
+        "restore": {
+          "label": "Auto-restoration runs on the next visit.",
+          "body": "When the contact opens /shared-with-me on the new device, a brief “Restoring your shards…” banner appears while the browser unwraps the server envelope and persists the raw bytes in the new device's IndexedDB. From there, every recovery action works exactly like before."
+        },
+        "failure": {
+          "title": "The only failure mode: a contact loses BOTH their device AND their 24-word phrase.",
+          "body": "Without the phrase, they can't unlock their master key — so they can't decrypt their ML-KEM secret key — so they can't unwrap their shard. Their slot is effectively permanent dead weight. As the vault owner, you should revoke them, invite a replacement, then click Distribute now to issue fresh shards to all current trust contacts."
+        }
+      },
+      "trustedLink": "Trusted Contacts in detail",
+      "recoveryKitLink": "Export your Recovery Kit"
+    },
+    "insights": {
+      "eyebrow": "Reflect & Prepare",
+      "title": "Nine honest cases for digital continuity.",
+      "intro": "Three reflections, one pain point, two emergency essentials, and three foundations. Skim the table of contents or read top-to-bottom — each section stands on its own.",
+      "toc": "In this guide",
+      "toneLabels": {
+        "warning": "Reflect",
+        "success": "Practical",
+        "info": "How Keeplas works"
+      },
+      "tips": {
+        "if-you-died-today": {
+          "title": "If you died today, who would access what?"
+        },
+        "secrets-die-with-you": {
+          "title": "Don't let your secrets die with you"
+        },
+        "probate-vs-grief": {
+          "title": "Probate moves in months. Families need days."
+        },
+        "medical-id": {
+          "title": "Set up your phone's Medical ID today"
+        },
+        "emergency-card": {
+          "title": "Carry an Emergency Card"
+        },
+        "twenty-four-words": {
+          "title": "Your 24 words are the root key"
+        },
+        "zero-knowledge": {
+          "title": "Zero-knowledge by design"
+        },
+        "trusted-contacts": {
+          "title": "Trusted contacts unlock continuity"
+        },
+        "quantum-safe": {
+          "title": "Quantum-safe encryption"
+        }
+      },
+      "diedToday": {
+        "p1": "Take ninety seconds. Picture every account, file, and key in your life — and then picture them gone. Your phone passcode. Your password manager master key. The drive with the kids' photos. The crypto seed phrase you wrote down somewhere « safe ». The login to the small business email forwarding addressed to your home. Most adults manage more than a hundred online accounts and almost none of them are mapped, named, or transferable.",
+        "p2": "The point of this question isn't to be morbid — it's to turn a vague worry into a concrete checklist. You can't protect what you haven't named. So before you do anything else, write down the categories that matter for your life:",
+        "items": {
+          "identity": "Identity & legal documents (passport, ID, birth certificates)",
+          "money": "Money (banks, brokerage, crypto wallets, retirement)",
+          "cloud": "Cloud (photos, drive, password manager, email)",
+          "people": "People (who needs to be contacted, who'd step in)",
+          "wishes": "Wishes (medical directives, organ donor status, funeral notes)"
+        },
+        "p3": "Mapping is the act. Choosing who gets what is the gift. The rest of this guide is how Keeplas — and a few habits outside Keeplas — make that gift durable."
+      },
+      "secrets": {
+        "p1": "When someone dies without a digital plan, three patterns repeat. The iCloud account quietly freezes — Apple now offers a Legacy Contact, but only if it's set up before death; otherwise the family faces a court order or a permanent lock. Crypto wallets become tombs the moment a seed phrase is missing — there is no support line, no « forgot password », no recovery. Photos and documents on a phone protected by Face ID and an unknown passcode are functionally lost.",
+        "p2": "None of these failures need a sophisticated attacker. They happen because the systems we depend on every day are designed for a single living user, not for transfer. The fix is small: a phrase you can write down, a contact who knows where it is, and a tool that can release it on the right conditions.",
+        "p3": "That is the ten-minute version of what Keeplas does. Add the few things you would not want to lose, name a trusted contact or two, and the cliff becomes a slope.",
+        "link": "Open your vault"
+      },
+      "probate": {
+        "p1": "Probate — the legal process that grants someone authority over a deceased person's estate — typically takes six to eighteen months, depending on the jurisdiction and the complexity of the estate. In some countries it's faster, in many it's slower. None of those timelines match the speed of life.",
+        "p2": "Within the first thirty days after a death, the family usually has to: pay the mortgage, keep insurance policies current, contest or confirm subscriptions, file a death notice with banks, and find a dozen account passwords that nobody wrote down. Without prepared access, all of this either falls on one exhausted relative or waits — accruing late fees, lapsing coverage, locking accounts.",
+        "p3": "Documenting your essentials now isn't a substitute for a will. It's the bridge that gets your family through the first month while the legal machinery catches up. Keeplas releases the information you've curated — not your whole life, just what you chose — to the people you chose, on the timeline you chose.",
+        "link": "Read the recovery & inheritance guide"
+      },
+      "medicalId": {
+        "p1": "For accidents and sudden illness, the fastest tool is already on your phone: the built-in Medical ID. It lives on your lock screen, works offline, requires no app, and is what trained paramedics actually look for first. Two minutes to set up on iPhone or Android.",
+        "callout": "We deliberately don't replicate Medical ID inside Keeplas — a QR card readable without a key would break our zero-knowledge promise, and the operating system already solved this problem on the device itself.",
+        "link": "Step-by-step setup for iPhone & Android"
+      },
+      "card": {
+        "p1": "Medical ID is excellent. Paper still beats it in a few specific situations: a dead phone battery, a foreign emergency room where paramedics aren't looking for the iOS lock-screen flow, a phone left in another room, a guardian who needs your blood type read aloud over a phone call.",
+        "p2": "A printed Emergency Card is the offline complement. It carries the bare minimum a first responder or trusted person needs in the first ten minutes — and nothing else. Specifically:",
+        "items": {
+          "identity": "Your name, date of birth, blood type",
+          "medical": "Allergies, current medications, critical conditions",
+          "contacts": "Two emergency contacts with their relationship to you",
+          "directives": "One sentence on advance directives or organ donor status"
+        },
+        "p3": "Crucially, none of your vault — no documents, no credentials, no inheritance instructions — appears on this card. The card opens the first door; the rest stays sealed behind your zero-knowledge keys.",
+        "link": "Pick the contacts who go on your card"
+      },
+      "words": {
+        "p1": "Your 24-word recovery phrase isn't a password — it's the mathematical seed every encryption key on your account is derived from. We use the BIP-39 standard you may have seen in crypto wallets, paired with Argon2id key derivation that turns the phrase into your Root Key locally, on your device. The phrase itself never leaves your device, and Keeplas servers never store it nor any hash of it.",
+        "p2": "That's the strength: the system has no fallback that bypasses the phrase, which is exactly what makes it impossible for us — or anyone we'd be compelled to share with — to read your data. That's also the responsibility: if you lose the phrase and you haven't set up trusted contacts, the vault is gone.",
+        "p3": "The right way to store 24 words is offline, on paper or steel, ideally in two separate physical locations (a fire-resistant box and a sealed envelope at a relative's home, for example). Never store them in a screenshot, a note app, an email draft, or a password manager — those defeat the entire purpose.",
+        "link": "Generate or print your Recovery Kit"
+      },
+      "zeroKnowledge": {
+        "p1": "Zero-knowledge is the cryptographic guarantee that a service can store your data without ever being able to read it. In Keeplas, your master key is derived locally from your 24-word phrase and never leaves your device. Every vault item is encrypted with AES-256-GCM on your device before upload. What we hold on our servers is mathematically opaque ciphertext.",
+        "p2": "The practical comparison: with traditional cloud storage (or most consumer password managers), the service holds a key that can unlock your data — under a court order, a leaked credential, or a rogue employee, that data becomes legible. With zero-knowledge, the ciphertext stays ciphertext until your device unlocks it.",
+        "p3": "The implication you should understand clearly: there is no « reset password and recover » path. The two real recovery paths are the 24-word phrase (self-service) and Shamir social recovery via your trusted contacts (when the phrase is lost). That's the whole shape of the system."
+      },
+      "trustedContacts": {
+        "p1": "Trusted contacts are the people who can collectively unlock your continuity if you lose your phrase or become unreachable. They don't hold your phrase — they hold cryptographic shards of your master key, generated through Shamir secret sharing. A configurable threshold (2 trusted contacts by default) must agree before recovery proceeds, and reconstruction always happens on their devices, never on Keeplas servers.",
+        "p2": "Pick at least two. A third contact adds resilience if you choose the stricter threshold. Pick people in different households, ideally different cities, who would actually pick up the phone in a hard week.",
+        "link": "Read the trusted contacts deep-dive"
+      },
+      "quantumSafe": {
+        "p1": "The biggest cryptographic risk to legacy data isn't today's attackers — it's tomorrow's. The pattern is called harvest now, decrypt later: well-funded adversaries are recording encrypted traffic and stored ciphertext today, betting that a future quantum computer will break the underlying algorithms and let them read what was captured years earlier.",
+        "p2": "For consumer chat or short-lived sessions this is mostly theoretical. For inheritance and continuity data — which has to remain confidential for decades — it's a real planning horizon. That's why Keeplas wraps every per-recipient data encryption key, and every Shamir shard, with ML-KEM-768 (NIST FIPS 203), the post-quantum key encapsulation standard ratified in 2024. It replaces RSA-OAEP on the wrapping layer.",
+        "p3": "The user-visible impact is essentially zero: same flows, same performance. The future-visible impact is that ciphertext captured today should still be unreadable when post-quantum decryption becomes feasible."
+      },
+      "footer": {
+        "heading": "Done reading?",
+        "body": "Head back to your hub and turn one of these cases into an action.",
+        "link": "Return to the Hub"
+      }
+    }
+  },
+  "notFound": {
+    "message": "Page not found",
+    "goHome": "Go home"
+  },
+  "lifeCheckConfirm": {
+    "badge": "Life Check",
+    "okTitle": "Thanks — you're confirmed",
+    "okBody": "We've recorded that you're well and reset your check-in countdown. You can safely close this tab.",
+    "invalidTitle": "This link is invalid or expired",
+    "invalidBody": "This confirmation link is invalid or has expired. Open Keeplas to confirm from the Life Check page, or wait for the next check-in.",
+    "openApp": "Open Keeplas"
+  },
+  "invite": {
+    "invalid": {
+      "badge": "Invitation Link",
+      "heading": "Invalid invitation",
+      "body": "This invitation link is invalid or has expired. Ask the vault owner to send you a new one."
+    },
+    "goToKeeplas": "Go to Keeplas",
+    "processed": {
+      "badge": "Invitation Status",
+      "heading": "Invitation already processed",
+      "accepted": "You have already accepted this invitation.",
+      "declined": "You have already declined this invitation."
+    },
+    "goToHub": "Go to Hub",
+    "confirmed": {
+      "badge": "Confirmed",
+      "heading": "You're now a Trusted Contact",
+      "bodyPre": "You are now part of ",
+      "bodyPost": "'s recovery network. You may receive a recovery fragment to help protect their vault."
+    },
+    "invite": {
+      "badge": "Trusted Contact Invitation",
+      "heading": "{name} invited you",
+      "bodyPre": "You have been designated as a ",
+      "bodyPost": " in {name}'s Keeplas vault."
+    },
+    "roles": {
+      "family": "Family member",
+      "friend": "Friend",
+      "lawyer": "Lawyer",
+      "doctor": "Doctor",
+      "other": "Trusted contact"
+    },
+    "roleFallback": "trusted contact",
+    "meaning": {
+      "title": "What this means",
+      "bullet1": "You will receive an encrypted recovery fragment.",
+      "bullet2": "You may be asked to help recover the vault in an emergency.",
+      "bullet3": "You will never see vault contents unless access is explicitly granted."
+    },
+    "needAccount": "You need a Keeplas account to accept this invitation.",
+    "createAccount": "Create Account",
+    "signIn": "Sign In",
+    "accepting": "Accepting...",
+    "accept": "Accept Invitation",
+    "declining": "Declining...",
+    "decline": "Decline",
+    "acceptFailed": "Failed to accept invitation",
+    "declineFailed": "Failed to decline invitation"
+  },
+  "security": {
+    "badge1": "Security & Privacy",
+    "badge2": "Quantum-safe end-to-end",
+    "title": "How Keeplas protects your vault",
+    "intro": "Five pillars: how you sign in, how your data is encrypted, how you unlock day-to-day, what happens if you lose access, and the tamper-evident audit trail that makes Keeplas usable as evidence in succession proceedings. We see encrypted bytes — never your data. Every per-recipient key is wrapped with a NIST post-quantum KEM, so a future quantum computer cannot retroactively break what we hold today.",
+    "externalRefs": "External references",
+    "technicalTitle": "How it works (technical)",
+    "faqHeading": "Frequently asked",
+    "pillars": {
+      "auth": {
+        "badge": "Pillar 1",
+        "title": "Authentication",
+        "intro": "Email and password sign you in — nothing more. Optional two-factor authentication blocks phishing. Your password never participates in encryption, so resetting it doesn't risk your data.",
+        "bullets": [
+          "Email + password to sign in.",
+          "Optional TOTP (Google Authenticator, 1Password, Authy…) for 2FA.",
+          "Lost your password? Reset it with your 24 recovery words. Your vault stays untouched.",
+          "Lost your authenticator? Reset 2FA with your 24 recovery words."
+        ]
+      },
+      "zk": {
+        "badge": "Pillar 2",
+        "title": "Zero-Knowledge Encryption",
+        "intro": "Your vault is encrypted on your device, before anything reaches our servers. The keys are derived from 24 recovery words that you alone hold — we never see them, store them, or transmit them. Per-recipient sharing uses a NIST post-quantum KEM, so even a future quantum adversary cannot retroactively decrypt what we hold.",
+        "bullets": [
+          "24 BIP-39 words generated locally during onboarding.",
+          "Argon2id derives a RootKey from your words + a per-user public salt.",
+          "RootKey wraps a per-vault MasterKey (AES-256-GCM).",
+          "Per-recipient key wrapping uses ML-KEM-768 (NIST FIPS 203) — quantum-resistant against future quantum computers.",
+          "We see only encrypted envelopes and the public salt. Even if our database leaked, your data stays opaque."
+        ]
+      },
+      "device": {
+        "badge": "Pillar 3",
+        "title": "Device Unlock",
+        "intro": "Typing 24 words at every login is brutal. After your first login on a device, you can save a faster local unlock — choose any combination. Each method stays on this device only and never syncs.",
+        "bullets": [
+          "PIN (6+ digits) protected by Argon2id with brute-force lockout.",
+          "Biometric — Face ID, Touch ID, Windows Hello — via WebAuthn + PRF extension.",
+          "Hardware security key — YubiKey or any FIDO2 authenticator with PRF.",
+          "All three can coexist. Lose the device? Re-enter your 24 words on a new one.",
+          "Inactivity auto-lock: after 20 minutes with no activity the vault locks itself, wiping the in-memory and on-device keys until you unlock again."
+        ]
+      },
+      "recovery": {
+        "badge": "Pillar 4",
+        "title": "Recovery",
+        "intro": "Your 24 words are the only secret without a server-side reset path. If you lose them, only your trusted contacts can help — through Shamir Secret Sharing wrapped with a post-quantum KEM. We have no master key. No backdoor.",
+        "bullets": [
+          "Lost password → reset with your 24 words. Vault unaffected.",
+          "Lost 2FA → reset with your 24 words.",
+          "Lost the 24 words → trusted contacts hold encrypted shards. A quorum can reconstruct.",
+          "Trusted-contact shards are wrapped with ML-KEM-768, so even harvest-now-decrypt-later attacks fail decades from now.",
+          "Posthumous continuity → trusted contacts gain access via configurable life-check failures."
+        ]
+      },
+      "audit": {
+        "badge": "Pillar 5",
+        "title": "Legal-Grade Audit Trail",
+        "intro": "For a court to admit Keeplas as evidence in a succession case, it has to prove who acted, when, and from where — without us being able to forge or rewrite it. Every state-changing action is appended to an immutable, hash-chained log with a server-attested IP and country, and the chain is broken the instant anyone tampers with a single entry.",
+        "bullets": [
+          "Every mutation produces an audit entry with action, resource, timestamp, IP, and country.",
+          "IP and country are signed server-side with HMAC-SHA256 — clients cannot spoof their own location.",
+          "Each entry carries the previous entry's hash, so the chain can be replayed and verified offline.",
+          "At signup we collect your date of birth (legal capacity) and country of residence (applicable inheritance law) — both are stored on your user record and recorded in the audit chain.",
+          "We preserve audit logs even after account deletion: the immutable trail outlives the user, which is exactly the property a probate court needs."
+        ]
+      }
+    },
+    "cta": {
+      "prompt": "Ready to set up your vault?",
+      "create": "Create your vault",
+      "have": "I already have one"
+    },
+    "faq": [
+      {
+        "q": "What if Keeplas gets hacked?",
+        "a": "Attackers would see encrypted bundles, public salts, and server-side scrypt password hashes. None of these alone reveal your vault. Without your 24 words (held only by you) or a quorum of your trusted contacts' shards, the data stays unreadable."
+      },
+      {
+        "q": "What if Keeplas shuts down?",
+        "a": "Your vault on-device contains your decrypted MasterKey while you're logged in — you can export everything. We will publish the encryption format so any developer can decrypt your bundle from your 24 words alone, with no Keeplas involvement."
+      },
+      {
+        "q": "What if I die or become incapacitated?",
+        "a": "That's the core mission. You configure trusted contacts and a life-check protocol. After confirmed inactivity, your trusted contacts can recover the vault using their distributed shards. You decide who, what, and when."
+      },
+      {
+        "q": "Can a court force you to hand over my data?",
+        "a": "We can hand over what we have: encrypted bundles. We cannot decrypt them. We do not hold your password reset path, your 24 words, or your MasterKey. The architecture removes the option of complying."
+      },
+      {
+        "q": "Why do I need a password if my data is encrypted by 24 words?",
+        "a": "Two layers. The password authenticates you to our servers (so attackers cannot just guess emails to access encrypted bundles). The 24 words encrypt the data itself. Both are needed at first login on a new device — afterward, your device unlock takes over."
+      },
+      {
+        "q": "What encryption algorithms do you use?",
+        "a": "Argon2id (OWASP 2024 params) for key derivation, AES-256-GCM for symmetric encryption, ML-KEM-768 (NIST FIPS 203, the post-quantum KEM standardized in August 2024) for wrapping per-recipient keys, SHA-256 for verifiers, and Shamir Secret Sharing over GF(256) for trusted-contact recovery. Cryptography runs client-side via the Web Crypto API and @noble/post-quantum."
+      },
+      {
+        "q": "Are you quantum-safe?",
+        "a": "Yes, end-to-end. Symmetric primitives (AES-256-GCM, Argon2id, SHA-256, Shamir Secret Sharing) are all quantum-resistant by construction. The asymmetric layer — used to wrap per-recipient keys and trusted-contact shards — uses ML-KEM-768, the NIST-standardized post-quantum KEM (FIPS 203, August 2024). This blocks the harvest-now-decrypt-later threat: data we store today stays opaque even to a future adversary running Shor's algorithm on a large quantum computer. Most password managers (Bitwarden, 1Password) have not yet migrated; we built Keeplas post-quantum from day one because vault data must stay confidential for decades."
+      },
+      {
+        "q": "Why do you ask for my date of birth and country?",
+        "a": "Two legal reasons. Date of birth proves civil capacity (you must be at least 18 to commit your estate) and identifies you in succession proceedings. Country of residence determines which inheritance law applies — French, Belgian, Quebec, and U.S. probate rules differ substantially. Both fields are stored only on your user record and inside the tamper-evident audit chain; they are never used for marketing and never shared with third parties."
+      },
+      {
+        "q": "I was invited as a trusted contact — why are my email and phone already filled in?",
+        "a": "Because the person who invited you entered them. To add you, they provide your name, email, and optionally your phone number so Keeplas can send you the one-time invitation link and, later, Life Check alerts. When you accept and create your own vault, those identifiers are pre-filled and locked on the signup form so your account matches the identity they registered, which prevents a mismatched email or number. That is the only information shared about you; nothing from their vault is exposed, and you alone hold your 24 words and keys."
+      },
+      {
+        "q": "Will the audit log hold up in court?",
+        "a": "That is exactly what it is built for. Every state-changing action is appended to an immutable hash-chained log with a server-attested IP and country (signed via HMAC-SHA256 so a client cannot fake its own location). Auditors and judges can replay the chain offline and detect any tampering: changing a single entry breaks every subsequent hash. Combined with your declared identity (date of birth, country), this is what lets a notary or probate court accept Keeplas activity as evidence of intent and authenticity. The full framework around legally-recognized electronic records in the EU is eIDAS."
+      },
+      {
+        "q": "What about GDPR?",
+        "a": "Audit entries store action metadata only — never the plaintext of your vault. You can request export or deletion of your account at any time, but the audit chain itself is preserved (anonymized to your now-deleted user ID) so that the immutability guarantee on which a future probate court might rely is not retroactively destroyed. See GDPR full text for the legal basis (Article 6.1.f legitimate interest combined with Article 17.3.b legal obligation)."
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@ import {
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 type Method = "pin" | "biometric" | "hardware-key";
 
@@ -22,6 +23,7 @@ export function EnrollDeviceUnlockDialog({
   userEmail,
   onClose,
 }: EnrollDeviceUnlockDialogProps) {
+  const t = useTranslations("settingsSecurity");
   const { masterKey } = useMasterKey();
   const { enroll } = useDeviceUnlock({ userEmail });
   const [method, setMethod] = useState<Method | null>(null);
@@ -41,11 +43,11 @@ export function EnrollDeviceUnlockDialog({
   async function handlePinSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (pin !== pinConfirm) {
-      setError("PINs do not match");
+      setError(t("enroll.pinMismatch"));
       return;
     }
     if (pin.length < PIN_MIN_LENGTH) {
-      setError(`PIN must be at least ${PIN_MIN_LENGTH} digits`);
+      setError(t("enroll.pinTooShort", { min: PIN_MIN_LENGTH }));
       return;
     }
     setBusy(true);
@@ -54,7 +56,7 @@ export function EnrollDeviceUnlockDialog({
       await enroll(masterKey!, { method: "pin", pin });
       onClose();
     } catch (err) {
-      setError(getErrorMessage(err, "Could not enroll PIN"));
+      setError(getErrorMessage(err, t("enroll.pinError")));
     } finally {
       setBusy(false);
     }
@@ -72,7 +74,7 @@ export function EnrollDeviceUnlockDialog({
       });
       onClose();
     } catch (err) {
-      setError(getErrorMessage(err, "Could not enroll authenticator"));
+      setError(getErrorMessage(err, t("enroll.authenticatorError")));
     } finally {
       setBusy(false);
     }
@@ -88,11 +90,10 @@ export function EnrollDeviceUnlockDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-headline-sm text-primary mb-2">
-          Speed up future unlocks
+          {t("enroll.title")}
         </h2>
         <p className="text-body-md text-on-surface-variant mb-6">
-          Choose at least one method so you don&apos;t have to type your 24
-          words on this device next time.
+          {t("enroll.description")}
         </p>
 
         {error ? (
@@ -108,9 +109,11 @@ export function EnrollDeviceUnlockDialog({
               onClick={() => setMethod("pin")}
               className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors"
             >
-              <div className="font-bold text-on-surface">PIN</div>
+              <div className="font-bold text-on-surface">
+                {t("enroll.pinOption")}
+              </div>
               <div className="text-xs text-on-surface-variant mt-1">
-                A {PIN_MIN_LENGTH}+ digit code stored only on this device
+                {t("enroll.pinOptionHint", { min: PIN_MIN_LENGTH })}
               </div>
             </button>
             <button
@@ -120,12 +123,12 @@ export function EnrollDeviceUnlockDialog({
               className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
             >
               <div className="font-bold text-on-surface">
-                Biometric (Face ID / Touch ID / Windows Hello)
+                {t("enroll.biometricOption")}
               </div>
               <div className="text-xs text-on-surface-variant mt-1">
                 {biometricAvailable
-                  ? "Use your platform authenticator"
-                  : "Not available on this device"}
+                  ? t("enroll.biometricAvailable")
+                  : t("enroll.biometricUnavailable")}
               </div>
             </button>
             <button
@@ -135,12 +138,12 @@ export function EnrollDeviceUnlockDialog({
               className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
             >
               <div className="font-bold text-on-surface">
-                Hardware security key
+                {t("enroll.hardwareOption")}
               </div>
               <div className="text-xs text-on-surface-variant mt-1">
                 {hardwareAvailable
-                  ? "YubiKey or other roaming authenticator"
-                  : "WebAuthn not supported"}
+                  ? t("enroll.hardwareAvailable")
+                  : t("enroll.hardwareUnavailable")}
               </div>
             </button>
             <button
@@ -148,7 +151,7 @@ export function EnrollDeviceUnlockDialog({
               onClick={onClose}
               className="w-full text-sm text-on-surface-variant hover:underline mt-4"
             >
-              Skip for now
+              {t("enroll.skip")}
             </button>
           </div>
         ) : null}
@@ -156,19 +159,21 @@ export function EnrollDeviceUnlockDialog({
         {method === "pin" ? (
           <form onSubmit={handlePinSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="enroll-pin">New PIN</Label>
+              <Label htmlFor="enroll-pin">{t("enroll.newPinLabel")}</Label>
               <Input
                 id="enroll-pin"
                 type="password"
                 inputMode="numeric"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                placeholder={`At least ${PIN_MIN_LENGTH} digits`}
+                placeholder={t("enroll.pinPlaceholder", { min: PIN_MIN_LENGTH })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="enroll-pin-confirm">Confirm PIN</Label>
+              <Label htmlFor="enroll-pin-confirm">
+                {t("enroll.confirmPinLabel")}
+              </Label>
               <Input
                 id="enroll-pin-confirm"
                 type="password"
@@ -187,7 +192,7 @@ export function EnrollDeviceUnlockDialog({
               disabled={busy || pin.length < PIN_MIN_LENGTH}
               className="w-full"
             >
-              {busy ? <Spinner size="sm" /> : "Save PIN"}
+              {busy ? <Spinner size="sm" /> : t("enroll.savePin")}
             </Button>
             <button
               type="button"
@@ -195,7 +200,7 @@ export function EnrollDeviceUnlockDialog({
               disabled={busy}
               className="w-full text-sm text-on-surface-variant hover:underline"
             >
-              Back
+              {t("enroll.back")}
             </button>
           </form>
         ) : null}

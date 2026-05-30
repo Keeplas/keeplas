@@ -1,6 +1,7 @@
 "use client";
 
 import { HelpHint, Icon } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { FREQUENCIES, type Frequency } from "./constants";
 
 const CLOCK_ICON = "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
@@ -11,17 +12,16 @@ interface FrequencySelectorProps {
 }
 
 export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
+  const t = useTranslations("lifeCheck");
   return (
     <section className="bg-surface-container-low rounded-2xl p-6 relative overflow-hidden">
       <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
         <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
-        Check-in cadence
-        <HelpHint content="How often Keeplas asks you to confirm you're well. Shorter = more frequent check-ins; longer = fewer interruptions but slower release." />
+        {t("frequency.title")}
+        <HelpHint content={t("frequency.help")} />
       </h3>
       <p className="text-body-md text-on-surface-variant mb-6">
-        How often Keeplas asks you to confirm you&apos;re well. Only an explicit
-        reply — in-app tap, email button, or WhatsApp — resets the countdown;
-        using the app does not.
+        {t("frequency.description")}
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {FREQUENCIES.map((freq) => {
@@ -48,14 +48,14 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
                   selected ? "opacity-80" : "text-on-surface-variant"
                 }`}
               >
-                {freq.unit}
+                {t(`frequency.unit.${freq.value}`)}
               </span>
               <span
                 className={`text-label-md mt-1 ${
                   selected ? "opacity-60" : "text-on-surface-variant/60"
                 }`}
               >
-                {freq.description}
+                {t(`frequency.tag.${freq.value}`)}
               </span>
             </button>
           );

@@ -161,6 +161,7 @@ export const getOnboardingState = query({
       recoveryVerified: user.recoveryVerified ?? false,
       hasEncryptedKeyBundle: !!user.encryptedKeyBundle,
       vaultThreshold: user.vaultThreshold ?? null,
+      language: user.language ?? null,
     };
   },
 });

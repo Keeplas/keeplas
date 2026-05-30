@@ -15,20 +15,20 @@ import {
   Progress,
   toast,
 } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRotateVault, type RotateStatus } from "@/lib/use-rotate-vault";
 
-const STATUS_LABEL: Record<RotateStatus, string> = {
-  idle: "",
-  validating: "Verifying your recovery phrase…",
-  rotating_keys: "Generating a new master key…",
-  redistributing: "Re-sealing recovery shards…",
-  reencrypting: "Re-encrypting your vault…",
-  finalizing: "Finalizing…",
-  done: "Done",
-  error: "",
+// Status keys that map to a user-facing progress label (resolved via t()).
+const STATUS_LABEL_KEYS: Partial<Record<RotateStatus, string>> = {
+  validating: "return.status.validating",
+  rotating_keys: "return.status.rotatingKeys",
+  redistributing: "return.status.redistributing",
+  reencrypting: "return.status.reencrypting",
+  finalizing: "return.status.finalizing",
+  done: "return.status.done",
 };
 
 function progressPercent(
@@ -60,6 +60,7 @@ function progressPercent(
  * material can no longer open anything they change going forward.
  */
 export function ReturnAfterReleaseBanner() {
+  const t = useTranslations("lifeCheck");
   const requests = useQuery(api.access_requests.getAccessRequests);
   const viewer = useQuery(api.users.viewer);
   const revokeReleasedAccess = useAuditedMutation(
@@ -91,7 +92,7 @@ export function ReturnAfterReleaseBanner() {
 
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
-      setLocalError("Enter all 24 words of your recovery phrase.");
+      setLocalError(t("return.phraseError"));
       return;
     }
 
@@ -103,8 +104,8 @@ export function ReturnAfterReleaseBanner() {
       setOpen(false);
       toast({
         variant: "success",
-        title: "Vault secured",
-        description: "Access was revoked and your vault was re-keyed.",
+        title: t("return.successTitle"),
+        description: t("return.successDescription"),
       });
     }
   }
@@ -120,13 +121,13 @@ export function ReturnAfterReleaseBanner() {
           <div>
             <p className="text-title-md">
               {rotationInProgress
-                ? "Finish securing your vault"
-                : "Your vault was released"}
+                ? t("return.bannerTitleResume")
+                : t("return.bannerTitleReleased")}
             </p>
             <p className="text-body-md mt-1 max-w-xl">
               {rotationInProgress
-                ? "A re-keying was started but not finished. Resume it to fully retire the old keys."
-                : "Trusted contacts were granted access. If you are back, revoke that access and re-key your vault. This protects everything from now on — it cannot recover what was already read."}
+                ? t("return.bannerBodyResume")
+                : t("return.bannerBodyReleased")}
             </p>
           </div>
         </div>
@@ -136,8 +137,8 @@ export function ReturnAfterReleaseBanner() {
           onClick={() => setOpen(true)}
         >
           {rotationInProgress
-            ? "Resume re-keying"
-            : "I'm back — secure my vault"}
+            ? t("return.resumeCta")
+            : t("return.secureCta")}
         </Button>
       </div>
 
@@ -151,12 +152,9 @@ export function ReturnAfterReleaseBanner() {
       >
         <DialogContent className="bg-surface max-w-lg p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6">
-            <DialogTitle>Secure my vault</DialogTitle>
+            <DialogTitle>{t("return.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              Enter your 24-word recovery phrase. We&apos;ll revoke the released
-              access and generate a fresh master key, re-encrypting every item.
-              Items a contact already opened during the release cannot be taken
-              back — this secures everything going forward.
+              {t("return.dialogDescription")}
             </DialogDescription>
           </DialogHeader>
 
@@ -169,7 +167,7 @@ export function ReturnAfterReleaseBanner() {
               onChange={(e) => setPhrase(e.target.value)}
               disabled={working}
               rows={4}
-              placeholder="Paste or type your 24 words…"
+              placeholder={t("return.phrasePlaceholder")}
               className="w-full rounded-xl bg-surface-container-low p-4 text-body-md outline-none focus-visible:ring-2 focus-visible:ring-secondary resize-none"
               autoComplete="off"
               spellCheck={false}
@@ -181,7 +179,7 @@ export function ReturnAfterReleaseBanner() {
                   value={progressPercent(status, progress.done, progress.total)}
                 />
                 <p className="text-label-md text-on-surface-variant">
-                  {STATUS_LABEL[status]}
+                  {STATUS_LABEL_KEYS[status] ? t(STATUS_LABEL_KEYS[status]) : ""}
                   {status === "reencrypting" && progress.total > 0
                     ? ` (${progress.done}/${progress.total})`
                     : ""}
@@ -199,10 +197,10 @@ export function ReturnAfterReleaseBanner() {
                 disabled={working}
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                {t("return.cancel")}
               </Button>
               <Button type="submit" variant="vault" disabled={working}>
-                {working ? "Securing…" : "Revoke & re-key"}
+                {working ? t("return.working") : t("return.submit")}
               </Button>
             </div>
           </form>

@@ -3,37 +3,20 @@
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Badge } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 
-const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
-  running: {
-    label: "Running",
-    className: "bg-warning-container text-on-warning-container",
-  },
-  validated: {
-    label: "Validated",
-    className: "bg-secondary-container text-on-secondary-container",
-  },
-  escalating: {
-    label: "Escalating",
-    className: "bg-error-container text-on-error-container",
-  },
-  triggered: {
-    label: "Triggered",
-    className: "bg-error text-on-error",
-  },
-  cancelled: {
-    label: "Cancelled",
-    className: "bg-surface-container-highest text-on-surface-variant",
-  },
+const STATUS_CLASSNAMES: Record<string, string> = {
+  running: "bg-warning-container text-on-warning-container",
+  validated: "bg-secondary-container text-on-secondary-container",
+  escalating: "bg-error-container text-on-error-container",
+  triggered: "bg-error text-on-error",
+  cancelled: "bg-surface-container-highest text-on-surface-variant",
 };
 
-const METHOD_LABELS: Record<string, string> = {
-  tap: "App confirmation",
-  email_link: "Email confirmation",
-  auto: "Auto-validated",
-};
+const METHOD_KEYS = ["tap", "email_link", "auto"] as const;
 
 export function LifeCheckHistory() {
+  const t = useTranslations("lifeCheck");
   const history = useQuery(api.life_check.getCycleHistory, { limit: 10 });
 
   if (!history || history.length === 0) return null;
@@ -41,13 +24,15 @@ export function LifeCheckHistory() {
   return (
     <section>
       <h2 className="font-headline font-bold text-xl text-primary mb-4">
-        Check History
+        {t("history.title")}
       </h2>
 
       <div className="space-y-2">
         {history.map((cycle) => {
-          const statusConfig =
-            STATUS_CONFIG[cycle.status] ?? STATUS_CONFIG.running;
+          const statusClassName =
+            STATUS_CLASSNAMES[cycle.status] ?? STATUS_CLASSNAMES.running;
+          const statusKey =
+            cycle.status in STATUS_CLASSNAMES ? cycle.status : "running";
           return (
             <div
               key={cycle._id}
@@ -64,13 +49,17 @@ export function LifeCheckHistory() {
                   </p>
                   {cycle.validatedBy && (
                     <p className="text-xs text-on-surface-variant mt-0.5">
-                      {METHOD_LABELS[cycle.validatedBy] ?? cycle.validatedBy}
+                      {(METHOD_KEYS as readonly string[]).includes(
+                        cycle.validatedBy,
+                      )
+                        ? t(`history.method.${cycle.validatedBy}`)
+                        : cycle.validatedBy}
                     </p>
                   )}
                 </div>
               </div>
-              <Badge className={statusConfig.className}>
-                {statusConfig.label}
+              <Badge className={statusClassName}>
+                {t(`history.status.${statusKey}`)}
               </Badge>
             </div>
           );

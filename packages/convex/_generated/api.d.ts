@@ -23,6 +23,7 @@ import type * as lib_audit_secret from "../lib/audit_secret.js";
 import type * as lib_crypto from "../lib/crypto.js";
 import type * as lib_email from "../lib/email.js";
 import type * as lib_life_check_token from "../lib/life_check_token.js";
+import type * as lib_locale from "../lib/locale.js";
 import type * as lib_phone from "../lib/phone.js";
 import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_storage from "../lib/storage.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "lib/crypto": typeof lib_crypto;
   "lib/email": typeof lib_email;
   "lib/life_check_token": typeof lib_life_check_token;
+  "lib/locale": typeof lib_locale;
   "lib/phone": typeof lib_phone;
   "lib/require_env": typeof lib_require_env;
   "lib/storage": typeof lib_storage;

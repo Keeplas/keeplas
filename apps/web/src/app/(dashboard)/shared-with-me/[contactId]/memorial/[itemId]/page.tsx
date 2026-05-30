@@ -7,6 +7,7 @@ import { useQuery } from "convex/react";
 import { Loader, RichTextEditor } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { useTranslations } from "@/lib/i18n";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { MemorialItemAttachments } from "@/components/memorial-item-attachments";
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
@@ -14,6 +15,7 @@ import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-te
 import { getCategoryConfig } from "@/lib/vault-categories";
 
 export default function MemorialItemPage() {
+  const t = useTranslations("sharedWithMe");
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const itemId = params.itemId as Id<"vault_items">;
@@ -37,9 +39,7 @@ export default function MemorialItemPage() {
       setDecrypting(true);
       try {
         if (!item.readable || !item.wrappedDek) {
-          setContent(
-            "[Unable to decrypt — this item was stored in a legacy format]",
-          );
+          setContent(t("item.decryptFailedLegacy"));
           return;
         }
         const res = await decryptItem({
@@ -51,12 +51,12 @@ export default function MemorialItemPage() {
         setLinks(res.links);
         setDek(res.dek);
       } catch {
-        setContent("[Unable to decrypt]");
+        setContent(t("item.decryptFailed"));
       } finally {
         setDecrypting(false);
       }
     })();
-  }, [data, isReady, content, decrypting, decryptItem]);
+  }, [data, isReady, content, decrypting, decryptItem, t]);
 
   if (data === undefined) return <Loader size="md" />;
 
@@ -64,15 +64,17 @@ export default function MemorialItemPage() {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl">
-          <h3 className="text-headline-sm text-primary">Item not available</h3>
+          <h3 className="text-headline-sm text-primary">
+            {t("item.notAvailable.title")}
+          </h3>
           <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-md">
-            This item was not released to you.
+            {t("item.notAvailable.description")}
           </p>
           <Link
             href="/shared-with-me"
             className="text-body-md font-bold text-secondary hover:underline mt-4"
           >
-            Back to Shared with me
+            {t("memorial.back")}
           </Link>
         </div>
       </div>
@@ -88,17 +90,20 @@ export default function MemorialItemPage() {
         href={`/shared-with-me/${contactId}/memorial`}
         className="text-label-md text-on-surface-variant hover:text-primary"
       >
-        ← {owner.name}&apos;s memorial vault
+        ← {t("item.backToMemorial", { ownerName: owner.name })}
       </Link>
 
       <h1 className="text-headline-lg text-primary mt-3 mb-1">{item.title}</h1>
       <p className="text-body-md text-on-surface-variant mb-8">
-        {category.label} · In memory of {owner.name}
+        {t("item.categoryInMemory", {
+          category: category.label,
+          ownerName: owner.name,
+        })}
       </p>
 
       {content === null ? (
         <div className="flex items-center gap-3 text-body-md text-on-surface-variant">
-          <Loader size="sm" /> Decrypting…
+          <Loader size="sm" /> {t("item.decrypting")}
         </div>
       ) : (
         <div className="space-y-8">
@@ -109,7 +114,9 @@ export default function MemorialItemPage() {
 
           {links.length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-label-md text-secondary">Linked URLs</h2>
+              <h2 className="text-label-md text-secondary">
+                {t("item.linkedUrls")}
+              </h2>
               <VaultLinkList urls={links} />
             </section>
           )}

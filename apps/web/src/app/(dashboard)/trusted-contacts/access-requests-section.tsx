@@ -6,8 +6,10 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Badge, HelpHint } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 
 export function AccessRequestsSection() {
+  const t = useTranslations("trustedContacts");
   const pendingRequests = useQuery(api.access_requests.getPendingRequests);
   const allRequests = useQuery(api.access_requests.getAccessRequests);
   const cancelEmergency = useAuditedMutation(
@@ -29,27 +31,27 @@ export function AccessRequestsSection() {
 
   const STATUS_LABELS: Record<string, { label: string; className: string }> = {
     pending: {
-      label: "Pending",
+      label: t("accessRequests.status.pending"),
       className: "bg-warning-container text-on-warning-container",
     },
     approved: {
-      label: "Approved",
+      label: t("accessRequests.status.approved"),
       className: "bg-secondary-container text-on-secondary-container",
     },
     denied: {
-      label: "Denied",
+      label: t("accessRequests.status.denied"),
       className: "bg-error-container text-on-error-container",
     },
     auto_denied: {
-      label: "Auto-denied",
+      label: t("accessRequests.status.autoDenied"),
       className: "bg-surface-container-highest text-on-surface-variant",
     },
     expired: {
-      label: "Expired",
+      label: t("accessRequests.status.expired"),
       className: "bg-surface-container-highest text-on-surface-variant",
     },
     revoked: {
-      label: "Revoked",
+      label: t("accessRequests.status.revoked"),
       className: "bg-surface-container-highest text-on-surface-variant",
     },
   };
@@ -57,8 +59,8 @@ export function AccessRequestsSection() {
   return (
     <section className="space-y-6">
       <h2 className="text-headline-md text-primary inline-flex items-center gap-2">
-        Emergency Access
-        <HelpHint content="Trust contacts open this request when Life Check has exhausted every channel and you can no longer be reached. Once the quorum confirms your unavailability, a 72-hour grace window opens — sign in and click I am well to cancel. After the window, contacts submit their shards and the vault opens in read-only memorial mode." />
+        {t("accessRequests.heading")}
+        <HelpHint content={t("accessRequests.help")} />
       </h2>
 
       {/* Pending emergency requests */}
@@ -75,27 +77,34 @@ export function AccessRequestsSection() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h4 className="text-headline-sm text-on-surface">
-                      Emergency Access initiated
+                      {t("accessRequests.initiatedTitle")}
                     </h4>
                     <p className="text-body-md text-on-surface-variant">
-                      {confirmations} of {quorumRequired} contacts have
-                      confirmed you are unreachable.
+                      {t("accessRequests.confirmedCount", {
+                        confirmations,
+                        quorumRequired,
+                      })}
                     </p>
                   </div>
                   <Badge className="bg-warning-container text-on-warning-container">
-                    {req.quorumReached ? "Quorum reached" : "Pending"}
+                    {req.quorumReached
+                      ? t("accessRequests.quorumReached")
+                      : t("accessRequests.status.pending")}
                   </Badge>
                 </div>
 
                 {req.quorumReached && (
                   <div className="mb-3 p-3 bg-error/5 rounded-lg">
                     <p className="text-sm text-error font-medium">
-                      Vault unlock window is open. Cancel now if you are well.
+                      {t("accessRequests.unlockWindowOpen")}
                     </p>
                     {req.gracePeriodEndsAt && (
                       <p className="text-xs text-error/80 mt-1">
-                        Grace period ends:{" "}
-                        {new Date(req.gracePeriodEndsAt).toLocaleString()}
+                        {t("accessRequests.gracePeriodEnds", {
+                          date: new Date(
+                            req.gracePeriodEndsAt,
+                          ).toLocaleString(),
+                        })}
                       </p>
                     )}
                     <button
@@ -104,8 +113,8 @@ export function AccessRequestsSection() {
                       className="mt-2 text-sm px-4 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
                     >
                       {processing === req._id
-                        ? "Cancelling..."
-                        : "I am well — cancel emergency access"}
+                        ? t("accessRequests.cancelling")
+                        : t("accessRequests.cancelButton")}
                     </button>
                   </div>
                 )}
@@ -118,7 +127,9 @@ export function AccessRequestsSection() {
       {/* Request History */}
       {allRequests && allRequests.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-label-md text-on-surface-variant">History</h3>
+          <h3 className="text-label-md text-on-surface-variant">
+            {t("accessRequests.history")}
+          </h3>
           {allRequests
             .filter((r) => r.status !== "pending")
             .slice(0, 10)

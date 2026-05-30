@@ -11,8 +11,10 @@ import {
   registerPasskey,
   usePasskeySupport,
 } from "@/lib/passkey";
+import { useTranslations } from "@/lib/i18n";
 
 export function PasskeyStep() {
+  const t = useTranslations("auth.onboarding.passkey");
   const router = useRouter();
   const startRegistration = useMutation(api.webauthn.startRegistration);
   const finishRegistration = useMutation(api.webauthn.finishRegistration);
@@ -32,7 +34,7 @@ export function PasskeyStep() {
       setDone(true);
       setTimeout(() => router.push("/hub"), 900);
     } catch (err) {
-      setError(getPasskeyErrorMessage(err, "Could not register your passkey."));
+      setError(getPasskeyErrorMessage(err, t("registerFailed")));
       setBusy(false);
     }
   }
@@ -46,24 +48,21 @@ export function PasskeyStep() {
       <div className="mb-8">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg mb-6">
           <Icon path={ICON_PATHS.face} className="w-5 h-5" />
-          <span className="text-label-md">Optional · Faster sign in</span>
+          <span className="text-label-md">{t("badge")}</span>
         </div>
         <h2 className="text-headline-lg text-primary mb-3 break-words">
-          {done ? "Passkey ready" : "Sign in with your face"}
+          {done ? t("headingDone") : t("heading")}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">
-          {done
-            ? "You can now unlock Keeplas with your device biometrics."
-            : "Use Face ID, Touch ID, or your device biometrics next time you sign in. Your password still works as a backup."}
+          {done ? t("descriptionDone") : t("description")}
         </p>
       </div>
 
       {!supported && !done && (
         <div className="bg-surface-container-low p-4 rounded-xl mb-6 text-left">
           <p className="text-body-md text-on-surface-variant">
-            Passkeys are not supported on this browser. You can set this up
-            later from <strong>Settings · Security Center</strong> on a
-            compatible device.
+            {t("unsupportedBefore")} <strong>{t("unsupportedTerm")}</strong>{" "}
+            {t("unsupportedAfter")}
           </p>
         </div>
       )}
@@ -87,7 +86,7 @@ export function PasskeyStep() {
           ) : (
             <Icon path={ICON_PATHS.fingerprint} className="w-5 h-5" />
           )}
-          <span>{done ? "Redirecting..." : "Enable biometric sign in"}</span>
+          <span>{done ? t("redirecting") : t("enable")}</span>
         </Button>
         <button
           type="button"
@@ -95,7 +94,7 @@ export function PasskeyStep() {
           disabled={busy || done}
           className="text-body-md text-on-surface-variant hover:text-primary transition-colors disabled:opacity-40"
         >
-          Skip for now
+          {t("skip")}
         </button>
       </div>
     </div>

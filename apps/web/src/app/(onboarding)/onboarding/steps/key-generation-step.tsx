@@ -11,6 +11,7 @@ import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 import { Button, Spinner } from "@keeplas/ui";
 
 interface KeyGenerationStepProps {
@@ -29,13 +30,14 @@ type GenerationPhase =
   | "complete"
   | "error";
 
-const PHASE_LABELS: Record<GenerationPhase, string> = {
-  deriving_root: "Deriving your Root Key from your 24 words...",
-  splitting_shards: "Creating recovery fragments...",
-  wrapping_master_key: "Sealing your Master Key...",
-  storing: "Securing your vault...",
-  complete: "Vault secured!",
-  error: "An error occurred",
+// Maps each phase to its translation key under `auth.onboarding.keyGeneration.phases`.
+const PHASE_KEYS: Record<GenerationPhase, string> = {
+  deriving_root: "derivingRoot",
+  splitting_shards: "splittingShards",
+  wrapping_master_key: "wrappingMasterKey",
+  storing: "storing",
+  complete: "complete",
+  error: "error",
 };
 
 const PHASE_PROGRESS: Record<GenerationPhase, number> = {
@@ -72,6 +74,8 @@ export function KeyGenerationStep({
   phraseSaltB64,
   onComplete,
 }: KeyGenerationStepProps) {
+  const t = useTranslations("auth.onboarding.keyGeneration");
+  const phaseLabel = (p: GenerationPhase) => t(`phases.${PHASE_KEYS[p]}`);
   const router = useRouter();
   const { setMasterKey } = useMasterKey();
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
@@ -161,9 +165,7 @@ export function KeyGenerationStep({
       } catch (err) {
         console.error("Key generation failed:", err);
         setPhase("error");
-        setError(
-          getErrorMessage(err, "Key generation failed. Please try again."),
-        );
+        setError(getErrorMessage(err, t("genericError")));
       }
     }
 
@@ -176,6 +178,7 @@ export function KeyGenerationStep({
     setMasterKey,
     onComplete,
     threshold,
+    t,
   ]);
 
   if (threshold === null) {
@@ -205,17 +208,13 @@ export function KeyGenerationStep({
               d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
             />
           </svg>
-          <span className="text-label-md">Securing Vault</span>
+          <span className="text-label-md">{t("badge")}</span>
         </div>
         <h2 className="text-headline-lg text-primary mb-3 break-words">
-          {phase === "complete"
-            ? "Your vault is ready"
-            : "Setting up your protection"}
+          {phase === "complete" ? t("headingComplete") : t("heading")}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-sm mx-auto">
-          {phase === "complete"
-            ? "Your Master Key is sealed by your 24 words. You can now start adding items to your vault."
-            : "Your keys are derived and sealed entirely on your device. We never see your phrase."}
+          {phase === "complete" ? t("descriptionComplete") : t("description")}
         </p>
       </div>
 
@@ -228,7 +227,7 @@ export function KeyGenerationStep({
           />
         </div>
         <p className="text-sm text-on-surface-variant font-label">
-          {PHASE_LABELS[phase]}
+          {phaseLabel(phase)}
         </p>
       </div>
 
@@ -281,7 +280,7 @@ export function KeyGenerationStep({
                       : "text-on-surface-variant/50"
                 }`}
               >
-                {PHASE_LABELS[p]}
+                {phaseLabel(p)}
               </span>
             </div>
           );
@@ -292,7 +291,7 @@ export function KeyGenerationStep({
       {phase === "complete" && (
         <div className="mt-8 p-4 bg-secondary-container/30 rounded-xl">
           <p className="text-sm text-on-secondary-container font-body">
-            Redirecting to your hub...
+            {t("redirecting")}
           </p>
         </div>
       )}
@@ -309,7 +308,7 @@ export function KeyGenerationStep({
             onClick={() => window.location.reload()}
             className="cursor-pointer"
           >
-            Try again
+            {t("tryAgain")}
           </Button>
         </div>
       )}
@@ -323,18 +322,17 @@ interface ThresholdPickerProps {
 }
 
 function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
+  const t = useTranslations("auth.onboarding.keyGeneration");
   const [value, setValue] = useState(defaultValue);
 
   return (
     <div className="w-full max-w-lg mx-auto">
       <div className="mb-8 text-center">
         <h2 className="text-headline-lg text-primary mb-3 break-words">
-          Recovery threshold
+          {t("thresholdHeading")}
         </h2>
         <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">
-          How many trusted contacts must agree to reconstruct your vault when
-          you become unreachable. Lower = easier recovery, higher = stronger
-          against collusion.
+          {t("thresholdDescription")}
         </p>
       </div>
 
@@ -355,7 +353,9 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
               }`}
             >
               <div className="text-headline-md text-primary font-bold">{n}</div>
-              <div className="text-label-md text-on-surface-variant">of 4</div>
+              <div className="text-label-md text-on-surface-variant">
+                {t("thresholdOf")}
+              </div>
             </button>
           );
         })}
@@ -365,15 +365,18 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
         <p className="text-body-md text-on-surface-variant">
           {value === 2 && (
             <>
-              <strong className="text-primary">Easiest recovery.</strong> Any
-              two contacts can collaborate. Recommended unless your contacts
-              face a high collusion risk.
+              <strong className="text-primary">
+                {t("thresholdEasiestStrong")}
+              </strong>{" "}
+              {t("thresholdEasiest")}
             </>
           )}
           {value === 3 && (
             <>
-              <strong className="text-primary">Balanced.</strong> Any three
-              contacts must collaborate. Resistant to single-pair collusion.
+              <strong className="text-primary">
+                {t("thresholdBalancedStrong")}
+              </strong>{" "}
+              {t("thresholdBalanced")}
             </>
           )}
         </p>
@@ -385,7 +388,7 @@ function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
         onClick={() => onSelect(value)}
         className="w-full cursor-pointer"
       >
-        Continue with {value}-of-4
+        {t("thresholdContinue", { value })}
       </Button>
     </div>
   );

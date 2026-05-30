@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "@/lib/i18n";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -27,6 +28,7 @@ interface CountdownProps {
  * Ticks once per second and freezes at zero once the target passes.
  */
 export function Countdown({ target }: CountdownProps) {
+  const t = useTranslations("lifeCheck");
   const [time, setTime] = useState(() => remaining(target));
 
   useEffect(() => {
@@ -35,21 +37,21 @@ export function Countdown({ target }: CountdownProps) {
   }, [target]);
 
   const segments = [
-    { value: time.days, label: "Days" },
-    { value: time.hours, label: "Hours" },
-    { value: time.minutes, label: "Minutes" },
-    { value: time.seconds, label: "Seconds" },
+    { value: time.days, key: "days" },
+    { value: time.hours, key: "hours" },
+    { value: time.minutes, key: "minutes" },
+    { value: time.seconds, key: "seconds" },
   ];
 
   return (
     <div className="flex gap-6 sm:gap-8">
       {segments.map((seg) => (
-        <div key={seg.label} className="text-center">
+        <div key={seg.key} className="text-center">
           <p className="text-display-md text-primary tabular-nums">
             {String(seg.value).padStart(2, "0")}
           </p>
           <p className="text-label-md uppercase tracking-wide text-on-surface-variant mt-1">
-            {seg.label}
+            {t(`countdown.${seg.key}`)}
           </p>
         </div>
       ))}

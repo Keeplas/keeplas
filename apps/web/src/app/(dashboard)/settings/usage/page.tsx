@@ -5,28 +5,17 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { buttonVariants, Icon, Loader, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 
 const STORAGE_QUOTA_BYTES = 100 * 1024 * 1024;
-const CURRENT_PLAN_LABEL = "Free";
 const CURRENT_PLAN_QUOTA_LABEL = "100 MB";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  personal_document: "Personal Documents",
-  financial_asset: "Financial Assets",
-  digital_asset: "Digital Assets",
-  health_directive: "Health Directives",
-  legal_document: "Legal Documents",
-  business_continuity: "Business Continuity",
-  conditional_message: "Conditional Messages",
-  credential: "Credentials",
-};
-
-const FILE_KIND_LABELS: Record<string, { label: string; iconPath: string }> = {
-  document: { label: "Documents", iconPath: ICON_PATHS.description },
-  image: { label: "Images", iconPath: ICON_PATHS.image },
-  audio: { label: "Audio", iconPath: ICON_PATHS.mic },
-  video: { label: "Video", iconPath: ICON_PATHS.videocam },
-};
+const FILE_KINDS: Array<{ kind: string; iconPath: string }> = [
+  { kind: "document", iconPath: ICON_PATHS.description },
+  { kind: "image", iconPath: ICON_PATHS.image },
+  { kind: "audio", iconPath: ICON_PATHS.mic },
+  { kind: "video", iconPath: ICON_PATHS.videocam },
+];
 
 function formatBytes(bytes: number) {
   if (bytes === 0) return "0 B";
@@ -41,6 +30,7 @@ function formatBytes(bytes: number) {
 }
 
 export default function SettingsUsagePage() {
+  const t = useTranslations("settings");
   const stats = useQuery(api.vaults.getUsageStats);
 
   if (stats === undefined) return <Loader />;
@@ -60,30 +50,32 @@ export default function SettingsUsagePage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-headline-md text-primary">Resources & Usage</h1>
+        <h1 className="text-headline-md text-primary">{t("usage.title")}</h1>
         <p className="text-body-md text-on-surface-variant max-w-2xl">
-          Monitor the encrypted storage and items consumed by your vault. When
-          you approach your plan&rsquo;s capacity, upgrade to keep adding items
-          without interruption.
+          {t("usage.description")}
         </p>
       </header>
 
       <section className="bg-surface-container-low rounded-2xl p-6 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-label-md text-secondary">Encrypted Storage</p>
+            <p className="text-label-md text-secondary">
+              {t("usage.encryptedStorage")}
+            </p>
             <p className="text-headline-md text-on-surface">
               {formatBytes(stats.storageBytes)}
               <span className="text-body-md text-on-surface-variant ml-2">
-                of {CURRENT_PLAN_QUOTA_LABEL}
+                {t("usage.ofQuota", { quota: CURRENT_PLAN_QUOTA_LABEL })}
               </span>
             </p>
             <p className="text-body-md text-on-surface-variant">
-              {formatBytes(remainingBytes)} remaining on the{" "}
+              {t("usage.remainingPrefix", {
+                amount: formatBytes(remainingBytes),
+              })}{" "}
               <span className="font-medium text-on-surface">
-                {CURRENT_PLAN_LABEL}
+                {t("usage.planNameFree")}
               </span>{" "}
-              plan
+              {t("usage.remainingSuffix")}
             </p>
           </div>
           <span
@@ -94,7 +86,7 @@ export default function SettingsUsagePage() {
                 : "bg-secondary-container text-on-secondary-container")
             }
           >
-            {usedPercent}% used
+            {t("usage.percentUsed", { percent: usedPercent })}
           </span>
         </div>
 
@@ -108,14 +100,13 @@ export default function SettingsUsagePage() {
             />
             <div className="space-y-2 flex-1">
               <p className="text-body-md text-on-error-container">
-                You&rsquo;re close to your storage limit. Upgrade to Lifetime
-                for 10 GB of encrypted capacity and additional continuity tools.
+                {t("usage.nearLimit")}
               </p>
               <Link
                 href="/settings/subscription"
                 className={buttonVariants({ variant: "vault", size: "sm" })}
               >
-                Upgrade plan
+                {t("usage.upgradePlan")}
               </Link>
             </div>
           </div>
@@ -124,36 +115,38 @@ export default function SettingsUsagePage() {
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <UsageStatCard
-          label="Active Items"
+          label={t("usage.cards.activeItems.label")}
           value={stats.activeItemsCount.toLocaleString()}
           iconPath={ICON_PATHS.description}
-          hint="Non-archived vault items"
+          hint={t("usage.cards.activeItems.hint")}
         />
         <UsageStatCard
-          label="Encrypted Files"
+          label={t("usage.cards.encryptedFiles.label")}
           value={stats.fileCount.toLocaleString()}
           iconPath={ICON_PATHS.cloud}
-          hint="Blobs stored in your vault"
+          hint={t("usage.cards.encryptedFiles.hint")}
         />
         <UsageStatCard
-          label="Categories Used"
+          label={t("usage.cards.categoriesUsed.label")}
           value={categoryEntries.length.toString()}
           iconPath={ICON_PATHS.accountTree}
-          hint="Distinct categories populated"
+          hint={t("usage.cards.categoriesUsed.hint")}
         />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-headline-sm text-primary">Items by Category</h2>
+            <h2 className="text-headline-sm text-primary">
+              {t("usage.itemsByCategory")}
+            </h2>
             <span className="text-label-md text-on-surface-variant">
-              {stats.activeItemsCount} total
+              {t("usage.total", { count: stats.activeItemsCount })}
             </span>
           </div>
           {categoryEntries.length === 0 ? (
             <p className="text-body-md text-on-surface-variant">
-              No items yet. Start building your vault from the Hub.
+              {t("usage.noItems")}
             </p>
           ) : (
             <ul className="space-y-2">
@@ -163,7 +156,7 @@ export default function SettingsUsagePage() {
                   className="flex items-center justify-between py-1.5"
                 >
                   <span className="text-body-md text-on-surface">
-                    {CATEGORY_LABELS[category] ?? category}
+                    {t(`usage.categories.${category}`)}
                   </span>
                   <span className="text-label-md text-on-surface-variant">
                     {count}
@@ -176,22 +169,24 @@ export default function SettingsUsagePage() {
 
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-headline-sm text-primary">Files by Type</h2>
+            <h2 className="text-headline-sm text-primary">
+              {t("usage.filesByType")}
+            </h2>
             <span className="text-label-md text-on-surface-variant">
-              {stats.fileCount} total
+              {t("usage.total", { count: stats.fileCount })}
             </span>
           </div>
           {stats.fileCount === 0 ? (
             <p className="text-body-md text-on-surface-variant">
-              No encrypted files attached yet.
+              {t("usage.noFiles")}
             </p>
           ) : (
             <ul className="space-y-2">
-              {Object.entries(FILE_KIND_LABELS).map(([kind, meta]) => {
-                const count = stats.fileKindCounts[kind] ?? 0;
+              {FILE_KINDS.map((meta) => {
+                const count = stats.fileKindCounts[meta.kind] ?? 0;
                 return (
                   <li
-                    key={kind}
+                    key={meta.kind}
                     className="flex items-center justify-between py-1.5"
                   >
                     <span className="flex items-center gap-2 text-body-md text-on-surface">
@@ -199,7 +194,7 @@ export default function SettingsUsagePage() {
                         path={meta.iconPath}
                         className="w-4 h-4 text-on-surface-variant"
                       />
-                      {meta.label}
+                      {t(`usage.fileKinds.${meta.kind}`)}
                     </span>
                     <span className="text-label-md text-on-surface-variant">
                       {count}
@@ -214,18 +209,18 @@ export default function SettingsUsagePage() {
 
       <section className="rounded-2xl bg-surface-container-low p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div className="space-y-1">
-          <h2 className="text-headline-sm text-primary">Need more capacity?</h2>
+          <h2 className="text-headline-sm text-primary">
+            {t("usage.needCapacity.title")}
+          </h2>
           <p className="text-body-md text-on-surface-variant max-w-xl">
-            Lifetime unlocks 10 GB of zero-knowledge storage, video legacy
-            messages, and the full scenario engine — forever, in a single
-            payment.
+            {t("usage.needCapacity.description")}
           </p>
         </div>
         <Link
           href="/settings/subscription"
           className={buttonVariants({ variant: "vault", size: "md" })}
         >
-          Compare plans
+          {t("usage.comparePlans")}
         </Link>
       </section>
     </div>

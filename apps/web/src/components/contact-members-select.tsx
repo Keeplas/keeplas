@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { InviteContactDialog } from "@/app/(dashboard)/trusted-contacts/invite-contact-dialog";
 
@@ -21,12 +22,18 @@ export function ContactMembersSelect({
   contacts,
   selected,
   onChange,
-  placeholder = "Add contacts",
+  placeholder,
   emptyPlaceholder,
-  searchPlaceholder = "Search contacts…",
-  emptyMessage = "Invite contacts first to add them here.",
+  searchPlaceholder,
+  emptyMessage,
 }: ContactMembersSelectProps) {
+  const t = useTranslations("trustedContacts");
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  const resolvedPlaceholder = placeholder ?? t("membersSelect.placeholder");
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t("membersSelect.searchPlaceholder");
+  const resolvedEmptyMessage = emptyMessage ?? t("membersSelect.emptyMessage");
 
   const memberOptions: MultiSelectOption[] = contacts.map((c) => ({
     value: c._id,
@@ -34,7 +41,7 @@ export function ContactMembersSelect({
     hint: c.email,
   }));
 
-  const triggerEmpty = emptyPlaceholder ?? placeholder;
+  const triggerEmpty = emptyPlaceholder ?? resolvedPlaceholder;
 
   return (
     <>
@@ -42,9 +49,9 @@ export function ContactMembersSelect({
         options={memberOptions}
         selected={selected}
         onChange={onChange}
-        placeholder={placeholder}
-        searchPlaceholder={searchPlaceholder}
-        emptyMessage={emptyMessage}
+        placeholder={resolvedPlaceholder}
+        searchPlaceholder={resolvedSearchPlaceholder}
+        emptyMessage={resolvedEmptyMessage}
         renderTrigger={(values) => {
           if (values.length === 0) {
             return <span className="text-outline-variant">{triggerEmpty}</span>;
@@ -68,7 +75,7 @@ export function ContactMembersSelect({
               className="w-4 h-4"
               strokeWidth={1.75}
             />
-            Add new contact
+            {t("membersSelect.addNew")}
           </button>
         )}
       />

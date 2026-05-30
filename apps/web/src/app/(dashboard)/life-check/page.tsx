@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Loader, type CountryCode } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { LifeCheckHistory } from "./life-check-history";
 import { ActiveCycleBanner } from "./sections/active-cycle-banner";
 import { ChannelList } from "./sections/channel-list";
@@ -13,6 +14,7 @@ import { ReleasePolicySettings } from "./sections/release-policy-settings";
 import { useLifeCheckConfig } from "./sections/use-life-check-config";
 
 export default function LifeCheckPage() {
+  const t = useTranslations("lifeCheck");
   const {
     config,
     activeCycle,
@@ -31,14 +33,12 @@ export default function LifeCheckPage() {
       <header className="mb-10 max-w-2xl">
         <h1 className="text-headline-lg text-primary mb-3">Life Check</h1>
         <p className="text-body-lg text-on-surface-variant">
-          Keeplas periodically asks you to confirm you&apos;re well. If you stop
-          responding, your trusted contacts confirm you&apos;re unavailable
-          before your vault is released to them. Pause everything from{" "}
+          {t("page.intro")}{" "}
           <a
             href="/settings/continuity"
             className="underline font-medium text-secondary"
           >
-            Settings → Continuity Protocol
+            {t("page.introLink")}
           </a>
           .
         </p>
@@ -106,25 +106,25 @@ function NextCheckInCard({
   nextCheckAt: number;
   onReset: () => void;
 }) {
+  const t = useTranslations("lifeCheck");
   return (
     <div className="mb-8 bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
         <p className="text-label-md text-on-surface-variant mb-4">
-          Next check-in
+          {t("nextCheckIn.label")}
         </p>
         <Countdown target={nextCheckAt} />
       </div>
       <div className="flex flex-col gap-3 sm:items-end sm:max-w-xs">
         <p className="text-body-md text-on-surface-variant sm:text-right">
-          We&apos;ll ask you to confirm you&apos;re well. Only your explicit
-          reply resets the countdown — using the app doesn&apos;t.
+          {t("nextCheckIn.description")}
         </p>
         <Button
           variant="default"
           onClick={onReset}
           className="w-full sm:w-auto"
         >
-          I&apos;m well — reset countdown
+          {t("nextCheckIn.reset")}
         </Button>
       </div>
     </div>

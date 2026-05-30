@@ -10,6 +10,7 @@ import {
   type CountryCode,
 } from "@keeplas/ui";
 import { PhoneVerificationDialog } from "@/components/phone-verification-dialog";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import type { ChannelConfig, ChannelType } from "./constants";
 
@@ -26,6 +27,7 @@ export function ChannelList({
   phoneNumber,
   defaultCountry,
 }: ChannelListProps) {
+  const t = useTranslations("lifeCheck");
   const sorted = [...channels].sort((a, b) => a.order - b.order);
   const [verifyOpen, setVerifyOpen] = useState(false);
 
@@ -33,8 +35,8 @@ export function ChannelList({
     <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
       <h3 className="text-headline-sm text-primary mb-5 flex items-center gap-2">
         <Icon path={ICON_PATHS.bell} className="w-5 h-5 text-secondary" />
-        Check-in channels
-        <HelpHint content="Channels Keeplas uses to reach you for a check-in — all sent together, not in sequence. Disable any you don't have. Note: only the email button and a WhatsApp reply can confirm you're well." />
+        {t("channels.title")}
+        <HelpHint content={t("channels.help")} />
       </h3>
       <div className="space-y-4">
         {sorted.map((ch) => {
@@ -56,21 +58,25 @@ export function ChannelList({
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-body-md font-bold text-primary">
-                      {ch.label}
+                      {t(`channels.items.${ch.type}.label`)}
                     </p>
                     {ch.isUpcoming && (
-                      <Badge variant="outline">Coming soon</Badge>
+                      <Badge variant="outline">
+                        {t("channels.comingSoon")}
+                      </Badge>
                     )}
                     {isUnverified && (
                       <Badge variant="outline">
-                        {ch.type === "whatsapp" ? "Not verified" : "No email"}
+                        {ch.type === "whatsapp"
+                          ? t("channels.notVerified")
+                          : t("channels.noEmail")}
                       </Badge>
                     )}
                   </div>
                   <p className="text-body-md text-on-surface-variant">
                     {isUnverified && ch.type === "email"
-                      ? "No email is linked to this account."
-                      : ch.description}
+                      ? t("channels.noEmailLinked")
+                      : t(`channels.items.${ch.type}.description`)}
                   </p>
                 </div>
               </div>
@@ -84,7 +90,7 @@ export function ChannelList({
                     size="sm"
                     onClick={() => setVerifyOpen(true)}
                   >
-                    Verify
+                    {t("channels.verify")}
                   </Button>
                 ) : (
                   <Switch checked={false} disabled />

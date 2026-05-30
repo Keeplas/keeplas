@@ -41,6 +41,7 @@ export const requestPhoneAuthOtp = mutation({
   args: {
     phoneNumber: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
+    language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const phone = normalizeE164(args.phoneNumber);
@@ -90,6 +91,7 @@ export const requestPhoneAuthOtp = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
       phoneNumber: phone,
       code,
+      language: args.language,
     });
 
     return { sent: true };

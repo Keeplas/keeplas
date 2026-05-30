@@ -7,6 +7,7 @@ import {
   useDistributeShards,
   MIN_TRUST_CONTACTS_FOR_RECOVERY,
 } from "@/lib/use-distribute-shards";
+import { useTranslations } from "@/lib/i18n";
 
 /**
  * Owner-side action card surfaced when at least one trust contact has
@@ -14,6 +15,7 @@ import {
  * + fan-out distribution.
  */
 export function DistributeShardsSection() {
+  const t = useTranslations("trustedContacts");
   const targets = useQuery(api.trusted_contacts.getDistributionTargets);
   const { distribute, status, error } = useDistributeShards();
 
@@ -32,17 +34,23 @@ export function DistributeShardsSection() {
       <div className="flex items-start justify-between gap-4 mb-3">
         <div>
           <h3 className="text-headline-sm text-primary inline-flex items-center gap-2">
-            Distribute shards
-            <HelpHint content="Splits your master key into 5 Shamir shares with your chosen threshold and seals each share to a trust contact's public key. Re-running this re-splits and invalidates any previously distributed shard — by design." />
+            {t("distribute.heading")}
+            <HelpHint content={t("distribute.help")} />
           </h3>
           <p className="text-body-md text-on-surface-variant mt-1">
             {belowMin
-              ? "Recovery needs at least 2 trusted contacts. Invite and confirm one more before distributing."
+              ? t("distribute.belowMin")
               : pending.length > 0
-                ? `${pending.length} of ${targets.length} trust contact${
-                    targets.length > 1 ? "s" : ""
-                  } still needs a shard.`
-                : "All trust contacts have a current shard."}
+                ? targets.length > 1
+                  ? t("distribute.pendingMany", {
+                      pending: pending.length,
+                      total: targets.length,
+                    })
+                  : t("distribute.pendingOne", {
+                      pending: pending.length,
+                      total: targets.length,
+                    })
+                : t("distribute.allCurrent")}
           </p>
         </div>
         <Button
@@ -52,13 +60,15 @@ export function DistributeShardsSection() {
           disabled={status === "running" || belowMin}
           className="cursor-pointer shrink-0"
         >
-          {status === "running" ? "Distributing…" : "Distribute now"}
+          {status === "running"
+            ? t("distribute.distributing")
+            : t("distribute.distributeNow")}
         </Button>
       </div>
 
       {status === "ok" && (
         <p className="text-label-md text-secondary mt-2">
-          Shards distributed to all eligible contacts.
+          {t("distribute.success")}
         </p>
       )}
       {status === "insufficient_contacts" && error && (
@@ -69,7 +79,7 @@ export function DistributeShardsSection() {
       )}
       {status === "missing_master_key" && (
         <p className="text-label-md text-error mt-2">
-          Unlock your vault first, then retry.
+          {t("distribute.missingMasterKey")}
         </p>
       )}
     </section>

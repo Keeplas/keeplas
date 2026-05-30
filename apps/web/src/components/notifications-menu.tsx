@@ -15,6 +15,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
+import { useTranslations } from "@/lib/i18n";
 
 const NOTIFICATION_ICON_PATHS: Record<string, string> = {
   life_check: ICON_PATHS.heartbeat,
@@ -33,6 +34,7 @@ interface NotificationsMenuProps {
 export function NotificationsMenu({
   variant = "sidebar",
 }: NotificationsMenuProps) {
+  const t = useTranslations("chrome");
   const [open, setOpen] = useState(false);
   const unreadCount = useQuery(api.notifications.getUnreadCount);
   const notifications = useQuery(api.notifications.getNotifications, {
@@ -54,10 +56,10 @@ export function NotificationsMenu({
           type="button"
           onClick={() => setOpen(true)}
           className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-label-md text-secondary/70 hover:bg-surface-container-highest hover:translate-x-1 transition-transform cursor-pointer"
-          aria-label="Notifications"
+          aria-label={t("notifications.title")}
         >
           {bellIcon}
-          <span className="flex-1 text-left">Notifications</span>
+          <span className="flex-1 text-left">{t("notifications.title")}</span>
           {(unreadCount ?? 0) > 0 && (
             <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-error text-on-error text-label-md flex items-center justify-center">
               {unreadCount! > 9 ? "9+" : unreadCount}
@@ -69,7 +71,7 @@ export function NotificationsMenu({
           type="button"
           onClick={() => setOpen(true)}
           className="relative p-2 rounded-xl text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer"
-          aria-label="Notifications"
+          aria-label={t("notifications.title")}
         >
           {bellIcon}
           {(unreadCount ?? 0) > 0 && (
@@ -85,7 +87,7 @@ export function NotificationsMenu({
         <SheetHeader>
           <div className="flex items-center gap-3">
             <Icon path={ICON_PATHS.bell} className="w-5 h-5 text-primary" />
-            <SheetTitle>Notifications</SheetTitle>
+            <SheetTitle>{t("notifications.title")}</SheetTitle>
           </div>
           <div className="flex items-center gap-2">
             {(unreadCount ?? 0) > 0 && (
@@ -94,11 +96,11 @@ export function NotificationsMenu({
                 onClick={() => markAllAsRead()}
                 className="px-3 py-1.5 rounded-full border border-outline-variant/30 text-body-md text-secondary hover:bg-surface-container transition-colors cursor-pointer"
               >
-                Mark all as read
+                {t("notifications.markAllRead")}
               </button>
             )}
             <SheetClose
-              aria-label="Close notifications"
+              aria-label={t("notifications.close")}
               className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
             >
               <Icon path={ICON_PATHS.close} className="w-5 h-5" />
@@ -114,7 +116,7 @@ export function NotificationsMenu({
                 className="w-10 h-10 text-on-surface-variant/40"
               />
               <p className="text-body-md text-on-surface-variant">
-                No notifications yet
+                {t("notifications.empty")}
               </p>
             </div>
           ) : (

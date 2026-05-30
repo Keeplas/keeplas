@@ -1,6 +1,6 @@
 export const LANGUAGES = [
-  { value: "en-US", label: "English (United States)" },
-  { value: "fr-FR", label: "French (Français)" },
+  { value: "en-US", label: "English" },
+  { value: "fr-FR", label: "Français" },
   { value: "es-ES", label: "Spanish (Español)", upcoming: true },
   { value: "pt-PT", label: "Portuguese (Português)", upcoming: true },
 ];

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Button, HelpHint, Icon, toast, useConfirm } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -33,6 +34,7 @@ interface IntroductionRow {
  * fan-out, but hidden from the regular /vault listing.
  */
 export function ReleaseIntroductionEditor() {
+  const t = useTranslations("lifeCheck");
   const vault = useQuery(api.vaults.getVault);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const intros = useQuery(api.vault_items.listReleaseIntroductions);
@@ -62,7 +64,7 @@ export function ReleaseIntroductionEditor() {
   }, [groups]);
 
   function describeTargeting(row: IntroductionRow): string {
-    if (row.recipientMode === "default") return "Everyone";
+    if (row.recipientMode === "default") return t("welcome.everyone");
     const names: string[] = [];
     for (const gid of row.sharedWithGroups) {
       const n = groupNameById.get(gid);
@@ -72,16 +74,16 @@ export function ReleaseIntroductionEditor() {
       const n = contactNameById.get(cid);
       if (n) names.push(n);
     }
-    if (names.length === 0) return "No one yet";
+    if (names.length === 0) return t("welcome.noOneYet");
     if (names.length <= 3) return names.join(", ");
     return `${names.slice(0, 2).join(", ")} +${names.length - 2}`;
   }
 
   async function handleDelete(id: Id<"vault_items">, title: string) {
     const ok = await confirm({
-      title: `Delete "${title}"?`,
-      description: "Contacts will no longer see this welcome message.",
-      confirmLabel: "Delete",
+      title: t("welcome.deleteTitle", { title }),
+      description: t("welcome.deleteDescription"),
+      confirmLabel: t("welcome.deleteConfirm"),
       variant: "destructive",
     });
     if (!ok) return;
@@ -90,7 +92,7 @@ export function ReleaseIntroductionEditor() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to delete introduction"),
+        title: getErrorMessage(err, t("welcome.deleteError")),
       });
     }
   }
@@ -105,11 +107,11 @@ export function ReleaseIntroductionEditor() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
-            Welcome message
-            <HelpHint content="A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items." />
+            {t("welcome.title")}
+            <HelpHint content={t("welcome.help")} />
           </h3>
           <p className="text-body-md text-on-surface-variant">
-            Greet your trusted contacts before they read what you left them.
+            {t("welcome.description")}
           </p>
         </div>
         {vault && (
@@ -120,13 +122,15 @@ export function ReleaseIntroductionEditor() {
             className="gap-2 cursor-pointer shrink-0"
           >
             <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
-            New message
+            {t("welcome.newMessage")}
           </Button>
         )}
       </div>
 
       {intros === undefined ? (
-        <p className="text-body-md text-on-surface-variant/70">Loading…</p>
+        <p className="text-body-md text-on-surface-variant/70">
+          {t("welcome.loading")}
+        </p>
       ) : rows.length === 0 ? (
         <div className="border-2 border-dashed border-outline-variant/30 rounded-2xl p-6 text-center">
           <Icon
@@ -134,8 +138,7 @@ export function ReleaseIntroductionEditor() {
             className="w-8 h-8 text-on-surface-variant/40 mx-auto mb-2"
           />
           <p className="text-body-md text-on-surface-variant">
-            No welcome message yet. Contacts will land on a list of items with
-            no context.
+            {t("welcome.empty")}
           </p>
         </div>
       ) : (
@@ -150,14 +153,18 @@ export function ReleaseIntroductionEditor() {
                   {row.title}
                 </p>
                 <p className="text-label-md text-on-surface-variant mt-1">
-                  {row.hasAttachments ? "Text + recording" : "Text"} · For{" "}
-                  {describeTargeting(row)}
+                  {row.hasAttachments
+                    ? t("welcome.kindWithRecording")
+                    : t("welcome.kindText")}{" "}
+                  {t("welcome.targetingPrefix", {
+                    targeting: describeTargeting(row),
+                  })}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDelete(row._id, row.title)}
-                aria-label={`Delete ${row.title}`}
+                aria-label={t("welcome.deleteAria", { title: row.title })}
                 className="p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
               >
                 <Icon path={ICON_PATHS.trash} className="w-4 h-4" />

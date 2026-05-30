@@ -3,30 +3,51 @@
 import Link from "next/link";
 import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
+
+const THRESHOLD_OPTIONS = [
+  { value: 2, key: "two", accent: "bg-secondary-container/40" },
+  { value: 3, key: "three", accent: "bg-surface-container-low" },
+];
+
+const POSTMORTEM_STEPS = [
+  { key: "detection", accent: "bg-secondary" },
+  { key: "confirmation", accent: "bg-tertiary" },
+  { key: "grace", accent: "bg-warning" },
+  { key: "reconstruction", accent: "bg-error" },
+  { key: "distribution", accent: "bg-primary" },
+];
+
+const SHARD_STEPS = [
+  { key: "accept", accent: "bg-secondary/40" },
+  { key: "distribution", accent: "bg-secondary" },
+  { key: "recoveryTime", accent: "bg-tertiary" },
+  { key: "reconstruction", accent: "bg-error" },
+];
+
+const ZK_BULLETS = ["distribution", "reception", "verification", "submission", "reconstruction"];
 
 export default function RecoveryDocPage() {
+  const t = useTranslations("docs");
   return (
     <div className="max-w-screen-md mx-auto space-y-12">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-label-md text-on-surface-variant">
         <Link href="/docs" className="hover:text-secondary">
-          Documentation
+          {t("breadcrumb")}
         </Link>
         <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
-        <span className="text-primary">Recovery & Inheritance</span>
+        <span className="text-primary">{t("recovery.title")}</span>
       </nav>
 
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-label-md text-secondary">Continuity</span>
-        <h1 className="text-headline-lg text-primary">
-          Recovery & Inheritance
-        </h1>
+        <span className="text-label-md text-secondary">
+          {t("recovery.eyebrow")}
+        </span>
+        <h1 className="text-headline-lg text-primary">{t("recovery.title")}</h1>
         <p className="text-body-lg text-on-surface-variant">
-          Two scenarios, two paths. You lose access while alive — your 24-word
-          phrase or your trust contacts get you back in. You become permanently
-          unreachable — your trust contacts unlock the vault for your
-          recipients.
+          {t("recovery.intro")}
         </p>
       </header>
 
@@ -36,14 +57,14 @@ export default function RecoveryDocPage() {
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
             <Icon path={ICON_PATHS.key} className="w-5 h-5" />
           </span>
-          <h3 className="text-headline-sm text-primary">You are alive</h3>
+          <h3 className="text-headline-sm text-primary">
+            {t("recovery.paths.alive.title")}
+          </h3>
           <p className="text-body-md text-on-surface-variant">
-            Path A: 24-word phrase → derives your Root Key locally → unwraps
-            your master key. Self-service, no contacts involved.
+            {t("recovery.paths.alive.pathA")}
           </p>
           <p className="text-body-md text-on-surface-variant">
-            Path B: Phrase lost too? Your trust contacts can collaborate to
-            reconstruct the master key (Shamir social recovery).
+            {t("recovery.paths.alive.pathB")}
           </p>
         </article>
 
@@ -51,11 +72,11 @@ export default function RecoveryDocPage() {
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
             <Icon path={ICON_PATHS.heartbeat} className="w-5 h-5" />
           </span>
-          <h3 className="text-headline-sm">You are unreachable</h3>
+          <h3 className="text-headline-sm">
+            {t("recovery.paths.unreachable.title")}
+          </h3>
           <p className="text-body-md text-on-primary-container">
-            Life Check fails on every channel → contacts confirm unreachability
-            → 72h grace window → contacts submit their shards → vault opens in
-            memorial mode → recipients receive their content.
+            {t("recovery.paths.unreachable.body")}
           </p>
         </article>
       </section>
@@ -65,32 +86,16 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-secondary rounded-full" />
           <h2 className="text-headline-md text-primary">
-            The 24 words: what they really are
+            {t("recovery.words.heading")}
           </h2>
         </div>
 
         <div className="space-y-4 text-body-md text-on-surface-variant">
-          <p>
-            At onboarding, your device generates a fresh BIP-39 24-word phrase.
-            Those words are <strong className="text-primary">never</strong> sent
-            to Keeplas — not even hashed. They exist in three places only: your
-            head, your printed Recovery Kit, and (briefly) your browser memory
-            during onboarding.
-          </p>
-          <p>
-            The phrase feeds Argon2id (a memory-hard key derivation) along with
-            a per-user salt, producing your Root Key. The Root Key wraps your
-            Master Key, which is what actually decrypts your vault. The wrapped
-            Master Key (`encryptedKeyBundle`) is the only part Keeplas stores —
-            and without your phrase, it&apos;s an opaque blob.
-          </p>
+          <p>{t("recovery.words.p1")}</p>
+          <p>{t("recovery.words.p2")}</p>
           <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
             <p className="text-body-md text-on-surface font-medium">
-              If you lose your 24 words, your trust contacts cannot recover them
-              — Keeplas cannot recover them either. What contacts <em>can</em>{" "}
-              do is rebuild your Master Key directly via Shamir quorum. After
-              that, you generate fresh 24 words and the vault continues
-              unchanged with a new phrase.
+              {t("recovery.words.callout")}
             </p>
           </div>
         </div>
@@ -101,16 +106,12 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-tertiary rounded-full" />
           <h2 className="text-headline-md text-primary">
-            The recovery threshold
+            {t("recovery.threshold.heading")}
           </h2>
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          During onboarding, you split your Master Key into 4 Shamir shares: one
-          device shard and up to three trusted-contact shards. You choose the
-          threshold — the minimum number that must collaborate to reconstruct
-          it. With 2 trusted contacts, keep the threshold at 2; a threshold of 3
-          needs 3 ready contacts.
+          {t("recovery.threshold.intro")}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -123,22 +124,17 @@ export default function RecoveryDocPage() {
                 {option.value}
               </p>
               <p className="text-label-md text-secondary mt-1">
-                {option.label}
+                {t(`recovery.threshold.options.${option.key}.label`)}
               </p>
               <p className="text-body-md text-on-surface-variant mt-2">
-                {option.body}
+                {t(`recovery.threshold.options.${option.key}.body`)}
               </p>
             </article>
           ))}
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          Default is{" "}
-          <strong className="text-primary">2 trusted contacts</strong> — the
-          easiest recovery path while still requiring at least two distinct
-          people. If your contacts face a higher collusion risk (e.g. all from
-          the same family or workplace), use threshold 3 only after 3 contacts
-          are ready.
+          {t("recovery.threshold.note")}
         </p>
       </section>
 
@@ -147,41 +143,20 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-error rounded-full" />
           <h2 className="text-headline-md text-primary">
-            Post-mortem flow, step by step
+            {t("recovery.postmortem.heading")}
           </h2>
         </div>
 
         <ol className="relative pl-8 border-l-2 border-error/20 space-y-8">
-          <Step
-            stage="Detection"
-            title="Life Check exhausts every channel"
-            body="Passive signals fail (no app activity, no device unlock, no third-party signal of life). The active channels you configured fire one by one — push, email, WhatsApp, SMS, IVR — with the delays you set. The cycle status moves to escalating."
-            accent="bg-secondary"
-          />
-          <Step
-            stage="Confirmation"
-            title="Trust contacts mark you unreachable"
-            body="All your trust contacts receive a notification asking whether they can reach you. From their hub they see a Mark as unreachable button (only visible while the cycle is escalating). The threshold number of confirmations opens the 72h grace window."
-            accent="bg-tertiary"
-          />
-          <Step
-            stage="Grace window"
-            title="72 hours to come back"
-            body="If you reappear during these 72 hours and click I am well, the cycle is cancelled, the access request is closed and every contact is notified. Nothing ever leaves your vault."
-            accent="bg-warning"
-          />
-          <Step
-            stage="Reconstruction"
-            title="Contacts submit their shards"
-            body="When the grace window expires, contacts submit their stored shards. Reconstruction happens entirely on-device — Keeplas servers see only encrypted shards, never the master key. The vault opens in read-only memorial mode."
-            accent="bg-error"
-          />
-          <Step
-            stage="Distribution"
-            title="Recipients receive their content"
-            body="Items you pre-assigned to recipients (letters, documents, account credentials, contacts) are released to them according to your routing. Anyone you didn't designate sees nothing."
-            accent="bg-primary"
-          />
+          {POSTMORTEM_STEPS.map((step) => (
+            <Step
+              key={step.key}
+              stage={t(`recovery.postmortem.steps.${step.key}.stage`)}
+              title={t(`recovery.postmortem.steps.${step.key}.title`)}
+              body={t(`recovery.postmortem.steps.${step.key}.body`)}
+              accent={step.accent}
+            />
+          ))}
         </ol>
       </section>
 
@@ -190,59 +165,27 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-primary rounded-full" />
           <h2 className="text-headline-md text-primary">
-            Why this stays zero-knowledge
+            {t("recovery.zk.heading")}
           </h2>
         </div>
 
         <div className="space-y-4 text-body-md text-on-surface-variant">
-          <p>
-            Throughout the entire lifecycle — distribution, reception,
-            verification, recovery — Keeplas servers never see a raw shard and
-            never see your master key. They store only ciphertext blobs wrapped
-            to specific public keys, plus public metadata (timestamps, audit
-            logs, threshold values).
-          </p>
+          <p>{t("recovery.zk.intro")}</p>
 
           <ul className="space-y-2 pl-4 list-disc">
-            <li>
-              <strong className="text-primary">Distribution</strong>: each shard
-              is wrapped to its target contact&apos;s ML-KEM public key before
-              it leaves your device. The server stores only the envelope.
-            </li>
-            <li>
-              <strong className="text-primary">Reception</strong>: the
-              contact&apos;s browser unwraps the envelope using its locally held
-              private key and persists the raw shard in IndexedDB. Nothing about
-              the raw bytes is ever sent back.
-            </li>
-            <li>
-              <strong className="text-primary">Verification</strong>:
-              successfully unwrapping the shard automatically stamps
-              <code className="text-secondary mx-1">lastVerifiedAt</code> on the
-              contact&apos;s row. That timestamp is just an attestation; the
-              server can&apos;t and doesn&apos;t inspect the shard.
-            </li>
-            <li>
-              <strong className="text-primary">Recovery submission</strong>:
-              when contacts submit their shard, each one wraps a copy for every
-              peer&apos;s public key (fan-out). The server stores the fan-out
-              envelopes — still ciphertext only.
-            </li>
-            <li>
-              <strong className="text-primary">Reconstruction</strong>: the
-              Shamir interpolation that rebuilds the master key happens entirely
-              in the contact&apos;s browser. The master key never touches a
-              server, by construction.
-            </li>
+            {ZK_BULLETS.map((b) => (
+              <li key={b}>
+                <strong className="text-primary">
+                  {t(`recovery.zk.bullets.${b}.label`)}
+                </strong>
+                : {t(`recovery.zk.bullets.${b}.body`)}
+              </li>
+            ))}
           </ul>
 
           <div className="bg-primary/5 rounded-xl p-4 border-l-4 border-primary">
             <p className="text-body-md text-on-surface font-medium">
-              Trade-off worth knowing: with threshold = 2, two colluding
-              contacts can both confirm unreachability AND open the vault. The
-              Life Check escalation + the 72h grace window are the only extra
-              safeguards. If you anticipate that risk (e.g. all your contacts
-              share a household), raise your threshold at onboarding.
+              {t("recovery.zk.callout")}
             </p>
           </div>
         </div>
@@ -253,41 +196,24 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-secondary rounded-full" />
           <h2 className="text-headline-md text-primary">
-            How a contact uses their shard
+            {t("recovery.shardUse.heading")}
           </h2>
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          Trust contacts never have to type, copy, export or back up their
-          shard. The browser handles the bytes invisibly. Here&apos;s what a
-          contact actually sees and does:
+          {t("recovery.shardUse.intro")}
         </p>
 
         <ol className="relative pl-8 border-l-2 border-secondary/20 space-y-6">
-          <Step
-            stage="Day 0"
-            title="They accept your invitation"
-            body="They sign in to Keeplas, generate their own ML-KEM keypair on-device, and the public half is uploaded so you can wrap shards to it."
-            accent="bg-secondary/40"
-          />
-          <Step
-            stage="Distribution"
-            title="They visit /shared-with-me once"
-            body="Their browser auto-unwraps the encrypted shard you distributed and stores the raw bytes in their IndexedDB. The card shows Hash verified [just now]. No button to click."
-            accent="bg-secondary"
-          />
-          <Step
-            stage="Recovery time"
-            title="They click Submit my shard"
-            body="Either after the post-mortem grace window expires, or after you trigger a social recovery while alive. Their browser reads the local shard, wraps a copy for each peer, uploads the fan-out envelopes."
-            accent="bg-tertiary"
-          />
-          <Step
-            stage="Reconstruction"
-            title="They click Reconstruct master key"
-            body="Once the threshold has submitted, their browser fetches the envelopes addressed to them, unwraps them with their private key, combines with its own raw shard, and rebuilds the master key locally. From there the vault can be decrypted in memorial read-only mode."
-            accent="bg-error"
-          />
+          {SHARD_STEPS.map((step) => (
+            <Step
+              key={step.key}
+              stage={t(`recovery.shardUse.steps.${step.key}.stage`)}
+              title={t(`recovery.shardUse.steps.${step.key}.title`)}
+              body={t(`recovery.shardUse.steps.${step.key}.body`)}
+              accent={step.accent}
+            />
+          ))}
         </ol>
       </section>
 
@@ -296,60 +222,41 @@ export default function RecoveryDocPage() {
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-tertiary rounded-full" />
           <h2 className="text-headline-md text-primary">
-            What happens if a contact changes device
+            {t("recovery.crossDevice.heading")}
           </h2>
         </div>
 
         <p className="text-body-md text-on-surface-variant">
-          A trust contact who switches phones, factory-resets their device,
-          opens an incognito window, or signs in on a new laptop does not lose
-          their shard. The architecture handles this without any manual export,
-          copy-paste or special action.
+          {t("recovery.crossDevice.intro")}
         </p>
 
         <div className="space-y-4 text-body-md text-on-surface-variant">
           <p>
             <strong className="text-primary">
-              The contact&apos;s ML-KEM keypair is portable.
+              {t("recovery.crossDevice.keypair.label")}
             </strong>{" "}
-            Their secret key is stored on the server, AES-GCM-encrypted under
-            their own master key. As soon as they unlock their vault on the new
-            device — with their 24-word phrase or via Device Unlock — the secret
-            key is decrypted in their browser, ready to use.
+            {t("recovery.crossDevice.keypair.body")}
           </p>
           <p>
             <strong className="text-primary">
-              The encrypted shard is still on the server.
+              {t("recovery.crossDevice.shard.label")}
             </strong>{" "}
-            Your client wrapped it to their public key during distribution; the
-            ciphertext lives in your{" "}
-            <code className="text-secondary">trusted_contacts</code> row. It
-            never depended on a specific device.
+            {t("recovery.crossDevice.shard.body")}
           </p>
           <p>
             <strong className="text-primary">
-              Auto-restoration runs on the next visit.
+              {t("recovery.crossDevice.restore.label")}
             </strong>{" "}
-            When the contact opens /shared-with-me on the new device, a brief
-            “Restoring your shards…” banner appears while the browser unwraps
-            the server envelope and persists the raw bytes in the new
-            device&apos;s IndexedDB. From there, every recovery action works
-            exactly like before.
+            {t("recovery.crossDevice.restore.body")}
           </p>
         </div>
 
         <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
           <p className="text-body-md text-on-surface font-medium mb-2">
-            The only failure mode: a contact loses BOTH their device AND their
-            24-word phrase.
+            {t("recovery.crossDevice.failure.title")}
           </p>
           <p className="text-body-md text-on-surface-variant">
-            Without the phrase, they can&apos;t unlock their master key — so
-            they can&apos;t decrypt their ML-KEM secret key — so they can&apos;t
-            unwrap their shard. Their slot is effectively permanent dead weight.
-            As the vault owner, you should revoke them, invite a replacement,
-            then click <strong>Distribute now</strong> to issue fresh shards to
-            all current trust contacts.
+            {t("recovery.crossDevice.failure.body")}
           </p>
         </div>
       </section>
@@ -362,7 +269,7 @@ export default function RecoveryDocPage() {
         >
           <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
-            Trusted Contacts in detail
+            {t("recovery.trustedLink")}
           </span>
         </Link>
         <Link
@@ -371,28 +278,13 @@ export default function RecoveryDocPage() {
         >
           <Icon path={ICON_PATHS.print} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
-            Export your Recovery Kit
+            {t("recovery.recoveryKitLink")}
           </span>
         </Link>
       </section>
     </div>
   );
 }
-
-const THRESHOLD_OPTIONS = [
-  {
-    value: 2,
-    label: "Easiest",
-    body: "Any two contacts. Default recommendation.",
-    accent: "bg-secondary-container/40",
-  },
-  {
-    value: 3,
-    label: "Strict",
-    body: "Requires three ready contacts. Stronger against a colluding pair, but less forgiving.",
-    accent: "bg-surface-container-low",
-  },
-];
 
 function Step({
   stage,

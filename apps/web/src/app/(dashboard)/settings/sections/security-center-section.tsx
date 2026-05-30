@@ -7,6 +7,7 @@ import { cn, Icon, Loader, UserAvatar } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
+import { useTranslations } from "@/lib/i18n";
 import { DeviceUnlockManager } from "./device-unlock-manager";
 import { PasskeyManager } from "./passkey-manager";
 import { TotpManager } from "./totp-manager";
@@ -42,6 +43,7 @@ function humanizeAction(action: string): string {
 const TOTAL_GUARDIAN_SLOTS = 5;
 
 export function SecurityCenterSection() {
+  const t = useTranslations("settingsSecurity");
   const summary = useQuery(api.audit.getSecuritySummary);
   const logs = useQuery(api.audit.listLogs, { limit: 50 });
   const contacts = useQuery(api.trusted_contacts.getContacts);
@@ -53,7 +55,7 @@ export function SecurityCenterSection() {
     contacts === undefined ||
     user === undefined
   ) {
-    return <Loader label="Loading Security Center" />;
+    return <Loader label={t("center.loading")} />;
   }
 
   const accepted = (contacts ?? []).filter(
@@ -78,6 +80,7 @@ export function SecurityCenterSection() {
       <LastAccessPanel
         lastSeenAt={lastAccessTs}
         country={lastAccessLog?.country ?? null}
+        t={t}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -87,16 +90,19 @@ export function SecurityCenterSection() {
             <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
               <div>
                 <h2 className="text-headline-md text-primary mb-2">
-                  Social Recovery
+                  {t("socialRecovery.title")}
                 </h2>
                 <p className="text-label-md text-secondary">
                   {accepted.length > 0
-                    ? "Status: Active & Secure"
-                    : "Status: Awaiting Guardians"}
+                    ? t("socialRecovery.statusActive")
+                    : t("socialRecovery.statusAwaiting")}
                 </p>
               </div>
               <div className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full text-body-md font-bold whitespace-nowrap">
-                {accepted.length} of {TOTAL_GUARDIAN_SLOTS} Guardians Verified
+                {t("socialRecovery.guardiansVerified", {
+                  count: accepted.length,
+                  total: TOTAL_GUARDIAN_SLOTS,
+                })}
               </div>
             </div>
 
@@ -161,7 +167,7 @@ export function SecurityCenterSection() {
                       />
                     </div>
                     <span className="text-label-md text-outline">
-                      Pending...
+                      {t("socialRecovery.pending")}
                     </span>
                   </div>
                 );
@@ -176,14 +182,16 @@ export function SecurityCenterSection() {
             >
               <Icon path={ICON_PATHS.mail} className="w-4 h-4" />
               <span>
-                {pending.length > 0 ? "Resend Invites" : "Invite Guardian"}
+                {pending.length > 0
+                  ? t("socialRecovery.resendInvites")
+                  : t("socialRecovery.inviteGuardian")}
               </span>
             </Link>
             <Link
               href="/trusted-contacts"
               className="text-secondary hover:underline px-5 py-2.5 text-body-md font-bold transition-all text-center"
             >
-              Manage Guardian Rules
+              {t("socialRecovery.manageRules")}
             </Link>
           </div>
         </section>
@@ -195,10 +203,11 @@ export function SecurityCenterSection() {
               path={ICON_PATHS.description}
               className="w-10 h-10 mb-5 text-secondary-fixed"
             />
-            <h2 className="text-headline-md text-white mb-3">Recovery Kit</h2>
+            <h2 className="text-headline-md text-white mb-3">
+              {t("recoveryKitShortcut.title")}
+            </h2>
             <p className="text-body-md text-on-primary-container mb-6">
-              Generate a physical, offline recovery sheet containing encrypted
-              metadata shards for your vault.
+              {t("recoveryKitShortcut.description")}
             </p>
           </div>
           <Link
@@ -206,7 +215,7 @@ export function SecurityCenterSection() {
             className="vault-gradient text-white w-full py-3 rounded-xl font-bold flex items-center justify-center space-x-3 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
           >
             <Icon path={ICON_PATHS.print} className="w-5 h-5" />
-            <span>Print Physical Kit</span>
+            <span>{t("recoveryKitShortcut.cta")}</span>
           </Link>
         </section>
 
@@ -214,27 +223,30 @@ export function SecurityCenterSection() {
         <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-2xl">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
-            <h2 className="text-headline-md text-primary">Master Recovery</h2>
+            <h2 className="text-headline-md text-primary">
+              {t("masterRecovery.title")}
+            </h2>
           </div>
           <p className="text-body-md text-on-surface-variant mb-6">
-            Your master key is split into{" "}
-            <strong className="text-primary">4 cryptographic shards</strong>{" "}
-            using Shamir&apos;s Secret Sharing — one on this device and three
-            held by your trusted contacts. You chose a threshold of{" "}
+            {t("masterRecovery.descriptionBefore")}{" "}
+            <strong className="text-primary">
+              {t("masterRecovery.shardsEmphasis")}
+            </strong>{" "}
+            {t("masterRecovery.descriptionMiddle")}{" "}
             <strong className="text-primary">
               {user?.vaultThreshold ?? 2}
             </strong>{" "}
-            shards to reconstruct the vault. Any combination meeting that
-            threshold works — your contacts collaborate on-device, never on the
-            server. Keeplas holds no shard.
+            {t("masterRecovery.descriptionAfter")}
           </p>
 
           <div className="space-y-3">
             <ShardRow
               icon={ICON_PATHS.key}
-              label="Recovery phrase"
+              label={t("masterRecovery.recoveryPhraseLabel")}
               hint={
-                hasRecoveryHash ? "Hashed and verified" : "Not generated yet"
+                hasRecoveryHash
+                  ? t("masterRecovery.recoveryPhraseHashed")
+                  : t("masterRecovery.recoveryPhraseNotGenerated")
               }
               verified={hasRecoveryHash}
             />
@@ -242,8 +254,10 @@ export function SecurityCenterSection() {
               <ShardRow
                 key={c._id}
                 icon={ICON_PATHS.users}
-                label={`Guardian shard #${i + 2}`}
-                hint={`Held by ${c.name.split(" ")[0]}`}
+                label={t("masterRecovery.guardianShardLabel", { index: i + 2 })}
+                hint={t("masterRecovery.guardianShardHint", {
+                  name: c.name.split(" ")[0],
+                })}
                 verified
               />
             ))}
@@ -253,7 +267,7 @@ export function SecurityCenterSection() {
             >
               <Icon path={ICON_PATHS.plus} className="w-5 h-5" />
               <span className="text-body-md font-bold">
-                Configure Additional Shard
+                {t("masterRecovery.configureAdditional")}
               </span>
             </Link>
           </div>
@@ -276,34 +290,39 @@ export function SecurityCenterSection() {
               path={ICON_PATHS.shieldCheck}
               className="w-6 h-6 text-secondary"
             />
-            <h2 className="text-headline-md text-primary">Activity Log</h2>
+            <h2 className="text-headline-md text-primary">
+              {t("activityLog.title")}
+            </h2>
           </div>
           <span className="text-label-md text-on-surface-variant">
-            Hash-chained · {logs.length} entries
+            {t("activityLog.hashChained", { count: logs.length })}
           </span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <SummaryStat label="Total events" value={summary?.totalEvents ?? 0} />
           <SummaryStat
-            label="Last activity"
+            label={t("activityLog.totalEvents")}
+            value={summary?.totalEvents ?? 0}
+          />
+          <SummaryStat
+            label={t("activityLog.lastActivity")}
             value={
               summary?.lastEventAt ? formatTimeAgo(summary.lastEventAt) : "—"
             }
           />
           <SummaryStat
-            label="Pending access"
+            label={t("activityLog.pendingAccess")}
             value={summary?.pendingAccessRequests ?? 0}
           />
           <SummaryStat
-            label="Approved access"
+            label={t("activityLog.approvedAccess")}
             value={summary?.approvedAccessRequests ?? 0}
           />
         </div>
 
         {logs.length === 0 ? (
           <p className="text-body-lg text-on-surface-variant text-center py-12">
-            No events recorded yet.
+            {t("activityLog.empty")}
           </p>
         ) : (
           <ul className="divide-y divide-outline-variant/15 max-h-96 overflow-y-auto">
@@ -329,7 +348,8 @@ export function SecurityCenterSection() {
                       {humanizeAction(log.action)}
                     </p>
                     <p className="text-body-md text-on-surface-variant truncate">
-                      {log.resourceType} · actor: {log.actorType}
+                      {log.resourceType} ·{" "}
+                      {t("activityLog.actor", { actor: log.actorType })}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
@@ -401,9 +421,11 @@ function SummaryStat({
 function LastAccessPanel({
   lastSeenAt,
   country,
+  t,
 }: {
   lastSeenAt: number | null;
   country: string | null;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   if (!lastSeenAt) return null;
 
@@ -414,16 +436,16 @@ function LastAccessPanel({
     minute: "2-digit",
   });
   const headline = isToday
-    ? `Today, ${time}`
+    ? t("lastAccess.today", { time })
     : `${date.toLocaleDateString([], { weekday: "short", month: "short", day: "2-digit" })} · ${time}`;
 
   const subtitleParts = [
-    country && country !== "XX" ? `from ${country}` : null,
+    country && country !== "XX" ? t("lastAccess.from", { country }) : null,
   ].filter(Boolean) as string[];
   const subtitle =
     subtitleParts.length > 0
       ? subtitleParts.join(" · ")
-      : "Verified device · Zero-Knowledge session";
+      : t("lastAccess.verifiedSession");
 
   return (
     <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border flex items-center gap-4">
@@ -431,7 +453,9 @@ function LastAccessPanel({
         <Icon path={ICON_PATHS.history} className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-label-md text-on-surface-variant">Last access</p>
+        <p className="text-label-md text-on-surface-variant">
+          {t("lastAccess.label")}
+        </p>
         <p className="text-headline-sm text-primary">{headline}</p>
         <p className="text-body-md text-on-surface-variant mt-0.5 truncate">
           {subtitle}

@@ -12,6 +12,7 @@ import {
   Loader,
   UserAvatar,
 } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { ReturnAfterReleaseBanner } from "@/components/return-after-release-banner";
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
@@ -43,35 +44,29 @@ const ACTION_ICONS: Record<string, string> = {
 };
 
 // Plain-language explanation surfaced via the per-action help icon, so users
-// understand why each step matters before they commit to it.
-const ACTION_HINTS: Record<string, string> = {
-  add_item:
-    "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
-  invite_contact:
-    "Trust contacts are the guardians who can help recover your vault. Invite someone you trust; they accept with their own Keeplas key.",
-  distribute_shards:
-    "Split your master key into encrypted shards and seal one to each trust contact. Recovery needs a threshold of shards, so no single contact can unlock your vault alone. Re-distribute after adding a new guardian.",
-  life_check:
-    "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
-  release_policy:
-    "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable, how long they have, and whether to release anyway or keep everything sealed if no one confirms.",
-  welcome_message:
-    "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
-  two_factor:
-    "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
-  verify_whatsapp:
-    "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
-  more_categories:
-    "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out.",
-};
+// understand why each step matters before they commit to it. The text is
+// resolved via t("hints.<key>") inside the component; this set gates which
+// actions show a help icon at all.
+const ACTION_HINT_KEYS = new Set<string>([
+  "add_item",
+  "invite_contact",
+  "distribute_shards",
+  "life_check",
+  "release_policy",
+  "welcome_message",
+  "two_factor",
+  "verify_whatsapp",
+  "more_categories",
+]);
 
 export function HubContent() {
+  const t = useTranslations("hub");
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const hubData = useQuery(api.hub.getHubData);
 
   if (items === undefined || contacts === undefined || hubData === undefined) {
-    return <Loader fullscreen label="Loading Hub" />;
+    return <Loader fullscreen label={t("loading")} />;
   }
 
   if (hubData === null) return null;
@@ -89,30 +84,34 @@ export function HubContent() {
   const { continuityScore } = hubData;
   const scoreLabel =
     continuityScore >= 75
-      ? "Strong Protection"
+      ? t("score.strong")
       : continuityScore >= 40
-        ? "Partial Coverage"
-        : "Action Required";
+        ? t("score.partial")
+        : t("score.actionRequired");
 
   return (
     <div className="max-w-screen-2xl mx-auto">
       {/* Header */}
       <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-headline-lg text-primary mb-2">Hub</h1>
+          <h1 className="text-headline-lg text-primary mb-2">{t("title")}</h1>
           <p className="text-body-lg text-secondary max-w-lg text-balance">
-            Your central command for protected legacy
+            {t("subtitle.line1")}
             <br />
-            and continuity readiness.
+            {t("subtitle.line2")}
           </p>
         </div>
 
         <a
           href="#priority-actions"
           className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
-          aria-label="Jump to priority actions"
+          aria-label={t("jumpToPriorityActions")}
         >
-          <ContinuityScoreBadge score={continuityScore} label={scoreLabel} />
+          <ContinuityScoreBadge
+            score={continuityScore}
+            label={scoreLabel}
+            actionsLabel={t("actionsRequired")}
+          />
         </a>
       </header>
 
@@ -135,10 +134,10 @@ export function HubContent() {
           >
             <Icon path={ICON_PATHS.fingerprint} className="w-10 h-10 mb-2" />
             <p className="text-headline-sm uppercase tracking-wide">
-              Your Legacy
+              {t("centerNode.title")}
             </p>
             <p className="text-label-md text-secondary-fixed mt-1">
-              Central Node
+              {t("centerNode.subtitle")}
             </p>
           </div>
         </div>
@@ -146,14 +145,16 @@ export function HubContent() {
         {/* Assets — top left */}
         <NodeCard
           iconPath={ICON_PATHS.accountBalance}
-          title="Assets"
+          title={t("nodes.assets.title")}
+          emptyLabel={t("nodes.empty")}
+          protectedLabel={t("nodes.protected")}
           position="md:top-10 md:left-10 lg:left-24"
           isEmpty={assets.length === 0}
           href="/vault"
         >
           {assets.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-2">
-              No assets recorded yet.
+              {t("nodes.assets.empty")}
             </p>
           ) : (
             <div className="space-y-3 mt-4">
@@ -178,14 +179,16 @@ export function HubContent() {
         {/* Contacts — bottom left */}
         <NodeCard
           iconPath={ICON_PATHS.group}
-          title="Contacts"
+          title={t("nodes.contacts.title")}
+          emptyLabel={t("nodes.empty")}
+          protectedLabel={t("nodes.protected")}
           position="md:bottom-10 md:left-10 lg:left-24"
           isEmpty={contacts.length === 0}
           href="/trusted-contacts"
         >
           {contacts.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-2">
-              No guardians linked yet.
+              {t("nodes.contacts.empty")}
             </p>
           ) : (
             <>
@@ -208,8 +211,13 @@ export function HubContent() {
                 )}
               </div>
               <p className="text-label-md text-on-surface-variant">
-                {contacts.length} Primary Guardian
-                {contacts.length > 1 ? "s" : ""} Linked
+                {contacts.length > 1
+                  ? t("nodes.contacts.guardiansLinked", {
+                      count: contacts.length,
+                    })
+                  : t("nodes.contacts.guardianLinked", {
+                      count: contacts.length,
+                    })}
               </p>
             </>
           )}
@@ -218,14 +226,16 @@ export function HubContent() {
         {/* Directives — top right */}
         <NodeCard
           iconPath={ICON_PATHS.medicalInformation}
-          title="Directives"
+          title={t("nodes.directives.title")}
+          emptyLabel={t("nodes.empty")}
+          protectedLabel={t("nodes.protected")}
           position="md:top-10 md:right-10 lg:right-24"
           isEmpty={directives.length === 0}
           href="/vault?section=documents"
         >
           {directives.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-2">
-              No directives recorded yet.
+              {t("nodes.directives.empty")}
             </p>
           ) : (
             <div className="space-y-3 mt-4">
@@ -250,14 +260,16 @@ export function HubContent() {
         {/* Documents — bottom right */}
         <NodeCard
           iconPath={ICON_PATHS.description}
-          title="Documents"
+          title={t("nodes.documents.title")}
+          emptyLabel={t("nodes.empty")}
+          protectedLabel={t("nodes.protected")}
           position="md:bottom-10 md:right-10 lg:right-24"
           isEmpty={documents.length === 0}
           href="/vault?section=documents"
         >
           {documents.length === 0 ? (
             <p className="text-body-md text-on-surface-variant mt-2">
-              No documents stored yet.
+              {t("nodes.documents.empty")}
             </p>
           ) : (
             <div className="space-y-3 mt-4">
@@ -328,7 +340,7 @@ export function HubContent() {
           className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm scroll-mt-24"
         >
           <h4 className="text-label-md text-on-surface-variant mb-6">
-            Priority Actions
+            {t("priorityActions")}
           </h4>
           <div className="space-y-2">
             {hubData.priorityActions.map((action) => (
@@ -380,8 +392,8 @@ export function HubContent() {
                   </span>
                 </Link>
                 <div className="flex items-center gap-1 pr-3 shrink-0">
-                  {ACTION_HINTS[action.key] && (
-                    <HelpHint content={ACTION_HINTS[action.key]} side="left" />
+                  {ACTION_HINT_KEYS.has(action.key) && (
+                    <HelpHint content={t(`hints.${action.key}`)} side="left" />
                   )}
                   <Icon
                     path={ICON_PATHS.chevronRight}
@@ -402,27 +414,27 @@ export function HubContent() {
         <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-label-md text-on-surface-variant">
-              Recent Activity
+              {t("recentActivity.title")}
             </h4>
             {hubData.totalItems > 0 && (
               <Link
                 href="/vault"
                 className="text-xs text-secondary font-bold cursor-pointer hover:underline"
               >
-                View all
+                {t("recentActivity.viewAll")}
               </Link>
             )}
           </div>
           {hubData.recentItems.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-sm text-on-surface-variant mb-4">
-                No items in your vault yet.
+                {t("recentActivity.empty")}
               </p>
               <Link
                 href="/vault"
                 className={buttonVariants({ variant: "vault", size: "sm" })}
               >
-                Add your first item
+                {t("recentActivity.addFirst")}
               </Link>
             </div>
           ) : (
@@ -465,11 +477,10 @@ export function HubContent() {
       <section className="mt-12">
         <header className="mb-6">
           <h4 className="text-label-md text-on-surface-variant">
-            Reflect & Prepare
+            {t("reflect.title")}
           </h4>
           <p className="text-body-md text-on-surface-variant/80 mt-1">
-            A few honest questions, real pain points, and practical steps for
-            continuity — inside Keeplas and beyond.
+            {t("reflect.subtitle")}
           </p>
         </header>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -504,6 +515,8 @@ export function HubContent() {
 function NodeCard({
   iconPath,
   title,
+  emptyLabel,
+  protectedLabel,
   position,
   isEmpty,
   href,
@@ -511,6 +524,8 @@ function NodeCard({
 }: {
   iconPath: string;
   title: string;
+  emptyLabel: string;
+  protectedLabel: string;
   position: string;
   isEmpty: boolean;
   href: string;
@@ -531,7 +546,7 @@ function NodeCard({
             <Icon path={iconPath} className="w-6 h-6" />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded">
-            {isEmpty ? "Empty" : "Protected"}
+            {isEmpty ? emptyLabel : protectedLabel}
           </span>
         </div>
         <h3 className="text-headline-sm text-primary mb-1">{title}</h3>
@@ -544,9 +559,11 @@ function NodeCard({
 function ContinuityScoreBadge({
   score,
   label,
+  actionsLabel,
 }: {
   score: number;
   label: string;
+  actionsLabel: string;
 }) {
   const circumference = 2 * Math.PI * 20;
   const scoreOffset = circumference - (circumference * score) / 100;
@@ -585,7 +602,7 @@ function ContinuityScoreBadge({
       </div>
       <div>
         <p className="text-label-md text-on-surface-variant">
-          Actions required
+          {actionsLabel}
         </p>
         <p className="text-body-md font-bold text-error">{label}</p>
       </div>

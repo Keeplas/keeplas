@@ -24,6 +24,8 @@ import {
 } from "@/lib/passkey";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { getErrorMessage } from "@/lib/utils";
+import { userLanguageForLocale } from "@/lib/locale";
+import { useLocale, useTranslations } from "@/lib/i18n";
 
 export function LoginForm() {
   const { signIn } = useAuthActions();
@@ -36,6 +38,8 @@ export function LoginForm() {
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
+  const locale = useLocale();
+  const language = userLanguageForLocale(locale);
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   // How the entered email signs in: detected on blur/submit. "email-otp"
   // accounts (passwordless) get an emailed code instead of a password.
@@ -47,6 +51,8 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const cooldown = useResendCooldown(30);
   const passkeySupported = usePasskeySupport();
+  const t = useTranslations("auth.login");
+  const c = useTranslations("common");
 
   function switchKind(next: "email" | "phone") {
     setKind(next);
@@ -84,7 +90,11 @@ export function LoginForm() {
         if (mode === "email-otp") {
           // Passwordless email: step 1 emails a code, step 2 signs in.
           if (!emailCodeSent) {
-            await requestEmailOtp({ email: email.trim(), intent: "signin" });
+            await requestEmailOtp({
+              email: email.trim(),
+              intent: "signin",
+              language,
+            });
             setEmailCodeSent(true);
             cooldown.start();
             setLoading(false);
@@ -93,6 +103,7 @@ export function LoginForm() {
           await signIn("email-otp", {
             email: email.trim(),
             code,
+            language,
             flow: "signIn",
           });
           return;
@@ -103,19 +114,15 @@ export function LoginForm() {
         if (mode === "email-otp") {
           setError(
             emailCodeSent
-              ? "Invalid or expired code."
-              : getErrorMessage(err, "Could not send the code. Try again."),
+              ? c("invalidCode")
+              : getErrorMessage(err, t("sendFailed")),
           );
         } else {
           // Tell apart "no account" (→ point to signup) from "wrong password".
           const exists = await convex
             .query(api.users.accountExistsByEmail, { email })
             .catch(() => true);
-          setError(
-            exists
-              ? "Invalid email or password."
-              : "No account found for this email. Sign up to create one.",
-          );
+          setError(exists ? t("invalidCredentials") : t("noEmailAccount"));
         }
         setLoading(false);
       }
@@ -124,14 +131,18 @@ export function LoginForm() {
 
     // Passwordless phone: step 1 requests a WhatsApp code, step 2 signs in.
     if (!phone || !isValidPhone(phone)) {
-      setError("Please enter a valid phone number.");
+      setError(t("phoneInvalid"));
       return;
     }
     setLoading(true);
     setError("");
     try {
       if (!phoneCodeSent) {
-        await requestPhoneOtp({ phoneNumber: phone, intent: "signin" });
+        await requestPhoneOtp({
+          phoneNumber: phone,
+          intent: "signin",
+          language,
+        });
         setPhoneCodeSent(true);
         cooldown.start();
         setLoading(false);
@@ -140,13 +151,12 @@ export function LoginForm() {
       await signIn("phone-otp", {
         phoneNumber: phone,
         code,
+        language,
         flow: "signIn",
       });
     } catch (err) {
       setError(
-        phoneCodeSent
-          ? "Invalid or expired code."
-          : getErrorMessage(err, "Could not send the code. Try again."),
+        phoneCodeSent ? c("invalidCode") : getErrorMessage(err, t("sendFailed")),
       );
       setLoading(false);
     }
@@ -157,10 +167,10 @@ export function LoginForm() {
     setLoading(true);
     setError("");
     try {
-      await requestPhoneOtp({ phoneNumber: phone, intent: "signin" });
+      await requestPhoneOtp({ phoneNumber: phone, intent: "signin", language });
       cooldown.start();
     } catch {
-      setError("Could not resend the code. Try again in a moment.");
+      setError(t("resendFailed"));
     } finally {
       setLoading(false);
     }
@@ -171,10 +181,14 @@ export function LoginForm() {
     setLoading(true);
     setError("");
     try {
-      await requestEmailOtp({ email: email.trim(), intent: "signin" });
+      await requestEmailOtp({
+        email: email.trim(),
+        intent: "signin",
+        language,
+      });
       cooldown.start();
     } catch {
-      setError("Could not resend the code. Try again in a moment.");
+      setError(t("resendFailed"));
     } finally {
       setLoading(false);
     }
@@ -193,12 +207,7 @@ export function LoginForm() {
         email || undefined,
       );
     } catch (err) {
-      setError(
-        getPasskeyErrorMessage(
-          err,
-          "Could not authenticate with your passkey.",
-        ),
-      );
+      setError(getPasskeyErrorMessage(err, t("passkeyFailed")));
       setLoading(false);
     }
   }
@@ -208,20 +217,20 @@ export function LoginForm() {
     (kind === "email" && emailMode === "email-otp" && !emailCodeSent);
   const submitLabel = needsSendStep
     ? loading
-      ? "Sending..."
-      : "Send code"
+      ? t("sending")
+      : t("sendCode")
     : loading
-      ? "Unlocking..."
-      : "Unlock Vault";
+      ? t("unlocking")
+      : t("unlock");
 
   return (
     <AuthFormShell
-      badgeLabel="Identification Required"
-      heading="Welcome back, Curator"
-      description="Access your encrypted archives by verifying your credentials."
+      badgeLabel={t("badge")}
+      heading={t("heading")}
+      description={t("description")}
       footer={{
-        prompt: "New Curator?",
-        label: "Request Access",
+        prompt: t("footerPrompt"),
+        label: t("footerLabel"),
         href: "/signup",
         accent: "secondary",
       }}
@@ -235,10 +244,10 @@ export function LoginForm() {
           >
             <TabsList className="w-full">
               <TabsTrigger value="phone" className="flex-1">
-                Phone
+                {c("phone")}
               </TabsTrigger>
               <TabsTrigger value="email" className="flex-1">
-                Email
+                {c("email")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -246,7 +255,7 @@ export function LoginForm() {
           {kind === "email" ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{c("emailAddress")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -267,12 +276,12 @@ export function LoginForm() {
                 emailCodeSent ? (
                   <div className="space-y-2">
                     <div className="flex justify-between items-end ml-1">
-                      <Label htmlFor="email-code">Email code</Label>
+                      <Label htmlFor="email-code">{t("emailCode")}</Label>
                       <Link
                         href="/login/recovery"
                         className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
                       >
-                        Lost access? 24 words
+                        {t("lostAccess")}
                       </Link>
                     </div>
                     <Input
@@ -295,24 +304,24 @@ export function LoginForm() {
                       className="text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
                     >
                       {cooldown.active
-                        ? `Resend code in ${cooldown.remaining}s`
-                        : "Resend code"}
+                        ? c("resendIn", { seconds: cooldown.remaining })
+                        : c("resendCode")}
                     </button>
                   </div>
                 ) : (
                   <p className="text-label-md text-on-surface-variant ml-1">
-                    This account signs in with an emailed code — no password.
+                    {t("emailOtpHint")}
                   </p>
                 )
               ) : (
                 <div className="space-y-2">
                   <div className="flex justify-between items-end ml-1">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{c("password")}</Label>
                     <Link
                       href="/login/recovery"
                       className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
                     >
-                      Reset with 24 words
+                      {t("resetWords")}
                     </Link>
                   </div>
                   <PasswordInput
@@ -328,7 +337,7 @@ export function LoginForm() {
           ) : (
             <>
               <div className="space-y-2">
-                <Label htmlFor="login-phone">Phone Number</Label>
+                <Label htmlFor="login-phone">{c("phoneNumber")}</Label>
                 <PhoneInput
                   id="login-phone"
                   value={phone}
@@ -339,12 +348,12 @@ export function LoginForm() {
               {phoneCodeSent && (
                 <div className="space-y-2">
                   <div className="flex justify-between items-end ml-1">
-                    <Label htmlFor="login-code">WhatsApp code</Label>
+                    <Label htmlFor="login-code">{t("whatsappCode")}</Label>
                     <Link
                       href="/login/recovery"
                       className="text-[10px] uppercase tracking-widest text-secondary font-bold hover:underline"
                     >
-                      Lost phone? 24 words
+                      {t("lostPhone")}
                     </Link>
                   </div>
                   <Input
@@ -367,8 +376,8 @@ export function LoginForm() {
                     className="text-label-md text-secondary font-bold hover:underline disabled:opacity-60"
                   >
                     {cooldown.active
-                      ? `Resend code in ${cooldown.remaining}s`
-                      : "Resend code"}
+                      ? c("resendIn", { seconds: cooldown.remaining })
+                      : c("resendCode")}
                   </button>
                 </div>
               )}
@@ -392,7 +401,7 @@ export function LoginForm() {
 
       <p className="mt-4 text-center text-label-md text-on-surface-variant">
         <Link href="/security" className="hover:underline">
-          How is your data protected?
+          {t("protectedLink")}
         </Link>
       </p>
 
@@ -417,7 +426,7 @@ export function LoginForm() {
             />
           </svg>
           <span className="font-label text-xs font-bold uppercase tracking-widest text-on-surface">
-            Biometric Authorization
+            {t("passkey")}
           </span>
         </button>
       )}

@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
 import { UnlockGate } from "@/components/unlock-gate";
 import { UploadQueueProvider } from "@/lib/upload-queue";
+import { useTranslations } from "@/lib/i18n";
 import { api } from "@keeplas/backend/_generated/api";
 
 export default function DashboardLayout({
@@ -15,6 +16,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("chrome");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
   const onboardingState = useQuery(
@@ -62,7 +64,7 @@ export default function DashboardLayout({
     totpGate === undefined ||
     loginOtpGate === undefined
   ) {
-    return <Loader fullscreen label="Unlocking your vault" />;
+    return <Loader fullscreen label={t("layout.unlockingVault")} />;
   }
 
   if (!isAuthenticated) {

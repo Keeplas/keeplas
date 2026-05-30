@@ -8,7 +8,7 @@ Hi! You're receiving this because {{1}} listed you as a trusted contact. We can'
 
 ### FR
 
-Bonjour ! Vous recevez ce message car {{1}} vous a désigné comme contact de confiance. Nous ne parvenons pas à confirmer qu'il/elle est toujours actif(ve). Veuillez vous connecter à Keeplas et accéder à la page "Partagé avec moi" pour confirmer son statut et maintenir sa protection de continuité à jour, ou déverrouiller son coffre si nécessaire.
+Bonjour ! Vous recevez ce message car {{1}} vous a désigné comme contact de confiance. Nous ne parvenons pas à confirmer que cette personne est toujours active. Connectez-vous à Keeplas et ouvrez la page « Partagé avec moi » pour confirmer son statut et maintenir sa protection de continuité à jour, ou déverrouiller son coffre si nécessaire.
 
 ## `keeplas_life_check`
 
@@ -18,7 +18,7 @@ We haven't seen any activity from you on Keeplas in a while. Please open Keeplas
 
 ### FR
 
-Nous n'avons pas détecté d'activité de votre part sur Keeplas depuis un certain temps. Veuillez ouvrir Keeplas ou répondre "Je vais bien" pour confirmer que tout va bien. Cela réinitialisera votre vérification d'activité et évitera une escalade qui pourrait donner accès à votre coffre à vos contacts de confiance.
+Nous n'avons pas détecté d'activité de votre part sur Keeplas depuis un certain temps. Ouvrez Keeplas ou répondez « Je vais bien » pour confirmer que tout va bien. Cela réinitialisera votre vérification d'activité et évitera une escalade qui pourrait donner accès à votre coffre à vos contacts de confiance.
 
 ## Trusted Contact Invitation
 
@@ -28,7 +28,7 @@ Hi! {{1}} chose you as a trusted contact on Keeplas. If you accept, you'll secur
 
 ### FR
 
-Bonjour ! {{1}} vous a choisi comme contact de confiance sur Keeplas. Si vous acceptez, vous conserverez en toute sécurité une partie chiffrée de sa clé de récupération. Vous n'aurez pas accès à ses données, sauf s'il/elle ne peut plus confirmer son activité et que Keeplas déclenche son processus de récupération. Appuyez ci-dessous pour accepter. Ce lien est valable 72 h.
+Bonjour ! {{1}} vous a choisi comme contact de confiance sur Keeplas. Si vous acceptez, vous conserverez en toute sécurité un fragment chiffré de sa clé de récupération. Vous n'aurez pas accès à ses données, sauf si cette personne ne peut plus confirmer son activité et que Keeplas déclenche son processus de récupération. Appuyez ci-dessous pour accepter. Ce lien est valable 72 h.
 
 ## Vault Recipient Notification
 
@@ -38,4 +38,4 @@ Hi! {{1}} added you as a recipient for their Keeplas Vault. No action is needed 
 
 ### FR
 
-Bonjour ! {{1}} vous a ajouté comme bénéficiaire de son Keeplas Vault. Aucune action n'est nécessaire pour le moment. Keeplas ne vous contactera que si un événement spécifique configuré par {{1}} est déclenché. Merci d'être là.
+Bonjour ! {{1}} vous a ajouté comme bénéficiaire de son coffre Keeplas. Aucune action n'est nécessaire pour le moment. Keeplas ne vous contactera que si un événement spécifique configuré par {{1}} est déclenché. Merci d'être là.

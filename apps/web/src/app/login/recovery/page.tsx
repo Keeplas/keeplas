@@ -25,6 +25,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ export default function PasswordRecoveryPage() {
   const convex = useConvex();
   const resetPassword = useAction(api.passwordReset.resetPasswordWithRecovery);
   const { signIn } = useAuthActions();
+  const t = useTranslations("auth.recovery");
+  const c = useTranslations("common");
 
   const [kind, setKind] = useState<"email" | "phone">("email");
   // Passwordless `email-otp` accounts recover with 24 words → session (no new
@@ -65,7 +68,7 @@ export default function PasswordRecoveryPage() {
             phoneNumber: account.phoneNumber,
           });
     if (!saltResult?.phraseSalt) {
-      throw new Error("Recovery is not configured for this account.");
+      throw new Error(t("notConfigured"));
     }
     return derivePhraseVerifier(words, base64ToUint8(saltResult.phraseSalt));
   }
@@ -76,7 +79,7 @@ export default function PasswordRecoveryPage() {
 
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
-      setError("Please enter all 24 words of your recovery phrase.");
+      setError(t("allWords"));
       return;
     }
 
@@ -84,7 +87,7 @@ export default function PasswordRecoveryPage() {
       // Passwordless phone: 24 words → session via the phone-recovery
       // provider. No password to set.
       if (!phone || !isValidPhone(phone)) {
-        setError("Enter a valid phone number for your account.");
+        setError(t("validPhone"));
         return;
       }
       setBusy(true);
@@ -94,19 +97,14 @@ export default function PasswordRecoveryPage() {
         await signIn("phone-recovery", { phoneNumber: phone, phraseHash });
         router.push("/hub");
       } catch (err) {
-        setError(
-          getErrorMessage(
-            err,
-            "Recovery failed. Check that your number and 24 words match.",
-          ),
-        );
+        setError(getErrorMessage(err, t("phoneFailed")));
         setBusy(false);
       }
       return;
     }
 
     if (!email.trim()) {
-      setError("Enter the email for your account.");
+      setError(t("enterEmail"));
       return;
     }
 
@@ -128,23 +126,18 @@ export default function PasswordRecoveryPage() {
         await signIn("email-recovery", { email: email.trim(), phraseHash });
         router.push("/hub");
       } catch (err) {
-        setError(
-          getErrorMessage(
-            err,
-            "Recovery failed. Check that your email and 24 words match.",
-          ),
-        );
+        setError(getErrorMessage(err, t("emailFailed")));
         setBusy(false);
       }
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("passwordMin"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("passwordsMismatch"));
       return;
     }
 
@@ -160,12 +153,7 @@ export default function PasswordRecoveryPage() {
       setSuccess(true);
       setTimeout(() => router.push("/login"), 2000);
     } catch (err) {
-      setError(
-        getErrorMessage(
-          err,
-          "Recovery failed. Check that your email and 24 words match.",
-        ),
-      );
+      setError(getErrorMessage(err, t("emailFailed")));
     } finally {
       setBusy(false);
     }
@@ -178,12 +166,9 @@ export default function PasswordRecoveryPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.shieldCheck} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">
-            Password reset successful
-          </h1>
+          <h1 className="text-headline-md text-primary">{t("successTitle")}</h1>
           <p className="text-body-md text-on-surface-variant">
-            Your password was reset. You will be redirected to login. Your vault
-            contents remain encrypted by your 24 words and stay safe.
+            {t("successBody")}
           </p>
         </div>
       </main>
@@ -197,13 +182,9 @@ export default function PasswordRecoveryPage() {
           <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.key} className="w-7 h-7" />
           </div>
-          <h1 className="text-headline-md text-primary">
-            Recover access with your 24 words
-          </h1>
+          <h1 className="text-headline-md text-primary">{t("heading")}</h1>
           <p className="text-body-md text-on-surface-variant">
-            Email accounts reset their password; phone accounts regain access
-            directly. Either way your encrypted vault is untouched — your 24
-            words remain the crypto root.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -223,16 +204,16 @@ export default function PasswordRecoveryPage() {
           >
             <TabsList className="w-full">
               <TabsTrigger value="email" className="flex-1">
-                Email
+                {c("email")}
               </TabsTrigger>
               <TabsTrigger value="phone" className="flex-1">
-                Phone
+                {c("phone")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
           {kind === "email" ? (
             <div className="space-y-1.5">
-              <Label htmlFor="rec-email">Email</Label>
+              <Label htmlFor="rec-email">{c("email")}</Label>
               <Input
                 id="rec-email"
                 type="email"
@@ -259,39 +240,37 @@ export default function PasswordRecoveryPage() {
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="rec-phone">Phone</Label>
+              <Label htmlFor="rec-phone">{c("phone")}</Label>
               <PhoneInput id="rec-phone" value={phone} onChange={setPhone} />
             </div>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="rec-phrase">Recovery phrase (24 words)</Label>
+            <Label htmlFor="rec-phrase">{t("phraseLabel")}</Label>
             <Textarea
               id="rec-phrase"
               value={phrase}
               onChange={(e) => setPhrase(e.target.value)}
-              placeholder="word1 word2 word3 ..."
+              placeholder={t("phrasePlaceholder")}
               rows={4}
               autoComplete="off"
               spellCheck={false}
             />
             <p className="text-label-md text-on-surface-variant">
-              Paste all 24 words. Case, spacing, numbers and punctuation are
-              ignored — you can paste directly from the PDF.
+              {t("phraseHint1")}
             </p>
             <p className="text-label-md text-on-surface-variant">
-              Words never leave this device — only a derived verifier is sent.
+              {t("phraseHint2")}
             </p>
           </div>
           {kind === "email" && emailMode === "email-otp" && (
             <p className="text-label-md text-on-surface-variant">
-              This account signs in with an emailed code — your 24 words restore
-              access directly, no new password needed.
+              {t("emailOtpHint")}
             </p>
           )}
           {kind === "email" && emailMode !== "email-otp" && (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="rec-new-password">New password</Label>
+                <Label htmlFor="rec-new-password">{t("newPassword")}</Label>
                 <PasswordInput
                   id="rec-new-password"
                   value={newPassword}
@@ -302,7 +281,7 @@ export default function PasswordRecoveryPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="rec-confirm-password">
-                  Confirm new password
+                  {t("confirmPassword")}
                 </Label>
                 <PasswordInput
                   id="rec-confirm-password"
@@ -330,9 +309,9 @@ export default function PasswordRecoveryPage() {
             {busy ? (
               <Spinner size="sm" />
             ) : kind === "phone" || emailMode === "email-otp" ? (
-              "Recover access"
+              t("recoverAccess")
             ) : (
-              "Reset password"
+              t("resetPassword")
             )}
           </Button>
         </form>
@@ -342,7 +321,7 @@ export default function PasswordRecoveryPage() {
             href="/login"
             className="text-body-md text-secondary hover:underline"
           >
-            Back to login
+            {t("backToLogin")}
           </Link>
         </div>
       </div>

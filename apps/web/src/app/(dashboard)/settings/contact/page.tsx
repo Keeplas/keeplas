@@ -15,6 +15,7 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 type Topic =
   | "general"
@@ -24,16 +25,17 @@ type Topic =
   | "feature_request"
   | "other";
 
-const TOPICS: Array<{ value: Topic; label: string }> = [
-  { value: "general", label: "General question" },
-  { value: "security", label: "Security concern" },
-  { value: "billing", label: "Billing & subscription" },
-  { value: "recovery", label: "Recovery & vault access" },
-  { value: "feature_request", label: "Feature request" },
-  { value: "other", label: "Other" },
+const TOPIC_VALUES: Topic[] = [
+  "general",
+  "security",
+  "billing",
+  "recovery",
+  "feature_request",
+  "other",
 ];
 
 export default function SettingsContactPage() {
+  const t = useTranslations("settings");
   const user = useQuery(api.users.viewer);
   const submitTicket = useMutation(api.support.submitTicket);
 
@@ -68,7 +70,7 @@ export default function SettingsContactPage() {
       setSubject("");
       setMessage("");
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to submit your message."));
+      setError(getErrorMessage(err, t("contact.submitError")));
     } finally {
       setSubmitting(false);
     }
@@ -82,11 +84,13 @@ export default function SettingsContactPage() {
             <Icon path={ICON_PATHS.checkCircle} className="w-7 h-7" />
           </span>
           <div className="space-y-2">
-            <h2 className="text-headline-md text-primary">Message sent</h2>
+            <h2 className="text-headline-md text-primary">
+              {t("contact.success.title")}
+            </h2>
             <p className="text-body-lg text-on-surface-variant">
-              Our concierge team will reply at{" "}
-              <strong className="text-primary">{contact}</strong> within one
-              hour.
+              {t("contact.success.intro")}{" "}
+              <strong className="text-primary">{contact}</strong>{" "}
+              {t("contact.success.outro")}
             </p>
           </div>
           <div className="pt-2">
@@ -97,7 +101,7 @@ export default function SettingsContactPage() {
               onClick={() => setSubmitted(false)}
               className="bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Send another message
+              {t("contact.success.sendAnother")}
             </Button>
           </div>
         </div>
@@ -114,7 +118,7 @@ export default function SettingsContactPage() {
         <ErrorAlert message={error} />
 
         <div className="space-y-2">
-          <Label htmlFor="contact-reply">Reply-to email or WhatsApp</Label>
+          <Label htmlFor="contact-reply">{t("contact.form.replyTo")}</Label>
           <Input
             id="contact-reply"
             type="text"
@@ -126,44 +130,44 @@ export default function SettingsContactPage() {
         </div>
 
         <div className="space-y-2">
-          <Label>Topic</Label>
+          <Label>{t("contact.form.topic")}</Label>
           <Select<Topic>
             value={topic}
             onValueChange={setTopic}
-            placeholder="Select a topic"
+            placeholder={t("contact.form.topicPlaceholder")}
           >
-            {TOPICS.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
+            {TOPIC_VALUES.map((value) => (
+              <SelectItem key={value} value={value}>
+                {t(`contact.topics.${value}`)}
               </SelectItem>
             ))}
           </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="contact-subject">Subject</Label>
+          <Label htmlFor="contact-subject">{t("contact.form.subject")}</Label>
           <Input
             id="contact-subject"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="e.g., Cannot complete life check"
+            placeholder={t("contact.form.subjectPlaceholder")}
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="contact-message">Message</Label>
+          <Label htmlFor="contact-message">{t("contact.form.message")}</Label>
           <Textarea
             id="contact-message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Share as much detail as possible. Do not include your recovery phrase."
+            placeholder={t("contact.form.messagePlaceholder")}
             rows={6}
             minLength={10}
             required
           />
           <p className="text-label-md text-on-surface-variant">
-            Never share your seed phrase with anyone, including our team.
+            {t("contact.form.seedWarning")}
           </p>
         </div>
 
@@ -175,10 +179,10 @@ export default function SettingsContactPage() {
             disabled={submitting}
             className="cursor-pointer"
           >
-            {submitting ? "Sending..." : "Send Message"}
+            {submitting ? t("contact.form.sending") : t("contact.form.send")}
           </Button>
           <p className="text-body-md text-on-surface-variant">
-            Typical response time: within one hour.
+            {t("contact.form.responseTime")}
           </p>
         </div>
       </form>

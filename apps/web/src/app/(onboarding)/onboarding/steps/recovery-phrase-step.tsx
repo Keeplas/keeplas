@@ -6,6 +6,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { Button, Loader } from "@keeplas/ui";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 import { copySecretWithAutoClear } from "@/lib/clipboard";
+import { useTranslations } from "@/lib/i18n";
 
 interface RecoveryPhraseStepProps {
   phrase: string[] | null;
@@ -18,6 +19,7 @@ export function RecoveryPhraseStep({
   onPhraseGenerated,
   onContinue,
 }: RecoveryPhraseStepProps) {
+  const t = useTranslations("auth.onboarding.recoveryPhrase");
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -65,20 +67,19 @@ export function RecoveryPhraseStep({
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(18);
-      pdf.text("Keeplas — Master Recovery Words", marginX, cursorY);
+      pdf.text(t("pdfTitle"), marginX, cursorY);
 
       cursorY += 8;
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(11);
       pdf.setTextColor(60);
-      pdf.text(`Account: ${accountId ?? "—"}`, marginX, cursorY);
+      pdf.text(`${t("pdfAccountLabel")}: ${accountId ?? "—"}`, marginX, cursorY);
 
       cursorY += 10;
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(10);
       pdf.setTextColor(90);
-      const warning =
-        "These 24 words are the only way to recover your vault. Keep this document offline and in a secure, fireproof location. Anyone with these words has full authority over your digital legacy.";
+      const warning = t("pdfWarning");
       const wrapped = pdf.splitTextToSize(warning, pageWidth - marginX * 2);
       pdf.text(wrapped, marginX, cursorY);
       cursorY += wrapped.length * 5 + 8;
@@ -107,7 +108,7 @@ export function RecoveryPhraseStep({
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(10);
       pdf.setTextColor(90);
-      pdf.text("Copy-paste line", marginX, cursorY);
+      pdf.text(t("pdfCopyLine"), marginX, cursorY);
       cursorY += 5;
       pdf.setFont("courier", "normal");
       pdf.setFontSize(9);
@@ -129,7 +130,7 @@ export function RecoveryPhraseStep({
   }
 
   if (!phrase) {
-    return <Loader label="Generating your Recovery Words" />;
+    return <Loader label={t("generating")} />;
   }
 
   return (
@@ -138,10 +139,10 @@ export function RecoveryPhraseStep({
       <section className="mb-8 md:mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-6">
         <div>
           <span className="text-label-md text-secondary mb-2 md:mb-3 block">
-            Cryptographic Foundation
+            {t("badge")}
           </span>
           <h1 className="text-headline-lg text-primary break-words">
-            Master Recovery Words
+            {t("heading")}
           </h1>
         </div>
         <div className="flex flex-row flex-nowrap gap-2 md:gap-3 print:hidden">
@@ -162,7 +163,7 @@ export function RecoveryPhraseStep({
                 d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75"
               />
             </svg>
-            {copied ? "Copied!" : "Copy all"}
+            {copied ? t("copied") : t("copyAll")}
           </button>
           <button
             onClick={handleDownload}
@@ -182,7 +183,7 @@ export function RecoveryPhraseStep({
                 d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
               />
             </svg>
-            {exporting ? "Generating PDF…" : "Download"}
+            {exporting ? t("generatingPdf") : t("download")}
           </button>
         </div>
       </section>
@@ -213,13 +214,10 @@ export function RecoveryPhraseStep({
         </svg>
         <div className="relative z-10">
           <h3 className="font-headline text-surface-container-lowest text-lg md:text-xl font-bold mb-2">
-            Absolute Recovery Authority
+            {t("warningTitle")}
           </h3>
           <p className="font-body text-on-primary-container leading-relaxed max-w-2xl">
-            These words are the only way to recover your vault. Keep them
-            offline and safe. Anyone with access to these words possesses full
-            authority over your digital legacy. We recommend writing them on
-            paper and storing in a secure, fireproof location.
+            {t("warningBody")}
           </p>
         </div>
       </div>
@@ -260,11 +258,10 @@ export function RecoveryPhraseStep({
             />
           </svg>
           <h4 className="font-headline font-bold text-base mb-1.5">
-            Offline Storage
+            {t("offlineTitle")}
           </h4>
           <p className="text-sm text-on-surface-variant leading-relaxed">
-            Never store these words digitally — no screenshots, cloud notes, or
-            email drafts.
+            {t("offlineBody")}
           </p>
         </div>
         <div className="p-6 bg-surface-container-low rounded-2xl">
@@ -282,11 +279,10 @@ export function RecoveryPhraseStep({
             />
           </svg>
           <h4 className="font-headline font-bold text-base mb-1.5">
-            Legacy Access
+            {t("legacyTitle")}
           </h4>
           <p className="text-sm text-on-surface-variant leading-relaxed">
-            Consider sharing the location of these words with a trusted
-            beneficiary.
+            {t("legacyBody")}
           </p>
         </div>
         <div className="p-6 bg-surface-container-low rounded-2xl">
@@ -304,11 +300,10 @@ export function RecoveryPhraseStep({
             />
           </svg>
           <h4 className="font-headline font-bold text-base mb-1.5">
-            Verification
+            {t("verificationTitle")}
           </h4>
           <p className="text-sm text-on-surface-variant leading-relaxed">
-            We will ask you to verify these words to confirm your backup is
-            secure.
+            {t("verificationBody")}
           </p>
         </div>
       </section>
@@ -323,9 +318,7 @@ export function RecoveryPhraseStep({
             className="mt-1 w-5 h-5 rounded-lg border-2 border-outline-variant/30 text-secondary focus:ring-secondary/20 focus:ring-offset-0 accent-secondary cursor-pointer"
           />
           <span className="text-sm text-on-surface font-body">
-            I have written down my 24 Recovery Words and stored them in a safe
-            place. I understand that losing these words means I cannot recover
-            my vault.
+            {t("confirmLabel")}
           </span>
         </label>
 
@@ -336,7 +329,7 @@ export function RecoveryPhraseStep({
           disabled={!confirmed}
           className="w-full group cursor-pointer disabled:pointer-events-none disabled:opacity-40"
         >
-          I saved my words — continue
+          {t("continue")}
           <svg
             className="w-5 h-5 transition-transform group-hover:translate-x-1"
             fill="none"

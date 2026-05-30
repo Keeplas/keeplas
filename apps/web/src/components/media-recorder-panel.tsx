@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Icon, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
+
+type Translator = ReturnType<typeof useTranslations>;
 
 type RecorderMode = "audio" | "video";
 
@@ -64,18 +67,37 @@ function formatDuration(totalSec: number): string {
   return `${minutes}:${seconds}`;
 }
 
-function friendlyError(err: unknown, mode: RecorderMode): string {
+function friendlyError(
+  err: unknown,
+  mode: RecorderMode,
+  t: Translator,
+): string {
   const name = (err as { name?: string }).name ?? "";
   if (name === "NotAllowedError") {
-    return `Permission refused. Enable ${mode === "video" ? "camera and microphone" : "microphone"} access in your browser settings.`;
+    return t("recorder.errorPermission", {
+      devices:
+        mode === "video"
+          ? t("recorder.devicesCameraMic")
+          : t("recorder.deviceMic"),
+    });
   }
   if (name === "NotFoundError") {
-    return `No ${mode === "video" ? "camera or microphone" : "microphone"} detected on this device.`;
+    return t("recorder.errorNotFound", {
+      devices:
+        mode === "video"
+          ? t("recorder.devicesCameraOrMic")
+          : t("recorder.deviceMic"),
+    });
   }
   if (name === "NotReadableError") {
-    return `${mode === "video" ? "Camera" : "Microphone"} is busy in another app.`;
+    return t("recorder.errorBusy", {
+      device:
+        mode === "video"
+          ? t("recorder.deviceCameraCapitalized")
+          : t("recorder.deviceMicCapitalized"),
+    });
   }
-  return getErrorMessage(err, "Unable to access capture devices.");
+  return getErrorMessage(err, t("recorder.errorGeneric"));
 }
 
 export function MediaRecorderPanel({
@@ -83,6 +105,7 @@ export function MediaRecorderPanel({
   onRecorded,
   onCancel,
 }: MediaRecorderPanelProps) {
+  const t = useTranslations("chrome");
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -249,7 +272,7 @@ export function MediaRecorderPanel({
           typeof navigator === "undefined" ||
           !navigator.mediaDevices?.getUserMedia
         ) {
-          throw new Error("Media capture is not available in this browser.");
+          throw new Error(t("recorder.notAvailable"));
         }
         const stream = await requestStream();
         if (cancelled) {
@@ -265,7 +288,7 @@ export function MediaRecorderPanel({
         setPhase("live");
       } catch (err) {
         if (!cancelled) {
-          setError(friendlyError(err, mode));
+          setError(friendlyError(err, mode, t));
           setPhase("error");
         }
       }
@@ -276,7 +299,7 @@ export function MediaRecorderPanel({
     return () => {
       cancelled = true;
     };
-  }, [mode, requestStream, setupAudioAnalyser, setPhase]);
+  }, [mode, requestStream, setupAudioAnalyser, setPhase, t]);
 
   // Global cleanup on unmount — stop recorder, release stream and waveform.
   useEffect(() => {
@@ -311,7 +334,7 @@ export function MediaRecorderPanel({
       setupAudioAnalyser(stream);
       setPhase("live");
     } catch (err) {
-      setError(friendlyError(err, mode));
+      setError(friendlyError(err, mode, t));
       setPhase("error");
     }
   }
@@ -319,11 +342,11 @@ export function MediaRecorderPanel({
   function handleStart() {
     const stream = streamRef.current;
     if (!stream) {
-      setError("Capture device is not ready yet. Please wait.");
+      setError(t("recorder.deviceNotReady"));
       return;
     }
     if (typeof MediaRecorder === "undefined") {
-      setError("Recording is not supported in this browser.");
+      setError(t("recorder.notSupported"));
       return;
     }
 
@@ -334,7 +357,7 @@ export function MediaRecorderPanel({
         ? new MediaRecorder(stream, { mimeType })
         : new MediaRecorder(stream);
     } catch (err) {
-      setError(getErrorMessage(err, "MediaRecorder initialization failed."));
+      setError(getErrorMessage(err, t("recorder.initFailed")));
       return;
     }
 
@@ -412,14 +435,20 @@ export function MediaRecorderPanel({
   const remainingSec = MAX_DURATION_SEC[mode] - elapsed;
 
   const subheadline = (() => {
-    if (phase === "warming") return "Preparing capture device…";
-    if (phase === "error")
-      return "Capture unavailable. Adjust permissions and retry.";
+    if (phase === "warming") return t("recorder.subPreparing");
+    if (phase === "error") return t("recorder.subUnavailable");
     if (phase === "recording")
-      return `Recording — ${formatDuration(elapsed)} / max ${formatDuration(MAX_DURATION_SEC[mode])}`;
+      return t("recorder.subRecording", {
+        elapsed: formatDuration(elapsed),
+        max: formatDuration(MAX_DURATION_SEC[mode]),
+      });
     if (phase === "stopped")
-      return `Preview — ${formatDuration(recordedDuration)}`;
-    return `Encrypted on your device. Max ${formatDuration(MAX_DURATION_SEC[mode])}.`;
+      return t("recorder.subPreview", {
+        duration: formatDuration(recordedDuration),
+      });
+    return t("recorder.subIdle", {
+      max: formatDuration(MAX_DURATION_SEC[mode]),
+    });
   })();
 
   return (
@@ -441,7 +470,9 @@ export function MediaRecorderPanel({
           </div>
           <div>
             <p className="text-headline-sm text-primary">
-              {mode === "audio" ? "Voice recording" : "Video recording"}
+              {mode === "audio"
+                ? t("recorder.titleAudio")
+                : t("recorder.titleVideo")}
             </p>
             <p className="text-label-md text-on-surface-variant">
               {subheadline}
@@ -452,7 +483,7 @@ export function MediaRecorderPanel({
           type="button"
           onClick={handleCancelAll}
           className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
-          aria-label="Cancel recording"
+          aria-label={t("recorder.cancelRecording")}
         >
           <Icon path={ICON_PATHS.close} className="w-4 h-4" />
         </button>
@@ -471,7 +502,7 @@ export function MediaRecorderPanel({
               onClick={handleRetryWarm}
               className="text-label-md hover:underline cursor-pointer"
             >
-              Try again
+              {t("recorder.tryAgain")}
             </button>
           )}
         </div>
@@ -493,7 +524,7 @@ export function MediaRecorderPanel({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
               </span>
-              Turning on camera…
+              {t("recorder.turningOnCamera")}
             </div>
           )}
           {(phase === "live" || phase === "recording") && (
@@ -506,7 +537,9 @@ export function MediaRecorderPanel({
                     : "bg-secondary",
                 )}
               />
-              {phase === "recording" ? "Recording" : "Live preview"}
+              {phase === "recording"
+                ? t("recorder.statusRecording")
+                : t("recorder.statusLivePreview")}
             </div>
           )}
         </div>
@@ -521,7 +554,7 @@ export function MediaRecorderPanel({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
               </span>
-              Enabling microphone…
+              {t("recorder.enablingMic")}
             </div>
           )}
           {(phase === "live" || phase === "recording") && (
@@ -534,7 +567,9 @@ export function MediaRecorderPanel({
                     : "bg-secondary",
                 )}
               />
-              {phase === "recording" ? "Recording" : "Mic live"}
+              {phase === "recording"
+                ? t("recorder.statusRecording")
+                : t("recorder.statusMicLive")}
             </div>
           )}
         </div>
@@ -550,7 +585,9 @@ export function MediaRecorderPanel({
             {formatDuration(elapsed)}
           </span>
           <span className="ml-auto text-label-md text-on-surface-variant">
-            {formatDuration(Math.max(0, remainingSec))} left
+            {t("recorder.timeLeft", {
+              time: formatDuration(Math.max(0, remainingSec)),
+            })}
           </span>
         </div>
       )}
@@ -575,7 +612,7 @@ export function MediaRecorderPanel({
           onClick={handleCancelAll}
           className="text-body-md font-bold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
         >
-          Cancel
+          {t("recorder.cancel")}
         </button>
 
         <div className="flex items-center gap-2">
@@ -589,7 +626,7 @@ export function MediaRecorderPanel({
               className="gap-2 cursor-pointer"
             >
               <Icon path={ICON_PATHS.record} className="w-4 h-4" />
-              Start recording
+              {t("recorder.startRecording")}
             </Button>
           )}
 
@@ -602,7 +639,7 @@ export function MediaRecorderPanel({
               className="gap-2 cursor-pointer"
             >
               <Icon path={ICON_PATHS.stop} className="w-4 h-4" filled />
-              Stop
+              {t("recorder.stop")}
             </Button>
           )}
 
@@ -616,7 +653,7 @@ export function MediaRecorderPanel({
                 className="gap-2 cursor-pointer"
               >
                 <Icon path={ICON_PATHS.refresh} className="w-4 h-4" />
-                Re-record
+                {t("recorder.reRecord")}
               </Button>
               <Button
                 type="button"
@@ -625,7 +662,7 @@ export function MediaRecorderPanel({
                 onClick={handleSave}
                 className="gap-2 cursor-pointer"
               >
-                Attach to vault
+                {t("recorder.attachToVault")}
               </Button>
             </>
           )}

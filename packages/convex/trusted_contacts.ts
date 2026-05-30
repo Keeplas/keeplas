@@ -18,6 +18,7 @@ import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
+import { resolveLocale, type Locale } from "./lib/locale";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -324,6 +325,7 @@ export const inviteContact = auditedMutation({
           phoneNumber: baseFields.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
           invitationToken,
+          language: inviter?.language,
         },
       );
     }
@@ -338,6 +340,7 @@ export const inviteContact = auditedMutation({
         {
           phoneNumber: baseFields.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
+          language: inviter?.language,
         },
       );
     }
@@ -868,6 +871,7 @@ export const resendInvitation = auditedMutation({
           phoneNumber: contact.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
           invitationToken,
+          language: inviter?.language,
         },
       );
     }
@@ -882,6 +886,7 @@ export const resendInvitation = auditedMutation({
         {
           phoneNumber: contact.phoneNumber,
           inviterName: inviter?.name?.trim() || "A Keeplas user",
+          language: inviter?.language,
         },
       );
     }
@@ -1130,12 +1135,15 @@ export const sendInvitationEmail = internalAction({
     const from = requireEnv("RESEND_FROM_EMAIL");
     const appUrl = requireEnv("APP_URL");
     const acceptUrl = `${appUrl}/invite/${data.invitationToken}`;
-    const inviterName = data.inviterName?.trim() || "A Keeplas user";
+    const locale = resolveLocale(data.inviterLanguage);
+    const inviterName =
+      data.inviterName?.trim() ||
+      (locale === "fr" ? "Un utilisateur Keeplas" : "A Keeplas user");
 
     const isTrust = (data.contactType ?? "trust") === "trust";
     const subject = isTrust
-      ? `${inviterName} invited you as a trusted contact on Keeplas`
-      : `${inviterName} added you as a recipient on Keeplas`;
+      ? INVITE_EMAIL_COPY[locale].trustSubject(inviterName)
+      : INVITE_EMAIL_COPY[locale].recipientSubject(inviterName);
 
     const html = isTrust
       ? trustInvitationHtml({
@@ -1143,8 +1151,9 @@ export const sendInvitationEmail = internalAction({
           recipientName: data.name,
           inviterName,
           acceptUrl,
+          locale,
         })
-      : recipientIntroHtml({ appUrl, inviterName });
+      : recipientIntroHtml({ appUrl, inviterName, locale });
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -1185,37 +1194,94 @@ export const getInvitationEmailContext = internalQuery({
       invitationStatus: contact.invitationStatus,
       invitationToken: contact.invitationToken,
       inviterName: inviter?.name ?? null,
+      // Drive the invite email's language off the inviter's preference — the
+      // invitee has no account (hence no locale) until they accept.
+      inviterLanguage: inviter?.language ?? null,
     };
   },
 });
+
+// Email copy mirrors the Infobip WhatsApp templates (`keeplas_invite_tc_*`,
+// `keeplas_invite_recipient_only_*`) so the two channels carry matching wording.
+const INVITE_EMAIL_COPY = {
+  en: {
+    trustSubject: (inviter: string) =>
+      `${inviter} invited you as a trusted contact on Keeplas`,
+    recipientSubject: (inviter: string) =>
+      `${inviter} added you as a recipient on Keeplas`,
+    greeting: (name: string) => `Hi ${name},`,
+    trustBody: (inviter: string) =>
+      `<strong>${inviter}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.`,
+    trustExplain:
+      "As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.",
+    accept: "Accept invitation",
+    expiry: (url: string) =>
+      `This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+    ignoreInvite: "If you weren't expecting this invitation, you can ignore this email.",
+    recipientHi: "Hi!",
+    recipientBody: (inviter: string) =>
+      `<strong>${inviter}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.`,
+    recipientThanks: "Thanks for being there.",
+    discover: "Discover Keeplas",
+    ignoreMistake: "If this email reached you by mistake, you can ignore it.",
+  },
+  fr: {
+    trustSubject: (inviter: string) =>
+      `${inviter} vous a désigné comme contact de confiance sur Keeplas`,
+    recipientSubject: (inviter: string) =>
+      `${inviter} vous a ajouté comme bénéficiaire sur Keeplas`,
+    greeting: (name: string) => `Bonjour ${name},`,
+    trustBody: (inviter: string) =>
+      `<strong>${inviter}</strong> vous a choisi comme contact de confiance sur Keeplas, la plateforme de continuité de vie à connaissance nulle.`,
+    trustExplain:
+      "En tant que contact de confiance, vous conserverez un fragment chiffré de sa clé de récupération. Avec ses autres contacts, vous pourrez l'aider à retrouver l'accès à son coffre si cette personne perd ses identifiants. Vous n'aurez accès à aucune de ses données.",
+    accept: "Accepter l'invitation",
+    expiry: (url: string) =>
+      `Ce lien est valable 72 h. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+    ignoreInvite:
+      "Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.",
+    recipientHi: "Bonjour !",
+    recipientBody: (inviter: string) =>
+      `<strong>${inviter}</strong> vous a ajouté comme bénéficiaire de son coffre Keeplas. Aucune action n'est nécessaire pour le moment — Keeplas ne vous contactera que si un événement spécifique configuré par cette personne est déclenché.`,
+    recipientThanks: "Merci d'être là.",
+    discover: "Découvrir Keeplas",
+    ignoreMistake:
+      "Si cet e-mail vous est parvenu par erreur, vous pouvez l'ignorer.",
+  },
+} satisfies Record<Locale, Record<string, string | ((arg: string) => string)>>;
 
 function trustInvitationHtml(opts: {
   appUrl: string;
   recipientName: string;
   inviterName: string;
   acceptUrl: string;
+  locale: Locale;
 }) {
+  const copy = INVITE_EMAIL_COPY[opts.locale];
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
 <p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
-<p>Hi ${escapeHtml(opts.recipientName)},</p>
-<p><strong>${escapeHtml(opts.inviterName)}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.</p>
-<p>As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.</p>
-<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Accept invitation</a></p>
-<p style="color:#666;font-size:13px">This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${opts.acceptUrl}" style="color:#041632;word-break:break-all">${opts.acceptUrl}</a></p>
-<p style="color:#666;font-size:13px;margin-top:24px">If you weren't expecting this invitation, you can ignore this email.</p>
+<p>${copy.greeting(escapeHtml(opts.recipientName))}</p>
+<p>${copy.trustBody(escapeHtml(opts.inviterName))}</p>
+<p>${copy.trustExplain}</p>
+<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.accept}</a></p>
+<p style="color:#666;font-size:13px">${copy.expiry(opts.acceptUrl)}</p>
+<p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreInvite}</p>
 </body></html>`;
 }
 
-function recipientIntroHtml(opts: { appUrl: string; inviterName: string }) {
-  // Body mirrors the Infobip WhatsApp template `keeplas_invite_recipient_only_en`
-  // so the two channels carry identical wording.
+function recipientIntroHtml(opts: {
+  appUrl: string;
+  inviterName: string;
+  locale: Locale;
+}) {
+  const copy = INVITE_EMAIL_COPY[opts.locale];
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:520px;margin:auto;padding:24px">
 <p style="text-align:center;margin:0 0 24px"><img src="${opts.appUrl}/assets/logo/logo-wordmark.svg" alt="Keeplas" width="200" height="40" style="display:inline-block;border:0;outline:none;text-decoration:none"/></p>
-<p>Hi!</p>
-<p><strong>${escapeHtml(opts.inviterName)}</strong> added you as a recipient on Keeplas Vault. You don't need to do anything for now — Keeplas will only contact you if a specific configured event is triggered.</p>
-<p>Thanks for being there.</p>
-<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">Discover Keeplas</a></p>
-<p style="color:#666;font-size:13px;margin-top:24px">If this email reached you by mistake, you can ignore it.</p>
+<p>${copy.recipientHi}</p>
+<p>${copy.recipientBody(escapeHtml(opts.inviterName))}</p>
+<p>${copy.recipientThanks}</p>
+<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.discover}</a></p>
+<p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreMistake}</p>
 </body></html>`;
 }
 
@@ -1323,10 +1389,17 @@ export const runAvailabilityReconfirm = internalMutation({
       });
 
       if (c.phoneNumber) {
+        const contactUser = c.contactUserId
+          ? await ctx.db.get(c.contactUserId)
+          : null;
         await ctx.scheduler.runAfter(
           0,
           internal.dispatch.sendReconfirmWhatsApp,
-          { phoneNumber: c.phoneNumber, ownerName },
+          {
+            phoneNumber: c.phoneNumber,
+            ownerName,
+            language: contactUser?.language ?? owner?.language,
+          },
         );
       }
 

@@ -5,6 +5,7 @@ import { ConvexReactClient } from "convex/react";
 import { ReactNode, useState } from "react";
 import { ConfirmDialogProvider } from "@keeplas/ui";
 import { MasterKeyProvider } from "@/lib/master-key-context";
+import { I18nProvider, ViewerLocaleSync } from "@/lib/i18n";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -26,14 +27,21 @@ export default function ConvexClientProvider({
   const [client] = useState(() => getConvexClient());
 
   if (!client) {
-    return <ConfirmDialogProvider>{children}</ConfirmDialogProvider>;
+    return (
+      <I18nProvider>
+        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+      </I18nProvider>
+    );
   }
 
   return (
     <ConvexAuthProvider client={client}>
-      <MasterKeyProvider>
-        <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
-      </MasterKeyProvider>
+      <I18nProvider>
+        <ViewerLocaleSync />
+        <MasterKeyProvider>
+          <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
+        </MasterKeyProvider>
+      </I18nProvider>
     </ConvexAuthProvider>
   );
 }

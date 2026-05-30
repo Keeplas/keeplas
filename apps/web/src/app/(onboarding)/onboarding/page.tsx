@@ -39,5 +39,7 @@ export default function OnboardingPage() {
     return null;
   }
 
-  return <OnboardingFlow initialStep={onboardingState.onboardingStep} />;
+  return (
+    <OnboardingFlow initialStep={onboardingState.onboardingStep} />
+  );
 }

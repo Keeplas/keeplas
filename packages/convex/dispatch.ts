@@ -6,6 +6,7 @@ import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireEnv } from "./lib/require_env";
 import { signLifeCheckToken } from "./lib/life_check_token";
+import { type Locale, resolveLocale } from "./lib/locale";
 
 const CHANNEL_TYPE = v.union(
   v.literal("push"),
@@ -87,9 +88,11 @@ async function sendPush({
     vapidPrivate,
   );
 
+  const locale = resolveLocale(user.language);
+  const copy = LIFE_CHECK_PUSH_COPY[locale];
   const payload = JSON.stringify({
-    title: "Keeplas Life Check",
-    body: `${user.name ?? "Hi"}, please confirm you are well.`,
+    title: copy.title,
+    body: copy.body(user.name),
     actionUrl: `${requireEnv("APP_URL")}/life-check`,
   });
 
@@ -141,6 +144,8 @@ async function sendEmail({ cycle, user }: DispatchContext): Promise<string> {
   if (!user.email) return "no_email";
 
   const verifyUrl = await buildConfirmUrl(cycle._id, user._id);
+  const locale = resolveLocale(user.language);
+  const copy = LIFE_CHECK_EMAIL_COPY[locale];
 
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
@@ -161,8 +166,9 @@ async function sendEmail({ cycle, user }: DispatchContext): Promise<string> {
     body: JSON.stringify({
       from,
       to: [user.email],
-      subject: "Keeplas — your scheduled check-in",
-      html: lifeCheckEmailHtml(user.name, verifyUrl),
+      subject: copy.subject,
+      html: lifeCheckEmailHtml(user.name, verifyUrl, locale),
+      text: copy.text(user.name, verifyUrl),
     }),
   });
 
@@ -252,11 +258,15 @@ async function sendWhatsAppTemplate(args: {
 
 async function sendWhatsApp({ user }: DispatchContext): Promise<string> {
   if (!user.phoneNumber) return "no_phone";
+  const locale = resolveLocale(user.language);
   return sendWhatsAppTemplate({
     to: user.phoneNumber,
-    templateName:
-      process.env.WHATSAPP_LIFE_CHECK_TEMPLATE_NAME ?? "keeplas_life_check_en",
-    language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+    templateName: localizedTemplateName(
+      process.env.WHATSAPP_LIFE_CHECK_TEMPLATE_NAME,
+      "keeplas_life_check",
+      locale,
+    ),
+    language: locale,
     // The template carries a single "I'm well" QUICK_REPLY button; Infobip
     // rejects the send (error 7008, UNDELIVERABLE_REJECTED_OPERATOR) unless we
     // echo it back. The payload is irrelevant to us — any reply maps to the
@@ -279,12 +289,18 @@ export const sendWhatsAppOtp = internalAction({
   args: {
     phoneNumber: v.string(),
     code: v.string(),
+    language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
     const result = await sendWhatsAppTemplate({
       to: args.phoneNumber,
-      templateName: process.env.WHATSAPP_OTP_TEMPLATE_NAME ?? "keeplas_otp_en",
-      language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_OTP_TEMPLATE_NAME,
+        "keeplas_otp",
+        locale,
+      ),
+      language: locale,
       placeholders: [args.code],
       buttons: [{ type: "URL", parameter: args.code }],
     });
@@ -309,13 +325,18 @@ export const sendInvitationWhatsApp = internalAction({
     phoneNumber: v.string(),
     inviterName: v.string(),
     invitationToken: v.string(),
+    language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
-      templateName:
-        process.env.WHATSAPP_TC_INVITE_TEMPLATE_NAME ?? "keeplas_invite_tc_en",
-      language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_TC_INVITE_TEMPLATE_NAME,
+        "keeplas_invite_tc",
+        locale,
+      ),
+      language: locale,
       placeholders: [args.inviterName],
       buttons: [{ type: "URL", parameter: args.invitationToken }],
     });
@@ -332,14 +353,18 @@ export const sendRecipientInvitationWhatsApp = internalAction({
   args: {
     phoneNumber: v.string(),
     inviterName: v.string(),
+    language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
-      templateName:
-        process.env.WHATSAPP_TC_RECIPIENT_INVITE_TEMPLATE_NAME ??
-        "keeplas_invite_recipient_only_en",
-      language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_TC_RECIPIENT_INVITE_TEMPLATE_NAME,
+        "keeplas_invite_recipient_only",
+        locale,
+      ),
+      language: locale,
       placeholders: [args.inviterName],
     });
   },
@@ -348,21 +373,26 @@ export const sendRecipientInvitationWhatsApp = internalAction({
 /**
  * WhatsApp availability re-confirmation nudge to a trusted contact whose
  * shard verification is stale/missing. Utility template
- * `keeplas_reconfirm_tc_en`: body placeholder = vault owner name; static
- * URL button (no parameter). No-op when Infobip is not configured.
+ * `keeplas_tc_reconfirm_en` (`_fr` variant auto-selected by locale): body
+ * placeholder = vault owner name; static URL button (no parameter). No-op when
+ * Infobip is not configured.
  */
 export const sendReconfirmWhatsApp = internalAction({
   args: {
     phoneNumber: v.string(),
     ownerName: v.string(),
+    language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
-      templateName:
-        process.env.WHATSAPP_TC_RECONFIRM_TEMPLATE_NAME ??
-        "keeplas_reconfirm_tc_en",
-      language: process.env.WHATSAPP_TEMPLATE_LANG ?? "en",
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_TC_RECONFIRM_TEMPLATE_NAME,
+        "keeplas_tc_reconfirm",
+        locale,
+      ),
+      language: locale,
       placeholders: [args.ownerName],
     });
   },
@@ -378,6 +408,7 @@ export const sendEmailOtp = internalAction({
   args: {
     email: v.string(),
     code: v.string(),
+    language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
     const apiKey = process.env.RESEND_API_KEY;
@@ -388,6 +419,8 @@ export const sendEmailOtp = internalAction({
       return "resend_not_configured";
     }
     const from = requireEnv("RESEND_FROM_EMAIL");
+    const locale = resolveLocale(args.language);
+    const copy = EMAIL_OTP_COPY[locale];
     const code = escapeHtml(args.code);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -398,9 +431,9 @@ export const sendEmailOtp = internalAction({
       body: JSON.stringify({
         from,
         to: [args.email],
-        subject: "Your Keeplas login code",
-        html: `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px"><p>Use this code to finish signing in to Keeplas:</p><p style="font-size:28px;font-weight:700;letter-spacing:0.4em;text-align:center;margin:32px 0;padding:16px;background:#f5f5f7;border-radius:12px">${code}</p><p style="color:#666;font-size:13px">This code expires in 10 minutes. If you didn't try to sign in, change your password.</p></body></html>`,
-        text: `Your Keeplas login code is ${args.code}. It expires in 10 minutes.`,
+        subject: copy.subject,
+        html: otpEmailHtml(code, locale),
+        text: copy.text(args.code),
       }),
     });
     if (!res.ok) {
@@ -411,13 +444,112 @@ export const sendEmailOtp = internalAction({
   },
 });
 
-function lifeCheckEmailHtml(name: string | undefined, url: string) {
-  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
+function localizedTemplateName(
+  configuredName: string | undefined,
+  baseName: string,
+  locale: Locale,
+): string {
+  const fallback = `${baseName}_${locale}`;
+  if (!configuredName) return fallback;
+  if (locale === "en") return configuredName.replace(/_fr$/i, "_en");
+  if (/_en$/i.test(configuredName))
+    return configuredName.replace(/_en$/i, "_fr");
+  if (/_fr$/i.test(configuredName)) return configuredName;
+  return `${configuredName}_fr`;
+}
+
+const LIFE_CHECK_PUSH_COPY = {
+  en: {
+    title: "Keeplas Life Check",
+    body: (name: string | undefined) =>
+      `${name ?? "Hi"}, please confirm you are well.`,
+  },
+  fr: {
+    title: "Vérification Keeplas",
+    body: (name: string | undefined) =>
+      `${name ?? "Bonjour"}, confirmez que vous allez bien.`,
+  },
+} satisfies Record<Locale, { title: string; body: (name?: string) => string }>;
+
+const EMAIL_OTP_COPY = {
+  en: {
+    subject: "Your Keeplas login code",
+    intro: "Use this code to finish signing in to Keeplas:",
+    expiry:
+      "This code expires in 10 minutes. If you didn't try to sign in, change your password.",
+    text: (code: string) =>
+      `Your Keeplas login code is ${code}. It expires in 10 minutes.`,
+  },
+  fr: {
+    subject: "Votre code de connexion Keeplas",
+    intro: "Utilisez ce code pour terminer votre connexion à Keeplas :",
+    expiry:
+      "Ce code expire dans 10 minutes. Si vous n'avez pas tenté de vous connecter, changez votre mot de passe.",
+    text: (code: string) =>
+      `Votre code de connexion Keeplas est ${code}. Il expire dans 10 minutes.`,
+  },
+} satisfies Record<
+  Locale,
+  {
+    subject: string;
+    intro: string;
+    expiry: string;
+    text: (code: string) => string;
+  }
+>;
+
+const LIFE_CHECK_EMAIL_COPY = {
+  en: {
+    subject: "Keeplas — your scheduled check-in",
+    greeting: (name: string | undefined) => (name ? `Hi ${name},` : "Hi,"),
+    body: "It's time for your scheduled Keeplas check-in. Tap the button below to confirm you're well and reset your countdown — no need to log in.",
+    button: "I am well",
+    fallback:
+      "If you cannot use the button, open {{url}} in your browser. If you don't respond, Keeplas will keep reminding you, then begin your continuity protocol.",
+    text: (name: string | undefined, url: string) =>
+      `${name ? `Hi ${name},\n\n` : ""}It's time for your scheduled Keeplas check-in. Confirm you're well here: ${url}`,
+  },
+  fr: {
+    subject: "Keeplas — votre vérification programmée",
+    greeting: (name: string | undefined) =>
+      name ? `Bonjour ${name},` : "Bonjour,",
+    body: "C'est le moment de votre vérification programmée Keeplas. Appuyez sur le bouton ci-dessous pour confirmer que vous allez bien et réinitialiser le compte à rebours, sans vous connecter.",
+    button: "Je vais bien",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur. Sans réponse de votre part, Keeplas continuera les rappels, puis lancera votre protocole de continuité.",
+    text: (name: string | undefined, url: string) =>
+      `${name ? `Bonjour ${name},\n\n` : ""}C'est le moment de votre vérification programmée Keeplas. Confirmez que vous allez bien ici : ${url}`,
+  },
+} satisfies Record<
+  Locale,
+  {
+    subject: string;
+    greeting: (name?: string) => string;
+    body: string;
+    button: string;
+    fallback: string;
+    text: (name: string | undefined, url: string) => string;
+  }
+>;
+
+function otpEmailHtml(code: string, locale: Locale) {
+  const copy = EMAIL_OTP_COPY[locale];
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px"><p>${copy.intro}</p><p style="font-size:28px;font-weight:700;letter-spacing:0.4em;text-align:center;margin:32px 0;padding:16px;background:#f5f5f7;border-radius:12px">${code}</p><p style="color:#666;font-size:13px">${copy.expiry}</p></body></html>`;
+}
+
+function lifeCheckEmailHtml(
+  name: string | undefined,
+  url: string,
+  locale: Locale,
+) {
+  const copy = LIFE_CHECK_EMAIL_COPY[locale];
+  const greeting = escapeHtml(copy.greeting(name));
+  const fallback = copy.fallback.replace("{{url}}", url);
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
 <p>${greeting}</p>
-<p>It's time for your scheduled Keeplas check-in. Tap the button below to confirm you're well and reset your countdown — no need to log in.</p>
-<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#0b1f3b;color:#fff;text-decoration:none;border-radius:8px">I am well</a></p>
-<p style="color:#666;font-size:13px">If you cannot use the button, open ${url} in your browser. If you don't respond, Keeplas will keep reminding you, then begin your continuity protocol.</p>
+<p>${copy.body}</p>
+<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#0b1f3b;color:#fff;text-decoration:none;border-radius:8px">${copy.button}</a></p>
+<p style="color:#666;font-size:13px">${fallback}</p>
 </body></html>`;
 }
 

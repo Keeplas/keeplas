@@ -38,6 +38,7 @@ export const requestEmailAuthOtp = mutation({
   args: {
     email: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
+    language: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email);
@@ -84,6 +85,7 @@ export const requestEmailAuthOtp = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
       email,
       code,
+      language: args.language,
     });
 
     return { sent: true };

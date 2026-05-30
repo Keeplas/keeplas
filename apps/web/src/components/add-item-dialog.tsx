@@ -51,6 +51,7 @@ import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { serializeLinks, isValidUrl } from "@/lib/link-payload";
 import { useUploadQueue } from "@/lib/upload-queue";
+import { useTranslations } from "@/lib/i18n";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
@@ -66,26 +67,14 @@ type TriggerType = "life_check_failure" | "time_based" | "manual";
 
 interface TriggerOption {
   value: TriggerType;
-  label: string;
-  hint: string;
+  // Stable i18n key suffix; label/hint resolve via t("triggers.<key>.*").
+  key: string;
 }
 
 const TRIGGER_OPTIONS: TriggerOption[] = [
-  {
-    value: "life_check_failure",
-    label: "Verified Life-Check Failure",
-    hint: "Released when you stop responding to Life Checks for the configured number of days.",
-  },
-  {
-    value: "time_based",
-    label: "Time-based Release",
-    hint: "Released on a specific calendar date — useful for birthdays, anniversaries, or coming-of-age letters.",
-  },
-  {
-    value: "manual",
-    label: "Manual Trigger",
-    hint: "Released only when you (or a curator) explicitly approve from the hub.",
-  },
+  { value: "life_check_failure", key: "lifeCheck" },
+  { value: "time_based", key: "timeBased" },
+  { value: "manual", key: "manual" },
 ];
 
 type AddItemDialogMode = "vault" | "release_introduction";
@@ -171,6 +160,7 @@ export function AddItemDialog({
   defaultCategory,
   mode = "vault",
 }: AddItemDialogProps) {
+  const t = useTranslations("vault");
   const isIntroMode = mode === "release_introduction";
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const { encryptContentWithKey, isReady } = useVaultCrypto();
@@ -254,9 +244,9 @@ export function AddItemDialog({
       ? [
           {
             value: ALL_TRUSTED_VALUE,
-            label: "All trust contacts",
-            hint: "Everyone who's accepted your invite",
-            groupLabel: "Broadcast",
+            label: t("recipients.allContacts"),
+            hint: t("recipients.allContactsHint"),
+            groupLabel: t("recipients.broadcastLabel"),
           },
         ]
       : [];
@@ -265,18 +255,20 @@ export function AddItemDialog({
       label: g.name,
       hint:
         g.memberContactIds.length === 1
-          ? "1 contact"
-          : `${g.memberContactIds.length} contacts`,
-      groupLabel: "Groups",
+          ? t("recipients.contactCountOne", { count: 1 })
+          : t("recipients.contactCountOther", {
+              count: g.memberContactIds.length,
+            }),
+      groupLabel: t("recipients.groupsLabel"),
     }));
     const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
       value: `${CONTACT_PREFIX}${c._id}`,
       label: c.name,
       hint: c.email,
-      groupLabel: "Individual contacts",
+      groupLabel: t("recipients.individualsLabel"),
     }));
     return [...allTrustedOpt, ...groupOpts, ...contactOpts];
-  }, [isIntroMode, recipientGroups, allContacts]);
+  }, [isIntroMode, recipientGroups, allContacts, t]);
 
   // Mutual exclusivity for the "All trust contacts" sentinel: picking it clears
   // any specific group/contact selections, and picking a specific recipient
@@ -355,11 +347,11 @@ export function AddItemDialog({
     const accepted: PreparedFile[] = [];
     for (const file of incoming) {
       if (!ACCEPTED_TYPES.split(",").includes(file.type)) {
-        setError(`${file.name} — unsupported file type. PDF, JPG or PNG only.`);
+        setError(t("editor.errorUnsupportedType", { name: file.name }));
         continue;
       }
       if (file.size > MAX_FILE_BYTES) {
-        setError(`${file.name} — exceeds 50 MB limit.`);
+        setError(t("editor.errorTooLarge", { name: file.name }));
         continue;
       }
       accepted.push({
@@ -407,7 +399,9 @@ export function AddItemDialog({
       ...prev,
       {
         id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        name: `${isVideo ? "Video" : "Voice"} message — ${stamp}.${ext}`,
+        name: `${
+          isVideo ? t("recorder.videoMessage") : t("recorder.voiceMessage")
+        } — ${stamp}.${ext}`,
         mimeType: meta.mimeType,
         size: blob.size,
         blob,
@@ -450,18 +444,18 @@ export function AddItemDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isReady || !cryptoReady) {
-      setError("Encryption key not available. Please sign in again.");
+      setError(t("dialog.errorNoKey"));
       return;
     }
     if (!title.trim()) {
-      setError("Asset name is required.");
+      setError(t("dialog.errorNameRequired"));
       return;
     }
 
     const cleanUrls = linkUrls.map((u) => u.trim()).filter(Boolean);
     const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
     if (invalidUrl) {
-      setError(`Invalid URL: ${invalidUrl}`);
+      setError(t("editor.errorInvalidUrl", { url: invalidUrl }));
       return;
     }
 
@@ -471,14 +465,12 @@ export function AddItemDialog({
       triggerType === "time_based" &&
       !releaseDate
     ) {
-      setError("Pick a release date for the time-based trigger.");
+      setError(t("dialog.errorReleaseDate"));
       return;
     }
 
     if (isIntroMode && recipientSelection.length === 0) {
-      setError(
-        "Pick at least one recipient — an introduction with no audience is never shown.",
-      );
+      setError(t("dialog.errorIntroRecipient"));
       return;
     }
 
@@ -519,7 +511,7 @@ export function AddItemDialog({
         resolvedRecipients = [];
       }
 
-      setProgress("Generating per-item key…");
+      setProgress(t("dialog.progressGenKey"));
       let wrap = await generateDekAndWrap(resolvedRecipients);
 
       // Verify-before-wrap (finding #2): if a recipient's encryption key could
@@ -544,7 +536,7 @@ export function AddItemDialog({
       }
       const { dek, ownerWrap, recipientWraps } = wrap;
 
-      setProgress("Sealing vault entry…");
+      setProgress(t("dialog.progressSealing"));
       const textPayload = body.trim();
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const encryptedLinks =
@@ -605,7 +597,7 @@ export function AddItemDialog({
 
       handleOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to save item."));
+      setError(getErrorMessage(err, t("dialog.errorSave")));
       setSaving(false);
       setProgress("");
     }
@@ -618,19 +610,25 @@ export function AddItemDialog({
         <DialogHeader className="px-8 py-6 items-start shrink-0 static">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-label-md text-secondary">
-              <span>{isIntroMode ? "Life Check" : "Vault"}</span>
+              <span>
+                {isIntroMode ? "Life Check" : t("dialog.breadcrumbVault")}
+              </span>
               <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
               <span className="text-on-surface-variant/50">
-                {isIntroMode ? "Welcome message" : "Secure New Asset"}
+                {isIntroMode
+                  ? t("dialog.breadcrumbWelcome")
+                  : t("dialog.breadcrumbNewAsset")}
               </span>
             </div>
             <DialogTitle className="text-headline-md">
-              {isIntroMode ? "Record a welcome message" : "Add to Vault"}
+              {isIntroMode
+                ? t("dialog.titleIntro")
+                : t("dialog.titleVault")}
             </DialogTitle>
             <DialogDescription className="text-body-md max-w-md">
               {isIntroMode
-                ? "A text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Encrypted on your device before it leaves."
-                : "Deposit a critical asset. Files are encrypted on your device before they leave. AES-256-GCM."}
+                ? t("dialog.descriptionIntro")
+                : t("dialog.descriptionVault")}
             </DialogDescription>
           </div>
           <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
@@ -653,12 +651,16 @@ export function AddItemDialog({
           <section className="bg-surface-container-low rounded-2xl p-6">
             <SectionHeading
               step="01"
-              title={isIntroMode ? "Message identity" : "Asset Identity"}
+              title={
+                isIntroMode
+                  ? t("dialog.section01Intro")
+                  : t("dialog.section01")
+              }
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={cn("space-y-2", isIntroMode && "md:col-span-2")}>
                 <Label className="text-label-md text-on-surface-variant">
-                  {isIntroMode ? "Title" : "Asset Name"}
+                  {isIntroMode ? t("dialog.fieldTitle") : t("dialog.fieldName")}
                 </Label>
                 <Input
                   type="text"
@@ -666,8 +668,8 @@ export function AddItemDialog({
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={
                     isIntroMode
-                      ? "e.g. A few words from me"
-                      : "e.g. Primary Brokerage Account"
+                      ? t("dialog.titlePlaceholder")
+                      : t("dialog.namePlaceholder")
                   }
                   required
                 />
@@ -675,12 +677,12 @@ export function AddItemDialog({
               {!isIntroMode && (
                 <div className="space-y-2">
                   <Label className="text-label-md text-on-surface-variant">
-                    Category
+                    {t("dialog.fieldCategory")}
                   </Label>
                   <Select<VaultCategory>
                     value={category}
                     onValueChange={setCategory}
-                    placeholder="Choose a category"
+                    placeholder={t("dialog.categoryPlaceholder")}
                   >
                     {CATEGORIES.map((cat) => (
                       <SelectItem key={cat.key} value={cat.key}>
@@ -693,13 +695,13 @@ export function AddItemDialog({
               <div className="md:col-span-2 space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
                   {isIntroMode
-                    ? "Your message"
+                    ? t("dialog.fieldYourMessage")
                     : isLetter
-                      ? "Message"
-                      : "Asset Description"}{" "}
+                      ? t("dialog.fieldMessage")
+                      : t("dialog.fieldDescription")}{" "}
                   {!isLetter && !isIntroMode && (
                     <span className="text-outline-variant normal-case tracking-normal">
-                      (optional)
+                      {t("dialog.optional")}
                     </span>
                   )}
                 </Label>
@@ -708,10 +710,10 @@ export function AddItemDialog({
                   onChange={setBody}
                   placeholder={
                     isIntroMode
-                      ? "Write a few words for your trusted contacts. They'll see this above the items you left them…"
+                      ? t("dialog.bodyPlaceholderIntro")
                       : isLetter
-                        ? "Write the message that will be released…"
-                        : "Describe the significance and location of this asset…"
+                        ? t("dialog.bodyPlaceholderLetter")
+                        : t("dialog.bodyPlaceholderAsset")
                   }
                   minHeight={isLetter || isIntroMode ? 240 : 160}
                 />
@@ -720,23 +722,26 @@ export function AddItemDialog({
               {isLetter && !isIntroMode && (
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-label-md text-on-surface-variant">
-                    Trigger
+                    {t("triggers.label")}
                   </Label>
                   <Select<TriggerType>
                     value={triggerType}
                     onValueChange={setTriggerType}
-                    placeholder="Choose a trigger"
+                    placeholder={t("triggers.placeholder")}
                   >
-                    {TRIGGER_OPTIONS.map((opt) => (
-                      <SelectItem
-                        key={opt.value}
-                        value={opt.value}
-                        label={opt.label}
-                        description={opt.hint}
-                      >
-                        {opt.label}
-                      </SelectItem>
-                    ))}
+                    {TRIGGER_OPTIONS.map((opt) => {
+                      const label = t(`triggers.${opt.key}.label`);
+                      return (
+                        <SelectItem
+                          key={opt.value}
+                          value={opt.value}
+                          label={label}
+                          description={t(`triggers.${opt.key}.hint`)}
+                        >
+                          {label}
+                        </SelectItem>
+                      );
+                    })}
                   </Select>
                 </div>
               )}
@@ -744,13 +749,13 @@ export function AddItemDialog({
               {isLetter && !isIntroMode && triggerType === "time_based" && (
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-label-md text-on-surface-variant">
-                    Release on
+                    {t("dialog.releaseOn")}
                   </Label>
                   <DatePicker
                     value={releaseDate}
                     onChange={setReleaseDate}
                     min={new Date().toISOString().split("T")[0]}
-                    placeholder="Pick a release date"
+                    placeholder={t("dialog.releaseDatePlaceholder")}
                   />
                 </div>
               )}
@@ -760,15 +765,14 @@ export function AddItemDialog({
                 triggerType === "life_check_failure" && (
                   <div className="md:col-span-2">
                     <InfoCallout icon={ICON_PATHS.heartbeat}>
-                      Uses your global Life Check cadence and escalation. Adjust
-                      the inactivity threshold once in{" "}
+                      {t("dialog.lifeCheckCalloutPrefix")}{" "}
                       <Link
                         href="/life-check"
                         className="text-secondary font-semibold hover:underline"
                       >
-                        Life Check settings
+                        {t("dialog.lifeCheckCalloutLink")}
                       </Link>
-                      — it applies to every letter with this trigger.
+                      {t("dialog.lifeCheckCalloutSuffix")}
                     </InfoCallout>
                   </div>
                 )}
@@ -776,9 +780,7 @@ export function AddItemDialog({
               {isIntroMode && (
                 <div className="md:col-span-2">
                   <InfoCallout icon={ICON_PATHS.heartbeat}>
-                    Released alongside your vault when Life Check confirms
-                    you&apos;re unreachable. Shown to recipients at the top of
-                    their memorial view.
+                    {t("dialog.introCallout")}
                   </InfoCallout>
                 </div>
               )}
@@ -787,7 +789,7 @@ export function AddItemDialog({
 
           {/* Section 02 — Secure Documentation */}
           <section className="bg-surface-container-low rounded-2xl p-6">
-            <SectionHeading step="02" title="Secure Documentation" />
+            <SectionHeading step="02" title={t("dialog.section02")} />
 
             {recorderMode ? (
               <MediaRecorderPanel
@@ -806,7 +808,7 @@ export function AddItemDialog({
                     className="gap-2 cursor-pointer"
                   >
                     <Icon path={ICON_PATHS.mic} className="w-4 h-4" />
-                    Record audio
+                    {t("dialog.recordAudio")}
                   </Button>
                   <Button
                     type="button"
@@ -816,10 +818,10 @@ export function AddItemDialog({
                     className="gap-2 cursor-pointer"
                   >
                     <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
-                    Record video
+                    {t("dialog.recordVideo")}
                   </Button>
                   <div className="flex items-center text-label-md text-on-surface-variant/60 ml-auto">
-                    or drop a file below
+                    {t("dialog.orDropFile")}
                   </div>
                 </div>
 
@@ -864,15 +866,14 @@ export function AddItemDialog({
                   </div>
                   <div>
                     <p className="text-headline-sm text-primary">
-                      Drag and drop secure files
+                      {t("dialog.dropTitle")}
                     </p>
                     <p className="text-body-md text-on-surface-variant mt-1">
-                      PDF, JPG, or PNG up to 50 MB per file. Encrypted on
-                      arrival.
+                      {t("dialog.dropHint")}
                     </p>
                   </div>
                   <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full text-label-md hover:bg-surface-container-highest transition-colors">
-                    Browse System
+                    {t("dialog.browseSystem")}
                   </span>
                 </div>
               </>
@@ -899,13 +900,14 @@ export function AddItemDialog({
                         </p>
                         <p className="text-label-md text-on-surface-variant">
                           {formatFileSize(file.size)}
-                          {duration ? ` • ${duration}` : ""} • Encrypted
+                          {duration ? ` • ${duration}` : ""} •{" "}
+                          {t("attachments.encrypted")}
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeFile(file.id)}
-                        aria-label={`Remove ${file.name}`}
+                        aria-label={t("dialog.removeFile", { name: file.name })}
                         className="ml-1 p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
                       >
                         <Icon
@@ -924,7 +926,7 @@ export function AddItemDialog({
           {/* Section 03 — Linked URLs (hidden for intro mode) */}
           {!isIntroMode && (
             <section className="bg-surface-container-low rounded-2xl p-6">
-              <SectionHeading step="03" title="Linked URLs" />
+              <SectionHeading step="03" title={t("dialog.section03")} />
               <VaultLinkInputList urls={linkUrls} onChange={setLinkUrls} />
             </section>
           )}
@@ -934,15 +936,17 @@ export function AddItemDialog({
             <SectionHeading
               step={isIntroMode ? "03" : "04"}
               title={
-                isIntroMode ? "Who sees this message?" : "Transmission Logic"
+                isIntroMode
+                  ? t("dialog.section04Intro")
+                  : t("dialog.section04")
               }
             />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-label-md text-on-surface-variant">
                   {isIntroMode
-                    ? "Pick the contacts who'll see this welcome"
-                    : "Who receives this at trigger?"}
+                    ? t("recipients.labelIntro")
+                    : t("recipients.label")}
                 </Label>
                 <MultiSelect
                   options={recipientOptions}
@@ -956,17 +960,19 @@ export function AddItemDialog({
                         }
                   }
                   placeholder={
-                    isIntroMode ? "All trust contacts" : "No one — keep private"
+                    isIntroMode
+                      ? t("recipients.allContacts")
+                      : t("recipients.placeholderPrivate")
                   }
-                  searchPlaceholder="Search groups or contacts…"
-                  emptyMessage="No groups or contacts yet."
+                  searchPlaceholder={t("recipients.searchPlaceholder")}
+                  emptyMessage={t("recipients.emptyMessage")}
                   renderTrigger={(selected) => {
                     if (selected.length === 0) {
                       return (
                         <span className="text-outline-variant">
                           {isIntroMode
-                            ? "Pick at least one recipient"
-                            : "No one — keep private"}
+                            ? t("recipients.placeholderIntro")
+                            : t("recipients.placeholderPrivate")}
                         </span>
                       );
                     }
@@ -983,8 +989,8 @@ export function AddItemDialog({
                 />
                 <p className="text-label-md text-on-surface-variant/70">
                   {isIntroMode
-                    ? "Broadcast to every trusted contact, target a group, or pick specific people. Combinations of groups and individuals are allowed."
-                    : "Pick one or more groups (your trust contacts are already a group), or specific people. Empty = the item stays private."}
+                    ? t("recipients.helperIntro")
+                    : t("recipients.helper")}
                 </p>
               </div>
             </div>
@@ -1002,7 +1008,7 @@ export function AddItemDialog({
                 className="w-4 h-4 rotate-180"
                 strokeWidth={2}
               />
-              Cancel
+              {t("dialog.cancel")}
             </button>
             <div className="flex items-center gap-4">
               {progress && (
@@ -1019,10 +1025,10 @@ export function AddItemDialog({
               >
                 <span>
                   {saving
-                    ? "Sealing…"
+                    ? t("dialog.sealing")
                     : isIntroMode
-                      ? "Save welcome message"
-                      : "Secure Asset to Vault"}
+                      ? t("dialog.saveWelcome")
+                      : t("dialog.secureToVault")}
                 </span>
                 <Icon
                   path={ICON_PATHS.lock}

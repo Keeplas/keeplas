@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { ErrorAlert, Loader, Switch } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
 import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-mode-section";
 
@@ -14,6 +15,7 @@ import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-
  * the current state at all times.
  */
 export function ContinuityControls() {
+  const t = useTranslations("lifeCheck");
   const config = useQuery(api.life_check.getConfig);
   const toggleActive = useMutation(api.life_check.toggleActive);
   const toggleTravelMode = useMutation(api.life_check.toggleTravelMode);
@@ -44,7 +46,7 @@ export function ContinuityControls() {
     try {
       await toggleActive({ isActive: nextActive });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to update Life Check"));
+      setError(getErrorMessage(err, t("controls.toggleError")));
     }
   }
 
@@ -57,25 +59,25 @@ export function ContinuityControls() {
     try {
       await toggleTravelMode({ enabled: enabling, until });
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to toggle Travel Mode"));
+      setError(getErrorMessage(err, t("controls.travelError")));
     }
   }
 
   const statusLabel = travelModeOn
-    ? "Travel Mode"
+    ? t("controls.statusTravel")
     : masterActive
-      ? "Active"
-      : "Paused";
+      ? t("controls.statusActive")
+      : t("controls.statusPaused");
 
   if (!isConfigured) {
     return (
       <div className="bg-surface-container-low p-6 rounded-2xl">
         <p className="text-body-md text-on-surface-variant">
-          Life Check is not configured yet. Visit{" "}
+          {t("controls.notConfigured")}{" "}
           <a href="/life-check" className="underline font-medium">
-            Life Check
+            {t("controls.notConfiguredLink")}
           </a>{" "}
-          to set it up.
+          {t("controls.notConfiguredSuffix")}
         </p>
       </div>
     );
@@ -87,7 +89,7 @@ export function ContinuityControls() {
         <div>
           <h3 className="text-headline-sm text-primary">Life Check</h3>
           <p className="text-body-md text-on-surface-variant">
-            Pause your Life Check entirely — no check-ins, no release. Status:{" "}
+            {t("controls.pauseDescription")}{" "}
             <strong className="text-primary">{statusLabel}</strong>.
           </p>
         </div>

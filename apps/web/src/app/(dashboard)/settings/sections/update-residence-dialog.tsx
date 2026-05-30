@@ -15,6 +15,7 @@ import {
 import { CountryCombobox } from "@/components/country-combobox";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 
 interface UpdateResidenceDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function UpdateResidenceDialog({
   onOpenChange,
   currentCountry,
 }: UpdateResidenceDialogProps) {
+  const t = useTranslations("settingsSecurity");
   const updateResidence = useAuditedMutation(api.users.updateLegalResidence);
 
   const [country, setCountry] = useState(currentCountry ?? "");
@@ -58,7 +60,7 @@ export function UpdateResidenceDialog({
       await updateResidence({ country });
       onOpenChange(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to update legal residence"));
+      setError(getErrorMessage(err, t("residence.error")));
     } finally {
       setSaving(false);
     }
@@ -69,11 +71,9 @@ export function UpdateResidenceDialog({
       <DialogContent className="bg-surface max-w-lg p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>Update legal residence</DialogTitle>
+            <DialogTitle>{t("residence.title")}</DialogTitle>
             <DialogDescription className="mt-1">
-              Change the country whose inheritance jurisdiction applies to your
-              vault. Your original declaration is preserved unchanged in the
-              audit log — this update is recorded as a new tamper-evident entry.
+              {t("residence.description")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -83,15 +83,16 @@ export function UpdateResidenceDialog({
           className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
         >
           <div className="space-y-2">
-            <Label htmlFor="residence-country">New country of residence</Label>
+            <Label htmlFor="residence-country">
+              {t("residence.countryLabel")}
+            </Label>
             <CountryCombobox
               id="residence-country"
               value={country}
               onChange={setCountry}
             />
             <p className="text-label-md text-on-surface-variant">
-              Pick the country where you currently reside. Birthday cannot be
-              changed.
+              {t("residence.countryHint")}
             </p>
           </div>
 
@@ -105,7 +106,7 @@ export function UpdateResidenceDialog({
               onClick={() => onOpenChange(false)}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Cancel
+              {t("residence.cancel")}
             </Button>
             <Button
               type="submit"
@@ -114,7 +115,7 @@ export function UpdateResidenceDialog({
               disabled={saving || !country || unchanged}
               className="flex-1 cursor-pointer"
             >
-              {saving ? "Saving…" : "Confirm update"}
+              {saving ? t("residence.saving") : t("residence.confirm")}
             </Button>
           </div>
         </form>

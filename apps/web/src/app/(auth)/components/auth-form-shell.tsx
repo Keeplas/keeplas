@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ErrorAlert } from "@keeplas/ui";
 import { AuthHeroSection } from "./auth-hero-section";
 import { MobileBrand } from "./mobile-brand";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface FooterLink {
   prompt: string;
@@ -48,6 +49,10 @@ export function AuthFormShell({
         <MobileBrand />
 
         <div className="w-full max-w-md">
+          <div className="mb-5 flex justify-end">
+            <LanguageSwitcher />
+          </div>
+
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
               <svg

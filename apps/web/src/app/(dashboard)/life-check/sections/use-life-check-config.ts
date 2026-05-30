@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { toast } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { getErrorMessage } from "@/lib/utils";
+import { useTranslations } from "@/lib/i18n";
 import {
   DEFAULT_CHANNELS,
   type ChannelConfig,
@@ -13,6 +14,7 @@ import {
 } from "./constants";
 
 export function useLifeCheckConfig() {
+  const t = useTranslations("lifeCheck.toasts");
   const config = useQuery(api.life_check.getConfig);
   const activeCycle = useQuery(api.life_check.getActiveCycle);
   const saveConfig = useMutation(api.life_check.saveConfig);
@@ -84,7 +86,7 @@ export function useLifeCheckConfig() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to save configuration"),
+        title: getErrorMessage(err, t("saveConfigError")),
       });
     }
   }
@@ -103,7 +105,7 @@ export function useLifeCheckConfig() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to toggle travel mode"),
+        title: getErrorMessage(err, t("travelToggleError")),
       });
     }
   }
@@ -113,13 +115,13 @@ export function useLifeCheckConfig() {
       await validateCycle({ method: "tap" });
       toast({
         variant: "success",
-        title: "Check-in confirmed",
-        description: "Your countdown has been reset.",
+        title: t("checkInTitle"),
+        description: t("checkInDescription"),
       });
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to validate"),
+        title: getErrorMessage(err, t("validateError")),
       });
     }
   }
@@ -130,7 +132,7 @@ export function useLifeCheckConfig() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to postpone"),
+        title: getErrorMessage(err, t("postponeError")),
       });
     }
   }
@@ -158,7 +160,7 @@ export function useLifeCheckConfig() {
     } catch (err) {
       toast({
         variant: "error",
-        title: getErrorMessage(err, "Failed to toggle Life Check"),
+        title: getErrorMessage(err, t("toggleActiveError")),
       });
     }
   }

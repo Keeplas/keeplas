@@ -2,6 +2,7 @@
 
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import {
   computeVerificationBadge,
   getInitials,
@@ -16,6 +17,7 @@ interface ContactCardProps {
 }
 
 export function ContactCard({ contact, onSelect }: ContactCardProps) {
+  const t = useTranslations("trustedContacts");
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
   const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
@@ -52,7 +54,9 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
                 : "bg-primary/10 text-primary",
             )}
           >
-            {isRecipientOnly ? "Recipient" : "Trust"}
+            {isRecipientOnly
+              ? t("contactCard.recipient")
+              : t("contactCard.trust")}
           </span>
           <span
             className={cn(
@@ -87,7 +91,7 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
         </span>
         {contact.shardConfirmed && (
           <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
-            Fragment Assigned
+            {t("contactCard.fragmentAssigned")}
           </span>
         )}
         {verificationBadge && (

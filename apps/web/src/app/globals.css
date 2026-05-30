@@ -157,6 +157,16 @@ body {
   color: var(--color-on-surface);
 }
 
+/* Tailwind v4's Preflight resets buttons to the default arrow cursor. Restore a
+   pointer on every enabled interactive control (buttons, role=button, switches,
+   tabs…) so hovering reads as clickable; disabled controls keep the default. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="switch"]:not([aria-disabled="true"]),
+[role="tab"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 /* ── Typography utilities ── */
 @utility text-display-lg {
   font-family: var(--font-manrope);

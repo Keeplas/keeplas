@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, Icon, Input, Label, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { isValidUrl } from "@/lib/link-payload";
+import { useTranslations } from "@/lib/i18n";
 
 interface VaultLinkInputListProps {
   urls: string[];
@@ -14,6 +15,7 @@ export function VaultLinkInputList({
   urls,
   onChange,
 }: VaultLinkInputListProps) {
+  const t = useTranslations("vault");
   const [touched, setTouched] = useState<boolean[]>(() =>
     urls.map(() => false),
   );
@@ -49,11 +51,10 @@ export function VaultLinkInputList({
   return (
     <div className="space-y-3">
       <Label className="text-label-md text-on-surface-variant">
-        Saved links
+        {t("linkInput.label")}
       </Label>
       <p className="text-body-md text-on-surface-variant">
-        URLs are encrypted before they leave your device. Nothing is fetched or
-        previewed.
+        {t("linkInput.description")}
       </p>
 
       <div className="space-y-2">
@@ -77,7 +78,7 @@ export function VaultLinkInputList({
                 />
                 {showError && (
                   <p className="text-label-md text-error">
-                    Enter a valid URL (including https://).
+                    {t("linkInput.invalid")}
                   </p>
                 )}
               </div>
@@ -86,7 +87,7 @@ export function VaultLinkInputList({
                 variant="ghost"
                 size="sm"
                 onClick={() => removeRow(index)}
-                aria-label="Remove link"
+                aria-label={t("linkInput.remove")}
                 className="mt-1 cursor-pointer text-on-surface-variant hover:text-error"
               >
                 <Icon
@@ -108,7 +109,7 @@ export function VaultLinkInputList({
         className="gap-2 cursor-pointer"
       >
         <Icon path={ICON_PATHS.plus} className="w-4 h-4" strokeWidth={2} />
-        Add another link
+        {t("linkInput.addAnother")}
       </Button>
     </div>
   );

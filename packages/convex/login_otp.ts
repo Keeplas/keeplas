@@ -168,11 +168,13 @@ export const requestLoginOtp = mutation({
       await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
         phoneNumber: resolved.destination,
         code,
+        language: user.language,
       });
     } else {
       await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
         email: resolved.destination,
         code,
+        language: user.language,
       });
     }
 

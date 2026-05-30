@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader, RichTextEditor } from "@keeplas/ui";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { useTranslations } from "@/lib/i18n";
 import { MemorialItemAttachments } from "@/components/memorial-item-attachments";
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
@@ -29,6 +30,7 @@ export function MemorialIntroductionCard({
   contactId: Id<"trusted_contacts">;
   intro: MemorialIntroductionData;
 }) {
+  const t = useTranslations("sharedWithMe");
   const { decryptItem, isReady } = useMemorialCrypto();
   const [content, setContent] = useState<string | null>(null);
   const [dek, setDek] = useState<CryptoKey | null>(null);
@@ -40,7 +42,7 @@ export function MemorialIntroductionCard({
       setDecrypting(true);
       try {
         if (!intro.readable || !intro.wrappedDek) {
-          setContent("[Unable to decrypt — legacy format]");
+          setContent(t("introCard.decryptFailedLegacy"));
           return;
         }
         const res = await decryptItem({
@@ -51,12 +53,12 @@ export function MemorialIntroductionCard({
         setContent(res.content);
         setDek(res.dek);
       } catch {
-        setContent("[Unable to decrypt]");
+        setContent(t("introCard.decryptFailed"));
       } finally {
         setDecrypting(false);
       }
     })();
-  }, [intro, isReady, content, decrypting, decryptItem]);
+  }, [intro, isReady, content, decrypting, decryptItem, t]);
 
   return (
     <article className="space-y-5">
@@ -65,7 +67,7 @@ export function MemorialIntroductionCard({
       )}
       {content === null ? (
         <div className="flex items-center gap-3 text-body-md text-on-surface-variant">
-          <Loader size="sm" /> Decrypting message…
+          <Loader size="sm" /> {t("introCard.decrypting")}
         </div>
       ) : (
         <>

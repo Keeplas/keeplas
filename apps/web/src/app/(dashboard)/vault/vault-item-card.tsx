@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { getCategoryConfig } from "@/lib/vault-categories";
+import { useTranslations } from "@/lib/i18n";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 interface VaultItemCardProps {
@@ -9,6 +10,7 @@ interface VaultItemCardProps {
 }
 
 export function VaultItemCard({ item }: VaultItemCardProps) {
+  const t = useTranslations("vault");
   const category = getCategoryConfig(item.category);
 
   return (
@@ -44,7 +46,7 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
       <div>
         <h3 className="font-bold text-base text-primary">{item.title}</h3>
         <p className="text-[10px] uppercase tracking-widest mt-1 text-on-surface-variant">
-          Updated {formatDate(item.updatedAt)}
+          {t("card.updated", { date: formatDate(item.updatedAt) })}
         </p>
       </div>
     </Link>

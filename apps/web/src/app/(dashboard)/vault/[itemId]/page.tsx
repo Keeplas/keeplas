@@ -26,6 +26,7 @@ import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useUploadQueue } from "@/lib/upload-queue";
+import { useTranslations } from "@/lib/i18n";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
@@ -91,6 +92,7 @@ function formatAttachmentSize(bytes: number): string {
 }
 
 export default function VaultItemPage() {
+  const t = useTranslations("vault");
   const params = useParams();
   const router = useRouter();
   const itemId = params.itemId as Id<"vault_items">;
@@ -162,18 +164,20 @@ export default function VaultItemPage() {
       label: g.name,
       hint:
         g.memberContactIds.length === 1
-          ? "1 contact"
-          : `${g.memberContactIds.length} contacts`,
-      groupLabel: "Groups",
+          ? t("recipients.contactCountOne", { count: 1 })
+          : t("recipients.contactCountOther", {
+              count: g.memberContactIds.length,
+            }),
+      groupLabel: t("recipients.groupsLabel"),
     }));
     const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
       value: `${CONTACT_PREFIX}${c._id}`,
       label: c.name,
       hint: c.email,
-      groupLabel: "Individual contacts",
+      groupLabel: t("recipients.individualsLabel"),
     }));
     return [...groupOpts, ...contactOpts];
-  }, [recipientGroups, allContacts]);
+  }, [recipientGroups, allContacts, t]);
 
   // Decrypt content + linked URLs when item loads. ZK items unwrap the
   // owner-wrapped DEK first (cached for attachments + future re-encrypt);
@@ -274,11 +278,11 @@ export default function VaultItemPage() {
     const allowed = ATTACHMENT_ACCEPTED_TYPES.split(",");
     for (const file of Array.from(list)) {
       if (!allowed.includes(file.type)) {
-        setError(`${file.name} — unsupported file type. PDF, JPG or PNG only.`);
+        setError(t("editor.errorUnsupportedType", { name: file.name }));
         continue;
       }
       if (file.size > ATTACHMENT_MAX_BYTES) {
-        setError(`${file.name} — exceeds 50 MB limit.`);
+        setError(t("editor.errorTooLarge", { name: file.name }));
         continue;
       }
       accepted.push({
@@ -365,7 +369,7 @@ export default function VaultItemPage() {
     const cleanUrls = editLinkUrls.map((u) => u.trim()).filter(Boolean);
     const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
     if (invalidUrl) {
-      setError(`Invalid URL: ${invalidUrl}`);
+      setError(t("editor.errorInvalidUrl", { url: invalidUrl }));
       return;
     }
     const contentPayload = editContent;
@@ -429,7 +433,7 @@ export default function VaultItemPage() {
         return true;
       };
 
-      setSavingProgress("Encrypting content…");
+      setSavingProgress(t("editor.progressEncrypting"));
       if (item.ownerWrappedDek) {
         const dek =
           itemDek ??
@@ -508,7 +512,7 @@ export default function VaultItemPage() {
 
       // Attachment removals — independent of metadata update.
       if (removedFileIds.size > 0) {
-        setSavingProgress("Removing attachments…");
+        setSavingProgress(t("editor.progressRemoving"));
         for (const fileId of removedFileIds) {
           await removeItemFile({ itemId, fileId });
         }
@@ -522,7 +526,7 @@ export default function VaultItemPage() {
       if (stagedFiles.length > 0) {
         const dekForFiles = attachmentDek ?? masterKey;
         if (!dekForFiles) {
-          throw new Error("Encryption key unavailable for new attachments.");
+          throw new Error(t("editor.errorNoKey"));
         }
         enqueueAttachments({
           itemId,
@@ -544,7 +548,7 @@ export default function VaultItemPage() {
       setStagedFiles([]);
       setEditing(false);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to update."));
+      setError(getErrorMessage(err, t("editor.errorUpdate")));
     } finally {
       setSaving(false);
       setSavingProgress("");
@@ -582,12 +586,14 @@ export default function VaultItemPage() {
   if (item === null) {
     return (
       <div className="max-w-2xl mx-auto text-center py-24">
-        <h2 className="text-headline-md text-primary mb-2">Item not found</h2>
+        <h2 className="text-headline-md text-primary mb-2">
+          {t("detail.notFound")}
+        </h2>
         <button
           onClick={() => router.push("/vault")}
           className="text-secondary font-bold cursor-pointer"
         >
-          Back to Vault
+          {t("detail.backToVault")}
         </button>
       </div>
     );
@@ -615,18 +621,20 @@ export default function VaultItemPage() {
             d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
           />
         </svg>
-        Back to Vault
+        {t("detail.backToVault")}
       </button>
 
       {editing ? (
         /* ─── Edit Mode ─── */
         <form onSubmit={handleSave} className="space-y-5">
-          <h2 className="text-headline-md text-primary mb-6">Edit Item</h2>
+          <h2 className="text-headline-md text-primary mb-6">
+            {t("editor.title")}
+          </h2>
 
           {error && <ErrorAlert message={error} className="mb-0" />}
 
           <div className="space-y-2">
-            <Label>Title</Label>
+            <Label>{t("editor.fieldTitle")}</Label>
             <Input
               type="text"
               value={editTitle}
@@ -636,7 +644,7 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Category</Label>
+            <Label>{t("editor.fieldCategory")}</Label>
             <Select<VaultCategory>
               value={editCategory}
               onValueChange={setEditCategory}
@@ -650,11 +658,11 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Secure Content</Label>
+            <Label>{t("editor.fieldContent")}</Label>
             <RichTextEditor
               value={editContent}
               onChange={setEditContent}
-              placeholder="Write the secure content for this item…"
+              placeholder={t("editor.contentPlaceholder")}
               minHeight={200}
             />
           </div>
@@ -667,7 +675,7 @@ export default function VaultItemPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>Secure Attachments</Label>
+            <Label>{t("editor.fieldAttachments")}</Label>
             <div className="space-y-2">
               {(itemFiles ?? []).map((file) => {
                 const removed = removedFileIds.has(file._id);
@@ -689,7 +697,7 @@ export default function VaultItemPage() {
               ))}
               {(itemFiles?.length ?? 0) === 0 && stagedFiles.length === 0 && (
                 <p className="text-label-md text-on-surface-variant/70">
-                  No attachments yet.
+                  {t("editor.noAttachments")}
                 </p>
               )}
             </div>
@@ -710,29 +718,28 @@ export default function VaultItemPage() {
                 className="bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
               >
                 <Icon path={ICON_PATHS.plus} className="w-4 h-4 mr-2" />
-                Add file
+                {t("editor.addFile")}
               </Button>
               <p className="text-label-md text-on-surface-variant/70 mt-2">
-                PDF, JPG or PNG up to 50 MB. Files are encrypted client-side
-                before upload.
+                {t("editor.fileHint")}
               </p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Who receives this at trigger?</Label>
+            <Label>{t("recipients.label")}</Label>
             <MultiSelect
               options={recipientOptions}
               selected={editRecipientSelection}
               onChange={setEditRecipientSelection}
-              placeholder="No one — keep private"
-              searchPlaceholder="Search groups or contacts…"
-              emptyMessage="No groups or contacts yet."
+              placeholder={t("recipients.placeholderPrivate")}
+              searchPlaceholder={t("recipients.searchPlaceholder")}
+              emptyMessage={t("recipients.emptyMessage")}
               renderTrigger={(selected) => {
                 if (selected.length === 0) {
                   return (
                     <span className="text-outline-variant">
-                      No one — keep private
+                      {t("recipients.placeholderPrivate")}
                     </span>
                   );
                 }
@@ -745,8 +752,7 @@ export default function VaultItemPage() {
               }}
             />
             <p className="text-label-md text-on-surface-variant/70">
-              Pick one or more groups (your trust contacts are already a group),
-              or specific people. Empty = the item stays private.
+              {t("recipients.helper")}
             </p>
           </div>
 
@@ -759,7 +765,7 @@ export default function VaultItemPage() {
               disabled={saving}
               className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
             >
-              Cancel
+              {t("editor.cancel")}
             </Button>
             <Button
               type="submit"
@@ -768,7 +774,9 @@ export default function VaultItemPage() {
               disabled={saving}
               className="flex-1 text-sm cursor-pointer"
             >
-              {saving ? savingProgress || "Encrypting…" : "Save Changes"}
+              {saving
+                ? savingProgress || t("editor.encrypting")
+                : t("editor.saveChanges")}
             </Button>
           </div>
         </form>
@@ -802,7 +810,7 @@ export default function VaultItemPage() {
               <button
                 onClick={startEditing}
                 className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer"
-                title="Edit"
+                title={t("detail.edit")}
               >
                 <svg
                   className="w-5 h-5 text-on-surface-variant"
@@ -821,7 +829,7 @@ export default function VaultItemPage() {
               <button
                 onClick={openDeleteDialog}
                 className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer"
-                title="Delete permanently"
+                title={t("detail.deletePermanently")}
               >
                 <svg
                   className="w-5 h-5 text-error"
@@ -858,10 +866,12 @@ export default function VaultItemPage() {
               }
               const summary =
                 item.accessLevel === "private"
-                  ? "Private"
+                  ? t("detail.summaryPrivate")
                   : labels.length > 0
-                    ? `Released to ${labels.join(", ")}`
-                    : "Released to all trust contacts";
+                    ? t("detail.summaryReleasedTo", {
+                        names: labels.join(", "),
+                      })
+                    : t("detail.summaryReleasedAll");
               return (
                 <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
                   {summary}
@@ -889,13 +899,13 @@ export default function VaultItemPage() {
                   />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
-                  Decrypted Content
+                  {t("detail.decryptedContent")}
                 </span>
               </div>
               {decrypting ? (
                 <div className="flex items-center gap-2 text-on-surface-variant">
                   <Spinner size="sm" />
-                  Decrypting...
+                  {t("detail.decrypting")}
                 </div>
               ) : (
                 <RichTextEditor
@@ -915,7 +925,7 @@ export default function VaultItemPage() {
                   strokeWidth={1.75}
                 />
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
-                  Linked URLs
+                  {t("detail.linkedUrls")}
                 </span>
               </div>
               <VaultLinkList urls={decryptedLinks} />
@@ -929,8 +939,10 @@ export default function VaultItemPage() {
 
           {/* Timestamp */}
           <p className="text-[11px] text-outline-variant">
-            Created {new Date(item.createdAt).toLocaleDateString()} · Updated{" "}
-            {new Date(item.updatedAt).toLocaleDateString()}
+            {t("detail.timestamps", {
+              created: new Date(item.createdAt).toLocaleDateString(),
+              updated: new Date(item.updatedAt).toLocaleDateString(),
+            })}
           </p>
 
           {/* Delete Confirmation — irreversible */}
@@ -940,21 +952,18 @@ export default function VaultItemPage() {
           >
             <DialogContent className="max-w-sm p-8 text-left">
               <DialogTitle className="mb-2 text-error">
-                Delete this item permanently?
+                {t("delete.title")}
               </DialogTitle>
               <DialogDescription className="mb-4">
-                This will erase the item, every secure attachment, and all
-                wrapped recipient keys. The action cannot be undone — there is
-                no archive, no trash, and no recovery, even with your recovery
-                phrase.
+                {t("delete.description")}
               </DialogDescription>
               <div className="space-y-2 mb-6">
                 <Label htmlFor="delete-confirm-input">
-                  Type{" "}
+                  {t("delete.confirmPrefix")}{" "}
                   <span className="font-mono font-bold text-error">
                     {DELETE_CONFIRM_TOKEN}
                   </span>{" "}
-                  to confirm
+                  {t("delete.confirmSuffix")}
                 </Label>
                 <Input
                   id="delete-confirm-input"
@@ -971,7 +980,7 @@ export default function VaultItemPage() {
                   onClick={() => handleDeleteDialogChange(false)}
                   className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer"
                 >
-                  Cancel
+                  {t("delete.cancel")}
                 </button>
                 <button
                   type="button"
@@ -979,7 +988,7 @@ export default function VaultItemPage() {
                   disabled={!canConfirmDelete || deleting}
                   className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {deleting ? "Deleting…" : "Delete forever"}
+                  {deleting ? t("delete.deleting") : t("delete.deleteForever")}
                 </button>
               </div>
             </DialogContent>
@@ -999,6 +1008,7 @@ function ExistingAttachmentRow({
   removed: boolean;
   onToggle: () => void;
 }) {
+  const t = useTranslations("vault");
   return (
     <div
       className={`flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 ${
@@ -1017,8 +1027,8 @@ function ExistingAttachmentRow({
           {file.name}
         </p>
         <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatAttachmentSize(file.size)} · Encrypted
-          {removed ? " · Will be deleted" : ""}
+          {formatAttachmentSize(file.size)} · {t("attachments.encrypted")}
+          {removed ? ` · ${t("editor.willBeDeleted")}` : ""}
         </p>
       </div>
       <button
@@ -1026,7 +1036,7 @@ function ExistingAttachmentRow({
         onClick={onToggle}
         className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
       >
-        {removed ? "Undo" : "Remove"}
+        {removed ? t("editor.undo") : t("editor.remove")}
       </button>
     </div>
   );
@@ -1039,6 +1049,7 @@ function StagedAttachmentRow({
   file: StagedAttachment;
   onRemove: () => void;
 }) {
+  const t = useTranslations("vault");
   return (
     <div className="flex items-center gap-3 bg-secondary/5 border border-secondary/20 rounded-xl px-4 py-3">
       <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center shrink-0 text-secondary">
@@ -1047,7 +1058,7 @@ function StagedAttachmentRow({
       <div className="min-w-0 flex-1">
         <p className="text-headline-sm text-primary truncate">{file.name}</p>
         <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatAttachmentSize(file.size)} · Will be encrypted on save
+          {formatAttachmentSize(file.size)} · {t("editor.willBeEncrypted")}
         </p>
       </div>
       <button
@@ -1055,7 +1066,7 @@ function StagedAttachmentRow({
         onClick={onRemove}
         className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
       >
-        Remove
+        {t("editor.remove")}
       </button>
     </div>
   );

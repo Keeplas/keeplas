@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useTranslations } from "@/lib/i18n";
 
 interface VaultLinkListProps {
   urls: string[];
@@ -12,6 +13,7 @@ interface VaultLinkListProps {
 const MASK = "••••••••••••••••••••";
 
 export function VaultLinkList({ urls }: VaultLinkListProps) {
+  const t = useTranslations("vault");
   const [revealed, setRevealed] = useState<boolean[]>(() =>
     urls.map(() => false),
   );
@@ -32,7 +34,9 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
 
   if (urls.length === 0) {
     return (
-      <p className="text-body-md text-on-surface-variant">No links saved.</p>
+      <p className="text-body-md text-on-surface-variant">
+        {t("links.empty")}
+      </p>
     );
   }
 
@@ -49,7 +53,9 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
                 preview the URL on hover, which would leak the secret. */}
             <span
               className="flex-1 text-sm text-on-surface font-mono break-all min-w-0"
-              aria-label={isRevealed ? "Link URL" : "Hidden link URL"}
+              aria-label={
+                isRevealed ? t("links.urlLabel") : t("links.hiddenLabel")
+              }
             >
               {isRevealed ? url : MASK}
             </span>
@@ -58,7 +64,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
               variant="ghost"
               size="sm"
               onClick={() => toggleAt(index)}
-              aria-label={isRevealed ? "Hide link" : "Reveal link"}
+              aria-label={isRevealed ? t("links.hide") : t("links.reveal")}
               className="shrink-0 cursor-pointer text-on-surface-variant hover:text-primary"
             >
               <Icon
@@ -74,7 +80,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
               variant="ghost"
               size="sm"
               onClick={() => openAt(index)}
-              aria-label="Open link in new tab"
+              aria-label={t("links.openNewTab")}
               className="shrink-0 cursor-pointer text-on-surface-variant hover:text-primary"
             >
               <Icon
