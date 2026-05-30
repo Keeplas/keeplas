@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildContentSecurityPolicy,
   buildSecurityHeaders,
@@ -41,9 +41,29 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toContain("form-action 'self'");
   });
 
-  it("never permits unsafe-eval (only the scoped wasm variant)", () => {
-    const csp = buildContentSecurityPolicy(NONCE);
-    expect(csp).not.toContain("'unsafe-eval'");
+  it("never permits unsafe-eval in production (only the scoped wasm variant)", () => {
+    const original = process.env.NODE_ENV;
+    vi.stubEnv("NODE_ENV", "production");
+    try {
+      const csp = buildContentSecurityPolicy(NONCE);
+      expect(csp).toContain("'wasm-unsafe-eval'");
+      // The standalone token never appears (the wasm-scoped variant does not
+      // contain a leading-quote "'unsafe-eval'").
+      expect(csp).not.toContain("'unsafe-eval'");
+    } finally {
+      vi.stubEnv("NODE_ENV", original ?? "test");
+    }
+  });
+
+  it("permits unsafe-eval in development (React dev build needs eval)", () => {
+    const original = process.env.NODE_ENV;
+    vi.stubEnv("NODE_ENV", "development");
+    try {
+      const csp = buildContentSecurityPolicy(NONCE);
+      expect(csp).toMatch(/script-src [^;]*'unsafe-eval'/);
+    } finally {
+      vi.stubEnv("NODE_ENV", original ?? "test");
+    }
   });
 
   it("always scopes connect-src to the Convex wildcard hosts", () => {

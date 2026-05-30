@@ -38,16 +38,24 @@ function convexConnectSources(): string[] {
  * Pure function so it can be unit-tested without a request context.
  */
 export function buildContentSecurityPolicy(nonce: string): string {
+  // React's dev build (and Next/Turbopack HMR) uses eval() for debugging
+  // features like reconstructing call stacks. Allow it ONLY in development —
+  // production never relies on eval(), so the strict policy stays intact.
+  const scriptSrc = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'strict-dynamic'",
+    "'wasm-unsafe-eval'",
+  ];
+  if (process.env.NODE_ENV === "development") {
+    scriptSrc.push("'unsafe-eval'");
+  }
+
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // 'wasm-unsafe-eval' is required by hash-wasm (Argon2id). 'strict-dynamic'
     // lets Next's nonced loader pull in its chunked scripts.
-    "script-src": [
-      "'self'",
-      `'nonce-${nonce}'`,
-      "'strict-dynamic'",
-      "'wasm-unsafe-eval'",
-    ],
+    "script-src": scriptSrc,
     // Tailwind / Next inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
