@@ -1,14 +1,22 @@
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  mutation,
+  query,
+  MutationCtx,
+} from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 import { categoryValidator, accessLevelValidator } from "./validators";
 import {
   requireFullAuth,
   getUserVault,
   getActiveItems,
+  getActiveStorageBytes,
   requireItemOwnership,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
+import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
   generateBlobUploadUrl,
   getBlobDownloadUrl,
@@ -225,6 +233,27 @@ const newFileValidator = v.object({
 });
 
 /**
+ * Reject an upload that would push the user past their plan's storage ceiling
+ * (Free 100 MB / Lifetime 10 GB — see lib/plans.ts). Throws
+ * `"STORAGE_QUOTA_EXCEEDED"`, which the client maps to an upgrade prompt.
+ * Sizes are the encrypted blob byte lengths the client just uploaded.
+ */
+async function assertWithinStorageQuota(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  files: { size: number }[],
+): Promise<void> {
+  if (files.length === 0) return;
+  const incoming = files.reduce((sum, f) => sum + f.size, 0);
+  const user = await ctx.db.get(userId);
+  const plan = getUserPlan(user ?? { plan: undefined });
+  const current = await getActiveStorageBytes(ctx, userId);
+  if (current + incoming > PLAN_QUOTA_BYTES[plan]) {
+    throw new Error("STORAGE_QUOTA_EXCEEDED");
+  }
+}
+
+/**
  * Create a new encrypted vault item, optionally attaching pre-uploaded
  * encrypted blobs stored in Convex storage.
  *
@@ -272,6 +301,8 @@ export const createItem = auditedMutation({
     if (!vault || vault.userId !== userId) {
       throw new Error("Vault not found");
     }
+
+    await assertWithinStorageQuota(ctx, userId, args.files ?? []);
 
     const recipientMode = args.recipientMode ?? "default";
     const sharedWithContacts = args.sharedWithContacts ?? [];
@@ -458,6 +489,8 @@ export const addItemFiles = auditedMutation({
     const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
     if (args.files.length === 0) return;
+
+    await assertWithinStorageQuota(ctx, userId, args.files);
 
     const existing = await ctx.db
       .query("vault_item_files")

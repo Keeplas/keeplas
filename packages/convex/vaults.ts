@@ -1,5 +1,11 @@
 import { mutation, query } from "./_generated/server";
-import { requireFullAuth, getUserVault, getActiveItems } from "./helpers";
+import {
+  requireFullAuth,
+  getUserVault,
+  getActiveItems,
+  getActiveVaultFiles,
+} from "./helpers";
+import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 
 /**
  * Get or create the user's vault.
@@ -51,15 +57,11 @@ export const getUsageStats = query({
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
 
+    const user = await ctx.db.get(userId);
+    const plan = getUserPlan(user ?? { plan: undefined });
+
     const items = await getActiveItems(ctx, userId);
-    const activeItemIds = new Set(items.map((item) => item._id));
-
-    const allFiles = await ctx.db
-      .query("vault_item_files")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-
-    const files = allFiles.filter((f) => activeItemIds.has(f.itemId));
+    const files = await getActiveVaultFiles(ctx, userId);
 
     let storageBytes = 0;
     const fileKindCounts: Record<string, number> = {};
@@ -79,6 +81,8 @@ export const getUsageStats = query({
       activeItemsCount: items.length,
       categoryCounts,
       fileKindCounts,
+      plan,
+      quotaBytes: PLAN_QUOTA_BYTES[plan],
     };
   },
 });

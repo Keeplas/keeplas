@@ -890,6 +890,10 @@
       "title": "Une architecture de continuité. Sécurisée pour toujours.",
       "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
       "popular": "Populaire",
+      "currentPlan": "Forfait actuel",
+      "checkoutSuccess": "Paiement reçu — votre forfait Lifetime est en cours d'activation.",
+      "checkoutCancel": "Paiement annulé. Aucun montant n'a été débité.",
+      "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
       "priceSuffix": {
         "forever": "/pour toujours",
@@ -933,6 +937,7 @@
       "ofQuota": "sur {quota}",
       "remainingPrefix": "{amount} restants sur le forfait",
       "planNameFree": "Gratuit",
+      "planNameLifetime": "Lifetime",
       "remainingSuffix": "",
       "percentUsed": "{percent}% utilisé",
       "nearLimit": "Vous approchez de votre limite de stockage. Passez à l'offre À vie pour 10 Go de capacité chiffrée et des outils de continuité supplémentaires.",

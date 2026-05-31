@@ -7,9 +7,6 @@ import { buttonVariants, Icon, Loader, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 
-const STORAGE_QUOTA_BYTES = 100 * 1024 * 1024;
-const CURRENT_PLAN_QUOTA_LABEL = "100 MB";
-
 const FILE_KINDS: Array<{ kind: string; iconPath: string }> = [
   { kind: "document", iconPath: ICON_PATHS.description },
   { kind: "image", iconPath: ICON_PATHS.image },
@@ -38,10 +35,15 @@ export default function SettingsUsagePage() {
 
   const usedPercent = Math.min(
     100,
-    Math.round((stats.storageBytes / STORAGE_QUOTA_BYTES) * 100),
+    Math.round((stats.storageBytes / stats.quotaBytes) * 100),
   );
   const isNearLimit = usedPercent >= 80;
-  const remainingBytes = Math.max(0, STORAGE_QUOTA_BYTES - stats.storageBytes);
+  const remainingBytes = Math.max(0, stats.quotaBytes - stats.storageBytes);
+  const quotaLabel = formatBytes(stats.quotaBytes);
+  const planName =
+    stats.plan === "lifetime"
+      ? t("usage.planNameLifetime")
+      : t("usage.planNameFree");
 
   const categoryEntries = Object.entries(stats.categoryCounts).sort(
     (a, b) => b[1] - a[1],
@@ -65,16 +67,14 @@ export default function SettingsUsagePage() {
             <p className="text-headline-md text-on-surface">
               {formatBytes(stats.storageBytes)}
               <span className="text-body-md text-on-surface-variant ml-2">
-                {t("usage.ofQuota", { quota: CURRENT_PLAN_QUOTA_LABEL })}
+                {t("usage.ofQuota", { quota: quotaLabel })}
               </span>
             </p>
             <p className="text-body-md text-on-surface-variant">
               {t("usage.remainingPrefix", {
                 amount: formatBytes(remainingBytes),
               })}{" "}
-              <span className="font-medium text-on-surface">
-                {t("usage.planNameFree")}
-              </span>{" "}
+              <span className="font-medium text-on-surface">{planName}</span>{" "}
               {t("usage.remainingSuffix")}
             </p>
           </div>

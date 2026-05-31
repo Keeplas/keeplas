@@ -890,6 +890,10 @@
       "title": "Legacy Architecture. Secured Forever.",
       "description": "Choose the protection level that fits your continuity plan. Both tiers run the same zero-knowledge encryption — only the surface area changes.",
       "popular": "Popular",
+      "currentPlan": "Current plan",
+      "checkoutSuccess": "Payment received — your Lifetime plan is being activated.",
+      "checkoutCancel": "Checkout cancelled. No charge was made.",
+      "checkoutError": "Could not start checkout. Please try again.",
       "footer": "Pricing displayed in USD. Switching plans never deletes your vault.",
       "priceSuffix": {
         "forever": "/forever",
@@ -933,6 +937,7 @@
       "ofQuota": "of {quota}",
       "remainingPrefix": "{amount} remaining on the",
       "planNameFree": "Free",
+      "planNameLifetime": "Lifetime",
       "remainingSuffix": "plan",
       "percentUsed": "{percent}% used",
       "nearLimit": "You're close to your storage limit. Upgrade to Lifetime for 10 GB of encrypted capacity and additional continuity tools.",

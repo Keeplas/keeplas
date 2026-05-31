@@ -1,5 +1,6 @@
 import { convexTest } from "convex-test";
 import schema from "../schema";
+import { storeBlob, type StorageRef } from "../lib/storage";
 import type { Id } from "../_generated/dataModel";
 
 // `auditedMutation` re-verifies an HMAC-signed audit envelope before running
@@ -21,6 +22,11 @@ export function makeT(): TestConvex {
 /** Insert a bare user (all user fields are optional) and return its id. */
 export async function seedUser(t: TestConvex): Promise<Id<"users">> {
   return await t.run((ctx) => ctx.db.insert("users", {}));
+}
+
+/** Mint a real storage handle for fixtures, routed through the wrapper. */
+export async function seedStorageRef(t: TestConvex): Promise<StorageRef> {
+  return await t.run((ctx) => storeBlob(ctx.storage, new Blob(["x"])));
 }
 
 /** Act as the given user — `getAuthUserId` reads `subject.split("|")[0]`. */

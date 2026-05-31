@@ -12,6 +12,7 @@
  */
 
 import { v } from "convex/values";
+import type { StorageActionWriter } from "convex/server";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
@@ -21,6 +22,19 @@ export const storageRefValidator = v.id("_storage");
 
 export async function generateBlobUploadUrl(ctx: MutationCtx): Promise<string> {
   return ctx.storage.generateUploadUrl();
+}
+
+/**
+ * Store a Blob directly and return its handle. Only the action / HTTP-action
+ * storage writer exposes `store()` — mutations stream ciphertext from the
+ * client via {@link generateBlobUploadUrl}. This is the wrapper's store half,
+ * used to seed blobs (e.g. test fixtures) without bypassing the abstraction.
+ */
+export async function storeBlob(
+  storage: StorageActionWriter,
+  blob: Blob,
+): Promise<StorageRef> {
+  return storage.store(blob);
 }
 
 export async function getBlobDownloadUrl(
