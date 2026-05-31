@@ -11,7 +11,17 @@
     "invalidCode": "Code invalide ou expiré.",
     "codePlaceholder": "123456",
     "learnMore": "En savoir plus",
-    "back": "Retour"
+    "back": "Retour",
+    "passwordStrength": {
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort",
+      "length": "Au moins 8 caractères",
+      "uppercase": "Au moins une lettre majuscule (A-Z)",
+      "lowercase": "Au moins une lettre minuscule (a-z)",
+      "number": "Au moins un chiffre (0-9)",
+      "special": "Au moins un caractère spécial (!@#$%^&*)"
+    }
   },
   "auth": {
     "hero": {
@@ -57,6 +67,7 @@
       "fullName": "Nom complet",
       "phoneOptional": "Téléphone (facultatif)",
       "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
       "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
       "startFailed": "Impossible de démarrer l'inscription. Réessayez.",
       "createFailed": "Impossible de créer le compte. Réessayez.",
@@ -226,6 +237,7 @@
       "enterEmail": "Saisissez l'e-mail de votre compte.",
       "emailFailed": "Échec de la récupération. Vérifiez que votre e-mail et vos 24 mots correspondent.",
       "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
       "passwordsMismatch": "Les mots de passe ne correspondent pas.",
       "successTitle": "Mot de passe réinitialisé",
       "successBody": "Votre mot de passe a été réinitialisé. Vous allez être redirigé vers la connexion. Le contenu de votre coffre reste chiffré par vos 24 mots et demeure protégé.",
@@ -890,6 +902,10 @@
       "title": "Une architecture de continuité. Sécurisée pour toujours.",
       "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
       "popular": "Populaire",
+      "currentPlan": "Forfait actuel",
+      "checkoutSuccess": "Paiement reçu — votre forfait Lifetime est en cours d'activation.",
+      "checkoutCancel": "Paiement annulé. Aucun montant n'a été débité.",
+      "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
       "priceSuffix": {
         "forever": "/pour toujours",
@@ -933,6 +949,7 @@
       "ofQuota": "sur {quota}",
       "remainingPrefix": "{amount} restants sur le forfait",
       "planNameFree": "Gratuit",
+      "planNameLifetime": "Lifetime",
       "remainingSuffix": "",
       "percentUsed": "{percent}% utilisé",
       "nearLimit": "Vous approchez de votre limite de stockage. Passez à l'offre À vie pour 10 Go de capacité chiffrée et des outils de continuité supplémentaires.",

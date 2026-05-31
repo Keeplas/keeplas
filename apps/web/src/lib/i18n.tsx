@@ -14,7 +14,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { useQuery } from "convex/react";
@@ -42,6 +42,15 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
+
+// localStorage is the source of truth for the active locale. Provider instances
+// subscribe here so a `setLocale` from anywhere (Preferences, ViewerLocaleSync)
+// re-reads the persisted value and re-renders the tree.
+const localeListeners = new Set<() => void>();
+function subscribeLocale(onChange: () => void) {
+  localeListeners.add(onChange);
+  return () => localeListeners.delete(onChange);
+}
 
 function resolvePath(dict: Dictionary, key: string): unknown {
   return key
@@ -80,11 +89,19 @@ function createTranslator(locale: Locale) {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale());
+  // getServerSnapshot returns defaultLocale, so SSR and the first client render
+  // agree; after hydration React re-reads readStoredLocale() and re-renders
+  // with the persisted locale. Reading localStorage in a useState initializer
+  // would instead diverge from the server and break hydration.
+  const locale = useSyncExternalStore(
+    subscribeLocale,
+    readStoredLocale,
+    () => defaultLocale,
+  );
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
     storeLocale(next);
+    localeListeners.forEach((notify) => notify());
   }, []);
 
   const t = useMemo(() => createTranslator(locale), [locale]);

@@ -2,6 +2,7 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { categoryValidator, accessLevelValidator } from "./validators";
+import { planValidator } from "./lib/plans";
 
 export default defineSchema({
   // Auth tables (managed by @convex-dev/auth)
@@ -116,10 +117,40 @@ export default defineSchema({
     // number via a 6-digit OTP delivered through the WhatsApp Business API.
     // Cleared if the phone number is changed afterward.
     phoneNumberVerifiedAt: v.optional(v.number()),
+
+    // Billing tier. Absent = "free". Flipped to "lifetime" only by the Stripe
+    // webhook (`billing.fulfillCheckout`) after a successful one-time payment;
+    // never set client-side. Drives the storage quota (see lib/plans.ts).
+    plan: v.optional(planValidator),
+    // Stripe Customer id captured from the completed Checkout session, kept so
+    // future receipts / the customer portal can reuse the same customer.
+    stripeCustomerId: v.optional(v.string()),
   })
     .index("email", ["email"])
     .index("by_last_seen", ["lastSeenAt"])
-    .index("by_phone", ["phoneNumber"]),
+    .index("by_phone", ["phoneNumber"])
+    .index("by_stripe_customer", ["stripeCustomerId"]),
+
+  // ═══════════════════════════════════════════════
+  // PAYMENTS (Stripe one-time Checkout)
+  // ═══════════════════════════════════════════════
+
+  // One row per completed Stripe Checkout session. Serves two purposes:
+  // webhook idempotency (a re-delivered `checkout.session.completed` finds the
+  // existing row by `stripeSessionId` and no-ops) and a billing/receipt
+  // history for the user. The Stripe secret never touches this table.
+  payments: defineTable({
+    userId: v.id("users"),
+    stripeSessionId: v.string(),
+    stripePaymentIntentId: v.optional(v.string()),
+    amountCents: v.number(),
+    currency: v.string(),
+    plan: planValidator,
+    status: v.literal("paid"),
+    createdAt: v.number(),
+  })
+    .index("by_session", ["stripeSessionId"])
+    .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // PHONE VERIFICATION (WhatsApp OTP)

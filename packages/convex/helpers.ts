@@ -141,6 +141,34 @@ export async function getActiveItems(ctx: QueryCtx, userId: Id<"users">) {
 }
 
 /**
+ * All vault files that count toward a user's storage footprint: attachments on
+ * their active (non-archived) items. Single source of truth shared by
+ * `getUsageStats` (display) and the upload quota check (enforcement) so the two
+ * never disagree on what "used storage" means.
+ */
+export async function getActiveVaultFiles(ctx: QueryCtx, userId: Id<"users">) {
+  const items = await getActiveItems(ctx, userId);
+  const activeItemIds = new Set(items.map((item) => item._id));
+  const allFiles = await ctx.db
+    .query("vault_item_files")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  return allFiles.filter((f) => activeItemIds.has(f.itemId));
+}
+
+/**
+ * Total encrypted bytes a user currently occupies (sum of `getActiveVaultFiles`
+ * sizes). Used by the pre-insert quota gate in vault_items.ts.
+ */
+export async function getActiveStorageBytes(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<number> {
+  const files = await getActiveVaultFiles(ctx, userId);
+  return files.reduce((sum, f) => sum + f.size, 0);
+}
+
+/**
  * Verify that the user owns the given item. Returns the item or throws.
  */
 export async function requireItemOwnership(

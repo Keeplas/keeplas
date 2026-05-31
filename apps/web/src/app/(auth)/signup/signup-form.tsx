@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useConvex, useMutation, useQuery } from "convex/react";
@@ -10,10 +10,12 @@ import {
   Input,
   Label,
   PasswordInput,
+  PasswordStrength,
   PhoneInput,
   Tabs,
   TabsList,
   TabsTrigger,
+  evaluatePassword,
   isValidPhone,
 } from "@keeplas/ui";
 import { AuthFormShell } from "../components/auth-form-shell";
@@ -67,6 +69,22 @@ export function SignupForm() {
   const cooldown = useResendCooldown(30);
   const t = useTranslations("auth.signup");
   const c = useTranslations("common");
+  const ps = useTranslations("common.passwordStrength");
+  const passwordLabels = useMemo(
+    () => ({
+      weak: ps("weak"),
+      medium: ps("medium"),
+      strong: ps("strong"),
+      rules: {
+        length: ps("length"),
+        uppercase: ps("uppercase"),
+        lowercase: ps("lowercase"),
+        number: ps("number"),
+        special: ps("special"),
+      },
+    }),
+    [ps],
+  );
 
   // Email/phone tabs show when there's no invitation, or when the invitation
   // carries both identifiers; an email-only invitation hides them.
@@ -120,8 +138,8 @@ export function SignupForm() {
       return;
     }
 
-    if (password.length < 8) {
-      setError(t("passwordMin"));
+    if (!evaluatePassword(password).isStrong) {
+      setError(t("passwordWeak"));
       return;
     }
     if (phone && !isValidPhone(phone)) {
@@ -424,6 +442,13 @@ export function SignupForm() {
                 required
                 minLength={8}
               />
+              {password.length > 0 && (
+                <PasswordStrength
+                  password={password}
+                  labels={passwordLabels}
+                  className="pt-1"
+                />
+              )}
             </div>
           )}
         </div>

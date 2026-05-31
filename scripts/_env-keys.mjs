@@ -107,6 +107,11 @@ export const CONVEX_OPTIONAL_GROUPS = {
     "WHATSAPP_TC_RECONFIRM_TEMPLATE_NAME",
     "WHATSAPP_TEMPLATE_LANG",
   ],
+  "Billing (Stripe)": [
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PRICE_LIFETIME",
+  ],
 };
 
 // Keys pushed by `sync-convex-env.mjs` from local env files to Convex.
@@ -135,6 +140,9 @@ export const CONVEX_SYNC_KEYS = [
   "WHATSAPP_TC_INVITE_TEMPLATE_NAME",
   "WHATSAPP_TC_RECONFIRM_TEMPLATE_NAME",
   "WHATSAPP_TEMPLATE_LANG",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_PRICE_LIFETIME",
 ];
 
 // Subset of CONVEX_SYNC_KEYS that MUST have a non-empty local value when syncing

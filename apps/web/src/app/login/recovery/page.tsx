@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useConvex } from "convex/react";
@@ -13,12 +13,14 @@ import {
   Input,
   Label,
   PasswordInput,
+  PasswordStrength,
   PhoneInput,
   Spinner,
   Tabs,
   TabsList,
   TabsTrigger,
   Textarea,
+  evaluatePassword,
   isValidPhone,
 } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
@@ -43,6 +45,22 @@ export default function PasswordRecoveryPage() {
   const { signIn } = useAuthActions();
   const t = useTranslations("auth.recovery");
   const c = useTranslations("common");
+  const ps = useTranslations("common.passwordStrength");
+  const passwordLabels = useMemo(
+    () => ({
+      weak: ps("weak"),
+      medium: ps("medium"),
+      strong: ps("strong"),
+      rules: {
+        length: ps("length"),
+        uppercase: ps("uppercase"),
+        lowercase: ps("lowercase"),
+        number: ps("number"),
+        special: ps("special"),
+      },
+    }),
+    [ps],
+  );
 
   const [kind, setKind] = useState<"email" | "phone">("email");
   // Passwordless `email-otp` accounts recover with 24 words → session (no new
@@ -141,8 +159,8 @@ export default function PasswordRecoveryPage() {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError(t("passwordMin"));
+    if (!evaluatePassword(newPassword).isStrong) {
+      setError(t("passwordWeak"));
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -287,6 +305,13 @@ export default function PasswordRecoveryPage() {
                   minLength={8}
                   required={emailMode === "password"}
                 />
+                {newPassword.length > 0 && (
+                  <PasswordStrength
+                    password={newPassword}
+                    labels={passwordLabels}
+                    className="pt-1"
+                  />
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="rec-confirm-password">

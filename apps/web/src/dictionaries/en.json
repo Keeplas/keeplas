@@ -11,7 +11,17 @@
     "invalidCode": "Invalid or expired code.",
     "codePlaceholder": "123456",
     "learnMore": "Learn more",
-    "back": "Back"
+    "back": "Back",
+    "passwordStrength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong",
+      "length": "Be at least 8 characters long",
+      "uppercase": "At least one uppercase letter (A-Z)",
+      "lowercase": "At least one lowercase letter (a-z)",
+      "number": "At least one number (0-9)",
+      "special": "At least one special character (!@#$%^&*)"
+    }
   },
   "auth": {
     "hero": {
@@ -57,6 +67,7 @@
       "fullName": "Full Name",
       "phoneOptional": "Phone (optional)",
       "passwordMin": "Password must be at least 8 characters.",
+      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
       "phoneInvalid": "Please enter a valid phone number.",
       "startFailed": "Could not start signup. Try again.",
       "createFailed": "Could not create account. Try again.",
@@ -226,6 +237,7 @@
       "enterEmail": "Enter the email for your account.",
       "emailFailed": "Recovery failed. Check that your email and 24 words match.",
       "passwordMin": "Password must be at least 8 characters.",
+      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
       "passwordsMismatch": "Passwords do not match.",
       "successTitle": "Password reset successful",
       "successBody": "Your password was reset. You will be redirected to login. Your vault contents remain encrypted by your 24 words and stay safe.",
@@ -890,6 +902,10 @@
       "title": "Legacy Architecture. Secured Forever.",
       "description": "Choose the protection level that fits your continuity plan. Both tiers run the same zero-knowledge encryption — only the surface area changes.",
       "popular": "Popular",
+      "currentPlan": "Current plan",
+      "checkoutSuccess": "Payment received — your Lifetime plan is being activated.",
+      "checkoutCancel": "Checkout cancelled. No charge was made.",
+      "checkoutError": "Could not start checkout. Please try again.",
       "footer": "Pricing displayed in USD. Switching plans never deletes your vault.",
       "priceSuffix": {
         "forever": "/forever",
@@ -933,6 +949,7 @@
       "ofQuota": "of {quota}",
       "remainingPrefix": "{amount} remaining on the",
       "planNameFree": "Free",
+      "planNameLifetime": "Lifetime",
       "remainingSuffix": "plan",
       "percentUsed": "{percent}% used",
       "nearLimit": "You're close to your storage limit. Upgrade to Lifetime for 10 GB of encrypted capacity and additional continuity tools.",

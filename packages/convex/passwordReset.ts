@@ -9,12 +9,11 @@ import { Id } from "./_generated/dataModel";
 import { constantTimeStringEquals } from "./lib/crypto";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
+import { assertStrongPassword } from "./lib/password";
 
 // Generous per-IP cap: a real recovery submits a handful of times; bulk
 // account enumeration from one IP is what this throttles.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
-
-const MIN_PASSWORD_LENGTH = 8;
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -97,11 +96,7 @@ export const resetPasswordWithRecovery = action({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.newPassword.length < MIN_PASSWORD_LENGTH) {
-      throw new Error(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
-      );
-    }
+    assertStrongPassword(args.newPassword);
     const email = normalizeEmail(args.email);
 
     const userId = (await ctx.runQuery(
