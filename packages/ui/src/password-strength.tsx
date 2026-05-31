@@ -1,6 +1,3 @@
-"use client";
-
-import * as React from "react";
 import { cn } from "./lib/utils";
 
 // The password policy, defined once. The same five rules are enforced
@@ -145,7 +142,11 @@ function CheckIcon({ className }: { className?: string }) {
       strokeWidth={2.25}
       aria-hidden
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m4.5 12.75 6 6 9-13.5"
+      />
     </svg>
   );
 }
@@ -160,7 +161,11 @@ function CloseIcon({ className }: { className?: string }) {
       strokeWidth={2}
       aria-hidden
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 18 18 6M6 6l12 12"
+      />
     </svg>
   );
 }

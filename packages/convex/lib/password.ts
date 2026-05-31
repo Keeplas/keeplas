@@ -26,6 +26,8 @@ export function assertStrongPassword(password: string): void {
     (rule) => rule.message,
   );
   if (failed.length > 0) {
-    throw new Error(`Password is too weak: it must contain ${failed.join(", ")}.`);
+    throw new Error(
+      `Password is too weak: it must contain ${failed.join(", ")}.`,
+    );
   }
 }
