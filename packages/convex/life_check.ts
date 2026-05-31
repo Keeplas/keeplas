@@ -817,6 +817,21 @@ export const enterConfirmationStage = internalMutation({
         relatedId: cycle._id,
         relatedType: "life_check_cycle",
       });
+
+      // Real outbound delivery (email + WhatsApp): tell the contact what's
+      // happening and that confirming opens the owner's 72h cancel window.
+      const contactUser = await ctx.db.get(contact.contactUserId);
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.notifyConfirmationRequest,
+        {
+          email: contact.email,
+          phoneNumber: contact.phoneNumber,
+          contactName: contact.name,
+          ownerName,
+          language: contactUser?.language,
+        },
+      );
     }
 
     const windowDays =

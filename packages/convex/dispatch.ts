@@ -566,3 +566,294 @@ function escapeHtml(s: string) {
             : "&#39;",
   );
 }
+
+// ---------------------------------------------------------------------------
+// Escalation / grace-window notifications (trust contacts + owner)
+//
+// Unlike the Life Check check-in (handled by sendChannel, which is bound to a
+// life_check_cycle and only sends the "confirm you're well" copy), these are
+// one-shot, recipient-addressed messages fired at three points of the
+// continuity protocol. They follow the same dedicated-sender pattern as
+// sendInvitationWhatsApp / sendReconfirmWhatsApp: graceful no-op when creds
+// are missing, EN/FR copy, Resend for email + an Infobip template for WhatsApp
+// (provisioned in the dashboard, static "open Keeplas" URL button). Web push
+// is intentionally out of scope for now.
+// ---------------------------------------------------------------------------
+
+interface CtaEmailCopy {
+  subject: string;
+  greeting: (name?: string) => string;
+  body: (name?: string) => string;
+  button: string;
+  fallback: string;
+}
+
+/** Shared CTA email body — greeting + paragraph + button + plain-link fallback. */
+function ctaEmailHtml(args: {
+  greeting: string;
+  body: string;
+  button: string;
+  url: string;
+  fallbackTemplate: string;
+}) {
+  const greeting = escapeHtml(args.greeting);
+  const body = escapeHtml(args.body);
+  const button = escapeHtml(args.button);
+  const fallback = escapeHtml(args.fallbackTemplate).replace(
+    "{{url}}",
+    args.url,
+  );
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
+<p>${greeting}</p>
+<p>${body}</p>
+<p style="margin:32px 0"><a href="${args.url}" style="display:inline-block;padding:12px 24px;background:#0b1f3b;color:#fff;text-decoration:none;border-radius:8px">${button}</a></p>
+<p style="color:#666;font-size:13px">${fallback}</p>
+</body></html>`;
+}
+
+/**
+ * Send a CTA email via Resend. No-ops (with a console log carrying the URL) in
+ * dev when Resend is unconfigured, so the wiring stays testable. `greetingName`
+ * addresses the recipient; `bodyName` is the owner referenced in the body (the
+ * two coincide for the owner-facing grace alert).
+ */
+async function sendCtaEmail(args: {
+  to: string | undefined;
+  copy: CtaEmailCopy;
+  greetingName: string | undefined;
+  bodyName: string;
+  path: string;
+}): Promise<string> {
+  if (!args.to) return "no_email";
+  const url = `${requireEnv("APP_URL")}${args.path}`;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.warn(`[notify_email] Resend not configured; url = ${url}`);
+    return "resend_not_configured";
+  }
+  const from = requireEnv("RESEND_FROM_EMAIL");
+  const greeting = args.copy.greeting(args.greetingName);
+  const body = args.copy.body(args.bodyName);
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [args.to],
+      subject: args.copy.subject,
+      html: ctaEmailHtml({
+        greeting,
+        body,
+        button: args.copy.button,
+        url,
+        fallbackTemplate: args.copy.fallback,
+      }),
+      text: `${greeting}\n\n${body}\n\n${url}`,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`resend ${res.status}: ${text.slice(0, 120)}`);
+  }
+  return "sent";
+}
+
+/** Send a single-placeholder WhatsApp template (static URL button in template). */
+async function sendTemplateWhatsApp(args: {
+  to: string | undefined;
+  envName: string | undefined;
+  base: string;
+  placeholder: string;
+  locale: Locale;
+}): Promise<string> {
+  if (!args.to) return "no_phone";
+  return sendWhatsAppTemplate({
+    to: args.to,
+    templateName: localizedTemplateName(args.envName, args.base, args.locale),
+    language: args.locale,
+    placeholders: [args.placeholder],
+  });
+}
+
+/** Best-effort channel call — never let one channel's failure mask the other. */
+async function safeSend(fn: () => Promise<string>): Promise<string> {
+  try {
+    return await fn();
+  } catch (error) {
+    return `error:${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
+const TC_CONFIRM_COPY = {
+  en: {
+    subject: "Action needed: confirm a Keeplas contact's status",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (owner?: string) =>
+      `${owner ?? "A Keeplas user"} has stopped responding to their Keeplas check-ins. If you cannot reach them either, confirm they are unavailable from your Keeplas account. Once enough trusted contacts confirm, ${owner ?? "they"} get a final 72-hour window to cancel — after that, you'll be invited to help unlock their vault.`,
+    button: "Open Keeplas",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Action requise : confirmer le statut d'un contact Keeplas",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (owner?: string) =>
+      `${owner ?? "Un utilisateur Keeplas"} ne répond plus à ses vérifications Keeplas. Si vous ne parvenez pas à le/la joindre non plus, confirmez son indisponibilité depuis votre compte Keeplas. Une fois qu'assez de contacts de confiance ont confirmé, ${owner ?? "la personne"} dispose d'un dernier délai de 72 heures pour annuler — ensuite, vous serez invité à aider à déverrouiller son coffre.`,
+    button: "Ouvrir Keeplas",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+const LC_GRACE_COPY = {
+  en: {
+    subject: "Keeplas — you have 72 hours to cancel vault transmission",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: () =>
+      "Your trusted contacts have confirmed you are unreachable, so Keeplas has started your continuity protocol. If this is a mistake, you have 72 hours to cancel before your vault is transmitted. Open Keeplas to cancel the emergency access — or simply complete your next check-in.",
+    button: "Cancel transmission",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — vous avez 72 heures pour annuler la transmission",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: () =>
+      "Vos contacts de confiance vous ont déclaré injoignable ; Keeplas a donc lancé votre protocole de continuité. S'il s'agit d'une erreur, vous avez 72 heures pour annuler avant la transmission de votre coffre. Ouvrez Keeplas pour annuler l'accès d'urgence — ou validez simplement votre prochaine vérification.",
+    button: "Annuler la transmission",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+const TC_RELEASE_COPY = {
+  en: {
+    subject: "You can now access a Keeplas vault",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (owner?: string) =>
+      `The 72-hour cancellation window has elapsed. You can now help unlock ${owner ?? "a Keeplas user"}'s vault. Open Keeplas and follow the recovery steps — you'll combine your recovery shard with the other trusted contacts to restore access.`,
+    button: "Open Keeplas",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Vous pouvez désormais accéder à un coffre Keeplas",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (owner?: string) =>
+      `Le délai d'annulation de 72 heures est écoulé. Vous pouvez maintenant aider à déverrouiller le coffre Keeplas de ${owner ?? "un utilisateur Keeplas"}. Ouvrez Keeplas et suivez les étapes de récupération — vous combinerez votre fragment de récupération avec celui des autres contacts de confiance pour restaurer l'accès.`,
+    button: "Ouvrir Keeplas",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/**
+ * Stage-2 notice to a trust contact: the owner stopped responding; confirming
+ * unavailability opens the owner's 72h cancel window, after which the contact
+ * is invited to help unlock the vault. Email + WhatsApp.
+ */
+export const notifyConfirmationRequest = internalAction({
+  args: {
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    ownerName: v.string(),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
+    const email = await safeSend(() =>
+      sendCtaEmail({
+        to: args.email,
+        copy: TC_CONFIRM_COPY[locale],
+        greetingName: args.contactName,
+        bodyName: args.ownerName,
+        path: "/shared-with-me",
+      }),
+    );
+    const whatsapp = await safeSend(() =>
+      sendTemplateWhatsApp({
+        to: args.phoneNumber,
+        envName: process.env.WHATSAPP_TC_UNREACHABLE_TEMPLATE_NAME,
+        base: "keeplas_tc_unreachable",
+        placeholder: args.ownerName,
+        locale,
+      }),
+    );
+    return `email:${email} whatsapp:${whatsapp}`;
+  },
+});
+
+/**
+ * Owner-facing alert when the unreachability quorum is reached: the 72h
+ * cancel window is now open. Links to /life-check (cancellation is step-up
+ * gated, so a plain authenticated deep link — no one-click token). Email +
+ * WhatsApp.
+ */
+export const notifyGraceCancel = internalAction({
+  args: {
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    ownerName: v.optional(v.string()),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
+    const email = await safeSend(() =>
+      sendCtaEmail({
+        to: args.email,
+        copy: LC_GRACE_COPY[locale],
+        greetingName: args.ownerName,
+        bodyName: args.ownerName ?? "",
+        path: "/life-check",
+      }),
+    );
+    const whatsapp = await safeSend(() =>
+      sendTemplateWhatsApp({
+        to: args.phoneNumber,
+        envName: process.env.WHATSAPP_LC_GRACE_TEMPLATE_NAME,
+        base: "keeplas_lc_grace",
+        placeholder: args.ownerName ?? "there",
+        locale,
+      }),
+    );
+    return `email:${email} whatsapp:${whatsapp}`;
+  },
+});
+
+/**
+ * Release notice to a recipient once the 72h window has elapsed and the vault
+ * is open: the actionable trigger to come back and perform recovery, days
+ * after they confirmed. Email + WhatsApp.
+ */
+export const notifyRelease = internalAction({
+  args: {
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    ownerName: v.string(),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
+    const email = await safeSend(() =>
+      sendCtaEmail({
+        to: args.email,
+        copy: TC_RELEASE_COPY[locale],
+        greetingName: args.contactName,
+        bodyName: args.ownerName,
+        path: "/shared-with-me",
+      }),
+    );
+    const whatsapp = await safeSend(() =>
+      sendTemplateWhatsApp({
+        to: args.phoneNumber,
+        envName: process.env.WHATSAPP_TC_RELEASE_TEMPLATE_NAME,
+        base: "keeplas_tc_release",
+        placeholder: args.ownerName,
+        locale,
+      }),
+    );
+    return `email:${email} whatsapp:${whatsapp}`;
+  },
+});

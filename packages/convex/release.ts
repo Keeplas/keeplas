@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { requireAuth, requireFullAuth, resolveItemRecipients } from "./helpers";
 import { createAuditLog } from "./audit";
 import { createNotification } from "./helpers";
@@ -49,6 +50,9 @@ async function fanOutRelease(
   const now = Date.now();
   let requestsCreated = 0;
 
+  const owner = await ctx.db.get(userId);
+  const ownerName = owner?.name ?? "A Keeplas user";
+
   for (const [contactId, itemIds] of perRecipient.entries()) {
     // Idempotency: skip only if a prior PER-RECIPIENT release (a row carrying
     // `item:` sections) already exists. The recovery-quorum request uses the
@@ -89,6 +93,17 @@ async function fanOutRelease(
         actionUrl: "/shared-with-me",
         channels: ["push", "email"],
         relatedType: "access_request",
+      });
+
+      // Real outbound delivery (email + WhatsApp): the actionable trigger to
+      // come back and perform recovery, days after they confirmed.
+      const contactUser = await ctx.db.get(contact.contactUserId);
+      await ctx.scheduler.runAfter(0, internal.dispatch.notifyRelease, {
+        email: contact.email,
+        phoneNumber: contact.phoneNumber,
+        contactName: contact.name,
+        ownerName,
+        language: contactUser?.language,
       });
     }
   }

@@ -160,6 +160,17 @@ export const markUserUnreachable = auditedMutation({
         relatedId: requestId,
         relatedType: "access_request",
       });
+
+      // Real outbound delivery (email + WhatsApp): the owner's last-chance
+      // 72h cancel alert. This is the safety net the grace window exists for,
+      // so it must actually leave the building (createNotification is a no-op).
+      const owner = await ctx.db.get(contact.userId);
+      await ctx.scheduler.runAfter(0, internal.dispatch.notifyGraceCancel, {
+        email: owner?.email,
+        phoneNumber: owner?.phoneNumber,
+        ownerName: owner?.name,
+        language: owner?.language,
+      });
     };
 
     const existing = await ctx.db
