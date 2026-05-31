@@ -39,12 +39,12 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 **Backend**
 
-- **Convex** (`^1.35.1`) — realtime backend & DB, cloud or self-hosted (`CONVEX_MODE=selfhosted`)
+- **[Convex](https://www.convex.dev/)** (`^1.35.1`) — realtime backend & DB, cloud or self-hosted (`CONVEX_MODE=selfhosted`)
 - **Convex Auth** + **`@auth/core`** — auth foundation
 - **`@simplewebauthn/{browser,server}`** — WebAuthn (Passkey) — phishing-resistant, biometric-local auth
 - **WhatsApp Cloud API** — OTP secondary verification channel
 - **`web-push`** — Web Push (VAPID) for the Life Check push channel
-- **Resend** — transactional email (Life Check, OTP, contact form)
+- **[Resend](https://resend.com/)** — transactional email (Life Check, OTP, contact form)
 
 **Cryptography** (gated by CODEOWNERS in `packages/crypto/`)
 
