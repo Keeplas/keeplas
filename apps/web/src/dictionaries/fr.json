@@ -220,6 +220,7 @@
     "recovery": {
       "notConfigured": "La récupération n'est pas configurée pour ce compte.",
       "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
+      "invalidPhrase": "Cette phrase de récupération n'est pas valide. Vérifiez les fautes de frappe ou les mots intervertis.",
       "validPhone": "Saisissez un numéro de téléphone valide pour votre compte.",
       "phoneFailed": "Échec de la récupération. Vérifiez que votre numéro et vos 24 mots correspondent.",
       "enterEmail": "Saisissez l'e-mail de votre compte.",
@@ -247,6 +248,7 @@
       "backToCode": "Retour à la saisie du code",
       "useHeading": "Utilisez votre phrase de récupération",
       "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
+      "invalidPhrase": "Cette phrase de récupération n'est pas valide. Vérifiez les fautes de frappe ou les mots intervertis.",
       "notConfigured": "La récupération n'est pas configurée pour ce compte.",
       "recoveryFailed": "Échec de la récupération.",
       "phraseLabel": "Phrase de récupération",

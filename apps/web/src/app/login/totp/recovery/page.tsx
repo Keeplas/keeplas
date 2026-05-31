@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { phraseToTotpResetVerifier } from "@keeplas/crypto";
+import { phraseToTotpResetVerifier, validatePhrase } from "@keeplas/crypto";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { Button, Icon, Label, Loader, Spinner, Textarea } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
@@ -73,10 +74,21 @@ export default function TotpRecoveryPage() {
       setError(t("allWords"));
       return;
     }
+    if (!(await validatePhrase(words))) {
+      setError(t("invalidPhrase"));
+      return;
+    }
+    if (!gate?.phraseSalt) {
+      setError(t("notConfigured"));
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
-      const verifierHash = await phraseToTotpResetVerifier(words);
+      const verifierHash = await phraseToTotpResetVerifier(
+        words,
+        base64ToUint8(gate.phraseSalt),
+      );
       await submitRecovery({ verifierHash });
       router.push("/hub");
     } catch (err) {

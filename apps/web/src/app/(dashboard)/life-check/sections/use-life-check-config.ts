@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { toast } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 import {
@@ -17,11 +18,11 @@ export function useLifeCheckConfig() {
   const t = useTranslations("lifeCheck.toasts");
   const config = useQuery(api.life_check.getConfig);
   const activeCycle = useQuery(api.life_check.getActiveCycle);
-  const saveConfig = useMutation(api.life_check.saveConfig);
-  const toggleTravelMode = useMutation(api.life_check.toggleTravelMode);
-  const validateCycle = useMutation(api.life_check.validateCycle);
-  const postponeCycle = useMutation(api.life_check.postponeCycle);
-  const toggleActive = useMutation(api.life_check.toggleActive);
+  const saveConfig = useAuditedMutation(api.life_check.saveConfig);
+  const toggleTravelMode = useAuditedMutation(api.life_check.toggleTravelMode);
+  const validateCycle = useAuditedMutation(api.life_check.validateCycle);
+  const postponeCycle = useAuditedMutation(api.life_check.postponeCycle);
+  const toggleActive = useAuditedMutation(api.life_check.toggleActive);
   const phoneStatus = useQuery(api.phone_verification.getMyStatus);
   const viewer = useQuery(api.users.viewer);
 

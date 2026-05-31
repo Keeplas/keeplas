@@ -8,11 +8,15 @@ import {
 import { internal } from "./_generated/api";
 import { constantTimeStringEquals } from "./lib/crypto";
 import { normalizeE164 } from "./lib/phone";
+import { auditContextValidator, verifyAuditContext } from "./audit";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 const MAX_ATTEMPTS = 5;
+// Generous per-IP cap for the salt lookup; mirrors passwordReset.
+const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
 async function sha256Hex(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
@@ -140,17 +144,26 @@ export const consumePhoneAuthCode = internalMutation({
 });
 
 /**
- * Public query — returns the Argon2id `phraseSalt` for a phone account so the
- * client can derive the salted recovery-phrase verifier before lost-phone
- * recovery. Mirrors getPhraseSaltByEmail: the salt is non-sensitive but is
- * only returned once a recovery verifier has actually been configured, to
- * limit account enumeration.
+ * Returns the Argon2id `phraseSalt` for a phone account so the client can
+ * derive the salted recovery-phrase verifier before lost-phone recovery.
+ * Mirrors getPhraseSaltByEmail: the salt is non-sensitive but is only
+ * returned once a recovery verifier has actually been configured.
  *
- * TODO: layer per-IP rate limiting before exposing in production.
+ * A mutation (not a query) so it can enforce a per-IP rate limit on the
+ * server-attested `_audit` IP before exposing the lookup in production. Hits
+ * are counted even on misses, throttling enumeration of non-existent accounts.
  */
-export const getPhraseSaltByPhone = query({
-  args: { phoneNumber: v.string() },
+export const getPhraseSaltByPhone = mutation({
+  args: { phoneNumber: v.string(), _audit: auditContextValidator },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
+    await enforceIpRateLimit(
+      ctx,
+      "phrase_salt",
+      args._audit.ip,
+      PHRASE_SALT_RATE_LIMIT_MAX,
+    );
+
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) return null;
     const user = await ctx.db

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireAuth, requireFullAuth, resolveItemRecipients } from "./helpers";
 import { createAuditLog } from "./audit";
@@ -16,7 +16,7 @@ import { createNotification } from "./helpers";
  * are not duplicated.
  */
 async function fanOutRelease(
-  ctx: any,
+  ctx: MutationCtx,
   userId: Id<"users">,
   reason: string,
 ): Promise<{
@@ -26,8 +26,8 @@ async function fanOutRelease(
 }> {
   const items = await ctx.db
     .query("vault_items")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .filter((q: any) =>
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) =>
       q.and(
         q.neq(q.field("status"), "archived"),
         q.neq(q.field("accessLevel"), "private"),
@@ -57,11 +57,11 @@ async function fanOutRelease(
     // release fan-out, or those contacts would never receive their item list.
     const approved = await ctx.db
       .query("access_requests")
-      .withIndex("by_requester", (q: any) => q.eq("requestedBy", contactId))
-      .filter((q: any) => q.eq(q.field("status"), "approved"))
+      .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
+      .filter((q) => q.eq(q.field("status"), "approved"))
       .collect();
-    const alreadyReleased = approved.some((r: any) =>
-      r.sectionsRequested.some((s: string) => s.startsWith("item:")),
+    const alreadyReleased = approved.some((r) =>
+      r.sectionsRequested.some((s) => s.startsWith("item:")),
     );
 
     if (alreadyReleased) continue;

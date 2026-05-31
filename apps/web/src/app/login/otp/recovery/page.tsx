@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { derivePhraseVerifier } from "@keeplas/crypto";
+import { derivePhraseVerifier, validatePhrase } from "@keeplas/crypto";
 import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { Button, Icon, Label, Loader, Spinner, Textarea } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
@@ -75,6 +75,10 @@ export default function LoginOtpRecoveryPage() {
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
       setError(t("allWords"));
+      return;
+    }
+    if (!(await validatePhrase(words))) {
+      setError(t("invalidPhrase"));
       return;
     }
     if (!gate?.phraseSalt) {

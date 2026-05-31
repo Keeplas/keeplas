@@ -3,6 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
+import { auditedMutation, createAuditLog } from "./audit";
 import { constantTimeStringEquals } from "./lib/crypto";
 
 const ISSUER = "Keeplas";
@@ -147,6 +148,9 @@ export const getMyTotpStatus = query({
       lastUsedAt: null as number | null,
       createdAt: null as number | null,
       recoveryBound: false,
+      // Per-user salt for the salted TOTP-reset verifier (see
+      // phraseToTotpResetVerifier). Non-sensitive; reused from phraseSalt.
+      phraseSalt: null as string | null,
     };
     const userId = await optionalAuth(ctx);
     if (userId === null) return empty;
@@ -155,7 +159,12 @@ export const getMyTotpStatus = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
     const user = await ctx.db.get(userId);
-    if (!row) return { ...empty, recoveryBound: !!user?.totpResetVerifierHash };
+    if (!row)
+      return {
+        ...empty,
+        recoveryBound: !!user?.totpResetVerifierHash,
+        phraseSalt: user?.phraseSalt ?? null,
+      };
     return {
       enrolled: !!row.verifiedAt,
       pending: !row.verifiedAt,
@@ -164,6 +173,7 @@ export const getMyTotpStatus = query({
       lastUsedAt: row.lastUsedAt ?? null,
       createdAt: row.createdAt as number | null,
       recoveryBound: !!user?.totpResetVerifierHash,
+      phraseSalt: user?.phraseSalt ?? null,
     };
   },
 });
@@ -177,7 +187,12 @@ export const getMyTotpGate = query({
   handler: async (ctx) => {
     const userId = await optionalAuth(ctx);
     if (userId === null) {
-      return { authenticated: false, required: false, recoveryBound: false };
+      return {
+        authenticated: false,
+        required: false,
+        recoveryBound: false,
+        phraseSalt: null as string | null,
+      };
     }
     const totp = await ctx.db
       .query("totp_secrets")
@@ -185,18 +200,21 @@ export const getMyTotpGate = query({
       .first();
     const user = await ctx.db.get(userId);
     const recoveryBound = !!user?.totpResetVerifierHash;
+    // Per-user salt for the salted TOTP-reset verifier; needed client-side to
+    // recompute the verifier during recovery. Non-sensitive.
+    const phraseSalt = user?.phraseSalt ?? null;
     if (!totp || !totp.verifiedAt) {
-      return { authenticated: true, required: false, recoveryBound };
+      return { authenticated: true, required: false, recoveryBound, phraseSalt };
     }
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) {
-      return { authenticated: true, required: true, recoveryBound };
+      return { authenticated: true, required: true, recoveryBound, phraseSalt };
     }
     const cleared = await ctx.db
       .query("auth_session_totp")
       .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
       .first();
-    return { authenticated: true, required: !cleared, recoveryBound };
+    return { authenticated: true, required: !cleared, recoveryBound, phraseSalt };
   },
 });
 
@@ -300,7 +318,9 @@ export const verifyAndEnable = mutation({
  * TOTP. Called from settings when the user wants to add the recovery path
  * after the fact, or rebind to a new recovery phrase.
  */
-export const bindRecoveryReset = mutation({
+export const bindRecoveryReset = auditedMutation({
+  action: "totp_recovery_bound",
+  resourceType: "totp",
   args: { recoveryVerifierHash: v.string() },
   handler: async (ctx, { recoveryVerifierHash }) => {
     const userId = await requireAuth(ctx);
@@ -407,11 +427,27 @@ export const submitTotpRecovery = mutation({
         });
       }
     }
+
+    // Audited via a manual entry rather than `auditedMutation`: this is a
+    // login-flow account-rescue path that must not be gated on the client's
+    // `_audit` envelope being present. Disabling TOTP through the recovery
+    // phrase is a security event worth recording on the chain regardless.
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "user",
+      actorId: userId,
+      action: "totp_recovery_used",
+      resourceType: "totp",
+      resourceId: userId,
+    });
+
     return { success: true };
   },
 });
 
-export const disable = mutation({
+export const disable = auditedMutation({
+  action: "totp_disabled",
+  resourceType: "totp",
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useConvex } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { derivePhraseVerifier } from "@keeplas/crypto";
+import { derivePhraseVerifier, validatePhrase } from "@keeplas/crypto";
 import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import {
   Button,
@@ -22,6 +22,7 @@ import {
   isValidPhone,
 } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
@@ -33,6 +34,12 @@ export default function PasswordRecoveryPage() {
   const router = useRouter();
   const convex = useConvex();
   const resetPassword = useAction(api.passwordReset.resetPasswordWithRecovery);
+  const getPhraseSaltByEmail = useAuditedMutation(
+    api.passwordReset.getPhraseSaltByEmail,
+  );
+  const getPhraseSaltByPhone = useAuditedMutation(
+    api.phone_auth.getPhraseSaltByPhone,
+  );
   const { signIn } = useAuthActions();
   const t = useTranslations("auth.recovery");
   const c = useTranslations("common");
@@ -61,12 +68,8 @@ export default function PasswordRecoveryPage() {
   ): Promise<string> {
     const saltResult =
       "email" in account
-        ? await convex.query(api.passwordReset.getPhraseSaltByEmail, {
-            email: account.email,
-          })
-        : await convex.query(api.phone_auth.getPhraseSaltByPhone, {
-            phoneNumber: account.phoneNumber,
-          });
+        ? await getPhraseSaltByEmail({ email: account.email })
+        : await getPhraseSaltByPhone({ phoneNumber: account.phoneNumber });
     if (!saltResult?.phraseSalt) {
       throw new Error(t("notConfigured"));
     }
@@ -80,6 +83,12 @@ export default function PasswordRecoveryPage() {
     const words = parseRecoveryPhrase(phrase);
     if (words.length !== 24) {
       setError(t("allWords"));
+      return;
+    }
+    // Fail fast on a malformed mnemonic (typo / transposed word) before any
+    // network round-trip — the server verifier would only reject it later.
+    if (!(await validatePhrase(words))) {
+      setError(t("invalidPhrase"));
       return;
     }
 

@@ -2,6 +2,7 @@ import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { auth } from "./auth";
+import { constantTimeStringEquals } from "./lib/crypto";
 
 const http = httpRouter();
 
@@ -24,7 +25,8 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     const secret = process.env.INFOBIP_INBOUND_SECRET;
-    if (!secret || request.headers.get("x-keeplas-webhook-secret") !== secret) {
+    const provided = request.headers.get("x-keeplas-webhook-secret");
+    if (!secret || !provided || !constantTimeStringEquals(provided, secret)) {
       return new Response("unauthorized", { status: 401 });
     }
 

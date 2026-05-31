@@ -220,6 +220,7 @@
     "recovery": {
       "notConfigured": "Recovery is not configured for this account.",
       "allWords": "Please enter all 24 words of your recovery phrase.",
+      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
       "validPhone": "Enter a valid phone number for your account.",
       "phoneFailed": "Recovery failed. Check that your number and 24 words match.",
       "enterEmail": "Enter the email for your account.",
@@ -247,6 +248,7 @@
       "backToCode": "Back to code entry",
       "useHeading": "Use your recovery phrase",
       "allWords": "Please enter all 24 words of your recovery phrase.",
+      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
       "notConfigured": "Recovery is not configured for this account.",
       "recoveryFailed": "Recovery failed.",
       "phraseLabel": "Recovery phrase",

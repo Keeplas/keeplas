@@ -67,6 +67,55 @@ export async function entropyToPhrase(
   return words;
 }
 
+/** word → 11-bit index, built once for {@link validatePhrase}. */
+const WORD_INDEX = new Map(WORDLIST.map((w, i) => [w, i] as const));
+
+/**
+ * Validate a 24-word BIP-39 mnemonic: every word must be in the wordlist and
+ * the embedded checksum must match. This is the exact inverse of
+ * {@link entropyToPhrase}.
+ *
+ * Used to fail fast on phrase entry (recovery flows) instead of relying on a
+ * downstream verifier mismatch — a transposed/mistyped word is caught locally.
+ * It does NOT prove the phrase is the *right* one (that's the salted Argon2id
+ * verifier's job), only that it is a well-formed mnemonic.
+ *
+ * All client-side; no network calls. Returns `false` for any malformed input.
+ */
+export async function validatePhrase(words: string[]): Promise<boolean> {
+  if (words.length !== 24) return false;
+
+  // Map each word back to its 11-bit index → reconstruct the 264-bit string.
+  const bits = new Uint8Array(264);
+  for (let i = 0; i < 24; i++) {
+    const word = words[i].toLowerCase().trim().normalize("NFKD");
+    const index = WORD_INDEX.get(word);
+    if (index === undefined) return false;
+    for (let j = 0; j < 11; j++) {
+      bits[i * 11 + j] = (index >> (10 - j)) & 1;
+    }
+  }
+
+  // First 256 bits → 32 entropy bytes.
+  const entropy = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) {
+      byte = (byte << 1) | bits[i * 8 + j];
+    }
+    entropy[i] = byte;
+  }
+
+  // Last 8 bits must equal the first 8 bits of SHA-256(entropy).
+  const hashBuffer = await crypto.subtle.digest("SHA-256", entropy);
+  const checksumByte = new Uint8Array(hashBuffer)[0];
+  for (let j = 0; j < 8; j++) {
+    if (bits[256 + j] !== ((checksumByte >> (7 - j)) & 1)) return false;
+  }
+
+  return true;
+}
+
 // Domain-separation prefix so the salted verifier digest can never collide
 // with any other Argon2id-derived secret in the system (root key, device
 // wrap key, TOTP reset). Mixed into the Argon2id password input.
@@ -115,48 +164,38 @@ export async function derivePhraseVerifier(
   return uint8ToHex(digest);
 }
 
+// Domain-separation prefix for the TOTP-reset verifier. Distinct from
+// PHRASE_VERIFIER_DOMAIN so the two Argon2id digests can never collide even
+// though they share the same per-user salt and 24-word input.
+const TOTP_RESET_DOMAIN = "keeplas-totp-reset-v2";
+
 /**
- * Derive a SHA-256 hex verifier dedicated to TOTP reset.
+ * Derive a STRONG, salted server-side verifier dedicated to TOTP reset.
  *
- * Uses PBKDF2 with a domain-separated salt (`"keeplas-totp-reset-v1"`),
- * distinct from any other derivation. Output bytes are then
- * SHA-256-hashed so what's stored server-side is irreversible.
+ * Mirrors {@link derivePhraseVerifier}: memory-hard Argon2id (see
+ * `argon2idRaw`) with the user's per-user `salt` (reuse `users.phraseSalt`)
+ * and a distinct domain prefix. This replaces the previous PBKDF2 + global
+ * constant salt, which let a single precomputation attack target every user's
+ * `totpResetVerifierHash` at once.
  *
- * The verifier proves possession of the recovery phrase without coupling
- * the TOTP-reset path with vault-key derivation or the login verifier.
+ * Proves possession of the recovery phrase without coupling the TOTP-reset
+ * path to vault-key derivation or the login verifier. The phrase never leaves
+ * the client; the server stores only the hex verifier and compares
+ * constant-time.
+ *
+ * Returns a 64-char lowercase hex string (32-byte Argon2id digest).
  */
 export async function phraseToTotpResetVerifier(
   words: string[],
+  salt: Uint8Array,
 ): Promise<string> {
   if (words.length !== 24) {
     throw new Error("Recovery phrase must be exactly 24 words");
   }
-
-  const passphrase = words.map((w) => w.toLowerCase().trim()).join(" ");
-  const encoder = new TextEncoder();
-
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(passphrase),
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
-
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: encoder.encode("keeplas-totp-reset-v1"),
-      iterations: 600_000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    256,
-  );
-
-  const hashBuffer = await crypto.subtle.digest("SHA-256", derivedBits);
-  const hashArray = new Uint8Array(hashBuffer);
-  return Array.from(hashArray)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const normalized = words
+    .map((w) => w.toLowerCase().trim().normalize("NFKD"))
+    .join(" ");
+  const password = `${TOTP_RESET_DOMAIN}:${normalized}`;
+  const digest = await argon2idRaw(password, salt);
+  return uint8ToHex(digest);
 }

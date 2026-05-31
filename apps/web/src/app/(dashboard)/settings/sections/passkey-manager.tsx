@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Icon, Loader, Spinner, useConfirm } from "@keeplas/ui";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
 import {
@@ -18,7 +19,7 @@ export function PasskeyManager() {
   const credentials = useQuery(api.webauthn.listMyCredentials);
   const startRegistration = useMutation(api.webauthn.startRegistration);
   const finishRegistration = useMutation(api.webauthn.finishRegistration);
-  const removeCredential = useMutation(api.webauthn.removeCredential);
+  const removeCredential = useAuditedMutation(api.webauthn.removeCredential);
 
   const supported = usePasskeySupport();
   const confirm = useConfirm();

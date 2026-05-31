@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { QRCodeSVG as QRCode } from "qrcode.react";
 import { phraseToTotpResetVerifier } from "@keeplas/crypto";
+import { base64ToUint8 } from "@keeplas/crypto/encoding";
 import { api } from "@keeplas/backend/_generated/api";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import {
   Button,
   Dialog,
@@ -41,8 +43,8 @@ export function TotpManager() {
   const startEnrollment = useMutation(api.totp.startEnrollment);
   const verifyAndEnable = useMutation(api.totp.verifyAndEnable);
   const cancelEnrollment = useMutation(api.totp.cancelEnrollment);
-  const bindRecoveryReset = useMutation(api.totp.bindRecoveryReset);
-  const disable = useMutation(api.totp.disable);
+  const bindRecoveryReset = useAuditedMutation(api.totp.bindRecoveryReset);
+  const disable = useAuditedMutation(api.totp.disable);
   const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
@@ -132,10 +134,17 @@ export function TotpManager() {
       setError(t("totp.phraseIncomplete"));
       return;
     }
+    if (!status?.phraseSalt) {
+      setError(t("totp.bindError"));
+      return;
+    }
     setBusy("binding");
     setError(null);
     try {
-      const verifierHash = await phraseToTotpResetVerifier(words);
+      const verifierHash = await phraseToTotpResetVerifier(
+        words,
+        base64ToUint8(status.phraseSalt),
+      );
       await bindRecoveryReset({ recoveryVerifierHash: verifierHash });
       setOpen(false);
       resetDialog();
