@@ -11,6 +11,7 @@ import { verifyAssertionAndGetUserId } from "./webauthn";
 import { normalizeE164 } from "./lib/phone";
 import { normalizeEmail } from "./lib/email";
 import { normalizeUserLanguage } from "./lib/locale";
+import { assertStrongPassword } from "./lib/password";
 
 // Maps the sign-up provider id to the initial auth method recorded on the
 // user. The passkey + recovery credential providers never create a user, so
@@ -42,6 +43,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     // captured for day-one WhatsApp/Life Check (verified in onboarding).
     Password({
       verify: ResendOTP,
+      // Authoritative strength gate — enforced on sign-up and password reset,
+      // never on plain sign-in (existing accounts are not re-validated).
+      validatePasswordRequirements: assertStrongPassword,
       profile(params) {
         let phoneNumber: string | undefined;
         try {

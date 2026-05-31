@@ -25,6 +25,7 @@ import type * as lib_crypto from "../lib/crypto.js";
 import type * as lib_email from "../lib/email.js";
 import type * as lib_life_check_token from "../lib/life_check_token.js";
 import type * as lib_locale from "../lib/locale.js";
+import type * as lib_password from "../lib/password.js";
 import type * as lib_phone from "../lib/phone.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_rate_limit from "../lib/rate_limit.js";
@@ -79,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   "lib/email": typeof lib_email;
   "lib/life_check_token": typeof lib_life_check_token;
   "lib/locale": typeof lib_locale;
+  "lib/password": typeof lib_password;
   "lib/phone": typeof lib_phone;
   "lib/plans": typeof lib_plans;
   "lib/rate_limit": typeof lib_rate_limit;

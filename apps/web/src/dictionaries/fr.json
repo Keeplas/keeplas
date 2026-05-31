@@ -11,7 +11,17 @@
     "invalidCode": "Code invalide ou expiré.",
     "codePlaceholder": "123456",
     "learnMore": "En savoir plus",
-    "back": "Retour"
+    "back": "Retour",
+    "passwordStrength": {
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort",
+      "length": "Au moins 8 caractères",
+      "uppercase": "Au moins une lettre majuscule (A-Z)",
+      "lowercase": "Au moins une lettre minuscule (a-z)",
+      "number": "Au moins un chiffre (0-9)",
+      "special": "Au moins un caractère spécial (!@#$%^&*)"
+    }
   },
   "auth": {
     "hero": {
@@ -57,6 +67,7 @@
       "fullName": "Nom complet",
       "phoneOptional": "Téléphone (facultatif)",
       "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
       "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
       "startFailed": "Impossible de démarrer l'inscription. Réessayez.",
       "createFailed": "Impossible de créer le compte. Réessayez.",
@@ -226,6 +237,7 @@
       "enterEmail": "Saisissez l'e-mail de votre compte.",
       "emailFailed": "Échec de la récupération. Vérifiez que votre e-mail et vos 24 mots correspondent.",
       "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
+      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
       "passwordsMismatch": "Les mots de passe ne correspondent pas.",
       "successTitle": "Mot de passe réinitialisé",
       "successBody": "Votre mot de passe a été réinitialisé. Vous allez être redirigé vers la connexion. Le contenu de votre coffre reste chiffré par vos 24 mots et demeure protégé.",
