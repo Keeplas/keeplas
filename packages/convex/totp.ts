@@ -204,7 +204,12 @@ export const getMyTotpGate = query({
     // recompute the verifier during recovery. Non-sensitive.
     const phraseSalt = user?.phraseSalt ?? null;
     if (!totp || !totp.verifiedAt) {
-      return { authenticated: true, required: false, recoveryBound, phraseSalt };
+      return {
+        authenticated: true,
+        required: false,
+        recoveryBound,
+        phraseSalt,
+      };
     }
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) {
@@ -214,7 +219,12 @@ export const getMyTotpGate = query({
       .query("auth_session_totp")
       .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
       .first();
-    return { authenticated: true, required: !cleared, recoveryBound, phraseSalt };
+    return {
+      authenticated: true,
+      required: !cleared,
+      recoveryBound,
+      phraseSalt,
+    };
   },
 });
 
