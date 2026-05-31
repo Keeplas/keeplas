@@ -2,7 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   generatePhrase,
   entropyToPhrase,
+  validatePhrase,
   derivePhraseVerifier,
+  phraseToTotpResetVerifier,
   generatePhraseVerifierSalt,
 } from "../src/recovery";
 import { WORDLIST } from "../src/recovery/wordlist";
@@ -81,6 +83,87 @@ describe("BIP-39 Recovery Phrase", () => {
       const phrase2 = await entropyToPhrase(entropy2);
 
       expect(phrase1).not.toEqual(phrase2);
+    });
+  });
+
+  describe("validatePhrase", () => {
+    // Published BIP-39 reference vectors (24 words / 256-bit entropy).
+    it("accepts the all-zero entropy reference vector (…abandon art)", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0x00));
+      expect(words[0]).toBe("abandon");
+      expect(words[23]).toBe("art");
+      expect(await validatePhrase(words)).toBe(true);
+    });
+
+    it("accepts the all-0xff entropy reference vector (…zoo vote)", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0xff));
+      expect(words[0]).toBe("zoo");
+      expect(words[23]).toBe("vote");
+      expect(await validatePhrase(words)).toBe(true);
+    });
+
+    it("accepts freshly generated phrases", async () => {
+      expect(await validatePhrase(await generatePhrase())).toBe(true);
+    });
+
+    it("rejects a phrase with a bad checksum (24× abandon)", async () => {
+      // The valid all-zero phrase ends in "art"; "abandon" as word 24 breaks it.
+      expect(await validatePhrase(Array(24).fill("abandon"))).toBe(false);
+    });
+
+    it("rejects a word that is not in the wordlist", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0x00));
+      words[5] = "notabip39word";
+      expect(await validatePhrase(words)).toBe(false);
+    });
+
+    it("rejects the wrong number of words", async () => {
+      expect(await validatePhrase(["abandon"])).toBe(false);
+      expect(await validatePhrase(Array(12).fill("abandon"))).toBe(false);
+    });
+
+    it("is case- and whitespace-insensitive", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0x00));
+      const messy = words.map((w) => `  ${w.toUpperCase()} `);
+      expect(await validatePhrase(messy)).toBe(true);
+    });
+  });
+
+  describe("phraseToTotpResetVerifier", () => {
+    it("returns 64-char hex and is deterministic for same phrase + salt", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0));
+      const salt = new Uint8Array(16).fill(5);
+      const v1 = await phraseToTotpResetVerifier(words, salt);
+      const v2 = await phraseToTotpResetVerifier(words, salt);
+      expect(v1).toMatch(/^[0-9a-f]{64}$/);
+      expect(v1).toBe(v2);
+    });
+
+    it("differs for a different salt", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(0));
+      const a = await phraseToTotpResetVerifier(
+        words,
+        new Uint8Array(16).fill(1),
+      );
+      const b = await phraseToTotpResetVerifier(
+        words,
+        new Uint8Array(16).fill(2),
+      );
+      expect(a).not.toBe(b);
+    });
+
+    it("is domain-separated from the phrase verifier (same salt, different digest)", async () => {
+      const words = await entropyToPhrase(new Uint8Array(32).fill(7));
+      const salt = new Uint8Array(16).fill(3);
+      const totp = await phraseToTotpResetVerifier(words, salt);
+      const phrase = await derivePhraseVerifier(words, salt);
+      expect(totp).not.toBe(phrase);
+    });
+
+    it("rejects phrases that are not 24 words", async () => {
+      await expect(
+        phraseToTotpResetVerifier(["abandon"], new Uint8Array(16).fill(1)),
+      ).rejects.toThrow("24 words");
     });
   });
 

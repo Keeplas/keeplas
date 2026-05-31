@@ -60,6 +60,14 @@ function base64ToBytes(b64: string): Uint8Array {
   return out;
 }
 
+function bytesToHex(bytes: Uint8Array): string {
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, "0");
+  }
+  return hex;
+}
+
 /**
  * Create an immutable audit log entry. Each entry carries a chained hash so
  * the sequence can be replayed and verified end-to-end. `ipAddress` and
@@ -86,23 +94,30 @@ export async function createAuditLog(
     .first();
 
   const previousLogHash = lastLog?.logHash ?? "genesis";
+  const now = Date.now();
 
+  // Every persisted field that matters for tamper-evidence is folded into the
+  // hashed payload (actor, IP, country, metadata included) so the chain
+  // protects the full record, not just the action. Cryptographic SHA-256 —
+  // a forged DB row cannot recompute a colliding chain.
   const logData = JSON.stringify({
     previousLogHash,
+    actorType: params.actorType,
+    actorId: params.actorId,
     action: params.action,
     resourceType: params.resourceType,
     resourceId: params.resourceId,
-    timestamp: Date.now(),
+    metadata: params.metadata ?? null,
+    ipAddress: params.ipAddress ?? null,
+    country: params.country ?? null,
+    timestamp: now,
   });
 
-  // NOTE: simple JS hash kept for parity with prior records. Followup will
-  // upgrade the chain to SHA-256 once a verified replay tool ships.
-  let hash = 0;
-  for (let i = 0; i < logData.length; i++) {
-    const char = logData.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
-  }
-  const logHash = Math.abs(hash).toString(16).padStart(8, "0");
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(logData),
+  );
+  const logHash = bytesToHex(new Uint8Array(digest));
 
   await ctx.db.insert("audit_logs", {
     userId: params.userId,
@@ -116,7 +131,7 @@ export async function createAuditLog(
     country: params.country,
     previousLogHash,
     logHash,
-    createdAt: Date.now(),
+    createdAt: now,
   });
 }
 

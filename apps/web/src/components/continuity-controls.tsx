@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { ErrorAlert, Loader, Switch } from "@keeplas/ui";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
 import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-mode-section";
@@ -17,8 +18,8 @@ import { TravelModeSection } from "@/app/(dashboard)/life-check/sections/travel-
 export function ContinuityControls() {
   const t = useTranslations("lifeCheck");
   const config = useQuery(api.life_check.getConfig);
-  const toggleActive = useMutation(api.life_check.toggleActive);
-  const toggleTravelMode = useMutation(api.life_check.toggleTravelMode);
+  const toggleActive = useAuditedMutation(api.life_check.toggleActive);
+  const toggleTravelMode = useAuditedMutation(api.life_check.toggleTravelMode);
 
   const [travelUntil, setTravelUntil] = useState("");
   const [error, setError] = useState("");

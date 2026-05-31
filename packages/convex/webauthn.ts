@@ -16,6 +16,7 @@ import {
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
+import { auditedMutation, createAuditLog } from "./audit";
 import { requireEnv } from "./lib/require_env";
 
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -175,6 +176,19 @@ export const finishRegistration = mutation({
         updatedAt: now,
       });
     }
+
+    // Audited via a manual entry rather than `auditedMutation`: passkey
+    // enrollment is reachable from the onboarding flow, which must not be
+    // gated on the client's `_audit` envelope. Adding an auth factor is a
+    // security event worth recording on the chain.
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "user",
+      actorId: userId,
+      action: "passkey_registered",
+      resourceType: "passkey",
+      resourceId: credential.id,
+    });
 
     return { success: true };
   },
@@ -338,7 +352,10 @@ export const listMyCredentials = query({
   },
 });
 
-export const removeCredential = mutation({
+export const removeCredential = auditedMutation({
+  action: "passkey_removed",
+  resourceType: "passkey",
+  getResourceId: (args) => args.credentialId,
   args: { credentialId: v.id("passkey_credentials") },
   handler: async (ctx, { credentialId }) => {
     const userId = await requireAuth(ctx);

@@ -33,6 +33,7 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 - **Tiptap 3** — rich text editor for vault content
 - **lucide-react** — icon set
 - **cmdk** — command palette
+- **Preference-based i18n** — English/French dictionaries (`en`/`fr`) with an in-app language switcher (the marketing site routes locale via URL)
 - **libphonenumber-js** — phone number parsing for WhatsApp OTP
 - **qrcode.react**, **html2canvas-pro**, **jspdf** — Emergency Card rendering & PDF export
 
@@ -47,7 +48,7 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 **Cryptography** (gated by CODEOWNERS in `packages/crypto/`)
 
-- **`@noble/post-quantum`** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and Shamir shards
+- **`@noble/post-quantum`** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and Shamir shards; ML-DSA-65 (NIST FIPS 204) signs each user's ML-KEM public key for authenticated key distribution (TOFU)
 - **`hash-wasm`** — Argon2id KDF for the 24-word root phrase
 - **AES-GCM** (WebCrypto) + **Shamir Secret Sharing** — content encryption and social recovery
 - **Vitest** — unit tests for the crypto primitives
@@ -186,6 +187,8 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 - The **24-word phrase** is the root crypto secret (Argon2id-derived). The **password is pure auth** and is resettable via the 24 words.
 - **No OAuth.** No direct phrase recovery — trusted contacts can rebuild the master key from Shamir shards once the recovery threshold is met. Default threshold is 2 contacts; threshold 3 requires 3 ready contacts.
 - Keeplas does not hold a server-side Shamir shard.
+- **Authenticated key distribution (TOFU).** Each user holds an **ML-DSA-65 (FIPS 204)** identity key; their ML-KEM public key is signed with it. Clients verify the signature and pinned fingerprint before wrapping a DEK/shard to a contact — never trusting a server-provided pubkey unverified. The identity secret key is wrapped under the master key and never sent in clear.
+- Sensitive auth flows enforce a **step-up gate** (login-OTP + TOTP) on top of the password; auth/onboarding/public flows are intentionally exempt.
 - Per-device unlock combines **PIN**, **biometric (PRF)**, and **hardware key (PRF)** — RootKey wraps live in IndexedDB; the 24-word phrase is requested on first login per device.
 - All sensitive cryptography is implemented in [`packages/crypto/`](./packages/crypto), gated by CODEOWNERS and unit-tested.
 

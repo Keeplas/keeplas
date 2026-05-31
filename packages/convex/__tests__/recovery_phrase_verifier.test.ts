@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { api, internal } from "../_generated/api";
-import { makeT, type TestConvex } from "./test.helpers";
+import { makeT, signedAudit, type TestConvex } from "./test.helpers";
 import type { Id } from "../_generated/dataModel";
 
 // Recovery-phrase verifier flow (findings H3/#8 + M1):
@@ -105,8 +105,9 @@ describe("getPhraseSaltByEmail (passwordReset)", () => {
       phraseSalt: SALT_B64,
       encryptedKeyBundle: BUNDLE,
     });
-    const result = await t.query(api.passwordReset.getPhraseSaltByEmail, {
+    const result = await t.mutation(api.passwordReset.getPhraseSaltByEmail, {
       email: "salt@example.com",
+      _audit: await signedAudit(),
     });
     expect(result).toEqual({
       phraseSalt: SALT_B64,
@@ -120,10 +121,34 @@ describe("getPhraseSaltByEmail (passwordReset)", () => {
       email: "nobundle@example.com",
       phraseSalt: SALT_B64,
     });
-    const result = await t.query(api.passwordReset.getPhraseSaltByEmail, {
+    const result = await t.mutation(api.passwordReset.getPhraseSaltByEmail, {
       email: "nobundle@example.com",
+      _audit: await signedAudit(),
     });
     expect(result).toBeNull();
+  });
+
+  it("rate-limits repeated lookups from the same IP", async () => {
+    const t = makeT();
+    await seedEmailUser(t, {
+      email: "rl@example.com",
+      phraseSalt: SALT_B64,
+      encryptedKeyBundle: BUNDLE,
+    });
+    // signedAudit() pins ip=127.0.0.1, so every call lands in the same bucket.
+    const audit = await signedAudit();
+    for (let i = 0; i < 20; i++) {
+      await t.mutation(api.passwordReset.getPhraseSaltByEmail, {
+        email: "rl@example.com",
+        _audit: audit,
+      });
+    }
+    await expect(
+      t.mutation(api.passwordReset.getPhraseSaltByEmail, {
+        email: "rl@example.com",
+        _audit: audit,
+      }),
+    ).rejects.toThrow(/too many/i);
   });
 });
 
@@ -152,8 +177,9 @@ describe("getPhraseSaltByPhone (phone_auth)", () => {
       phraseSalt: SALT_B64,
       recoveryPhraseHash: VERIFIER,
     });
-    const result = await t.query(api.phone_auth.getPhraseSaltByPhone, {
+    const result = await t.mutation(api.phone_auth.getPhraseSaltByPhone, {
       phoneNumber: "+33612345678",
+      _audit: await signedAudit(),
     });
     expect(result).toEqual({ phraseSalt: SALT_B64 });
   });
@@ -164,8 +190,9 @@ describe("getPhraseSaltByPhone (phone_auth)", () => {
       phoneNumber: "+33698765432",
       phraseSalt: SALT_B64,
     });
-    const result = await t.query(api.phone_auth.getPhraseSaltByPhone, {
+    const result = await t.mutation(api.phone_auth.getPhraseSaltByPhone, {
       phoneNumber: "+33698765432",
+      _audit: await signedAudit(),
     });
     expect(result).toBeNull();
   });

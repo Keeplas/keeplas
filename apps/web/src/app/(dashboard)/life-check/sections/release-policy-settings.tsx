@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { HelpHint, Switch, toast } from "@keeplas/ui";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ const UNSELECTED_CLS =
 export function ReleasePolicySettings() {
   const t = useTranslations("lifeCheck");
   const config = useQuery(api.life_check.getConfig);
-  const save = useMutation(api.life_check.saveReleasePolicy);
+  const save = useAuditedMutation(api.life_check.saveReleasePolicy);
 
   const [threshold, setThreshold] = useState(2);
   const [windowDays, setWindowDays] = useState(7);

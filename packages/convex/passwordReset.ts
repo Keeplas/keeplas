@@ -3,10 +3,16 @@ import {
   invalidateSessions,
   modifyAccountCredentials,
 } from "@convex-dev/auth/server";
-import { action, internalQuery, query } from "./_generated/server";
+import { action, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { constantTimeStringEquals } from "./lib/crypto";
+import { auditContextValidator, verifyAuditContext } from "./audit";
+import { enforceIpRateLimit } from "./lib/rate_limit";
+
+// Generous per-IP cap: a real recovery submits a handful of times; bulk
+// account enumeration from one IP is what this throttles.
+const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -15,16 +21,27 @@ function normalizeEmail(email: string): string {
 }
 
 /**
- * Public query — returns the Argon2id salt the client needs to derive the
- * RootKey at login. The salt itself is non-sensitive (it's stored in clear
- * server-side by design), but to limit email enumeration we only return it
- * when an `encryptedKeyBundle` has actually been set for the user.
+ * Returns the Argon2id salt the client needs to derive the RootKey at login.
+ * The salt itself is non-sensitive (it's stored in clear server-side by
+ * design), but to limit email enumeration we only return it when an
+ * `encryptedKeyBundle` has actually been set for the user.
  *
- * TODO: layer per-IP rate limiting before exposing in production.
+ * A mutation (not a query) so it can enforce a per-IP rate limit on the
+ * server-attested `_audit` IP before exposing the lookup in production. The
+ * limit is counted on every hit — including misses — so enumeration of
+ * non-existent accounts is throttled too.
  */
-export const getPhraseSaltByEmail = query({
-  args: { email: v.string() },
+export const getPhraseSaltByEmail = mutation({
+  args: { email: v.string(), _audit: auditContextValidator },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
+    await enforceIpRateLimit(
+      ctx,
+      "phrase_salt",
+      args._audit.ip,
+      PHRASE_SALT_RATE_LIMIT_MAX,
+    );
+
     const email = normalizeEmail(args.email);
     const user = await ctx.db
       .query("users")

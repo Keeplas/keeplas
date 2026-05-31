@@ -67,6 +67,12 @@ export function buildContentSecurityPolicy(nonce: string): string {
     "form-action": ["'self'"],
     // blob: for any worker the WASM glue spawns.
     "worker-src": ["'self'", "blob:"],
+    // Surface violations so an injection attempt or a broken third-party shows
+    // up in our logs. `report-to` is the modern channel (group defined by the
+    // `Reporting-Endpoints` header below); `report-uri` is the legacy fallback
+    // still honored by browsers that ignore `report-to`.
+    "report-to": ["csp-endpoint"],
+    "report-uri": ["/api/csp-report"],
   };
 
   return Object.entries(directives)
@@ -82,6 +88,9 @@ export function buildContentSecurityPolicy(nonce: string): string {
 export function buildSecurityHeaders(nonce: string): Record<string, string> {
   return {
     "Content-Security-Policy": buildContentSecurityPolicy(nonce),
+    // Defines the `csp-endpoint` group referenced by the CSP `report-to`
+    // directive. Same-origin collector route logs violations server-side.
+    "Reporting-Endpoints": 'csp-endpoint="/api/csp-report"',
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",

@@ -3,6 +3,7 @@
 export {
   generatePhrase,
   entropyToPhrase,
+  validatePhrase,
   phraseToTotpResetVerifier,
   derivePhraseVerifier,
   generatePhraseVerifierSalt,

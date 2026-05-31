@@ -95,6 +95,14 @@ async function importAesKeyFromSharedSecret(
  * Returns a JSON envelope string with the KEM ciphertext, the AES-GCM IV,
  * and the AES-GCM-encrypted DEK. Designed to live inside the existing
  * `ownerWrappedDek` / `wrappedDek` / `encryptedShard` string fields.
+ *
+ * AAD NOTE (deferred hardening): `additionalData` is supported but no call
+ * site binds one yet, so envelopes are not cryptographically tied to their
+ * (itemId | recipient | version) context. The risk is envelope *confusion* —
+ * a malicious server relocating a valid ciphertext between rows/recipients —
+ * NOT decryption (the server stays blind). Binding AAD requires passing the
+ * same context at every wrap AND unwrap site symmetrically; tracked as
+ * post-launch work to avoid a broad crypto refactor right before release.
  */
 export async function wrapDek(
   dek: CryptoKey,

@@ -25,6 +25,7 @@ import type * as lib_email from "../lib/email.js";
 import type * as lib_life_check_token from "../lib/life_check_token.js";
 import type * as lib_locale from "../lib/locale.js";
 import type * as lib_phone from "../lib/phone.js";
+import type * as lib_rate_limit from "../lib/rate_limit.js";
 import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_storage from "../lib/storage.js";
 import type * as life_check from "../life_check.js";
@@ -75,6 +76,7 @@ declare const fullApi: ApiFromModules<{
   "lib/life_check_token": typeof lib_life_check_token;
   "lib/locale": typeof lib_locale;
   "lib/phone": typeof lib_phone;
+  "lib/rate_limit": typeof lib_rate_limit;
   "lib/require_env": typeof lib_require_env;
   "lib/storage": typeof lib_storage;
   life_check: typeof life_check;

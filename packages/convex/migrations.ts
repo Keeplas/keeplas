@@ -24,6 +24,7 @@ export const wipeAllData = internalMutation({
       "notifications",
       "support_tickets",
       "audit_logs",
+      "ip_rate_limits",
       "recovery_shard_submissions",
       "access_requests",
       "push_subscriptions",
@@ -70,5 +71,28 @@ export const wipeAllData = internalMutation({
     }
 
     return { deletedByTable, blobsDeleted: blobs.length };
+  },
+});
+
+/**
+ * Targeted wipe of `audit_logs` only — leaves all other data intact.
+ *
+ * Required before deploying the SHA-256 audit chain (the hash algorithm
+ * changed, so any entry written under the legacy 32-bit hash would break
+ * end-to-end chain verification). Use this instead of the full wipe when the
+ * deployment holds data you want to keep. Internal-only:
+ *   npx convex run migrations:wipeAuditLogs '{"confirm":"WIPE"}' --prod
+ */
+export const wipeAuditLogs = internalMutation({
+  args: { confirm: v.string() },
+  handler: async (ctx, args) => {
+    if (args.confirm !== "WIPE") {
+      throw new Error('Pass { "confirm": "WIPE" } to clear the audit log.');
+    }
+    const rows = await ctx.db.query("audit_logs").collect();
+    for (const row of rows) {
+      await ctx.db.delete(row._id);
+    }
+    return { deleted: rows.length };
   },
 });

@@ -9,7 +9,7 @@ import {
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import { auditedMutation, createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
 
@@ -68,7 +68,11 @@ export const getConfig = query({
 /**
  * Create or update Life Check configuration.
  */
-export const saveConfig = mutation({
+export const saveConfig = auditedMutation({
+  action: "life_check_configured",
+  resourceType: "life_check_config",
+  getResourceId: (_args, result) =>
+    (result as { configId: Id<"life_check_configs"> }).configId,
   args: {
     frequency: v.union(
       v.literal("test"),
@@ -110,15 +114,6 @@ export const saveConfig = mutation({
         updatedAt: now,
       });
 
-      await createAuditLog(ctx, {
-        userId,
-        actorType: "user",
-        actorId: userId,
-        action: "life_check_configured",
-        resourceType: "life_check_config",
-        resourceId: existing._id,
-      });
-
       return { configId: existing._id };
     }
 
@@ -135,15 +130,6 @@ export const saveConfig = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "life_check_configured",
-      resourceType: "life_check_config",
-      resourceId: configId,
-    });
-
     return { configId };
   },
 });
@@ -151,7 +137,12 @@ export const saveConfig = mutation({
 /**
  * Toggle travel mode.
  */
-export const toggleTravelMode = mutation({
+export const toggleTravelMode = auditedMutation({
+  action: "life_check_travel_mode_toggled",
+  resourceType: "life_check_config",
+  getResourceId: (_args, result) =>
+    (result as { configId: Id<"life_check_configs"> }).configId,
+  getMetadata: (args) => ({ enabled: args.enabled, until: args.until }),
   args: {
     enabled: v.boolean(),
     until: v.optional(v.number()),
@@ -180,16 +171,7 @@ export const toggleTravelMode = mutation({
       updatedAt: Date.now(),
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: args.enabled ? "travel_mode_enabled" : "travel_mode_disabled",
-      resourceType: "life_check_config",
-      resourceId: config._id,
-    });
-
-    return { success: true };
+    return { success: true, configId: config._id };
   },
 });
 
@@ -199,7 +181,14 @@ export const toggleTravelMode = mutation({
  * no cycle is in flight, so a proactive confirmation simply extends the
  * countdown. See `confirmAlive`.
  */
-export const validateCycle = mutation({
+export const validateCycle = auditedMutation({
+  // Distinct from confirmAlive's "life_check_validated" (which records the
+  // cycle state transition). This entry captures the deliberate, IP/country-
+  // attested user "I'm alive" action — meaningful proof for a dead-man's
+  // switch even when no cycle is in flight (proactive countdown reset).
+  action: "life_check_user_confirmed",
+  resourceType: "life_check_config",
+  getMetadata: (args) => ({ method: args.method }),
   args: {
     method: v.union(v.literal("tap"), v.literal("email_link")),
   },
@@ -213,7 +202,12 @@ export const validateCycle = mutation({
 /**
  * Postpone the current Life Check.
  */
-export const postponeCycle = mutation({
+export const postponeCycle = auditedMutation({
+  action: "life_check_postponed",
+  resourceType: "life_check_config",
+  getResourceId: (_args, result) =>
+    (result as { configId: Id<"life_check_configs"> }).configId,
+  getMetadata: (args) => ({ duration: args.duration }),
   args: {
     duration: v.union(v.literal("48h"), v.literal("7d"), v.literal("custom")),
     customDate: v.optional(v.number()),
@@ -265,17 +259,7 @@ export const postponeCycle = mutation({
       updatedAt: now,
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "life_check_postponed",
-      resourceType: "life_check_config",
-      resourceId: config._id,
-      metadata: JSON.stringify({ duration: args.duration }),
-    });
-
-    return { success: true };
+    return { success: true, configId: config._id };
   },
 });
 
@@ -972,7 +956,12 @@ export const releaseAfterConfirmation = internalMutation({
 /**
  * Toggle Life Check active status.
  */
-export const toggleActive = mutation({
+export const toggleActive = auditedMutation({
+  action: "life_check_active_toggled",
+  resourceType: "life_check_config",
+  getResourceId: (_args, result) =>
+    (result as { configId: Id<"life_check_configs"> }).configId,
+  getMetadata: (args) => ({ isActive: args.isActive }),
   args: { isActive: v.boolean() },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -989,7 +978,7 @@ export const toggleActive = mutation({
       updatedAt: Date.now(),
     });
 
-    return { success: true };
+    return { success: true, configId: config._id };
   },
 });
 
@@ -998,7 +987,16 @@ export const toggleActive = mutation({
  * unavailability, how long they have, and what happens if they don't. Read by
  * `enterConfirmationStage` / `resolveConfirmationWindow` / `markUserUnreachable`.
  */
-export const saveReleasePolicy = mutation({
+export const saveReleasePolicy = auditedMutation({
+  action: "life_check_release_policy_saved",
+  resourceType: "life_check_config",
+  getResourceId: (_args, result) =>
+    (result as { configId: Id<"life_check_configs"> }).configId,
+  getMetadata: (args) => ({
+    confirmationThreshold: args.confirmationThreshold,
+    confirmationWindowDays: args.confirmationWindowDays,
+    fallbackBehavior: args.fallbackBehavior,
+  }),
   args: {
     confirmationThreshold: v.number(),
     confirmationWindowDays: v.number(),
@@ -1026,20 +1024,6 @@ export const saveReleasePolicy = mutation({
       updatedAt: Date.now(),
     });
 
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "life_check_release_policy_saved",
-      resourceType: "life_check_config",
-      resourceId: config._id,
-      metadata: JSON.stringify({
-        confirmationThreshold: args.confirmationThreshold,
-        confirmationWindowDays: args.confirmationWindowDays,
-        fallbackBehavior: args.fallbackBehavior,
-      }),
-    });
-
-    return { success: true };
+    return { success: true, configId: config._id };
   },
 });

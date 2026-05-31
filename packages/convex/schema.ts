@@ -221,6 +221,16 @@ export default defineSchema({
     // Base32-encoded 20-byte HMAC-SHA1 secret. Stored server-side so we can
     // verify codes; treated as a high-value credential alongside password
     // hashes. Must never leave the backend after enrollment.
+    //
+    // DELIBERATELY NOT encrypted at rest. Server-side TOTP verification needs
+    // the plaintext seed at every check, and any wrapping key would live in
+    // the same deployment env as this table — an attacker with DB read access
+    // (the threat encryption-at-rest defends) would also reach that key, so
+    // the wrap buys almost nothing while adding key-management + migration
+    // cost. Mitigations instead: `totp_secrets` is never logged or exported
+    // (no query returns `secret`; audit metadata never includes it), and the
+    // recovery-phrase escape hatch lets a user re-enrol if a seed is exposed.
+    // Revisit if a dedicated KMS/HSM with an out-of-deployment key is added.
     secret: v.string(),
     label: v.optional(v.string()),
     // Set when the user has confirmed enrollment by entering a valid code.
@@ -260,6 +270,15 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_expires", ["userId", "expiresAt"]),
+
+  // Per-IP throttle for unauthenticated, enumeration-prone endpoints (e.g. the
+  // recovery-phrase salt lookups). One row per hit, keyed `${scope}:${ip}`;
+  // `enforceIpRateLimit` (lib/rate_limit.ts) counts rows in the trailing
+  // window and prunes expired ones opportunistically.
+  ip_rate_limits: defineTable({
+    key: v.string(),
+    createdAt: v.number(),
+  }).index("by_key", ["key"]),
 
   // Marker that a Convex Auth session has cleared the login-OTP step.
   // Login OTP is always required, so a session without a row here is
