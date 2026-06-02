@@ -6,7 +6,7 @@
 //        scripts/sync-convex-env.mjs
 //
 // `.env.convex.local` exists so backend-only secrets (e.g. SITE_URL) can live
-// outside `.env.local` (which Next.js auto-loads).
+// outside `.env.local` (which Vite auto-loads).
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";

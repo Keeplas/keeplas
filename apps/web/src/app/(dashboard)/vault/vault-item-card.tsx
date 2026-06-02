@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { getCategoryConfig } from "@/lib/vault-categories";
 import { useTranslations } from "@/lib/i18n";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";

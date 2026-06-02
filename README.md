@@ -28,7 +28,7 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 **Frontend**
 
-- **Next.js 16 (App Router) + React 19** — web-first, PWA-ready, Turbopack dev server
+- **TanStack Start (Vite) + React 19** — type-safe file-based routing, runs as an SPA with a server runtime for request middleware + API routes
 - **Tailwind CSS v4** + **shadcn/ui** + **Radix UI** primitives — design system (Tooltip and DatePicker still on `@base-ui/react`, migrated when touched)
 - **Tiptap 3** — rich text editor for vault content
 - **lucide-react** — icon set
@@ -63,7 +63,7 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 ```
 apps/
-  web/                  Next.js App Router app (PWA-ready)
+  web/                  TanStack Start (Vite) app (PWA-ready)
 packages/
   convex/               Convex schema, queries, mutations, actions  (@keeplas/backend)
   crypto/               Zero-knowledge crypto: AES, KDF, KEM, Shamir, recovery  (RESTRICTED)
@@ -119,16 +119,16 @@ For the full bootstrap including the auth-key chicken-and-egg dance, see [`CONTR
 
 ## Try it (Docker)
 
-A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, with bind-mounted source (so host edits hot-reload) and named volumes for `node_modules`, `.next/`, `.turbo/`, and `.convex/` state.
+A containerized dev environment is provided as an alternative to a local Node install. It pins **Node 22** and **pnpm 10.8.1** to match CI, with bind-mounted source (so host edits hot-reload) and named volumes for `node_modules`, `dist/`, `.turbo/`, and `.convex/` state.
 
 ```bash
-cp .env.local.example .env.local                # then fill KEEPLAS_CTX_SECRET
+cp .env.example .env.local                      # then fill KEEPLAS_CTX_SECRET
 docker compose up                               # installs + starts dev server on :3000
 ```
 
 Full Docker workflow (provisioning Convex inside the container, running ad-hoc commands via `compose exec`, common gotchas, when to use Docker vs native): see [`docs/DOCKER.md`](./docs/DOCKER.md).
 
-> The image is **`Dockerfile.dev`** — not production-ready. Deployments target Vercel (web) + Convex Cloud (backend); no production Dockerfile is shipped.
+> The image is **`Dockerfile.dev`** — not production-ready. The web app builds with `vite build` (TanStack Start / Nitro) and can deploy to any Node host or a Nitro preset (Vercel, Netlify, Cloudflare); the backend runs on Convex Cloud. No production Dockerfile is shipped.
 
 ## Environment variables
 
@@ -140,12 +140,14 @@ All required variables are documented in [`.env.example`](./.env.example). High-
 - **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this)
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Web Push — VAPID (optional)** — `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Life Check push channel
-- **WhatsApp Cloud API (optional)** — `WHATSAPP_*` — Life Check WhatsApp channel and WhatsApp OTP verification
+- **WhatsApp — Infobip (optional)** — `INFOBIP_*`, `WHATSAPP_*_TEMPLATE_NAME` — Life Check WhatsApp channel and WhatsApp OTP verification
 
 Two env files cover the split:
 
-- `.env.local` — loaded by Next.js at runtime (web-side keys + shared secrets)
-- `.env.convex.local` — backend-only values that should NOT be loaded into the Next.js process (e.g. `SITE_URL`)
+- `.env.local` — `NEXT_PUBLIC_*` vars are inlined into the client bundle by Vite at build time (see `apps/web/vite.config.ts`); server-only secrets are read from `process.env` at runtime by the request middleware (`apps/web/src/start.ts`)
+- `.env.convex.local` — backend-only values that should NOT be loaded into the web process (e.g. `SITE_URL`)
+
+> The `NEXT_PUBLIC_` prefix is kept (rather than Vite's `VITE_`) so existing references and the Convex env sync keep working unchanged after the TanStack Start migration.
 
 Both are read by `pnpm sync:convex-env` and pushed to the Convex deployment.
 
@@ -175,7 +177,7 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 | `pnpm typecheck`       | TypeScript `--noEmit` across all packages                                                                     |
 | `pnpm test`            | Run test suites (Vitest in `packages/crypto/`)                                                                |
 | `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                                          |
-| `pnpm clean`           | Remove build artifacts (`dist`, `.next`, `.turbo`)                                                            |
+| `pnpm clean`           | Remove build artifacts (`dist`, `.output`, `.turbo`)                                                          |
 | `pnpm check:env`       | Validate `.env.local` is complete (runs as predev/prebuild — fast, local-only)                                |
 | `pnpm check:convex`    | Validate that the Convex deployment has every required server-side var (manual, pre-push — `~30s round-trip`) |
 | `pnpm sync:convex-env` | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment                                 |
@@ -196,6 +198,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 
 ## Documentation
 
+- [`docs/STACK.md`](./docs/STACK.md) — tech stack and the rationale behind each choice
 - [`PRD/keeplas-architecture-recap-v5.md`](./PRD/keeplas-architecture-recap-v5.md) — full architecture, security & product decisions
 - [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md) — Convex + zero-knowledge technical spec
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap

@@ -1,7 +1,5 @@
 import { SharedVaultList } from "./shared-vault-list";
 
-export const dynamic = "force-dynamic";
-
 export default function SharedWithMePage() {
   return (
     <div className="max-w-screen-2xl mx-auto">

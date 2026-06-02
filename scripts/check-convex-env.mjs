@@ -4,7 +4,7 @@
 //   node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-convex-env.mjs
 //
 // The local `.env.local` is loaded so we can compare KEEPLAS_CTX_SECRET on both
-// sides — the HMAC signing on Next.js MUST match the verification key on
+// sides — the HMAC signing on the web server MUST match the verification key on
 // Convex, otherwise every audited mutation fails.
 
 import { spawnSync } from "node:child_process";

@@ -14,7 +14,7 @@ The fast path is **native** with `pnpm bootstrap`. Docker is supported as an alt
    `git clone https://github.com/YOUR_USERNAME/keeplas.git && cd keeplas`
 2. **One-command bootstrap:**
    `pnpm bootstrap`
-   Copies `.env.local.example` → `.env.local`, installs, links per-package envs, prints the next steps.
+   Copies `.env.example` → `.env.local`, installs, links per-package envs, prints the next steps.
    _Note:_ this script is intentionally **not** named `setup` — `pnpm setup` is a reserved pnpm built-in that configures your shell's `PNPM_HOME`.
 3. Open `.env.local` and paste a freshly generated audit secret in `KEEPLAS_CTX_SECRET`:
    `openssl rand -base64 32`
@@ -58,7 +58,7 @@ After pulling main (especially across a dep bump), you may see something like:
 Module [...]/next@16.2.3/[...] was instantiated [...] but the module factory is not available
 ```
 
-…even though the lockfile has been at `16.2.6` for a while. This happens because pnpm's content-addressable store keeps every version of a dep across upgrades, and Turbopack's `.next/` cache may reference the old path.
+…even though the lockfile has been at `16.2.6` for a while. This happens because pnpm's content-addressable store keeps every version of a dep across upgrades, and the Vite/build cache may reference the old path.
 
 **Fix:**
 
@@ -66,7 +66,7 @@ Module [...]/next@16.2.3/[...] was instantiated [...] but the module factory is 
 pnpm reset
 ```
 
-This wipes every `node_modules`, `.next`, and `.turbo` under the repo and reinstalls from the current lockfile. Then hard-reload the browser (Cmd+Shift+R) or open the page in a private window to bypass cached client chunks.
+This wipes every `node_modules`, build output, and `.turbo` under the repo and reinstalls from the current lockfile. Then hard-reload the browser (Cmd+Shift+R) or open the page in a private window to bypass cached client chunks.
 
 ### `pnpm setup` modifies your shell profile and does nothing
 
@@ -82,7 +82,7 @@ We use a flat label scheme so newcomers can find work fast:
 
 - `good-first-issue` — small, well-scoped, no domain context required.
 - `help-wanted` — open contributions welcomed.
-- `area:web` — `apps/web/` (Next.js, UI, hooks, middleware).
+- `area:web` — `apps/web/` (TanStack Start, UI, hooks, server middleware).
 - `area:convex` — `packages/convex/` (schema, queries, mutations, actions).
 - `area:crypto` — `packages/crypto/` (**founder-approved only** — see Restricted Areas).
 - `area:ui` — `packages/ui/` design system.

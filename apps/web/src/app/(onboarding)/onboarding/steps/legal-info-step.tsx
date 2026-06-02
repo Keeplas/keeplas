@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, DatePicker, ErrorAlert, Label } from "@keeplas/ui";

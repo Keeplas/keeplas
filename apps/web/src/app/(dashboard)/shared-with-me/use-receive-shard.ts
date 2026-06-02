@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import { unwrapBytes } from "@keeplas/crypto/kem";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";

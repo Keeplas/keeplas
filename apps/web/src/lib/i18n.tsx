@@ -1,5 +1,3 @@
-"use client";
-
 // Preference-based i18n for the authenticated app. Unlike the marketing site
 // (which routes locale via the URL), here the locale is a user preference:
 // `users.language` in Convex, mirrored to localStorage for pre-auth flows.

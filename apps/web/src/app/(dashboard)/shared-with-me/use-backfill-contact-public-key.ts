@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useRef } from "react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";

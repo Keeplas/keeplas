@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "@/lib/navigation";
+import { Link } from "@/lib/navigation";
 import { useQuery } from "convex/react";
 import { Loader, Icon } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";

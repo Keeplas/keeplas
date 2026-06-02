@@ -7,7 +7,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "dist/**"],
+      "outputs": ["dist/**", ".output/**", ".nitro/**"],
       "env": [
         "NEXT_PUBLIC_*",
         "APP_URL",

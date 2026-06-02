@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 type Updater<T> = T | ((prev: T) => T);

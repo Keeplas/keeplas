@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Loader, RichTextEditor } from "@keeplas/ui";
 import type { Id } from "@keeplas/backend/_generated/dataModel";

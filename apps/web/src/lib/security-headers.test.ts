@@ -4,7 +4,7 @@ import {
   buildSecurityHeaders,
 } from "./security-headers";
 
-const NONCE = "test-nonce-abc123";
+const HASH = "'sha256-AbC123='";
 
 describe("buildContentSecurityPolicy", () => {
   const originalConvexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -21,19 +21,24 @@ describe("buildContentSecurityPolicy", () => {
     }
   });
 
-  it("embeds the per-request nonce in script-src", () => {
-    const csp = buildContentSecurityPolicy(NONCE);
-    expect(csp).toContain(`'nonce-${NONCE}'`);
+  it("allow-lists inline scripts by their SHA-256 hash in script-src", () => {
+    const csp = buildContentSecurityPolicy([HASH]);
+    expect(csp).toMatch(new RegExp(`script-src [^;]*${HASH}`));
+  });
+
+  it("serves bundled scripts from same-origin via 'self'", () => {
+    const csp = buildContentSecurityPolicy([]);
+    expect(csp).toMatch(/script-src [^;]*'self'/);
   });
 
   it("allows WASM execution required by hash-wasm (Argon2id)", () => {
-    const csp = buildContentSecurityPolicy(NONCE);
+    const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toContain("'wasm-unsafe-eval'");
     expect(csp).toMatch(/worker-src [^;]*blob:/);
   });
 
   it("locks down dangerous directives", () => {
-    const csp = buildContentSecurityPolicy(NONCE);
+    const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'none'");
@@ -45,7 +50,7 @@ describe("buildContentSecurityPolicy", () => {
     const original = process.env.NODE_ENV;
     vi.stubEnv("NODE_ENV", "production");
     try {
-      const csp = buildContentSecurityPolicy(NONCE);
+      const csp = buildContentSecurityPolicy([HASH]);
       expect(csp).toContain("'wasm-unsafe-eval'");
       // The standalone token never appears (the wasm-scoped variant does not
       // contain a leading-quote "'unsafe-eval'").
@@ -59,7 +64,7 @@ describe("buildContentSecurityPolicy", () => {
     const original = process.env.NODE_ENV;
     vi.stubEnv("NODE_ENV", "development");
     try {
-      const csp = buildContentSecurityPolicy(NONCE);
+      const csp = buildContentSecurityPolicy([HASH]);
       expect(csp).toMatch(/script-src [^;]*'unsafe-eval'/);
     } finally {
       vi.stubEnv("NODE_ENV", original ?? "test");
@@ -67,7 +72,7 @@ describe("buildContentSecurityPolicy", () => {
   });
 
   it("always scopes connect-src to the Convex wildcard hosts", () => {
-    const csp = buildContentSecurityPolicy(NONCE);
+    const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toContain("https://*.convex.cloud");
     expect(csp).toContain("wss://*.convex.cloud");
   });
@@ -75,22 +80,22 @@ describe("buildContentSecurityPolicy", () => {
   it("adds the configured Convex origin to connect-src when present", () => {
     process.env.NEXT_PUBLIC_CONVEX_URL =
       "https://energetic-pony-179.convex.cloud";
-    const csp = buildContentSecurityPolicy(NONCE);
+    const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toContain("https://energetic-pony-179.convex.cloud");
   });
 
   it("ignores a malformed Convex URL without throwing", () => {
     process.env.NEXT_PUBLIC_CONVEX_URL = "not a url";
-    expect(() => buildContentSecurityPolicy(NONCE)).not.toThrow();
-    const csp = buildContentSecurityPolicy(NONCE);
+    expect(() => buildContentSecurityPolicy([HASH])).not.toThrow();
+    const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toContain("https://*.convex.cloud");
   });
 });
 
 describe("buildSecurityHeaders", () => {
   it("returns the CSP plus all hardening headers", () => {
-    const headers = buildSecurityHeaders(NONCE);
-    expect(headers["Content-Security-Policy"]).toContain(`'nonce-${NONCE}'`);
+    const headers = buildSecurityHeaders([HASH]);
+    expect(headers["Content-Security-Policy"]).toContain(HASH);
     expect(headers["X-Content-Type-Options"]).toBe("nosniff");
     expect(headers["Referrer-Policy"]).toBe("no-referrer");
     expect(headers["Strict-Transport-Security"]).toBe(
@@ -100,7 +105,7 @@ describe("buildSecurityHeaders", () => {
   });
 
   it("disables sensitive features but keeps WebAuthn get", () => {
-    const headers = buildSecurityHeaders(NONCE);
+    const headers = buildSecurityHeaders([HASH]);
     const policy = headers["Permissions-Policy"];
     expect(policy).toContain("camera=()");
     expect(policy).toContain("microphone=()");

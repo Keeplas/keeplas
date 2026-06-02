@@ -1,5 +1,3 @@
-"use client";
-
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Badge } from "@keeplas/ui";

@@ -1,8 +1,6 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { cn, Icon, Loader } from "@keeplas/ui";

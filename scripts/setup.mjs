@@ -3,7 +3,7 @@
 //
 // What it does:
 //   1. Verifies Node + pnpm versions match package.json engines.
-//   2. Copies `.env.local.example` → `.env.local` if it doesn't exist.
+//   2. Copies `.env.example` → `.env.local` if it doesn't exist.
 //   3. Runs `pnpm install`.
 //   4. Runs `pnpm link:env` to symlink per-package .env.local files.
 //   5. Prints the manual next-steps (Convex bootstrap + env sync).
@@ -15,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { RED, YELLOW, GREEN, CYAN, DIM, BOLD, RESET } from "./_env-keys.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const envExample = resolve(repoRoot, ".env.local.example");
+const envExample = resolve(repoRoot, ".env.example");
 const envLocal = resolve(repoRoot, ".env.local");
 
 function step(label) {
@@ -33,11 +33,11 @@ function run(cmd, args) {
   }
 }
 
-step("1/4  Copy .env.local.example → .env.local");
+step("1/4  Copy .env.example → .env.local");
 if (existsSync(envLocal)) {
   console.log(`${DIM}.env.local already exists, leaving it alone${RESET}`);
 } else if (!existsSync(envExample)) {
-  console.error(`${RED}.env.local.example not found at ${envExample}${RESET}`);
+  console.error(`${RED}.env.example not found at ${envExample}${RESET}`);
   process.exit(1);
 } else {
   copyFileSync(envExample, envLocal);
@@ -67,7 +67,7 @@ ${BOLD}Push the rest of your local env to Convex${RESET}:
   ${CYAN}pnpm sync:convex-env${RESET}
 
 ${BOLD}Boot the app${RESET}:
-  ${CYAN}pnpm dev${RESET}                          ${DIM}# Next.js + convex dev in parallel${RESET}
+  ${CYAN}pnpm dev${RESET}                          ${DIM}# Vite + convex dev in parallel${RESET}
 
 ${BOLD}You're done.${RESET} ${YELLOW}pnpm dev${RESET} is now your normal workflow.
 ${DIM}See CONTRIBUTING.md for details. Pre-push: pnpm check:convex.${RESET}

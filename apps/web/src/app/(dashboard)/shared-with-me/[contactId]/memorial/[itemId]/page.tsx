@@ -1,7 +1,5 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "@/lib/navigation";
+import { Link } from "@/lib/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { Loader, RichTextEditor } from "@keeplas/ui";

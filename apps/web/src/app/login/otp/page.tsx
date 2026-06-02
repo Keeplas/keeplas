@@ -1,8 +1,6 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@/lib/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Button, Icon, Input, Label, Loader, Spinner } from "@keeplas/ui";
@@ -11,8 +9,6 @@ import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { useTranslations } from "@/lib/i18n";
-
-export const dynamic = "force-dynamic";
 
 export default function LoginOtpPage() {
   const router = useRouter();

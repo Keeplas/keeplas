@@ -1,10 +1,8 @@
-"use client";
-
-import { use, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useConvexAuth } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
-import Link from "next/link";
+import { Link, useParams } from "@/lib/navigation";
 import { Button, buttonVariants, Loader, ErrorAlert } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -56,12 +54,8 @@ function InvitationShell({
   );
 }
 
-export default function InvitationPage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = use(params);
+export default function InvitationPage() {
+  const { token } = useParams<{ token: string }>();
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const t = useTranslations("invite");
   const invitation = useQuery(api.trusted_contacts.getInvitationByToken, {

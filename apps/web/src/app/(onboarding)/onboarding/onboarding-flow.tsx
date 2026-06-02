@@ -1,7 +1,4 @@
-"use client";
-
 import { useState, useCallback } from "react";
-import Image from "next/image";
 import { LegalInfoStep } from "./steps/legal-info-step";
 import { RecoveryPhraseStep } from "./steps/recovery-phrase-step";
 import { VerificationStep } from "./steps/verification-step";
@@ -77,12 +74,11 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
       {/* Header */}
       <header className="px-4 sm:px-6 md:px-8 py-4 md:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 shrink-0">
-          <Image
+          <img
             src="/assets/logo/logo-wordmark.svg"
             alt="Keeplas"
             width={200}
             height={40}
-            priority
             className="h-9 md:h-11 w-auto"
           />
         </div>

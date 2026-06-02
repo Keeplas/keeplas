@@ -24,7 +24,7 @@ export const isAuditSecret = (v) => {
   }
 };
 
-// Required by the Next.js process — loaded from `.env` / `.env.local`.
+// Required by the web process — loaded from `.env` / `.env.local`.
 export const WEB_REQUIRED = [
   { key: "NEXT_PUBLIC_APP_URL", test: isHttpUrl },
   { key: "APP_URL", test: isHttpUrl },

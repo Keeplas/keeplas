@@ -1,12 +1,11 @@
 #!/usr/bin/env node
-// Nuclear cleanup: wipe every `node_modules`, `.next`, and `.turbo`, then
+// Nuclear cleanup: wipe every `node_modules`, build output, and `.turbo`, then
 // reinstall from the current lockfile.
 //
 // Use when you see a runtime / build error referencing an OLD version of a
-// dependency (e.g. `next@16.2.3` in an error path when the lockfile is at
-// 16.2.6). pnpm's content-addressable store keeps old versions across
-// upgrades — sometimes Turbopack's `.next/` cache references those stale
-// paths and the app loads a half-and-half mix.
+// dependency when the lockfile is newer. pnpm's content-addressable store keeps
+// old versions across upgrades — sometimes a stale Vite / build cache references
+// those paths and the app loads a half-and-half mix.
 //
 // Safe to run any time. Takes ~30–60s depending on disk and network.
 
@@ -30,7 +29,10 @@ const toDelete = [
   ".turbo",
   // Web app caches
   "apps/web/node_modules",
-  "apps/web/.next",
+  "apps/web/dist",
+  "apps/web/.output",
+  "apps/web/.nitro",
+  "apps/web/.vite",
   "apps/web/.turbo",
   // Package caches
   "packages/convex/node_modules",

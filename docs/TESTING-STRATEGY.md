@@ -12,7 +12,7 @@ match what's already in the repo.
 2. **Test the contract, not the implementation.** Convex query/mutation handlers
    are tested through their public signature; React components through their
    rendered DOM and user-visible behaviour.
-3. **Don't test third-party code.** Trust Convex, Radix, Next.js, and the Web
+3. **Don't test third-party code.** Trust Convex, Radix, TanStack Router, and the Web
    Crypto API. Test our wiring around them.
 
 ## What goes in unit tests

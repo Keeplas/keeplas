@@ -1,7 +1,4 @@
-"use client";
-
 import type { ReactNode } from "react";
-import Image from "next/image";
 import { useTranslations } from "@/lib/i18n";
 
 interface AuthHeroSectionProps {
@@ -24,7 +21,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
       {/* Top: Logo */}
       <div className="relative z-10">
         <div className="flex items-center gap-3">
-          <Image
+          <img
             src="/assets/logo/logo.svg"
             alt="Keeplas"
             width={36}

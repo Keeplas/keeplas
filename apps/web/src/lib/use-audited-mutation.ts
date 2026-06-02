@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { useMutation } from "convex/react";
 import { FunctionReference } from "convex/server";

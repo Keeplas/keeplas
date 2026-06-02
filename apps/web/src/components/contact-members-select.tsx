@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon } from "@keeplas/ui";

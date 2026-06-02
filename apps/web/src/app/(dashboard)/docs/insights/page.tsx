@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { Icon, InfoCallout } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { LEGACY_TIPS, type LegacyTip } from "@/lib/legacy-tips";

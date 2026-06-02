@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -209,7 +207,6 @@ function AttachmentCard({
 
       {plainUrl && file.kind === "image" && (
         <div className="overflow-hidden rounded-xl bg-surface-container flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={plainUrl}
             alt={file.name}

@@ -93,7 +93,8 @@ const RULES = [
 const SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs"]);
 const IGNORED_DIRS = new Set([
 	"node_modules",
-	".next",
+	"dist",
+	".output",
 	".turbo",
 	"_generated",
 	".git",

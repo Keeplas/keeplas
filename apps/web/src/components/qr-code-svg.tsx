@@ -1,5 +1,3 @@
-"use client";
-
 import { QRCodeSVG as QRCode } from "qrcode.react";
 
 interface QRCodeSVGProps {

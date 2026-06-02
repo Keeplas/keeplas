@@ -1,5 +1,3 @@
-"use client";
-
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { cn } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";

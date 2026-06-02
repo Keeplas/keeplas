@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Button, Icon, Input, Label, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
