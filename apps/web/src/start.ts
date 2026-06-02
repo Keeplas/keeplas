@@ -169,36 +169,56 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
       return result;
     }
 
-    // Read the document so we can hash its inline scripts for the CSP.
+    // Issue / refresh the sealed audit cookie on the document response.
+    const cookie = await maybeSealCookie(request);
+
+    // In dev the SSR document is a per-request *stream* (chunked). Buffering it
+    // to hash inline scripts would break TanStack Start's progressive hydration
+    // protocol ($_TSR / $R.tsr stream lifecycle), so we only set headers on the
+    // streamed response. The dev CSP allows inline scripts (see
+    // buildContentSecurityPolicy). In production the SPA shell is a static
+    // prerender — safe to buffer and hash for a strict, inline-free CSP.
+    if (process.env.NODE_ENV !== "production") {
+      for (const [name, value] of Object.entries(buildSecurityHeaders())) {
+        response.headers.set(name, value);
+      }
+      if (cookie) response.headers.append("Set-Cookie", cookie);
+      return result;
+    }
+
     const html = await response.text();
     const hashes = await hashInlineScripts(html);
     const headers = new Headers(response.headers);
     for (const [name, value] of Object.entries(buildSecurityHeaders(hashes))) {
       headers.set(name, value);
     }
+    if (cookie) headers.append("Set-Cookie", cookie);
 
-    // Issue / refresh the sealed audit cookie on the document response.
-    const secret = process.env.KEEPLAS_CTX_SECRET;
-    if (secret) {
-      const existing = readCookie(request, COOKIE_NAME);
-      if (!existing || !isFreshSealed(existing)) {
-        const ip = extractIp(request);
-        const country = extractCountry(request);
-        const ts = Date.now();
-        const sig = await sign(`${ip}|${country}|${ts}`, secret);
-        headers.append("Set-Cookie", buildSealCookie({ ip, country, ts, sig }));
-      }
-    } else if (!warnedAboutMissingSecret) {
+    return new Response(html, { status: response.status, headers });
+  },
+);
+
+/** Build a fresh sealed audit cookie when one is missing/stale, else null. */
+async function maybeSealCookie(request: Request): Promise<string | null> {
+  const secret = process.env.KEEPLAS_CTX_SECRET;
+  if (!secret) {
+    if (!warnedAboutMissingSecret) {
       warnedAboutMissingSecret = true;
       console.error(
         "[start] KEEPLAS_CTX_SECRET is not set — audited mutations will fail. " +
           "Add it to .env.local and restart the dev server.",
       );
     }
-
-    return new Response(html, { status: response.status, headers });
-  },
-);
+    return null;
+  }
+  const existing = readCookie(request, COOKIE_NAME);
+  if (existing && isFreshSealed(existing)) return null;
+  const ip = extractIp(request);
+  const country = extractCountry(request);
+  const ts = Date.now();
+  const sig = await sign(`${ip}|${country}|${ts}`, secret);
+  return buildSealCookie({ ip, country, ts, sig });
+}
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [securityMiddleware],

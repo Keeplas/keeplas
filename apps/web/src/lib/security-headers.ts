@@ -43,12 +43,17 @@ function convexConnectSources(): string[] {
 export function buildContentSecurityPolicy(
   scriptHashes: string[] = [],
 ): string {
-  // React's dev build (and Vite HMR) uses eval() for debugging features like
-  // reconstructing call stacks. Allow it ONLY in development — production never
-  // relies on eval(), so the strict policy stays intact.
-  const scriptSrc = ["'self'", "'wasm-unsafe-eval'", ...scriptHashes];
+  const scriptSrc = ["'self'", "'wasm-unsafe-eval'"];
   if (process.env.NODE_ENV === "development") {
-    scriptSrc.push("'unsafe-eval'");
+    // Dev only: Vite/HMR + React Refresh inject inline scripts and rely on
+    // eval(), and the per-request streamed SSR document is not buffered (so we
+    // can't hash its inline scripts without breaking hydration). Allow inline +
+    // eval here. The strict hash-based policy applies in production, where the
+    // SPA shell is a static prerender. ('unsafe-inline' is ignored by browsers
+    // when hashes are present, so we deliberately emit no hashes in dev.)
+    scriptSrc.push("'unsafe-inline'", "'unsafe-eval'");
+  } else {
+    scriptSrc.push(...scriptHashes);
   }
 
   const directives: Record<string, string[]> = {
