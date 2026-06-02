@@ -198,6 +198,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 
 ## Documentation
 
+- [`docs/STACK.md`](./docs/STACK.md) — tech stack and the rationale behind each choice
 - [`PRD/keeplas-architecture-recap-v5.md`](./PRD/keeplas-architecture-recap-v5.md) — full architecture, security & product decisions
 - [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md) — Convex + zero-knowledge technical spec
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap

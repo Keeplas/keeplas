@@ -1,114 +1,114 @@
-# Keeplas — Architecture Technique : Convex, ZK & Recovery
+# Keeplas — Technical Architecture: Convex, ZK & Recovery
 
-> Document technique — Avril 2026 — v1
+> Technical document — April 2026 — v1
 
 ---
 
-## Table des matières
+## Table of Contents
 
-1. [Principes Fondamentaux](#1-principes-fondamentaux)
-2. [Séparation Client / Serveur](#2-séparation-client--serveur)
-3. [Schema Convex Complet](#3-schema-convex-complet)
-4. [Passkey (WebAuthn) — Auth Recommandée](#4-passkey-webauthn--auth-recommandée)
-5. [Zero Knowledge & Cryptographie](#5-zero-knowledge--cryptographie)
-6. [Recovery — Flux Complets](#6-recovery--flux-complets)
-7. [Logique des Convex Functions](#7-logique-des-convex-functions)
+1. [Core Principles](#1-core-principles)
+2. [Client / Server Separation](#2-client--server-separation)
+3. [Complete Convex Schema](#3-complete-convex-schema)
+4. [Passkey (WebAuthn) — Recommended Auth](#4-passkey-webauthn--recommended-auth)
+5. [Zero Knowledge & Cryptography](#5-zero-knowledge--cryptography)
+6. [Recovery — Complete Flows](#6-recovery--complete-flows)
+7. [Convex Functions Logic](#7-convex-functions-logic)
 8. [Scheduled Functions — Life Check](#8-scheduled-functions--life-check)
-9. [Structure des fichiers Convex](#9-structure-des-fichiers-convex)
+9. [Convex File Structure](#9-convex-file-structure)
 
 ---
 
-## 1. Principes Fondamentaux
+## 1. Core Principles
 
-### Règle absolue
+### Absolute rule
 
-> **Ce qui est secret ne touche jamais le serveur Convex.**
+> **Anything secret never touches the Convex server.**
 
-Convex est un serveur de coordination et de stockage. Il ne connaît jamais :
+Convex is a coordination and storage server. It never knows:
 
-- Le Master Key
-- La Recovery Phrase
-- Les shards Shamir en clair
-- Le contenu déchiffré du vault
+- The Master Key
+- The Recovery Phrase
+- The Shamir shards in clear
+- The decrypted vault content
 
-Il stocke uniquement des données chiffrées qu'il ne peut pas lire.
+It only stores encrypted data that it cannot read.
 
-### Responsabilités par couche
+### Responsibilities per layer
 
 ```
-packages/crypto/     ← Secrets, chiffrement, ZK proofs
-    zk/              ← Génération ZK Proofs (Noir/Barretenberg)
-    aes/             ← Chiffrement AES-256-GCM (Web Crypto API)
-    shamir/          ← Split et reconstruction Shamir
-    recovery/        ← BIP-39, dérivation Master Key
+packages/crypto/     ← Secrets, encryption, ZK proofs
+    zk/              ← ZK Proof generation (Noir/Barretenberg)
+    aes/             ← AES-256-GCM encryption (Web Crypto API)
+    shamir/          ← Shamir split and reconstruction
+    recovery/        ← BIP-39, Master Key derivation
 
-convex/              ← Stockage et coordination
-    schema.ts        ← Tables (données chiffrées uniquement)
-    users.ts         ← CRUD utilisateurs
-    vault.ts         ← CRUD vault items chiffrés
-    lifeCheck.ts     ← Scheduling, cycles, signaux passifs
-    trustedContacts.ts ← Gestion contacts et shards chiffrés
-    accessRequests.ts  ← Modes d'accès A/B
-    zkVerification.ts  ← Vérification ZK Proofs (pas génération)
+convex/              ← Storage and coordination
+    schema.ts        ← Tables (encrypted data only)
+    users.ts         ← User CRUD
+    vault.ts         ← Encrypted vault item CRUD
+    lifeCheck.ts     ← Scheduling, cycles, passive signals
+    trustedContacts.ts ← Contact management and encrypted shards
+    accessRequests.ts  ← Access modes A/B
+    zkVerification.ts  ← ZK Proof verification (not generation)
     scenarios.ts     ← Scenario Engine
-    auditLogs.ts     ← Log immuable
+    auditLogs.ts     ← Immutable log
     notifications.ts ← Notifications
 ```
 
 ---
 
-## 2. Séparation Client / Serveur
+## 2. Client / Server Separation
 
-### Ce que Convex stocke vs ce qu'il ne voit jamais
+### What Convex stores vs what it never sees
 
-| Donnée                    | Client uniquement        | Convex stocke                |
-| ------------------------- | ------------------------ | ---------------------------- |
-| Master Key                | ✅ Généré localement     | ❌ Jamais                    |
-| Recovery Phrase (24 mots) | ✅ Affiché une fois      | ❌ Jamais                    |
-| Shards Shamir en clair    | ✅ Reconstruction locale | ❌ Jamais                    |
-| Déchiffrement vault       | ✅ Côté navigateur       | ❌ Jamais                    |
-| ZK Proof computation      | ✅ Noir/Barretenberg     | ❌ Jamais                    |
-| Hash Recovery Phrase      | —                        | ✅ sha256 uniquement         |
-| Shards chiffrés           | —                        | ✅ Illisible sans clé privée |
-| Vault items chiffrés      | —                        | ✅ Illisible sans Master Key |
-| Public Key user           | —                        | ✅ Pas secrète               |
-| Métadonnées (titre, date) | —                        | ✅ En clair                  |
-| ZK Proof vérification     | —                        | ✅ Vérifier ≠ connaître      |
-| Logs d'audit              | —                        | ✅ Immuables                 |
-| Config Life Check         | —                        | ✅ En clair                  |
+| Data                       | Client only             | Convex stores                     |
+| -------------------------- | ----------------------- | --------------------------------- |
+| Master Key                 | ✅ Generated locally    | ❌ Never                          |
+| Recovery Phrase (24 words) | ✅ Shown once           | ❌ Never                          |
+| Shamir shards in clear     | ✅ Local reconstruction | ❌ Never                          |
+| Vault decryption           | ✅ Browser-side         | ❌ Never                          |
+| ZK Proof computation       | ✅ Noir/Barretenberg    | ❌ Never                          |
+| Recovery Phrase hash       | —                       | ✅ sha256 only                    |
+| Encrypted shards           | —                       | ✅ Unreadable without private key |
+| Encrypted vault items      | —                       | ✅ Unreadable without Master Key  |
+| User Public Key            | —                       | ✅ Not secret                     |
+| Metadata (title, date)     | —                       | ✅ In clear                       |
+| ZK Proof verification      | —                       | ✅ Verify ≠ know                  |
+| Audit logs                 | —                       | ✅ Immutable                      |
+| Life Check config          | —                       | ✅ In clear                       |
 
-### Ce que Convex voit réellement dans chaque table
+### What Convex actually sees in each table
 
 ```typescript
-// users — ce que Convex voit
+// users — what Convex sees
 {
   email: "user@example.com",
-  publicKey: "0x04a3f8b...",           // Clé publique, pas secrète
-  encryptedKeyBundle: "U2FsdGVk...",   // Master Key chiffré biométrie
-                                        // Convex NE PEUT PAS déchiffrer
-  recoveryPhraseHash: "sha256:abc...", // Hash pour vérifier sans connaître
-  keeplasShard: "U2FsdGVk...",         // Shard 5 chiffré par ZK proof
+  publicKey: "0x04a3f8b...",           // Public key, not secret
+  encryptedKeyBundle: "U2FsdGVk...",   // Master Key encrypted with biometrics
+                                        // Convex CANNOT decrypt
+  recoveryPhraseHash: "sha256:abc...", // Hash to verify without knowing
+  keeplasShard: "U2FsdGVk...",         // Shard 5 encrypted by ZK proof
 }
 
-// vault_items — ce que Convex voit
+// vault_items — what Convex sees
 {
-  title: "Passport Scan",              // Métadonnée en clair
-  encryptedContent: "U2FsdGVk...",    // Contenu illisible sans Master Key
-  contentHash: "sha256:xyz...",        // Intégrité seulement
+  title: "Passport Scan",              // Metadata in clear
+  encryptedContent: "U2FsdGVk...",    // Content unreadable without Master Key
+  contentHash: "sha256:xyz...",        // Integrity only
 }
 
-// trusted_contacts — ce que Convex voit
+// trusted_contacts — what Convex sees
 {
   shardIndex: 2,
-  encryptedShard: "U2FsdGVk...",      // Shard chiffré clé publique contact
-                                        // Seul le contact peut déchiffrer
+  encryptedShard: "U2FsdGVk...",      // Shard encrypted with the contact's public key
+                                        // Only the contact can decrypt it
   shardPublicKeyUsed: "0x04b2c...",
 }
 ```
 
 ---
 
-## 3. Schema Convex Complet
+## 3. Complete Convex Schema
 
 ```typescript
 // packages/convex/schema.ts
@@ -122,46 +122,46 @@ export default defineSchema({
   // ═══════════════════════════════════════════════
 
   users: defineTable({
-    // Identité
-    email: v.optional(v.string()), // Optionnel si Passkey uniquement
+    // Identity
+    email: v.optional(v.string()), // Optional if Passkey-only
     name: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
     timezone: v.optional(v.string()),
     language: v.optional(v.string()), // "fr" | "en" | "sw"
 
-    // Auth — array pour supporter plusieurs méthodes simultanées
+    // Auth — array to support several methods simultaneously
     authProviders: v.array(
       v.union(
-        v.literal("passkey"), // ← Recommandé en premier
+        v.literal("passkey"), // ← Recommended first
         v.literal("email"),
         v.literal("google"),
         v.literal("apple"),
       ),
     ),
 
-    // Passkey / WebAuthn — plusieurs appareils possibles
+    // Passkey / WebAuthn — several devices possible
     passkeyCredentials: v.optional(
       v.array(
         v.object({
-          credentialId: v.string(), // ID unique du Passkey
-          publicKey: v.string(), // Clé publique WebAuthn
-          deviceName: v.optional(v.string()), // "iPhone de Prince"
+          credentialId: v.string(), // Unique Passkey ID
+          publicKey: v.string(), // WebAuthn public key
+          deviceName: v.optional(v.string()), // "Prince's iPhone"
           createdAt: v.number(),
           lastUsedAt: v.number(),
         }),
       ),
     ),
 
-    // ZK — clés publiques uniquement côté serveur
-    publicKey: v.string(), // Clé publique EC
-    encryptedKeyBundle: v.string(), // Master Key chiffré biométrie/passkey
-    recoveryPhraseHash: v.string(), // sha256(phrase) — vérification
+    // ZK — public keys only on the server side
+    publicKey: v.string(), // EC public key
+    encryptedKeyBundle: v.string(), // Master Key encrypted with biometrics/passkey
+    recoveryPhraseHash: v.string(), // sha256(phrase) — verification
     recoveryVerified: v.boolean(),
-    zkVerifierKey: v.string(), // Clé publique circuit Noir
+    zkVerifierKey: v.string(), // Noir circuit public key
 
-    // Shard 5 — détenu par Keeplas, chiffré ZK
-    keeplasShard: v.string(), // Illisible sans ZK proof valide
+    // Shard 5 — held by Keeplas, ZK-encrypted
+    keeplasShard: v.string(), // Unreadable without a valid ZK proof
 
     // Onboarding
     onboardingStep: v.union(
@@ -171,7 +171,7 @@ export default defineSchema({
     ),
     vaultIntegrityScore: v.number(), // 0-100
 
-    // Statut
+    // Status
     isActive: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -195,7 +195,7 @@ export default defineSchema({
     ),
     securityLevel: v.union(v.literal("standard"), v.literal("maximum")),
 
-    // Intégrité
+    // Integrity
     integrityScore: v.number(),
     encryptedItemsCount: v.number(),
     secureNodesCount: v.number(),
@@ -231,22 +231,22 @@ export default defineSchema({
       v.literal("credential"),
     ),
 
-    // Contenu — chiffré, illisible par Convex
-    title: v.string(), // Métadonnée en clair
+    // Content — encrypted, unreadable by Convex
+    title: v.string(), // Metadata in clear
     description: v.optional(v.string()),
     encryptedContent: v.string(), // AES-256-GCM
     encryptionType: v.union(
       v.literal("aes_256_gcm"),
       v.literal("zero_knowledge"),
     ),
-    contentHash: v.string(), // Vérification intégrité
+    contentHash: v.string(), // Integrity verification
 
-    // Fichiers
+    // Files
     fileStorageId: v.optional(v.id("_storage")),
     fileType: v.optional(v.string()),
     fileSize: v.optional(v.number()),
 
-    // Accès
+    // Access
     sharedWithContacts: v.array(v.id("trusted_contacts")),
     accessLevel: v.union(
       v.literal("private"),
@@ -255,7 +255,7 @@ export default defineSchema({
       v.literal("public"),
     ),
 
-    // Statut
+    // Status
     status: v.union(
       v.literal("active"),
       v.literal("draft"),
@@ -279,10 +279,10 @@ export default defineSchema({
   // ═══════════════════════════════════════════════
 
   trusted_contacts: defineTable({
-    userId: v.id("users"), // Propriétaire vault
-    contactUserId: v.optional(v.id("users")), // Si compte Keeplas
+    userId: v.id("users"), // Vault owner
+    contactUserId: v.optional(v.id("users")), // If a Keeplas account
 
-    // Identité
+    // Identity
     name: v.string(),
     email: v.string(),
     phoneNumber: v.optional(v.string()),
@@ -295,7 +295,7 @@ export default defineSchema({
       v.literal("other"),
     ),
 
-    // Désignations spéciales
+    // Special designations
     isFirstResponder: v.boolean(),
     isMedicalContact: v.boolean(),
 
@@ -310,16 +310,16 @@ export default defineSchema({
       ),
     ),
 
-    // Shard Shamir — chiffré avec clé publique du contact
+    // Shamir shard — encrypted with the contact's public key
     shardIndex: v.number(), // 1-5
-    encryptedShard: v.string(), // Illisible sans clé privée contact
-    shardPublicKeyUsed: v.string(), // Clé publique utilisée
+    encryptedShard: v.string(), // Unreadable without the contact's private key
+    shardPublicKeyUsed: v.string(), // Public key used
     shardConfirmed: v.boolean(),
     shardConfirmedAt: v.optional(v.number()),
 
-    // Recovery du contact
-    contactRecoveryHash: v.optional(v.string()), // sha256(recovery phrase contact)
-    contactPublicKey: v.optional(v.string()), // Clé publique du contact
+    // Contact recovery
+    contactRecoveryHash: v.optional(v.string()), // sha256(contact recovery phrase)
+    contactPublicKey: v.optional(v.string()), // Contact's public key
 
     // Invitation
     invitationStatus: v.union(
@@ -328,11 +328,11 @@ export default defineSchema({
       v.literal("declined"),
       v.literal("revoked"),
     ),
-    invitationToken: v.string(), // Token sécurisé (72h)
+    invitationToken: v.string(), // Secure token (72h)
     invitedAt: v.number(),
     acceptedAt: v.optional(v.number()),
 
-    // Accès proactif B2
+    // Proactive access B2
     proactiveAccess: v.optional(
       v.object({
         sections: v.array(v.string()),
@@ -342,7 +342,7 @@ export default defineSchema({
       }),
     ),
 
-    // Accès conditionnel B4
+    // Conditional access B4
     conditionalAccess: v.optional(
       v.object({
         inactivityDays: v.number(),
@@ -372,9 +372,9 @@ export default defineSchema({
       v.literal("quarterly"),
     ),
 
-    // Signaux passifs (opt-in)
+    // Passive signals (opt-in)
     passiveSignals: v.object({
-      appActivity: v.boolean(), // Toujours true
+      appActivity: v.boolean(), // Always true
       deviceActivity: v.boolean(),
       gpsMovement: v.boolean(),
       whatsappActivity: v.boolean(),
@@ -383,7 +383,7 @@ export default defineSchema({
       appleWatch: v.boolean(),
     }),
 
-    // Canaux actifs ordonnés
+    // Ordered active channels
     activeChannels: v.array(
       v.object({
         type: v.union(
@@ -400,16 +400,16 @@ export default defineSchema({
       }),
     ),
 
-    // Cas particuliers
+    // Special cases
     travelModeEnabled: v.boolean(),
     travelModeUntil: v.optional(v.number()),
     expeditionMode: v.boolean(),
 
-    // Statut
+    // Status
     isActive: v.boolean(),
     nextCheckAt: v.number(),
     lastCheckAt: v.optional(v.number()),
-    confidenceThreshold: v.number(), // Défaut: 50 pts
+    confidenceThreshold: v.number(), // Default: 50 pts
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -433,16 +433,16 @@ export default defineSchema({
       v.literal("cancelled"),
     ),
 
-    // Niveau 0 — Passif
+    // Level 0 — Passive
     passiveScore: v.number(),
     passiveValidatedAt: v.optional(v.number()),
     passiveSignalUsed: v.optional(v.string()),
 
-    // Escalade
+    // Escalation
     currentLevel: v.number(), // 0-4
     levelReachedAt: v.optional(v.number()),
 
-    // Canaux tentés
+    // Channels attempted
     channelsAttempted: v.array(
       v.object({
         channelType: v.string(),
@@ -452,7 +452,7 @@ export default defineSchema({
       }),
     ),
 
-    // Résolution
+    // Resolution
     validatedAt: v.optional(v.number()),
     validatedBy: v.optional(v.string()), // "passive"|"tap"|"email"|...
     cancelledAt: v.optional(v.number()),
@@ -519,15 +519,15 @@ export default defineSchema({
       v.literal("revoked"),
     ),
 
-    // Réponse
+    // Response
     respondedAt: v.optional(v.number()),
-    autoResponseAt: v.number(), // Délai refus automatique
+    autoResponseAt: v.number(), // Automatic-denial delay
     accessType: v.optional(
       v.union(v.literal("read"), v.literal("read_download")),
     ),
     accessExpiresAt: v.optional(v.number()),
 
-    // Quorum Mode A
+    // Mode A quorum
     quorumRequired: v.optional(v.number()),
     quorumReached: v.optional(v.boolean()),
     contactsInitiated: v.optional(v.array(v.id("trusted_contacts"))),
@@ -578,7 +578,7 @@ export default defineSchema({
     ),
 
     encryptionType: v.literal("zero_knowledge"),
-    curatorsRequired: v.number(), // Contacts requis pour libérer
+    curatorsRequired: v.number(), // Contacts required to release
 
     releasedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -626,7 +626,7 @@ export default defineSchema({
     userId: v.id("users"),
 
     triggerType: v.literal("inactivity_days"),
-    triggerValue: v.number(), // Jours (7, 30, 60...)
+    triggerValue: v.number(), // Days (7, 30, 60...)
     label: v.string(),
 
     actions: v.array(
@@ -663,7 +663,7 @@ export default defineSchema({
   emergency_cards: defineTable({
     userId: v.id("users"),
 
-    // Données publiques
+    // Public data
     fullName: v.optional(v.string()),
     bloodType: v.optional(v.string()),
     allergies: v.optional(v.string()),
@@ -692,7 +692,7 @@ export default defineSchema({
     .index("by_qr_token", ["qrCodeToken"]),
 
   // ═══════════════════════════════════════════════
-  // AUDIT LOGS — IMMUABLE
+  // AUDIT LOGS — IMMUTABLE
   // ═══════════════════════════════════════════════
 
   audit_logs: defineTable({
@@ -706,7 +706,7 @@ export default defineSchema({
     ),
     actorId: v.string(),
 
-    // Action sous forme "resource.action"
+    // Action in the form "resource.action"
     action: v.string(), // "vault.item.created"
     resourceType: v.string(),
     resourceId: v.string(),
@@ -715,12 +715,12 @@ export default defineSchema({
     ipAddress: v.optional(v.string()),
     deviceInfo: v.optional(v.string()),
 
-    // Chaîne d'intégrité
+    // Integrity chain
     previousLogHash: v.string(),
     logHash: v.string(),
 
     createdAt: v.number(),
-    // Pas de updatedAt — jamais modifié
+    // No updatedAt — never modified
   })
     .index("by_user", ["userId"])
     .index("by_action", ["userId", "action"])
@@ -764,37 +764,37 @@ export default defineSchema({
 
 ---
 
-## 4. Passkey (WebAuthn) — Auth Recommandée
+## 4. Passkey (WebAuthn) — Recommended Auth
 
-### Alignement avec la philosophie ZK
+### Alignment with the ZK philosophy
 
-Le Passkey est le choix d'authentification recommandé par défaut pour Keeplas car il partage exactement la même philosophie que le Zero Knowledge :
+The Passkey is the recommended default authentication choice for Keeplas because it shares exactly the same philosophy as Zero Knowledge:
 
 ```
 Passkey (WebAuthn)                    Zero Knowledge
 ──────────────────────────────────    ──────────────────────────────────
-Clé privée jamais transmise     ←→   Master Key jamais transmis
-Biométrie locale uniquement     ←→   Déchiffrement local uniquement
-Vérification par challenge      ←→   ZK Proof d'identité
-Pas de mot de passe côté serveur ←→  Pas de secret côté Convex
-Résistant au phishing           ←→   Vault illisible sans clé locale
+Private key never transmitted    ←→   Master Key never transmitted
+Local biometrics only            ←→   Local decryption only
+Challenge-based verification     ←→   ZK identity proof
+No server-side password          ←→   No secret on the Convex side
+Phishing-resistant               ←→   Vault unreadable without the local key
 ```
 
-### Relation Passkey ↔ Master Key
+### Passkey ↔ Master Key relationship
 
 ```
 Passkey                              Master Key (ZK)
 ────────────────────────────         ────────────────────────────────
-Authentifie le user                  Déchiffre le vault
-Prouve "c'est bien toi"              Accède aux données chiffrées
-Géré par l'OS / navigateur           Géré par packages/crypto/
-Stocké dans iCloud / Google          encryptedKeyBundle dans Convex
+Authenticates the user               Decrypts the vault
+Proves "it's really you"             Accesses the encrypted data
+Managed by the OS / browser          Managed by packages/crypto/
+Stored in iCloud / Google            encryptedKeyBundle in Convex
 
-→ Le Passkey ne remplace PAS le Master Key
-→ Il le protège et le déverrouille
+→ The Passkey does NOT replace the Master Key
+→ It protects and unlocks it
 ```
 
-### Flux Passkey à l'inscription
+### Passkey flow at sign-up
 
 ```typescript
 // packages/crypto/passkey/register.ts
@@ -803,7 +803,7 @@ export async function registerPasskey(
   userId: string,
   masterKey: CryptoKey,
 ): Promise<PasskeyCredential> {
-  // 1. Créer le Passkey via WebAuthn
+  // 1. Create the Passkey via WebAuthn
   const credential = (await navigator.credentials.create({
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -815,15 +815,15 @@ export async function registerPasskey(
       },
       pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
       authenticatorSelection: {
-        authenticatorAttachment: "platform", // Biométrie locale
-        userVerification: "required", // Face ID / empreinte obligatoire
-        residentKey: "required", // Passkey stocké sur l'appareil
+        authenticatorAttachment: "platform", // Local biometrics
+        userVerification: "required", // Face ID / fingerprint required
+        residentKey: "required", // Passkey stored on the device
       },
     },
   })) as PublicKeyCredential;
 
-  // 2. Chiffrer le Master Key avec la clé publique du Passkey
-  // → encryptedKeyBundle sera stocké dans Convex
+  // 2. Encrypt the Master Key with the Passkey's public key
+  // → encryptedKeyBundle will be stored in Convex
   const credentialPublicKey = extractPublicKey(credential);
   const encryptedKeyBundle = await encryptWithPasskey(
     masterKey,
@@ -833,52 +833,52 @@ export async function registerPasskey(
   return {
     credentialId: bufferToBase64(credential.rawId),
     publicKey: credentialPublicKey,
-    encryptedKeyBundle, // → Convex (illisible sans Passkey)
+    encryptedKeyBundle, // → Convex (unreadable without the Passkey)
     deviceName: getDeviceName(),
   };
 }
 ```
 
-### Flux Passkey à la connexion
+### Passkey flow at sign-in
 
 ```typescript
 // packages/crypto/passkey/authenticate.ts
 
 export async function authenticateWithPasskey(
-  encryptedKeyBundle: string, // Récupéré depuis Convex
+  encryptedKeyBundle: string, // Fetched from Convex
 ): Promise<CryptoKey> {
-  // 1. Challenge WebAuthn — biométrie requise
+  // 1. WebAuthn challenge — biometrics required
   const assertion = (await navigator.credentials.get({
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       rpId: "keeplas.com",
-      userVerification: "required", // Face ID / empreinte obligatoire
+      userVerification: "required", // Face ID / fingerprint required
     },
   })) as PublicKeyCredential;
 
-  // 2. Déchiffrer le Master Key localement avec la clé privée du Passkey
-  // La clé privée ne quitte jamais le Secure Enclave de l'appareil
+  // 2. Decrypt the Master Key locally with the Passkey's private key
+  // The private key never leaves the device's Secure Enclave
   const masterKey = await decryptWithPasskey(
     base64ToBuffer(encryptedKeyBundle),
     assertion,
   );
 
   return masterKey;
-  // Master Key disponible → vault déchiffré côté client ✅
-  // Convex n'a jamais vu le Master Key
+  // Master Key available → vault decrypted client-side ✅
+  // Convex has never seen the Master Key
 }
 ```
 
-### Gestion multi-appareils
+### Multi-device management
 
 ```typescript
-// Ajouter un nouvel appareil avec Passkey
+// Add a new device with a Passkey
 export const addPasskeyDevice = mutation({
   args: {
     userId: v.id("users"),
     credentialId: v.string(),
     publicKey: v.string(),
-    encryptedKeyBundle: v.string(), // Master Key re-chiffré pour ce Passkey
+    encryptedKeyBundle: v.string(), // Master Key re-encrypted for this Passkey
     deviceName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -887,7 +887,7 @@ export const addPasskeyDevice = mutation({
 
     const existing = user.passkeyCredentials ?? [];
 
-    // Maximum 5 appareils par compte
+    // Maximum 5 devices per account
     if (existing.length >= 5) throw new Error("Maximum 5 devices reached");
 
     const now = Date.now();
@@ -902,8 +902,8 @@ export const addPasskeyDevice = mutation({
           lastUsedAt: now,
         },
       ],
-      // Mettre à jour le encryptedKeyBundle pour ce nouvel appareil
-      // (chaque appareil a son propre encryptedKeyBundle)
+      // Update the encryptedKeyBundle for this new device
+      // (each device has its own encryptedKeyBundle)
       updatedAt: now,
     });
 
@@ -920,38 +920,38 @@ export const addPasskeyDevice = mutation({
 });
 ```
 
-### Scénario — Nouvel appareil avec Passkey
+### Scenario — New device with a Passkey
 
 ```
-Option A — Passkey synchronisé (iCloud / Google)
+Option A — Synced Passkey (iCloud / Google)
 ────────────────────────────────────────────────────
-Passkey disponible automatiquement sur le nouvel appareil
+Passkey available automatically on the new device
     ↓
-Face ID → déchiffre encryptedKeyBundle
+Face ID → decrypts encryptedKeyBundle
     ↓
-Master Key disponible → vault accessible ✅
-(aucune action supplémentaire requise)
+Master Key available → vault accessible ✅
+(no additional action required)
 
-Option B — Passkey non synchronisé (nouvel appareil Android)
+Option B — Non-synced Passkey (new Android device)
 ────────────────────────────────────────────────────
-Authentification via Recovery Phrase ou Social Recovery
+Authentication via Recovery Phrase or Social Recovery
     ↓
-Master Key reconstruit côté client
+Master Key reconstructed client-side
     ↓
-Nouveau Passkey créé sur le nouvel appareil
+New Passkey created on the new device
     ↓
-Master Key re-chiffré avec le nouveau Passkey
+Master Key re-encrypted with the new Passkey
     ↓
-Nouveau encryptedKeyBundle + passkeyCredentials mis à jour dans Convex
+New encryptedKeyBundle + passkeyCredentials updated in Convex
 ```
 
-### Révoquer un appareil perdu
+### Revoke a lost device
 
 ```typescript
 export const revokePasskeyDevice = mutation({
   args: {
     userId: v.id("users"),
-    credentialId: v.string(), // ID de l'appareil à révoquer
+    credentialId: v.string(), // ID of the device to revoke
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
@@ -981,9 +981,9 @@ export const revokePasskeyDevice = mutation({
 
 ---
 
-## 5. Zero Knowledge & Cryptographie
+## 5. Zero Knowledge & Cryptography
 
-### 4.1 Génération du Master Key (100% client)
+### 4.1 Master Key generation (100% client)
 
 ```typescript
 // packages/crypto/aes/masterKey.ts
@@ -993,38 +993,38 @@ import { splitSecret } from "../shamir/split";
 import { deriveRecoveryPhrase } from "../recovery/bip39";
 
 export async function generateMasterKey() {
-  // 1. Générer la clé AES-256-GCM via Web Crypto API
+  // 1. Generate the AES-256-GCM key via the Web Crypto API
   const masterKey = await window.crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
     true, // extractable
     ["encrypt", "decrypt"],
   );
 
-  // 2. Exporter en raw bytes pour Shamir
+  // 2. Export to raw bytes for Shamir
   const rawKey = await window.crypto.subtle.exportKey("raw", masterKey);
   const keyBytes = new Uint8Array(rawKey);
 
-  // 3. Dériver la Recovery Phrase (BIP-39)
-  // La phrase N'EST PAS envoyée au serveur
-  const recoveryPhrase = deriveRecoveryPhrase(keyBytes); // 24 mots
+  // 3. Derive the Recovery Phrase (BIP-39)
+  // The phrase is NOT sent to the server
+  const recoveryPhrase = deriveRecoveryPhrase(keyBytes); // 24 words
 
-  // 4. Calculer le hash de vérification (envoyé à Convex)
+  // 4. Compute the verification hash (sent to Convex)
   const phraseHash = await hashRecoveryPhrase(recoveryPhrase);
 
-  // 5. Split Shamir 3-of-5
+  // 5. Shamir 3-of-5 split
   const shards = splitSecret(keyBytes, 5, 3);
-  // shards[0] → appareil local
+  // shards[0] → local device
   // shards[1] → Contact A
   // shards[2] → Contact B
   // shards[3] → Contact C
-  // shards[4] → Keeplas (shard 5, chiffré ZK)
+  // shards[4] → Keeplas (shard 5, ZK-encrypted)
 
   return {
-    masterKey, // Reste en mémoire locale uniquement
-    rawKey: keyBytes, // Idem
-    recoveryPhrase, // Affiché une fois, jamais stocké
+    masterKey, // Stays in local memory only
+    rawKey: keyBytes, // Same
+    recoveryPhrase, // Shown once, never stored
     phraseHash, // → Convex
-    shards, // Chiffrés avant envoi à Convex
+    shards, // Encrypted before sending to Convex
   };
 }
 
@@ -1036,35 +1036,35 @@ async function hashRecoveryPhrase(phrase: string): Promise<string> {
 }
 ```
 
-### 4.2 Chiffrement des Shards avant envoi à Convex
+### 4.2 Encrypting shards before sending to Convex
 
 ```typescript
 // packages/crypto/shamir/encryptShards.ts
 
 export async function encryptShardForContact(
   shard: Uint8Array,
-  contactPublicKey: string, // Clé publique EC du contact
+  contactPublicKey: string, // Contact's EC public key
 ): Promise<string> {
-  // ECDH : chiffrement asymétrique
-  // Seul le contact (avec sa clé privée) peut déchiffrer
+  // ECDH: asymmetric encryption
+  // Only the contact (with their private key) can decrypt
   const encrypted = await ecdhEncrypt(shard, contactPublicKey);
   return bufferToBase64(encrypted);
-  // Ce résultat chiffré est envoyé à Convex
-  // Convex ne peut pas déchiffrer sans la clé privée du contact
+  // This encrypted result is sent to Convex
+  // Convex cannot decrypt it without the contact's private key
 }
 
 export async function encryptShardForKeeplus(
   shard: Uint8Array,
-  zkVerifierKey: string, // Clé publique du circuit Noir
+  zkVerifierKey: string, // Noir circuit public key
 ): Promise<string> {
-  // Chiffré de façon à ne pouvoir être déchiffré
-  // qu'en fournissant une ZK Proof valide
+  // Encrypted such that it can only be decrypted
+  // by providing a valid ZK Proof
   const encrypted = await zkEncrypt(shard, zkVerifierKey);
   return bufferToBase64(encrypted);
 }
 ```
 
-### 4.3 Chiffrement du vault (AES-256-GCM)
+### 4.3 Vault encryption (AES-256-GCM)
 
 ```typescript
 // packages/crypto/aes/encrypt.ts
@@ -1073,7 +1073,7 @@ export async function encryptVaultItem(
   content: string,
   masterKey: CryptoKey,
 ): Promise<{ encryptedContent: string; contentHash: string }> {
-  // IV aléatoire pour chaque chiffrement
+  // Random IV for each encryption
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
   const encoded = new TextEncoder().encode(content);
@@ -1084,19 +1084,19 @@ export async function encryptVaultItem(
     encoded,
   );
 
-  // Préfixer l'IV au ciphertext pour le déchiffrement
+  // Prefix the IV to the ciphertext for decryption
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(encrypted), iv.length);
 
   const encryptedContent = bufferToBase64(combined);
 
-  // Hash pour vérification d'intégrité
+  // Hash for integrity verification
   const hash = await window.crypto.subtle.digest("SHA-256", encrypted);
   const contentHash = "sha256:" + bufferToHex(hash);
 
   return { encryptedContent, contentHash };
-  // Seul encryptedContent est envoyé à Convex — illisible sans masterKey
+  // Only encryptedContent is sent to Convex — unreadable without masterKey
 }
 
 export async function decryptVaultItem(
@@ -1114,45 +1114,45 @@ export async function decryptVaultItem(
   );
 
   return new TextDecoder().decode(decrypted);
-  // Déchiffrement 100% côté client — Convex n'est jamais impliqué
+  // Decryption 100% client-side — Convex is never involved
 }
 ```
 
-### 4.4 Zero Knowledge Proof — Circuit Noir
+### 4.4 Zero Knowledge Proof — Noir circuit
 
 ```typescript
 // packages/crypto/zk/keeplasShard.ts
-// Ce code tourne côté client uniquement (WASM)
+// This code runs on the client only (WASM)
 
 import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
 import { Noir } from "@noir-lang/noir_js";
 import circuit from "./circuits/keeplas_identity.json";
 
 export async function generateIdentityProof(
-  secretInput: Uint8Array, // Dérivé du Master Key — jamais transmis
-  publicInput: string, // Identifiant public du user
+  secretInput: Uint8Array, // Derived from the Master Key — never transmitted
+  publicInput: string, // The user's public identifier
 ): Promise<{ proof: Uint8Array; publicSignals: string[] }> {
   const backend = new BarretenbergBackend(circuit);
   const noir = new Noir(circuit, backend);
 
-  // La proof prouve : "je connais un secret tel que hash(secret) = publicInput"
-  // Sans révéler le secret lui-même
+  // The proof proves: "I know a secret such that hash(secret) = publicInput"
+  // Without revealing the secret itself
   const { proof, publicInputs } = await noir.generateFinalProof({
-    secret: Array.from(secretInput), // Resté côté client
-    identity_hash: publicInput, // Connu de Convex
+    secret: Array.from(secretInput), // Stayed on the client
+    identity_hash: publicInput, // Known to Convex
   });
 
   return { proof, publicSignals: publicInputs };
 }
 
-// Côté Convex (vérification uniquement — pas de secret)
+// On the Convex side (verification only — no secret)
 export async function verifyIdentityProof(
   proof: Uint8Array,
   publicSignals: string[],
-  verifierKey: string, // zkVerifierKey stocké dans users
+  verifierKey: string, // zkVerifierKey stored in users
 ): Promise<boolean> {
-  // Convex vérifie la proof mathématiquement
-  // Sans jamais connaître le secret
+  // Convex verifies the proof mathematically
+  // Without ever knowing the secret
   const backend = new BarretenbergBackend(circuit);
   const noir = new Noir(circuit, backend);
   return await noir.verifyFinalProof({ proof, publicInputs: publicSignals });
@@ -1161,32 +1161,32 @@ export async function verifyIdentityProof(
 
 ---
 
-## 6. Recovery — Flux Complets
+## 6. Recovery — Complete Flows
 
 ### 5.1 Recovery via Recovery Phrase (Option A)
 
 ```
-ÉTAPE 1 — User entre ses 24 mots (client uniquement)
+STEP 1 — User enters their 24 words (client only)
 ────────────────────────────────────────────────────
-User saisit les 24 mots dans l'interface
+User types the 24 words into the interface
     ↓
-BIP-39 → reconstruit les raw bytes du Master Key
+BIP-39 → reconstructs the Master Key's raw bytes
     ↓
-hash(phrase) calculé localement
+hash(phrase) computed locally
     ↓
-Convex query : recoveryPhraseHash === hash calculé ?
-    ↓ OUI
-Master Key reconstruit localement ✅
+Convex query: recoveryPhraseHash === computed hash ?
+    ↓ YES
+Master Key reconstructed locally ✅
     ↓
-ÉTAPE 2 — Regénération du shard local
+STEP 2 — Local shard regeneration
 ────────────────────────────────────────────────────
-Nouveau shard 1 généré pour le nouvel appareil
+New shard 1 generated for the new device
     ↓
-Chiffré avec la biométrie du nouvel appareil
+Encrypted with the new device's biometrics
     ↓
-Nouveau encryptedKeyBundle → sauvegardé dans Convex
+New encryptedKeyBundle → saved in Convex
     ↓
-Vault accessible sur le nouvel appareil ✅
+Vault accessible on the new device ✅
 ```
 
 ```typescript
@@ -1194,16 +1194,16 @@ Vault accessible sur le nouvel appareil ✅
 
 export async function recoverFromPhrase(
   inputPhrase: string,
-  storedHash: string, // Récupéré depuis Convex
+  storedHash: string, // Fetched from Convex
 ): Promise<CryptoKey | null> {
-  // 1. Vérifier le hash localement
+  // 1. Verify the hash locally
   const inputHash = await hashRecoveryPhrase(inputPhrase);
-  if (inputHash !== storedHash) return null; // Phrase incorrecte
+  if (inputHash !== storedHash) return null; // Incorrect phrase
 
-  // 2. Reconstruire le Master Key depuis la phrase
-  const rawKey = phraseToKeyBytes(inputPhrase); // BIP-39 inverse
+  // 2. Reconstruct the Master Key from the phrase
+  const rawKey = phraseToKeyBytes(inputPhrase); // Inverse BIP-39
 
-  // 3. Importer en CryptoKey
+  // 3. Import as a CryptoKey
   const masterKey = await window.crypto.subtle.importKey(
     "raw",
     rawKey,
@@ -1213,53 +1213,53 @@ export async function recoverFromPhrase(
   );
 
   return masterKey;
-  // Le Master Key est reconstruit — jamais envoyé à Convex
+  // The Master Key is reconstructed — never sent to Convex
 }
 ```
 
-### 5.2 Recovery Sociale (Option B — 2 contacts minimum)
+### 5.2 Social Recovery (Option B — minimum 2 contacts)
 
 ```
-ÉTAPE 1 — Contact A soumet son shard
+STEP 1 — Contact A submits their shard
 ────────────────────────────────────────────────────
-Contact A entre sa Recovery Phrase personnelle (client A)
+Contact A enters their personal Recovery Phrase (client A)
     ↓
-Reconstruit sa clé privée locale
+Reconstructs their local private key
     ↓
-Récupère son encryptedShard depuis Convex
+Fetches their encryptedShard from Convex
     ↓
-Déchiffre le shard avec sa clé privée → Shard A en clair
+Decrypts the shard with their private key → Shard A in clear
     ↓
-Shard A transmis de façon sécurisée au flux de recovery
-(via canal chiffré E2E entre les deux appareils)
+Shard A securely transmitted to the recovery flow
+(via an E2E-encrypted channel between the two devices)
 
-ÉTAPE 2 — Contact B fait la même chose
+STEP 2 — Contact B does the same
 ────────────────────────────────────────────────────
-Shard B obtenu côté client B
+Shard B obtained on client B
 
-ÉTAPE 3 — Reconstruction Shamir (client du user)
+STEP 3 — Shamir reconstruction (the user's client)
 ────────────────────────────────────────────────────
 Shard A + Shard B + Shard 5 (Keeplas via ZK proof)
     ↓
-Shamir reconstruct (3 shards sur 5 = seuil atteint)
+Shamir reconstruct (3 of 5 shards = threshold reached)
     ↓
-Master Key reconstruit localement ✅
+Master Key reconstructed locally ✅
     ↓
-ÉTAPE 4 — Redistribution
+STEP 4 — Redistribution
 ────────────────────────────────────────────────────
-Nouveau shard 1 pour le nouvel appareil
-Nouveaux shards pour les contacts si nécessaire
-Nouveau keeplasShard chiffré ZK
-Tous les encryptedShards mis à jour dans Convex
+New shard 1 for the new device
+New shards for the contacts if necessary
+New ZK-encrypted keeplasShard
+All encryptedShards updated in Convex
 ```
 
 ```typescript
 // packages/crypto/recovery/socialRecovery.ts
 
 export async function reconstructFromShards(
-  shards: Uint8Array[], // Minimum 3 shards déchiffrés
+  shards: Uint8Array[], // Minimum 3 decrypted shards
 ): Promise<CryptoKey> {
-  // Reconstruction Shamir (côté client uniquement)
+  // Shamir reconstruction (client-side only)
   const rawKey = combineSecret(shards);
 
   const masterKey = await window.crypto.subtle.importKey(
@@ -1274,40 +1274,40 @@ export async function reconstructFromShards(
 }
 
 export async function decryptContactShard(
-  encryptedShard: string, // Récupéré depuis Convex
-  contactPrivateKey: CryptoKey, // Clé privée du contact — locale uniquement
+  encryptedShard: string, // Fetched from Convex
+  contactPrivateKey: CryptoKey, // Contact's private key — local only
 ): Promise<Uint8Array> {
   const shardBytes = base64ToBuffer(encryptedShard);
   return await ecdhDecrypt(shardBytes, contactPrivateKey);
-  // Déchiffrement 100% local au contact — Convex n'est jamais impliqué
+  // Decryption 100% local to the contact — Convex is never involved
 }
 ```
 
-### 5.3 Obtention du Shard 5 Keeplas (via ZK Proof)
+### 5.3 Obtaining the Keeplas Shard 5 (via ZK Proof)
 
 ```typescript
 // packages/crypto/recovery/keeplasShard.ts
 
 export async function requestKeeplasShard(
-  masterKey: Uint8Array, // Partiel — reconstruit depuis d'autres shards
+  masterKey: Uint8Array, // Partial — reconstructed from other shards
   userId: string,
   zkVerifierKey: string,
 ): Promise<Uint8Array> {
-  // 1. Générer la ZK Proof d'identité (côté client)
+  // 1. Generate the identity ZK Proof (client-side)
   const { proof, publicSignals } = await generateIdentityProof(
     masterKey,
     userId,
   );
 
-  // 2. Envoyer la proof à Convex (pas le secret)
+  // 2. Send the proof to Convex (not the secret)
   const encryptedShard5 = await convex.mutation(
     api.zkVerification.verifyAndReleaseShard,
     { proof: bufferToBase64(proof), publicSignals, userId },
   );
-  // Convex vérifie la proof mathématiquement
-  // Si valide → renvoie le shard 5 chiffré
+  // Convex verifies the proof mathematically
+  // If valid → returns the encrypted shard 5
 
-  // 3. Déchiffrer le shard 5 côté client
+  // 3. Decrypt shard 5 on the client
   const shard5 = await zkDecrypt(base64ToBuffer(encryptedShard5), masterKey);
 
   return shard5;
@@ -1316,7 +1316,7 @@ export async function requestKeeplasShard(
 
 ---
 
-## 7. Logique des Convex Functions
+## 7. Convex Functions Logic
 
 ### 6.1 Users
 
@@ -1326,17 +1326,17 @@ export async function requestKeeplasShard(
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-// Création du compte — reçoit uniquement les données publiques
+// Account creation — receives only public data
 export const createUser = mutation({
   args: {
-    email: v.optional(v.string()), // Optionnel si Passkey
+    email: v.optional(v.string()), // Optional if Passkey
     authProviders: v.array(v.string()), // ["passkey"] | ["google"] | ...
     publicKey: v.string(),
-    encryptedKeyBundle: v.string(), // Master Key chiffré biométrie/passkey
-    recoveryPhraseHash: v.string(), // sha256 uniquement — pas la phrase
+    encryptedKeyBundle: v.string(), // Master Key encrypted with biometrics/passkey
+    recoveryPhraseHash: v.string(), // sha256 only — not the phrase
     zkVerifierKey: v.string(),
-    keeplasShard: v.string(), // Shard 5 chiffré ZK
-    // Passkey spécifique
+    keeplasShard: v.string(), // ZK-encrypted shard 5
+    // Passkey-specific
     passkeyCredential: v.optional(
       v.object({
         credentialId: v.string(),
@@ -1370,7 +1370,7 @@ export const createUser = mutation({
       lastSeenAt: now,
     });
 
-    // Créer le vault vide
+    // Create the empty vault
     await ctx.db.insert("vaults", {
       userId,
       status: "active",
@@ -1385,7 +1385,7 @@ export const createUser = mutation({
       updatedAt: Date.now(),
     });
 
-    // Log audit
+    // Audit log
     await createAuditLog(ctx, {
       userId,
       actorType: "user",
@@ -1399,17 +1399,17 @@ export const createUser = mutation({
   },
 });
 
-// Vérification Recovery Phrase — compare les hash uniquement
+// Recovery Phrase verification — compares hashes only
 export const verifyRecoveryPhrase = mutation({
   args: {
     userId: v.id("users"),
-    recoveryPhraseHash: v.string(), // sha256(phrase) calculé côté client
+    recoveryPhraseHash: v.string(), // sha256(phrase) computed client-side
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
-    // Comparaison de hash — Convex ne connaît jamais la phrase
+    // Hash comparison — Convex never knows the phrase
     if (user.recoveryPhraseHash !== args.recoveryPhraseHash) {
       return { success: false };
     }
@@ -1424,7 +1424,7 @@ export const verifyRecoveryPhrase = mutation({
   },
 });
 
-// Update lastSeenAt — déclenché à chaque interaction app
+// Update lastSeenAt — triggered on every app interaction
 export const recordAppActivity = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -1433,13 +1433,13 @@ export const recordAppActivity = mutation({
       updatedAt: Date.now(),
     });
 
-    // Enregistrer comme signal passif
+    // Record as a passive signal
     await ctx.db.insert("passive_signals", {
       userId: args.userId,
       signalType: "app_activity",
       scoreContribution: 40,
       detectedAt: Date.now(),
-      validUntil: Date.now() + 15 * 24 * 60 * 60 * 1000, // 15 jours
+      validUntil: Date.now() + 15 * 24 * 60 * 60 * 1000, // 15 days
     });
   },
 });
@@ -1456,7 +1456,7 @@ export const addVaultItem = mutation({
     userId: v.id("users"),
     category: v.string(),
     title: v.string(),
-    encryptedContent: v.string(), // Chiffré côté client avant envoi
+    encryptedContent: v.string(), // Encrypted client-side before sending
     encryptionType: v.string(),
     contentHash: v.string(),
     accessLevel: v.string(),
@@ -1464,7 +1464,7 @@ export const addVaultItem = mutation({
     tags: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    // Vérifier que le user est bien propriétaire du vault
+    // Verify that the user really owns the vault
     const vault = await ctx.db.get(args.vaultId);
     if (!vault || vault.userId !== args.userId) {
       throw new Error("Unauthorized");
@@ -1479,16 +1479,16 @@ export const addVaultItem = mutation({
       updatedAt: Date.now(),
     });
 
-    // Mettre à jour le compteur du vault
+    // Update the vault counter
     await ctx.db.patch(args.vaultId, {
       encryptedItemsCount: vault.encryptedItemsCount + 1,
       updatedAt: Date.now(),
     });
 
-    // Recalculer le Vault Integrity Score
+    // Recompute the Vault Integrity Score
     await recalculateIntegrityScore(ctx, args.userId, args.vaultId);
 
-    // Log audit
+    // Audit log
     await createAuditLog(ctx, {
       userId: args.userId,
       actorType: "user",
@@ -1520,11 +1520,11 @@ export const inviteContact = mutation({
     isFirstResponder: v.boolean(),
     isMedicalContact: v.boolean(),
     shardIndex: v.number(),
-    encryptedShard: v.string(), // Chiffré côté client avec clé publique contact
+    encryptedShard: v.string(), // Encrypted client-side with the contact's public key
     shardPublicKeyUsed: v.string(),
   },
   handler: async (ctx, args) => {
-    // Vérifier qu'il n'y a pas déjà 5 contacts
+    // Verify there are not already 5 contacts
     const existing = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -1536,7 +1536,7 @@ export const inviteContact = mutation({
     );
     if (active.length >= 5) throw new Error("Maximum 5 trusted contacts");
 
-    // Générer token d'invitation sécurisé (72h)
+    // Generate a secure invitation token (72h)
     const invitationToken = generateSecureToken();
 
     const contactId = await ctx.db.insert("trusted_contacts", {
@@ -1549,7 +1549,7 @@ export const inviteContact = mutation({
       updatedAt: Date.now(),
     });
 
-    // Envoyer email d'invitation (via scheduled function)
+    // Send the invitation email (via a scheduled function)
     await ctx.scheduler.runAfter(0, api.notifications.sendInvitationEmail, {
       contactId,
       invitationToken,
@@ -1560,13 +1560,13 @@ export const inviteContact = mutation({
   },
 });
 
-// Confirmation du shard par le contact
+// Shard confirmation by the contact
 export const confirmShard = mutation({
   args: {
     contactId: v.id("trusted_contacts"),
     invitationToken: v.string(),
-    contactPublicKey: v.string(), // Clé publique du contact
-    contactRecoveryHash: v.string(), // sha256(recovery phrase contact)
+    contactPublicKey: v.string(), // Contact's public key
+    contactRecoveryHash: v.string(), // sha256(contact recovery phrase)
   },
   handler: async (ctx, args) => {
     const contact = await ctx.db.get(args.contactId);
@@ -1584,7 +1584,7 @@ export const confirmShard = mutation({
       updatedAt: Date.now(),
     });
 
-    // Mettre à jour le Vault Integrity Score
+    // Update the Vault Integrity Score
     await recalculateIntegrityScore(ctx, contact.userId);
   },
 });
@@ -1598,15 +1598,15 @@ export const confirmShard = mutation({
 export const verifyAndReleaseShard = mutation({
   args: {
     userId: v.id("users"),
-    proof: v.string(), // ZK Proof générée côté client
+    proof: v.string(), // ZK Proof generated client-side
     publicSignals: v.array(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
     if (!user) throw new Error("User not found");
 
-    // Vérifier la proof mathématiquement
-    // Convex VÉRIFIE mais ne CONNAÎT PAS le secret
+    // Verify the proof mathematically
+    // Convex VERIFIES but does NOT KNOW the secret
     const isValid = await verifyZKProof(
       base64ToBuffer(args.proof),
       args.publicSignals,
@@ -1625,7 +1625,7 @@ export const verifyAndReleaseShard = mutation({
       throw new Error("Invalid ZK Proof");
     }
 
-    // Log de l'accès au shard 5
+    // Log the access to shard 5
     await createAuditLog(ctx, {
       userId: args.userId,
       actorType: "user",
@@ -1635,7 +1635,7 @@ export const verifyAndReleaseShard = mutation({
       resourceId: args.userId,
     });
 
-    // Retourner le shard 5 chiffré — le client le déchiffre avec sa ZK proof
+    // Return the encrypted shard 5 — the client decrypts it with its ZK proof
     return user.keeplasShard;
   },
 });
@@ -1646,7 +1646,7 @@ export const verifyAndReleaseShard = mutation({
 ```typescript
 // packages/convex/accessRequests.ts
 
-// Mode B1 — Trusted Contact demande l'accès
+// Mode B1 — Trusted Contact requests access
 export const requestAccess = mutation({
   args: {
     vaultUserId: v.id("users"),
@@ -1661,13 +1661,13 @@ export const requestAccess = mutation({
       throw new Error("Unauthorized");
     }
 
-    // Vérifier que le mode est autorisé pour ce contact
+    // Verify the mode is allowed for this contact
     if (!contact.accessModes.includes(args.accessMode as any)) {
       throw new Error("Access mode not permitted for this contact");
     }
 
-    // Délai de refus automatique selon config du user
-    const autoResponseHours = 24; // Configurable par le user
+    // Automatic-denial delay per the user's config
+    const autoResponseHours = 24; // Configurable by the user
     const autoResponseAt = Date.now() + autoResponseHours * 3600 * 1000;
 
     const requestId = await ctx.db.insert("access_requests", {
@@ -1682,12 +1682,12 @@ export const requestAccess = mutation({
       updatedAt: Date.now(),
     });
 
-    // Notifier le propriétaire immédiatement
+    // Notify the owner immediately
     await ctx.db.insert("notifications", {
       userId: args.vaultUserId,
       type: "access_request",
-      title: `${contact.name} demande accès à votre vault`,
-      body: args.reason ?? "Aucune raison précisée",
+      title: `${contact.name} is requesting access to your vault`,
+      body: args.reason ?? "No reason specified",
       actionUrl: `/access-requests/${requestId}`,
       channels: ["push", "email"],
       isRead: false,
@@ -1696,7 +1696,7 @@ export const requestAccess = mutation({
       createdAt: Date.now(),
     });
 
-    // Programmer le refus automatique si pas de réponse
+    // Schedule the automatic denial if no response
     await ctx.scheduler.runAt(autoResponseAt, api.accessRequests.autoDecline, {
       requestId,
     });
@@ -1705,7 +1705,7 @@ export const requestAccess = mutation({
   },
 });
 
-// Réponse du propriétaire du vault
+// Response from the vault owner
 export const respondToAccessRequest = mutation({
   args: {
     requestId: v.id("access_requests"),
@@ -1740,17 +1740,17 @@ export const respondToAccessRequest = mutation({
       updatedAt: now,
     });
 
-    // Notifier le contact de la décision
+    // Notify the contact of the decision
     const contact = await ctx.db.get(request.requestedBy);
     if (contact?.contactUserId) {
       await ctx.db.insert("notifications", {
         userId: contact.contactUserId,
         type: "access_request",
-        title: args.decision === "deny" ? "Accès refusé" : "Accès accordé",
+        title: args.decision === "deny" ? "Access denied" : "Access granted",
         body:
           args.decision === "deny"
-            ? "Le propriétaire a refusé votre demande d'accès."
-            : "Vous avez maintenant accès au vault.",
+            ? "The owner denied your access request."
+            : "You now have access to the vault.",
         channels: ["push", "email"],
         isRead: false,
         relatedId: args.requestId,
@@ -1775,7 +1775,7 @@ export const respondToAccessRequest = mutation({
 
 ## 8. Scheduled Functions — Life Check
 
-### 7.1 Cron principal
+### 7.1 Main cron
 
 ```typescript
 // packages/convex/crons.ts
@@ -1785,28 +1785,28 @@ import { api } from "./_generated/api";
 
 const crons = cronJobs();
 
-// Toutes les heures — vérifier les Life Checks dus
+// Every hour — check the due Life Checks
 crons.interval(
   "life-check-scheduler",
   { hours: 1 },
   api.lifeCheck.processScheduledChecks,
 );
 
-// Toutes les 4 heures — escalade des cycles en cours
+// Every 4 hours — escalate the running cycles
 crons.interval(
   "life-check-escalation",
   { hours: 4 },
   api.lifeCheck.processEscalations,
 );
 
-// Toutes les 15 minutes — signaux passifs
+// Every 15 minutes — passive signals
 crons.interval(
   "passive-signals-collector",
   { minutes: 15 },
   api.lifeCheck.collectPassiveSignals,
 );
 
-// Chaque jour — nettoyage des signaux expirés
+// Every day — cleanup of expired signals
 crons.daily(
   "cleanup-expired-signals",
   { hourUTC: 2, minuteUTC: 0 },
@@ -1816,17 +1816,17 @@ crons.daily(
 export default crons;
 ```
 
-### 7.2 Logique principale du Life Check
+### 7.2 Main Life Check logic
 
 ```typescript
 // packages/convex/lifeCheck.ts
 
-// Déclenché toutes les heures
+// Triggered every hour
 export const processScheduledChecks = internalAction({
   handler: async (ctx) => {
     const now = Date.now();
 
-    // Trouver tous les Life Checks dus
+    // Find all due Life Checks
     const dueConfigs = await ctx.runQuery(api.lifeCheck.getDueConfigs, {
       before: now,
     });
@@ -1840,7 +1840,7 @@ export const processScheduledChecks = internalAction({
   },
 });
 
-// Démarrer un cycle
+// Start a cycle
 export const startCycle = internalMutation({
   args: {
     configId: v.id("life_check_configs"),
@@ -1860,7 +1860,7 @@ export const startCycle = internalMutation({
       startedAt: now,
     });
 
-    // Étape 1 : Calculer le score passif immédiatement
+    // Step 1: Compute the passive score immediately
     await ctx.scheduler.runAfter(0, api.lifeCheck.evaluatePassiveSignals, {
       cycleId,
       userId: args.userId,
@@ -1870,7 +1870,7 @@ export const startCycle = internalMutation({
   },
 });
 
-// Niveau 0 — Évaluation des signaux passifs
+// Level 0 — Passive signals evaluation
 export const evaluatePassiveSignals = internalAction({
   args: {
     cycleId: v.id("life_check_cycles"),
@@ -1879,13 +1879,13 @@ export const evaluatePassiveSignals = internalAction({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    // Récupérer tous les signaux valides
+    // Fetch all valid signals
     const signals = await ctx.runQuery(api.lifeCheck.getValidSignals, {
       userId: args.userId,
       validAt: now,
     });
 
-    // Calculer le score total
+    // Compute the total score
     let totalScore = 0;
     let bestSignal = "";
 
@@ -1903,7 +1903,7 @@ export const evaluatePassiveSignals = internalAction({
     });
 
     if (totalScore >= (config?.confidenceThreshold ?? 50)) {
-      // Score suffisant → validation silencieuse ✅
+      // Sufficient score → silent validation ✅
       await ctx.runMutation(api.lifeCheck.validateCycle, {
         cycleId: args.cycleId,
         validatedBy: "passive",
@@ -1911,13 +1911,13 @@ export const evaluatePassiveSignals = internalAction({
         passiveSignalUsed: bestSignal,
       });
     } else {
-      // Score insuffisant → passer au niveau 1
+      // Insufficient score → move to level 1
       await ctx.runMutation(api.lifeCheck.updateCycleScore, {
         cycleId: args.cycleId,
         passiveScore: totalScore,
       });
 
-      // Délai avant niveau 1 selon fréquence
+      // Delay before level 1 depending on frequency
       const delayHours =
         config?.frequency === "weekly"
           ? 12
@@ -1934,38 +1934,38 @@ export const evaluatePassiveSignals = internalAction({
   },
 });
 
-// Niveau 1 — Push notification simple
+// Level 1 — Simple push notification
 export const triggerLevel1 = internalAction({
   args: {
     cycleId: v.id("life_check_cycles"),
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    // Vérifier que le cycle est encore "running"
+    // Verify the cycle is still "running"
     const cycle = await ctx.runQuery(api.lifeCheck.getCycle, {
       cycleId: args.cycleId,
     });
-    if (cycle?.status !== "running") return; // Déjà validé
+    if (cycle?.status !== "running") return; // Already validated
 
     await ctx.runMutation(api.lifeCheck.updateCycleLevel, {
       cycleId: args.cycleId,
       level: 1,
     });
 
-    // Envoyer push notification "Tout va bien ? 👍"
+    // Send a push notification "All good? 👍"
     await ctx.runMutation(api.notifications.sendLifeCheckPush, {
       userId: args.userId,
       cycleId: args.cycleId,
-      message: "Tout va bien ?",
+      message: "All good?",
     });
 
-    // Récupérer config pour délai suivant
+    // Fetch config for the next delay
     const config = await ctx.runQuery(api.lifeCheck.getConfig, {
       userId: args.userId,
     });
     const nextChannelDelay = getNextChannelDelay(config, 1);
 
-    // Programmer niveau 2 si pas de réponse
+    // Schedule level 2 if no response
     await ctx.scheduler.runAfter(
       nextChannelDelay,
       api.lifeCheck.triggerNextChannel,
@@ -1974,7 +1974,7 @@ export const triggerLevel1 = internalAction({
   },
 });
 
-// Niveaux 2+ — Escalade canal par canal
+// Levels 2+ — Channel-by-channel escalation
 export const triggerNextChannel = internalAction({
   args: {
     cycleId: v.id("life_check_cycles"),
@@ -1996,7 +1996,7 @@ export const triggerNextChannel = internalAction({
         .sort((a, b) => a.order - b.order) ?? [];
 
     if (args.channelIndex >= channels.length) {
-      // Tous les canaux épuisés → déclencher urgence
+      // All channels exhausted → trigger emergency
       await ctx.runMutation(api.lifeCheck.triggerEmergency, {
         cycleId: args.cycleId,
         userId: args.userId,
@@ -2011,14 +2011,14 @@ export const triggerNextChannel = internalAction({
       level: args.channelIndex + 2,
     });
 
-    // Envoyer via le canal approprié
+    // Send via the appropriate channel
     await ctx.runMutation(api.notifications.sendViaChannel, {
       userId: args.userId,
       cycleId: args.cycleId,
       channelType: channel.type,
     });
 
-    // Programmer le canal suivant
+    // Schedule the next channel
     await ctx.scheduler.runAfter(
       channel.delayHours * 3600 * 1000,
       api.lifeCheck.triggerNextChannel,
@@ -2031,7 +2031,7 @@ export const triggerNextChannel = internalAction({
   },
 });
 
-// Validation d'un cycle (par n'importe quel niveau)
+// Validate a cycle (by any level)
 export const validateCycle = internalMutation({
   args: {
     cycleId: v.id("life_check_cycles"),
@@ -2054,7 +2054,7 @@ export const validateCycle = internalMutation({
       completedAt: now,
     });
 
-    // Programmer le prochain cycle
+    // Schedule the next cycle
     const config = await ctx.db.get(cycle.configId);
     if (config) {
       const nextCheckAt = calculateNextCheck(config.frequency, now);
@@ -2067,7 +2067,7 @@ export const validateCycle = internalMutation({
   },
 });
 
-// Déclenchement de l'urgence
+// Emergency triggering
 export const triggerEmergency = internalMutation({
   args: {
     cycleId: v.id("life_check_cycles"),
@@ -2075,14 +2075,14 @@ export const triggerEmergency = internalMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now();
-    const gracePeriodEndsAt = now + 72 * 3600 * 1000; // 72h de grâce
+    const gracePeriodEndsAt = now + 72 * 3600 * 1000; // 72h grace
 
     await ctx.db.patch(args.cycleId, {
       status: "triggered",
       completedAt: now,
     });
 
-    // Notifier TOUS les trusted contacts
+    // Notify ALL trusted contacts
     const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -2094,8 +2094,8 @@ export const triggerEmergency = internalMutation({
         await ctx.db.insert("notifications", {
           userId: contact.contactUserId,
           type: "security_alert",
-          title: "Life Check — Aucune réponse détectée",
-          body: "Le propriétaire du vault n'a pas répondu. Une période de grâce de 72h est en cours.",
+          title: "Life Check — No response detected",
+          body: "The vault owner has not responded. A 72h grace period is in progress.",
           channels: ["push", "email"],
           isRead: false,
           relatedId: args.cycleId,
@@ -2105,7 +2105,7 @@ export const triggerEmergency = internalMutation({
       }
     }
 
-    // Log audit immuable
+    // Immutable audit log
     await createAuditLog(ctx, {
       userId: args.userId,
       actorType: "system",
@@ -2128,12 +2128,12 @@ function calculateNextCheck(frequency: string, from: number): number {
 }
 ```
 
-### 7.3 Audit Log immuable
+### 7.3 Immutable Audit Log
 
 ```typescript
 // packages/convex/auditLogs.ts
 
-let lastLogHash = "genesis"; // Hash initial
+let lastLogHash = "genesis"; // Initial hash
 
 export async function createAuditLog(
   ctx: any,
@@ -2150,7 +2150,7 @@ export async function createAuditLog(
 ) {
   const now = Date.now();
 
-  // Récupérer le dernier log pour la chaîne
+  // Fetch the last log for the chain
   const lastLog = await ctx.db
     .query("audit_logs")
     .withIndex("by_created", (q) => q.eq("userId", params.userId))
@@ -2159,7 +2159,7 @@ export async function createAuditLog(
 
   const previousHash = lastLog?.logHash ?? "genesis";
 
-  // Construire le hash de ce log
+  // Build the hash of this log
   const logContent = JSON.stringify({
     ...params,
     previousHash,
@@ -2172,61 +2172,61 @@ export async function createAuditLog(
     previousLogHash: previousHash,
     logHash,
     createdAt: now,
-    // Pas de updatedAt — jamais modifié
+    // No updatedAt — never modified
   });
 }
 ```
 
 ---
 
-## 9. Structure des fichiers Convex
+## 9. Convex File Structure
 
 ```
 packages/convex/
-├── schema.ts                   ← Schema complet (section 3)
-├── _generated/                 ← Auto-généré par Convex CLI
+├── schema.ts                   ← Complete schema (section 3)
+├── _generated/                 ← Auto-generated by the Convex CLI
 ├── crons.ts                    ← Scheduled functions
 │
 ├── users.ts                    ← CRUD + recovery verification
-├── vault.ts                    ← CRUD vault items
-├── trustedContacts.ts          ← Invitations + confirmations shards
-├── lifeCheck.ts                ← Cycles + escalade + signaux passifs
+├── vault.ts                    ← Vault item CRUD
+├── trustedContacts.ts          ← Invitations + shard confirmations
+├── lifeCheck.ts                ← Cycles + escalation + passive signals
 ├── accessRequests.ts           ← Modes A/B
 ├── conditionalMessages.ts      ← Dead Man Switch messages
 ├── scenarios.ts                ← Scenario Engine
 ├── emergencyCards.ts           ← Emergency Card + QR
-├── zkVerification.ts           ← Vérification ZK Proofs
-├── notifications.ts            ← Envoi multi-canaux
-├── auditLogs.ts                ← Log immuable + chaîne de hash
+├── zkVerification.ts           ← ZK Proof verification
+├── notifications.ts            ← Multi-channel sending
+├── auditLogs.ts                ← Immutable log + hash chain
 │
 └── _helpers/
-    ├── integrityScore.ts       ← Calcul Vault Integrity Score
-    ├── secureToken.ts          ← Génération tokens sécurisés
-    └── syncHash.ts             ← Hash de synchronisation vault
+    ├── integrityScore.ts       ← Vault Integrity Score computation
+    ├── secureToken.ts          ← Secure token generation
+    └── syncHash.ts             ← Vault synchronization hash
 
 packages/crypto/
-├── passkey/                    ← WebAuthn (NOUVEAU)
-│   ├── register.ts             ← Création Passkey + chiffrement Master Key
-│   ├── authenticate.ts         ← Auth Passkey + déchiffrement Master Key
-│   └── multiDevice.ts          ← Ajout / révocation appareils
+├── passkey/                    ← WebAuthn (NEW)
+│   ├── register.ts             ← Passkey creation + Master Key encryption
+│   ├── authenticate.ts         ← Passkey auth + Master Key decryption
+│   └── multiDevice.ts          ← Device add / revoke
 ├── zk/
 │   ├── circuits/
-│   │   └── keeplas_identity.json ← Circuit Noir compilé
-│   └── keeplasShard.ts         ← Génération + vérification ZK Proofs
+│   │   └── keeplas_identity.json ← Compiled Noir circuit
+│   └── keeplasShard.ts         ← ZK Proof generation + verification
 ├── aes/
-│   ├── masterKey.ts            ← Génération Master Key
-│   └── encrypt.ts              ← Chiffrement / déchiffrement vault items
+│   ├── masterKey.ts            ← Master Key generation
+│   └── encrypt.ts              ← Vault item encryption / decryption
 ├── shamir/
-│   ├── split.ts                ← Shamir split 3-of-5
-│   ├── combine.ts              ← Reconstruction depuis shards
-│   └── encryptShards.ts        ← Chiffrement shards pour contacts + Keeplas
+│   ├── split.ts                ← Shamir 3-of-5 split
+│   ├── combine.ts              ← Reconstruction from shards
+│   └── encryptShards.ts        ← Shard encryption for contacts + Keeplas
 └── recovery/
-    ├── bip39.ts                ← Génération Recovery Phrase 24 mots
-    ├── phraseRecovery.ts       ← Recovery depuis Recovery Phrase
-    └── socialRecovery.ts       ← Recovery sociale (2 contacts min)
+    ├── bip39.ts                ← 24-word Recovery Phrase generation
+    ├── phraseRecovery.ts       ← Recovery from a Recovery Phrase
+    └── socialRecovery.ts       ← Social recovery (min. 2 contacts)
 ```
 
 ---
 
-_Document technique — Keeplas v1 — Avril 2026 — v2_
-_Prochaine étape : Implémentation packages/crypto/ (Passkey + ZK circuits Noir)_
+_Technical document — Keeplas v1 — April 2026 — v2_
+_Next step: Implementation of packages/crypto/ (Passkey + Noir ZK circuits)_
