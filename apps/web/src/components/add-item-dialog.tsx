@@ -1,5 +1,3 @@
-"use client";
-
 import {
   useEffect,
   useMemo,
@@ -22,7 +20,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import {
   Button,
   DatePicker,

@@ -6,10 +6,11 @@
  * Content-Security-Policy plus the standard hardening headers shrink the
  * attack surface (XSS, clickjacking, MIME sniffing, referrer leakage).
  *
- * The CSP is nonce-based: the middleware generates a fresh nonce per request
- * and passes it here. Next.js injects that nonce onto its own framework
- * scripts when it sees `'nonce-...'` in `script-src`, so no inline scripts
- * need `'unsafe-inline'`.
+ * The CSP is hash-based: the request middleware (src/start.ts) computes the
+ * SHA-256 hash of every inline `<script>` in the rendered document and passes
+ * the `'sha256-...'` tokens here. Every other script is bundled by Vite and
+ * served same-origin, so `'self'` covers it — no inline script ever needs
+ * `'unsafe-inline'`.
  *
  * WASM note: `hash-wasm` compiles/instantiates a WebAssembly module at
  * runtime, which the CSP treats as script execution. `'wasm-unsafe-eval'`
@@ -34,29 +35,29 @@ function convexConnectSources(): string[] {
 }
 
 /**
- * Builds the Content-Security-Policy value for a given per-request nonce.
- * Pure function so it can be unit-tested without a request context.
+ * Builds the Content-Security-Policy value. `scriptHashes` are the
+ * `'sha256-...'` tokens for the inline scripts present in the rendered
+ * document (computed per response by the request middleware). Pure function so
+ * it can be unit-tested without a request context.
  */
-export function buildContentSecurityPolicy(nonce: string): string {
-  // React's dev build (and Next/Turbopack HMR) uses eval() for debugging
-  // features like reconstructing call stacks. Allow it ONLY in development —
-  // production never relies on eval(), so the strict policy stays intact.
-  const scriptSrc = [
-    "'self'",
-    `'nonce-${nonce}'`,
-    "'strict-dynamic'",
-    "'wasm-unsafe-eval'",
-  ];
+export function buildContentSecurityPolicy(
+  scriptHashes: string[] = [],
+): string {
+  // React's dev build (and Vite HMR) uses eval() for debugging features like
+  // reconstructing call stacks. Allow it ONLY in development — production never
+  // relies on eval(), so the strict policy stays intact.
+  const scriptSrc = ["'self'", "'wasm-unsafe-eval'", ...scriptHashes];
   if (process.env.NODE_ENV === "development") {
     scriptSrc.push("'unsafe-eval'");
   }
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    // 'wasm-unsafe-eval' is required by hash-wasm (Argon2id). 'strict-dynamic'
-    // lets Next's nonced loader pull in its chunked scripts.
+    // 'wasm-unsafe-eval' is required by hash-wasm (Argon2id). Inline framework
+    // scripts are allow-listed by their SHA-256 hash; bundled scripts are
+    // same-origin, covered by 'self'.
     "script-src": scriptSrc,
-    // Tailwind / Next inject runtime <style> tags; hashing them is impractical.
+    // Tailwind / Vite inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
     "img-src": ["'self'", "data:", "blob:"],
@@ -81,13 +82,15 @@ export function buildContentSecurityPolicy(nonce: string): string {
 }
 
 /**
- * Builds the full set of security headers (CSP + hardening headers) for a
- * given nonce. Pure and order-stable so it is straightforward to assert in
- * tests. The caller is responsible for applying these to the response.
+ * Builds the full set of security headers (CSP + hardening headers) for the
+ * given inline-script SHA-256 hashes. Pure and order-stable so it is
+ * straightforward to assert in tests. The caller applies these to the response.
  */
-export function buildSecurityHeaders(nonce: string): Record<string, string> {
+export function buildSecurityHeaders(
+  scriptHashes: string[] = [],
+): Record<string, string> {
   return {
-    "Content-Security-Policy": buildContentSecurityPolicy(nonce),
+    "Content-Security-Policy": buildContentSecurityPolicy(scriptHashes),
     // Defines the `csp-endpoint` group referenced by the CSP `report-to`
     // directive. Same-origin collector route logs violations server-side.
     "Reporting-Endpoints": 'csp-endpoint="/api/csp-report"',

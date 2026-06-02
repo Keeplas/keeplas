@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useState } from "react";
 import { useConvex } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";

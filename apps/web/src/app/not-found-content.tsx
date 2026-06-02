@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { useTranslations } from "@/lib/i18n";
 
 export function NotFoundContent() {

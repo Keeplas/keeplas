@@ -1,7 +1,5 @@
-"use client";
-
 import type { ReactNode } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { ErrorAlert } from "@keeplas/ui";
 import { AuthHeroSection } from "./auth-hero-section";
 import { MobileBrand } from "./mobile-brand";

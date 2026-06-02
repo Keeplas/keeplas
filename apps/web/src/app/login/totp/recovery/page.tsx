@@ -1,8 +1,6 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@/lib/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { phraseToTotpResetVerifier, validatePhrase } from "@keeplas/crypto";
 import { base64ToUint8 } from "@keeplas/crypto/encoding";
@@ -12,8 +10,6 @@ import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
-
-export const dynamic = "force-dynamic";
 
 export default function TotpRecoveryPage() {
   const router = useRouter();

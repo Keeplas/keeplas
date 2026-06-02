@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "@/lib/navigation";
 import { useAction, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, cn, Icon, Spinner, toast } from "@keeplas/ui";

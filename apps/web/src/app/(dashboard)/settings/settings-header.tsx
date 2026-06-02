@@ -1,6 +1,4 @@
-"use client";
-
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/lib/navigation";
 import { Icon } from "@keeplas/ui";
 import { DialogTitle, DialogDescription } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";

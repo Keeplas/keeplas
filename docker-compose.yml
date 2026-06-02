@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
-    # `.env` is loaded directly by Next.js, Convex CLI, and our scripts (via --env-file).
+    # `.env` is loaded directly by Vite, Convex CLI, and our scripts (via --env-file).
     # No env_file: directive here so `docker compose config` doesn't fail before the
     # contributor has created their .env from .env.example.
     tty: true
@@ -18,7 +18,7 @@ services:
       - keeplas_convex_node_modules:/app/packages/convex/node_modules
       - keeplas_ui_node_modules:/app/packages/ui/node_modules
       - keeplas_crypto_node_modules:/app/packages/crypto/node_modules
-      - keeplas_next:/app/apps/web/.next
+      - keeplas_web_dist:/app/apps/web/dist
       - keeplas_turbo:/app/.turbo
       - keeplas_convex_state:/app/.convex
       - keeplas_convex_auth:/root/.convex
@@ -30,7 +30,7 @@ volumes:
   keeplas_convex_node_modules:
   keeplas_ui_node_modules:
   keeplas_crypto_node_modules:
-  keeplas_next:
+  keeplas_web_dist:
   keeplas_turbo:
   keeplas_convex_state:
   keeplas_convex_auth:

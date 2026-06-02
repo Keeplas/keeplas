@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { useMasterKey } from "./master-key-context";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";

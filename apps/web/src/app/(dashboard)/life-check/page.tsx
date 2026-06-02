@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Loader, type CountryCode } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { LifeCheckHistory } from "./life-check-history";

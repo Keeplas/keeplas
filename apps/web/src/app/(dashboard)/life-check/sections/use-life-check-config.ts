@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { toast } from "@keeplas/ui";

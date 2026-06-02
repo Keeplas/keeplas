@@ -1,9 +1,7 @@
-"use client";
-
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Link } from "@/lib/navigation";
+import { useSearchParams } from "@/lib/navigation";
 import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {

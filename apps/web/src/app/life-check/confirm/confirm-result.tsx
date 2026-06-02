@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { buttonVariants } from "@keeplas/ui";
 import { MobileBrand } from "../../(auth)/components/mobile-brand";
 import { useTranslations } from "@/lib/i18n";

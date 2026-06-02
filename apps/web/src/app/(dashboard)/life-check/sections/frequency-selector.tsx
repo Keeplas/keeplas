@@ -1,5 +1,3 @@
-"use client";
-
 import { HelpHint, Icon } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { FREQUENCIES, type Frequency } from "./constants";

@@ -1,9 +1,6 @@
-"use client";
-
 import { useQuery } from "convex/react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/lib/navigation";
+import { usePathname } from "@/lib/navigation";
 import { cn, Icon, UserAvatar } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { ICON_PATHS } from "@/lib/icons";
@@ -79,7 +76,7 @@ export function Sidebar() {
           aria-label={t("nav.goToHub")}
           className="flex items-center gap-3 mb-8 outline-none rounded-xl"
         >
-          <Image
+          <img
             src="/assets/logo/logo.svg"
             alt="Keeplas"
             width={40}
@@ -177,7 +174,7 @@ export function Sidebar() {
           aria-label={t("nav.goToHub")}
           className="flex items-center gap-2 outline-none rounded-xl"
         >
-          <Image
+          <img
             src="/assets/logo/logo.svg"
             alt="Keeplas"
             width={28}

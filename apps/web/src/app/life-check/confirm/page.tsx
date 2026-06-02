@@ -1,47 +1,61 @@
-import { ConvexHttpClient } from "convex/browser";
+import { useEffect, useState } from "react";
+import { useAction } from "convex/react";
+import { Loader } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
 import { AuthHeroSection } from "../../(auth)/components/auth-hero-section";
 import { ConfirmResult } from "./confirm-result";
+import { useSearchParams } from "@/lib/navigation";
+
+type ConfirmStatus = "ok" | "invalid";
 
 /**
  * Unauthenticated landing for the one-click email confirmation. When the email
- * link is clicked, this page calls the Convex action server-side to verify the
- * HMAC token and reset the liveness timer, then renders the outcome — keeping
- * the visible URL on the Keeplas domain (no Convex deployment leak).
+ * link is clicked, this page calls the Convex action to verify the HMAC token
+ * and reset the liveness timer, then renders the outcome — keeping the visible
+ * URL on the Keeplas domain (the action call is an XHR to Convex).
  */
-export default async function LifeCheckConfirmPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string; token?: string }>;
-}) {
-  const { status, token } = await searchParams;
+export default function LifeCheckConfirmPage() {
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get("status");
+  const token = searchParams.get("token");
+  const confirm = useAction(api.life_check.confirmFromEmailToken);
 
-  let resolvedStatus: "ok" | "invalid" | undefined =
-    status === "ok" || status === "invalid" ? status : undefined;
+  const initial: ConfirmStatus | undefined =
+    statusParam === "ok" || statusParam === "invalid" ? statusParam : undefined;
+  const [resolved, setResolved] = useState<ConfirmStatus | undefined>(initial);
+  const [pending, setPending] = useState(initial === undefined && !!token);
 
-  if (!resolvedStatus && token) {
-    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-    if (!convexUrl) {
-      resolvedStatus = "invalid";
-    } else {
+  useEffect(() => {
+    if (initial !== undefined || !token) return;
+    let active = true;
+    void (async () => {
       try {
-        const client = new ConvexHttpClient(convexUrl);
-        resolvedStatus = await client.action(
-          api.life_check.confirmFromEmailToken,
-          { token },
-        );
+        const result = await confirm({ token });
+        if (active) setResolved(result);
       } catch {
-        resolvedStatus = "invalid";
+        if (active) setResolved("invalid");
+      } finally {
+        if (active) setPending(false);
       }
-    }
-  }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [initial, token, confirm]);
 
-  const ok = resolvedStatus === "ok";
+  if (pending) {
+    return (
+      <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
+        <AuthHeroSection />
+        <Loader fullscreen />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
       <AuthHeroSection />
-      <ConfirmResult ok={ok} />
+      <ConfirmResult ok={resolved === "ok"} />
     </main>
   );
 }

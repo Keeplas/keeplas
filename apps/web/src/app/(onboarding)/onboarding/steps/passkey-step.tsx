@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { useMutation } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Icon, Spinner } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";

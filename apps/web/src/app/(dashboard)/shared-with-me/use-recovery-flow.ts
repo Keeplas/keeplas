@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useState } from "react";
 import { useQuery } from "convex/react";
 import { reconstruct } from "@keeplas/crypto/shamir";

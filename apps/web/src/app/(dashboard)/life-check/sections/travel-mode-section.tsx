@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { DatePicker, HelpHint, Icon } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";

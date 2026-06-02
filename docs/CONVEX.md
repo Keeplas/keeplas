@@ -24,10 +24,10 @@ pnpm sync:convex-env                             # KEEPLAS_CTX_SECRET, WEBAUTHN_
 pnpm check:convex                                # should be green
 
 # 6. Boot the app
-pnpm dev                                         # Next.js + `convex dev` in parallel
+pnpm dev                                         # Vite + `convex dev` in parallel
 ```
 
-After this, `pnpm dev` is your only command — it spawns the Next.js server and `convex dev` in parallel and runs the background env-drift check.
+After this, `pnpm dev` is your only command — it spawns the Vite dev server and `convex dev` in parallel and runs the background env-drift check.
 
 ## Why each contributor needs their own deployment
 
@@ -51,11 +51,11 @@ You're asked to pick during `npx convex dev --once --configure=new`. Most contri
 
 ### When you only edit web code (`apps/web/`)
 
-Just `pnpm dev`. The Convex background check warns on drift; the Next.js dev server hot-reloads. You don't need to run `convex dev` unless you've changed schema or backend functions.
+Just `pnpm dev`. The Convex background check warns on drift; the Vite dev server hot-reloads. You don't need to run `convex dev` unless you've changed schema or backend functions.
 
 ### When you edit Convex code (`packages/convex/`)
 
-`pnpm dev` already runs `convex dev` in parallel with the Next.js server — saving a `schema.ts` or query/mutation re-publishes within 1–2 seconds and regenerates `packages/convex/_generated/`. You only need a second terminal for `npx convex dev` if you've stopped the dev stack for some reason.
+`pnpm dev` already runs `convex dev` in parallel with the Vite dev server — saving a `schema.ts` or query/mutation re-publishes within 1–2 seconds and regenerates `packages/convex/_generated/`. You only need a second terminal for `npx convex dev` if you've stopped the dev stack for some reason.
 
 If `convex dev` is _not_ running while you edit `packages/convex/`, the web app will be talking to a stale function bundle on the server and TypeScript will drift from the schema.
 

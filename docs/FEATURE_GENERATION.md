@@ -6,7 +6,7 @@ conventions exactly — drift is what makes the codebase hard to navigate.
 
 ## Prerequisites
 
-- Next.js 16 App Router, React 19, Convex 1.35+, pnpm 10.8+, Tailwind v4.
+- TanStack Start (Vite), React 19, Convex 1.35+, pnpm 10.8+, Tailwind v4.
 - Backend functions live under `packages/convex/` and are imported via
   `@keeplas/backend/_generated/api` from the web app.
 - All UI primitives come from `@keeplas/ui` (shadcn/Radix). Never write custom
@@ -141,7 +141,7 @@ colors:
 
 Typography scale: `text-headline-lg`, `text-headline-md`, `text-headline-sm`,
 `text-body-lg`, `text-body-md`, `text-label-md`. Fonts: Manrope (display) +
-Inter (body), already wired via `next/font` in `app/layout.tsx`.
+Inter (body), wired via Fontsource in `src/routes/__root.tsx`.
 
 ## Sidebar integration
 

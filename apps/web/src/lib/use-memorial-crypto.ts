@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useVaultCrypto } from "./use-vault-crypto";

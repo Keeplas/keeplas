@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { cn, Icon, Loader, UserAvatar } from "@keeplas/ui";

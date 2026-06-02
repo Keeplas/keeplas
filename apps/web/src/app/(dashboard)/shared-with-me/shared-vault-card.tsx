@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/navigation";
 import { useQuery } from "convex/react";
 import { cn, HelpHint } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";

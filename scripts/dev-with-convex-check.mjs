@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Boot the full dev stack from the repo root:
 //   1. `pnpm check:convex-env` in the background (warn-only, never blocks).
-//   2. `pnpm --filter @keeplas/web dev` — Next.js dev server.
+//   2. `pnpm --filter @keeplas/web dev` — Vite dev server.
 //   3. `npx convex dev` — Convex function watcher.
 //
 // Why we don't let turbo orchestrate `convex dev`: when turbo spawns it

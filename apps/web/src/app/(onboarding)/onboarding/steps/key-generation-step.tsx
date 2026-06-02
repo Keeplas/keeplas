@@ -1,8 +1,6 @@
-"use client";
-
 import { useEffect, useState, useRef } from "react";
 import { useMutation } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";

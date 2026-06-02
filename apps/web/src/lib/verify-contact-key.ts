@@ -1,5 +1,3 @@
-"use client";
-
 import { parsePublicKey } from "@keeplas/crypto/kem";
 import { verifyBytes, identityKeyFingerprint } from "@keeplas/crypto/sig";
 

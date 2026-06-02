@@ -2,7 +2,7 @@
 
 The repo ships a `Dockerfile.dev` + `docker-compose.yml` so contributors can run the entire dev stack without installing Node, pnpm, or even Convex CLI on their host. The image pins Node 22 and pnpm 10.8.1 to match CI — useful when you're chasing a "works on my machine" bug or onboarding on a fresh laptop.
 
-> Docker is **optional**. The native path (`pnpm bootstrap` → `npx convex dev`) is faster for daily work because Next.js's Turbopack hot-reload is slower across the bind mount. Docker shines for **reproducibility** (CI parity) and **fresh-machine onboarding**.
+> Docker is **optional**. The native path (`pnpm bootstrap` → `npx convex dev`) is faster for daily work because Vite's HMR is slower across the bind mount. Docker shines for **reproducibility** (CI parity) and **fresh-machine onboarding**.
 
 ## What you need
 
@@ -13,7 +13,7 @@ The repo ships a `Dockerfile.dev` + `docker-compose.yml` so contributors can run
 
 - **Node 22** + **pnpm 10.8.1**, pinned. Matches CI exactly.
 - The full monorepo bind-mounted at `/app`. Edits on the host hot-reload inside the container.
-- Named volumes for `node_modules` (root + per-package), `.next/`, `.turbo/`, and `.convex/` so they don't churn the host filesystem.
+- Named volumes for `node_modules` (root + per-package), `dist/`, `.turbo/`, and `.convex/` so they don't churn the host filesystem.
 - Port `3000` forwarded → reach the dev app at <http://localhost:3000> from your host browser.
 
 The image is **`Dockerfile.dev`** — not production. No production Dockerfile is shipped; deployments target Vercel (web) + Convex Cloud (backend).
@@ -22,7 +22,7 @@ The image is **`Dockerfile.dev`** — not production. No production Dockerfile i
 
 ```bash
 # 1. Create your .env.local on the host (the container reads from the bind mount)
-cp .env.local.example .env.local
+cp .env.example .env.local
 # fill KEEPLAS_CTX_SECRET → `openssl rand -base64 32`
 
 # 2. Provision your Convex deployment (runs inside the container — opens a browser on the host)
@@ -84,7 +84,7 @@ HOST (~/keeplas-app/)              CONTAINER (/app/)
 src/*.tsx          ◄─── bind ───►  src/*.tsx           # edits reflect both ways
 .env.local         ◄─── bind ───►  .env.local
 node_modules/      ◄── named ────  /app/node_modules   # volume-only, host is empty
-.next/             ◄── named ────  /app/apps/web/.next # volume-only
+dist/              ◄── named ────  /app/apps/web/dist  # volume-only
 .convex/           ◄── named ────  /app/.convex        # volume-only
 ```
 
@@ -101,7 +101,7 @@ The `.convex/` named volume holds local Convex state (auth tokens, deployment me
 - **`docker compose up` exits with `KEEPLAS_CTX_SECRET is missing`.** The `predev` check fires before the dev server boots. Edit `.env.local` on the host (the bind mount carries it into the container) and re-run.
 - **WebAuthn / Passkey doesn't work.** The container exposes port 3000 over plain HTTP. WebAuthn requires HTTPS in production but accepts `http://localhost:3000` as a special case. If you're hitting it from another machine on your LAN, that won't work — use the host directly.
 - **`pnpm install` is slow.** First boot installs into named volumes. After that, it's cached. Avoid `docker compose down -v` unless you want a full reset.
-- **Edits don't hot-reload.** The bind mount works, but Next.js Turbopack on macOS Docker can be slow to detect file changes. If reloads stall, restart with `docker compose restart app`.
+- **Edits don't hot-reload.** The bind mount works, but Vite HMR on macOS Docker can be slow to detect file changes. If reloads stall, restart with `docker compose restart app`.
 - **`convex dev` doesn't see my changes.** You may have started it via `compose run` (one-shot, dies when the command exits). Use `compose exec app npx convex dev` from a second terminal, or `compose up` (which runs `pnpm dev` and includes the Convex watcher transitively).
 - **`pnpm link:env` fails with `EPERM`.** On Windows hosts, the named-volume layer doesn't grant symlink permissions. Run Docker Desktop as administrator the first time, or fall back to native (pnpm + Node) on the host.
 
@@ -109,7 +109,7 @@ The `.convex/` named volume holds local Convex state (auth tokens, deployment me
 
 | Use Docker when…                        | Use native when…                                 |
 | --------------------------------------- | ------------------------------------------------ |
-| You're on a fresh machine               | You want fastest hot-reload (Turbopack)          |
+| You're on a fresh machine               | You want fastest hot-reload (Vite HMR)           |
 | You're debugging a CI-only issue        | You're iterating on UI / styles                  |
 | You don't want Node + pnpm on the host  | You already have Node 22 + pnpm 10.8.1 installed |
 | You want true CI-parity reproducibility | You need to attach a debugger                    |

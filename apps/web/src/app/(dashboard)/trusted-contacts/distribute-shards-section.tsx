@@ -1,5 +1,3 @@
-"use client";
-
 import { useQuery } from "convex/react";
 import { Button, HelpHint } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";

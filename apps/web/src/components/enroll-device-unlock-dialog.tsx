@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Button, Input, Label, Spinner } from "@keeplas/ui";
 import {

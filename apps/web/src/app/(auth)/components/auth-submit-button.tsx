@@ -1,5 +1,3 @@
-"use client";
-
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Button, cn } from "@keeplas/ui";
 

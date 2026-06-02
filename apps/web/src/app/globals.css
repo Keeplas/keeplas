@@ -5,6 +5,15 @@
 /* Scan the shared UI package so Tailwind compiles its classes (required in v4 monorepos). */
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 
+/* Font family stacks. The actual @font-face declarations are pulled in from
+   Fontsource (imported in src/routes/__root.tsx). The Tailwind typography
+   tokens in `@theme inline` below reference these variables. */
+:root {
+  --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-manrope: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-geist: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
 /* ═══════════════════════════════════════════════
    KEEPLAS DESIGN SYSTEM — "The Digital Curator"
    Ref: PRD/Design/design-guidelines.md

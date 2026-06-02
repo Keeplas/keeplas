@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import { useConfirm } from "@keeplas/ui";
 import { useAuditedMutation } from "./use-audited-mutation";

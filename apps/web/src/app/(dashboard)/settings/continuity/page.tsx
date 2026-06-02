@@ -1,5 +1,3 @@
-"use client";
-
 import { ContinuityControls } from "@/components/continuity-controls";
 import { useTranslations } from "@/lib/i18n";
 

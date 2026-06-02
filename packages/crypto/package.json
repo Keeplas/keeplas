@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3",
-    "vitest": "^3.2.1"
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@noble/post-quantum": "^0.6.1",

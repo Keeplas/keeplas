@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Icon, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";

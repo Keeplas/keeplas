@@ -1,7 +1,5 @@
-"use client";
-
 import { useQuery, useMutation } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useEffect } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Loader } from "@keeplas/ui";

@@ -1,8 +1,6 @@
-"use client";
-
 import { useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@/lib/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useAction, useConvex } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { derivePhraseVerifier, validatePhrase } from "@keeplas/crypto";
@@ -29,8 +27,6 @@ import { ICON_PATHS } from "@/lib/icons";
 import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
-
-export const dynamic = "force-dynamic";
 
 export default function PasswordRecoveryPage() {
   const router = useRouter();
