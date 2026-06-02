@@ -110,3 +110,11 @@ The web app was migrated off Next.js to TanStack Start (Vite). Conventions:
 - Vault auto-locks after inactivity (clears in-memory + persisted keys); CSP + strict security headers are set in `apps/web` middleware. The master key stays extractable by design (needed for Shamir `exportKey` + rotation) — auto-lock + CSP are its mitigations.
 - Framing: this is **client-side / zero-access** encryption (server is blind in normal operation), not zero-knowledge _proofs_. It is not infallible against a simultaneously malicious server + compromised client.
 - Sensitive crypto code lives in `packages/crypto/` and is gated by CODEOWNERS. Invariants are enforced by `pnpm check:zk` (`scripts/check-zk.mjs`).
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `packages/convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->
