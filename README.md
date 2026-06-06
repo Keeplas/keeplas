@@ -5,12 +5,10 @@
 # Keeplas Vault
 
 <p align="center">
-  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-keeplas.com%2Fdocs-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-JOIN-b9eaff?style=for-the-badge&labelColor=041632&logo=github"></a>
-  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-AGPL--3.0-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="https://keeplas.com"><img alt="Built by Keeplas" src="https://img.shields.io/badge/BUILT%20BY-KEEPLAS-b9eaff?style=for-the-badge&labelColor=28657a"></a>
-  <img alt="Zero-Knowledge" src="https://img.shields.io/badge/-ZERO--KNOWLEDGE-041632?style=for-the-badge&labelColor=b9eaff">
-  <img alt="Post-Quantum (ML-KEM-768)" src="https://img.shields.io/badge/-POST--QUANTUM-041632?style=for-the-badge&labelColor=b9eaff">
+  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-b9eaff?style=for-the-badge&labelColor=041632"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-b9eaff?style=for-the-badge&labelColor=041632&logo=github&logoColor=041632"></a>
+  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-b9eaff?style=for-the-badge&labelColor=041632"></a>
+  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-b9eaff?style=for-the-badge&labelColor=041632"></a>
 </p>
 
 > Open-source **Life Continuity Platform** — securely store, organize, and transmit vital information to trusted contacts.
