@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import { nitro } from "nitro/vite";
 import viteReact from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -38,6 +39,10 @@ export default defineConfig(({ mode }) => {
       // Next.js `force-dynamic` + client-guard model and avoids SSR/hydration
       // issues with Convex auth state and localStorage-based i18n.
       tanstackStart({ spa: { enabled: true } }),
+      // Compile the server (request middleware + server routes) into a Vercel
+      // Function via Nitro. Required for Vercel to build/deploy TanStack Start
+      // (replaces the old Next.js framework preset).
+      nitro(),
       viteReact(),
     ],
   };
