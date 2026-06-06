@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/keeplas/keeplas-app/blob/main/SECURITY.md
+    url: https://github.com/Keeplas/keeplas/blob/main/SECURITY.md
     about: Do NOT open a GitHub issue. Email security@keeplas.com — see SECURITY.md.
   - name: Question or discussion
-    url: https://github.com/keeplas/keeplas-app/discussions
+    url: https://github.com/Keeplas/keeplas/discussions
     about: Ask a question or start a discussion (not a bug or feature request).
