@@ -1,0 +1,7 @@
+# Sponsor button shown on the repo. Uncomment and fill the handles you actually use.
+# Docs: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# github: [keeplas]              # GitHub Sponsors username/org
+# open_collective: keeplas       # Open Collective slug
+# ko_fi: keeplas                 # Ko-fi username
+# custom: ["https://keeplas.com/sponsor"]
