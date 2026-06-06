@@ -29,5 +29,7 @@ jobs:
         with:
           path-to-signatures: signatures/cla.json
           path-to-document: https://github.com/Keeplas/keeplas/blob/main/CONTRIBUTOR_LICENSE_AGREEMENT.md
-          branch: main
-          allowlist: dependabot[bot]
+          # Signatures are stored on a dedicated UNPROTECTED branch — the bot
+          # pushes directly here and cannot push to protected main/develop.
+          branch: cla-signatures
+          allowlist: dependabot[bot], GhislainMitahi, princenocode
