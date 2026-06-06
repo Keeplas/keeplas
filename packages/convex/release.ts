@@ -5,6 +5,7 @@ import { internal } from "./_generated/api";
 import { requireAuth, requireFullAuth, resolveItemRecipients } from "./helpers";
 import { createAuditLog } from "./audit";
 import { createNotification } from "./helpers";
+import { formatSenderIdentity } from "./lib/identity";
 
 /**
  * Run the per-recipient release fan-out for a user. For each active vault
@@ -51,7 +52,7 @@ async function fanOutRelease(
   let requestsCreated = 0;
 
   const owner = await ctx.db.get(userId);
-  const ownerName = owner?.name ?? "A Keeplas user";
+  const ownerName = formatSenderIdentity(owner);
 
   for (const [contactId, itemIds] of perRecipient.entries()) {
     // Idempotency: skip only if a prior PER-RECIPIENT release (a row carrying

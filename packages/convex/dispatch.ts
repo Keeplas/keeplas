@@ -568,6 +568,396 @@ function escapeHtml(s: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Welcome message — fired once after onboarding completes (storeKeyBundle).
+// Thanks the user, drives home that their 24 recovery words are the only key to
+// their vault (we never see them), and nudges the 3 priority actions. Email via
+// Resend (works today); WhatsApp via an Infobip utility template that must be
+// provisioned + Meta-approved as an _en/_fr pair before it delivers — until
+// then the send is a harmless no-op, exactly like the escalation templates.
+// ---------------------------------------------------------------------------
+
+// Prod hub; the WhatsApp template's static "Open Keeplas" URL button points here
+// too (configured in the Infobip console), so keep them in sync.
+const WELCOME_HUB_URL = "https://app.keeplas.com/hub";
+
+const WELCOME_EMAIL_COPY = {
+  en: {
+    subject: "Welcome to Keeplas — and a word about your 24 words",
+    greeting: (name: string | undefined) =>
+      name ? `Hi ${name},` : "Hi there,",
+    thanks:
+      "Thank you for joining Keeplas. Your vault is now sealed and yours alone.",
+    wordsTitle: "First, take care of your 24 words.",
+    wordsBody:
+      "Those 24 recovery words are the only key that encrypts your vault — we never see them, and we can't recover them for you. Your password only signs you in (and can be reset with these words); the words themselves can only ever be recovered through your trusted contacts. Write them down and keep them offline, somewhere safe — ideally two separate places.",
+    stepsTitle: "Then, finish setting up your continuity — 3 quick steps:",
+    steps: [
+      "🔑 Secure your 24 words — store them offline, away from your screen.",
+      "👥 Invite a trusted contact — your safety net if you ever lose your words.",
+      "🗂️ Add your first vault item — a password, a document, a letter for later.",
+    ],
+    button: "Finish setting up",
+    closing: "You're in control of everything, always.",
+    signoff: "— The Keeplas team",
+    text: (name: string | undefined, url: string) =>
+      `${name ? `Hi ${name},` : "Hi there,"}\n\nThank you for joining Keeplas. Your vault is now sealed and yours alone.\n\nFirst, take care of your 24 words. Those 24 recovery words are the only key that encrypts your vault — we never see them, and we can't recover them for you. Keep them offline and safe.\n\nThen, finish setting up your continuity:\n1. Secure your 24 words.\n2. Invite a trusted contact.\n3. Add your first vault item.\n\nFinish setting up: ${url}\n\n— The Keeplas team`,
+  },
+  fr: {
+    subject: "Bienvenue sur Keeplas — un mot sur vos 24 mots",
+    greeting: (name: string | undefined) =>
+      name ? `Bonjour ${name},` : "Bonjour,",
+    thanks:
+      "Merci d'avoir rejoint Keeplas. Votre coffre est désormais scellé, et n'appartient qu'à vous.",
+    wordsTitle: "D'abord, prenez soin de vos 24 mots.",
+    wordsBody:
+      "Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre — nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Votre mot de passe ne sert qu'à vous connecter (et peut être réinitialisé avec ces mots) ; les mots, eux, ne peuvent être récupérés que via vos contacts de confiance. Notez-les et conservez-les hors ligne, en lieu sûr — idéalement à deux endroits distincts.",
+    stepsTitle: "Ensuite, finalisez votre continuité — 3 étapes rapides :",
+    steps: [
+      "🔑 Sécurisez vos 24 mots — conservez-les hors ligne, loin de votre écran.",
+      "👥 Invitez un contact de confiance — votre filet de sécurité si vous perdez vos mots.",
+      "🗂️ Ajoutez un premier élément au coffre — un mot de passe, un document, une lettre.",
+    ],
+    button: "Finaliser ma configuration",
+    closing: "Vous gardez le contrôle de tout, à tout moment.",
+    signoff: "— L'équipe Keeplas",
+    text: (name: string | undefined, url: string) =>
+      `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nMerci d'avoir rejoint Keeplas. Votre coffre est désormais scellé, et n'appartient qu'à vous.\n\nD'abord, prenez soin de vos 24 mots. Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre — nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Conservez-les hors ligne, en lieu sûr.\n\nEnsuite, finalisez votre continuité :\n1. Sécurisez vos 24 mots.\n2. Invitez un contact de confiance.\n3. Ajoutez un premier élément au coffre.\n\nFinaliser ma configuration : ${url}\n\n— L'équipe Keeplas`,
+  },
+} satisfies Record<
+  Locale,
+  {
+    subject: string;
+    greeting: (name?: string) => string;
+    thanks: string;
+    wordsTitle: string;
+    wordsBody: string;
+    stepsTitle: string;
+    steps: string[];
+    button: string;
+    closing: string;
+    signoff: string;
+    text: (name: string | undefined, url: string) => string;
+  }
+>;
+
+function welcomeEmailHtml(
+  name: string | undefined,
+  url: string,
+  locale: Locale,
+) {
+  const copy = WELCOME_EMAIL_COPY[locale];
+  const greeting = escapeHtml(copy.greeting(name));
+  const steps = copy.steps
+    .map((s) => `<li style="margin:8px 0">${escapeHtml(s)}</li>`)
+    .join("");
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
+<p>${greeting}</p>
+<p>${escapeHtml(copy.thanks)}</p>
+<p style="font-weight:700;margin-top:24px">${escapeHtml(copy.wordsTitle)}</p>
+<p>${escapeHtml(copy.wordsBody)}</p>
+<p style="font-weight:700;margin-top:24px">${escapeHtml(copy.stepsTitle)}</p>
+<ul style="padding-left:20px;margin:8px 0">${steps}</ul>
+<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#041632;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
+<p style="color:#666;font-size:13px">${escapeHtml(copy.closing)}<br>${escapeHtml(copy.signoff)}</p>
+</body></html>`;
+}
+
+/**
+ * Post-onboarding welcome email via Resend. Sibling of `sendEmailOtp`: no-ops
+ * with a console log in dev when Resend is unconfigured, so manual onboarding
+ * testing remains possible. Fired by `onboarding.storeKeyBundle`.
+ */
+export const sendWelcomeEmail = internalAction({
+  args: {
+    email: v.string(),
+    name: v.optional(v.string()),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn(
+        `[welcome] Resend not configured; welcome email skipped for ${args.email}`,
+      );
+      return "resend_not_configured";
+    }
+    const from = requireEnv("RESEND_FROM_EMAIL");
+    const locale = resolveLocale(args.language);
+    const copy = WELCOME_EMAIL_COPY[locale];
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [args.email],
+        subject: copy.subject,
+        html: welcomeEmailHtml(args.name, WELCOME_HUB_URL, locale),
+        text: copy.text(args.name, WELCOME_HUB_URL),
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Resend ${res.status}: ${text.slice(0, 200)}`);
+    }
+    return "sent";
+  },
+});
+
+/**
+ * Post-onboarding welcome WhatsApp message (additive — email stays primary).
+ * Utility template `keeplas_welcome_en` (`_fr` auto-selected by locale): body
+ * placeholder = first name; static "Open Keeplas" URL button (no parameter,
+ * pointing at WELCOME_HUB_URL, configured in Infobip). No-op when Infobip is
+ * not configured OR the template isn't approved yet. Fired by
+ * `onboarding.storeKeyBundle`.
+ */
+export const sendWelcomeWhatsApp = internalAction({
+  args: {
+    phoneNumber: v.string(),
+    name: v.optional(v.string()),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
+    // The template body greets "{{1}}" — WhatsApp rejects an empty placeholder,
+    // so fall back to a neutral word when the name is missing.
+    const name = args.name?.trim() || (locale === "fr" ? "à vous" : "there");
+    return sendWhatsAppTemplate({
+      to: args.phoneNumber,
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_WELCOME_TEMPLATE_NAME,
+        "keeplas_welcome",
+        locale,
+      ),
+      language: locale,
+      placeholders: [name],
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Setup-completion reminders — fired at day 3 and day 10 after onboarding by
+// onboarding.sendSetupReminder, but ONLY for users who still haven't added a
+// trusted contact and/or a vault item. The email adapts to what's missing and
+// hardens its tone at day 10; the WhatsApp template is a single generic nudge
+// (one _en/_fr pair to provision in Infobip). Same "none of us know when life
+// takes a turn" framing as the rest of the continuity copy.
+// ---------------------------------------------------------------------------
+
+const REMINDER_STAGE = v.union(v.literal("day3"), v.literal("day10"));
+
+const SETUP_REMINDER_COPY = {
+  en: {
+    subject: (urgent: boolean) =>
+      urgent
+        ? "Don't leave your legacy unfinished"
+        : "Your Keeplas vault isn't protecting anyone yet",
+    greeting: (name: string | undefined) =>
+      name ? `Hi ${name},` : "Hi there,",
+    intro: (urgent: boolean) =>
+      urgent
+        ? "It's been over a week, and your Keeplas vault still can't do its job. A few minutes now is all it takes to change that."
+        : "You set up your Keeplas vault a few days ago — but it isn't protecting anyone yet.",
+    stake:
+      "None of us know when life will take a turn. The whole point of Keeplas is to be ready before that day, not after.",
+    actionsTitle: "Here's what's left:",
+    actionContacts:
+      "👥 Invite a trusted contact — without one, no one can ever recover your vault.",
+    actionItems:
+      "🗂️ Add your first vault item — a password, a document, instructions for the people you love.",
+    button: "Finish securing my vault",
+    signoff: "— The Keeplas team",
+    text: (
+      name: string | undefined,
+      url: string,
+      missingContacts: boolean,
+      missingItems: boolean,
+    ) => {
+      const lines = [
+        missingContacts &&
+          "- Invite a trusted contact — without one, no one can ever recover your vault.",
+        missingItems &&
+          "- Add your first vault item — a password, a document, instructions for your loved ones.",
+      ].filter(Boolean);
+      return `${name ? `Hi ${name},` : "Hi there,"}\n\nYour Keeplas vault isn't protecting anyone yet. None of us know when life will take a turn — the point of Keeplas is to be ready before that day.\n\nWhat's left:\n${lines.join("\n")}\n\nFinish now: ${url}\n\n— The Keeplas team`;
+    },
+  },
+  fr: {
+    subject: (urgent: boolean) =>
+      urgent
+        ? "Ne laissez pas votre héritage inachevé"
+        : "Votre coffre Keeplas ne protège encore personne",
+    greeting: (name: string | undefined) =>
+      name ? `Bonjour ${name},` : "Bonjour,",
+    intro: (urgent: boolean) =>
+      urgent
+        ? "Cela fait plus d'une semaine, et votre coffre Keeplas ne peut toujours pas remplir son rôle. Quelques minutes suffisent pour y remédier."
+        : "Vous avez créé votre coffre Keeplas il y a quelques jours — mais il ne protège encore personne.",
+    stake:
+      "Nul ne sait quand le malheur frappera. Tout l'intérêt de Keeplas est d'être prêt avant ce jour-là, pas après.",
+    actionsTitle: "Voici ce qu'il reste à faire :",
+    actionContacts:
+      "👥 Invitez un contact de confiance — sans lui, personne ne pourra jamais récupérer votre coffre.",
+    actionItems:
+      "🗂️ Ajoutez un premier élément au coffre — un mot de passe, un document, des instructions pour vos proches.",
+    button: "Finaliser mon coffre",
+    signoff: "— L'équipe Keeplas",
+    text: (
+      name: string | undefined,
+      url: string,
+      missingContacts: boolean,
+      missingItems: boolean,
+    ) => {
+      const lines = [
+        missingContacts &&
+          "- Invitez un contact de confiance — sans lui, personne ne pourra récupérer votre coffre.",
+        missingItems &&
+          "- Ajoutez un premier élément au coffre — un mot de passe, un document, des instructions pour vos proches.",
+      ].filter(Boolean);
+      return `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nVotre coffre Keeplas ne protège encore personne. Nul ne sait quand le malheur frappera — l'intérêt de Keeplas est d'être prêt avant ce jour-là.\n\nCe qu'il reste :\n${lines.join("\n")}\n\nFinaliser : ${url}\n\n— L'équipe Keeplas`;
+    },
+  },
+} satisfies Record<
+  Locale,
+  {
+    subject: (urgent: boolean) => string;
+    greeting: (name?: string) => string;
+    intro: (urgent: boolean) => string;
+    stake: string;
+    actionsTitle: string;
+    actionContacts: string;
+    actionItems: string;
+    button: string;
+    signoff: string;
+    text: (
+      name: string | undefined,
+      url: string,
+      missingContacts: boolean,
+      missingItems: boolean,
+    ) => string;
+  }
+>;
+
+function setupReminderEmailHtml(
+  name: string | undefined,
+  url: string,
+  locale: Locale,
+  urgent: boolean,
+  missingContacts: boolean,
+  missingItems: boolean,
+) {
+  const copy = SETUP_REMINDER_COPY[locale];
+  const actions = [
+    missingContacts && copy.actionContacts,
+    missingItems && copy.actionItems,
+  ]
+    .filter((a): a is string => Boolean(a))
+    .map((a) => `<li style="margin:8px 0">${escapeHtml(a)}</li>`)
+    .join("");
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px">
+<p>${escapeHtml(copy.greeting(name))}</p>
+<p>${escapeHtml(copy.intro(urgent))}</p>
+<p>${escapeHtml(copy.stake)}</p>
+<p style="font-weight:700;margin-top:24px">${escapeHtml(copy.actionsTitle)}</p>
+<ul style="padding-left:20px;margin:8px 0">${actions}</ul>
+<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#041632;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
+<p style="color:#666;font-size:13px">${escapeHtml(copy.signoff)}</p>
+</body></html>`;
+}
+
+/**
+ * Day-3 / day-10 setup-completion reminder via email (Resend). Adapts to what
+ * the user is still missing and hardens its subject/intro at day 10. No-ops
+ * with a console log in dev when Resend is unconfigured.
+ */
+export const sendSetupReminderEmail = internalAction({
+  args: {
+    email: v.string(),
+    name: v.optional(v.string()),
+    language: v.optional(v.string()),
+    stage: REMINDER_STAGE,
+    missingContacts: v.boolean(),
+    missingItems: v.boolean(),
+  },
+  handler: async (_ctx, args) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn(
+        `[setup_reminder] Resend not configured; ${args.stage} reminder skipped for ${args.email}`,
+      );
+      return "resend_not_configured";
+    }
+    const from = requireEnv("RESEND_FROM_EMAIL");
+    const locale = resolveLocale(args.language);
+    const copy = SETUP_REMINDER_COPY[locale];
+    const urgent = args.stage === "day10";
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [args.email],
+        subject: copy.subject(urgent),
+        html: setupReminderEmailHtml(
+          args.name,
+          WELCOME_HUB_URL,
+          locale,
+          urgent,
+          args.missingContacts,
+          args.missingItems,
+        ),
+        text: copy.text(
+          args.name,
+          WELCOME_HUB_URL,
+          args.missingContacts,
+          args.missingItems,
+        ),
+      }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Resend ${res.status}: ${text.slice(0, 200)}`);
+    }
+    return "sent";
+  },
+});
+
+/**
+ * Day-3 / day-10 setup-completion reminder via WhatsApp. A single generic
+ * Infobip utility template `keeplas_setup_reminder` (placeholder = first name,
+ * static "Open Keeplas" URL button) covers both stages and any missing
+ * combination, so only one _en/_fr pair needs provisioning. No-op when Infobip
+ * is unconfigured / the template isn't approved.
+ */
+export const sendSetupReminderWhatsApp = internalAction({
+  args: {
+    phoneNumber: v.string(),
+    name: v.optional(v.string()),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    const locale = resolveLocale(args.language);
+    const name = args.name?.trim() || (locale === "fr" ? "à vous" : "there");
+    return sendWhatsAppTemplate({
+      to: args.phoneNumber,
+      templateName: localizedTemplateName(
+        process.env.WHATSAPP_SETUP_REMINDER_TEMPLATE_NAME,
+        "keeplas_setup_reminder",
+        locale,
+      ),
+      language: locale,
+      placeholders: [name],
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Escalation / grace-window notifications (trust contacts + owner)
 //
 // Unlike the Life Check check-in (handled by sendChannel, which is bound to a

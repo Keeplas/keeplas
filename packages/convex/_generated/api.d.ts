@@ -23,6 +23,7 @@ import type * as hub from "../hub.js";
 import type * as lib_audit_secret from "../lib/audit_secret.js";
 import type * as lib_crypto from "../lib/crypto.js";
 import type * as lib_email from "../lib/email.js";
+import type * as lib_identity from "../lib/identity.js";
 import type * as lib_life_check_token from "../lib/life_check_token.js";
 import type * as lib_locale from "../lib/locale.js";
 import type * as lib_password from "../lib/password.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   "lib/audit_secret": typeof lib_audit_secret;
   "lib/crypto": typeof lib_crypto;
   "lib/email": typeof lib_email;
+  "lib/identity": typeof lib_identity;
   "lib/life_check_token": typeof lib_life_check_token;
   "lib/locale": typeof lib_locale;
   "lib/password": typeof lib_password;

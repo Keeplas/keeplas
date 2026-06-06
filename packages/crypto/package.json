@@ -21,7 +21,7 @@
     "clean": "rm -rf dist .turbo node_modules"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   },
   "dependencies": {

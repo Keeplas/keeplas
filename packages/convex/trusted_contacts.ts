@@ -19,6 +19,7 @@ import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 import { resolveLocale, type Locale } from "./lib/locale";
+import { formatSenderIdentity } from "./lib/identity";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -323,7 +324,7 @@ export const inviteContact = auditedMutation({
         internal.dispatch.sendInvitationWhatsApp,
         {
           phoneNumber: baseFields.phoneNumber,
-          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          inviterName: formatSenderIdentity(inviter),
           invitationToken,
           language: inviter?.language,
         },
@@ -339,7 +340,7 @@ export const inviteContact = auditedMutation({
         internal.dispatch.sendRecipientInvitationWhatsApp,
         {
           phoneNumber: baseFields.phoneNumber,
-          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          inviterName: formatSenderIdentity(inviter),
           language: inviter?.language,
         },
       );
@@ -578,7 +579,7 @@ export const acceptInvitation = auditedMutation({
       userId: contact.userId,
       type: "contact_confirmed",
       title: "Contact accepted",
-      body: `${contact.name} accepted your invitation and is now a trusted contact.`,
+      body: `${formatSenderIdentity(contact)} accepted your invitation and is now a trusted contact.`,
       actionUrl: "/trusted-contacts",
       channels: ["push", "email"],
       relatedId: contact._id,
@@ -640,7 +641,7 @@ export const declineInvitation = auditedMutation({
       userId: contact.userId,
       type: "contact_invited",
       title: "Invitation declined",
-      body: `${contact.name} declined your trusted contact invitation.`,
+      body: `${formatSenderIdentity(contact)} declined your trusted contact invitation.`,
       actionUrl: "/trusted-contacts",
       relatedId: contact._id,
       relatedType: "trusted_contact",
@@ -705,7 +706,7 @@ export const storeEncryptedShard = auditedMutation({
 
     if (isFirstDistribution && contact.contactUserId) {
       const owner = await ctx.db.get(userId);
-      const ownerName = owner?.name?.trim() || "A Keeplas user";
+      const ownerName = formatSenderIdentity(owner);
       await createNotification(ctx, {
         userId: contact.contactUserId,
         type: "vault_update",
@@ -869,7 +870,7 @@ export const resendInvitation = auditedMutation({
         internal.dispatch.sendInvitationWhatsApp,
         {
           phoneNumber: contact.phoneNumber,
-          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          inviterName: formatSenderIdentity(inviter),
           invitationToken,
           language: inviter?.language,
         },
@@ -885,7 +886,7 @@ export const resendInvitation = auditedMutation({
         internal.dispatch.sendRecipientInvitationWhatsApp,
         {
           phoneNumber: contact.phoneNumber,
-          inviterName: inviter?.name?.trim() || "A Keeplas user",
+          inviterName: formatSenderIdentity(inviter),
           language: inviter?.language,
         },
       );
@@ -1136,9 +1137,14 @@ export const sendInvitationEmail = internalAction({
     const appUrl = requireEnv("APP_URL");
     const acceptUrl = `${appUrl}/invite/${data.invitationToken}`;
     const locale = resolveLocale(data.inviterLanguage);
-    const inviterName =
-      data.inviterName?.trim() ||
-      (locale === "fr" ? "Un utilisateur Keeplas" : "A Keeplas user");
+    const inviterName = formatSenderIdentity(
+      {
+        name: data.inviterName,
+        email: data.inviterEmail,
+        phoneNumber: data.inviterPhone,
+      },
+      locale === "fr" ? "Un utilisateur Keeplas" : "A Keeplas user",
+    );
 
     const isTrust = (data.contactType ?? "trust") === "trust";
     const subject = isTrust
@@ -1194,6 +1200,8 @@ export const getInvitationEmailContext = internalQuery({
       invitationStatus: contact.invitationStatus,
       invitationToken: contact.invitationToken,
       inviterName: inviter?.name ?? null,
+      inviterEmail: inviter?.email ?? null,
+      inviterPhone: inviter?.phoneNumber ?? null,
       // Drive the invite email's language off the inviter's preference — the
       // invitee has no account (hence no locale) until they accept.
       inviterLanguage: inviter?.language ?? null,
@@ -1344,7 +1352,7 @@ export const runAvailabilityReconfirm = internalMutation({
             userId: c.userId,
             type: "security_alert",
             title: "Trusted contact unavailable",
-            body: `${c.name} never accepted your invitation. Replace them so your continuity protocol stays operational.`,
+            body: `${formatSenderIdentity(c)} never accepted your invitation. Replace them so your continuity protocol stays operational.`,
             channels: ["push", "email"],
             actionUrl: "/trusted-contacts",
             relatedId: c._id,
@@ -1376,7 +1384,7 @@ export const runAvailabilityReconfirm = internalMutation({
       if (throttled) continue;
 
       const owner = await ctx.db.get(c.userId);
-      const ownerName = owner?.name?.trim() || "a Keeplas user";
+      const ownerName = formatSenderIdentity(owner);
 
       await createNotification(ctx, {
         userId: c.contactUserId,
@@ -1419,7 +1427,7 @@ export const runAvailabilityReconfirm = internalMutation({
           userId: c.userId,
           type: "security_alert",
           title: "Trusted contact unresponsive",
-          body: `${c.name} hasn't re-verified their recovery shard after several reminders. Replace them so your continuity protocol stays operational.`,
+          body: `${formatSenderIdentity(c)} hasn't re-verified their recovery shard after several reminders. Replace them so your continuity protocol stays operational.`,
           channels: ["push", "email"],
           actionUrl: "/trusted-contacts",
           relatedId: c._id,

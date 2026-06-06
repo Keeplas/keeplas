@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
+import { formatSenderIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
@@ -49,6 +50,25 @@ export function resolveThresholdDays(config: {
   inactivityThresholdDays?: number;
 }): number {
   return config.inactivityThresholdDays ?? FREQUENCY_DAYS[config.frequency];
+}
+
+/**
+ * Counter-reset patch. Restarts the inactivity clock from `now` with a full
+ * fresh window. Spread into a `ctx.db.patch` whenever the user "returns" —
+ * resuming after a pause or coming back from travel mode — so a stale
+ * `lastActivityAt` can't fire a cycle immediately on the next evaluator tick.
+ */
+function clockResetFields(
+  config: {
+    frequency: "test" | "weekly" | "monthly" | "quarterly";
+    inactivityThresholdDays?: number;
+  },
+  now: number,
+) {
+  return {
+    lastActivityAt: now,
+    nextCheckAt: now + resolveThresholdDays(config) * DAY_MS,
+  };
 }
 
 /**
@@ -157,19 +177,32 @@ export const toggleTravelMode = auditedMutation({
 
     if (!config) throw new Error("Life Check not configured");
 
+    const now = Date.now();
     // Max 180 days
     if (args.enabled && args.until) {
-      const maxUntil = Date.now() + 180 * 24 * 60 * 60 * 1000;
+      const maxUntil = now + 180 * DAY_MS;
       if (args.until > maxUntil) {
         throw new Error("Travel mode maximum is 180 days");
       }
     }
 
-    await ctx.db.patch(config._id, {
-      travelModeEnabled: args.enabled,
-      travelModeUntil: args.enabled ? args.until : undefined,
-      updatedAt: Date.now(),
-    });
+    if (args.enabled) {
+      // Entering travel mode — suspend any cycle already in flight.
+      await ctx.db.patch(config._id, {
+        travelModeEnabled: true,
+        travelModeUntil: args.until,
+        updatedAt: now,
+      });
+      await suspendInFlightCycle(ctx, userId, "travel_mode", now);
+    } else {
+      // Returning early — clear travel mode and start a fresh window.
+      await ctx.db.patch(config._id, {
+        travelModeEnabled: false,
+        travelModeUntil: undefined,
+        updatedAt: now,
+        ...clockResetFields(config, now),
+      });
+    }
 
     return { success: true, configId: config._id };
   },
@@ -334,11 +367,16 @@ async function startCycleForConfig(
     if (config.travelModeUntil && Date.now() < config.travelModeUntil) {
       return null;
     }
+    // Travel mode expired — clear it, restart the clock, and don't start a
+    // cycle this tick (the user is presumed back; give a full fresh window).
+    const now = Date.now();
     await ctx.db.patch(config._id, {
       travelModeEnabled: false,
       travelModeUntil: undefined,
-      updatedAt: Date.now(),
+      updatedAt: now,
+      ...clockResetFields(config, now),
     });
+    return null;
   }
 
   const enabled = enabledChannels(config.activeChannels);
@@ -520,20 +558,7 @@ export async function confirmAlive(
   });
 
   // The user is alive — cancel any in-progress trusted-contact confirmation.
-  const pendingRequests = await ctx.db
-    .query("access_requests")
-    .withIndex("by_status", (q) =>
-      q.eq("vaultUserId", userId).eq("status", "pending"),
-    )
-    .collect();
-  for (const req of pendingRequests) {
-    await ctx.db.patch(req._id, {
-      status: "denied",
-      cancelledDuringGrace: true,
-      respondedAt: now,
-      updatedAt: now,
-    });
-  }
+  await denyPendingAccessRequests(ctx, userId, now);
 
   const cycle = await findInFlightCycle(ctx, userId);
   if (!cycle) return;
@@ -555,6 +580,71 @@ export async function confirmAlive(
     resourceType: "life_check_cycle",
     resourceId: cycle._id,
     metadata: JSON.stringify({ method }),
+  });
+}
+
+/**
+ * Deny every pending trusted-contact access request for a user. Shared by
+ * `confirmAlive` (owner proved liveness) and `suspendInFlightCycle` (owner
+ * paused / entered travel mode) — in both cases an in-progress Stage-2
+ * confirmation must be torn down.
+ */
+async function denyPendingAccessRequests(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  now: number,
+) {
+  const pendingRequests = await ctx.db
+    .query("access_requests")
+    .withIndex("by_status", (q) =>
+      q.eq("vaultUserId", userId).eq("status", "pending"),
+    )
+    .collect();
+  for (const req of pendingRequests) {
+    await ctx.db.patch(req._id, {
+      status: "denied",
+      cancelledDuringGrace: true,
+      respondedAt: now,
+      updatedAt: now,
+    });
+  }
+}
+
+/**
+ * Tear down any in-flight Life Check cycle when the owner suspends the switch
+ * (manual pause or entering travel mode). Unlike `confirmAlive` this is NOT a
+ * liveness signal, so the cycle ends as `cancelled` rather than `validated`.
+ * Denies pending Stage-2 access requests, cancels every scheduled escalation
+ * job, and audit-logs the suspension. No-ops when nothing is in flight.
+ */
+async function suspendInFlightCycle(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  reason: string,
+  now: number,
+) {
+  await denyPendingAccessRequests(ctx, userId, now);
+
+  const cycle = await findInFlightCycle(ctx, userId);
+  if (!cycle) return;
+
+  await ctx.db.patch(cycle._id, {
+    status: "cancelled",
+    cancelledAt: now,
+    cancelledReason: reason,
+    completedAt: now,
+  });
+
+  await cancelPendingSchedules(ctx, cycle._id);
+
+  await createAuditLog(ctx, {
+    userId,
+    actorType: "user",
+    actorId: userId,
+    action: "life_check_cycle_suspended",
+    resourceType: "life_check_cycle",
+    resourceId: cycle._id,
+    metadata: JSON.stringify({ reason }),
   });
 }
 
@@ -646,14 +736,17 @@ export const evaluateAllConfigs = internalMutation({
           config.travelModeUntil !== undefined &&
           now >= config.travelModeUntil
         ) {
+          // Travel mode expired — the user is presumed back. Clear it and
+          // restart the clock so they get a full fresh window, then skip this
+          // tick (no immediate cycle from a stale lastActivityAt).
           await ctx.db.patch(config._id, {
             travelModeEnabled: false,
             travelModeUntil: undefined,
             updatedAt: now,
+            ...clockResetFields(config, now),
           });
-        } else {
-          continue;
         }
+        continue;
       }
 
       const lastActivity = config.lastActivityAt ?? config.createdAt;
@@ -796,7 +889,7 @@ export const enterConfirmationStage = internalMutation({
     });
 
     const owner = await ctx.db.get(cycle.userId);
-    const ownerName = owner?.name ?? "A Keeplas user";
+    const ownerName = formatSenderIdentity(owner);
 
     const contacts = await ctx.db
       .query("trusted_contacts")
@@ -988,10 +1081,20 @@ export const toggleActive = auditedMutation({
 
     if (!config) throw new Error("Life Check not configured");
 
-    await ctx.db.patch(config._id, {
-      isActive: args.isActive,
-      updatedAt: Date.now(),
-    });
+    const now = Date.now();
+    if (args.isActive) {
+      // Resuming — give the user a full fresh window so a stale clock from the
+      // pause period can't fire a cycle on the next evaluator tick.
+      await ctx.db.patch(config._id, {
+        isActive: true,
+        updatedAt: now,
+        ...clockResetFields(config, now),
+      });
+    } else {
+      // Pausing — stop everything, including any cycle already in flight.
+      await ctx.db.patch(config._id, { isActive: false, updatedAt: now });
+      await suspendInFlightCycle(ctx, userId, "paused", now);
+    }
 
     return { success: true, configId: config._id };
   },

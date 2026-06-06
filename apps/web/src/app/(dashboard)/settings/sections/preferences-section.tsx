@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Button, Label, Select, SelectItem, Switch } from "@keeplas/ui";
+import { Label, Select, SelectItem, Switch } from "@keeplas/ui";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import {
   useLocalStorageState,
@@ -50,8 +50,6 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
       STORAGE_KEYS.notifications,
       DEFAULT_NOTIFICATIONS,
     );
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   // Re-seed the editable fields whenever the viewer record changes, adjusting
   // during render instead of syncing in an effect.
@@ -62,22 +60,28 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
     setTimezone(user.timezone ?? "UTC");
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
+  // Auto-save each field on change. Language/timezone are persisted to Convex;
+  // currency and notifications are localStorage-only and persist via their setters.
+  async function persist(next: { language?: string; timezone?: string }) {
     onError("");
-    setSaved(false);
     try {
-      await updatePreferences({ language, timezone });
+      await updatePreferences(next);
       // Apply the new locale immediately (also persists to localStorage);
       // ViewerLocaleSync keeps it in sync from the stored preference too.
-      setLocale(resolveLocale(language));
-      setSaved(true);
+      if (next.language) setLocale(resolveLocale(next.language));
     } catch (err) {
       onError(getErrorMessage(err, t("preferences.saveError")));
-    } finally {
-      setSaving(false);
     }
+  }
+
+  function handleLanguageChange(value: string) {
+    setLanguage(value);
+    void persist({ language: value });
+  }
+
+  function handleTimezoneChange(value: string) {
+    setTimezone(value);
+    void persist({ timezone: value });
   }
 
   function toggleNotification(key: keyof NotificationPrefs) {
@@ -86,10 +90,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
 
   return (
     <section className="space-y-6">
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
           <div className="space-y-1.5">
             <h2 className="text-headline-sm text-primary">
@@ -106,7 +107,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               </Label>
               <Select
                 value={language}
-                onValueChange={setLanguage}
+                onValueChange={handleLanguageChange}
                 placeholder={t("preferences.chooseLanguage")}
               >
                 {LANGUAGES.map((lang) => (
@@ -128,7 +129,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
               </Label>
               <Select
                 value={timezone}
-                onValueChange={setTimezone}
+                onValueChange={handleTimezoneChange}
                 placeholder={t("preferences.chooseTimezone")}
               >
                 {TIMEZONES.map((tz) => (
@@ -188,24 +189,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
             ))}
           </div>
         </div>
-
-        <div className="col-span-full flex items-center justify-end gap-4">
-          {saved && (
-            <span className="text-body-md text-secondary font-medium">
-              {t("preferences.saved")}
-            </span>
-          )}
-          <Button
-            type="submit"
-            variant="vault"
-            size="md"
-            disabled={saving}
-            className="cursor-pointer"
-          >
-            {saving ? t("preferences.saving") : t("preferences.save")}
-          </Button>
-        </div>
-      </form>
+      </div>
     </section>
   );
 }
