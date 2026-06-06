@@ -2,10 +2,10 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Crypto package — founders only (security-critical)
-/packages/crypto/ @prince-keeplas @ghislain-keeplas
+/packages/crypto/ @princenocode @GhislainMitahi
 
 # Security audits — founders only
-/security/ @prince-keeplas @ghislain-keeplas
+/security/ @princenocode @GhislainMitahi
 
 # All other code — open to community
-* @prince-keeplas
+* @princenocode
