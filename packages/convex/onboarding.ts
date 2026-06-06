@@ -6,6 +6,7 @@ import {
 } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { requireAuth, optionalAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 
@@ -260,15 +261,41 @@ export const storeKeyBundle = mutation({
       throw new Error("vaultThreshold must be between 2 and 3");
     }
 
+    const user = await ctx.db.get(userId);
+    // Send the welcome message only on the first time onboarding completes —
+    // `welcomeSentAt` is the idempotency guard against a re-invoked storeKeyBundle.
+    const sendWelcome = user != null && !user.welcomeSentAt;
+
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       phraseSalt: args.phraseSalt,
       vaultThreshold: args.vaultThreshold,
       onboardingStep: "complete",
       updatedAt: Date.now(),
+      ...(sendWelcome ? { welcomeSentAt: Date.now() } : {}),
     });
 
     await seedDefaults(ctx, userId);
+
+    // Thank the user and nudge the 3 priority actions, across whichever channels
+    // they reachable on. Both are graceful no-ops when the provider is
+    // unconfigured (email) / the Infobip template isn't approved yet (WhatsApp).
+    if (sendWelcome && user) {
+      if (user.email) {
+        await ctx.scheduler.runAfter(0, internal.dispatch.sendWelcomeEmail, {
+          email: user.email,
+          name: user.name,
+          language: user.language,
+        });
+      }
+      if (user.phoneNumber) {
+        await ctx.scheduler.runAfter(0, internal.dispatch.sendWelcomeWhatsApp, {
+          phoneNumber: user.phoneNumber,
+          name: user.name,
+          language: user.language,
+        });
+      }
+    }
   },
 });
 

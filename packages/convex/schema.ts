@@ -106,6 +106,11 @@ export default defineSchema({
       ),
     ),
 
+    // Timestamp (ms) at which the post-onboarding welcome message (email +
+    // WhatsApp) was scheduled. Set once in `storeKeyBundle`; its presence is the
+    // idempotency guard that stops a second `storeKeyBundle` from re-sending.
+    welcomeSentAt: v.optional(v.number()),
+
     // No `createdAt` — Convex stamps `_creationTime` on every document; use it.
     updatedAt: v.optional(v.number()),
     lastSeenAt: v.optional(v.number()),
