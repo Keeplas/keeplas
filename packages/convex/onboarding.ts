@@ -7,7 +7,7 @@ import {
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { requireAuth, optionalAuth } from "./helpers";
+import { requireAuth, optionalAuth, getActiveItems } from "./helpers";
 import { createAuditLog } from "./audit";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -295,6 +295,79 @@ export const storeKeyBundle = mutation({
           language: user.language,
         });
       }
+
+      // Drip reminders: re-check at day 3 and day 10 whether the user has still
+      // not added a trusted contact and/or a vault item, and nudge them if so.
+      // The check happens at fire time (sendSetupReminder), so a user who
+      // finishes setup before then is never pinged.
+      await ctx.scheduler.runAfter(
+        3 * DAY_MS,
+        internal.onboarding.sendSetupReminder,
+        { userId, stage: "day3" },
+      );
+      await ctx.scheduler.runAfter(
+        10 * DAY_MS,
+        internal.onboarding.sendSetupReminder,
+        { userId, stage: "day10" },
+      );
+    }
+  },
+});
+
+/**
+ * Fired by the scheduler 3 and 10 days after onboarding completes. Sends a
+ * setup-completion reminder ONLY when the user still hasn't added a trusted
+ * contact and/or a vault item — a user who has both is fully set up and gets
+ * nothing. Delivers across whichever channels the user is reachable on; both
+ * sends degrade gracefully when their provider is unconfigured.
+ */
+export const sendSetupReminder = internalMutation({
+  args: {
+    userId: v.id("users"),
+    stage: v.union(v.literal("day3"), v.literal("day10")),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.onboardingStep !== "complete") return;
+
+    const trustContacts = (
+      await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+        .collect()
+    ).filter((c) => (c.contactType ?? "trust") === "trust");
+    const items = await getActiveItems(ctx, args.userId);
+
+    const missingContacts = trustContacts.length === 0;
+    const missingItems = items.length === 0;
+    // Fully set up — nothing to nudge.
+    if (!missingContacts && !missingItems) return;
+
+    if (user.email) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendSetupReminderEmail,
+        {
+          email: user.email,
+          name: user.name,
+          language: user.language,
+          stage: args.stage,
+          missingContacts,
+          missingItems,
+        },
+      );
+    }
+    if (user.phoneNumber) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.dispatch.sendSetupReminderWhatsApp,
+        {
+          phoneNumber: user.phoneNumber,
+          name: user.name,
+          language: user.language,
+        },
+      );
     }
   },
 });
