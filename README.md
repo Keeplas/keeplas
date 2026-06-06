@@ -211,7 +211,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 We welcome contributions! Please read:
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — workflow and code style
-- [CONTRIBUTOR_LICENSE_AGREEMENT.md](./CONTRIBUTOR_LICENSE_AGREEMENT.md) — required CLA
+- [CONTRIBUTOR_LICENSE_AGREEMENT.md](./CONTRIBUTOR_LICENSE_AGREEMENT.md)
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 
 Restricted areas (founder approval required): `packages/crypto/`, `security/`.
