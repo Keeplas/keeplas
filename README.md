@@ -5,11 +5,11 @@
 # Keeplas Vault
 
 <p align="center">
-  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-keeplas.com%2Fdocs-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-AGPL--3.0-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="https://keeplas.com"><img alt="Built by Keeplas" src="https://img.shields.io/badge/BUILT%20BY-KEEPLAS-b9eaff?style=for-the-badge&labelColor=28657a"></a>
-  <img alt="Zero-Knowledge" src="https://img.shields.io/badge/-ZERO--KNOWLEDGE-041632?style=for-the-badge&labelColor=b9eaff">
-  <img alt="Post-Quantum (ML-KEM-768)" src="https://img.shields.io/badge/-POST--QUANTUM-041632?style=for-the-badge&labelColor=b9eaff">
+  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-b9eaff?style=for-the-badge&logo=gitbook&logoColor=041632"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-b9eaff?style=for-the-badge&logo=github&logoColor=041632"></a>
+  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-b9eaff?style=for-the-badge&logo=keepassxc&logoColor=041632"></a>
+  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-b9eaff?style=for-the-badge&logo=gnu&logoColor=041632"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Need help" src="https://img.shields.io/badge/NEED%20HELP-b9eaff?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNjMyIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik05LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyIvPjxwYXRoIGQ9Ik0xMiAxN2guMDEiLz48L3N2Zz4K"></a>
 </p>
 
 > Open-source **Life Continuity Platform** — securely store, organize, and transmit vital information to trusted contacts.
@@ -205,6 +205,17 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
 - [`docs/TRUSTED_CONTACTS_SHARDS.md`](./docs/TRUSTED_CONTACTS_SHARDS.md) — trusted contacts, shard distribution & recovery
 - [`CLAUDE.md`](./CLAUDE.md) — engineering conventions for AI assistants & humans
+
+## Community & Discussions
+
+Have a question, an idea, or want to share feedback? Join us in [**GitHub Discussions**](https://github.com/Keeplas/keeplas/discussions):
+
+- **💬 Q&A** — ask how something works or get help with setup
+- **💡 Ideas** — propose features or improvements
+- **📣 Show & tell** — share what you built or how you use Keeplas
+- **🗣️ General** — anything else community-related
+
+Use Discussions for open-ended conversation, and [GitHub Issues](https://github.com/Keeplas/keeplas/issues) for confirmed bugs and actionable tasks. For security vulnerabilities, **do not** post publicly — email **security@keeplas.com** (see [SECURITY.md](./SECURITY.md)).
 
 ## Contributing
 
