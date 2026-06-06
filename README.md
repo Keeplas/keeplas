@@ -5,10 +5,11 @@
 # Keeplas Vault
 
 <p align="center">
-  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-b9eaff?style=for-the-badge&labelColor=041632&logo=github&logoColor=041632"></a>
-  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-b9eaff?style=for-the-badge&labelColor=041632"></a>
-  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-b9eaff?style=for-the-badge&labelColor=041632"></a>
+  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-b9eaff?style=for-the-badge&logo=gitbook&logoColor=041632"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-b9eaff?style=for-the-badge&logo=github&logoColor=041632"></a>
+  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-b9eaff?style=for-the-badge&logo=keepassxc&logoColor=041632"></a>
+  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-b9eaff?style=for-the-badge&logo=gnu&logoColor=041632"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Need help" src="https://img.shields.io/badge/NEED%20HELP-b9eaff?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNjMyIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik05LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyIvPjxwYXRoIGQ9Ik0xMiAxN2guMDEiLz48L3N2Zz4K"></a>
 </p>
 
 > Open-source **Life Continuity Platform** — securely store, organize, and transmit vital information to trusted contacts.
