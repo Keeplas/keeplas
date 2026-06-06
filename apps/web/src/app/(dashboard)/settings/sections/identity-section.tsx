@@ -42,8 +42,6 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [residenceDialogOpen, setResidenceDialogOpen] = useState(false);
 
   const phoneStatus = useQuery(api.phone_verification.getMyStatus);
@@ -80,18 +78,16 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
       })
     : null;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
+  // Auto-save the display name when the field loses focus, but only when it
+  // actually changed from the persisted value — avoids redundant mutations.
+  async function handleNameBlur() {
+    const next = name.trim();
+    if (next === (user.name ?? "")) return;
     onError("");
-    setSaved(false);
     try {
-      await updateProfile({ name });
-      setSaved(true);
+      await updateProfile({ name: next });
     } catch (err) {
       onError(getErrorMessage(err, t("identity.updateError")));
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -147,10 +143,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
 
   return (
     <section>
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-6"
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <button
             type="button"
@@ -243,6 +236,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             id="display-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onBlur={handleNameBlur}
             placeholder={t("identity.displayNamePlaceholder")}
           />
         </div>
@@ -330,24 +324,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
             {t("identity.phone.hint")}
           </p>
         </div>
-
-        <div className="col-span-full flex items-center justify-start gap-4">
-          {saved && (
-            <span className="text-body-md text-secondary font-medium">
-              {t("identity.updated")}
-            </span>
-          )}
-          <Button
-            type="submit"
-            variant="vault"
-            size="md"
-            disabled={saving}
-            className="cursor-pointer"
-          >
-            {saving ? t("identity.saving") : t("identity.save")}
-          </Button>
-        </div>
-      </form>
+      </div>
 
       <div className="mt-10 bg-surface-container-low rounded-2xl p-6 space-y-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
