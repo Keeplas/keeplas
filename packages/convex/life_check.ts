@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
+import { formatSenderIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
@@ -796,7 +797,7 @@ export const enterConfirmationStage = internalMutation({
     });
 
     const owner = await ctx.db.get(cycle.userId);
-    const ownerName = owner?.name ?? "A Keeplas user";
+    const ownerName = formatSenderIdentity(owner);
 
     const contacts = await ctx.db
       .query("trusted_contacts")
