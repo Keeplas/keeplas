@@ -86,32 +86,31 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 Run every step in order — none are optional for a first run:
 
 ```bash
-# 1. One-command bootstrap: copies .env.local, installs, links per-package envs
+# 1. One-command bootstrap: copies .env.local, installs, links per-package envs,
+#    then provisions your Convex deployment (interactive, opens a browser —
+#    writes CONVEX_DEPLOYMENT + NEXT_PUBLIC_CONVEX_URL into .env.local)
 pnpm bootstrap
 
 # 2. Generate the audit HMAC secret, then paste it into .env.local
 openssl rand -base64 32
 # → set KEEPLAS_CTX_SECRET=<output> in .env.local
 
-# 3. Provision your Convex deployment (one-time, opens a browser)
-npx convex dev --once --configure=new
-
-# 4. Seed Convex Auth's JWT keys on the deployment (REQUIRED — without this
+# 3. Seed Convex Auth's JWT keys on the deployment (REQUIRED — without this
 #    the first sign-in throws "Missing environment variable JWT_PRIVATE_KEY")
 npx @convex-dev/auth
 
-# 5. Push the rest of your local env to Convex (REQUIRED — audited mutations
+# 4. Push the rest of your local env to Convex (REQUIRED — audited mutations
 #    fail if KEEPLAS_CTX_SECRET doesn't match on the server)
 pnpm sync:convex-env
 
-# 6. Verify everything is in sync
+# 5. Verify everything is in sync
 pnpm check:convex          # must be green before continuing
 
-# 7. Boot the app — Convex env check runs in the background, never blocks
+# 6. Boot the app — Convex env check runs in the background, never blocks
 pnpm dev
 ```
 
-After step 7, open <http://localhost:3000>, sign in, and you're running. From then on `pnpm dev` is your only daily command.
+After step 6, open <http://localhost:3000>, sign in, and you're running. From then on `pnpm dev` is your only daily command.
 
 > Whenever you edit anything under `packages/convex/`, `pnpm dev` already runs `convex dev` in parallel to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
 
@@ -170,7 +169,7 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 | Command                | Description                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `pnpm bootstrap`       | One-command bootstrap (`.env.local`, install, link envs, prints next steps)                                   |
+| `pnpm bootstrap`       | One-command bootstrap (`.env.local`, install, link envs, provision Convex, prints next steps)                 |
 | `pnpm dev`             | Run all dev servers via Turborepo. Convex env check runs in the background — never blocks boot                |
 | `pnpm build`           | Production build for every workspace                                                                          |
 | `pnpm lint`            | ESLint across the monorepo                                                                                    |

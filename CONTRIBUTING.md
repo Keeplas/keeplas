@@ -14,20 +14,17 @@ The fast path is **native** with `pnpm bootstrap`. Docker is supported as an alt
    `git clone https://github.com/YOUR_USERNAME/keeplas.git && cd keeplas`
 2. **One-command bootstrap:**
    `pnpm bootstrap`
-   Copies `.env.example` → `.env.local`, installs, links per-package envs, prints the next steps.
+   Copies `.env.example` → `.env.local`, installs, links per-package envs, then provisions your personal Convex deployment (interactive — opens a browser, skipped if `CONVEX_DEPLOYMENT` is already set) and writes `CONVEX_DEPLOYMENT` + `NEXT_PUBLIC_CONVEX_URL` into `.env.local`.
    _Note:_ this script is intentionally **not** named `setup` — `pnpm setup` is a reserved pnpm built-in that configures your shell's `PNPM_HOME`.
 3. Open `.env.local` and paste a freshly generated audit secret in `KEEPLAS_CTX_SECRET`:
    `openssl rand -base64 32`
-4. Provision your personal Convex deployment (interactive — opens a browser):
-   `npx convex dev --once --configure=new`
-   This writes `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` into `.env.local`.
-5. Seed Convex Auth's JWT keys on your deployment (one-time):
+4. Seed Convex Auth's JWT keys on your deployment (one-time):
    `npx @convex-dev/auth`
    Generates a unique `JWT_PRIVATE_KEY` + `JWKS` pair and sets them on your deployment via the Convex CLI. Without this, the very first sign-in throws `Missing environment variable JWT_PRIVATE_KEY`.
-6. Push the rest of your local env to Convex:
+5. Push the rest of your local env to Convex:
    `pnpm sync:convex-env`
-   Pushes the audit secret, WebAuthn config, and Resend keys. `JWKS` / `JWT_PRIVATE_KEY` are deliberately **not** pushed by this script (they're per-deployment unique, seeded by step 5).
-7. Boot the app:
+   Pushes the audit secret, WebAuthn config, and Resend keys. `JWKS` / `JWT_PRIVATE_KEY` are deliberately **not** pushed by this script (they're per-deployment unique, seeded by step 4).
+6. Boot the app:
    `pnpm dev`
    The Convex env check runs in the background and warns on drift without blocking boot. Pre-push, run `pnpm check:convex` for a hard check.
 
