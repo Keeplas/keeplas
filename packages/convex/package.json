@@ -21,7 +21,7 @@
     "@types/node": "^25",
     "@types/web-push": "^3.6.4",
     "convex-test": "^0.0.53",
-    "typescript": "^5.8.3",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   }
 }
