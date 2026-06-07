@@ -12,7 +12,20 @@ export default defineConfig(({ mode }) => {
   // secrets (KEEPLAS_CTX_SECRET, STRIPE_*, ...) are read from process.env at
   // runtime inside server middleware/functions and are intentionally NOT
   // inlined into the client bundle.
-  const env = loadEnv(mode, process.cwd(), "NEXT_PUBLIC_");
+  // Vite's `loadEnv` only reads `.env` FILES. On Vercel/CI the `NEXT_PUBLIC_*`
+  // vars are injected via the dashboard as `process.env` (no `.env` file is
+  // written), so loadEnv alone returns nothing there and the values never get
+  // inlined — leaving `process.env.NEXT_PUBLIC_CONVEX_URL` undefined in the
+  // client AND the SSR bundle (which makes the Convex client null, so
+  // `ConvexAuthProvider` never mounts and `useConvexAuth` throws). Merge both
+  // sources, with `process.env` winning so the deployment env overrides files.
+  const filePublicEnv = loadEnv(mode, process.cwd(), "NEXT_PUBLIC_");
+  const processPublicEnv = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) =>
+      key.startsWith("NEXT_PUBLIC_"),
+    ),
+  );
+  const env = { ...filePublicEnv, ...processPublicEnv };
   const define = Object.fromEntries(
     Object.entries(env).map(([key, value]) => [
       `process.env.${key}`,
@@ -58,7 +71,16 @@ export default defineConfig(({ mode }) => {
       // Compile the server (request middleware + server routes) into a Vercel
       // Function via Nitro. Required for Vercel to build/deploy TanStack Start
       // (replaces the old Next.js framework preset).
-      nitro(),
+      nitro({
+        // The Vercel build externalizes React (the SSR function does a runtime
+        // `require('react')`), but on Vercel's pnpm install the tracer failed to
+        // copy it into the function — so production crashed with `Cannot find
+        // module 'react'` at /var/task, surfaced as h3's `{status:500,unhandled:
+        // true,message:"HTTPError"}`. Force-trace the React family into the
+        // function output. (Inlining via `noExternals` is not an option: it
+        // breaks React's JSX dev-runtime CJS interop during prerender.)
+        traceDeps: ["react", "react-dom"],
+      }),
       viteReact(),
     ],
   };

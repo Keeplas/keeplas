@@ -42,6 +42,7 @@ function convexConnectSources(): string[] {
  */
 export function buildContentSecurityPolicy(
   scriptHashes: string[] = [],
+  scriptNonces: string[] = [],
 ): string {
   const scriptSrc = ["'self'", "'wasm-unsafe-eval'"];
   if (process.env.NODE_ENV === "development") {
@@ -53,6 +54,7 @@ export function buildContentSecurityPolicy(
     // when hashes are present, so we deliberately emit no hashes in dev.)
     scriptSrc.push("'unsafe-inline'", "'unsafe-eval'");
   } else {
+    scriptSrc.push(...scriptNonces.map((nonce) => `'nonce-${nonce}'`));
     scriptSrc.push(...scriptHashes);
   }
 
@@ -62,11 +64,17 @@ export function buildContentSecurityPolicy(
     // scripts are allow-listed by their SHA-256 hash; bundled scripts are
     // same-origin, covered by 'self'.
     "script-src": scriptSrc,
+    // Chrome reports blocked <script> elements against script-src-elem. Keep it
+    // explicit so hash allow-listing applies consistently to framework scripts.
+    "script-src-elem": scriptSrc,
     // Tailwind / Vite inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
     "img-src": ["'self'", "data:", "blob:"],
-    "font-src": ["'self'"],
+    // Vite inlines small font files (under build.assetsInlineLimit) into the CSS
+    // bundle as `data:font/woff2;base64,...`, so `data:` is required for those.
+    // A font is inert (cannot execute script), so this does not weaken the CSP.
+    "font-src": ["'self'", "data:"],
     "object-src": ["'none'"],
     "base-uri": ["'none'"],
     "frame-ancestors": ["'none'"],
@@ -93,9 +101,13 @@ export function buildContentSecurityPolicy(
  */
 export function buildSecurityHeaders(
   scriptHashes: string[] = [],
+  scriptNonces: string[] = [],
 ): Record<string, string> {
   return {
-    "Content-Security-Policy": buildContentSecurityPolicy(scriptHashes),
+    "Content-Security-Policy": buildContentSecurityPolicy(
+      scriptHashes,
+      scriptNonces,
+    ),
     // Defines the `csp-endpoint` group referenced by the CSP `report-to`
     // directive. Same-origin collector route logs violations server-side.
     "Reporting-Endpoints": 'csp-endpoint="/api/csp-report"',
