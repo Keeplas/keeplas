@@ -66,7 +66,10 @@ export function buildContentSecurityPolicy(
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
     "img-src": ["'self'", "data:", "blob:"],
-    "font-src": ["'self'"],
+    // Vite inlines small font files (under build.assetsInlineLimit) into the CSS
+    // bundle as `data:font/woff2;base64,...`, so `data:` is required for those.
+    // A font is inert (cannot execute script), so this does not weaken the CSP.
+    "font-src": ["'self'", "data:"],
     "object-src": ["'none'"],
     "base-uri": ["'none'"],
     "frame-ancestors": ["'none'"],
