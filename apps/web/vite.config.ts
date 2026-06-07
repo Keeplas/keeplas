@@ -12,7 +12,20 @@ export default defineConfig(({ mode }) => {
   // secrets (KEEPLAS_CTX_SECRET, STRIPE_*, ...) are read from process.env at
   // runtime inside server middleware/functions and are intentionally NOT
   // inlined into the client bundle.
-  const env = loadEnv(mode, process.cwd(), "NEXT_PUBLIC_");
+  // Vite's `loadEnv` only reads `.env` FILES. On Vercel/CI the `NEXT_PUBLIC_*`
+  // vars are injected via the dashboard as `process.env` (no `.env` file is
+  // written), so loadEnv alone returns nothing there and the values never get
+  // inlined — leaving `process.env.NEXT_PUBLIC_CONVEX_URL` undefined in the
+  // client AND the SSR bundle (which makes the Convex client null, so
+  // `ConvexAuthProvider` never mounts and `useConvexAuth` throws). Merge both
+  // sources, with `process.env` winning so the deployment env overrides files.
+  const filePublicEnv = loadEnv(mode, process.cwd(), "NEXT_PUBLIC_");
+  const processPublicEnv = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) =>
+      key.startsWith("NEXT_PUBLIC_"),
+    ),
+  );
+  const env = { ...filePublicEnv, ...processPublicEnv };
   const define = Object.fromEntries(
     Object.entries(env).map(([key, value]) => [
       `process.env.${key}`,
