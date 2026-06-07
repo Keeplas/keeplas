@@ -114,11 +114,14 @@ export function buildSecurityHeaders(
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
-    // Disable everything the app never uses. publickey-credentials-get=(self)
-    // is kept so WebAuthn (PRF unlock with biometric / hardware key) works.
+    // Disable everything the app never uses. camera/microphone are kept at
+    // (self) so same-origin audio/video recording (add-item-dialog vault items)
+    // works while staying blocked in cross-origin iframes.
+    // publickey-credentials-get=(self) is kept so WebAuthn (PRF unlock with
+    // biometric / hardware key) works.
     "Permissions-Policy": [
-      "camera=()",
-      "microphone=()",
+      "camera=(self)",
+      "microphone=(self)",
       "geolocation=()",
       "payment=()",
       "usb=()",
