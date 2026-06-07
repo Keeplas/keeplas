@@ -42,6 +42,7 @@ function convexConnectSources(): string[] {
  */
 export function buildContentSecurityPolicy(
   scriptHashes: string[] = [],
+  scriptNonces: string[] = [],
 ): string {
   const scriptSrc = ["'self'", "'wasm-unsafe-eval'"];
   if (process.env.NODE_ENV === "development") {
@@ -53,6 +54,7 @@ export function buildContentSecurityPolicy(
     // when hashes are present, so we deliberately emit no hashes in dev.)
     scriptSrc.push("'unsafe-inline'", "'unsafe-eval'");
   } else {
+    scriptSrc.push(...scriptNonces.map((nonce) => `'nonce-${nonce}'`));
     scriptSrc.push(...scriptHashes);
   }
 
@@ -99,9 +101,13 @@ export function buildContentSecurityPolicy(
  */
 export function buildSecurityHeaders(
   scriptHashes: string[] = [],
+  scriptNonces: string[] = [],
 ): Record<string, string> {
   return {
-    "Content-Security-Policy": buildContentSecurityPolicy(scriptHashes),
+    "Content-Security-Policy": buildContentSecurityPolicy(
+      scriptHashes,
+      scriptNonces,
+    ),
     // Defines the `csp-endpoint` group referenced by the CSP `report-to`
     // directive. Same-origin collector route logs violations server-side.
     "Reporting-Endpoints": 'csp-endpoint="/api/csp-report"',

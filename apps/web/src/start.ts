@@ -101,6 +101,7 @@ async function sha256Token(text: string): Promise<string> {
 }
 
 const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
+const SCRIPT_WITHOUT_NONCE = /<script(?![^>]*\bnonce=)/gi;
 
 /** Hash every inline (src-less) <script> in the document for the CSP. */
 async function hashInlineScripts(html: string): Promise<string[]> {
@@ -110,6 +111,16 @@ async function hashInlineScripts(html: string): Promise<string[]> {
     if (body && body.length > 0) hashes.push(await sha256Token(body));
   }
   return hashes;
+}
+
+function randomNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return uint8ToBase64(bytes);
+}
+
+function addScriptNonce(html: string, nonce: string): string {
+  return html.replaceAll(SCRIPT_WITHOUT_NONCE, `<script nonce="${nonce}"`);
 }
 
 function buildSealCookie(sealed: SealedContext): string {
@@ -187,14 +198,18 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
     }
 
     const html = await response.text();
+    const scriptNonce = randomNonce();
+    const htmlWithNonce = addScriptNonce(html, scriptNonce);
     const hashes = await hashInlineScripts(html);
     const headers = new Headers(response.headers);
-    for (const [name, value] of Object.entries(buildSecurityHeaders(hashes))) {
+    for (const [name, value] of Object.entries(
+      buildSecurityHeaders(hashes, [scriptNonce]),
+    )) {
       headers.set(name, value);
     }
     if (cookie) headers.append("Set-Cookie", cookie);
 
-    return new Response(html, { status: response.status, headers });
+    return new Response(htmlWithNonce, { status: response.status, headers });
   },
 );
 

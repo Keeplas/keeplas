@@ -31,6 +31,12 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toMatch(new RegExp(`script-src-elem [^;]*${HASH}`));
   });
 
+  it("allow-lists script elements by nonce in production", () => {
+    const csp = buildContentSecurityPolicy([], ["abc123"]);
+    expect(csp).toMatch(/script-src [^;]*'nonce-abc123'/);
+    expect(csp).toMatch(/script-src-elem [^;]*'nonce-abc123'/);
+  });
+
   it("serves bundled scripts from same-origin via 'self'", () => {
     const csp = buildContentSecurityPolicy([]);
     expect(csp).toMatch(/script-src [^;]*'self'/);
