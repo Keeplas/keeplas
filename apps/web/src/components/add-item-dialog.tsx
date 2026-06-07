@@ -248,17 +248,26 @@ export function AddItemDialog({
           },
         ]
       : [];
-    const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
-      value: `${GROUP_PREFIX}${g._id}`,
-      label: g.name,
-      hint:
-        g.memberContactIds.length === 1
-          ? t("recipients.contactCountOne", { count: 1 })
-          : t("recipients.contactCountOther", {
-              count: g.memberContactIds.length,
-            }),
-      groupLabel: t("recipients.groupsLabel"),
-    }));
+    // Count only members that still resolve to a live (non-revoked) contact —
+    // `allContacts` is already filtered to non-revoked. A revoked contact lingers
+    // in `memberContactIds` (revoke doesn't prune groups), so the raw array
+    // length would over-count vs. both the individual list and what actually
+    // gets released (resolveItemRecipients intersects the same way).
+    const liveContactIds = new Set(allContacts.map((c) => c._id));
+    const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => {
+      const memberCount = g.memberContactIds.filter((id) =>
+        liveContactIds.has(id),
+      ).length;
+      return {
+        value: `${GROUP_PREFIX}${g._id}`,
+        label: g.name,
+        hint:
+          memberCount === 1
+            ? t("recipients.contactCountOne", { count: 1 })
+            : t("recipients.contactCountOther", { count: memberCount }),
+        groupLabel: t("recipients.groupsLabel"),
+      };
+    });
     const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
       value: `${CONTACT_PREFIX}${c._id}`,
       label: c.name,

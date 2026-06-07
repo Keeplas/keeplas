@@ -71,6 +71,11 @@ export function buildContentSecurityPolicy(
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
     "img-src": ["'self'", "data:", "blob:"],
+    // Decrypted vault attachments (audio/video) are played from in-memory
+    // `blob:` object URLs. Without an explicit media-src the browser falls back
+    // to default-src ('self') and refuses the blob, so the player stays stuck at
+    // 0:00. Decryption happens client-side — the blob never leaves the page.
+    "media-src": ["'self'", "blob:"],
     // Vite inlines small font files (under build.assetsInlineLimit) into the CSS
     // bundle as `data:font/woff2;base64,...`, so `data:` is required for those.
     // A font is inert (cannot execute script), so this does not weaken the CSP.
