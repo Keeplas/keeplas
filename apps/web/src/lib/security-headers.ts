@@ -62,6 +62,9 @@ export function buildContentSecurityPolicy(
     // scripts are allow-listed by their SHA-256 hash; bundled scripts are
     // same-origin, covered by 'self'.
     "script-src": scriptSrc,
+    // Chrome reports blocked <script> elements against script-src-elem. Keep it
+    // explicit so hash allow-listing applies consistently to framework scripts.
+    "script-src-elem": scriptSrc,
     // Tailwind / Vite inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
     "connect-src": ["'self'", ...convexConnectSources()],
