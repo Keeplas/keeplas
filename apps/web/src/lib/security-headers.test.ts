@@ -120,11 +120,11 @@ describe("buildSecurityHeaders", () => {
     expect(headers["X-Frame-Options"]).toBe("DENY");
   });
 
-  it("disables sensitive features but keeps WebAuthn get", () => {
+  it("disables sensitive features but keeps WebAuthn get + same-origin media", () => {
     const headers = buildSecurityHeaders([HASH]);
     const policy = headers["Permissions-Policy"];
-    expect(policy).toContain("camera=()");
-    expect(policy).toContain("microphone=()");
+    expect(policy).toContain("camera=(self)");
+    expect(policy).toContain("microphone=(self)");
     expect(policy).toContain("geolocation=()");
     expect(policy).toContain("publickey-credentials-get=(self)");
   });

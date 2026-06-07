@@ -28,9 +28,26 @@ export function normalizeUserLanguage(
   return userLanguageForLocale(resolveLocale(value));
 }
 
+// Pick the first browser-advertised language we support, falling back to the
+// default locale. Used as the initial guess before the user picks one and
+// before an authenticated preference is loaded.
+export function detectBrowserLocale(): Locale {
+  if (typeof navigator === "undefined") return defaultLocale;
+  const candidates =
+    navigator.languages && navigator.languages.length > 0
+      ? navigator.languages
+      : [navigator.language];
+  for (const candidate of candidates) {
+    if (candidate && resolveLocale(candidate) === "fr") return "fr";
+  }
+  return defaultLocale;
+}
+
 export function readStoredLocale(): Locale {
   if (typeof window === "undefined") return defaultLocale;
-  return resolveLocale(window.localStorage.getItem(LANGUAGE_STORAGE_KEY));
+  const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (stored) return resolveLocale(stored);
+  return detectBrowserLocale();
 }
 
 export function storeLocale(locale: Locale): void {
