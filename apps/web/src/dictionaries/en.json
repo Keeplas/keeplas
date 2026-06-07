@@ -1396,7 +1396,9 @@
       "download": "Download",
       "decrypting": "Decrypting…",
       "documentReady": "Document ready — open or download to view.",
-      "open": "Open"
+      "open": "Open",
+      "enlarge": "Enlarge",
+      "close": "Close"
     }
   },
   "trustedContacts": {
@@ -1750,7 +1752,9 @@
       "decrypting": "Decrypting…",
       "decryptError": "Unable to decrypt attachment.",
       "documentReady": "Document ready — open or download to view.",
-      "open": "Open"
+      "open": "Open",
+      "enlarge": "Enlarge",
+      "close": "Close"
     },
     "detail": {
       "notFound": "Item not found",
