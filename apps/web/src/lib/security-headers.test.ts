@@ -93,6 +93,11 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toMatch(/font-src [^;]*data:/);
   });
 
+  it("allows blob: media so decrypted audio/video attachments can play", () => {
+    const csp = buildContentSecurityPolicy([HASH]);
+    expect(csp).toMatch(/media-src [^;]*blob:/);
+  });
+
   it("adds the configured Convex origin to connect-src when present", () => {
     process.env.NEXT_PUBLIC_CONVEX_URL =
       "https://energetic-pony-179.convex.cloud";

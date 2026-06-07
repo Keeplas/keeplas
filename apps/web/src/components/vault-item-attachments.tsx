@@ -7,6 +7,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+import { ImageLightbox } from "@/components/image-lightbox";
 
 type AttachmentFile = Doc<"vault_item_files">;
 
@@ -206,13 +207,12 @@ function AttachmentCard({
       )}
 
       {plainUrl && file.kind === "image" && (
-        <div className="overflow-hidden rounded-xl bg-surface-container flex justify-center">
-          <img
-            src={plainUrl}
-            alt={file.name}
-            className="max-h-[480px] w-auto object-contain"
-          />
-        </div>
+        <ImageLightbox
+          src={plainUrl}
+          alt={file.name}
+          enlargeLabel={t("attachments.enlarge")}
+          closeLabel={t("attachments.close")}
+        />
       )}
 
       {plainUrl && file.kind === "document" && (

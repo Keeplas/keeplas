@@ -1396,7 +1396,9 @@
       "download": "Télécharger",
       "decrypting": "Déchiffrement…",
       "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
-      "open": "Ouvrir"
+      "open": "Ouvrir",
+      "enlarge": "Agrandir",
+      "close": "Fermer"
     }
   },
   "trustedContacts": {
@@ -1750,7 +1752,9 @@
       "decrypting": "Déchiffrement…",
       "decryptError": "Impossible de déchiffrer la pièce jointe.",
       "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
-      "open": "Ouvrir"
+      "open": "Ouvrir",
+      "enlarge": "Agrandir",
+      "close": "Fermer"
     },
     "detail": {
       "notFound": "Élément introuvable",
