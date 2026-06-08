@@ -805,6 +805,10 @@
         "title": "Nous contacter",
         "description": "Questions, retours ou préoccupations de sécurité — notre équipe est là pour vous aider."
       },
+      "roadmap": {
+        "title": "Feuille de route",
+        "description": "Ce que nous construisons ensuite — guidé par ce qui compte le plus pour protéger votre succession."
+      },
       "fallback": {
         "title": "Paramètres",
         "description": "Configurez votre sanctuaire numérique."
@@ -815,6 +819,7 @@
       "defaultName": "Curateur",
       "secureSession": "Session sécurisée",
       "closeNav": "Fermer la navigation",
+      "roadmap": "Feuille de route",
       "documentation": "Documentation",
       "contact": "Nous contacter",
       "signOut": "Se déconnecter",
@@ -2668,5 +2673,70 @@
         "a": "Les entrées d'audit ne stockent que des métadonnées d'action — jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment, mais la chaîne d'audit elle-même est conservée (anonymisée vers votre identifiant utilisateur désormais supprimé) afin que la garantie d'immuabilité sur laquelle un futur tribunal des successions pourrait s'appuyer ne soit pas détruite rétroactivement. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime combiné à l'article 17.3.b obligation légale)."
       }
     ]
+  },
+  "roadmap": {
+    "upcomingFeatures": {
+      "heading": "Fonctionnalités à venir",
+      "description": "Pas de dates promises — uniquement les directions dans lesquelles nous investissons activement.",
+      "items": [
+        {
+          "title": "Notifications Telegram",
+          "description": "Recevez vos vérifications de vie et les alertes de vos contacts de confiance directement dans Telegram, via un bot avec livraison chiffrée de bout en bout."
+        },
+        {
+          "title": "Notifications SMS et vérification de vie",
+          "description": "Confirmez que tout va bien en répondant à un simple SMS, et permettez à vos contacts de confiance de vous joindre quand l'accès Internet est limité."
+        },
+        {
+          "title": "Résidence des données",
+          "description": "Choisissez le pays d'hébergement de votre Vault chiffré, pour répondre à vos exigences personnelles, familiales ou réglementaires."
+        },
+        {
+          "title": "Export du Vault",
+          "description": "Téléchargez à tout moment l'intégralité de votre Vault chiffré — portabilité totale, aucune dépendance, sans question."
+        },
+        {
+          "title": "Conformité notariale et juridique",
+          "description": "Notarisation optionnelle de vos instructions de transmission et intégrations avec les cadres juridiques de succession selon les juridictions."
+        },
+        {
+          "title": "Ancrage blockchain",
+          "description": "Preuves publiques d'existence et horodatages infalsifiables pour vos documents les plus importants, ancrés sur une chaîne publique."
+        },
+        {
+          "title": "Applications mobiles",
+          "description": "Applications iOS et Android natives pour des vérifications de vie rapides, un accès au Vault à tout moment et un déverrouillage biométrique."
+        },
+        {
+          "title": "Audit de niveau bancaire",
+          "description": "Certification indépendante SOC 2 Type II et ISO 27001 de notre infrastructure, de nos processus et de nos contrôles."
+        },
+        {
+          "title": "Support des clés matérielles",
+          "description": "Utilisez une YubiKey ou toute clé de sécurité FIDO2 comme facteur d'authentification supplémentaire, résistant au phishing."
+        },
+        {
+          "title": "Personnalisation",
+          "description": "Adaptez certains aspects de Keeplas — thèmes, cadence des notifications, organisation du Vault, rythme des vérifications de vie — pour que l'app épouse votre quotidien."
+        },
+        {
+          "title": "Gestion des successions",
+          "description": "Outils pour planifier et orchestrer la transmission de votre succession numérique et physique à vos proches, avec des rôles clairs et une transmission étape par étape."
+        },
+        {
+          "title": "Succession des cadres patrimoniaux, héritages et participations",
+          "description": "Pilotez la transmission des structures formelles — sociétés patrimoniales, dispositions successorales et participations en entreprise — avec des bénéficiaires définis et une exécution traçable."
+        },
+        {
+          "title": "Certification des documents",
+          "description": "Certifiez l'authenticité et l'intégrité de vos documents les plus importants, avec des preuves vérifiables à partager avec des tiers."
+        }
+      ]
+    },
+    "requestFeature": {
+      "heading": "Il vous manque quelque chose ?",
+      "description": "Dites-nous ce qui rendrait Keeplas indispensable pour vous. Nous lisons chaque demande.",
+      "cta": "Demander une fonctionnalité"
+    }
   }
 }

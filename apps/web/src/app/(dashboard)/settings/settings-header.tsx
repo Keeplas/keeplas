@@ -12,6 +12,7 @@ const SECTION_KEYS: Record<string, string> = {
   "/settings/recovery-kit": "recoveryKit",
   "/settings/subscription": "subscription",
   "/settings/contact": "contact",
+  "/settings/roadmap": "roadmap",
 };
 
 function lookupSectionKey(pathname: string | null): string {

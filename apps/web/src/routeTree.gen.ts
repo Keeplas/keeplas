@@ -37,6 +37,7 @@ import { Route as DashboardVaultItemIdIndexRouteImport } from './routes/_dashboa
 import { Route as DashboardSettingsUsageIndexRouteImport } from './routes/_dashboard/settings/usage/index'
 import { Route as DashboardSettingsSubscriptionIndexRouteImport } from './routes/_dashboard/settings/subscription/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/_dashboard/settings/security/index'
+import { Route as DashboardSettingsRoadmapIndexRouteImport } from './routes/_dashboard/settings/roadmap/index'
 import { Route as DashboardSettingsRecoveryKitIndexRouteImport } from './routes/_dashboard/settings/recovery-kit/index'
 import { Route as DashboardSettingsPreferencesIndexRouteImport } from './routes/_dashboard/settings/preferences/index'
 import { Route as DashboardSettingsContinuityIndexRouteImport } from './routes/_dashboard/settings/continuity/index'
@@ -195,6 +196,12 @@ const DashboardSettingsSecurityIndexRoute =
     path: '/security/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
+const DashboardSettingsRoadmapIndexRoute =
+  DashboardSettingsRoadmapIndexRouteImport.update({
+    id: '/roadmap/',
+    path: '/roadmap/',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
 const DashboardSettingsRecoveryKitIndexRoute =
   DashboardSettingsRecoveryKitIndexRouteImport.update({
     id: '/recovery-kit/',
@@ -304,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
   '/settings/recovery-kit/': typeof DashboardSettingsRecoveryKitIndexRoute
+  '/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/settings/usage/': typeof DashboardSettingsUsageIndexRoute
@@ -343,6 +351,7 @@ export interface FileRoutesByTo {
   '/settings/continuity': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences': typeof DashboardSettingsPreferencesIndexRoute
   '/settings/recovery-kit': typeof DashboardSettingsRecoveryKitIndexRoute
+  '/settings/roadmap': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription': typeof DashboardSettingsSubscriptionIndexRoute
   '/settings/usage': typeof DashboardSettingsUsageIndexRoute
@@ -387,6 +396,7 @@ export interface FileRoutesById {
   '/_dashboard/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/_dashboard/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
   '/_dashboard/settings/recovery-kit/': typeof DashboardSettingsRecoveryKitIndexRoute
+  '/_dashboard/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/_dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/_dashboard/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/_dashboard/settings/usage/': typeof DashboardSettingsUsageIndexRoute
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/settings/continuity/'
     | '/settings/preferences/'
     | '/settings/recovery-kit/'
+    | '/settings/roadmap/'
     | '/settings/security/'
     | '/settings/subscription/'
     | '/settings/usage/'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/settings/continuity'
     | '/settings/preferences'
     | '/settings/recovery-kit'
+    | '/settings/roadmap'
     | '/settings/security'
     | '/settings/subscription'
     | '/settings/usage'
@@ -511,6 +523,7 @@ export interface FileRouteTypes {
     | '/_dashboard/settings/continuity/'
     | '/_dashboard/settings/preferences/'
     | '/_dashboard/settings/recovery-kit/'
+    | '/_dashboard/settings/roadmap/'
     | '/_dashboard/settings/security/'
     | '/_dashboard/settings/subscription/'
     | '/_dashboard/settings/usage/'
@@ -734,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsSecurityIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
+    '/_dashboard/settings/roadmap/': {
+      id: '/_dashboard/settings/roadmap/'
+      path: '/roadmap'
+      fullPath: '/settings/roadmap/'
+      preLoaderRoute: typeof DashboardSettingsRoadmapIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
     '/_dashboard/settings/recovery-kit/': {
       id: '/_dashboard/settings/recovery-kit/'
       path: '/recovery-kit'
@@ -846,6 +866,7 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsContinuityIndexRoute: typeof DashboardSettingsContinuityIndexRoute
   DashboardSettingsPreferencesIndexRoute: typeof DashboardSettingsPreferencesIndexRoute
   DashboardSettingsRecoveryKitIndexRoute: typeof DashboardSettingsRecoveryKitIndexRoute
+  DashboardSettingsRoadmapIndexRoute: typeof DashboardSettingsRoadmapIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsSubscriptionIndexRoute: typeof DashboardSettingsSubscriptionIndexRoute
   DashboardSettingsUsageIndexRoute: typeof DashboardSettingsUsageIndexRoute
@@ -859,6 +880,7 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
     DashboardSettingsPreferencesIndexRoute,
   DashboardSettingsRecoveryKitIndexRoute:
     DashboardSettingsRecoveryKitIndexRoute,
+  DashboardSettingsRoadmapIndexRoute: DashboardSettingsRoadmapIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsSubscriptionIndexRoute:
     DashboardSettingsSubscriptionIndexRoute,
