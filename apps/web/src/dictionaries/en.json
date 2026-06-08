@@ -805,6 +805,10 @@
         "title": "Contact Us",
         "description": "Questions, feedback or security concerns — our concierge team is here to help."
       },
+      "roadmap": {
+        "title": "Roadmap",
+        "description": "What we're building next — shaped by what matters most for protecting your succession."
+      },
       "fallback": {
         "title": "Settings",
         "description": "Configure your digital sanctuary."
@@ -815,6 +819,7 @@
       "defaultName": "Curator",
       "secureSession": "Secure session",
       "closeNav": "Close navigation",
+      "roadmap": "Roadmap",
       "documentation": "Documentation",
       "contact": "Contact Us",
       "signOut": "Sign Out",
@@ -2668,5 +2673,70 @@
         "a": "Audit entries store action metadata only — never the plaintext of your vault. You can request export or deletion of your account at any time, but the audit chain itself is preserved (anonymized to your now-deleted user ID) so that the immutability guarantee on which a future probate court might rely is not retroactively destroyed. See GDPR full text for the legal basis (Article 6.1.f legitimate interest combined with Article 17.3.b legal obligation)."
       }
     ]
+  },
+  "roadmap": {
+    "upcomingFeatures": {
+      "heading": "Upcoming Features",
+      "description": "No promised dates — only directions we are actively investing in.",
+      "items": [
+        {
+          "title": "Telegram notifications",
+          "description": "Receive life check-ins and trusted-contact alerts directly in Telegram, with end-to-end encrypted bot delivery."
+        },
+        {
+          "title": "SMS notifications & life check-in",
+          "description": "Confirm you're alive with a single SMS reply, and let trusted contacts reach you when network access is limited."
+        },
+        {
+          "title": "Data residency",
+          "description": "Choose the country where your encrypted vault is stored, to meet personal, family, or regulatory requirements."
+        },
+        {
+          "title": "Vault export",
+          "description": "Download your entire encrypted vault at any time — full portability, no lock-in, no questions asked."
+        },
+        {
+          "title": "Notarial & legal compliance",
+          "description": "Optional notarisation of succession instructions and integrations with inheritance frameworks across jurisdictions."
+        },
+        {
+          "title": "Blockchain anchoring",
+          "description": "Public proof of existence and tamper-evident timestamps for your most important documents, anchored on a public chain."
+        },
+        {
+          "title": "Mobile apps",
+          "description": "Native iOS and Android apps for fast life check-ins, vault access on the go, and biometric unlock."
+        },
+        {
+          "title": "Bank-grade audit",
+          "description": "Independent SOC 2 Type II and ISO 27001 certification of our infrastructure, processes, and controls."
+        },
+        {
+          "title": "Hardware key support",
+          "description": "Use a YubiKey or any FIDO2 hardware security key as an additional, phishing-resistant authentication factor."
+        },
+        {
+          "title": "Personalization",
+          "description": "Tailor parts of the Keeplas experience — themes, notification cadence, vault layout, life-check rhythm — so the app fits how you actually live."
+        },
+        {
+          "title": "Estate management",
+          "description": "Tools to plan and orchestrate the transfer of your digital and physical succession to your heirs, with clear roles and step-by-step transmission."
+        },
+        {
+          "title": "Succession of estate frameworks, inheritances & holdings",
+          "description": "Manage the transfer of formal structures — holding entities, inheritance dispositions, and corporate shareholdings — with defined beneficiaries and traceable execution."
+        },
+        {
+          "title": "Document certification",
+          "description": "Certify the authenticity and integrity of your most important documents, with verifiable proof you can share with third parties."
+        }
+      ]
+    },
+    "requestFeature": {
+      "heading": "Missing something?",
+      "description": "Tell us what would make Keeplas indispensable to you. We read every request.",
+      "cta": "Request a feature"
+    }
   }
 }

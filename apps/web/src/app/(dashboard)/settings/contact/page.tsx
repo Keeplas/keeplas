@@ -11,6 +11,7 @@ import {
   SelectItem,
   Textarea,
 } from "@keeplas/ui";
+import { useSearchParams } from "@/lib/navigation";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
@@ -37,9 +38,17 @@ export default function SettingsContactPage() {
   const user = useQuery(api.users.viewer);
   const submitTicket = useMutation(api.support.submitTicket);
 
+  // Seed the topic from a `?topic=` query param (e.g. the Roadmap section links
+  // here with topic=feature_request), falling back to "general" when absent or
+  // unknown.
+  const requestedTopic = useSearchParams().get("topic");
+  const initialTopic: Topic = TOPIC_VALUES.includes(requestedTopic as Topic)
+    ? (requestedTopic as Topic)
+    : "general";
+
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [topic, setTopic] = useState<Topic>("general");
+  const [topic, setTopic] = useState<Topic>(initialTopic);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
