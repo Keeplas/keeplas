@@ -595,13 +595,11 @@
       "help": "How often Keeplas asks you to confirm you're well. Shorter = more frequent check-ins; longer = fewer interruptions but slower release.",
       "description": "How often Keeplas asks you to confirm you're well. Only an explicit reply — in-app tap, email button, or WhatsApp — resets the countdown; using the app does not.",
       "unit": {
-        "test": "Seconds",
         "weekly": "Days",
         "monthly": "Days",
         "quarterly": "Days"
       },
       "tag": {
-        "test": "Test",
         "weekly": "Active",
         "monthly": "Recommended",
         "quarterly": "Relaxed"

@@ -595,13 +595,11 @@
       "help": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Plus court = des vérifications plus fréquentes ; plus long = moins d'interruptions mais une transmission plus lente.",
       "description": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Seule une réponse explicite — depuis l'application, le bouton de l'e-mail ou WhatsApp — réinitialise le compte à rebours ; utiliser l'application ne suffit pas.",
       "unit": {
-        "test": "Secondes",
         "weekly": "Jours",
         "monthly": "Jours",
         "quarterly": "Jours"
       },
       "tag": {
-        "test": "Test",
         "weekly": "Actif",
         "monthly": "Recommandé",
         "quarterly": "Détendu"

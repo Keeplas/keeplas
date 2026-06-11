@@ -15,16 +15,15 @@ crons.interval(
 );
 
 /**
- * Per-minute evaluator for the inactivity-driven Life Check trigger. For each
+ * Hourly evaluator for the inactivity-driven Life Check trigger. For each
  * active config, initiates a new cycle when the user has been inactive for
  * longer than the configured threshold. Skips travel mode and configs that
- * already have a running/escalating cycle. Runs every minute so sub-day
- * cadences (e.g. the 60-second "test" cadence) fire promptly instead of only
- * on an hourly tick; day-scale cadences are unaffected.
+ * already have a running/escalating cycle. The smallest cadence is 7 days, so
+ * an hourly tick resolves thresholds with ample precision.
  */
 crons.interval(
   "life_check_evaluator",
-  { minutes: 1 },
+  { hours: 1 },
   internal.life_check.evaluateAllConfigs,
 );
 
