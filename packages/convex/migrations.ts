@@ -96,3 +96,40 @@ export const wipeAuditLogs = internalMutation({
     return { deleted: rows.length };
   },
 });
+
+/**
+ * One-shot migration that retires the legacy 60-second "test" check-in cadence.
+ * Any `life_check_configs` still on `frequency: "test"` is moved to the safe
+ * "weekly" cadence (7-day threshold) with the inactivity clock re-armed from
+ * `now`, so it can't fire immediately. MUST run on a deployment BEFORE pushing
+ * the schema that drops `v.literal("test")` — otherwise the schema push is
+ * rejected, and a leftover "test" config would otherwise trigger in ~60s.
+ * Idempotent and a no-op when no "test" config exists:
+ *   npx convex run migrations:migrateTestCadence        # dev
+ *   npx convex run migrations:migrateTestCadence --prod # prod (run first)
+ */
+export const migrateTestCadence = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const WEEKLY_DAYS = 7;
+    const now = Date.now();
+
+    const configs = await ctx.db.query("life_check_configs").collect();
+    // `frequency` no longer includes "test" in the generated types, but legacy
+    // documents may still carry it until this migration runs — compare as string.
+    const stale = configs.filter((c) => (c.frequency as string) === "test");
+
+    for (const config of stale) {
+      await ctx.db.patch(config._id, {
+        frequency: "weekly",
+        inactivityThresholdDays: WEEKLY_DAYS,
+        lastActivityAt: now,
+        nextCheckAt: now + WEEKLY_DAYS * DAY_MS,
+        updatedAt: now,
+      });
+    }
+
+    return { scanned: configs.length, migrated: stale.length };
+  },
+});

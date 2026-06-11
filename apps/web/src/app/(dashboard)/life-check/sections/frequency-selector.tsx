@@ -21,7 +21,7 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
       <p className="text-body-md text-on-surface-variant mb-6">
         {t("frequency.description")}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {FREQUENCIES.map((freq) => {
           const selected = value === freq.value;
           return (
