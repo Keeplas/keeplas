@@ -546,14 +546,13 @@ export default defineSchema({
     userId: v.id("users"),
 
     frequency: v.union(
-      v.literal("test"),
       v.literal("weekly"),
       v.literal("monthly"),
       v.literal("quarterly"),
     ),
 
     // Inactivity-driven trigger model. Derived from `frequency` at write time
-    // (test=60s, weekly=7d, monthly=30d, quarterly=90d) but stored explicitly
+    // (weekly=7d, monthly=30d, quarterly=90d) but stored explicitly
     // so the evaluator can compare without re-mapping. Optional during rollout.
     inactivityThresholdDays: v.optional(v.number()),
     // Last observed user activity (login, navigation). The evaluator only
