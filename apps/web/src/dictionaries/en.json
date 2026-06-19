@@ -26,9 +26,9 @@
   "auth": {
     "hero": {
       "eyebrow": "The Digital Curator",
-      "titleLine1": "Secure Your",
-      "titleLine2": "Digital Legacy.",
-      "body": "Everything you cannot take with you, kept safe for the day you are no longer here. Encrypted end-to-end, and passed on to the people you choose when you no longer can.",
+      "titleLine1": "For the day",
+      "titleLine2": "you're gone.",
+      "body": "Death gives no warning. The accounts, passwords and last words you never passed on die with you — unless they're sealed here, encrypted end to end, waiting for the people you chose.",
       "encryptionStandard": "Encryption Standard",
       "architecture": "Architecture",
       "quantumSafe": "Quantum-Safe (FIPS 203)"
@@ -337,7 +337,9 @@
       "unavailableSuffix": "(unavailable on this device)",
       "methodPin": "PIN",
       "methodBiometric": "Biometric",
-      "methodHardwareKey": "Hardware key"
+      "methodHardwareKey": "Hardware key",
+      "contact": "Contact us",
+      "logout": "Log out"
     },
     "emailVerify": {
       "invalidEmail": "Enter a valid email address",

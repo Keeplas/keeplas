@@ -26,9 +26,9 @@
   "auth": {
     "hero": {
       "eyebrow": "Le Curateur Numérique",
-      "titleLine1": "Protégez votre",
-      "titleLine2": "héritage numérique.",
-      "body": "Tout ce que vous ne pouvez emporter, gardé en sécurité pour le jour où vous ne serez plus là. Chiffré de bout en bout, transmis aux personnes que vous avez choisies lorsque vous ne le pourrez plus.",
+      "titleLine1": "Pour le jour",
+      "titleLine2": "de votre départ.",
+      "body": "La mort ne prévient pas. Les comptes, les mots de passe et les derniers mots que vous n'avez jamais transmis meurent avec vous — sauf s'ils sont scellés ici, chiffrés de bout en bout, en attente des personnes que vous avez choisies.",
       "encryptionStandard": "Norme de chiffrement",
       "architecture": "Architecture",
       "quantumSafe": "Résistant au quantique (FIPS 203)"
@@ -337,7 +337,9 @@
       "unavailableSuffix": "(indisponible sur cet appareil)",
       "methodPin": "Code PIN",
       "methodBiometric": "Biométrie",
-      "methodHardwareKey": "Clé matérielle"
+      "methodHardwareKey": "Clé matérielle",
+      "contact": "Nous contacter",
+      "logout": "Se déconnecter"
     },
     "emailVerify": {
       "invalidEmail": "Saisissez une adresse e-mail valide",

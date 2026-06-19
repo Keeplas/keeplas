@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Input, Label, Loader, Spinner } from "@keeplas/ui";
 import { deriveRootKey } from "@keeplas/crypto/kdf";
@@ -20,6 +21,7 @@ import { useTranslations } from "@/lib/i18n";
 import { AuthHeroSection } from "@/app/(auth)/components/auth-hero-section";
 import { MobileBrand } from "@/app/(auth)/components/mobile-brand";
 import { EnrollDeviceUnlockDialog } from "./enroll-device-unlock-dialog";
+import { ContactDialog } from "./contact-dialog";
 
 interface UnlockGateProps {
   children: React.ReactNode;
@@ -29,6 +31,7 @@ type Mode = "list" | "pin" | "phrase";
 
 export function UnlockGate({ children }: UnlockGateProps) {
   const t = useTranslations("chrome");
+  const { signOut } = useAuthActions();
   const { masterKey, setMasterKey, restoring } = useMasterKey();
   const user = useQuery(api.users.viewer);
   const userEmail = user?.email ?? null;
@@ -49,6 +52,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   const bundleString = user?.encryptedKeyBundle ?? null;
   const bundle = useMemo(() => parseKeyBundle(bundleString), [bundleString]);
@@ -323,6 +327,24 @@ export function UnlockGate({ children }: UnlockGateProps) {
                 </button>
               </form>
             ) : null}
+
+            <div className="mt-8 flex items-center justify-center gap-2 text-label-md text-on-surface-variant">
+              <button
+                type="button"
+                onClick={() => setContactOpen(true)}
+                className="font-bold hover:underline"
+              >
+                {t("unlock.contact")}
+              </button>
+              <span aria-hidden>·</span>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="font-bold hover:underline"
+              >
+                {t("unlock.logout")}
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -332,6 +354,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
           onClose={() => setEnrollOpen(false)}
         />
       ) : null}
+      <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
     </>
   );
 }
