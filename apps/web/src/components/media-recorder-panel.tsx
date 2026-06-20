@@ -3,6 +3,13 @@ import { Button, Icon, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+import {
+  type CameoCompositor,
+  type CameoGeometry,
+  clampGeometry,
+  createCameoCompositor,
+  DEFAULT_CAMEO_GEOMETRY,
+} from "@/lib/screen-cameo";
 
 type Translator = ReturnType<typeof useTranslations>;
 
@@ -108,6 +115,54 @@ function friendlyError(
   return getErrorMessage(err, t("recorder.errorGeneric"));
 }
 
+/** Attach a stream to a hidden <video> and resolve once it can render frames. */
+function playVideo(
+  video: HTMLVideoElement,
+  stream: MediaStream,
+): Promise<void> {
+  video.srcObject = stream;
+  return new Promise((resolve) => {
+    if (video.readyState >= 2) {
+      video.play().catch(() => {});
+      resolve();
+      return;
+    }
+    video.onloadedmetadata = () => {
+      video.play().catch(() => {});
+      resolve();
+    };
+  });
+}
+
+// Fullscreen helpers with the Safari (webkit) fallback. Using the Fullscreen API
+// (rather than a fixed/portal overlay) keeps the recorder's DOM in place, so the
+// running cameo compositor's canvas/video refs stay valid while expanding.
+type WebkitElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void;
+};
+type WebkitDocument = Document & {
+  webkitFullscreenElement?: Element | null;
+  webkitExitFullscreen?: () => Promise<void> | void;
+};
+
+function currentFullscreenElement(): Element | null {
+  return (
+    document.fullscreenElement ??
+    (document as WebkitDocument).webkitFullscreenElement ??
+    null
+  );
+}
+
+function requestFullscreen(el: HTMLElement): Promise<void> | void {
+  if (el.requestFullscreen) return el.requestFullscreen();
+  return (el as WebkitElement).webkitRequestFullscreen?.();
+}
+
+function exitFullscreen(): Promise<void> | void {
+  if (document.exitFullscreen) return document.exitFullscreen();
+  return (document as WebkitDocument).webkitExitFullscreen?.();
+}
+
 export function MediaRecorderPanel({
   mode,
   onRecorded,
@@ -140,12 +195,45 @@ export function MediaRecorderPanel({
   const [recordedDuration, setRecordedDuration] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
+  // Screen + camera cameo (mode === "screen" only).
+  const screenVideoRef = useRef<HTMLVideoElement | null>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
+  const cameoCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const compositorRef = useRef<CameoCompositor | null>(null);
+  const sourceStreamsRef = useRef<MediaStream[]>([]);
+  const cameoGeometryRef = useRef<CameoGeometry>(DEFAULT_CAMEO_GEOMETRY);
+  const cameoLayerRef = useRef<HTMLDivElement | null>(null);
+  const cameoDragRef = useRef<"move" | "resize" | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [cameoActive, setCameoActive] = useState(false);
+  const [cameoGeom, setCameoGeom] = useState<CameoGeometry>(
+    DEFAULT_CAMEO_GEOMETRY,
+  );
+  const [layerSize, setLayerSize] = useState({ w: 0, h: 0 });
+  const [expanded, setExpanded] = useState(false);
+
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     if (livePreviewRef.current) {
       livePreviewRef.current.srcObject = null;
     }
+  }, []);
+
+  // Tear down the cameo pipeline: draw loop, canvas track, and the raw
+  // screen/camera source streams feeding it.
+  const stopCameo = useCallback(() => {
+    compositorRef.current?.stop();
+    compositorRef.current = null;
+    sourceStreamsRef.current.forEach((s) =>
+      s.getTracks().forEach((track) => track.stop()),
+    );
+    sourceStreamsRef.current = [];
+    if (screenVideoRef.current) screenVideoRef.current.srcObject = null;
+    if (cameraVideoRef.current) cameraVideoRef.current.srcObject = null;
+    setCameoActive(false);
   }, []);
 
   // When the user ends the share from the browser's native "Stop sharing" bar,
@@ -365,8 +453,9 @@ export function MediaRecorderPanel({
       }
       teardownAudioAnalyser();
       stopStream();
+      stopCameo();
     };
-  }, [clearTimer, stopStream, teardownAudioAnalyser]);
+  }, [clearTimer, stopStream, stopCameo, teardownAudioAnalyser]);
 
   // Revoke preview URL when it changes.
   useEffect(() => {
@@ -375,10 +464,52 @@ export function MediaRecorderPanel({
     };
   }, [previewUrl]);
 
+  // Track the cameo overlay box size so the drag handle maps to canvas
+  // fractions (it re-measures automatically when expanding to full screen).
+  useEffect(() => {
+    if (!cameoActive) return;
+    const el = cameoLayerRef.current;
+    if (!el) return;
+    const update = () =>
+      setLayerSize({ w: el.clientWidth, h: el.clientHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [cameoActive]);
+
+  // Keep `expanded` in sync with the browser fullscreen state (covers Esc / F11
+  // and the native exit, which don't go through our toggle button).
+  useEffect(() => {
+    const onChange = () =>
+      setExpanded(currentFullscreenElement() === containerRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
+  }, []);
+
+  const toggleExpand = useCallback(() => {
+    if (currentFullscreenElement()) {
+      exitFullscreen();
+    } else if (containerRef.current) {
+      Promise.resolve(requestFullscreen(containerRef.current)).catch(() => {});
+    }
+  }, []);
+
   async function handleRetryWarm() {
     stopStream();
+    stopCameo();
     teardownAudioAnalyser();
     setError("");
+    // Screen acquisition needs a user gesture — return to the idle "click Start"
+    // state; handleStart re-acquires on the next click.
+    if (mode === "screen") {
+      setPhase("live");
+      return;
+    }
     setPhase("warming");
     try {
       const stream = await requestStream();
@@ -386,7 +517,6 @@ export function MediaRecorderPanel({
       if (mode !== "audio" && livePreviewRef.current) {
         livePreviewRef.current.srcObject = stream;
       }
-      if (mode === "screen") attachScreenEndHandler(stream);
       if (mode === "audio") setupAudioAnalyser(stream);
       setPhase("live");
     } catch (err) {
@@ -395,21 +525,135 @@ export function MediaRecorderPanel({
     }
   }
 
+  // Acquire screen + camera, run the compositor, and return the recordable
+  // (canvas + mic) stream. Falls back to screen-only if the camera is denied.
+  async function acquireCameoStream(): Promise<MediaStream> {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: 30 } },
+      audio: true,
+    });
+    let camStream: MediaStream | null = null;
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 640 },
+          frameRate: { ideal: 30 },
+        },
+        audio: true,
+      });
+    } catch {
+      // Camera denied — keep the screen recording without the cameo.
+    }
+    sourceStreamsRef.current = camStream
+      ? [screenStream, camStream]
+      : [screenStream];
+    attachScreenEndHandler(screenStream);
+
+    if (!camStream) {
+      setError(t("recorder.cameraDenied"));
+      if (livePreviewRef.current)
+        livePreviewRef.current.srcObject = screenStream;
+      const fallback = new MediaStream();
+      screenStream.getTracks().forEach((track) => fallback.addTrack(track));
+      return fallback;
+    }
+
+    const screenVideo = screenVideoRef.current;
+    const cameraVideo = cameraVideoRef.current;
+    const canvas = cameoCanvasRef.current;
+    if (!screenVideo || !cameraVideo || !canvas) {
+      throw new Error("Cameo surfaces not mounted");
+    }
+    await Promise.all([
+      playVideo(screenVideo, screenStream),
+      playVideo(cameraVideo, camStream),
+    ]);
+
+    cameoGeometryRef.current = DEFAULT_CAMEO_GEOMETRY;
+    setCameoGeom(DEFAULT_CAMEO_GEOMETRY);
+    const compositor = createCameoCompositor({
+      screenVideo,
+      cameraVideo,
+      canvas,
+      micTrack: camStream.getAudioTracks()[0] ?? null,
+      geometryRef: cameoGeometryRef,
+      fps: 30,
+    });
+    compositorRef.current = compositor;
+    setCameoActive(true);
+    return compositor.stream;
+  }
+
+  // Pointer-driven move / resize of the camera circle. Geometry is stored as
+  // fractions, so the compositor (and thus the recording) updates live.
+  function pointerFraction(e: React.PointerEvent) {
+    const el = cameoLayerRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    return {
+      fx: (e.clientX - rect.left) / rect.width,
+      fy: (e.clientY - rect.top) / rect.height,
+      rectW: rect.width,
+      rectH: rect.height,
+      minSide: Math.min(rect.width, rect.height),
+    };
+  }
+
+  function applyGeom(g: CameoGeometry) {
+    const clamped = clampGeometry(g);
+    cameoGeometryRef.current = clamped;
+    setCameoGeom(clamped);
+  }
+
+  function onCameoPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    cameoDragRef.current =
+      (e.target as HTMLElement).dataset.cameoResize === "true"
+        ? "resize"
+        : "move";
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onCameoPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!cameoDragRef.current) return;
+    const p = pointerFraction(e);
+    if (!p) return;
+    if (cameoDragRef.current === "move") {
+      applyGeom({ ...cameoGeometryRef.current, cx: p.fx, cy: p.fy });
+    } else {
+      const c = cameoGeometryRef.current;
+      const dx = (p.fx - c.cx) * p.rectW;
+      const dy = (p.fy - c.cy) * p.rectH;
+      applyGeom({ ...c, r: Math.hypot(dx, dy) / p.minSide });
+    }
+  }
+
+  function onCameoPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    cameoDragRef.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  }
+
   async function handleStart() {
     let stream = streamRef.current;
     // Screen capture is acquired here (this click is the required user gesture).
     if (!stream && mode === "screen") {
       setPhase("warming");
       try {
-        stream = await requestStream();
+        if (cameraEnabled) {
+          stream = await acquireCameoStream();
+        } else {
+          stream = await requestStream();
+          if (livePreviewRef.current) livePreviewRef.current.srcObject = stream;
+          attachScreenEndHandler(stream);
+        }
       } catch (err) {
+        stopCameo();
         setError(friendlyError(err, mode, t));
         setPhase("error");
         return;
       }
       streamRef.current = stream;
-      if (livePreviewRef.current) livePreviewRef.current.srcObject = stream;
-      attachScreenEndHandler(stream);
     }
     if (!stream) {
       setError(t("recorder.deviceNotReady"));
@@ -450,6 +694,7 @@ export function MediaRecorderPanel({
       setPreviewUrl(URL.createObjectURL(blob));
       teardownAudioAnalyser();
       stopStream();
+      stopCameo();
       setPhase("stopped");
     };
 
@@ -497,6 +742,7 @@ export function MediaRecorderPanel({
     }
     teardownAudioAnalyser();
     stopStream();
+    stopCameo();
     clearTimer();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     onCancel();
@@ -521,8 +767,16 @@ export function MediaRecorderPanel({
     });
   })();
 
+  const showCameraToggle = mode === "screen" && phase === "live";
+
   return (
-    <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+    <div
+      ref={containerRef}
+      className={cn(
+        "bg-surface-container-low space-y-5",
+        expanded ? "overflow-auto rounded-none p-6 md:p-10" : "rounded-2xl p-6",
+      )}
+    >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div
@@ -557,14 +811,32 @@ export function MediaRecorderPanel({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleCancelAll}
-          className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
-          aria-label={t("recorder.cancelRecording")}
-        >
-          <Icon path={ICON_PATHS.close} className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          {mode !== "audio" && (
+            <button
+              type="button"
+              onClick={toggleExpand}
+              className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
+              aria-label={
+                expanded ? t("recorder.collapse") : t("recorder.expand")
+              }
+              title={expanded ? t("recorder.collapse") : t("recorder.expand")}
+            >
+              <Icon
+                path={expanded ? ICON_PATHS.collapse : ICON_PATHS.expand}
+                className="w-4 h-4"
+              />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleCancelAll}
+            className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
+            aria-label={t("recorder.cancelRecording")}
+          >
+            <Icon path={ICON_PATHS.close} className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -588,14 +860,54 @@ export function MediaRecorderPanel({
 
       {/* Live visual — video / screen preview or audio waveform */}
       {mode !== "audio" && phase !== "stopped" && (
-        <div className="relative w-full aspect-video rounded-xl bg-primary/5 overflow-hidden">
+        <div
+          className={cn(
+            "relative w-full aspect-video rounded-xl bg-primary/5 overflow-hidden",
+            expanded && "mx-auto max-w-6xl max-h-[78vh]",
+          )}
+        >
           <video
             ref={livePreviewRef}
             autoPlay
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className={cn(
+              "w-full h-full object-cover",
+              cameoActive && "hidden",
+            )}
           />
+          {mode === "screen" && (
+            <canvas
+              ref={cameoCanvasRef}
+              className={cn(
+                "w-full h-full object-contain bg-black",
+                !cameoActive && "hidden",
+              )}
+            />
+          )}
+          {/* Draggable / resizable camera circle (mirrors the canvas cameo). */}
+          {cameoActive && (
+            <div ref={cameoLayerRef} className="absolute inset-0">
+              <div
+                className="absolute rounded-full border-2 border-dashed border-white/80 cursor-move touch-none"
+                style={{
+                  width: 2 * cameoGeom.r * Math.min(layerSize.w, layerSize.h),
+                  height: 2 * cameoGeom.r * Math.min(layerSize.w, layerSize.h),
+                  left: cameoGeom.cx * layerSize.w,
+                  top: cameoGeom.cy * layerSize.h,
+                  transform: "translate(-50%, -50%)",
+                }}
+                onPointerDown={onCameoPointerDown}
+                onPointerMove={onCameoPointerMove}
+                onPointerUp={onCameoPointerUp}
+              >
+                <div
+                  data-cameo-resize="true"
+                  className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-white shadow cursor-nwse-resize"
+                />
+              </div>
+            </div>
+          )}
           {phase === "warming" && (
             <div className="absolute inset-0 flex items-center justify-center text-body-md text-on-surface-variant gap-2 bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
@@ -693,14 +1005,38 @@ export function MediaRecorderPanel({
         </div>
       )}
 
+      {cameoActive && (
+        <p className="text-label-md text-on-surface-variant text-center">
+          {t("recorder.cameoDragHint")}
+        </p>
+      )}
+
       <div className="flex items-center justify-between gap-3 pt-1">
-        <button
-          type="button"
-          onClick={handleCancelAll}
-          className="text-body-md font-bold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-        >
-          {t("recorder.cancel")}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCancelAll}
+            className="text-body-md font-bold text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+          >
+            {t("recorder.cancel")}
+          </button>
+          {showCameraToggle && (
+            <button
+              type="button"
+              onClick={() => setCameraEnabled((v) => !v)}
+              aria-pressed={cameraEnabled}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-label-md cursor-pointer transition-colors",
+                cameraEnabled
+                  ? "bg-primary/10 text-primary"
+                  : "bg-surface-container-high text-on-surface-variant",
+              )}
+            >
+              <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
+              {t("recorder.toggleCamera")}
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-2">
           {(phase === "warming" || phase === "error" || phase === "live") && (
@@ -755,6 +1091,10 @@ export function MediaRecorderPanel({
           )}
         </div>
       </div>
+
+      {/* Hidden sources feeding the cameo compositor (never shown directly). */}
+      <video ref={screenVideoRef} muted playsInline className="hidden" />
+      <video ref={cameraVideoRef} muted playsInline className="hidden" />
     </div>
   );
 }
