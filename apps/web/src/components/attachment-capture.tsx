@@ -26,10 +26,14 @@ interface AttachmentCaptureProps {
 export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
   const t = useTranslations("vault");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(
-    null,
-  );
+  const [recorderMode, setRecorderMode] = useState<
+    "audio" | "video" | "screen" | null
+  >(null);
   const [isDragging, setIsDragging] = useState(false);
+  // Screen capture is desktop-only — most mobile browsers lack getDisplayMedia.
+  const canRecordScreen =
+    typeof navigator !== "undefined" &&
+    !!navigator.mediaDevices?.getDisplayMedia;
 
   function ingestFiles(list: FileList | File[]) {
     const accepted: PreparedFile[] = [];
@@ -77,7 +81,7 @@ export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
     meta: { mimeType: string; durationSec: number },
   ) {
     if (!recorderMode) return;
-    const isVideo = recorderMode === "video";
+    const isVideoLike = recorderMode === "video" || recorderMode === "screen";
     const ext = meta.mimeType.includes("mp4") ? "mp4" : "webm";
     // Filesystem-safe timestamp: YYYY-MM-DD_HH-mm-ss (local time).
     const now = new Date();
@@ -87,12 +91,16 @@ export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
       {
         id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         name: `${
-          isVideo ? t("recorder.videoMessage") : t("recorder.voiceMessage")
+          recorderMode === "screen"
+            ? t("recorder.screenMessage")
+            : recorderMode === "video"
+              ? t("recorder.videoMessage")
+              : t("recorder.voiceMessage")
         } — ${stamp}.${ext}`,
         mimeType: meta.mimeType,
         size: blob.size,
         blob,
-        kind: isVideo ? "video" : "audio",
+        kind: isVideoLike ? "video" : "audio",
         durationSec: meta.durationSec,
       },
     ]);
@@ -132,6 +140,18 @@ export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
           <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
           {t("dialog.recordVideo")}
         </Button>
+        {canRecordScreen && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setRecorderMode("screen")}
+            className="gap-2 cursor-pointer"
+          >
+            <Icon path={ICON_PATHS.screen} className="w-4 h-4" />
+            {t("dialog.recordScreen")}
+          </Button>
+        )}
         <div className="flex items-center text-label-md text-on-surface-variant/60 ml-auto">
           {t("dialog.orDropFile")}
         </div>

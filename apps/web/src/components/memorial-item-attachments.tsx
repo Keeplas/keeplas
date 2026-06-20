@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon, Spinner, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
-import { getErrorMessage } from "@/lib/utils";
+import { useDecryptedAttachmentUrl } from "@/lib/use-decrypted-attachment-url";
 import { useTranslations } from "@/lib/i18n";
-import { ImageLightbox } from "@/components/image-lightbox";
+import { AttachmentThumbnail } from "@/components/attachment-thumbnail";
 
 // Contact-facing copy of VaultItemAttachments. Reads files through the
 // memorial-authorized queries (gated on the contact's approved release) and
@@ -43,6 +43,15 @@ function iconForKind(kind: AttachmentFile["kind"]): string {
   }
 }
 
+function useMemorialDecrypt(itemDek: CryptoKey) {
+  const { decryptBlobWithKey, isReady } = useVaultCrypto();
+  const decrypt = useCallback(
+    (cipher: Blob, iv: string) => decryptBlobWithKey(cipher, iv, itemDek),
+    [itemDek, decryptBlobWithKey],
+  );
+  return { decrypt, enabled: isReady };
+}
+
 export function MemorialItemAttachments({
   contactId,
   itemId,
@@ -69,6 +78,9 @@ export function MemorialItemAttachments({
 
   if (files.length === 0) return null;
 
+  const images = files.filter((f) => f.kind === "image");
+  const others = files.filter((f) => f.kind !== "image");
+
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
@@ -77,17 +89,63 @@ export function MemorialItemAttachments({
           {t("attachments.title", { count: files.length })}
         </span>
       </div>
-      <div className="grid grid-cols-1 gap-4">
-        {files.map((file) => (
-          <AttachmentCard
-            key={file._id}
-            contactId={contactId}
-            file={file}
-            itemDek={itemDek}
-          />
-        ))}
-      </div>
+
+      {images.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {images.map((file) => (
+            <MemorialImageThumbnail
+              key={file._id}
+              contactId={contactId}
+              file={file}
+              itemDek={itemDek}
+            />
+          ))}
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <div className="grid grid-cols-1 gap-4">
+          {others.map((file) => (
+            <AttachmentCard
+              key={file._id}
+              contactId={contactId}
+              file={file}
+              itemDek={itemDek}
+            />
+          ))}
+        </div>
+      )}
     </section>
+  );
+}
+
+function MemorialImageThumbnail({
+  contactId,
+  file,
+  itemDek,
+}: {
+  contactId: Id<"trusted_contacts">;
+  file: AttachmentFile;
+  itemDek: CryptoKey;
+}) {
+  const t = useTranslations("sharedWithMe");
+  const signedUrl = useQuery(api.memorial.getMemorialItemFileUrl, {
+    contactId,
+    fileId: file._id,
+  });
+  const { decrypt, enabled } = useMemorialDecrypt(itemDek);
+
+  return (
+    <AttachmentThumbnail
+      file={file}
+      signedUrl={signedUrl}
+      decrypt={decrypt}
+      enabled={enabled}
+      errorFallback={t("attachments.decryptFailed")}
+      enlargeLabel={t("attachments.enlarge")}
+      closeLabel={t("attachments.close")}
+      downloadLabel={t("attachments.download")}
+    />
   );
 }
 
@@ -105,54 +163,15 @@ function AttachmentCard({
     contactId,
     fileId: file._id,
   });
-  const { decryptBlobWithKey, isReady } = useVaultCrypto();
-
-  const [plainUrl, setPlainUrl] = useState<string | null>(null);
-  const [decrypting, setDecrypting] = useState(false);
-  const [error, setError] = useState<string>("");
-
-  useEffect(() => {
-    let cancelled = false;
-    let createdUrl: string | null = null;
-
-    async function run() {
-      if (!signedUrl || !isReady || plainUrl || decrypting) return;
-      setDecrypting(true);
-      setError("");
-      try {
-        const res = await fetch(signedUrl);
-        if (!res.ok)
-          throw new Error(
-            t("attachments.downloadFailed", { status: res.status }),
-          );
-        const cipherBlob = await res.blob();
-        const plainBlob = await decryptBlobWithKey(
-          cipherBlob,
-          file.iv,
-          itemDek,
-        );
-        const typedBlob = new Blob([plainBlob], {
-          type: file.mimeType || plainBlob.type || "application/octet-stream",
-        });
-        createdUrl = URL.createObjectURL(typedBlob);
-        if (!cancelled) setPlainUrl(createdUrl);
-      } catch (err) {
-        if (!cancelled) {
-          setError(getErrorMessage(err, t("attachments.decryptFailed")));
-        }
-      } finally {
-        if (!cancelled) setDecrypting(false);
-      }
-    }
-
-    run();
-
-    return () => {
-      cancelled = true;
-      if (createdUrl) URL.revokeObjectURL(createdUrl);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedUrl, isReady, itemDek, file._id, file.iv, file.mimeType]);
+  const { decrypt, enabled } = useMemorialDecrypt(itemDek);
+  const { plainUrl, decrypting, error } = useDecryptedAttachmentUrl({
+    signedUrl,
+    iv: file.iv,
+    mimeType: file.mimeType,
+    decrypt,
+    enabled,
+    errorFallback: t("attachments.decryptFailed"),
+  });
 
   const duration = formatDuration(file.durationSec);
   const meta = useMemo(() => {
@@ -221,15 +240,6 @@ function AttachmentCard({
           controls
           src={plainUrl}
           className="w-full aspect-video rounded-xl bg-primary/5 object-contain"
-        />
-      )}
-
-      {plainUrl && file.kind === "image" && (
-        <ImageLightbox
-          src={plainUrl}
-          alt={file.name}
-          enlargeLabel={t("attachments.enlarge")}
-          closeLabel={t("attachments.close")}
         />
       )}
 

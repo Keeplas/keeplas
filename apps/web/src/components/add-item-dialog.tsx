@@ -521,7 +521,7 @@ export function AddItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] p-0 flex flex-col overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[92vh] p-0 flex flex-col overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-8 py-6 items-start shrink-0 static">
           <div className="space-y-2">
