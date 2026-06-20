@@ -353,7 +353,14 @@ export default defineSchema({
 
     category: categoryValidator,
 
-    title: v.string(),
+    // Legacy plaintext title. Kept optional only to read rows not yet migrated
+    // to `encryptedTitle`; new writes never set it. Removed once the
+    // client-side backfill has converged (see vault_items.backfillItemTitle).
+    title: v.optional(v.string()),
+    // Encrypted item title — same per-item DEK + JSON {ciphertext, iv} envelope
+    // as `encryptedContent`. Under the owner/recipient-wrapped DEK for ZK items,
+    // under the master key for legacy `aes_256_gcm` items.
+    encryptedTitle: v.optional(v.string()),
     encryptedContent: v.string(),
     // Optional encrypted JSON array of URLs attached to this item. Encrypted
     // with the same per-item DEK as encryptedContent — payload is a self
@@ -366,6 +373,13 @@ export default defineSchema({
     ),
     sharedWithContacts: v.array(v.id("trusted_contacts")),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
+    // Contacts the owner intended to share with at save time but whose
+    // encryption key wasn't yet publishable (`unverifiable`): no wrapped DEK
+    // row exists for them. The owner's client re-wraps the DEK to each one
+    // once they publish their key (see vault_items.getItemsNeedingRewrap +
+    // useBackfillPendingShares), then removes them from this list. The save
+    // is never blocked on these — only on signature/fingerprint alarms.
+    pendingRecipients: v.optional(v.array(v.id("trusted_contacts"))),
     recipientMode: v.optional(
       v.union(v.literal("default"), v.literal("groups"), v.literal("explicit")),
     ),

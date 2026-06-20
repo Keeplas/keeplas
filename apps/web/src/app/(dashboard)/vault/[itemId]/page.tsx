@@ -125,6 +125,7 @@ export default function VaultItemPage() {
   );
   const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
+  const [decryptedTitle, setDecryptedTitle] = useState<string>("");
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
   const [decrypting, setDecrypting] = useState(false);
@@ -204,7 +205,10 @@ export default function VaultItemPage() {
         const decryptOne = (payload: string) =>
           dek ? decryptContentWithKey(payload, dek) : decryptContent(payload);
 
-        const [content, links] = await Promise.all([
+        const [title, content, links] = await Promise.all([
+          item.encryptedTitle
+            ? decryptOne(item.encryptedTitle).catch(() => item.title ?? "")
+            : Promise.resolve(item.title ?? ""),
           decryptOne(item.encryptedContent).catch(() => "[Unable to decrypt]"),
           item.encryptedLinks
             ? decryptOne(item.encryptedLinks)
@@ -212,9 +216,11 @@ export default function VaultItemPage() {
                 .catch(() => [] as string[])
             : Promise.resolve([] as string[]),
         ]);
+        setDecryptedTitle(title);
         setDecryptedContent(content);
         setDecryptedLinks(links);
       } catch {
+        setDecryptedTitle(item.title ?? "");
         setDecryptedContent("[Unable to decrypt]");
         setDecryptedLinks([]);
         if (isZk) setItemDek(undefined);
@@ -235,7 +241,7 @@ export default function VaultItemPage() {
 
   function startEditing() {
     if (!item || decryptedContent === null) return;
-    setEditTitle(item.title);
+    setEditTitle(decryptedTitle);
     setEditContent(normalizeContentForRichText(decryptedContent));
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
     setEditCategory(item.category);
@@ -400,6 +406,7 @@ export default function VaultItemPage() {
           .map(toWrapRecipient);
       }
 
+      let encryptedTitle: string;
       let encryptedContent: string;
       let encryptedLinks: string;
       let ownerWrappedDek: string | undefined;
@@ -437,6 +444,7 @@ export default function VaultItemPage() {
           itemDek ??
           (await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek }));
         attachmentDek = dek;
+        encryptedTitle = await encryptContentWithKey(editTitle.trim(), dek);
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         let wraps = await wrapExistingDek(dek, resolvedRecipients);
@@ -471,6 +479,10 @@ export default function VaultItemPage() {
           }
         }
         attachmentDek = fresh.dek;
+        encryptedTitle = await encryptContentWithKey(
+          editTitle.trim(),
+          fresh.dek,
+        );
         encryptedContent = await encryptContentWithKey(
           contentPayload,
           fresh.dek,
@@ -485,6 +497,7 @@ export default function VaultItemPage() {
         // Legacy item still encrypted under master key — keep that flow.
         // Recipient release won't work on legacy items until they're re-saved
         // with files re-encrypted. For now, save with master-key content.
+        encryptedTitle = await encryptContent(editTitle.trim());
         encryptedContent = await encryptContent(contentPayload);
         encryptedLinks = await encryptContent(linksPayload);
         nextEncryptionType = "aes_256_gcm";
@@ -492,7 +505,7 @@ export default function VaultItemPage() {
 
       await updateItem({
         itemId,
-        title: editTitle.trim(),
+        encryptedTitle,
         encryptedContent,
         encryptedLinks,
         category: editCategory,
@@ -802,7 +815,9 @@ export default function VaultItemPage() {
                   {category.label}
                 </span>
               </div>
-              <h1 className="text-headline-lg text-primary">{item.title}</h1>
+              <h1 className="text-headline-lg text-primary">
+                {decryptedTitle}
+              </h1>
             </div>
             <div className="flex items-center gap-2">
               <button

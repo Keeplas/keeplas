@@ -1858,7 +1858,9 @@
       "errorIntroRecipient": "Choisissez au moins un bénéficiaire — un message de bienvenue sans audience n'est jamais affiché.",
       "errorSave": "Échec de l'enregistrement de l'élément.",
       "progressGenKey": "Génération de la clé propre à l'élément…",
-      "progressSealing": "Scellement de l'entrée du coffre…"
+      "progressSealing": "Scellement de l'entrée du coffre…",
+      "deferredShareTitle": "Enregistré — partages en attente",
+      "deferredShareBody": "{names} n'ont pas encore publié leur clé de chiffrement. Ils y auront accès automatiquement dès qu'ils l'auront fait."
     },
     "triggers": {
       "label": "Déclencheur",

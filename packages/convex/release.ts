@@ -180,12 +180,26 @@ export const getReleasePreview = query({
       )
       .collect();
 
-    const perContact = new Map<Id<"trusted_contacts">, string[]>();
+    // Titles are encrypted; carry the ciphertext + the owner's wrapped DEK so
+    // the owner's client can decrypt them in the preview (legacy `title` kept
+    // as a fallback for rows not yet migrated).
+    type PreviewTitle = {
+      _id: Id<"vault_items">;
+      title?: string;
+      encryptedTitle?: string;
+      ownerWrappedDek?: string;
+    };
+    const perContact = new Map<Id<"trusted_contacts">, PreviewTitle[]>();
     for (const item of items) {
       const recipients = await resolveItemRecipients(ctx, item, userId);
       for (const cid of recipients) {
         const titles = perContact.get(cid) ?? [];
-        titles.push(item.title);
+        titles.push({
+          _id: item._id,
+          title: item.title,
+          encryptedTitle: item.encryptedTitle,
+          ownerWrappedDek: item.ownerWrappedDek,
+        });
         perContact.set(cid, titles);
       }
     }

@@ -103,6 +103,7 @@ async function shapeItem(
   return {
     _id: item._id,
     title: item.title,
+    encryptedTitle: item.encryptedTitle,
     category: item.category,
     encryptionType: item.encryptionType,
     encryptedContent: item.encryptedContent,

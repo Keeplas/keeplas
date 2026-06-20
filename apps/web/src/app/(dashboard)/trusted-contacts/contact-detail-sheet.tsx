@@ -18,6 +18,7 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { getCategoryConfig } from "@/lib/vault-categories";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import {
   computeVerificationBadge,
   formatRelative,
@@ -84,6 +85,7 @@ function ContactDetailBody({
   const summary = useQuery(api.trusted_contacts.getContactAccessSummary, {
     contactId: contact._id,
   });
+  const titles = useDecryptedTitles(summary?.releasedItems);
 
   async function handleRevoke() {
     if (!confirmRevoke) {
@@ -283,7 +285,7 @@ function ContactDetailBody({
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-body-md text-on-surface truncate">
-                        {item.title}
+                        {titles[item._id] ?? ""}
                       </p>
                       <p className="text-label-md text-on-surface-variant">
                         {getCategoryConfig(item.category).label} ·{" "}

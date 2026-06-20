@@ -24,6 +24,7 @@ export default function MemorialItemPage() {
   });
   const { decryptItem, isReady } = useMemorialCrypto();
 
+  const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string | null>(null);
   const [links, setLinks] = useState<string[]>([]);
   const [dek, setDek] = useState<CryptoKey | null>(null);
@@ -37,14 +38,17 @@ export default function MemorialItemPage() {
       setDecrypting(true);
       try {
         if (!item.readable || !item.wrappedDek) {
+          setTitle(item.title ?? "");
           setContent(t("item.decryptFailedLegacy"));
           return;
         }
         const res = await decryptItem({
           wrappedDek: item.wrappedDek,
+          encryptedTitle: item.encryptedTitle,
           encryptedContent: item.encryptedContent,
           encryptedLinks: item.encryptedLinks,
         });
+        setTitle(res.title || item.title || "");
         setContent(res.content);
         setLinks(res.links);
         setDek(res.dek);
@@ -91,7 +95,7 @@ export default function MemorialItemPage() {
         ← {t("item.backToMemorial", { ownerName: owner.name })}
       </Link>
 
-      <h1 className="text-headline-lg text-primary mt-3 mb-1">{item.title}</h1>
+      <h1 className="text-headline-lg text-primary mt-3 mb-1">{title}</h1>
       <p className="text-body-md text-on-surface-variant mb-8">
         {t("item.categoryInMemory", {
           category: category.label,

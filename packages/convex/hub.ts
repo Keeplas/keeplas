@@ -191,6 +191,8 @@ export const getHubData = query({
       recentItems: recentItems.map((item) => ({
         _id: item._id,
         title: item.title,
+        encryptedTitle: item.encryptedTitle,
+        ownerWrappedDek: item.ownerWrappedDek,
         category: item.category,
         updatedAt: item.updatedAt,
       })),

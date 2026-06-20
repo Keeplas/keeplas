@@ -119,6 +119,8 @@ export const listReleaseIntroductions = query({
         return {
           _id: item._id,
           title: item.title,
+          encryptedTitle: item.encryptedTitle,
+          ownerWrappedDek: item.ownerWrappedDek,
           recipientMode: item.recipientMode ?? "default",
           sharedWithContacts: item.sharedWithContacts,
           sharedWithGroups: item.sharedWithGroups ?? [],
@@ -277,7 +279,9 @@ export const createItem = auditedMutation({
   args: {
     vaultId: v.id("vaults"),
     category: categoryValidator,
-    title: v.string(),
+    // Encrypted under the item's DEK (master key for legacy items), same
+    // envelope as encryptedContent. Plaintext titles are no longer written.
+    encryptedTitle: v.string(),
     encryptedContent: v.string(),
     encryptedLinks: v.optional(v.string()),
     accessLevel: accessLevelValidator,
@@ -289,6 +293,9 @@ export const createItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
+    // Contacts the owner meant to share with but couldn't wrap yet (their key
+    // isn't published). Stored so the owner's client can re-wrap later.
+    pendingRecipients: v.optional(v.array(v.id("trusted_contacts"))),
     files: v.optional(v.array(newFileValidator)),
     triggerType: v.optional(triggerTypeValidator),
     triggerConfig: v.optional(triggerConfigValidator),
@@ -307,6 +314,7 @@ export const createItem = auditedMutation({
     const recipientMode = args.recipientMode ?? "default";
     const sharedWithContacts = args.sharedWithContacts ?? [];
     const sharedWithGroups = args.sharedWithGroups ?? [];
+    const pendingRecipients = args.pendingRecipients ?? [];
 
     // Intros are addressed to trusted contacts by definition — clamp the
     // access level server-side so a malformed client can't smuggle one in
@@ -315,13 +323,17 @@ export const createItem = auditedMutation({
       ? "trusted_only"
       : args.accessLevel;
 
-    if (sharedWithContacts.length > 0 || sharedWithGroups.length > 0) {
+    if (
+      sharedWithContacts.length > 0 ||
+      sharedWithGroups.length > 0 ||
+      pendingRecipients.length > 0
+    ) {
       const own = await ctx.db
         .query("trusted_contacts")
         .withIndex("by_user", (q) => q.eq("userId", userId))
         .collect();
       const ownContactIds = new Set(own.map((c) => c._id));
-      for (const cid of sharedWithContacts) {
+      for (const cid of [...sharedWithContacts, ...pendingRecipients]) {
         if (!ownContactIds.has(cid)) {
           throw new Error("One or more contacts are not yours");
         }
@@ -340,12 +352,13 @@ export const createItem = auditedMutation({
       vaultId: args.vaultId,
       userId,
       category: args.category,
-      title: args.title,
+      encryptedTitle: args.encryptedTitle,
       encryptedContent: args.encryptedContent,
       encryptedLinks: args.encryptedLinks,
       encryptionType: args.encryptionType ?? "aes_256_gcm",
       sharedWithContacts,
       sharedWithGroups,
+      pendingRecipients,
       recipientMode,
       ownerWrappedDek: args.ownerWrappedDek,
       accessLevel,
@@ -416,7 +429,7 @@ export const updateItem = auditedMutation({
   },
   args: {
     itemId: v.id("vault_items"),
-    title: v.optional(v.string()),
+    encryptedTitle: v.optional(v.string()),
     encryptedContent: v.optional(v.string()),
     encryptedLinks: v.optional(v.string()),
     category: v.optional(categoryValidator),
@@ -425,6 +438,8 @@ export const updateItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
+    // Mirror createItem: contacts deferred because their key isn't published.
+    pendingRecipients: v.optional(v.array(v.id("trusted_contacts"))),
     // Re-keying a ZK item replaces its owner wrap; mirror createItem.
     ownerWrappedDek: v.optional(v.string()),
     isReleaseIntroduction: v.optional(v.boolean()),
@@ -467,6 +482,149 @@ export const updateItem = auditedMutation({
         ),
       );
     }
+  },
+});
+
+/**
+ * Owner items that have at least one deferred (`pendingRecipients`) contact
+ * whose encryption key is now published. Drives the client-side re-wrap
+ * backfill (useBackfillPendingShares): for each item it returns the
+ * `ownerWrappedDek` (so the client can unwrap the DEK) plus the key material of
+ * every pending contact ready to receive a wrap. The actual unwrap/verify/wrap
+ * happens on the owner's device — the server stays zero-access.
+ */
+export const getItemsNeedingRewrap = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.neq(q.field("status"), "archived"))
+      .collect();
+
+    const result = [];
+    for (const item of items) {
+      const pending = item.pendingRecipients ?? [];
+      // No deferred recipients, or no owner envelope to unwrap the DEK from.
+      if (pending.length === 0 || !item.ownerWrappedDek) continue;
+
+      const readyContacts = [];
+      for (const contactId of pending) {
+        const c = await ctx.db.get(contactId);
+        if (!c || c.invitationStatus === "revoked") continue;
+        // Only contacts that have fully published their key material can be
+        // re-wrapped; the rest stay pending until they do.
+        if (
+          c.contactPublicKey &&
+          c.contactIdentityPublicKey &&
+          c.contactPublicKeySignature
+        ) {
+          readyContacts.push({
+            _id: c._id,
+            name: c.name,
+            contactPublicKey: c.contactPublicKey,
+            contactIdentityPublicKey: c.contactIdentityPublicKey,
+            contactPublicKeySignature: c.contactPublicKeySignature,
+            pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
+          });
+        }
+      }
+
+      if (readyContacts.length > 0) {
+        result.push({
+          itemId: item._id,
+          ownerWrappedDek: item.ownerWrappedDek,
+          encryptionType: item.encryptionType,
+          readyContacts,
+        });
+      }
+    }
+    return result;
+  },
+});
+
+/**
+ * Add wrapped DEKs for contacts that were deferred at save time (their key
+ * wasn't published yet — see `pendingRecipients`). Insert-only and idempotent:
+ * unlike `updateItem`, existing recipient-key rows are left untouched, and a
+ * contact is only backfilled if it is genuinely pending on this item (so this
+ * mutation can't be used to smuggle in an arbitrary recipient). Each contact
+ * successfully added is removed from `pendingRecipients`. Owner-only.
+ */
+export const addRecipientKeys = auditedMutation({
+  action: "vault_item.recipients_backfilled",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  getMetadata: (args) => ({ count: args.recipientKeys.length }),
+  args: {
+    itemId: v.id("vault_items"),
+    recipientKeys: v.array(recipientKeyValidator),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
+    if (args.recipientKeys.length === 0) return;
+
+    const pending = new Set(item.pendingRecipients ?? []);
+    const now = Date.now();
+    const added = new Set<Id<"trusted_contacts">>();
+
+    for (const rk of args.recipientKeys) {
+      // Only backfill a contact that was actually deferred on this item.
+      if (!pending.has(rk.contactId)) continue;
+      const existing = await ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_item_contact", (q) =>
+          q.eq("itemId", args.itemId).eq("contactId", rk.contactId),
+        )
+        .first();
+      if (existing) {
+        // Already wrapped — just clear it from pending below.
+        added.add(rk.contactId);
+        continue;
+      }
+      await ctx.db.insert("vault_item_recipient_keys", {
+        itemId: args.itemId,
+        contactId: rk.contactId,
+        wrappedDek: rk.wrappedDek,
+        createdAt: now,
+      });
+      added.add(rk.contactId);
+    }
+
+    if (added.size > 0) {
+      await ctx.db.patch(args.itemId, {
+        pendingRecipients: [...pending].filter((cid) => !added.has(cid)),
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+/**
+ * Client-side title migration: store the encrypted title and drop the legacy
+ * plaintext one. The server holds no key, so the owner's client encrypts each
+ * legacy title under its DEK (master key for legacy items) and calls this.
+ * Idempotent — a row already carrying `encryptedTitle` is just re-patched.
+ */
+export const backfillItemTitle = auditedMutation({
+  action: "vault_item.title_backfilled",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  args: {
+    itemId: v.id("vault_items"),
+    encryptedTitle: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    await requireItemOwnership(ctx, args.itemId, userId);
+    await ctx.db.patch(args.itemId, {
+      encryptedTitle: args.encryptedTitle,
+      title: undefined,
+      updatedAt: Date.now(),
+    });
   },
 });
 

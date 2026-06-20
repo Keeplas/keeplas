@@ -1858,7 +1858,9 @@
       "errorIntroRecipient": "Pick at least one recipient — an introduction with no audience is never shown.",
       "errorSave": "Failed to save item.",
       "progressGenKey": "Generating per-item key…",
-      "progressSealing": "Sealing vault entry…"
+      "progressSealing": "Sealing vault entry…",
+      "deferredShareTitle": "Saved — some shares are pending",
+      "deferredShareBody": "{names} haven't published their encryption key yet. They'll get access automatically once they do."
     },
     "triggers": {
       "label": "Trigger",

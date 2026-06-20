@@ -7,6 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { useTranslations } from "@/lib/i18n";
 import { CATEGORIES } from "@/lib/vault-categories";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { MemorialIntroductionCard } from "./memorial-introduction-card";
 import { MemorialIntroductionDialog } from "./memorial-introduction-dialog";
 
@@ -48,6 +49,8 @@ export default function MemorialVaultPage() {
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const data = useQuery(api.memorial.getReleasedVaultForMe, { contactId });
+  // Recipient-side title decryption: each item carries its own wrappedDek.
+  const titles = useDecryptedTitles(data?.items);
   const [introOpen, setIntroOpen] = useState(false);
   const [lastIntroKey, setLastIntroKey] = useState<string | null>(null);
 
@@ -177,7 +180,7 @@ export default function MemorialVaultPage() {
                         className="bg-surface-container-low hover:bg-surface-container transition-colors p-5 rounded-2xl block"
                       >
                         <p className="text-headline-sm text-primary truncate">
-                          {item.title}
+                          {titles[item._id] ?? ""}
                         </p>
                         <p className="text-label-md text-on-surface-variant mt-1">
                           {item.hasFiles
@@ -192,7 +195,7 @@ export default function MemorialVaultPage() {
                         className="bg-surface-container-low/60 p-5 rounded-2xl opacity-60"
                       >
                         <p className="text-headline-sm text-primary truncate">
-                          {item.title}
+                          {titles[item._id] ?? ""}
                         </p>
                         <p className="text-label-md text-on-surface-variant mt-1">
                           {t("memorial.unavailableLegacy")}

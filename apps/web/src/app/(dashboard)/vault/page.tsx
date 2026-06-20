@@ -9,6 +9,8 @@ import { AddItemDialog } from "@/components/add-item-dialog";
 import { ReleaseIntroductionEditor } from "@/app/(dashboard)/life-check/sections/release-introduction-editor";
 import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 interface SectionConfig {
@@ -98,6 +100,9 @@ function VaultPageContent() {
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
+  const titles = useDecryptedTitles(items);
+  // Owner-side migration of any legacy plaintext titles still in the vault.
+  useBackfillItemTitles(items);
   const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
@@ -200,6 +205,7 @@ function VaultPageContent() {
                   <VaultItemCard
                     key={item._id}
                     item={item}
+                    title={titles[item._id] ?? ""}
                     groups={recipientGroups}
                     contacts={allContacts}
                   />
@@ -342,10 +348,12 @@ function transmissionSummary(
 // transmission target (Private / contact / group / "All trust contacts").
 function VaultItemCard({
   item,
+  title,
   groups,
   contacts,
 }: {
   item: Doc<"vault_items">;
+  title: string;
   groups: Doc<"recipient_groups">[];
   contacts: Doc<"trusted_contacts">[];
 }) {
@@ -377,7 +385,7 @@ function VaultItemCard({
           <span className="truncate">{transmission.label}</span>
         </span>
       </div>
-      <h4 className="text-headline-sm text-primary truncate">{item.title}</h4>
+      <h4 className="text-headline-sm text-primary truncate">{title}</h4>
       <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
         {t("card.updated", { date: formatDate(item.updatedAt) })}
       </p>

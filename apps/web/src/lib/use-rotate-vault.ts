@@ -233,6 +233,7 @@ export function useRotateVault() {
     async (
       item: {
         _id: Id<"vault_items">;
+        encryptedTitle?: string;
         encryptedContent: string;
         encryptedLinks?: string;
         ownerWrappedDek?: string;
@@ -269,6 +270,15 @@ export function useRotateVault() {
       const newLinks = item.encryptedLinks
         ? await encryptContentWithKey(
             await decryptContentWithKey(item.encryptedLinks, oldDek),
+            newDek,
+          )
+        : undefined;
+      // Re-encrypt the title under the new DEK too; un-migrated rows (plaintext
+      // title, no encryptedTitle yet) are left for the title backfill to pick up
+      // under the freshly-rotated DEK.
+      const newTitle = item.encryptedTitle
+        ? await encryptContentWithKey(
+            await decryptContentWithKey(item.encryptedTitle, oldDek),
             newDek,
           )
         : undefined;
@@ -351,6 +361,7 @@ export function useRotateVault() {
 
       await updateItem({
         itemId: item._id,
+        encryptedTitle: newTitle,
         encryptedContent: newContent,
         encryptedLinks: newLinks,
         ownerWrappedDek: ownerWrap,

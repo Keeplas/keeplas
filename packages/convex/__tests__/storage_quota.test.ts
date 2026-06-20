@@ -56,7 +56,7 @@ async function createItemWithFile(
   return asUser(t, userId).mutation(api.vault_items.createItem, {
     vaultId,
     category: "personal_document",
-    title: "Attachment",
+    encryptedTitle: JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
     encryptedContent: JSON.stringify({ ciphertext: "Y2lwaA==", iv: "aXY=" }),
     accessLevel: "private",
     files: [fileOf(storageId, size)],
@@ -111,7 +111,9 @@ describe("storage quota enforcement", () => {
     )) as Id<"vault_items">;
 
     const stored = await t.run((ctx) => ctx.db.get(itemId));
-    expect(stored?.title).toBe("Attachment");
+    expect(stored?.encryptedTitle).toBe(
+      JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
+    );
   });
 
   it("rejects an addItemFiles upload that would cross the free quota", async () => {
