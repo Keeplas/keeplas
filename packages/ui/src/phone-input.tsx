@@ -7,6 +7,7 @@ import {
   getCountries,
   getCountryCallingCode,
   getExampleNumber,
+  validatePhoneNumberLength,
   type CountryCode,
 } from "libphonenumber-js";
 import examples from "libphonenumber-js/mobile/examples";
@@ -143,6 +144,15 @@ function formatNationalNoTrunk(
   return { display, e164 };
 }
 
+/**
+ * Whether `input` (E.164 or as-typed) has more digits than valid for
+ * `country`. Per-country max length comes from libphonenumber-js metadata —
+ * no hardcoded digit counts.
+ */
+function isTooLong(input: string, country: CountryCode): boolean {
+  return validatePhoneNumberLength(input, country) === "TOO_LONG";
+}
+
 function stripDialPrefix(value: string, callingCode: string): string {
   const prefix = `+${callingCode} `;
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
@@ -245,6 +255,10 @@ export function PhoneInput({
       formatter.input(raw.trim());
       const detected = formatter.getCountry();
       if (detected && isKnownCountry(detected)) {
+        // Refuse a pasted/typed value longer than the country allows.
+        if (isTooLong(raw.trim(), detected)) {
+          return;
+        }
         setCountry(detected);
         const callingCode = getCountryCallingCode(detected);
         const intl = formatter.getNumber()?.formatInternational() ?? raw.trim();
@@ -267,6 +281,11 @@ export function PhoneInput({
       emit(undefined);
       return;
     }
+    // Refuse digits beyond the country's max valid length: the controlled
+    // input reverts to the last accepted value.
+    if (isTooLong(`+${getCountryCallingCode(country)}${digits}`, country)) {
+      return;
+    }
     const { display, e164 } = formatNationalNoTrunk(country, digits);
     setNationalDisplay(display);
     setInternalInvalid(false);
@@ -276,7 +295,20 @@ export function PhoneInput({
   function handleCountrySelect(next: CountryCode) {
     setCountry(next);
     setOpen(false);
-    const digits = stripToSignificantDigits(nationalDisplay);
+    let digits = stripToSignificantDigits(nationalDisplay);
+    if (!digits) {
+      setNationalDisplay("");
+      emit(undefined);
+      return;
+    }
+    // The new country may allow fewer digits than the old one — drop the
+    // surplus trailing digits so the field stays valid rather than too long.
+    while (
+      digits &&
+      isTooLong(`+${getCountryCallingCode(next)}${digits}`, next)
+    ) {
+      digits = digits.slice(0, -1);
+    }
     if (!digits) {
       setNationalDisplay("");
       emit(undefined);

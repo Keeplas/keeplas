@@ -15,8 +15,10 @@ import { ICON_PATHS } from "@/lib/icons";
 import { ReturnAfterReleaseBanner } from "@/components/return-after-release-banner";
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
 import { getInitials } from "@/lib/user";
 import { formatTimeAgo } from "@/lib/format";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 
 const ASSET_CATEGORIES: VaultCategory[] = ["financial_asset", "digital_asset"];
 const DIRECTIVE_CATEGORIES: VaultCategory[] = [
@@ -59,9 +61,13 @@ const ACTION_HINT_KEYS = new Set<string>([
 
 export function HubContent() {
   const t = useTranslations("hub");
+  const categoryLabel = useCategoryLabel();
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const hubData = useQuery(api.hub.getHubData);
+  // Item _ids in recentItems are a subset of `items`, so one decrypt pass
+  // covers the asset/directive/document node cards and the recent-activity list.
+  const titles = useDecryptedTitles(items);
 
   if (items === undefined || contacts === undefined || hubData === undefined) {
     return <Loader fullscreen label={t("loading")} />;
@@ -162,7 +168,7 @@ export function HubContent() {
                   className="flex justify-between items-center text-body-md"
                 >
                   <span className="text-on-surface-variant truncate">
-                    {a.title}
+                    {titles[a._id] ?? ""}
                   </span>
                   <Icon
                     path={ICON_PATHS.checkCircle}
@@ -243,7 +249,7 @@ export function HubContent() {
                   className="flex justify-between items-center text-body-md"
                 >
                   <span className="text-on-surface-variant truncate">
-                    {d.title}
+                    {titles[d._id] ?? ""}
                   </span>
                   <Icon
                     path={ICON_PATHS.checkCircle}
@@ -277,7 +283,7 @@ export function HubContent() {
                   className="flex justify-between items-center text-body-md"
                 >
                   <span className="text-on-surface-variant truncate">
-                    {d.title}
+                    {titles[d._id] ?? ""}
                   </span>
                   <Icon
                     path={ICON_PATHS.checkCircle}
@@ -453,10 +459,11 @@ export function HubContent() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-headline font-bold text-primary truncate">
-                        {item.title}
+                        {titles[item._id] ?? ""}
                       </p>
                       <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
-                        {cat.label} · {formatTimeAgo(item.updatedAt)}
+                        {categoryLabel(item.category)} ·{" "}
+                        {formatTimeAgo(item.updatedAt)}
                       </p>
                     </div>
                     <Icon

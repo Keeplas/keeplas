@@ -7,11 +7,15 @@ export interface MemorialDecryptInput {
   // The per-item DEK wrapped to THIS contact's ML-KEM key
   // (vault_item_recipient_keys.wrappedDek).
   wrappedDek: string;
+  encryptedTitle?: string | null;
   encryptedContent: string;
   encryptedLinks?: string | null;
 }
 
 export interface MemorialDecryptResult {
+  // Decrypted title, or "" when the item carries no encrypted title (legacy
+  // rows still expose a plaintext title on the server side).
+  title: string;
   content: string;
   links: string[];
   // The unwrapped per-item DEK, reused to decrypt the item's attachments.
@@ -31,11 +35,15 @@ export function useMemorialCrypto() {
   const decryptItem = useCallback(
     async ({
       wrappedDek,
+      encryptedTitle,
       encryptedContent,
       encryptedLinks,
     }: MemorialDecryptInput): Promise<MemorialDecryptResult> => {
       const dek = await unwrapOwnerDek({ wrappedDek });
-      const [content, links] = await Promise.all([
+      const [title, content, links] = await Promise.all([
+        encryptedTitle
+          ? decryptContentWithKey(encryptedTitle, dek).catch(() => "")
+          : Promise.resolve(""),
         decryptContentWithKey(encryptedContent, dek).catch(
           () => "[Unable to decrypt]",
         ),
@@ -45,7 +53,7 @@ export function useMemorialCrypto() {
               .catch(() => [] as string[])
           : Promise.resolve([] as string[]),
       ]);
-      return { content, links, dek };
+      return { title, content, links, dek };
     },
     [unwrapOwnerDek, decryptContentWithKey],
   );

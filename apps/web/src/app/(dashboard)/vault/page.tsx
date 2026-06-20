@@ -9,6 +9,9 @@ import { AddItemDialog } from "@/components/add-item-dialog";
 import { ReleaseIntroductionEditor } from "@/app/(dashboard)/life-check/sections/release-introduction-editor";
 import { ICON_PATHS } from "@/lib/icons";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 interface SectionConfig {
@@ -17,10 +20,11 @@ interface SectionConfig {
   accent: string;
 }
 
-// One section per category. Health Directives, Legal Documents, and Business
-// Continuity are top-level here so they don't collapse into "Personal
-// Documents" — each category has its own intent and own UI affordances.
-// Labels and empty-state messages resolve via t("sections.<key>.*") in render.
+// One section per category — each has its own intent and UI affordances, so
+// they stay top-level rather than collapsing into "Personal Documents". The
+// heading resolves from the category label (useCategoryLabel); the empty-state
+// message resolves via t("sections.<key>.empty") in render. Display order is
+// computed at render (alphabetical by translated label, "other" last).
 const SECTIONS: SectionConfig[] = [
   {
     key: "documents",
@@ -62,6 +66,36 @@ const SECTIONS: SectionConfig[] = [
     category: "conditional_message",
     accent: "bg-error",
   },
+  {
+    key: "property",
+    category: "property",
+    accent: "bg-secondary",
+  },
+  {
+    key: "insurance",
+    category: "insurance_policy",
+    accent: "bg-primary",
+  },
+  {
+    key: "subscriptions",
+    category: "subscription",
+    accent: "bg-tertiary",
+  },
+  {
+    key: "contacts",
+    category: "contacts",
+    accent: "bg-secondary",
+  },
+  {
+    key: "wishes",
+    category: "wishes",
+    accent: "bg-error",
+  },
+  {
+    key: "other",
+    category: "other",
+    accent: "bg-primary",
+  },
 ];
 
 const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
@@ -90,6 +124,7 @@ function VaultLoader() {
 
 function VaultPageContent() {
   const t = useTranslations("vault");
+  const categoryLabel = useCategoryLabel();
   const searchParams = useSearchParams();
   const rawSection = searchParams.get("section");
   const activeSection = rawSection
@@ -98,6 +133,9 @@ function VaultPageContent() {
 
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
+  const titles = useDecryptedTitles(items);
+  // Owner-side migration of any legacy plaintext titles still in the vault.
+  useBackfillItemTitles(items);
   const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
@@ -129,11 +167,27 @@ function VaultPageContent() {
     return map;
   }, [items]);
 
+  // Sections follow the active language alphabetically by their category label;
+  // "other" is a catch-all and always sorts last.
+  const sortedSections = useMemo(
+    () =>
+      [...SECTIONS].sort((a, b) =>
+        a.category === "other"
+          ? 1
+          : b.category === "other"
+            ? -1
+            : categoryLabel(a.category).localeCompare(
+                categoryLabel(b.category),
+              ),
+      ),
+    [categoryLabel],
+  );
+
   if (items === undefined || vault === undefined) {
     return <Loader fullscreen label={t("page.loading")} />;
   }
 
-  const sectionsToRender = activeSection ? [activeSection] : SECTIONS;
+  const sectionsToRender = activeSection ? [activeSection] : sortedSections;
   const activeCount = activeSection
     ? (itemsByCategory.get(activeSection.category)?.length ?? 0)
     : 0;
@@ -156,7 +210,7 @@ function VaultPageContent() {
         )}
         <h1 className="text-headline-lg text-primary">
           {activeSection
-            ? t(`sections.${activeSection.key}.label`)
+            ? categoryLabel(activeSection.category)
             : t("page.title")}
         </h1>
         <p className="text-body-lg text-on-surface-variant max-w-md">
@@ -183,7 +237,7 @@ function VaultPageContent() {
           return (
             <VaultSection
               key={section.key}
-              title={t(`sections.${section.key}.label`)}
+              title={categoryLabel(section.category)}
               count={sectionItems.length}
               accent={section.accent}
               viewAllHref={
@@ -200,6 +254,7 @@ function VaultPageContent() {
                   <VaultItemCard
                     key={item._id}
                     item={item}
+                    title={titles[item._id] ?? ""}
                     groups={recipientGroups}
                     contacts={allContacts}
                   />
@@ -342,10 +397,12 @@ function transmissionSummary(
 // transmission target (Private / contact / group / "All trust contacts").
 function VaultItemCard({
   item,
+  title,
   groups,
   contacts,
 }: {
   item: Doc<"vault_items">;
+  title: string;
   groups: Doc<"recipient_groups">[];
   contacts: Doc<"trusted_contacts">[];
 }) {
@@ -377,7 +434,7 @@ function VaultItemCard({
           <span className="truncate">{transmission.label}</span>
         </span>
       </div>
-      <h4 className="text-headline-sm text-primary truncate">{item.title}</h4>
+      <h4 className="text-headline-sm text-primary truncate">{title}</h4>
       <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
         {t("card.updated", { date: formatDate(item.updatedAt) })}
       </p>

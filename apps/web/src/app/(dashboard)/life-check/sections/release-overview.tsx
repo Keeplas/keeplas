@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Loader } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 
 const ROLE_KEYS = ["family", "friend", "lawyer", "doctor", "other"] as const;
 
@@ -13,6 +15,13 @@ const ROLE_KEYS = ["family", "friend", "lawyer", "doctor", "other"] as const;
 export function ReleaseOverview() {
   const t = useTranslations("lifeCheck");
   const preview = useQuery(api.release.getReleasePreview);
+  // Flatten the per-contact title lists into one decrypt pass (the cache keys on
+  // _id + ciphertext, so an item shared with several contacts decrypts once).
+  const allTitles = useMemo(
+    () => (preview ?? []).flatMap((r) => r.itemTitles),
+    [preview],
+  );
+  const titles = useDecryptedTitles(allTitles);
 
   return (
     <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
@@ -52,7 +61,10 @@ export function ReleaseOverview() {
                 </p>
                 {r.itemTitles.length > 0 && (
                   <p className="text-label-md text-on-surface-variant/70 truncate mt-1">
-                    {r.itemTitles.join(", ")}
+                    {r.itemTitles
+                      .map((it) => titles[it._id] ?? "")
+                      .filter(Boolean)
+                      .join(", ")}
                     {r.itemCount > r.itemTitles.length ? "…" : ""}
                   </p>
                 )}

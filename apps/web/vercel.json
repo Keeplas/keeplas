@@ -1,3 +1,8 @@
 {
-  "framework": "tanstack-start"
+  "framework": "tanstack-start",
+  "git": {
+    "deploymentEnabled": {
+      "dependabot/**": false
+    }
+  }
 }

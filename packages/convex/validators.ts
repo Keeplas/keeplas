@@ -9,6 +9,12 @@ export const categoryValidator = v.union(
   v.literal("business_continuity"),
   v.literal("conditional_message"),
   v.literal("credential"),
+  v.literal("property"),
+  v.literal("insurance_policy"),
+  v.literal("subscription"),
+  v.literal("contacts"),
+  v.literal("wishes"),
+  v.literal("other"),
 );
 
 // TEMPORARY: "public" and "emergency_only" are kept here only so the schema

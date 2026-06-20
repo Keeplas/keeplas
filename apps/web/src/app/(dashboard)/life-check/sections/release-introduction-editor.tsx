@@ -7,13 +7,13 @@ import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { AddItemDialog } from "@/components/add-item-dialog";
 
 type RecipientMode = "default" | "groups" | "explicit";
 
 interface IntroductionRow {
   _id: Id<"vault_items">;
-  title: string;
   recipientMode: RecipientMode;
   sharedWithContacts: Id<"trusted_contacts">[];
   sharedWithGroups: Id<"recipient_groups">[];
@@ -36,6 +36,7 @@ export function ReleaseIntroductionEditor() {
   const vault = useQuery(api.vaults.getVault);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
   const intros = useQuery(api.vault_items.listReleaseIntroductions);
+  const titles = useDecryptedTitles(intros);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
@@ -148,7 +149,7 @@ export function ReleaseIntroductionEditor() {
             >
               <div className="min-w-0">
                 <p className="text-body-md font-bold text-primary truncate">
-                  {row.title}
+                  {titles[row._id] ?? ""}
                 </p>
                 <p className="text-label-md text-on-surface-variant mt-1">
                   {row.hasAttachments
@@ -161,8 +162,10 @@ export function ReleaseIntroductionEditor() {
               </div>
               <button
                 type="button"
-                onClick={() => handleDelete(row._id, row.title)}
-                aria-label={t("welcome.deleteAria", { title: row.title })}
+                onClick={() => handleDelete(row._id, titles[row._id] ?? "")}
+                aria-label={t("welcome.deleteAria", {
+                  title: titles[row._id] ?? "",
+                })}
                 className="p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
               >
                 <Icon path={ICON_PATHS.trash} className="w-4 h-4" />

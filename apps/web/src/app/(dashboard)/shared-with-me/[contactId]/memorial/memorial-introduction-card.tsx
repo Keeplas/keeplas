@@ -8,7 +8,8 @@ import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-te
 
 export interface MemorialIntroductionData {
   _id: Id<"vault_items">;
-  title: string;
+  title?: string;
+  encryptedTitle?: string;
   encryptedContent: string;
   encryptedLinks: string | null;
   wrappedDek: string | null;
@@ -30,6 +31,7 @@ export function MemorialIntroductionCard({
 }) {
   const t = useTranslations("sharedWithMe");
   const { decryptItem, isReady } = useMemorialCrypto();
+  const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string | null>(null);
   const [dek, setDek] = useState<CryptoKey | null>(null);
   const [decrypting, setDecrypting] = useState(false);
@@ -40,14 +42,17 @@ export function MemorialIntroductionCard({
       setDecrypting(true);
       try {
         if (!intro.readable || !intro.wrappedDek) {
+          setTitle(intro.title ?? "");
           setContent(t("introCard.decryptFailedLegacy"));
           return;
         }
         const res = await decryptItem({
           wrappedDek: intro.wrappedDek,
+          encryptedTitle: intro.encryptedTitle,
           encryptedContent: intro.encryptedContent,
           encryptedLinks: intro.encryptedLinks,
         });
+        setTitle(res.title || intro.title || "");
         setContent(res.content);
         setDek(res.dek);
       } catch {
@@ -60,9 +65,7 @@ export function MemorialIntroductionCard({
 
   return (
     <article className="space-y-5">
-      {intro.title && (
-        <h3 className="text-headline-sm text-primary">{intro.title}</h3>
-      )}
+      {title && <h3 className="text-headline-sm text-primary">{title}</h3>}
       {content === null ? (
         <div className="flex items-center gap-3 text-body-md text-on-surface-variant">
           <Loader size="sm" /> {t("introCard.decrypting")}

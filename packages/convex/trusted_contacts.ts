@@ -97,6 +97,8 @@ export const getContactAccessSummary = query({
         releasedItems.push({
           _id: item._id,
           title: item.title,
+          encryptedTitle: item.encryptedTitle,
+          ownerWrappedDek: item.ownerWrappedDek,
           category: item.category,
           recipientMode: item.recipientMode ?? "default",
           isReleaseIntroduction: item.isReleaseIntroduction === true,

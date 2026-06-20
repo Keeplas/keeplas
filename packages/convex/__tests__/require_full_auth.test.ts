@@ -69,7 +69,7 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
       asUserSession(t, userId, sessionId).mutation(api.vault_items.createItem, {
         vaultId,
         category: "personal_document",
-        title: "Secret",
+        encryptedTitle: JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
         encryptedContent: JSON.stringify({
           ciphertext: "Y2lwaA==",
           iv: "aXY=",
@@ -99,7 +99,7 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
       {
         vaultId,
         category: "personal_document",
-        title: "Secret",
+        encryptedTitle: JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
         encryptedContent: JSON.stringify({
           ciphertext: "Y2lwaA==",
           iv: "aXY=",
@@ -109,7 +109,10 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
       },
     )) as Id<"vault_items">;
     const stored = await t.run((ctx) => ctx.db.get(itemId));
-    expect(stored?.title).toBe("Secret");
+    expect(stored?.encryptedTitle).toBe(
+      JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
+    );
+    expect(stored?.title).toBeUndefined();
   });
 
   it("(c) does NOT double-gate a passwordless (phone-otp) account", async () => {

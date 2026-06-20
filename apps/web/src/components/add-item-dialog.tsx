@@ -17,7 +17,8 @@ import {
 import { toWrapRecipient } from "@/lib/verify-contact-key";
 import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { getErrorMessage } from "@/lib/utils";
-import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
+import { type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import { Link } from "@/lib/navigation";
@@ -39,6 +40,7 @@ import {
   DialogDescription,
   DialogClose,
   cn,
+  toast,
 } from "@keeplas/ui";
 // AccessLevel is derived from recipient selection:
 //   no recipients selected   → "private"
@@ -159,6 +161,8 @@ export function AddItemDialog({
   mode = "vault",
 }: AddItemDialogProps) {
   const t = useTranslations("vault");
+  const categoryLabel = useCategoryLabel();
+  const sortedCategories = useSortedCategories();
   const isIntroMode = mode === "release_introduction";
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const { encryptContentWithKey, isReady } = useVaultCrypto();
@@ -521,30 +525,48 @@ export function AddItemDialog({
       setProgress(t("dialog.progressGenKey"));
       let wrap = await generateDekAndWrap(resolvedRecipients);
 
-      // Verify-before-wrap (finding #2): if a recipient's encryption key could
-      // not be authenticated, BLOCK the save. The owner may explicitly re-pin a
-      // deliberate identity change, after which we retry once; otherwise we
-      // abort so no item is created with a recipient the contacts can't safely
-      // decrypt.
-      if (wrap.blocked.length > 0) {
-        const retry = await showBlockedWrapAlert(wrap.blocked);
+      // Verify-before-wrap (finding #2). Two classes of failure are handled
+      // differently:
+      //  • HARD (signature_invalid / fingerprint_changed) — a possible server
+      //    key substitution. Still BLOCKING: the owner may explicitly re-pin a
+      //    deliberate identity change (retried once), otherwise we abort so no
+      //    item is created with a recipient the contacts can't safely decrypt.
+      //  • DEFERRABLE (unverifiable) — the contact simply hasn't published
+      //    their key yet. We DON'T block: the item saves wrapping only to the
+      //    ready recipients, and the not-ready ones are recorded as
+      //    `pendingRecipients` so the owner's client re-wraps the DEK to them
+      //    automatically once they publish (see useBackfillPendingShares).
+      const isHard = (b: { reason: string }) =>
+        b.reason === "signature_invalid" || b.reason === "fingerprint_changed";
+
+      let hard = wrap.blocked.filter(isHard);
+      if (hard.length > 0) {
+        const retry = await showBlockedWrapAlert(hard);
         if (!retry) {
           setSaving(false);
           setProgress("");
           return;
         }
         wrap = await generateDekAndWrap(resolvedRecipients);
-        if (wrap.blocked.length > 0) {
-          await showBlockedWrapAlert(wrap.blocked);
+        hard = wrap.blocked.filter(isHard);
+        if (hard.length > 0) {
+          await showBlockedWrapAlert(hard);
           setSaving(false);
           setProgress("");
           return;
         }
       }
+
+      const deferred = wrap.blocked.filter((b) => b.reason === "unverifiable");
+      const pendingRecipients = deferred.map(
+        (b) => b.contactId as Id<"trusted_contacts">,
+      );
+
       const { dek, ownerWrap, recipientWraps } = wrap;
 
       setProgress(t("dialog.progressSealing"));
       const textPayload = body.trim();
+      const encryptedTitle = await encryptContentWithKey(title.trim(), dek);
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const encryptedLinks =
         cleanUrls.length > 0
@@ -569,7 +591,7 @@ export function AddItemDialog({
       const itemId = (await createItem({
         vaultId,
         category,
-        title: title.trim(),
+        encryptedTitle,
         encryptedContent,
         encryptedLinks,
         accessLevel: recipientConfig.derivedAccessLevel,
@@ -582,10 +604,23 @@ export function AddItemDialog({
           contactId: rw.contactId as Id<"trusted_contacts">,
           wrappedDek: rw.wrappedDek,
         })),
+        pendingRecipients,
         files: undefined,
         isReleaseIntroduction: isIntroMode || undefined,
         ...triggerArgs,
       })) as Id<"vault_items">;
+
+      // Some selected contacts hadn't published their key yet — the item
+      // saved without blocking; flag the deferred shares so the owner knows
+      // they'll be wrapped automatically once those contacts publish.
+      if (deferred.length > 0) {
+        toast({
+          title: t("dialog.deferredShareTitle"),
+          description: t("dialog.deferredShareBody", {
+            names: deferred.map((b) => b.name ?? "A contact").join(", "),
+          }),
+        });
+      }
 
       if (files.length > 0) {
         enqueueAttachments({
@@ -687,9 +722,9 @@ export function AddItemDialog({
                     onValueChange={setCategory}
                     placeholder={t("dialog.categoryPlaceholder")}
                   >
-                    {CATEGORIES.map((cat) => (
+                    {sortedCategories.map((cat) => (
                       <SelectItem key={cat.key} value={cat.key}>
-                        {cat.label}
+                        {categoryLabel(cat.key)}
                       </SelectItem>
                     ))}
                   </Select>

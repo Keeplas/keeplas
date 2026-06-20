@@ -10,10 +10,11 @@ import { VaultLinkList } from "@/components/vault-link-list";
 import { MemorialItemAttachments } from "@/components/memorial-item-attachments";
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
-import { getCategoryConfig } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
 
 export default function MemorialItemPage() {
   const t = useTranslations("sharedWithMe");
+  const categoryLabel = useCategoryLabel();
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const itemId = params.itemId as Id<"vault_items">;
@@ -24,6 +25,7 @@ export default function MemorialItemPage() {
   });
   const { decryptItem, isReady } = useMemorialCrypto();
 
+  const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string | null>(null);
   const [links, setLinks] = useState<string[]>([]);
   const [dek, setDek] = useState<CryptoKey | null>(null);
@@ -37,14 +39,17 @@ export default function MemorialItemPage() {
       setDecrypting(true);
       try {
         if (!item.readable || !item.wrappedDek) {
+          setTitle(item.title ?? "");
           setContent(t("item.decryptFailedLegacy"));
           return;
         }
         const res = await decryptItem({
           wrappedDek: item.wrappedDek,
+          encryptedTitle: item.encryptedTitle,
           encryptedContent: item.encryptedContent,
           encryptedLinks: item.encryptedLinks,
         });
+        setTitle(res.title || item.title || "");
         setContent(res.content);
         setLinks(res.links);
         setDek(res.dek);
@@ -80,7 +85,6 @@ export default function MemorialItemPage() {
   }
 
   const { owner, item } = data;
-  const category = getCategoryConfig(item.category);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -91,10 +95,10 @@ export default function MemorialItemPage() {
         ← {t("item.backToMemorial", { ownerName: owner.name })}
       </Link>
 
-      <h1 className="text-headline-lg text-primary mt-3 mb-1">{item.title}</h1>
+      <h1 className="text-headline-lg text-primary mt-3 mb-1">{title}</h1>
       <p className="text-body-md text-on-surface-variant mb-8">
         {t("item.categoryInMemory", {
-          category: category.label,
+          category: categoryLabel(item.category),
           ownerName: owner.name,
         })}
       </p>
