@@ -6,6 +6,12 @@ export type VaultCategory =
   | "legal_document"
   | "business_continuity"
   | "conditional_message"
-  | "credential";
+  | "credential"
+  | "property"
+  | "insurance_policy"
+  | "subscription"
+  | "contacts"
+  | "wishes"
+  | "other";
 
 export type AccessLevel = "private" | "trusted_only";

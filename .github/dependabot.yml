@@ -4,16 +4,20 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
+      interval: monthly
+    open-pull-requests-limit: 5
     groups:
       # Batch routine updates into a single PR to cut review noise
       minor-and-patch:
         update-types:
           - minor
           - patch
+      # Fold scattered dev-dependency bumps (vite, plugin-react, …) into one PR
+      dev-dependencies:
+        dependency-type: development
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
+    open-pull-requests-limit: 3

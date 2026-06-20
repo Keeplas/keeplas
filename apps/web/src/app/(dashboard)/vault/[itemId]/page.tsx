@@ -8,15 +8,12 @@ import {
   useRecipientCrypto,
   type WrapRecipient,
 } from "@/lib/use-recipient-crypto";
-import { toWrapRecipient } from "@/lib/verify-contact-key";
+import { toWrapRecipient, type BlockedContact } from "@/lib/verify-contact-key";
 import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
-import {
-  getCategoryConfig,
-  CATEGORIES,
-  type VaultCategory,
-} from "@/lib/vault-categories";
+import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
@@ -42,6 +39,7 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  toast,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 
@@ -91,6 +89,8 @@ function formatAttachmentSize(bytes: number): string {
 
 export default function VaultItemPage() {
   const t = useTranslations("vault");
+  const categoryLabel = useCategoryLabel();
+  const sortedCategories = useSortedCategories();
   const params = useParams();
   const router = useRouter();
   const itemId = params.itemId as Id<"vault_items">;
@@ -414,28 +414,42 @@ export default function VaultItemPage() {
         contactId: Id<"trusted_contacts">;
         wrappedDek: string;
       }> = [];
+      // Contacts whose key isn't published yet (`unverifiable`): the save isn't
+      // blocked on them — they're recorded as pending and re-wrapped later by
+      // useBackfillPendingShares once they publish.
+      let pendingRecipientsPayload: Id<"trusted_contacts">[] = [];
       let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" =
         "zero_knowledge";
       // The DEK we should use to encrypt newly-added attachments under,
       // matching whatever the item currently lives under.
       let attachmentDek: CryptoKey | undefined;
 
-      // Verify-before-wrap (finding #2): re-run the wrap after an explicit
-      // re-pin, and ABORT if any recipient still can't be authenticated. Shared
-      // by both ZK branches so the blocking policy is identical.
+      // Verify-before-wrap (finding #2). HARD failures (signature_invalid /
+      // fingerprint_changed) are a possible server key substitution — still
+      // BLOCKING: alert, allow one re-pin retry, abort if unresolved. DEFERRABLE
+      // failures (unverifiable — contact hasn't published a key yet) don't
+      // block: returned so the caller records them as pending. Shared by both
+      // ZK branches so the policy is identical.
+      // Returns null to abort, otherwise the deferrable contacts to defer.
+      const isHard = (b: BlockedContact) =>
+        b.reason === "signature_invalid" || b.reason === "fingerprint_changed";
       const guardBlocked = async (
-        blocked: Awaited<ReturnType<typeof wrapExistingDek>>["blocked"],
-        retryWrap: () => Promise<{ blocked: typeof blocked }>,
-      ): Promise<boolean> => {
-        if (blocked.length === 0) return true;
-        const retry = await showBlockedWrapAlert(blocked);
-        if (!retry) return false;
-        const second = await retryWrap();
-        if (second.blocked.length > 0) {
-          await showBlockedWrapAlert(second.blocked);
-          return false;
+        wrap: { blocked: BlockedContact[] },
+        retryWrap: () => Promise<{ blocked: BlockedContact[] }>,
+      ): Promise<BlockedContact[] | null> => {
+        let current = wrap;
+        let hard = current.blocked.filter(isHard);
+        if (hard.length > 0) {
+          const retry = await showBlockedWrapAlert(hard);
+          if (!retry) return null;
+          current = await retryWrap();
+          hard = current.blocked.filter(isHard);
+          if (hard.length > 0) {
+            await showBlockedWrapAlert(hard);
+            return null;
+          }
         }
-        return true;
+        return current.blocked.filter((b) => b.reason === "unverifiable");
       };
 
       setSavingProgress(t("editor.progressEncrypting"));
@@ -448,17 +462,18 @@ export default function VaultItemPage() {
         encryptedContent = await encryptContentWithKey(contentPayload, dek);
         encryptedLinks = await encryptContentWithKey(linksPayload, dek);
         let wraps = await wrapExistingDek(dek, resolvedRecipients);
-        if (wraps.blocked.length > 0) {
-          const ok = await guardBlocked(wraps.blocked, async () => {
-            wraps = await wrapExistingDek(dek, resolvedRecipients);
-            return wraps;
-          });
-          if (!ok) {
-            setSaving(false);
-            setSavingProgress("");
-            return;
-          }
+        const deferred = await guardBlocked(wraps, async () => {
+          wraps = await wrapExistingDek(dek, resolvedRecipients);
+          return wraps;
+        });
+        if (deferred === null) {
+          setSaving(false);
+          setSavingProgress("");
+          return;
         }
+        pendingRecipientsPayload = deferred.map(
+          (b) => b.contactId as Id<"trusted_contacts">,
+        );
         ownerWrappedDek = wraps.ownerWrap.wrappedDek;
         recipientKeysPayload = wraps.recipientWraps.map((rw) => ({
           contactId: rw.contactId as Id<"trusted_contacts">,
@@ -467,17 +482,18 @@ export default function VaultItemPage() {
       } else if (item.encryptionType === "zero_knowledge") {
         // Item flagged ZK but somehow missing the owner wrap — re-key it.
         let fresh = await generateDekAndWrap(resolvedRecipients);
-        if (fresh.blocked.length > 0) {
-          const ok = await guardBlocked(fresh.blocked, async () => {
-            fresh = await generateDekAndWrap(resolvedRecipients);
-            return fresh;
-          });
-          if (!ok) {
-            setSaving(false);
-            setSavingProgress("");
-            return;
-          }
+        const deferred = await guardBlocked(fresh, async () => {
+          fresh = await generateDekAndWrap(resolvedRecipients);
+          return fresh;
+        });
+        if (deferred === null) {
+          setSaving(false);
+          setSavingProgress("");
+          return;
         }
+        pendingRecipientsPayload = deferred.map(
+          (b) => b.contactId as Id<"trusted_contacts">,
+        );
         attachmentDek = fresh.dek;
         encryptedTitle = await encryptContentWithKey(
           editTitle.trim(),
@@ -517,9 +533,28 @@ export default function VaultItemPage() {
           ? {
               ownerWrappedDek,
               recipientKeys: recipientKeysPayload,
+              pendingRecipients: pendingRecipientsPayload,
             }
           : {}),
       });
+
+      // Some selected contacts hadn't published their key yet — the save
+      // wasn't blocked; flag the deferred shares so the owner knows they'll be
+      // wrapped automatically once those contacts publish.
+      if (pendingRecipientsPayload.length > 0) {
+        const deferredNames = resolvedRecipients
+          .filter((r) =>
+            pendingRecipientsPayload.includes(
+              r.contactId as Id<"trusted_contacts">,
+            ),
+          )
+          .map((r) => r.name ?? "A contact")
+          .join(", ");
+        toast({
+          title: t("dialog.deferredShareTitle"),
+          description: t("dialog.deferredShareBody", { names: deferredNames }),
+        });
+      }
 
       // Attachment removals — independent of metadata update.
       if (removedFileIds.size > 0) {
@@ -660,9 +695,9 @@ export default function VaultItemPage() {
               value={editCategory}
               onValueChange={setEditCategory}
             >
-              {CATEGORIES.map((cat) => (
+              {sortedCategories.map((cat) => (
                 <SelectItem key={cat.key} value={cat.key}>
-                  {cat.label}
+                  {categoryLabel(cat.key)}
                 </SelectItem>
               ))}
             </Select>
@@ -812,7 +847,7 @@ export default function VaultItemPage() {
                   />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
-                  {category.label}
+                  {categoryLabel(item.category)}
                 </span>
               </div>
               <h1 className="text-headline-lg text-primary">

@@ -10,10 +10,11 @@ import { VaultLinkList } from "@/components/vault-link-list";
 import { MemorialItemAttachments } from "@/components/memorial-item-attachments";
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
-import { getCategoryConfig } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
 
 export default function MemorialItemPage() {
   const t = useTranslations("sharedWithMe");
+  const categoryLabel = useCategoryLabel();
   const params = useParams();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const itemId = params.itemId as Id<"vault_items">;
@@ -84,7 +85,6 @@ export default function MemorialItemPage() {
   }
 
   const { owner, item } = data;
-  const category = getCategoryConfig(item.category);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -98,7 +98,7 @@ export default function MemorialItemPage() {
       <h1 className="text-headline-lg text-primary mt-3 mb-1">{title}</h1>
       <p className="text-body-md text-on-surface-variant mb-8">
         {t("item.categoryInMemory", {
-          category: category.label,
+          category: categoryLabel(item.category),
           ownerName: owner.name,
         })}
       </p>

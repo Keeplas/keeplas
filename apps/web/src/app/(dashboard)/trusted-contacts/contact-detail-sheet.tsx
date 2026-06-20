@@ -18,6 +18,7 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { getCategoryConfig } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import {
   computeVerificationBadge,
@@ -72,6 +73,7 @@ function ContactDetailBody({
   onClose: () => void;
 }) {
   const t = useTranslations("trustedContacts");
+  const categoryLabel = useCategoryLabel();
   const [confirmRevoke, setConfirmRevoke] = useState(false);
   const [revoking, setRevoking] = useState(false);
   const [resending, setResending] = useState(false);
@@ -288,7 +290,7 @@ function ContactDetailBody({
                         {titles[item._id] ?? ""}
                       </p>
                       <p className="text-label-md text-on-surface-variant">
-                        {getCategoryConfig(item.category).label} ·{" "}
+                        {categoryLabel(item.category)} ·{" "}
                         {t(
                           `detail.recipientMode.${RECIPIENT_MODE_KEYS[item.recipientMode]}`,
                         )}
