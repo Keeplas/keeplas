@@ -390,6 +390,7 @@
       "errorNotFound": "No {devices} detected on this device.",
       "errorBusy": "{device} is busy in another app.",
       "errorGeneric": "Unable to access capture devices.",
+      "errorScreenDenied": "Screen sharing was cancelled or denied. Click Try again to pick a window or tab.",
       "devicesCameraMic": "camera and microphone",
       "devicesCameraOrMic": "camera or microphone",
       "deviceMic": "microphone",
@@ -406,9 +407,12 @@
       "subIdle": "Encrypted on your device. Max {max}.",
       "titleAudio": "Voice recording",
       "titleVideo": "Video recording",
+      "titleScreen": "Screen recording",
       "cancelRecording": "Cancel recording",
       "tryAgain": "Try again",
       "turningOnCamera": "Turning on camera…",
+      "startingScreenShare": "Starting screen share…",
+      "screenIdleHint": "Click Start recording to choose a screen, window, or tab to capture.",
       "enablingMic": "Enabling microphone…",
       "statusRecording": "Recording",
       "statusLivePreview": "Live preview",
@@ -1875,6 +1879,7 @@
       "introCallout": "Released alongside your vault when Life Check confirms you're unreachable. Shown to recipients at the top of their memorial view.",
       "recordAudio": "Record audio",
       "recordVideo": "Record video",
+      "recordScreen": "Record screen",
       "orDropFile": "or drop a file below",
       "dropTitle": "Drag and drop secure files",
       "dropHint": "PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.",
@@ -1912,7 +1917,8 @@
     },
     "recorder": {
       "videoMessage": "Video message",
-      "voiceMessage": "Voice message"
+      "voiceMessage": "Voice message",
+      "screenMessage": "Screen recording"
     }
   },
   "docs": {

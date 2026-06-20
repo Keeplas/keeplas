@@ -390,6 +390,7 @@
       "errorNotFound": "Aucun {devices} détecté sur cet appareil.",
       "errorBusy": "{device} est utilisé(e) par une autre application.",
       "errorGeneric": "Impossible d'accéder aux périphériques de capture.",
+      "errorScreenDenied": "Le partage d'écran a été annulé ou refusé. Cliquez sur Réessayer pour choisir une fenêtre ou un onglet.",
       "devicesCameraMic": "à la caméra et au microphone",
       "devicesCameraOrMic": "caméra ou microphone",
       "deviceMic": "au microphone",
@@ -406,9 +407,12 @@
       "subIdle": "Chiffré sur votre appareil. Max {max}.",
       "titleAudio": "Enregistrement vocal",
       "titleVideo": "Enregistrement vidéo",
+      "titleScreen": "Enregistrement d'écran",
       "cancelRecording": "Annuler l'enregistrement",
       "tryAgain": "Réessayer",
       "turningOnCamera": "Activation de la caméra…",
+      "startingScreenShare": "Démarrage du partage d'écran…",
+      "screenIdleHint": "Cliquez sur Démarrer l'enregistrement pour choisir un écran, une fenêtre ou un onglet à capturer.",
       "enablingMic": "Activation du microphone…",
       "statusRecording": "Enregistrement",
       "statusLivePreview": "Aperçu en direct",
@@ -1875,6 +1879,7 @@
       "introCallout": "Transmis avec votre coffre lorsque Life Check confirme que vous êtes injoignable. Affiché aux bénéficiaires en haut de leur vue commémorative.",
       "recordAudio": "Enregistrer un audio",
       "recordVideo": "Enregistrer une vidéo",
+      "recordScreen": "Enregistrer l'écran",
       "orDropFile": "ou déposez un fichier ci-dessous",
       "dropTitle": "Glissez-déposez des fichiers sécurisés",
       "dropHint": "PDF, JPG ou PNG jusqu'à 50 Mo par fichier. Chiffrés dès leur arrivée.",
@@ -1912,7 +1917,8 @@
     },
     "recorder": {
       "videoMessage": "Message vidéo",
-      "voiceMessage": "Message vocal"
+      "voiceMessage": "Message vocal",
+      "screenMessage": "Enregistrement d'écran"
     }
   },
   "docs": {

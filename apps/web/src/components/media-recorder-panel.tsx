@@ -6,7 +6,7 @@ import { useTranslations } from "@/lib/i18n";
 
 type Translator = ReturnType<typeof useTranslations>;
 
-type RecorderMode = "audio" | "video";
+type RecorderMode = "audio" | "video" | "screen";
 
 interface MediaRecorderPanelProps {
   mode: RecorderMode;
@@ -38,11 +38,13 @@ const VIDEO_MIME_CANDIDATES = [
 const MAX_DURATION_SEC: Record<RecorderMode, number> = {
   audio: 30 * 60,
   video: 30 * 60,
+  screen: 30 * 60,
 };
 
 const WAVEFORM_BARS = 40;
 
 function pickMimeType(mode: RecorderMode): string {
+  // Screen capture is video — only audio mode uses the audio codec list.
   const list = mode === "audio" ? AUDIO_MIME_CANDIDATES : VIDEO_MIME_CANDIDATES;
   for (const candidate of list) {
     if (
@@ -71,6 +73,14 @@ function friendlyError(
   t: Translator,
 ): string {
   const name = (err as { name?: string }).name ?? "";
+  // getDisplayMedia rejects with NotAllowedError / AbortError when the user
+  // dismisses the picker or cancels the share — not a real permission failure.
+  if (
+    mode === "screen" &&
+    (name === "NotAllowedError" || name === "AbortError")
+  ) {
+    return t("recorder.errorScreenDenied");
+  }
   if (name === "NotAllowedError") {
     return t("recorder.errorPermission", {
       devices:
@@ -137,6 +147,26 @@ export function MediaRecorderPanel({
       livePreviewRef.current.srcObject = null;
     }
   }, []);
+
+  // When the user ends the share from the browser's native "Stop sharing" bar,
+  // the screen video track fires "ended": finalize the take if we were
+  // recording, otherwise surface a retry prompt.
+  const attachScreenEndHandler = useCallback(
+    (stream: MediaStream) => {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (!videoTrack) return;
+      videoTrack.addEventListener("ended", () => {
+        if (recorderRef.current?.state === "recording") {
+          recorderRef.current.stop();
+        } else {
+          stopStream();
+          setError(t("recorder.errorScreenDenied"));
+          setPhase("error");
+        }
+      });
+    },
+    [setPhase, stopStream, t],
+  );
 
   const teardownAudioAnalyser = useCallback(() => {
     if (rafRef.current !== null) {
@@ -243,6 +273,27 @@ export function MediaRecorderPanel({
   );
 
   const requestStream = useCallback(async (): Promise<MediaStream> => {
+    if (mode === "screen") {
+      // Screen video + the user's mic narration combined into one stream.
+      const display = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: { ideal: 24 } },
+        audio: true, // tab/system audio if the user opts in via the picker
+      });
+      let micTrack: MediaStreamTrack | null = null;
+      try {
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micTrack = mic.getAudioTracks()[0] ?? null;
+      } catch {
+        // Mic is optional — fall back to whatever audio the screen share carries.
+      }
+      const combined = new MediaStream();
+      display.getVideoTracks().forEach((track) => combined.addTrack(track));
+      // Prefer mic narration; otherwise keep the screen's own audio track.
+      if (micTrack) combined.addTrack(micTrack);
+      else
+        display.getAudioTracks().forEach((track) => combined.addTrack(track));
+      return combined;
+    }
     const constraints: MediaStreamConstraints =
       mode === "audio"
         ? { audio: true }
@@ -265,6 +316,12 @@ export function MediaRecorderPanel({
     async function warm() {
       setPhase("warming");
       setError("");
+      // getDisplayMedia requires a user gesture, which the mount effect lacks —
+      // defer screen acquisition to the Start button (handleStart).
+      if (mode === "screen") {
+        setPhase("live");
+        return;
+      }
       try {
         if (
           typeof navigator === "undefined" ||
@@ -279,10 +336,10 @@ export function MediaRecorderPanel({
         }
         streamRef.current = stream;
 
-        if (mode === "video" && livePreviewRef.current) {
+        if (mode !== "audio" && livePreviewRef.current) {
           livePreviewRef.current.srcObject = stream;
         }
-        setupAudioAnalyser(stream);
+        if (mode === "audio") setupAudioAnalyser(stream);
         setPhase("live");
       } catch (err) {
         if (!cancelled) {
@@ -326,10 +383,11 @@ export function MediaRecorderPanel({
     try {
       const stream = await requestStream();
       streamRef.current = stream;
-      if (mode === "video" && livePreviewRef.current) {
+      if (mode !== "audio" && livePreviewRef.current) {
         livePreviewRef.current.srcObject = stream;
       }
-      setupAudioAnalyser(stream);
+      if (mode === "screen") attachScreenEndHandler(stream);
+      if (mode === "audio") setupAudioAnalyser(stream);
       setPhase("live");
     } catch (err) {
       setError(friendlyError(err, mode, t));
@@ -337,8 +395,22 @@ export function MediaRecorderPanel({
     }
   }
 
-  function handleStart() {
-    const stream = streamRef.current;
+  async function handleStart() {
+    let stream = streamRef.current;
+    // Screen capture is acquired here (this click is the required user gesture).
+    if (!stream && mode === "screen") {
+      setPhase("warming");
+      try {
+        stream = await requestStream();
+      } catch (err) {
+        setError(friendlyError(err, mode, t));
+        setPhase("error");
+        return;
+      }
+      streamRef.current = stream;
+      if (livePreviewRef.current) livePreviewRef.current.srcObject = stream;
+      attachScreenEndHandler(stream);
+    }
     if (!stream) {
       setError(t("recorder.deviceNotReady"));
       return;
@@ -462,7 +534,13 @@ export function MediaRecorderPanel({
             )}
           >
             <Icon
-              path={mode === "audio" ? ICON_PATHS.mic : ICON_PATHS.videocam}
+              path={
+                mode === "audio"
+                  ? ICON_PATHS.mic
+                  : mode === "screen"
+                    ? ICON_PATHS.screen
+                    : ICON_PATHS.videocam
+              }
               className="w-5 h-5"
             />
           </div>
@@ -470,7 +548,9 @@ export function MediaRecorderPanel({
             <p className="text-headline-sm text-primary">
               {mode === "audio"
                 ? t("recorder.titleAudio")
-                : t("recorder.titleVideo")}
+                : mode === "screen"
+                  ? t("recorder.titleScreen")
+                  : t("recorder.titleVideo")}
             </p>
             <p className="text-label-md text-on-surface-variant">
               {subheadline}
@@ -506,8 +586,8 @@ export function MediaRecorderPanel({
         </div>
       )}
 
-      {/* Live visual — video preview or audio waveform */}
-      {mode === "video" && phase !== "stopped" && (
+      {/* Live visual — video / screen preview or audio waveform */}
+      {mode !== "audio" && phase !== "stopped" && (
         <div className="relative w-full aspect-video rounded-xl bg-primary/5 overflow-hidden">
           <video
             ref={livePreviewRef}
@@ -522,10 +602,19 @@ export function MediaRecorderPanel({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
               </span>
-              {t("recorder.turningOnCamera")}
+              {mode === "screen"
+                ? t("recorder.startingScreenShare")
+                : t("recorder.turningOnCamera")}
             </div>
           )}
-          {(phase === "live" || phase === "recording") && (
+          {/* Screen capture has no live preview until the share starts. */}
+          {mode === "screen" && phase === "live" && (
+            <div className="absolute inset-0 flex items-center justify-center text-center text-body-md text-on-surface-variant px-6 bg-surface-container-high/60">
+              {t("recorder.screenIdleHint")}
+            </div>
+          )}
+          {(phase === "recording" ||
+            (phase === "live" && mode !== "screen")) && (
             <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-label-md px-3 py-1 rounded-full">
               <span
                 className={cn(
