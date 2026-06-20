@@ -1,7 +1,7 @@
 import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useParams, useRouter } from "@/lib/navigation";
-import { useState, useEffect, useMemo, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import {
@@ -15,6 +15,12 @@ import { getErrorMessage } from "@/lib/utils";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
+import { AttachmentCapture } from "@/components/attachment-capture";
+import {
+  formatFileSize,
+  iconForKind,
+  type PreparedFile,
+} from "@/lib/attachment-capture";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
@@ -45,47 +51,6 @@ import { ICON_PATHS } from "@/lib/icons";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
-
-const ATTACHMENT_ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
-const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024;
-
-type AttachmentKind = "document" | "audio" | "video" | "image";
-
-interface StagedAttachment {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: number;
-  blob: Blob;
-  kind: AttachmentKind;
-  durationSec?: number;
-}
-
-function inferAttachmentKind(mimeType: string): AttachmentKind {
-  if (mimeType.startsWith("audio/")) return "audio";
-  if (mimeType.startsWith("video/")) return "video";
-  if (mimeType.startsWith("image/")) return "image";
-  return "document";
-}
-
-function attachmentIcon(kind: AttachmentKind): string {
-  switch (kind) {
-    case "audio":
-      return ICON_PATHS.mic;
-    case "video":
-      return ICON_PATHS.videocam;
-    case "image":
-      return ICON_PATHS.image;
-    default:
-      return ICON_PATHS.pictureAsPdf;
-  }
-}
-
-function formatAttachmentSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 export default function VaultItemPage() {
   const t = useTranslations("vault");
@@ -151,11 +116,10 @@ export default function VaultItemPage() {
   const [removedFileIds, setRemovedFileIds] = useState<
     Set<Id<"vault_item_files">>
   >(new Set());
-  const [stagedFiles, setStagedFiles] = useState<StagedAttachment[]>([]);
+  const [stagedFiles, setStagedFiles] = useState<PreparedFile[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingProgress, setSavingProgress] = useState("");
   const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const recipientOptions = useMemo<MultiSelectOption[]>(() => {
     const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
@@ -275,42 +239,6 @@ export default function VaultItemPage() {
     setStagedFiles([]);
     setError("");
     setEditing(false);
-  }
-
-  function ingestAttachments(list: FileList | File[]) {
-    const accepted: StagedAttachment[] = [];
-    const allowed = ATTACHMENT_ACCEPTED_TYPES.split(",");
-    for (const file of Array.from(list)) {
-      if (!allowed.includes(file.type)) {
-        setError(t("editor.errorUnsupportedType", { name: file.name }));
-        continue;
-      }
-      if (file.size > ATTACHMENT_MAX_BYTES) {
-        setError(t("editor.errorTooLarge", { name: file.name }));
-        continue;
-      }
-      accepted.push({
-        id: `${file.name}-${file.size}-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 7)}`,
-        name: file.name,
-        mimeType: file.type,
-        size: file.size,
-        blob: file,
-        kind: inferAttachmentKind(file.type),
-      });
-    }
-    if (accepted.length > 0) {
-      setError("");
-      setStagedFiles((prev) => [...prev, ...accepted]);
-    }
-  }
-
-  function handleAttachmentPick(e: ChangeEvent<HTMLInputElement>) {
-    if (e.target.files) {
-      ingestAttachments(e.target.files);
-      e.target.value = "";
-    }
   }
 
   function toggleRemoveExisting(fileId: Id<"vault_item_files">) {
@@ -748,24 +676,10 @@ export default function VaultItemPage() {
               )}
             </div>
             <div className="pt-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept={ATTACHMENT_ACCEPTED_TYPES}
-                onChange={handleAttachmentPick}
-                className="hidden"
+              <AttachmentCapture
+                onAdd={(f) => setStagedFiles((prev) => [...prev, ...f])}
+                onError={setError}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-              >
-                <Icon path={ICON_PATHS.plus} className="w-4 h-4 mr-2" />
-                {t("editor.addFile")}
-              </Button>
               <p className="text-label-md text-on-surface-variant/70 mt-2">
                 {t("editor.fileHint")}
               </p>
@@ -1064,7 +978,7 @@ function ExistingAttachmentRow({
       }`}
     >
       <div className="w-9 h-9 bg-surface-container-high rounded-lg flex items-center justify-center shrink-0 text-primary">
-        <Icon path={attachmentIcon(file.kind)} className="w-4 h-4" />
+        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
         <p
@@ -1075,7 +989,7 @@ function ExistingAttachmentRow({
           {file.name}
         </p>
         <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatAttachmentSize(file.size)} · {t("attachments.encrypted")}
+          {formatFileSize(file.size)} · {t("attachments.encrypted")}
           {removed ? ` · ${t("editor.willBeDeleted")}` : ""}
         </p>
       </div>
@@ -1094,19 +1008,19 @@ function StagedAttachmentRow({
   file,
   onRemove,
 }: {
-  file: StagedAttachment;
+  file: PreparedFile;
   onRemove: () => void;
 }) {
   const t = useTranslations("vault");
   return (
-    <div className="flex items-center gap-3 bg-secondary/5 border border-secondary/20 rounded-xl px-4 py-3">
+    <div className="flex items-center gap-3 bg-secondary/5 rounded-xl px-4 py-3">
       <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center shrink-0 text-secondary">
-        <Icon path={attachmentIcon(file.kind)} className="w-4 h-4" />
+        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-headline-sm text-primary truncate">{file.name}</p>
         <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatAttachmentSize(file.size)} · {t("editor.willBeEncrypted")}
+          {formatFileSize(file.size)} · {t("editor.willBeEncrypted")}
         </p>
       </div>
       <button
