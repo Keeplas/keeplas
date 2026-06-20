@@ -28,9 +28,9 @@ export interface CameoCompositor {
 }
 
 export const DEFAULT_CAMEO_GEOMETRY: CameoGeometry = {
-  cx: 0.86,
-  cy: 0.82,
-  r: 0.16,
+  cx: 0.88,
+  cy: 0.84,
+  r: 0.11,
 };
 
 /** Clamp the geometry so the whole circle stays inside the frame. */
@@ -50,6 +50,8 @@ interface CompositorOptions {
   micTrack: MediaStreamTrack | null;
   /** Read every frame so live drag / resize is reflected in the recording. */
   geometryRef: { current: CameoGeometry };
+  /** Toggle the camera circle on/off live (even mid-recording). */
+  drawCameraRef?: { current: boolean };
   fps?: number;
 }
 
@@ -59,6 +61,7 @@ export function createCameoCompositor({
   canvas,
   micTrack,
   geometryRef,
+  drawCameraRef,
   fps = 30,
 }: CompositorOptions): CameoCompositor {
   const ctx = canvas.getContext("2d");
@@ -83,9 +86,10 @@ export function createCameoCompositor({
     const cx = g.cx * w;
     const cy = g.cy * h;
 
+    const drawCamera = drawCameraRef?.current ?? true;
     const camW = cameraVideo.videoWidth;
     const camH = cameraVideo.videoHeight;
-    if (camW > 0 && camH > 0) {
+    if (drawCamera && camW > 0 && camH > 0) {
       // Square cover crop of the camera frame.
       const side = Math.min(camW, camH);
       const sx = (camW - side) / 2;
@@ -112,15 +116,6 @@ export function createCameoCompositor({
       );
       ctx.restore();
     }
-
-    // Ring to lift the circle off the background.
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.lineWidth = Math.max(2, radius * 0.04);
-    ctx.strokeStyle = "rgba(255,255,255,0.9)";
-    ctx.stroke();
-    ctx.restore();
 
     rafId = requestAnimationFrame(draw);
   };
