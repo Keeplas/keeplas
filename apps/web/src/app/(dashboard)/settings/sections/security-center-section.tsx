@@ -7,8 +7,6 @@ import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
 import { useTranslations } from "@/lib/i18n";
 import { DeviceUnlockManager } from "./device-unlock-manager";
-import { PasskeyManager } from "./passkey-manager";
-import { TotpManager } from "./totp-manager";
 import { RedistributeShardsCard } from "./redistribute-shards-card";
 
 const ACTION_ICONS: Record<string, string> = {
@@ -276,8 +274,6 @@ export function SecurityCenterSection() {
         </div>
 
         <DeviceUnlockManager />
-        <PasskeyManager />
-        <TotpManager />
       </div>
 
       {/* Activity Log */}

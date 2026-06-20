@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type DragEvent,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
@@ -46,7 +39,13 @@ import {
 //   no recipients selected   → "private"
 //   recipients selected      → "trusted_only"
 import { ICON_PATHS } from "@/lib/icons";
-import { MediaRecorderPanel } from "@/components/media-recorder-panel";
+import { AttachmentCapture } from "@/components/attachment-capture";
+import {
+  formatDuration,
+  formatFileSize,
+  iconForKind,
+  type PreparedFile,
+} from "@/lib/attachment-capture";
 import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { serializeLinks, isValidUrl } from "@/lib/link-payload";
@@ -93,21 +92,6 @@ interface AddItemDialogProps {
   mode?: AddItemDialogMode;
 }
 
-const ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
-
-type FileKind = "document" | "audio" | "video" | "image";
-
-interface PreparedFile {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: number;
-  blob: Blob;
-  kind: FileKind;
-  durationSec?: number;
-}
-
 function SectionHeading({ step, title }: { step: string; title: string }) {
   return (
     <div className="flex items-center gap-4 mb-6">
@@ -117,40 +101,6 @@ function SectionHeading({ step, title }: { step: string; title: string }) {
       <h3 className="text-headline-sm text-primary">{title}</h3>
     </div>
   );
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDuration(totalSec?: number): string | null {
-  if (!totalSec || !Number.isFinite(totalSec)) return null;
-  const m = Math.floor(totalSec / 60);
-  const s = Math.floor(totalSec % 60);
-  if (m === 0) return `${s}s`;
-  return `${m}m${s.toString().padStart(2, "0")}s`;
-}
-
-function inferFileKind(mimeType: string): FileKind {
-  if (mimeType.startsWith("audio/")) return "audio";
-  if (mimeType.startsWith("video/")) return "video";
-  if (mimeType.startsWith("image/")) return "image";
-  return "document";
-}
-
-function iconForKind(kind: FileKind): string {
-  switch (kind) {
-    case "audio":
-      return ICON_PATHS.mic;
-    case "video":
-      return ICON_PATHS.videocam;
-    case "image":
-      return ICON_PATHS.image;
-    default:
-      return ICON_PATHS.pictureAsPdf;
-  }
 }
 
 export function AddItemDialog({
@@ -169,7 +119,6 @@ export function AddItemDialog({
   const { generateDekAndWrap, isReady: cryptoReady } = useRecipientCrypto();
   const showBlockedWrapAlert = useBlockedWrapAlert();
   const { enqueueAttachments } = useUploadQueue();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
   const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
@@ -190,12 +139,8 @@ export function AddItemDialog({
   );
   const [files, setFiles] = useState<PreparedFile[]>([]);
   const [linkUrls, setLinkUrls] = useState<string[]>([""]);
-  const [recorderMode, setRecorderMode] = useState<"audio" | "video" | null>(
-    null,
-  );
   const [recipientSelection, setRecipientSelection] = useState<string[]>([]);
   const [recipientsTouched, setRecipientsTouched] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [triggerType, setTriggerType] =
     useState<TriggerType>("life_check_failure");
   const [releaseDate, setReleaseDate] = useState("");
@@ -353,76 +298,6 @@ export function AddItemDialog({
     };
   }
 
-  function ingestFiles(list: FileList | File[]) {
-    const incoming = Array.from(list);
-    const accepted: PreparedFile[] = [];
-    for (const file of incoming) {
-      if (!ACCEPTED_TYPES.split(",").includes(file.type)) {
-        setError(t("editor.errorUnsupportedType", { name: file.name }));
-        continue;
-      }
-      if (file.size > MAX_FILE_BYTES) {
-        setError(t("editor.errorTooLarge", { name: file.name }));
-        continue;
-      }
-      accepted.push({
-        id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        name: file.name,
-        mimeType: file.type,
-        size: file.size,
-        blob: file,
-        kind: inferFileKind(file.type),
-      });
-    }
-    if (accepted.length) {
-      setError("");
-      setFiles((prev) => [...prev, ...accepted]);
-    }
-  }
-
-  function handleFilePick(e: ChangeEvent<HTMLInputElement>) {
-    if (e.target.files) {
-      ingestFiles(e.target.files);
-      e.target.value = "";
-    }
-  }
-
-  function handleDrop(e: DragEvent<HTMLDivElement>) {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files) {
-      ingestFiles(e.dataTransfer.files);
-    }
-  }
-
-  function handleRecorded(
-    blob: Blob,
-    meta: { mimeType: string; durationSec: number },
-  ) {
-    if (!recorderMode) return;
-    const isVideo = recorderMode === "video";
-    const ext = meta.mimeType.includes("mp4") ? "mp4" : "webm";
-    // Filesystem-safe timestamp: YYYY-MM-DD_HH-mm-ss (local time).
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-    setFiles((prev) => [
-      ...prev,
-      {
-        id: `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        name: `${
-          isVideo ? t("recorder.videoMessage") : t("recorder.voiceMessage")
-        } — ${stamp}.${ext}`,
-        mimeType: meta.mimeType,
-        size: blob.size,
-        blob,
-        kind: isVideo ? "video" : "audio",
-        durationSec: meta.durationSec,
-      },
-    ]);
-    setRecorderMode(null);
-  }
-
   function removeFile(id: string) {
     setFiles((prev) => prev.filter((f) => f.id !== id));
   }
@@ -437,7 +312,6 @@ export function AddItemDialog({
     );
     setFiles([]);
     setLinkUrls([""]);
-    setRecorderMode(null);
     setRecipientSelection([]);
     setRecipientsTouched(false);
     setTriggerType("life_check_failure");
@@ -829,93 +703,10 @@ export function AddItemDialog({
           <section className="bg-surface-container-low rounded-2xl p-6">
             <SectionHeading step="02" title={t("dialog.section02")} />
 
-            {recorderMode ? (
-              <MediaRecorderPanel
-                mode={recorderMode}
-                onRecorded={handleRecorded}
-                onCancel={() => setRecorderMode(null)}
-              />
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-3 mb-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRecorderMode("audio")}
-                    className="gap-2 cursor-pointer"
-                  >
-                    <Icon path={ICON_PATHS.mic} className="w-4 h-4" />
-                    {t("dialog.recordAudio")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRecorderMode("video")}
-                    className="gap-2 cursor-pointer"
-                  >
-                    <Icon path={ICON_PATHS.videocam} className="w-4 h-4" />
-                    {t("dialog.recordVideo")}
-                  </Button>
-                  <div className="flex items-center text-label-md text-on-surface-variant/60 ml-auto">
-                    {t("dialog.orDropFile")}
-                  </div>
-                </div>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ACCEPTED_TYPES}
-                  multiple
-                  onChange={handleFilePick}
-                  className="sr-only"
-                />
-
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => fileInputRef.current?.click()}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      fileInputRef.current?.click();
-                    }
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragging(true);
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  className={cn(
-                    "border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
-                    "hover:bg-surface-container-high/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-                    isDragging &&
-                      "bg-surface-container-high/80 border-secondary/40",
-                  )}
-                >
-                  <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <Icon
-                      path={ICON_PATHS.download}
-                      className="w-7 h-7 rotate-180"
-                      strokeWidth={1.75}
-                    />
-                  </div>
-                  <div>
-                    <p className="text-headline-sm text-primary">
-                      {t("dialog.dropTitle")}
-                    </p>
-                    <p className="text-body-md text-on-surface-variant mt-1">
-                      {t("dialog.dropHint")}
-                    </p>
-                  </div>
-                  <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full text-label-md hover:bg-surface-container-highest transition-colors">
-                    {t("dialog.browseSystem")}
-                  </span>
-                </div>
-              </>
-            )}
+            <AttachmentCapture
+              onAdd={(f) => setFiles((prev) => [...prev, ...f])}
+              onError={setError}
+            />
 
             {files.length > 0 && (
               <div className="mt-5 flex flex-wrap gap-3">
