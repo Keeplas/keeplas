@@ -64,7 +64,47 @@ const SECTIONS: SectionConfig[] = [
     category: "conditional_message",
     accent: "bg-error",
   },
-];
+  {
+    key: "property",
+    category: "property",
+    accent: "bg-secondary",
+  },
+  {
+    key: "insurance",
+    category: "insurance_policy",
+    accent: "bg-primary",
+  },
+  {
+    key: "subscriptions",
+    category: "subscription",
+    accent: "bg-tertiary",
+  },
+  {
+    key: "contacts",
+    category: "contacts",
+    accent: "bg-secondary",
+  },
+  {
+    key: "wishes",
+    category: "wishes",
+    accent: "bg-error",
+  },
+  {
+    key: "other",
+    category: "other",
+    accent: "bg-primary",
+  },
+  // "Other" is a catch-all and always sorts last; the rest are alphabetical by
+  // their (English) category label, mirroring the add-item picker order.
+].sort((a, b) =>
+  a.category === "other"
+    ? 1
+    : b.category === "other"
+      ? -1
+      : getCategoryConfig(a.category).label.localeCompare(
+          getCategoryConfig(b.category).label,
+        ),
+);
 
 const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
 const PREVIEW_LIMIT = 3;

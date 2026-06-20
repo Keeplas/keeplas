@@ -986,7 +986,13 @@
         "legal_document": "Documents juridiques",
         "business_continuity": "Continuité d'activité",
         "conditional_message": "Messages conditionnels",
-        "credential": "Identifiants"
+        "credential": "Identifiants",
+        "property": "Biens immobiliers",
+        "insurance_policy": "Assurances",
+        "subscription": "Abonnements et services",
+        "contacts": "Contacts",
+        "wishes": "Volontés",
+        "other": "Autre"
       },
       "fileKinds": {
         "document": "Documents",
@@ -1702,6 +1708,30 @@
       "messages": {
         "label": "Messages conditionnels",
         "empty": "Aucun message conditionnel pour l'instant."
+      },
+      "property": {
+        "label": "Biens immobiliers",
+        "empty": "Aucun bien immobilier pour l'instant. Ajoutez le premier."
+      },
+      "insurance": {
+        "label": "Assurances",
+        "empty": "Aucune assurance pour l'instant. Ajoutez la première."
+      },
+      "subscriptions": {
+        "label": "Abonnements et services",
+        "empty": "Aucun abonnement pour l'instant. Ajoutez le premier."
+      },
+      "contacts": {
+        "label": "Contacts",
+        "empty": "Aucun contact pour l'instant. Ajoutez le premier."
+      },
+      "wishes": {
+        "label": "Volontés",
+        "empty": "Aucune volonté pour l'instant. Partagez ce qui compte pour vous."
+      },
+      "other": {
+        "label": "Autre",
+        "empty": "Rien ici pour l'instant. Ajoutez le premier élément."
       }
     },
     "section": {

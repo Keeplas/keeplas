@@ -986,7 +986,13 @@
         "legal_document": "Legal Documents",
         "business_continuity": "Business Continuity",
         "conditional_message": "Conditional Messages",
-        "credential": "Credentials"
+        "credential": "Credentials",
+        "property": "Real Estate / Property",
+        "insurance_policy": "Insurance Policies",
+        "subscription": "Subscriptions & Services",
+        "contacts": "Contacts",
+        "wishes": "Wishes",
+        "other": "Other"
       },
       "fileKinds": {
         "document": "Documents",
@@ -1702,6 +1708,30 @@
       "messages": {
         "label": "Conditional Messages",
         "empty": "No conditional messages yet."
+      },
+      "property": {
+        "label": "Real Estate / Property",
+        "empty": "No property records yet. Add your first."
+      },
+      "insurance": {
+        "label": "Insurance Policies",
+        "empty": "No insurance policies yet. Add your first."
+      },
+      "subscriptions": {
+        "label": "Subscriptions & Services",
+        "empty": "No subscriptions yet. Add your first."
+      },
+      "contacts": {
+        "label": "Contacts",
+        "empty": "No contacts yet. Add your first."
+      },
+      "wishes": {
+        "label": "Wishes",
+        "empty": "No wishes yet. Share what matters to you."
+      },
+      "other": {
+        "label": "Other",
+        "empty": "Nothing here yet. Add your first item."
       }
     },
     "section": {
