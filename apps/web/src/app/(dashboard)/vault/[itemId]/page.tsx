@@ -12,11 +12,8 @@ import { toWrapRecipient, type BlockedContact } from "@/lib/verify-contact-key";
 import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
-import {
-  getCategoryConfig,
-  CATEGORIES,
-  type VaultCategory,
-} from "@/lib/vault-categories";
+import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import { VaultItemAttachments } from "@/components/vault-item-attachments";
 import { VaultLinkList } from "@/components/vault-link-list";
 import { VaultLinkInputList } from "@/components/vault-link-input-list";
@@ -92,6 +89,8 @@ function formatAttachmentSize(bytes: number): string {
 
 export default function VaultItemPage() {
   const t = useTranslations("vault");
+  const categoryLabel = useCategoryLabel();
+  const sortedCategories = useSortedCategories();
   const params = useParams();
   const router = useRouter();
   const itemId = params.itemId as Id<"vault_items">;
@@ -696,9 +695,9 @@ export default function VaultItemPage() {
               value={editCategory}
               onValueChange={setEditCategory}
             >
-              {CATEGORIES.map((cat) => (
+              {sortedCategories.map((cat) => (
                 <SelectItem key={cat.key} value={cat.key}>
-                  {cat.label}
+                  {categoryLabel(cat.key)}
                 </SelectItem>
               ))}
             </Select>
@@ -848,7 +847,7 @@ export default function VaultItemPage() {
                   />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
-                  {category.label}
+                  {categoryLabel(item.category)}
                 </span>
               </div>
               <h1 className="text-headline-lg text-primary">

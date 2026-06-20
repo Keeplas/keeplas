@@ -1676,61 +1676,63 @@
       "countOne": "Affichage de l'unique élément de cette catégorie.",
       "countOther": "Affichage des {count} éléments de cette catégorie."
     },
+    "categories": {
+      "personal_document": "Documents personnels",
+      "financial_asset": "Actifs financiers",
+      "digital_asset": "Actifs numériques",
+      "health_directive": "Directives médicales",
+      "legal_document": "Documents juridiques",
+      "business_continuity": "Continuité d'activité",
+      "conditional_message": "Lettre / Message personnel",
+      "credential": "Identifiants",
+      "property": "Biens",
+      "insurance_policy": "Assurances",
+      "subscription": "Abonnements et services",
+      "contacts": "À contacter",
+      "wishes": "Dernières volontés",
+      "other": "Autre"
+    },
     "sections": {
       "documents": {
-        "label": "Documents personnels",
         "empty": "Aucun document personnel pour l'instant. Ajoutez le premier."
       },
       "health": {
-        "label": "Directives médicales",
         "empty": "Aucune directive médicale pour l'instant. Ajoutez la première."
       },
       "legal": {
-        "label": "Documents juridiques",
         "empty": "Aucun document juridique pour l'instant. Ajoutez le premier."
       },
       "business": {
-        "label": "Continuité d'activité",
         "empty": "Aucun plan de continuité d'activité pour l'instant. Ajoutez le premier."
       },
       "financial": {
-        "label": "Actifs financiers",
         "empty": "Aucun actif financier pour l'instant. Ajoutez le premier."
       },
       "credentials": {
-        "label": "Identifiants",
         "empty": "Aucun identifiant pour l'instant. Ajoutez le premier."
       },
       "digital": {
-        "label": "Actifs numériques",
         "empty": "Aucun actif numérique pour l'instant. Ajoutez le premier."
       },
       "messages": {
-        "label": "Messages conditionnels",
         "empty": "Aucun message conditionnel pour l'instant."
       },
       "property": {
-        "label": "Biens immobiliers",
-        "empty": "Aucun bien immobilier pour l'instant. Ajoutez le premier."
+        "empty": "Aucun bien pour l'instant. Ajoutez le premier."
       },
       "insurance": {
-        "label": "Assurances",
         "empty": "Aucune assurance pour l'instant. Ajoutez la première."
       },
       "subscriptions": {
-        "label": "Abonnements et services",
         "empty": "Aucun abonnement pour l'instant. Ajoutez le premier."
       },
       "contacts": {
-        "label": "Contacts",
         "empty": "Aucun contact pour l'instant. Ajoutez le premier."
       },
       "wishes": {
-        "label": "Volontés",
         "empty": "Aucune volonté pour l'instant. Partagez ce qui compte pour vous."
       },
       "other": {
-        "label": "Autre",
         "empty": "Rien ici pour l'instant. Ajoutez le premier élément."
       }
     },

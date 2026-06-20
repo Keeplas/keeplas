@@ -1676,61 +1676,63 @@
       "countOne": "Showing all {count} item in this category.",
       "countOther": "Showing all {count} items in this category."
     },
+    "categories": {
+      "personal_document": "Personal Documents",
+      "financial_asset": "Financial Assets",
+      "digital_asset": "Digital Assets",
+      "health_directive": "Health Directives",
+      "legal_document": "Legal Documents",
+      "business_continuity": "Business Continuity",
+      "conditional_message": "Letter / Personal Message",
+      "credential": "Credentials",
+      "property": "Property & Belongings",
+      "insurance_policy": "Insurance Policies",
+      "subscription": "Subscriptions & Services",
+      "contacts": "Contacts",
+      "wishes": "Wishes",
+      "other": "Other"
+    },
     "sections": {
       "documents": {
-        "label": "Personal Documents",
         "empty": "No personal documents yet. Add your first."
       },
       "health": {
-        "label": "Health Directives",
         "empty": "No health directives yet. Add your first."
       },
       "legal": {
-        "label": "Legal Documents",
         "empty": "No legal documents yet. Add your first."
       },
       "business": {
-        "label": "Business Continuity",
         "empty": "No business continuity plans yet. Add your first."
       },
       "financial": {
-        "label": "Financial Assets",
         "empty": "No financial assets yet. Add your first."
       },
       "credentials": {
-        "label": "Credentials",
         "empty": "No credentials yet. Add your first."
       },
       "digital": {
-        "label": "Digital Assets",
         "empty": "No digital assets yet. Add your first."
       },
       "messages": {
-        "label": "Conditional Messages",
         "empty": "No conditional messages yet."
       },
       "property": {
-        "label": "Real Estate / Property",
-        "empty": "No property records yet. Add your first."
+        "empty": "No belongings yet. Add your first."
       },
       "insurance": {
-        "label": "Insurance Policies",
         "empty": "No insurance policies yet. Add your first."
       },
       "subscriptions": {
-        "label": "Subscriptions & Services",
         "empty": "No subscriptions yet. Add your first."
       },
       "contacts": {
-        "label": "Contacts",
         "empty": "No contacts yet. Add your first."
       },
       "wishes": {
-        "label": "Wishes",
         "empty": "No wishes yet. Share what matters to you."
       },
       "other": {
-        "label": "Other",
         "empty": "Nothing here yet. Add your first item."
       }
     },

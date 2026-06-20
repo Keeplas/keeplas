@@ -17,7 +17,8 @@ import {
 import { toWrapRecipient } from "@/lib/verify-contact-key";
 import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
 import { getErrorMessage } from "@/lib/utils";
-import { CATEGORIES, type VaultCategory } from "@/lib/vault-categories";
+import { type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import { Link } from "@/lib/navigation";
@@ -160,6 +161,8 @@ export function AddItemDialog({
   mode = "vault",
 }: AddItemDialogProps) {
   const t = useTranslations("vault");
+  const categoryLabel = useCategoryLabel();
+  const sortedCategories = useSortedCategories();
   const isIntroMode = mode === "release_introduction";
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const { encryptContentWithKey, isReady } = useVaultCrypto();
@@ -719,9 +722,9 @@ export function AddItemDialog({
                     onValueChange={setCategory}
                     placeholder={t("dialog.categoryPlaceholder")}
                   >
-                    {CATEGORIES.map((cat) => (
+                    {sortedCategories.map((cat) => (
                       <SelectItem key={cat.key} value={cat.key}>
-                        {cat.label}
+                        {categoryLabel(cat.key)}
                       </SelectItem>
                     ))}
                   </Select>

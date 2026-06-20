@@ -15,6 +15,7 @@ import { ICON_PATHS } from "@/lib/icons";
 import { ReturnAfterReleaseBanner } from "@/components/return-after-release-banner";
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
+import { useCategoryLabel } from "@/lib/use-categories";
 import { getInitials } from "@/lib/user";
 import { formatTimeAgo } from "@/lib/format";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
@@ -60,6 +61,7 @@ const ACTION_HINT_KEYS = new Set<string>([
 
 export function HubContent() {
   const t = useTranslations("hub");
+  const categoryLabel = useCategoryLabel();
   const items = useQuery(api.vault_items.getItems);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const hubData = useQuery(api.hub.getHubData);
@@ -460,7 +462,8 @@ export function HubContent() {
                         {titles[item._id] ?? ""}
                       </p>
                       <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
-                        {cat.label} · {formatTimeAgo(item.updatedAt)}
+                        {categoryLabel(item.category)} ·{" "}
+                        {formatTimeAgo(item.updatedAt)}
                       </p>
                     </div>
                     <Icon

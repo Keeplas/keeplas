@@ -136,13 +136,13 @@ function SelectImpl<Value = string>({
           sideOffset={6}
           align={align}
           className={cn(
-            "z-[60] min-w-[var(--radix-select-trigger-width)] max-h-[min(24rem,var(--radix-select-content-available-height))]",
+            "z-[60] min-w-[var(--radix-select-trigger-width)]",
             "bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
             popupClassName,
           )}
         >
-          <SelectPrimitives.Viewport className="p-0">
+          <SelectPrimitives.Viewport className="p-0 max-h-[min(24rem,var(--radix-select-content-available-height))] overflow-y-auto">
             {children}
           </SelectPrimitives.Viewport>
         </SelectPrimitives.Content>
