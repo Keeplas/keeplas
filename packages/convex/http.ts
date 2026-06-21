@@ -122,7 +122,11 @@ http.route({
           stripePaymentIntentId: session.payment_intent,
           amountCents: session.amount_total ?? 0,
           currency: session.currency ?? "usd",
-          stripeCustomerId: session.customer,
+          // Stripe sends `customer: null` for `payment`-mode sessions when no
+          // Customer object was created (the common first-buyer case). The
+          // mutation's `v.optional(v.string())` rejects null, so normalize it
+          // to undefined here at the boundary.
+          stripeCustomerId: session.customer ?? undefined,
         });
       }
     }
