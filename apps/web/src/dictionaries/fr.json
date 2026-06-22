@@ -694,6 +694,7 @@
       "kindWithRecording": "Texte + enregistrement",
       "kindText": "Texte",
       "targetingPrefix": "· Pour {targeting}",
+      "openAria": "Ouvrir {title}",
       "deleteAria": "Supprimer {title}",
       "deleteTitle": "Supprimer « {title} » ?",
       "deleteDescription": "Les contacts ne verront plus ce message d'accueil.",
@@ -1533,7 +1534,8 @@
     "contactCard": {
       "recipient": "Bénéficiaire",
       "trust": "Confiance",
-      "fragmentAssigned": "Fragment attribué"
+      "fragmentAssigned": "Fragment attribué",
+      "awaitingKey": "Clé en attente"
     },
     "detail": {
       "close": "Fermer les détails du contact",
@@ -1546,6 +1548,8 @@
       "recoveryRole": "Rôle de récupération",
       "recipientOnlyDescription": "Bénéficiaire uniquement — ne détient aucun fragment de récupération. Cette personne reçoit uniquement les éléments du coffre qui lui sont destinés lors d'un déclenchement.",
       "shardIndex": "Index du fragment",
+      "awaitingKey": "Clé de chiffrement en attente",
+      "awaitingKeyHelp": "Ce contact a accepté l'invitation mais n'a pas encore publié sa clé de chiffrement. Il obtiendra l'accès automatiquement dès qu'il aura terminé la configuration de son compte — aucune action requise de votre part.",
       "fragmentAssigned": "Fragment attribué",
       "fragmentAssignedHelp": "Un fragment Shamir chiffré de votre clé maîtresse a été enveloppé avec la clé publique de ce contact, puis stocké. Cette personne devra le soumettre avec le seuil de récupération pour que le coffre puisse être reconstitué.",
       "verificationHelp": "Vérification cryptographique aller-retour confirmant que la paire de clés du contact est fonctionnelle. Le propriétaire enveloppe un texte clair connu avec la clé publique du contact, et le contact le déchiffre sur son appareil — prouvant qu'il détient la clé privée correspondante sans exposer aucun contenu du coffre.",

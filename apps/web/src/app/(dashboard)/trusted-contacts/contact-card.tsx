@@ -4,6 +4,7 @@ import { useTranslations } from "@/lib/i18n";
 import {
   computeVerificationBadge,
   getInitials,
+  isAwaitingKey,
   ROLE_BADGE_ICONS,
   ROLE_LABELS,
   STATUS_CONFIG,
@@ -87,6 +88,11 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
           </svg>
           <span className="text-label-md text-primary">{roleLabel}</span>
         </span>
+        {isAwaitingKey(contact) && (
+          <span className="text-label-md px-3 py-1.5 rounded-lg bg-tertiary-container text-on-tertiary-container">
+            {t("contactCard.awaitingKey")}
+          </span>
+        )}
         {contact.shardConfirmed && (
           <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
             {t("contactCard.fragmentAssigned")}

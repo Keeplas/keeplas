@@ -77,6 +77,22 @@ export function formatRelative(ts: number): string {
   return `${year}y ago`;
 }
 
+/**
+ * True when an accepted contact has not yet published their encryption key —
+ * mirrors the 3-field check in `verifyContactKey` / `getItemsNeedingRewrap`.
+ * Surfaces the window between accepting an invitation and finalizing crypto, so
+ * the "shares are pending" toast lines up with what the owner sees on the card.
+ * Non-accepted rows are excluded: their status badge ("Pending") already says it.
+ */
+export function isAwaitingKey(contact: Doc<"trusted_contacts">): boolean {
+  if (contact.invitationStatus !== "accepted") return false;
+  return !(
+    contact.contactPublicKey &&
+    contact.contactIdentityPublicKey &&
+    contact.contactPublicKeySignature
+  );
+}
+
 export function computeVerificationBadge(
   contact: Doc<"trusted_contacts">,
 ): { label: string; className: string; lastVerifiedAt?: number } | null {

@@ -20,6 +20,7 @@ import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 import { resolveLocale, type Locale } from "./lib/locale";
 import { formatSenderIdentity } from "./lib/identity";
+import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 const MAX_TRUST_CONTACTS = 5;
 
@@ -957,31 +958,11 @@ export const republishContactPublicKey = auditedMutation({
     // The republishing caller IS the contact user, so we mirror their identity
     // material (finding #2) onto every owner's row alongside the ML-KEM key.
     const me = await ctx.db.get(userId);
-    const identityPublicKey = me?.identityPublicKey;
-    const publicKeySignature = me?.publicKeySignature;
-    const rows = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_contact_user", (q) => q.eq("contactUserId", userId))
-      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
-      .collect();
-
-    let patched = 0;
-    for (const row of rows) {
-      if (
-        row.contactPublicKey === args.contactPublicKey &&
-        row.contactIdentityPublicKey === identityPublicKey &&
-        row.contactPublicKeySignature === publicKeySignature
-      ) {
-        continue;
-      }
-      await ctx.db.patch(row._id, {
-        contactPublicKey: args.contactPublicKey,
-        contactIdentityPublicKey: identityPublicKey,
-        contactPublicKeySignature: publicKeySignature,
-        updatedAt: Date.now(),
-      });
-      patched++;
-    }
+    const patched = await publishContactKeyToOwnerRows(ctx, userId, {
+      contactPublicKey: args.contactPublicKey,
+      contactIdentityPublicKey: me?.identityPublicKey,
+      contactPublicKeySignature: me?.publicKeySignature,
+    });
     return { patched };
   },
 });

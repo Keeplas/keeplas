@@ -24,6 +24,7 @@ import {
   computeVerificationBadge,
   formatRelative,
   getInitials,
+  isAwaitingKey,
   ROLE_LABELS,
   STATUS_CONFIG,
 } from "./contact-display";
@@ -260,6 +261,14 @@ function ContactDetailBody({
                   )}
                 </div>
               )}
+            </div>
+          )}
+          {isAwaitingKey(contact) && (
+            <div className="mt-3">
+              <span className="text-label-md px-3 py-1.5 rounded-lg bg-tertiary-container text-on-tertiary-container inline-flex items-center gap-1.5">
+                {t("detail.awaitingKey")}
+                <HelpHint content={t("detail.awaitingKeyHelp")} />
+              </span>
             </div>
           )}
         </section>
