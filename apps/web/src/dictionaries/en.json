@@ -694,6 +694,7 @@
       "kindWithRecording": "Text + recording",
       "kindText": "Text",
       "targetingPrefix": "· For {targeting}",
+      "openAria": "Open {title}",
       "deleteAria": "Delete {title}",
       "deleteTitle": "Delete \"{title}\"?",
       "deleteDescription": "Contacts will no longer see this welcome message.",
@@ -1533,7 +1534,8 @@
     "contactCard": {
       "recipient": "Recipient",
       "trust": "Trust",
-      "fragmentAssigned": "Fragment Assigned"
+      "fragmentAssigned": "Fragment Assigned",
+      "awaitingKey": "Awaiting key"
     },
     "detail": {
       "close": "Close contact details",
@@ -1546,6 +1548,8 @@
       "recoveryRole": "Recovery role",
       "recipientOnlyDescription": "Recipient only — holds no recovery shard. They only receive the vault items routed to them when a trigger fires.",
       "shardIndex": "Shard index",
+      "awaitingKey": "Awaiting encryption key",
+      "awaitingKeyHelp": "This contact accepted the invitation but hasn't published their encryption key yet. They'll get access automatically once they finish setting up their account — no action needed from you.",
       "fragmentAssigned": "Fragment assigned",
       "fragmentAssignedHelp": "An encrypted Shamir share of your master key has been wrapped to this contact's public key and stored. They will need to submit it together with the recovery threshold for the vault to be reconstructible.",
       "verificationHelp": "Round-trip cryptographic check that the contact's keypair is functional. The owner wraps a known plaintext to the contact's public key, and the contact unwraps it on-device — proving they hold the matching private key without exposing any vault content.",

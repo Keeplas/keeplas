@@ -15,6 +15,7 @@ import {
   storageRefValidator,
 } from "./lib/storage";
 import { normalizeUserLanguage } from "./lib/locale";
+import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
 const MAX_AGE_MS = 130 * 365.25 * 24 * 60 * 60 * 1000;
@@ -337,6 +338,17 @@ export const setPublicKey = auditedMutation({
       encryptedIdentitySecretKey: args.encryptedIdentitySecretKey,
       publicKeySignature: args.publicKeySignature,
       updatedAt: Date.now(),
+    });
+
+    // Close the accept-before-crypto gap: a contact who accepted an invitation
+    // before their keypair existed left the owner's row with an empty
+    // `contactPublicKey`. Now that their key material is set, backfill every
+    // owner's accepted row so the owner can wrap shards/DEKs to them — without
+    // waiting for a manual `/shared-with-me` visit. Idempotent.
+    await publishContactKeyToOwnerRows(ctx, userId, {
+      contactPublicKey: args.publicKey,
+      contactIdentityPublicKey: args.identityPublicKey,
+      contactPublicKeySignature: args.publicKeySignature,
     });
   },
 });

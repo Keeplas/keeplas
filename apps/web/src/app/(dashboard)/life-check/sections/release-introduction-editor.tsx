@@ -6,6 +6,7 @@ import { Button, HelpHint, Icon, toast, useConfirm } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
+import { Link } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { AddItemDialog } from "@/components/add-item-dialog";
@@ -145,9 +146,15 @@ export function ReleaseIntroductionEditor() {
           {rows.map((row) => (
             <li
               key={row._id}
-              className="bg-surface p-4 rounded-xl flex items-start justify-between gap-4"
+              className="bg-surface rounded-xl flex items-stretch justify-between gap-2"
             >
-              <div className="min-w-0">
+              <Link
+                href={`/vault/${row._id}`}
+                aria-label={t("welcome.openAria", {
+                  title: titles[row._id] ?? "",
+                })}
+                className="min-w-0 flex-1 p-4 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer"
+              >
                 <p className="text-body-md font-bold text-primary truncate">
                   {titles[row._id] ?? ""}
                 </p>
@@ -159,14 +166,14 @@ export function ReleaseIntroductionEditor() {
                     targeting: describeTargeting(row),
                   })}
                 </p>
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => handleDelete(row._id, titles[row._id] ?? "")}
                 aria-label={t("welcome.deleteAria", {
                   title: titles[row._id] ?? "",
                 })}
-                className="p-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
+                className="m-2 p-2 self-start rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
               >
                 <Icon path={ICON_PATHS.trash} className="w-4 h-4" />
               </button>
