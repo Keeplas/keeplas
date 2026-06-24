@@ -476,7 +476,7 @@ export const acceptInvitation = auditedMutation({
       throw new Error("This invitation has already been processed");
     }
 
-    const expiresAt = contact.invitedAt + 72 * 60 * 60 * 1000;
+    const expiresAt = contact.invitedAt + INVITE_EXPIRY_MS;
     if (Date.now() > expiresAt) {
       throw new Error("This invitation has expired");
     }
@@ -1207,7 +1207,7 @@ const INVITE_EMAIL_COPY = {
       "As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.",
     accept: "Accept invitation",
     expiry: (url: string) =>
-      `This link expires in 72 hours. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+      `This link expires in 7 days. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
     ignoreInvite:
       "If you weren't expecting this invitation, you can ignore this email.",
     recipientHi: "Hi!",
@@ -1229,7 +1229,7 @@ const INVITE_EMAIL_COPY = {
       "En tant que contact de confiance, vous conserverez un fragment chiffré de sa clé de récupération. Avec ses autres contacts, vous pourrez l'aider à retrouver l'accès à son coffre si cette personne perd ses identifiants. Vous n'aurez accès à aucune de ses données.",
     accept: "Accepter l'invitation",
     expiry: (url: string) =>
-      `Ce lien est valable 72 h. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+      `Ce lien est valable 7 jours. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
     ignoreInvite:
       "Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.",
     recipientHi: "Bonjour !",
@@ -1294,7 +1294,7 @@ function escapeHtml(s: string) {
 const RECONFIRM_STALE_MS = 30 * 24 * 60 * 60 * 1000; // verification considered stale
 const RECONFIRM_THROTTLE_MS = 6 * 24 * 60 * 60 * 1000; // ≤ 1 nudge / weekly run
 const MAX_RECONFIRM_REMINDERS = 3; // then alert the owner to replace
-const INVITE_EXPIRY_MS = 72 * 60 * 60 * 1000; // matches the accept-link TTL
+const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL + WhatsApp template (keeplas_invite_tc)
 
 /**
  * Weekly availability re-confirmation sweep (driven by crons.ts). Two gaps
@@ -1304,7 +1304,7 @@ const INVITE_EXPIRY_MS = 72 * 60 * 60 * 1000; // matches the accept-link TTL
  *    than 30 days gets nudged (in-app + email, plus WhatsApp when a phone is
  *    on file) to re-verify. After 3 ignored nudges the vault owner is alerted
  *    once to replace the unresponsive contact.
- *  - A trust invitation still "pending" past its 72h accept window alerts the
+ *  - A trust invitation still "pending" past its 7-day accept window alerts the
  *    owner once that the contact never came on board.
  *
  * Reuses the existing notification + WhatsApp dispatch infrastructure; no
