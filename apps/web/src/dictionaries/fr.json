@@ -481,7 +481,9 @@
     },
     "reflect": {
       "title": "Réfléchir et préparer",
-      "subtitle": "Quelques questions honnêtes, de vraies difficultés et des étapes concrètes pour la continuité — au sein de Keeplas et au-delà."
+      "subtitle": "Quelques questions honnêtes, de vraies difficultés et des étapes concrètes pour la continuité — au sein de Keeplas et au-delà.",
+      "previous": "Afficher les cartes de réflexion précédentes",
+      "next": "Afficher les cartes de réflexion suivantes"
     },
     "terminate": {
       "hero": {
@@ -1783,11 +1785,11 @@
       "fieldAttachments": "Pièces jointes sécurisées",
       "noAttachments": "Aucune pièce jointe pour l'instant.",
       "addFile": "Ajouter un fichier",
-      "fileHint": "PDF, JPG ou PNG jusqu'à 50 Mo. Les fichiers sont chiffrés côté client avant l'envoi.",
+      "fileHint": "Tout type de fichier jusqu'à 50 Mo, sauf scripts et exécutables. Les fichiers sont chiffrés côté client avant l'envoi.",
       "cancel": "Annuler",
       "encrypting": "Chiffrement…",
       "saveChanges": "Enregistrer les modifications",
-      "errorUnsupportedType": "{name} — type de fichier non pris en charge. PDF, JPG ou PNG uniquement.",
+      "errorUnsupportedType": "{name} — les scripts et fichiers exécutables ne sont pas pris en charge.",
       "errorTooLarge": "{name} — dépasse la limite de 50 Mo.",
       "errorInvalidUrl": "URL invalide : {url}",
       "errorNoKey": "Clé de chiffrement indisponible pour les nouvelles pièces jointes.",
@@ -1845,7 +1847,7 @@
       "recordVideo": "Enregistrer une vidéo",
       "orDropFile": "ou déposez un fichier ci-dessous",
       "dropTitle": "Glissez-déposez des fichiers sécurisés",
-      "dropHint": "PDF, JPG ou PNG jusqu'à 50 Mo par fichier. Chiffrés dès leur arrivée.",
+      "dropHint": "Tout type de fichier jusqu'à 50 Mo par fichier, sauf scripts et exécutables. Chiffrés dès leur arrivée.",
       "browseSystem": "Parcourir le système",
       "removeFile": "Supprimer {name}",
       "cancel": "Annuler",

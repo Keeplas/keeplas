@@ -91,7 +91,82 @@ interface AddItemDialogProps {
   mode?: AddItemDialogMode;
 }
 
-const ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
+const BLOCKED_FILE_EXTENSIONS = [
+  ".apk",
+  ".app",
+  ".applescript",
+  ".bat",
+  ".bash",
+  ".bin",
+  ".cmd",
+  ".com",
+  ".command",
+  ".csh",
+  ".deb",
+  ".dmg",
+  ".dll",
+  ".docm",
+  ".exe",
+  ".fish",
+  ".hta",
+  ".ipa",
+  ".jar",
+  ".js",
+  ".jse",
+  ".ksh",
+  ".lnk",
+  ".mjs",
+  ".msi",
+  ".pkg",
+  ".pl",
+  ".ps1",
+  ".psd1",
+  ".psm1",
+  ".py",
+  ".rb",
+  ".reg",
+  ".rpm",
+  ".run",
+  ".scr",
+  ".scpt",
+  ".sh",
+  ".so",
+  ".ts",
+  ".vb",
+  ".vbe",
+  ".vbs",
+  ".wsf",
+  ".wsh",
+  ".xlam",
+  ".xlsm",
+  ".zsh",
+];
+const BLOCKED_MIME_TYPES = [
+  "application/javascript",
+  "application/java-archive",
+  "application/vnd.android.package-archive",
+  "application/vnd.apple.installer+xml",
+  "application/vnd.microsoft.portable-executable",
+  "application/x-apple-diskimage",
+  "application/x-csh",
+  "application/x-debian-package",
+  "application/x-dosexec",
+  "application/x-executable",
+  "application/x-httpd-php",
+  "application/x-java-archive",
+  "application/x-mach-binary",
+  "application/x-ms-installer",
+  "application/x-msdownload",
+  "application/x-msi",
+  "application/x-msdos-program",
+  "application/x-rpm",
+  "application/x-sh",
+  "application/x-shellscript",
+  "text/javascript",
+  "text/x-python",
+  "text/x-script",
+  "text/x-shellscript",
+];
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 type FileKind = "document" | "audio" | "video" | "image";
@@ -136,6 +211,15 @@ function inferFileKind(mimeType: string): FileKind {
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("image/")) return "image";
   return "document";
+}
+
+function isBlockedFile(file: File): boolean {
+  const lowerName = file.name.toLowerCase();
+  return (
+    BLOCKED_FILE_EXTENSIONS.some((extension) =>
+      lowerName.endsWith(extension),
+    ) || BLOCKED_MIME_TYPES.includes(file.type)
+  );
 }
 
 function iconForKind(kind: FileKind): string {
@@ -353,7 +437,7 @@ export function AddItemDialog({
     const incoming = Array.from(list);
     const accepted: PreparedFile[] = [];
     for (const file of incoming) {
-      if (!ACCEPTED_TYPES.split(",").includes(file.type)) {
+      if (isBlockedFile(file)) {
         setError(t("editor.errorUnsupportedType", { name: file.name }));
         continue;
       }
@@ -831,7 +915,6 @@ export function AddItemDialog({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={ACCEPTED_TYPES}
                   multiple
                   onChange={handleFilePick}
                   className="sr-only"

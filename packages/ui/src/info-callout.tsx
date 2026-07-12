@@ -56,7 +56,7 @@ export function InfoCallout({
       )}
       {...props}
     >
-      <Icon path={icon} className={cn("w-4 h-4 mt-0.5 shrink-0", tones.icon)} />
+      <Icon path={icon} className={cn("w-5 h-5 mt-0.5 shrink-0", tones.icon)} />
       <div className="text-body-md leading-relaxed">{children}</div>
     </div>
   );

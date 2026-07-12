@@ -98,6 +98,46 @@ export const wipeAuditLogs = internalMutation({
 });
 
 /**
+ * One-shot migration that retires legacy `vault_items` rows carrying the old
+ * `encryptedTitle` field with no plaintext `title`. The current schema requires
+ * `title: v.string()` and does not declare `encryptedTitle`, so those rows block
+ * the strict schema push (Convex rejects both the missing `title` and the
+ * unknown `encryptedTitle`). This backfills a placeholder `title` (the original
+ * was encrypted and is unrecoverable without the key) and clears
+ * `encryptedTitle`.
+ *
+ * Widen → MIGRATE → narrow: run this while the schema still tolerates the legacy
+ * shape (title optional + encryptedTitle optional), BEFORE pushing the strict
+ * schema. Idempotent; a no-op once every row has a `title` and no
+ * `encryptedTitle`.
+ *   npx convex run migrations:migrateVaultItemTitles        # dev
+ */
+export const migrateVaultItemTitles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("vault_items").collect();
+    let migrated = 0;
+    for (const row of rows) {
+      // `encryptedTitle` is not in the generated types (removed from schema) —
+      // read it through a cast for the transitional window.
+      const legacy = row as unknown as { encryptedTitle?: string };
+      const missingTitle = !row.title || row.title.length === 0;
+      if (!missingTitle && legacy.encryptedTitle === undefined) continue;
+      await ctx.db.patch(row._id, {
+        ...(missingTitle ? { title: "(recovered)" } : {}),
+        // Passing `undefined` removes the field from the document.
+        ...(legacy.encryptedTitle !== undefined
+          ? { encryptedTitle: undefined }
+          : {}),
+        updatedAt: Date.now(),
+      } as unknown as Partial<typeof row>);
+      migrated++;
+    }
+    return { scanned: rows.length, migrated };
+  },
+});
+
+/**
  * One-shot migration that retires the legacy 60-second "test" check-in cadence.
  * Any `life_check_configs` still on `frequency: "test"` is moved to the safe
  * "weekly" cadence (7-day threshold) with the inactivity clock re-armed from

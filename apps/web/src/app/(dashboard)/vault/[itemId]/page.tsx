@@ -48,7 +48,82 @@ import { ICON_PATHS } from "@/lib/icons";
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
 
-const ATTACHMENT_ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
+const BLOCKED_ATTACHMENT_EXTENSIONS = [
+  ".apk",
+  ".app",
+  ".applescript",
+  ".bat",
+  ".bash",
+  ".bin",
+  ".cmd",
+  ".com",
+  ".command",
+  ".csh",
+  ".deb",
+  ".dmg",
+  ".dll",
+  ".docm",
+  ".exe",
+  ".fish",
+  ".hta",
+  ".ipa",
+  ".jar",
+  ".js",
+  ".jse",
+  ".ksh",
+  ".lnk",
+  ".mjs",
+  ".msi",
+  ".pkg",
+  ".pl",
+  ".ps1",
+  ".psd1",
+  ".psm1",
+  ".py",
+  ".rb",
+  ".reg",
+  ".rpm",
+  ".run",
+  ".scr",
+  ".scpt",
+  ".sh",
+  ".so",
+  ".ts",
+  ".vb",
+  ".vbe",
+  ".vbs",
+  ".wsf",
+  ".wsh",
+  ".xlam",
+  ".xlsm",
+  ".zsh",
+];
+const BLOCKED_ATTACHMENT_MIME_TYPES = [
+  "application/javascript",
+  "application/java-archive",
+  "application/vnd.android.package-archive",
+  "application/vnd.apple.installer+xml",
+  "application/vnd.microsoft.portable-executable",
+  "application/x-apple-diskimage",
+  "application/x-csh",
+  "application/x-debian-package",
+  "application/x-dosexec",
+  "application/x-executable",
+  "application/x-httpd-php",
+  "application/x-java-archive",
+  "application/x-mach-binary",
+  "application/x-ms-installer",
+  "application/x-msdownload",
+  "application/x-msi",
+  "application/x-msdos-program",
+  "application/x-rpm",
+  "application/x-sh",
+  "application/x-shellscript",
+  "text/javascript",
+  "text/x-python",
+  "text/x-script",
+  "text/x-shellscript",
+];
 const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024;
 
 type AttachmentKind = "document" | "audio" | "video" | "image";
@@ -68,6 +143,15 @@ function inferAttachmentKind(mimeType: string): AttachmentKind {
   if (mimeType.startsWith("video/")) return "video";
   if (mimeType.startsWith("image/")) return "image";
   return "document";
+}
+
+function isBlockedAttachment(file: File): boolean {
+  const lowerName = file.name.toLowerCase();
+  return (
+    BLOCKED_ATTACHMENT_EXTENSIONS.some((extension) =>
+      lowerName.endsWith(extension),
+    ) || BLOCKED_ATTACHMENT_MIME_TYPES.includes(file.type)
+  );
 }
 
 function attachmentIcon(kind: AttachmentKind): string {
@@ -273,9 +357,8 @@ export default function VaultItemPage() {
 
   function ingestAttachments(list: FileList | File[]) {
     const accepted: StagedAttachment[] = [];
-    const allowed = ATTACHMENT_ACCEPTED_TYPES.split(",");
     for (const file of Array.from(list)) {
-      if (!allowed.includes(file.type)) {
+      if (isBlockedAttachment(file)) {
         setError(t("editor.errorUnsupportedType", { name: file.name }));
         continue;
       }
@@ -704,7 +787,6 @@ export default function VaultItemPage() {
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept={ATTACHMENT_ACCEPTED_TYPES}
                 onChange={handleAttachmentPick}
                 className="hidden"
               />

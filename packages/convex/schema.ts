@@ -130,6 +130,11 @@ export default defineSchema({
     // Stripe Customer id captured from the completed Checkout session, kept so
     // future receipts / the customer portal can reuse the same customer.
     stripeCustomerId: v.optional(v.string()),
+
+    // Back-office role. Absent = a normal product user. "admin" grants access
+    // to the keeplas-admin analytics console (gated server-side by
+    // `requireAdmin`). Never set client-side — assigned out-of-band.
+    role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
   })
     .index("email", ["email"])
     .index("by_last_seen", ["lastSeenAt"])
@@ -828,4 +833,29 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_unread", ["userId", "isRead"])
     .index("by_type", ["userId", "type"]),
+
+  // ═══════════════════════════════════════════════
+  // ANALYTICS EVENTS (product usage — consumed by keeplas-admin)
+  // ═══════════════════════════════════════════════
+  //
+  // Lightweight product-analytics stream emitted by the web app on navigation.
+  // Deliberately NOT part of the tamper-evident audit chain (a page view is not
+  // an auditable action) — written by the plain `analytics.track` mutation, not
+  // `auditedMutation`. To preserve the zero-knowledge model, `route` stores the
+  // matched route TEMPLATE (e.g. "/vault/$itemId"), never a resolved path, so no
+  // sensitive identifier ever lands here in cleartext.
+  analytics_events: defineTable({
+    // Absent for pre-auth pages (auth / onboarding) where no user exists yet.
+    userId: v.optional(v.id("users")),
+    eventType: v.union(v.literal("page_view"), v.literal("session_start")),
+    route: v.string(),
+    // Server-attested IP + ISO-3166-1 alpha-2 country, lifted from the sealed
+    // `_audit` envelope (same source as audit_logs), verified before insert.
+    ipAddress: v.optional(v.string()),
+    country: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_created", ["createdAt"])
+    .index("by_user", ["userId"])
+    .index("by_type_created", ["eventType", "createdAt"]),
 });
