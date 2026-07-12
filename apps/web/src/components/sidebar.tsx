@@ -116,7 +116,7 @@ export function Sidebar() {
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-4 px-4 py-3 rounded-xl text-xs font-medium uppercase tracking-widest transition-transform hover:translate-x-1",
+              "flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1",
               isSettingsActive
                 ? "bg-secondary text-on-secondary shadow-lg"
                 : "text-secondary/70 hover:bg-surface-container-highest",
