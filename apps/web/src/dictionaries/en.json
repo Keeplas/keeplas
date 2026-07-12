@@ -500,7 +500,9 @@
     },
     "reflect": {
       "title": "Reflect & Prepare",
-      "subtitle": "A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond."
+      "subtitle": "A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond.",
+      "previous": "Show previous reflection cards",
+      "next": "Show next reflection cards"
     },
     "terminate": {
       "hero": {
@@ -1838,11 +1840,11 @@
       "fieldAttachments": "Secure Attachments",
       "noAttachments": "No attachments yet.",
       "addFile": "Add file",
-      "fileHint": "PDF, JPG or PNG up to 50 MB. Files are encrypted client-side before upload.",
+      "fileHint": "Any file type up to 50 MB, except scripts and executables. Files are encrypted client-side before upload.",
       "cancel": "Cancel",
       "encrypting": "Encrypting…",
       "saveChanges": "Save Changes",
-      "errorUnsupportedType": "{name} — unsupported file type. PDF, JPG or PNG only.",
+      "errorUnsupportedType": "{name} — scripts and executable files are not supported.",
       "errorTooLarge": "{name} — exceeds 50 MB limit.",
       "errorInvalidUrl": "Invalid URL: {url}",
       "errorNoKey": "Encryption key unavailable for new attachments.",
@@ -1901,7 +1903,7 @@
       "recordScreen": "Record screen",
       "orDropFile": "or drop a file below",
       "dropTitle": "Drag and drop secure files",
-      "dropHint": "PDF, JPG, or PNG up to 50 MB per file. Encrypted on arrival.",
+      "dropHint": "Any file type up to 50 MB per file, except scripts and executables. Encrypted on arrival.",
       "browseSystem": "Browse System",
       "removeFile": "Remove {name}",
       "cancel": "Cancel",
