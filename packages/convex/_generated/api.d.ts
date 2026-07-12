@@ -10,6 +10,15 @@
 
 import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
+import type * as admin_access from "../admin/access.js";
+import type * as admin_activity from "../admin/activity.js";
+import type * as admin_analytics from "../admin/analytics.js";
+import type * as admin_lib from "../admin/lib.js";
+import type * as admin_revenue from "../admin/revenue.js";
+import type * as admin_security from "../admin/security.js";
+import type * as admin_users from "../admin/users.js";
+import type * as admin_vault from "../admin/vault.js";
+import type * as analytics from "../analytics.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
@@ -67,6 +76,15 @@ import type {
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
+  "admin/access": typeof admin_access;
+  "admin/activity": typeof admin_activity;
+  "admin/analytics": typeof admin_analytics;
+  "admin/lib": typeof admin_lib;
+  "admin/revenue": typeof admin_revenue;
+  "admin/security": typeof admin_security;
+  "admin/users": typeof admin_users;
+  "admin/vault": typeof admin_vault;
+  analytics: typeof analytics;
   audit: typeof audit;
   auth: typeof auth;
   billing: typeof billing;

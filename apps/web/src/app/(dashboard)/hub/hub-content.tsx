@@ -1,5 +1,6 @@
 import { Link } from "@/lib/navigation";
 import { useQuery } from "convex/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   buttonVariants,
@@ -59,6 +60,8 @@ const ACTION_HINT_KEYS = new Set<string>([
   "more_categories",
 ]);
 
+const REFLECT_SLIDER_GAP = 16;
+
 export function HubContent() {
   const t = useTranslations("hub");
   const categoryLabel = useCategoryLabel();
@@ -68,6 +71,69 @@ export function HubContent() {
   // Item _ids in recentItems are a subset of `items`, so one decrypt pass
   // covers the asset/directive/document node cards and the recent-activity list.
   const titles = useDecryptedTitles(items);
+  const hubContentReady =
+    items !== undefined && contacts !== undefined && hubData !== undefined;
+  const reflectRailRef = useRef<HTMLDivElement>(null);
+  const [reflectSliderState, setReflectSliderState] = useState({
+    currentGroup: 1,
+    totalGroups: 1,
+    canScrollPrevious: false,
+    canScrollNext: true,
+  });
+
+  const updateReflectSliderState = useCallback(() => {
+    const rail = reflectRailRef.current;
+    if (!rail) return;
+
+    const maxScrollLeft = Math.max(rail.scrollWidth - rail.clientWidth, 0);
+    const totalGroups =
+      maxScrollLeft === 0
+        ? 1
+        : Math.max(
+            1,
+            Math.round(maxScrollLeft / Math.max(rail.clientWidth, 1)) + 1,
+          );
+    const currentGroup =
+      maxScrollLeft === 0
+        ? 1
+        : Math.min(
+            Math.round(rail.scrollLeft / Math.max(rail.clientWidth, 1)) + 1,
+            totalGroups,
+          );
+
+    setReflectSliderState({
+      currentGroup,
+      totalGroups,
+      canScrollPrevious: rail.scrollLeft > REFLECT_SLIDER_GAP / 2,
+      canScrollNext: rail.scrollLeft < maxScrollLeft - REFLECT_SLIDER_GAP / 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    const rail = reflectRailRef.current;
+    if (!rail) return;
+
+    updateReflectSliderState();
+    rail.addEventListener("scroll", updateReflectSliderState, {
+      passive: true,
+    });
+    window.addEventListener("resize", updateReflectSliderState);
+
+    return () => {
+      rail.removeEventListener("scroll", updateReflectSliderState);
+      window.removeEventListener("resize", updateReflectSliderState);
+    };
+  }, [hubContentReady, updateReflectSliderState]);
+
+  const scrollReflectSlider = useCallback((direction: "previous" | "next") => {
+    const rail = reflectRailRef.current;
+    if (!rail) return;
+
+    rail.scrollBy({
+      left: direction === "previous" ? -rail.clientWidth : rail.clientWidth,
+      behavior: "smooth",
+    });
+  }, []);
 
   if (items === undefined || contacts === undefined || hubData === undefined) {
     return <Loader fullscreen label={t("loading")} />;
@@ -480,25 +546,66 @@ export function HubContent() {
 
       {/* Reflect & Prepare — reflection, pain points, emergency advice, education */}
       <section className="mt-12">
-        <header className="mb-6">
-          <h4 className="text-label-md text-on-surface-variant">
-            {t("reflect.title")}
-          </h4>
-          <p className="text-body-md text-on-surface-variant/80 mt-1">
-            {t("reflect.subtitle")}
-          </p>
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h4 className="text-label-md text-on-surface-variant">
+              {t("reflect.title")}
+            </h4>
+            <p className="text-body-md text-on-surface-variant/80 mt-1">
+              {t("reflect.subtitle")}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <span className="text-label-md text-on-surface-variant tabular-nums">
+              {reflectSliderState.currentGroup} /{" "}
+              {reflectSliderState.totalGroups}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={cn(
+                  "w-9 h-9 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  reflectSliderState.canScrollPrevious
+                    ? "hover:bg-surface-container-low"
+                    : "opacity-40 cursor-default",
+                )}
+                aria-label={t("reflect.previous")}
+                disabled={!reflectSliderState.canScrollPrevious}
+                onClick={() => scrollReflectSlider("previous")}
+              >
+                <Icon path={ICON_PATHS.arrowLeft} className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "w-9 h-9 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  reflectSliderState.canScrollNext
+                    ? "hover:bg-surface-container-low"
+                    : "opacity-40 cursor-default",
+                )}
+                aria-label={t("reflect.next")}
+                disabled={!reflectSliderState.canScrollNext}
+                onClick={() => scrollReflectSlider("next")}
+              >
+                <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </header>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          ref={reflectRailRef}
+          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide pb-1"
+        >
           {LEGACY_TIPS.map((tip) => (
             <Link
               key={tip.slug}
               href={tipHref(tip)}
-              className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+              className="group block shrink-0 basis-full sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] rounded-xl snap-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
             >
               <InfoCallout
                 icon={ICON_PATHS[tip.iconKey]}
                 tone={tip.tone}
-                className="relative h-full transition-colors group-hover:border-secondary/60"
+                className="relative h-full min-h-36 transition-colors group-hover:border-secondary/60"
               >
                 <strong className="block text-primary mb-1 font-headline pr-6">
                   {tip.title}
