@@ -15,7 +15,7 @@
     "clean": "rm -rf .output .nitro .vite dist .turbo node_modules"
   },
   "dependencies": {
-    "@auth/core": "^0.41.2",
+    "@auth/core": "^0.41.3",
     "@convex-dev/auth": "^0.0.93",
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/inter": "^5.2.8",
