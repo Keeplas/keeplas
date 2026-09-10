@@ -43,7 +43,7 @@
     "react": "^19",
     "react-dom": "^19",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "react": "^19",
