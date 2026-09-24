@@ -18,6 +18,7 @@ import { auditedMutation } from "./audit";
 import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
+import { isNotificationsPaused } from "./lib/pause";
 import { resolveLocale, type Locale } from "./lib/locale";
 import { formatSenderIdentity } from "./lib/identity";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
@@ -1105,6 +1106,7 @@ export const getVaultsWhereIAmContact = query({
 export const sendInvitationEmail = internalAction({
   args: { contactId: v.id("trusted_contacts") },
   handler: async (ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) return "resend_not_configured";
 

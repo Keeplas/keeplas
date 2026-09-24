@@ -56,6 +56,7 @@ export default function LifeCheckPage() {
             config && (
               <NextCheckInCard
                 nextCheckAt={config.nextCheckAt}
+                paused={config.paused}
                 onReset={handleValidate}
               />
             )
@@ -99,9 +100,12 @@ export default function LifeCheckPage() {
 // is the explicit in-app reply that resets the countdown (validateCycle → tap).
 function NextCheckInCard({
   nextCheckAt,
+  paused,
   onReset,
 }: {
   nextCheckAt: number;
+  /** Server-side kill switch: the counting is frozen, so don't show a ticking clock. */
+  paused: boolean;
   onReset: () => void;
 }) {
   const t = useTranslations("lifeCheck");
@@ -111,7 +115,13 @@ function NextCheckInCard({
         <p className="text-label-md text-on-surface-variant mb-4">
           {t("nextCheckIn.label")}
         </p>
-        <Countdown target={nextCheckAt} />
+        {paused ? (
+          <p className="text-headline-sm text-on-surface">
+            {t("nextCheckIn.paused")}
+          </p>
+        ) : (
+          <Countdown target={nextCheckAt} />
+        )}
       </div>
       <div className="flex flex-col gap-3 sm:items-end sm:max-w-xs">
         <p className="text-body-md text-on-surface-variant sm:text-right">
