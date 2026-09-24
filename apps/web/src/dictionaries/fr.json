@@ -560,6 +560,7 @@
     "nextCheckIn": {
       "label": "Prochaine vérification",
       "description": "Nous vous demanderons de confirmer que vous allez bien. Seule votre réponse explicite réinitialise le compte à rebours — utiliser l'application ne suffit pas.",
+      "paused": "Les vérifications sont en pause. Votre compte à rebours reprendra dès que Life Check sera réactivé.",
       "reset": "Je vais bien — réinitialiser le compte à rebours"
     },
     "activeCycle": {
