@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths(),
       // Tailwind v4 via its first-class Vite plugin (not the PostCSS plugin).
       // Tailwind's own engine resolves the `@import "tailwindcss"` /
-      // `tw-animate-css` / `shadcn/tailwind.css` directives in globals.css, so
+      // `tw-animate-css` / `./shadcn-tailwind.css` directives in globals.css, so
       // vite 8's rolldown CSS pipeline never tries to resolve the bare
       // `tailwindcss` specifier as a file (which broke the SSR build).
       tailwindcss(),

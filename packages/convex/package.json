@@ -11,9 +11,9 @@
     "clean": "rm -rf dist .turbo node_modules"
   },
   "dependencies": {
-    "@auth/core": "^0.41.2",
+    "@auth/core": "^0.41.3",
     "@convex-dev/auth": "^0.0.93",
-    "@simplewebauthn/server": "^13.3.1",
+    "@simplewebauthn/server": "^13.3.3",
     "convex": "^1.40.0",
     "web-push": "^3.6.7"
   },
@@ -22,6 +22,6 @@
     "@types/web-push": "^3.6.4",
     "convex-test": "^0.0.53",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   }
 }
