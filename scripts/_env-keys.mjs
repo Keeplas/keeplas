@@ -64,6 +64,12 @@ export const WEB_OPTIONAL_GROUPS = {
     "INFOBIP_API_KEY",
     "INFOBIP_WHATSAPP_SENDER",
   ],
+  "App association (/.well-known)": [
+    "APPLE_TEAM_ID",
+    "IOS_BUNDLE_ID",
+    "ANDROID_PACKAGE_NAME",
+    "ANDROID_SHA256_CERT_FINGERPRINTS",
+  ],
 };
 
 // Required on the Convex deployment — read at action/mutation time on the
