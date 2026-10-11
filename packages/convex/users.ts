@@ -343,7 +343,7 @@ export const setPublicKey = auditedMutation({
     // Close the accept-before-crypto gap: a contact who accepted an invitation
     // before their keypair existed left the owner's row with an empty
     // `contactPublicKey`. Now that their key material is set, backfill every
-    // owner's accepted row so the owner can wrap shards/DEKs to them — without
+    // owner's accepted row so the owner can wrap DEKs to them — without
     // waiting for a manual `/shared-with-me` visit. Idempotent.
     await publishContactKeyToOwnerRows(ctx, userId, {
       contactPublicKey: args.publicKey,

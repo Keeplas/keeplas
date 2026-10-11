@@ -5,7 +5,6 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { deriveRootKey } from "@keeplas/crypto/kdf";
-import { split } from "@keeplas/crypto/shamir";
 import {
   generateRecipientKeyPair,
   serializePublicKey,
@@ -13,7 +12,6 @@ import {
   parseSecretKey,
   wrapDek,
   unwrapDek,
-  wrapBytes,
 } from "@keeplas/crypto/kem";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import { parsePublicKey } from "@keeplas/crypto/kem";
@@ -22,14 +20,16 @@ import { useVaultCrypto } from "./use-vault-crypto";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { verifyContactKey } from "./verify-contact-key";
-import { STORAGE_KEYS } from "./storage-keys";
 
 /**
- * Full master-key rotation for the "return after release" flow.
- *
- * When the owner comes back AFTER an emergency release fired, the leaked
- * material (master key via Shamir, owner secret key, released DEKs) must be
- * retired. This hook, driven from the client with the unlocked vault + the
+ * Full master-key rotation, for two flows:
+ *  - "return after release": the owner comes back AFTER an emergency release
+ *    fired, so the released material (owner secret key, released DEKs) must be
+ *    retired;
+ *  - forced rotation (`masterKeyRotationRequired`): the owner's MasterKey was
+ *    once Shamir-split to trusted contacts (pre-v2), so old shards may still
+ *    sit on a contact's device.
+ * This hook, driven from the client with the unlocked vault + the
  * 24-word phrase, regenerates the master key and owner ML-KEM keypair, then
  * re-encrypts every item under a fresh per-item DEK and re-wraps it to the
  * still-trusted recipients. It does NOT recover data a contact already
@@ -45,7 +45,6 @@ export type RotateStatus =
   | "idle"
   | "validating"
   | "rotating_keys"
-  | "redistributing"
   | "reencrypting"
   | "finalizing"
   | "done"
@@ -144,9 +143,6 @@ export function useRotateVault() {
   );
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
-  const storeEncryptedShard = useAuditedMutation(
-    api.trusted_contacts.storeEncryptedShard,
-  );
 
   const [status, setStatus] = useState<RotateStatus>("idle");
   const [progress, setProgress] = useState<RotateProgress>({
@@ -167,65 +163,6 @@ export function useRotateVault() {
       return storageId;
     },
     [],
-  );
-
-  /** Re-split the new master key and hand new shards to device/contacts. */
-  const redistribute = useCallback(
-    async (masterKey: CryptoKey, threshold: number) => {
-      const rawMasterKey = new Uint8Array(
-        await crypto.subtle.exportKey("raw", masterKey),
-      );
-      // 4 shares: device + 3 contacts. The server holds NO shard (finding #3).
-      const shards = await split(rawMasterKey, 4, threshold);
-      rawMasterKey.fill(0);
-      try {
-        localStorage.setItem(
-          STORAGE_KEYS.deviceShard,
-          uint8ToBase64(shards[0]),
-        );
-      } catch {
-        // Private mode etc — non-fatal.
-      }
-
-      const targets = await convex.query(
-        api.trusted_contacts.getDistributionTargets,
-        {},
-      );
-      // storeEncryptedShard enforces a 2-contact floor; skip contact shards
-      // when the trusted circle is too small (the device shard still rotates).
-      if (targets.length >= 2) {
-        for (const t of targets) {
-          const slot = t.shardIndex - 1;
-          if (slot < 0 || slot >= shards.length) continue;
-          // Verify-before-wrap (finding #2): authenticate the contact's key and
-          // honour the TOFU pin before handing them a shard. A failure throws
-          // and aborts the rotation (surfaced via the rotate error state) — we
-          // never wrap a shard to an unauthenticated / changed key.
-          const outcome = await verifyContactKey(t);
-          if (outcome.status !== "ok") {
-            throw new Error(
-              `Can't verify ${t.name}'s encryption key (${outcome.status}). Resolve this from your contacts before rotating.`,
-            );
-          }
-          if (outcome.pinFingerprint) {
-            await pinContactIdentity({
-              contactId: t.contactId,
-              fingerprint: outcome.pinFingerprint,
-            });
-          }
-          const envelope = await wrapBytes(
-            shards[slot],
-            outcome.contactPublicKey,
-          );
-          await storeEncryptedShard({
-            contactId: t.contactId,
-            encryptedShard: envelope,
-            shardPublicKeyUsed: outcome.contactPublicKey,
-          });
-        }
-      }
-    },
-    [convex, storeEncryptedShard, pinContactIdentity],
   );
 
   /** Re-encrypt a single ZK item under a fresh DEK and re-wrap it. */
@@ -442,14 +379,12 @@ export function useRotateVault() {
         }
 
         const resuming = !!viewer.encryptedAsymmetricSecretKeyPrev;
-        let newMasterKey: CryptoKey;
         let newOwnerPubB64: string;
         let newOwnerSecret: Uint8Array;
         let oldOwnerSecret: Uint8Array;
 
         if (resuming) {
           // Key material already swapped; the live master key IS the new one.
-          newMasterKey = masterKey;
           newOwnerPubB64 = viewer.publicKey!;
           newOwnerSecret = await unwrapSecretUnderKey(
             viewer.encryptedAsymmetricSecretKey!,
@@ -466,7 +401,7 @@ export function useRotateVault() {
           oldOwnerSecret = oldSec;
 
           setStatus("rotating_keys");
-          newMasterKey = await generateMasterKey();
+          const newMasterKey = await generateMasterKey();
           const rawNew = new Uint8Array(
             await crypto.subtle.exportKey("raw", newMasterKey),
           );
@@ -507,12 +442,6 @@ export function useRotateVault() {
           setMasterKey(newMasterKey);
         }
 
-        // Re-split shards of the NEW master key. Runs in both modes: a crash
-        // before this point leaves contacts holding stale OLD-key shards, so a
-        // resumed run must (idempotently) redistribute too.
-        setStatus("redistributing");
-        await redistribute(newMasterKey, viewer.vaultThreshold ?? 2);
-
         setStatus("reencrypting");
         setProgress({ done: 0, total: items.length });
         for (let i = 0; i < items.length; i++) {
@@ -541,7 +470,6 @@ export function useRotateVault() {
       signWithIdentityKey,
       rotateKeyMaterial,
       setMasterKey,
-      redistribute,
       migrateItem,
       finalizeRotation,
     ],

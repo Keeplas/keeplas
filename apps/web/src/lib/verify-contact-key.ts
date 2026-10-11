@@ -6,7 +6,7 @@ import { verifyBytes, identityKeyFingerprint } from "@keeplas/crypto/sig";
  *
  * A malicious server could swap a contact's stored `contactPublicKey` for one
  * whose secret key it controls, silently making itself a recipient of every
- * DEK/shard wrapped to that contact. We defend with two layers:
+ * DEK wrapped to that contact. We defend with two layers:
  *
  *  1. SIGNATURE: the contact signs their ML-KEM public-key bytes with their
  *     long-lived ML-DSA identity key. We verify that signature before wrapping.

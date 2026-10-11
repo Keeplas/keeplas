@@ -213,55 +213,37 @@ function ContactDetailBody({
               {t("detail.recipientOnlyDescription")}
             </p>
           ) : (
-            <div className="space-y-3">
-              {typeof contact.shardIndex === "number" && (
-                <dl>
-                  <DetailRow
-                    label={t("detail.shardIndex")}
-                    value={`#${contact.shardIndex}`}
+            verificationBadge && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={cn(
+                    "text-label-md px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5",
+                    verificationBadge.className,
+                  )}
+                >
+                  {verificationBadge.label}
+                  <HelpHint
+                    content={
+                      <>
+                        <p>{t("detail.verificationHelp")}</p>
+                        {verificationBadge.lastVerifiedAt !== undefined && (
+                          <p className="mt-2">
+                            {t("detail.lastVerified", {
+                              relative: formatRelative(
+                                verificationBadge.lastVerifiedAt,
+                              ),
+                              date: new Date(
+                                verificationBadge.lastVerifiedAt,
+                              ).toLocaleDateString(),
+                            })}
+                          </p>
+                        )}
+                      </>
+                    }
                   />
-                </dl>
-              )}
-              {(contact.shardConfirmed || verificationBadge) && (
-                <div className="flex flex-wrap items-center gap-2">
-                  {contact.shardConfirmed && (
-                    <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container inline-flex items-center gap-1.5">
-                      {t("detail.fragmentAssigned")}
-                      <HelpHint content={t("detail.fragmentAssignedHelp")} />
-                    </span>
-                  )}
-                  {verificationBadge && (
-                    <span
-                      className={cn(
-                        "text-label-md px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5",
-                        verificationBadge.className,
-                      )}
-                    >
-                      {verificationBadge.label}
-                      <HelpHint
-                        content={
-                          <>
-                            <p>{t("detail.verificationHelp")}</p>
-                            {verificationBadge.lastVerifiedAt !== undefined && (
-                              <p className="mt-2">
-                                {t("detail.lastVerified", {
-                                  relative: formatRelative(
-                                    verificationBadge.lastVerifiedAt,
-                                  ),
-                                  date: new Date(
-                                    verificationBadge.lastVerifiedAt,
-                                  ).toLocaleDateString(),
-                                })}
-                              </p>
-                            )}
-                          </>
-                        }
-                      />
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+                </span>
+              </div>
+            )
           )}
           {isAwaitingKey(contact) && (
             <div className="mt-3">

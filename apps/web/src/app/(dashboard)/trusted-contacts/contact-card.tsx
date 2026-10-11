@@ -93,11 +93,6 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
             {t("contactCard.awaitingKey")}
           </span>
         )}
-        {contact.shardConfirmed && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-secondary-container text-on-secondary-container">
-            {t("contactCard.fragmentAssigned")}
-          </span>
-        )}
         {verificationBadge && (
           <span
             className={cn(

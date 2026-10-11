@@ -77,7 +77,7 @@ describe("resolveConfirmationWindow fallback (finding H1)", () => {
     expect(cycle?.status).toBe("cancelled");
   });
 
-  it("DOES release only on explicit owner opt-in (release_anyway)", async () => {
+  it("never releases on a missed window, even with a legacy release_anyway config (F5)", async () => {
     const t = makeT();
     const owner = await seedUser(t);
     const cycleId = await seedAwaitingConfirmation(t, owner, "release_anyway");
@@ -87,8 +87,54 @@ describe("resolveConfirmationWindow fallback (finding H1)", () => {
     });
 
     const cycle = await t.run((ctx) => ctx.db.get(cycleId));
-    // release_anyway hands off to the release fan-out via markCycleTriggered.
-    expect(cycle?.status).toBe("triggered");
+    expect(cycle?.status).toBe("cancelled");
+    expect(cycle?.cancelledReason).toBe("no_contact_confirmation");
+    const approved = await t.run((ctx) =>
+      ctx.db
+        .query("access_requests")
+        .withIndex("by_status", (q) =>
+          q.eq("vaultUserId", owner).eq("status", "approved"),
+        )
+        .collect(),
+    );
+    expect(approved).toHaveLength(0);
+  });
+});
+
+describe("release_anyway is retired (F5)", () => {
+  it("saveReleasePolicy always stores the abort fallback", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const cycleId = await seedAwaitingConfirmation(t, owner);
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+
+    await asUser(t, owner).mutation(api.life_check.saveReleasePolicy, {
+      confirmationThreshold: 2,
+      confirmationWindowDays: 7,
+      _audit: await signedAudit(),
+    });
+
+    const config = await t.run((ctx) => ctx.db.get(cycle!.configId));
+    expect(config?.fallbackBehavior).toBe("abort");
+  });
+
+  it("migrations:retireReleaseAnyway rewrites legacy configs to abort", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const cycleId = await seedAwaitingConfirmation(t, owner, "release_anyway");
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+
+    const result = await t.mutation(
+      internal.migrations.retireReleaseAnyway,
+      {},
+    );
+    expect(result.migrated).toBe(1);
+    const config = await t.run((ctx) => ctx.db.get(cycle!.configId));
+    expect(config?.fallbackBehavior).toBe("abort");
+
+    // Idempotent.
+    const again = await t.mutation(internal.migrations.retireReleaseAnyway, {});
+    expect(again.migrated).toBe(0);
   });
 });
 
@@ -163,7 +209,7 @@ describe("pause / travel mode suspend in-flight work and reset the counter", () 
     const cycleId = await seedRunningCycle(t, owner, configId);
 
     // A Stage-2 trusted-contact confirmation is already pending.
-    const contactId = await seedTrustContact(t, owner, { shardIndex: 0 });
+    const contactId = await seedTrustContact(t, owner, { n: 0 });
     const now = Date.now();
     const reqId = await t.run((ctx) =>
       ctx.db.insert("access_requests", {

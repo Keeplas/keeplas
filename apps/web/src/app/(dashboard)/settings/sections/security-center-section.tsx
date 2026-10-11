@@ -7,7 +7,6 @@ import { formatTimeAgo } from "@/lib/format";
 import { getInitials } from "@/lib/user";
 import { useTranslations } from "@/lib/i18n";
 import { DeviceUnlockManager } from "./device-unlock-manager";
-import { RedistributeShardsCard } from "./redistribute-shards-card";
 
 const ACTION_ICONS: Record<string, string> = {
   vault_item_created: ICON_PATHS.lock,
@@ -215,7 +214,7 @@ export function SecurityCenterSection() {
           </Link>
         </section>
 
-        {/* Master Recovery / Shamir */}
+        {/* Master Recovery: 24 words + trusted contacts (no key split) */}
         <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-2xl">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
@@ -224,15 +223,7 @@ export function SecurityCenterSection() {
             </h2>
           </div>
           <p className="text-body-md text-on-surface-variant mb-6">
-            {t("masterRecovery.descriptionBefore")}{" "}
-            <strong className="text-primary">
-              {t("masterRecovery.shardsEmphasis")}
-            </strong>{" "}
-            {t("masterRecovery.descriptionMiddle")}{" "}
-            <strong className="text-primary">
-              {user?.vaultThreshold ?? 2}
-            </strong>{" "}
-            {t("masterRecovery.descriptionAfter")}
+            {t("masterRecovery.description")}
           </p>
 
           <div className="space-y-3">
@@ -250,8 +241,8 @@ export function SecurityCenterSection() {
               <ShardRow
                 key={c._id}
                 icon={ICON_PATHS.users}
-                label={t("masterRecovery.guardianShardLabel", { index: i + 2 })}
-                hint={t("masterRecovery.guardianShardHint", {
+                label={t("masterRecovery.guardianLabel", { index: i + 1 })}
+                hint={t("masterRecovery.guardianHint", {
                   name: c.name.split(" ")[0],
                 })}
                 verified
@@ -268,10 +259,6 @@ export function SecurityCenterSection() {
             </Link>
           </div>
         </section>
-
-        <div className="md:col-span-12">
-          <RedistributeShardsCard />
-        </div>
 
         <DeviceUnlockManager />
       </div>

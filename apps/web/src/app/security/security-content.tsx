@@ -124,21 +124,16 @@ const PILLARS: Array<{
     key: "recovery",
     icon: ICON_PATHS.users,
     technicalLines: [
-      "Shamir Secret Sharing · 4 shards · threshold 2–3 to reconstruct MasterKey",
-      "Shards · 1 local · 3 distributed to trusted contacts (ML-KEM-768 + AES-256-GCM wrapped to each contact's public key) · Keeplas holds NO shard",
+      "MasterKey never split · sealed by the RootKey derived from the 24 words · only the owner can rebuild it",
+      "Trusted contacts hold no key material · succession releases only the items wrapped to each recipient (per-item DEK, ML-KEM-768 + AES-256-GCM)",
       "Recovery phrase verification · SHA-256(phrase) compared server-side · phrase never sent",
       "No master key, no escrow, no employee or court-ordered access path",
     ],
     references: [
       {
-        label: "Shamir — How to Share a Secret (1979)",
-        url: "https://dl.acm.org/doi/10.1145/359168.359176",
-        note: "The original paper on threshold secret sharing",
-      },
-      {
         label: "Harvest now, decrypt later",
         url: "https://en.wikipedia.org/wiki/Harvest_now,_decrypt_later",
-        note: "Why we encrypt every shard with ML-KEM-768 today",
+        note: "Why we wrap every item key with ML-KEM-768 today",
       },
     ],
   },

@@ -150,26 +150,24 @@ export async function signedAudit() {
   return { ip, country, ts, sig };
 }
 
-/** Seed an accepted trust contact holding the given shard slot. */
+/** Seed an accepted trust contact; `n` only keeps names / tokens unique. */
 export async function seedTrustContact(
   t: TestConvex,
   ownerId: Id<"users">,
-  opts: { shardIndex: number; confirmed?: boolean },
+  opts: { n: number },
 ): Promise<Id<"trusted_contacts">> {
   const now = Date.now();
   return await t.run((ctx) =>
     ctx.db.insert("trusted_contacts", {
       userId: ownerId,
-      name: `Contact ${opts.shardIndex}`,
-      email: `c${opts.shardIndex}@example.com`,
+      name: `Contact ${opts.n}`,
+      email: `c${opts.n}@example.com`,
       role: "family",
       contactType: "trust",
       invitationStatus: "accepted",
-      invitationToken: `tok-${opts.shardIndex}-${now}`,
+      invitationToken: `tok-${opts.n}-${now}`,
       invitedAt: now,
-      shardIndex: opts.shardIndex,
       contactPublicKey: "pk",
-      shardConfirmed: opts.confirmed ?? false,
       createdAt: now,
       updatedAt: now,
     }),

@@ -9,10 +9,9 @@ export default function SharedWithMePage() {
           <span className="text-secondary">Vaults I Protect</span>
         </h1>
         <p className="text-body-lg text-on-surface-variant">
-          People who designated you as a trusted contact. You hold an encrypted
-          recovery shard for each — you cannot read their vault, but together
-          with their other contacts you can help them regain access if they ever
-          lose their credentials.
+          People who designated you as a trusted contact. You cannot read their
+          vault — you help confirm if something happens to them, so the items
+          they chose reach the right people.
         </p>
       </header>
 

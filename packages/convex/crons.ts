@@ -29,7 +29,7 @@ crons.interval(
 
 /**
  * Weekly availability re-confirmation sweep. Nudges trust contacts whose
- * shard verification is stale/missing and alerts the owner to replace a
+ * availability check is stale/missing and alerts the owner to replace a
  * contact who never accepted or stays unresponsive.
  */
 crons.interval(

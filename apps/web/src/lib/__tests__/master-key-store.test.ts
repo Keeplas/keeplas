@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { clearPersistedMasterKeys } from "../master-key-store";
-import { STORAGE_KEYS } from "../storage-keys";
 
-// Minimal in-memory localStorage stub. We only exercise the device-shard
+// Pre-v2 builds left a plaintext Shamir share under this key (v2 F2).
+const LEGACY_DEVICE_SHARD_KEY = "keeplas_device_shard";
+
+// Minimal in-memory localStorage stub. We only exercise the legacy-shard
 // removal path here; the IndexedDB clear is allowed to fail (no fake-indexeddb)
 // because clearPersistedMasterKeys swallows that error.
 function installLocalStorageStub() {
@@ -30,12 +32,12 @@ describe("clearPersistedMasterKeys", () => {
     vi.unstubAllGlobals();
   });
 
-  it("removes the plaintext device shard from localStorage", async () => {
+  it("removes a legacy plaintext device shard from localStorage", async () => {
     const map = installLocalStorageStub();
-    map.set(STORAGE_KEYS.deviceShard, "some-plaintext-shard");
+    map.set(LEGACY_DEVICE_SHARD_KEY, "some-plaintext-shard");
 
     await clearPersistedMasterKeys();
 
-    expect(localStorage.getItem(STORAGE_KEYS.deviceShard)).toBeNull();
+    expect(localStorage.getItem(LEGACY_DEVICE_SHARD_KEY)).toBeNull();
   });
 });

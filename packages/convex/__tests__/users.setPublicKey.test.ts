@@ -83,7 +83,6 @@ describe("setPublicKey — backfills owner rows when crypto comes online", () =>
         invitationStatus: "accepted",
         invitationToken: `tok-${now}`,
         invitedAt: now,
-        shardIndex: 2,
         createdAt: now,
         updatedAt: now,
       }),

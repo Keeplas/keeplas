@@ -48,9 +48,9 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 **Cryptography** (gated by CODEOWNERS in `packages/crypto/`)
 
-- **`@noble/post-quantum`** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and Shamir shards; ML-DSA-65 (NIST FIPS 204) signs each user's ML-KEM public key for authenticated key distribution (TOFU)
+- **`@noble/post-quantum`** — ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs; ML-DSA-65 (NIST FIPS 204) signs each user's ML-KEM public key for authenticated key distribution (TOFU)
 - **`hash-wasm`** — Argon2id KDF for the 24-word root phrase
-- **AES-GCM** (WebCrypto) + **Shamir Secret Sharing** — content encryption and social recovery
+- **AES-GCM** (WebCrypto) — content encryption
 - **Vitest** — unit tests for the crypto primitives
 
 **Tooling**
@@ -184,11 +184,10 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 ## Security model
 
-- **Master Key**, **Recovery Phrase (24 words)**, and **Shamir shards** never leave the client unencrypted.
+- **Master Key** and **Recovery Phrase (24 words)** never leave the client unencrypted. The master key is never split — trusted contacts hold no part of it.
 - The **24-word phrase** is the root crypto secret (Argon2id-derived). The **password is pure auth** and is resettable via the 24 words.
-- **No OAuth.** No direct phrase recovery — trusted contacts can rebuild the master key from Shamir shards once the recovery threshold is met. Default threshold is 2 contacts; threshold 3 requires 3 ready contacts.
-- Keeplas does not hold a server-side Shamir shard.
-- **Authenticated key distribution (TOFU).** Each user holds an **ML-DSA-65 (FIPS 204)** identity key; their ML-KEM public key is signed with it. Clients verify the signature and pinned fingerprint before wrapping a DEK/shard to a contact — never trusting a server-provided pubkey unverified. The identity secret key is wrapped under the master key and never sent in clear.
+- **No OAuth.** Trusted contacts confirm when the owner is unreachable (2 confirmations + a 72h owner-cancellable grace window); each recipient then receives only the items assigned to them. A missed Life Check alone never releases anything.
+- **Authenticated key distribution (TOFU).** Each user holds an **ML-DSA-65 (FIPS 204)** identity key; their ML-KEM public key is signed with it. Clients verify the signature and pinned fingerprint before wrapping a DEK to a contact — never trusting a server-provided pubkey unverified. The identity secret key is wrapped under the master key and never sent in clear.
 - Sensitive auth flows enforce a **step-up gate** (login-OTP + TOTP) on top of the password; auth/onboarding/public flows are intentionally exempt.
 - Per-device unlock combines **PIN**, **biometric (PRF)**, and **hardware key (PRF)** — RootKey wraps live in IndexedDB; the 24-word phrase is requested on first login per device.
 - All sensitive cryptography is implemented in [`packages/crypto/`](./packages/crypto), gated by CODEOWNERS and unit-tested.
@@ -203,7 +202,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap
 - [`PRD/Design/`](./PRD/Design) — wireframes and design tokens
 - [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
-- [`docs/TRUSTED_CONTACTS_SHARDS.md`](./docs/TRUSTED_CONTACTS_SHARDS.md) — trusted contacts, shard distribution & recovery
+- [`docs/TRUSTED_CONTACTS.md`](./docs/TRUSTED_CONTACTS.md) — trusted contacts, release flow & availability
 - [`CLAUDE.md`](./CLAUDE.md) — engineering conventions for AI assistants & humans
 
 ## Community & Discussions

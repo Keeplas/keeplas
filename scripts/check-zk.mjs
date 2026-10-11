@@ -83,6 +83,22 @@ const RULES = [
 			'fallbackBehavior must default to "abort", never "release_anyway" (finding H1).',
 	},
 	{
+		// v2 F1/F2: the MasterKey is never Shamir-split — no client may split it
+		// or rebuild it from contact shards. Owner recovery (phase 5) splits a
+		// separate recovery secret and must not reopen this path.
+		pattern: /from\s+["']@keeplas\/crypto\/shamir["']/,
+		message:
+			"apps/web must not import @keeplas/crypto/shamir — the MasterKey is never split (v2 F1/F2).",
+		allow: (relPath) => !relPath.startsWith(join("apps", "web")),
+	},
+	{
+		// v2 F5: a missed Life Check never releases — the client must not offer it.
+		pattern: /release_anyway/,
+		message:
+			'"release_anyway" is retired (v2 F5) — a missed Life Check never releases.',
+		allow: (relPath) => !relPath.startsWith(join("apps", "web")),
+	},
+	{
 		// The recovery-phrase verifier must be compared in constant time (M1).
 		pattern: /recoveryPhraseHash\s*[!=]==|[!=]==\s*args\.phraseHash/,
 		message:

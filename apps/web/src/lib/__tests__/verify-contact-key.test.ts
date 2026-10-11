@@ -15,7 +15,7 @@ import { verifyContactKey } from "../verify-contact-key";
  * Verify-before-wrap unit tests (finding #2). Exercises the real ML-KEM /
  * ML-DSA crypto so a tampered key is genuinely rejected, not just by string
  * comparison. Each `build*` produces the server-provided shape the client
- * consumes before wrapping a DEK/shard to a contact.
+ * consumes before wrapping a DEK to a contact.
  */
 function buildHonestContact() {
   const kem = generateRecipientKeyPair();

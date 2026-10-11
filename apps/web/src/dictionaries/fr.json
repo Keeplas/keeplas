@@ -161,7 +161,6 @@
       "keyGeneration": {
         "phases": {
           "derivingRoot": "Dérivation de votre clé racine à partir de vos 24 mots…",
-          "splittingShards": "Création des fragments de récupération…",
           "wrappingMasterKey": "Scellement de votre clé maîtresse…",
           "storing": "Sécurisation de votre coffre…",
           "complete": "Coffre sécurisé !",
@@ -174,15 +173,7 @@
         "description": "Vos clés sont dérivées et scellées entièrement sur votre appareil. Nous ne voyons jamais votre phrase.",
         "redirecting": "Redirection vers votre accueil…",
         "tryAgain": "Réessayer",
-        "genericError": "La génération des clés a échoué. Veuillez réessayer.",
-        "thresholdHeading": "Seuil de récupération",
-        "thresholdDescription": "Combien de contacts de confiance doivent s'accorder pour reconstruire votre coffre lorsque vous devenez injoignable. Plus bas = récupération plus facile, plus haut = plus résistant à la collusion.",
-        "thresholdOf": "sur 4",
-        "thresholdEasiestStrong": "Récupération la plus facile.",
-        "thresholdEasiest": "Deux contacts quelconques peuvent collaborer. Recommandé sauf si vos contacts présentent un risque élevé de collusion.",
-        "thresholdBalancedStrong": "Équilibré.",
-        "thresholdBalanced": "Trois contacts quelconques doivent collaborer. Résistant à la collusion d'une seule paire.",
-        "thresholdContinue": "Continuer avec {value} sur 4"
+        "genericError": "La génération des clés a échoué. Veuillez réessayer."
       },
       "passkey": {
         "badge": "Optionnel · Connexion plus rapide",
@@ -483,14 +474,14 @@
     "priorityActions": "Actions prioritaires",
     "hints": {
       "add_item": "Conservez votre premier actif, document ou identifiant dans le coffre. Tout est chiffré de bout en bout — vous seul et les personnes que vous choisissez pourrez jamais le lire.",
-      "invite_contact": "Les contacts de confiance sont les gardiens qui peuvent aider à récupérer votre coffre. Invitez une personne de confiance ; elle accepte avec sa propre clé Keeplas.",
-      "distribute_shards": "Divisez votre clé maîtresse en parts chiffrées et scellez-en une à chaque contact de confiance. La récupération exige un seuil de parts, afin qu'aucun contact ne puisse déverrouiller votre coffre à lui seul. Redistribuez après avoir ajouté un nouveau gardien.",
+      "invite_contact": "Les contacts de confiance sont les gardiens qui confirment s'il vous arrive quelque chose. Invitez une personne de confiance ; elle accepte avec sa propre clé Keeplas.",
       "life_check": "Life Check prend régulièrement de vos nouvelles. Si vous cessez de répondre, Keeplas amorce le processus de continuité et prévient vos gardiens.",
-      "release_policy": "Décidez de ce qui se passe si vous cessez de répondre : combien de contacts de confiance doivent confirmer votre indisponibilité, de combien de temps ils disposent, et s'il faut libérer malgré tout ou tout garder scellé si personne ne confirme.",
+      "release_policy": "Décidez de ce qui se passe si vous cessez de répondre : combien de contacts de confiance doivent confirmer votre indisponibilité et de combien de temps ils disposent. Sans leur confirmation, rien n'est jamais transmis.",
       "welcome_message": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'ils ne consultent les éléments.",
       "two_factor": "Ajoutez une clé d'accès ou une application d'authentification afin qu'un mot de passe dérobé ne suffise pas à atteindre votre compte.",
       "verify_whatsapp": "Vérifiez votre numéro WhatsApp pour que les contrôles de Life Check et les alertes de sécurité vous parviennent de façon fiable.",
-      "more_categories": "Répartissez votre héritage entre plusieurs catégories — finances, directives de santé, documents juridiques, identifiants — afin que rien d'essentiel ne soit oublié."
+      "more_categories": "Répartissez votre héritage entre plusieurs catégories — finances, directives de santé, documents juridiques, identifiants — afin que rien d'essentiel ne soit oublié.",
+      "contacts_ready": "Votre Life Check a besoin de deux contacts de confiance pour confirmer que vous êtes injoignable. Un contact est prêt dès qu'il accepte votre invitation et configure sa clé Keeplas. Il ne détient jamais de clé de votre coffre."
     },
     "recentActivity": {
       "title": "Activité récente",
@@ -674,15 +665,12 @@
         "released": {
           "dayLabel": "Résultat",
           "title": "Coffre transmis",
-          "descriptionAnyway": "Une fois que {contacts} confirment, votre coffre leur est transmis — et transmis quand même si la fenêtre s'écoule sans aucune confirmation.",
-          "descriptionAbort": "Une fois que {contacts} confirment, votre coffre leur est transmis. Si personne ne confirme à temps, rien n'est transmis.",
-          "help": "Contrôlé par l'option « Transmettre quand même si personne ne confirme » dans la politique de transmission. Activée (recommandé) : transmission même si personne ne confirme une fois la fenêtre écoulée. Désactivée : transmission uniquement si vos contacts confirment."
+          "help": "Rien n'est jamais transmis en silence : vos contacts de confiance doivent d'abord confirmer, et vous disposez encore d'une fenêtre de grâce de 72 heures pour annuler.",
+          "description": "Une fois que {contacts} confirment, chaque bénéficiaire reçoit les éléments que vous lui avez attribués. Si personne ne confirme à temps, rien n'est transmis."
         }
       },
       "recap": {
-        "text": "{contacts} pour confirmer · fenêtre de {days} jours · {fallback}",
-        "fallbackAnyway": "transmis quand même après la fenêtre",
-        "fallbackAbort": "rien n'est transmis sans confirmation"
+        "text": "{contacts} pour confirmer · fenêtre de {days} jours · rien n'est transmis sans confirmation"
       }
     },
     "welcome": {
@@ -721,17 +709,15 @@
     },
     "policy": {
       "title": "Politique de transmission",
-      "help": "Si vous cessez de répondre aux vérifications, vos contacts de confiance sont invités à confirmer votre indisponibilité avant toute transmission. Définissez combien doivent confirmer, de combien de temps ils disposent et ce qui se passe si personne ne le fait.",
+      "help": "Si vous cessez de répondre aux vérifications, vos contacts de confiance sont invités à confirmer votre indisponibilité avant toute transmission. Définissez combien doivent confirmer et de combien de temps ils disposent. Si personne ne confirme, rien n'est transmis.",
       "description": "La sauvegarde humaine avant toute transmission de votre coffre.",
       "thresholdLabel": "Contacts qui doivent confirmer votre indisponibilité",
       "thresholdHelp": "Le nombre minimum de contacts de confiance qui doivent confirmer de façon indépendante qu'ils ne parviennent pas à vous joindre avant que votre coffre puisse être transmis. Un nombre plus élevé protège contre toute action d'un seul contact isolé.",
       "windowLabel": "Jours dont ils disposent pour confirmer",
       "windowHelp": "De combien de temps disposent vos contacts de confiance pour atteindre le nombre requis une fois que Keeplas les alerte. C'est distinct de la fenêtre de grâce fixe de 72 heures dont vous bénéficiez pour annuler la transmission après leur confirmation.",
       "windowDays": "{count} jours",
-      "releaseAnywayLabel": "Transmettre quand même si personne ne confirme",
-      "releaseAnywayOn": "Recommandé : si aucun contact ne confirme, votre coffre est tout de même transmis après la fenêtre, afin que vos bénéficiaires soient atteints.",
-      "releaseAnywayOff": "Si aucun contact ne confirme, rien n'est transmis.",
-      "saveError": "Échec de l'enregistrement de la politique de transmission"
+      "saveError": "Échec de l'enregistrement de la politique de transmission",
+      "noConfirmation": "Si aucun contact ne confirme à temps, rien n'est transmis. Une vérification manquée ne suffit jamais à ouvrir votre coffre."
     },
     "travel": {
       "title": "Mode voyage",
@@ -793,10 +779,14 @@
       "status": {
         "validating": "Vérification de votre phrase de récupération…",
         "rotatingKeys": "Génération d'une nouvelle clé maîtresse…",
-        "redistributing": "Rescellement des parts de récupération…",
         "reencrypting": "Rechiffrement de votre coffre…",
         "finalizing": "Finalisation…",
         "done": "Terminé"
+      },
+      "forced": {
+        "dialogDescription": "Votre clé maîtresse a autrefois été divisée entre vos contacts de confiance. Keeplas ne fonctionne plus ainsi : nous retirons donc cette clé. Saisissez votre phrase de récupération de 24 mots : nous générerons une nouvelle clé maîtresse et rechiffrerons chaque élément. Vos contacts et destinataires conservent leur accès.",
+        "submit": "Changer la clé de mon coffre",
+        "successDescription": "Votre coffre utilise désormais une nouvelle clé maîtresse."
       }
     }
   },
@@ -810,7 +800,7 @@
       },
       "security": {
         "title": "Centre de sécurité",
-        "description": "Récupération sociale, parts Shamir, biométrie et journal d'audit chaîné par hachage."
+        "description": "Mots de récupération, contacts de confiance, biométrie et journal d'audit chaîné par hachage."
       },
       "preferences": {
         "title": "Préférences",
@@ -1105,17 +1095,6 @@
       "saving": "Enregistrement…",
       "confirm": "Confirmer la mise à jour"
     },
-    "redistribute": {
-      "title": "Redistribuer les fragments de récupération",
-      "help": "Recalcule le partage de votre clé maîtresse selon le seuil choisi et rescelle le fragment de chaque contact de confiance avec sa clé publique. Tout fragment détenu précédemment devient obsolète dès que vous cliquez — c'est voulu. Utilisez cette action après avoir intégré un contact de confiance de remplacement, ou comme tâche d'entretien périodique.",
-      "statusNone": "Invitez au moins 2 contacts de confiance et attendez qu'ils acceptent avant de pouvoir distribuer.",
-      "statusBelowMin": "Un seul contact de confiance éligible. La récupération en exige au moins 2 — invitez-en un autre et faites-le confirmer avant de distribuer.",
-      "statusReady": "{count} contacts de confiance éligibles · seuil actuel {threshold}.",
-      "distributing": "Distribution…",
-      "distribute": "Distribuer maintenant",
-      "success": "Fragments redistribués. Vos contacts récupéreront les nouvelles enveloppes lors de leur prochaine visite sur /shared-with-me.",
-      "missingMasterKey": "Déverrouillez d'abord votre coffre, puis réessayez."
-    },
     "enroll": {
       "pinMismatch": "Les codes PIN ne correspondent pas",
       "pinTooShort": "Le code PIN doit comporter au moins {min} chiffres",
@@ -1245,16 +1224,13 @@
     },
     "masterRecovery": {
       "title": "Récupération maîtresse",
-      "descriptionBefore": "Votre clé maîtresse est divisée en",
-      "shardsEmphasis": "4 fragments cryptographiques",
-      "descriptionMiddle": "grâce au partage de secret de Shamir — un sur cet appareil et trois détenus par vos contacts de confiance. Vous avez choisi un seuil de",
-      "descriptionAfter": "fragments pour reconstruire le coffre. Toute combinaison atteignant ce seuil fonctionne — vos contacts collaborent sur l'appareil, jamais sur le serveur. Keeplas ne détient aucun fragment.",
       "recoveryPhraseLabel": "Phrase de récupération",
       "recoveryPhraseHashed": "Hachée et vérifiée",
       "recoveryPhraseNotGenerated": "Pas encore générée",
-      "guardianShardLabel": "Fragment de gardien n°{index}",
-      "guardianShardHint": "Détenu par {name}",
-      "configureAdditional": "Configurer un fragment supplémentaire"
+      "configureAdditional": "Gérer les contacts de confiance",
+      "description": "Votre clé maîtresse est scellée par vos 24 mots de récupération et ne quitte jamais vos appareils. Elle n'est jamais divisée : vos contacts de confiance confirment s'il vous arrive quelque chose, mais ne détiennent aucune partie de votre clé et ne peuvent pas ouvrir votre coffre.",
+      "guardianLabel": "Contact de confiance n°{index}",
+      "guardianHint": "{name} · confirme si vous êtes injoignable"
     },
     "activityLog": {
       "title": "Journal d'activité",
@@ -1312,13 +1288,11 @@
       "empty": {
         "title": "Aucun coffre ne vous est encore confié",
         "description": "Lorsqu'une personne vous ajoute comme contact de confiance et que vous acceptez l'invitation, le coffre qu'elle protège apparaîtra ici."
-      },
-      "restoring": "Restauration de vos fragments sur cet appareil — vos fragments chiffrés sont déchiffrés localement et ne quittent jamais votre navigateur."
+      }
     },
     "card": {
       "phase": {
         "released": "Ouvert",
-        "recovery": "Récupération",
         "actionNeeded": "Action requise",
         "guarding": "En garde",
         "awaitingRelease": "En attente d'ouverture"
@@ -1331,8 +1305,6 @@
         "months": "il y a {count} mois",
         "years": "il y a {count} ans"
       },
-      "verifiedAt": "Vérifié {relative}",
-      "verifying": "Vérification…",
       "type": {
         "recipient": "Bénéficiaire",
         "trust": "Confiance"
@@ -1345,9 +1317,6 @@
         "other": "Autre",
         "contact": "Contact"
       },
-      "fragmentHeld": "Fragment conservé · {status}",
-      "noFragment": "Aucun fragment pour l'instant",
-      "fragmentHint": "Un fragment de récupération chiffré de ce coffre est scellé avec votre clé publique et stocké sur cet appareil. Avec les autres contacts de confiance (seuil défini par le propriétaire), vous pouvez aider à rouvrir le coffre — seul, vous ne le pouvez pas. Il est revérifié automatiquement à chaque ouverture de cette page, pour que le propriétaire sache que vous pouvez toujours le déchiffrer.",
       "guarding": {
         "recipient": "Vous recevrez ici ce que {ownerName} vous a laissé si son coffre venait à être ouvert.",
         "trust": "Rien à faire pour le moment — on ne vous sollicitera que si {ownerName} cesse de répondre à ses vérifications d'activité."
@@ -1359,7 +1328,7 @@
       },
       "actionNeeded": {
         "prompt": "{ownerName} a cessé de répondre à ses vérifications d'activité. Si vous ne parvenez vraiment pas à le/la joindre, confirmez-le.",
-        "hint": "Deux contacts de confiance doivent confirmer avant l'ouverture d'une fenêtre de grâce de 72 heures. Pendant cette fenêtre, le propriétaire peut encore annuler en se manifestant. Ce n'est qu'une fois écoulée que le coffre peut être récupéré ou ouvert.",
+        "hint": "Deux contacts de confiance doivent confirmer avant l'ouverture d'une fenêtre de grâce de 72 heures. Pendant cette fenêtre, le propriétaire peut encore annuler en se manifestant. Ce n'est qu'une fois écoulée que les éléments assignés par le propriétaire sont transmis à leurs destinataires.",
         "confirm": "Confirmer — cette personne est injoignable",
         "cancel": "Annuler",
         "done": "Confirmation enregistrée. Les autres contacts de confiance seront prévenus.",
@@ -1367,20 +1336,9 @@
         "mark": "Signaler comme injoignable",
         "error": "Impossible de confirmer l'impossibilité de joindre la personne."
       },
-      "recovery": {
-        "title": "Récupération en cours",
-        "hint": "La fenêtre de grâce de 72 h s'est écoulée sans que le propriétaire annule. Vous et les autres contacts de confiance pouvez désormais soumettre vos fragments. Une fois le seuil atteint, n'importe quel participant peut reconstruire la clé maîtresse entièrement sur son appareil — le serveur ne voit jamais les fragments en clair.",
-        "submissionCountOne": "{count} soumission",
-        "submissionCountOther": "{count} soumissions",
-        "sealing": "Scellement de votre fragment pour les pairs…",
-        "submit": "Soumettre mon fragment",
-        "submittedToPeersOne": "Votre fragment a été transmis à {count} pair.",
-        "submittedToPeersOther": "Votre fragment a été transmis à {count} pairs.",
-        "reconstructed": "Clé maîtresse reconstruite sur cet appareil. L'accès au coffre mémoriel est disponible.",
-        "reconstructing": "Reconstruction…",
-        "awaitingPeers": "En attente des soumissions des pairs…",
-        "reconstruct": "Reconstruire la clé maîtresse"
-      }
+      "availableAt": "Disponible · confirmé {relative}",
+      "confirmingAvailability": "Confirmation de votre disponibilité…",
+      "availabilityHint": "Ouvrir cette page confirme au propriétaire que vous pouvez toujours agir comme contact de confiance. Vous ne détenez aucune clé de son coffre et ne pouvez pas lire ses données."
     },
     "memorial": {
       "noAccess": {
@@ -1451,25 +1409,25 @@
     "guardians": {
       "heading": "Le rôle des gardiens",
       "roles": {
-        "holdsShard": {
-          "title": "Détient un fragment de récupération",
-          "description": "Chaque contact de confiance conserve un fragment chiffré de votre clé maîtresse. La confirmation par deux d'entre eux, puis la soumission de leurs fragments, est ce qui déverrouille le coffre."
-        },
         "confirmsUnreachable": {
           "title": "Confirme que vous êtes injoignable",
           "description": "Une fois que Life Check a épuisé tous les canaux, vos contacts de confiance sont notifiés. Deux d'entre eux doivent confirmer que vous êtes injoignable pour ouvrir la fenêtre de grâce de 72 heures."
         },
         "releasesVault": {
           "title": "Libère le coffre et les bénéficiaires",
-          "description": "Une fois la fenêtre de grâce écoulée sans réponse de votre part, les soumissions de fragments atteignent le quorum et le coffre se déverrouille. Les bénéficiaires reçoivent alors les éléments qui leur ont été attribués."
+          "description": "Une fois la fenêtre de grâce écoulée sans réponse de votre part, chaque bénéficiaire reçoit uniquement les éléments que vous lui avez attribués."
+        },
+        "noVaultAccess": {
+          "title": "Ne lit jamais votre coffre",
+          "description": "Les contacts de confiance ne détiennent aucune clé de votre coffre. Ils ne peuvent pas ouvrir vos éléments, ni seuls, ni ensemble."
         }
       }
     },
     "recoveryNetwork": {
       "title": "Réseau de récupération",
-      "help": "Indique si votre récupération sociale est opérationnelle. Le grand nombre correspond au nombre de gardiens ayant accepté, sur les {threshold} nécessaires pour déverrouiller le coffre (votre quorum, défini lors de l'intégration). En dessous du quorum, la récupération est impossible. Au quorum, elle fonctionne mais un seul gardien manquant la compromet. Au-dessus du quorum, vous disposez d'une marge. Les invitations en attente et la distribution des fragments sont affichées pour que vous sachiez exactement ce qu'il reste à faire.",
+      "help": "Indique si votre protocole de continuité peut fonctionner. Le grand nombre correspond au nombre de gardiens ayant accepté, sur les {threshold} nécessaires pour confirmer que vous êtes injoignable (votre quorum). En dessous du quorum, rien ne peut être transmis. Au quorum, cela fonctionne mais un seul gardien manquant le compromet. Au-dessus du quorum, vous disposez d'une marge.",
       "quorum": "quorum",
-      "stepLabel": "Étape 2 · Fragments Shamir nécessaires pour déverrouiller le coffre",
+      "stepLabel": "Confirmations nécessaires pour lancer la transmission",
       "state": {
         "unprotected": "Non protégé — invitez votre premier gardien",
         "atRisk": "À risque — {count} de plus pour atteindre le quorum",
@@ -1479,28 +1437,27 @@
       },
       "accepted": "Acceptés",
       "pendingInvites": "Invitations en attente",
-      "shardsDistributed": "Fragments distribués",
       "maxGuardians": "Gardiens maximum"
     },
     "oneGuardianWarning": {
       "title": "Un seul gardien ne suffit pas",
-      "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. La récupération ne peut pas fonctionner avec un seul gardien pour deux raisons : au moins 2 contacts de confiance doivent voter que vous êtes injoignable avant l'ouverture de la fenêtre de grâce, et un gardien isolé n'a aucun pair avec qui échanger des fragments, de sorte que le coffre ne peut jamais atteindre les 2 fragments nécessaires pour reconstituer votre clé."
+      "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
     },
     "emptyState": {
       "title": "Invitez votre premier gardien",
-      "description": "Invitez au moins 2 gardiens de confiance pour la récupération. Le modèle de fragments actuel utilise jusqu'à 3 détenteurs de fragments ; les bénéficiaires ne sont soumis à aucune limite."
+      "description": "Invitez au moins 2 gardiens de confiance — deux d'entre eux doivent confirmer avant toute transmission. Les bénéficiaires ne sont soumis à aucune limite."
     },
     "trustContacts": {
       "heading": "Contacts de confiance",
-      "help": "Chaque contact de confiance détient un fragment chiffré de votre clé de récupération. Ils peuvent collectivement vous aider à retrouver l'accès à votre coffre. Limité à 5 par conception — moins convient, davantage affaiblirait le modèle de sécurité.",
+      "help": "Les contacts de confiance confirment s'il vous arrive quelque chose. Ils ne détiennent aucune clé de votre coffre et ne peuvent pas le lire. Limité à 5 par conception — moins convient.",
       "inviteNext": "Inviter le prochain contact de confiance",
       "slotsRemaining": "{count} places restantes"
     },
     "recipientsOnly": {
       "heading": "Bénéficiaires",
-      "help": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement (message conditionnel, libération du coffre). Elles ne détiennent pas de fragment de récupération, il n'y a donc aucune limite au nombre que vous pouvez ajouter.",
+      "help": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement (message conditionnel, libération du coffre). Elles n'ont aucun rôle de confirmation, il n'y a donc aucune limite au nombre que vous pouvez ajouter.",
       "addTitle": "Ajouter un bénéficiaire",
-      "addDescription": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement — aucun rôle de récupération, aucun fragment, aucune limite.",
+      "addDescription": "Personnes qui reçoivent uniquement des éléments lors d'un déclenchement — aucun rôle de confirmation, aucune limite.",
       "addButton": "Ajouter un bénéficiaire"
     },
     "howGroups": {
@@ -1516,7 +1473,7 @@
     },
     "accessRequests": {
       "heading": "Accès d'urgence",
-      "help": "Les contacts de confiance ouvrent cette demande lorsque Life Check a épuisé tous les canaux et que vous ne pouvez plus être joint. Une fois que le quorum confirme votre indisponibilité, une fenêtre de grâce de 72 heures s'ouvre — connectez-vous et cliquez sur Je vais bien pour l'annuler. Passé ce délai, les contacts soumettent leurs fragments et le coffre s'ouvre en mode mémorial en lecture seule.",
+      "help": "Les contacts de confiance ouvrent cette demande lorsque Life Check a épuisé tous les canaux et que vous ne pouvez plus être joint. Une fois que le quorum confirme votre indisponibilité, une fenêtre de grâce de 72 heures s'ouvre — connectez-vous et cliquez sur Je vais bien pour l'annuler. Passé ce délai, chaque bénéficiaire reçoit uniquement les éléments que vous lui avez attribués.",
       "status": {
         "pending": "En attente",
         "approved": "Approuvé",
@@ -1537,7 +1494,6 @@
     "contactCard": {
       "recipient": "Bénéficiaire",
       "trust": "Confiance",
-      "fragmentAssigned": "Fragment attribué",
       "awaitingKey": "Clé en attente"
     },
     "detail": {
@@ -1549,14 +1505,11 @@
       "invited": "Invité",
       "accepted": "Accepté",
       "recoveryRole": "Rôle de récupération",
-      "recipientOnlyDescription": "Bénéficiaire uniquement — ne détient aucun fragment de récupération. Cette personne reçoit uniquement les éléments du coffre qui lui sont destinés lors d'un déclenchement.",
-      "shardIndex": "Index du fragment",
+      "recipientOnlyDescription": "Bénéficiaire uniquement — aucun rôle de confirmation. Cette personne reçoit uniquement les éléments du coffre qui lui sont destinés lors d'un déclenchement.",
       "awaitingKey": "Clé de chiffrement en attente",
       "awaitingKeyHelp": "Ce contact a accepté l'invitation mais n'a pas encore publié sa clé de chiffrement. Il obtiendra l'accès automatiquement dès qu'il aura terminé la configuration de son compte — aucune action requise de votre part.",
-      "fragmentAssigned": "Fragment attribué",
-      "fragmentAssignedHelp": "Un fragment Shamir chiffré de votre clé maîtresse a été enveloppé avec la clé publique de ce contact, puis stocké. Cette personne devra le soumettre avec le seuil de récupération pour que le coffre puisse être reconstitué.",
-      "verificationHelp": "Vérification cryptographique aller-retour confirmant que la paire de clés du contact est fonctionnelle. Le propriétaire enveloppe un texte clair connu avec la clé publique du contact, et le contact le déchiffre sur son appareil — prouvant qu'il détient la clé privée correspondante sans exposer aucun contenu du coffre.",
-      "lastVerified": "Dernière vérification {relative} ({date}).",
+      "verificationHelp": "Confirmé chaque fois que ce contact ouvre Keeplas et que sa propre clé se déverrouille sur son appareil — la preuve qu'il peut toujours agir comme contact de confiance. Cela ne lui donne jamais accès à votre coffre.",
+      "lastVerified": "Dernière confirmation {relative} ({date}).",
       "itemsReleased": "Éléments libérés vers ce contact",
       "noItemsRouted": "Aucun élément du coffre n'est encore acheminé vers ce contact.",
       "recipientMode": {
@@ -1603,18 +1556,6 @@
       "saving": "Enregistrement…",
       "submit": "Enregistrer les modifications"
     },
-    "distribute": {
-      "heading": "Distribuer les fragments",
-      "help": "Divise votre clé maîtresse en 5 fragments Shamir selon le seuil que vous avez choisi et scelle chaque fragment avec la clé publique d'un contact de confiance. Relancer cette opération redivise la clé et invalide tout fragment précédemment distribué — par conception.",
-      "belowMin": "La récupération nécessite au moins 2 contacts de confiance. Invitez-en et confirmez-en un de plus avant de distribuer.",
-      "pendingOne": "{pending} contact de confiance sur {total} a encore besoin d'un fragment.",
-      "pendingMany": "{pending} contacts de confiance sur {total} ont encore besoin d'un fragment.",
-      "allCurrent": "Tous les contacts de confiance disposent d'un fragment à jour.",
-      "distributing": "Distribution…",
-      "distributeNow": "Distribuer maintenant",
-      "success": "Fragments distribués à tous les contacts éligibles.",
-      "missingMasterKey": "Déverrouillez d'abord votre coffre, puis réessayez."
-    },
     "invite": {
       "errorMissingContact": "Ajoutez un e-mail ou un numéro de téléphone",
       "errorInvalidEmail": "Veuillez saisir un e-mail valide",
@@ -1622,8 +1563,8 @@
       "errorSend": "Échec de l'envoi de l'invitation",
       "titleRecipient": "Ajouter un bénéficiaire",
       "titleTrust": "Inviter un contact de confiance",
-      "descriptionRecipient": "Cette personne recevra des éléments du coffre uniquement lorsqu'un de vos déclencheurs s'active. Elle ne détient aucun fragment de récupération.",
-      "descriptionTrust": "Cette personne recevra un fragment de récupération et pourra vous aider à retrouver l'accès à votre coffre.",
+      "descriptionRecipient": "Cette personne recevra des éléments du coffre uniquement lorsqu'un de vos déclencheurs s'active.",
+      "descriptionTrust": "Cette personne aidera à confirmer s'il vous arrive quelque chose. Elle ne détiendra jamais de clé de votre coffre.",
       "fullNameLabel": "Nom complet *",
       "fullNamePlaceholder": "Saisissez son nom complet",
       "emailLabel": "E-mail",
@@ -1640,14 +1581,14 @@
         "other": "Autre"
       },
       "roleInKeeplasLabel": "Rôle dans Keeplas",
-      "roleInKeeplasHelp": "Contact de confiance = détient un fragment de récupération, compte dans votre limite de 5 contacts de confiance, peut aider à récupérer votre compte. Bénéficiaire uniquement = reçoit des éléments lors d'un déclenchement mais sans rôle de récupération ni limite.",
+      "roleInKeeplasHelp": "Contact de confiance = confirme si vous êtes injoignable, compte dans votre limite de 5 contacts de confiance. Bénéficiaire uniquement = reçoit des éléments lors d'un déclenchement, sans rôle de confirmation ni limite. Aucun des deux ne détient jamais de clé de votre coffre.",
       "trustOption": {
         "title": "Contact de confiance",
-        "description": "Détient un fragment de récupération. Compte dans votre limite de 5 contacts de confiance."
+        "description": "Confirme si vous êtes injoignable. Compte dans votre limite de 5 contacts de confiance."
       },
       "recipientOption": {
         "title": "Bénéficiaire uniquement",
-        "description": "Reçoit des éléments lors d'un déclenchement. Aucun fragment, aucune limite, aucun rôle de récupération."
+        "description": "Reçoit des éléments lors d'un déclenchement. Aucune limite, aucun rôle de confirmation."
       },
       "cancel": "Annuler",
       "sending": "Envoi…",
@@ -2582,8 +2523,8 @@
     "confirmed": {
       "badge": "Confirmé",
       "heading": "Vous êtes désormais contact de confiance",
-      "bodyPre": "Vous faites désormais partie du réseau de récupération de ",
-      "bodyPost": ". Vous pourrez recevoir un fragment de récupération pour aider à protéger son coffre."
+      "bodyPre": "Vous faites désormais partie du cercle de confiance de ",
+      "bodyPost": ". Vous aiderez à confirmer s'il lui arrive quelque chose — vous ne détiendrez aucune partie de sa clé."
     },
     "invite": {
       "badge": "Invitation de contact de confiance",
@@ -2601,8 +2542,8 @@
     "roleFallback": "contact de confiance",
     "meaning": {
       "title": "Ce que cela signifie",
-      "bullet1": "Vous recevrez un fragment de récupération chiffré.",
-      "bullet2": "Il pourra vous être demandé d'aider à récupérer le coffre en cas d'urgence.",
+      "bullet1": "Vous ne détenez aucune clé de son coffre et ne pouvez pas le lire.",
+      "bullet2": "Il pourra vous être demandé de confirmer si cette personne est joignable.",
       "bullet3": "Vous ne verrez jamais le contenu du coffre, sauf si l'accès vous est explicitement accordé."
     },
     "needAccount": "Vous avez besoin d'un compte Keeplas pour accepter cette invitation.",
@@ -2662,7 +2603,7 @@
       "recovery": {
         "badge": "Pilier 4",
         "title": "Récupération",
-        "intro": "Vos 24 mots sont le seul secret sans voie de réinitialisation côté serveur. Si vous les perdez, seuls vos contacts de confiance peuvent vous aider — via le partage de secret Shamir chiffré avec un KEM post-quantique. Nous n'avons aucune clé maîtresse. Aucune porte dérobée.",
+        "intro": "Vos 24 mots sont le seul moyen de reconstituer votre clé maîtresse — il n'existe aucune réinitialisation côté serveur, et vos contacts de confiance n'en détiennent jamais aucune partie. Nous n'avons aucune clé maîtresse. Aucune porte dérobée.",
         "bullets": [
           "Mot de passe perdu → réinitialisez-le avec vos 24 mots. Coffre intact.",
           "2FA perdue → réinitialisez-la avec vos 24 mots.",

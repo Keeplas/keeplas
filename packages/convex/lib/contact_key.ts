@@ -7,7 +7,7 @@ import type { MutationCtx } from "../_generated/server";
  *
  * This closes the gap where a contact accepts an invitation BEFORE their crypto
  * is ready: `acceptInvitation` then stores `contactPublicKey: undefined`, and
- * the owner cannot wrap a shard/DEK to them. The moment the contact finalizes
+ * the owner cannot wrap a DEK to them. The moment the contact finalizes
  * their keypair (`users.setPublicKey`) — or re-publishes from `/shared-with-me`
  * (`republishContactPublicKey`) — this backfills every owner's row so the
  * owner's reactive re-wrap (`getItemsNeedingRewrap`) can grant access.

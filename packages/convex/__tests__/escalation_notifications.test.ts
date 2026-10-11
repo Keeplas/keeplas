@@ -76,7 +76,7 @@ async function seedContact(
   t: TestConvex,
   ownerId: Id<"users">,
   opts: {
-    shardIndex: number;
+    n: number;
     contactUserId?: Id<"users">;
     contactType?: "trust" | "recipient_only";
     phoneNumber?: string;
@@ -87,17 +87,15 @@ async function seedContact(
     ctx.db.insert("trusted_contacts", {
       userId: ownerId,
       contactUserId: opts.contactUserId,
-      name: `Contact ${opts.shardIndex}`,
-      email: `c${opts.shardIndex}@example.com`,
+      name: `Contact ${opts.n}`,
+      email: `c${opts.n}@example.com`,
       phoneNumber: opts.phoneNumber,
       role: "family",
       contactType: opts.contactType ?? "trust",
       invitationStatus: "accepted",
-      invitationToken: `tok-${opts.shardIndex}-${now}`,
+      invitationToken: `tok-${opts.n}-${now}`,
       invitedAt: now,
-      shardIndex: opts.shardIndex,
       contactPublicKey: "pk",
-      shardConfirmed: true,
       createdAt: now,
       updatedAt: now,
     }),
@@ -113,17 +111,17 @@ describe("enterConfirmationStage outbound delivery", () => {
 
     const c1 = await seedUser(t);
     const c2 = await seedUser(t);
-    await seedContact(t, owner, { shardIndex: 2, contactUserId: c1 });
-    await seedContact(t, owner, { shardIndex: 3, contactUserId: c2 });
+    await seedContact(t, owner, { n: 2, contactUserId: c1 });
+    await seedContact(t, owner, { n: 3, contactUserId: c2 });
     // Skipped: recipient_only (not a trust contact)…
     const r = await seedUser(t);
     await seedContact(t, owner, {
-      shardIndex: 4,
+      n: 4,
       contactUserId: r,
       contactType: "recipient_only",
     });
     // …and a trust contact with no account yet (no contactUserId).
-    await seedContact(t, owner, { shardIndex: 5 });
+    await seedContact(t, owner, { n: 5 });
 
     await t.mutation(internal.life_check.enterConfirmationStage, { cycleId });
 
@@ -144,7 +142,7 @@ describe("markUserUnreachable quorum outbound delivery", () => {
 
     const contactUser = await seedUser(t);
     const contactId = await seedContact(t, owner, {
-      shardIndex: 2,
+      n: 2,
       contactUserId: contactUser,
     });
 
@@ -192,8 +190,8 @@ describe("fanOutRelease outbound delivery", () => {
 
     const c1 = await seedUser(t);
     const c2 = await seedUser(t);
-    await seedContact(t, owner, { shardIndex: 2, contactUserId: c1 });
-    await seedContact(t, owner, { shardIndex: 3, contactUserId: c2 });
+    await seedContact(t, owner, { n: 2, contactUserId: c1 });
+    await seedContact(t, owner, { n: 3, contactUserId: c2 });
 
     await t.mutation(internal.release.triggerRelease, {
       userId: owner,

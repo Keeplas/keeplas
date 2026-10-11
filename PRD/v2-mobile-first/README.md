@@ -48,6 +48,7 @@ Business rules: [`design-kit/docs/BUSINESS-RULES.md`](design-kit/docs/BUSINESS-R
 | D11 | Landing page                                         | The Figma "Landing page" (L-01 → L-06) is **out of the current plan** for the app; it is built in the keeplas-website repo                                                                                    | 2026-10-11                   |
 | D12 | Language                                             | English by default, including first launch; French optional, saved on the account; missing FR keys fall back to EN                                                                                            | 2026-10-11 (from design kit) |
 | D13 | Trust contacts                                       | Up to 3 trust contacts; 2 confirmations are enough                                                                                                                                                            | 2026-10-11 (from design kit) |
+| D14 | MasterKey shards (F1 + F2)                           | **Removed entirely**, not re-split into 3 contact shares: once reconstruction is gone, MasterKey shares only keep a collusion risk. Owners whose key was ever split get a **forced** master-key rotation      | 2026-10-11                   |
 
 Still open (design kit `OPEN-DECISIONS.md`): web sidebar labels (proposal: My vault, Shared with me, People, Life check, Devices, Settings; Recovery center from Settings), language selector style, tablet layout.
 
@@ -84,16 +85,16 @@ Each step lists its verification. A phase is done when every check passes.
 
 - [x] Design kit, Figma snapshot and this file under `PRD/v2-mobile-first/` → verify: links in this file resolve
 
-### Phase 1: `apps/mobile` scaffold
+### Phase 1: `apps/mobile` scaffold (done)
 
-- [ ] Expo app in `apps/mobile`, wired into pnpm workspace + Turborepo, no features → verify: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm build` green; web unaffected
-- [ ] Load the design-kit tokens (`tokens/theme.ts`) and fonts (Source Serif 4, Inter via `expo-font`) → verify: app boots on iOS simulator with a token-styled placeholder screen
+- [x] Expo app in `apps/mobile`, wired into pnpm workspace + Turborepo, no features → verify: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm build` green; web unaffected
+- [x] Load the design-kit tokens (`tokens/theme.ts`) and fonts (Source Serif 4, Inter via `expo-font`) → verify: app boots on iOS simulator with a token-styled placeholder screen
 
-### Phase 2: Stop the leaks (F2 → F1 → F5)
+### Phase 2: Stop the leaks (F2 → F1 → F5) (done)
 
-- [ ] 3 contact shares only; migrate existing users; delete the device shard → verify: Vitest proves no share is written to local storage and 2 contacts are still required
-- [ ] Remove master-key reconstruction (UI + Convex endpoints) → verify: test that no contact can obtain the owner MasterKey; memorial release tests still green
-- [ ] Remove `release_anyway` → verify: test that a missed confirmation window never releases
+- [x] No MasterKey shares at all (D14); purge server + browser shards; forced rotation for exposed owners → verify: `stop_leaks.test.ts` (purge migration, no shard slot, rotation flag); `pnpm check:zk` forbids `@keeplas/crypto/shamir` in `apps/web`; 2 contacts still required (`hub.test.ts`, quorum tests)
+- [x] Remove master-key reconstruction (UI + Convex endpoints) → verify: `stop_leaks.test.ts` proves no contact endpoint serves a shard, even from a legacy row after a release; memorial release tests still green
+- [x] Remove `release_anyway` → verify: `life_check.test.ts` proves a missed confirmation window never releases, even with a legacy config; `retireReleaseAnyway` migration test
 
 ### Phase 3: Design system v2
 
