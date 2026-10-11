@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -9,6 +10,11 @@ import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import {
+  categoryCounts,
+  isInbox,
+  useVaultData,
+} from "@/features/vault/vault-data";
 import {
   greetingKey,
   groupCategoryCounts,
@@ -25,10 +31,12 @@ import { colors as palette, radius, withAlpha } from "@/theme";
  * titles) arrives with capture in the next part.
  */
 export default function Home() {
+  const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
   const viewer = useViewer();
   const hub = useQuery(api.hub.getHubData);
+  const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
   useEffect(() => {
@@ -39,7 +47,8 @@ export default function Home() {
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   // Categories are encrypted (F4): counted on the device once the vault list
   // decrypts item metadata (capture part).
-  const groups = groupCategoryCounts({});
+  const groups = groupCategoryCounts(categoryCounts(items ?? []));
+  const inboxCount = (items ?? []).filter(isInbox).length + pending.length;
   const contactsReady =
     hub?.priorityActions.find((a) => a.key === "contacts_ready")?.done ?? false;
   // Ways back in: this phone, 2 ready trust contacts, the recovery kit.
@@ -109,7 +118,7 @@ export default function Home() {
       <ListRow
         icon="mail"
         title={t("home.inbox")}
-        description={t("home.inboxBody")}
+        description={inboxCount ? itemCount(inboxCount) : t("home.inboxBody")}
         onPress={soon}
       />
       <View style={styles.sectionHeader}>
@@ -118,9 +127,30 @@ export default function Home() {
           {t("common.seeAll")}
         </Text>
       </View>
-      <Text variant="body-sm" color="text.muted">
-        {t("home.recentEmpty")}
-      </Text>
+      {pending.slice(0, 3).map(({ entry, title }) => (
+        <ListRow
+          key={entry.id}
+          icon="cloud-upload"
+          title={title ?? t("capture.untitled")}
+          description={t(`home.outbox.${entry.status}`)}
+        />
+      ))}
+      {(items ?? []).slice(0, 5).map((item) => (
+        <ListRow
+          key={item.id}
+          icon="document"
+          title={item.title ?? t("item.decrypting")}
+          description={t(`capture.category.${item.category}`)}
+          onPress={() =>
+            router.push({ pathname: "/item/[id]", params: { id: item.id } })
+          }
+        />
+      ))}
+      {items?.length === 0 && pending.length === 0 ? (
+        <Text variant="body-sm" color="text.muted">
+          {t("home.recentEmpty")}
+        </Text>
+      ) : null}
     </Screen>
   );
 }

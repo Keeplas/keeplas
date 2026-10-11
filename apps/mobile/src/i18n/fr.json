@@ -153,7 +153,16 @@
     "title": "Ouvrir votre coffre avec votre kit",
     "body": "Ce téléphone ne détient pas encore la clé de votre coffre. Saisissez les 24 mots de votre kit de récupération, séparés par des espaces.",
     "cta": "Ouvrir mon coffre",
-    "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre."
+    "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
+    "contactsCta": "Demander à mes contacts"
+  },
+  "socialRecovery": {
+    "title": "Récupérer avec mes contacts",
+    "body": "Deux contacts doivent approuver. Keeplas attend ensuite 72 heures avant de libérer la clé protégée.",
+    "start": "Démarrer la récupération",
+    "codeBody": "Appelez chaque contact et comparez ce code à 6 chiffres. Ne l'envoyez pas par message.",
+    "waiting": "En attente",
+    "restore": "Restaurer mon coffre"
   },
   "home": {
     "greetingMorning": "Bonjour",
@@ -172,7 +181,13 @@
     "inbox": "Boîte chiffrée",
     "inboxBody": "Les éléments à trier apparaîtront ici",
     "recent": "Éléments récents",
-    "recentEmpty": "La liste de votre coffre arrive avec la capture dans la prochaine mise à jour."
+    "recentEmpty": "Votre coffre est prêt pour son premier élément.",
+    "outbox": {
+      "waiting": "En attente d'envoi",
+      "uploading": "Envoi de la copie chiffrée",
+      "failed": "Échec de l'envoi",
+      "quota": "Stockage plein"
+    }
   },
   "settings": {
     "title": "Réglages",
@@ -210,7 +225,30 @@
     "devices": "Appareils",
     "devicesBody": "Gérez les appareils connectés à votre compte.",
     "activity": "Activité du compte",
-    "activityBody": "Consultez les connexions et l'activité récente."
+    "activityBody": "Consultez les connexions et l'activité récente.",
+    "recovery": "Centre de récupération",
+    "recoveryBody": "Contacts, demandes et état de récupération."
+  },
+  "recoveryCenter": {
+    "title": "Centre de récupération",
+    "body": "Préparez vos contacts pour que deux d'entre eux puissent vous aider si vous perdez tous vos appareils.",
+    "ready": "Récupération par contacts prête",
+    "notReady": "Récupération non configurée",
+    "configure": "Configurer la récupération",
+    "renew": "Renouveler la configuration",
+    "needTwo": "Au moins 2 contacts acceptés avec un compte Keeplas sont nécessaires.",
+    "requests": "Demandes pour moi",
+    "owner": "Propriétaire du coffre",
+    "review": "Vérifier la demande"
+  },
+  "approval": {
+    "title": "Approbation de récupération",
+    "body": "Appelez {name} avec un numéro que vous connaissez déjà.",
+    "showCode": "Afficher le code",
+    "code": "Code de comparaison",
+    "call": "Comparez le code oralement. Une différence peut indiquer une interception.",
+    "matches": "Le code correspond — approuver",
+    "mismatch": "Le code ne correspond pas"
   },
   "devices": {
     "title": "Appareils",
@@ -421,9 +459,62 @@
     "attachments": "Pièces jointes",
     "encrypted": "Ces informations sont déchiffrées uniquement sur ce téléphone."
   },
+  "people": {
+    "title": "Contacts",
+    "body": "Contacts de confiance et personnes qui partagent avec vous.",
+    "add": "Ajouter",
+    "trusted": "Contacts de confiance",
+    "empty": "Aucun contact de confiance.",
+    "sharedWithMe": "Partagé avec moi",
+    "sharedFolder": "Dossier partagé",
+    "items": "{n} éléments",
+    "notAvailable": "Disponible après vérification",
+    "available": "Disponible",
+    "later": "Plus tard",
+    "addTitle": "Ajouter un contact",
+    "addBody": "Invitez jusqu'à 3 personnes. Deux peuvent vous aider à récupérer l'accès et confirmer un décès.",
+    "name": "Nom",
+    "email": "E-mail (facultatif)",
+    "phone": "Téléphone (facultatif)",
+    "sendInvite": "Envoyer l'invitation",
+    "status": {
+      "pending": "Invité",
+      "accepted": "Actif",
+      "declined": "Refusé",
+      "revoked": "Retiré"
+    }
+  },
+  "lifeCheck": {
+    "title": "Life check",
+    "body": "Choisissez à quelle fréquence Keeplas doit vous demander de confirmer.",
+    "notConfigured": "Choisir la fréquence",
+    "imOkay": "Je vais bien",
+    "imOkayBody": "Réinitialiser le compte à rebours",
+    "travel": "Mode voyage",
+    "travelOn": "En pause pendant votre voyage",
+    "travelOff": "Suspendre les contrôles 30 jours",
+    "note": "Si vous manquez la fenêtre, vos contacts doivent confirmer avant toute transmission."
+  },
+  "backup": {
+    "title": "Sauvegarde cloud",
+    "bodyShort": "Récupération iCloud ou Google chiffrée",
+    "body": "Keeplas conserve une enveloppe chiffrée. La clé reste séparément dans le trousseau synchronisé de votre plateforme.",
+    "risk": "Une personne qui contrôle à la fois votre compte Apple ou Google et le code d'un appareil pourrait restaurer cette sauvegarde.",
+    "auth": "Confirmer la sauvegarde cloud",
+    "noRootKey": "Ce téléphone ne peut pas créer la sauvegarde. Créez d'abord un nouveau kit de récupération.",
+    "enable": "Activer la sauvegarde",
+    "disable": "Désactiver et supprimer",
+    "on": "Activée",
+    "off": "Désactivée"
+  },
   "invite": {
     "title": "Vous avez été invité",
-    "body": "L'acceptation des invitations arrive dans la prochaine mise à jour de l'app. Gardez ce lien : vous pourrez l'accepter à ce moment-là.",
+    "body": "Vérifiez cette invitation comme contact de confiance.",
+    "from": "{name} vous invite comme contact de confiance. Vous pourrez aider à la récupération sans lire son coffre.",
+    "invalid": "Cette invitation est invalide, expirée ou déjà traitée.",
+    "accept": "Accepter l'invitation",
+    "decline": "Refuser",
+    "signIn": "Se connecter pour répondre",
     "cta": "Aller sur Keeplas"
   }
 }

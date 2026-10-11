@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
-import { Stack, useRouter } from "expo-router";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { createPublicKeyMaterial } from "@/crypto/vault-keys";
+import { StateSheet } from "@/components/state-message";
 import { hasPendingLink } from "@/features/link/pending-link";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -24,6 +25,10 @@ export default function AppLayout() {
   const ensureDevice = useEnsureDevice();
   const setPublicKey = useAuditedMutation(api.users.setPublicKey);
   const alerts = useQuery(api.devices.pendingAlerts);
+  const activeLifeCheck = useQuery(api.life_check.getActiveCycle);
+  const validateLifeCheck = useAuditedMutation(api.life_check.validateCycle);
+  const postponeLifeCheck = useAuditedMutation(api.life_check.postponeCycle);
+  const pathname = usePathname();
   const shownAlerts = useRef(new Set<string>());
   const publishing = useRef(false);
 
@@ -55,6 +60,22 @@ export default function AppLayout() {
   return (
     <VaultDataProvider>
       <Stack screenOptions={{ headerShown: false }} />
+      <StateSheet
+        visible={!!activeLifeCheck && pathname !== "/life-check"}
+        onDismiss={() => undefined}
+        icon="shield-check"
+        tone="info"
+        title="Life check"
+        body="Let us know you're okay. This resets the safety countdown."
+        primary={{
+          label: "I'm okay",
+          onPress: () => void validateLifeCheck({ method: "tap" }),
+        }}
+        secondary={{
+          label: "Remind me in 48 hours",
+          onPress: () => void postponeLifeCheck({ duration: "48h" }),
+        }}
+      />
     </VaultDataProvider>
   );
 }

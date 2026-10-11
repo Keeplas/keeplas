@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -17,6 +18,7 @@ import { useVault } from "@/providers/vault-provider";
  * the key bundle, then the key goes behind this phone's biometrics.
  */
 export default function RecoveryKitEntry() {
+  const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
   const { adopt } = useVault();
@@ -69,6 +71,11 @@ export default function RecoveryKitEntry() {
         loading={busy}
         disabled={words.trim().split(/\s+/).length !== 24}
         onPress={open}
+      />
+      <Button
+        variant="secondary"
+        label={t("recoveryKit.contactsCta")}
+        onPress={() => router.push("/contact-recovery")}
       />
       <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>

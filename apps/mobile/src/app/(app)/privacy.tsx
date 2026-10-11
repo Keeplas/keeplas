@@ -18,6 +18,11 @@ export default function Privacy() {
     { key: "passkey", icon: "fingerprint" },
     { key: "pin", icon: "pin" },
     { key: "kit", icon: "lifebuoy" },
+    {
+      key: "recovery",
+      icon: "shield-check",
+      onPress: () => router.push("/recovery"),
+    },
     { key: "devices", icon: "laptop", onPress: () => router.push("/devices") },
     { key: "activity", icon: "activity" },
   ];

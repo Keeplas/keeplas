@@ -82,8 +82,22 @@ export default function Settings() {
           icon="clock"
           title={t("settings.lifeCheck")}
           description={t(`frequency.${lifeCheck.frequency}`)}
+          onPress={() => router.push("/life-check")}
         />
-      ) : null}
+      ) : (
+        <ListRow
+          icon="clock"
+          title={t("settings.lifeCheck")}
+          description={t("lifeCheck.notConfigured")}
+          onPress={() => router.push("/life-check")}
+        />
+      )}
+      <ListRow
+        icon="cloud-upload"
+        title={t("backup.title")}
+        description={t("backup.bodyShort")}
+        onPress={() => router.push("/backup")}
+      />
       <ListRow
         icon="globe"
         title={t("common.language")}

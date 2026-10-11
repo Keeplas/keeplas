@@ -23,7 +23,7 @@ import { resolveLocale, type Locale } from "./lib/locale";
 import { formatSenderIdentity } from "./lib/identity";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
-const MAX_TRUST_CONTACTS = 5;
+const MAX_TRUST_CONTACTS = 3;
 
 /**
  * Minimum trust contacts for a working continuity setup. A single guardian is
@@ -196,7 +196,7 @@ export const inviteContact = auditedMutation({
         (c) => (c.contactType ?? "trust") === "trust",
       ).length;
       if (trustCount >= MAX_TRUST_CONTACTS) {
-        throw new Error("Maximum of 5 trusted contacts reached");
+        throw new Error("Maximum of 3 trusted contacts reached");
       }
     }
 
