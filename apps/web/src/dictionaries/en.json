@@ -237,6 +237,23 @@
       "stop": "Stop",
       "reRecord": "Re-record",
       "attachToVault": "Attach to vault"
+    },
+    "offline": {
+      "title": "You're offline",
+      "body": "Keeplas reconnects on its own. Changes you make now are saved once you're back online.",
+      "ok": "OK"
+    },
+    "permissionOff": {
+      "retry": "Try again",
+      "notNow": "Not now",
+      "camera": {
+        "title": "Camera access is off",
+        "body": "Allow the camera in your browser's site settings to record videos."
+      },
+      "microphone": {
+        "title": "Microphone access is off",
+        "body": "Allow the microphone in your browser settings."
+      }
     }
   },
   "hub": {
@@ -1313,10 +1330,21 @@
       "savedTitle": "Attachments saved",
       "savedDescription": "{label} — {count} file encrypted and uploaded",
       "savedDescriptionPlural": "{label} — {count} files encrypted and uploaded",
-      "failedTitle": "Some attachments failed",
-      "failedDescription": "{label} — {completed}/{total} saved · {failed} failed ({error})",
-      "retryAltText": "Retry failed attachments",
-      "retry": "Retry"
+      "state": {
+        "failed": {
+          "title": "Upload failed",
+          "body": "“{name}” didn't upload. It stays on this page until you retry or leave.",
+          "retry": "Retry",
+          "remove": "Remove from queue"
+        },
+        "full": {
+          "title": "Your {quota} are full",
+          "bodyFree": "Free storage is used up. Delete items or go Lifetime for 10 GB.",
+          "body": "Your storage is used up. Delete items to free up space.",
+          "upgrade": "Get Lifetime",
+          "manage": "Manage storage"
+        }
+      }
     },
     "page": {
       "loading": "Loading your vault",

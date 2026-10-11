@@ -237,6 +237,23 @@
       "stop": "Arrêter",
       "reRecord": "Réenregistrer",
       "attachToVault": "Joindre au coffre"
+    },
+    "offline": {
+      "title": "Vous êtes hors ligne",
+      "body": "Keeplas se reconnecte tout seul. Vos modifications sont enregistrées dès que la connexion revient.",
+      "ok": "OK"
+    },
+    "permissionOff": {
+      "retry": "Réessayer",
+      "notNow": "Plus tard",
+      "camera": {
+        "title": "L'accès à la caméra est désactivé",
+        "body": "Autorisez la caméra dans les réglages du site de votre navigateur pour enregistrer des vidéos."
+      },
+      "microphone": {
+        "title": "L'accès au micro est désactivé",
+        "body": "Autorisez le micro dans les réglages du navigateur."
+      }
     }
   },
   "hub": {
@@ -1313,10 +1330,21 @@
       "savedTitle": "Pièces jointes enregistrées",
       "savedDescription": "{label} — {count} fichier chiffré et téléversé",
       "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
-      "failedTitle": "Échec de certaines pièces jointes",
-      "failedDescription": "{label} — {completed}/{total} fichiers enregistrés · {failed} en échec ({error})",
-      "retryAltText": "Réessayer l'envoi des pièces jointes en échec",
-      "retry": "Réessayer"
+      "state": {
+        "failed": {
+          "title": "Échec de l'envoi",
+          "body": "« {name} » n'a pas été envoyé. Il reste sur cette page jusqu'à ce que vous réessayiez ou la quittiez.",
+          "retry": "Réessayer",
+          "remove": "Retirer de la file"
+        },
+        "full": {
+          "title": "Vos {quota} sont pleins",
+          "bodyFree": "L'espace gratuit est utilisé. Supprimez des éléments ou passez à l'offre À vie pour 10 Go.",
+          "body": "Votre espace est utilisé. Supprimez des éléments pour en libérer.",
+          "upgrade": "Passer à l'offre À vie",
+          "manage": "Gérer le stockage"
+        }
+      }
     },
     "page": {
       "loading": "Chargement de votre coffre",

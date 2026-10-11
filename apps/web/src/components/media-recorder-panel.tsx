@@ -10,6 +10,7 @@ import {
   useConfirm,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { PermissionOffMessage } from "@/components/permission-off-message";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 import {
@@ -82,6 +83,10 @@ function formatDuration(totalSec: number): string {
     .padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
+
+/** The browser refused the camera / microphone (not a cancelled screen pick). */
+const isPermissionDenied = (err: unknown, mode: RecorderMode) =>
+  mode !== "screen" && (err as { name?: string }).name === "NotAllowedError";
 
 function friendlyError(
   err: unknown,
@@ -198,6 +203,7 @@ export function MediaRecorderPanel({
   }, []);
 
   const [error, setError] = useState<string>("");
+  const [denied, setDenied] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [paused, setPaused] = useState(false);
   // Mirror + accumulators so the elapsed clock and final duration exclude
@@ -436,6 +442,7 @@ export function MediaRecorderPanel({
         setPhase("live");
       } catch (err) {
         if (!cancelled) {
+          setDenied(isPermissionDenied(err, mode));
           setError(friendlyError(err, mode, t));
           setPhase("error");
         }
@@ -509,6 +516,7 @@ export function MediaRecorderPanel({
     stopCameo();
     teardownAudioAnalyser();
     setError("");
+    setDenied(false);
     // Screen acquisition needs a user gesture — return to the idle "click Start"
     // state; handleStart re-acquires on the next click.
     if (mode === "screen") {
@@ -525,6 +533,7 @@ export function MediaRecorderPanel({
       if (mode === "audio") setupAudioAnalyser(stream);
       setPhase("live");
     } catch (err) {
+      setDenied(isPermissionDenied(err, mode));
       setError(friendlyError(err, mode, t));
       setPhase("error");
     }
@@ -872,6 +881,18 @@ export function MediaRecorderPanel({
 
   const showCameraToggle =
     mode === "screen" && (phase === "live" || phase === "recording");
+
+  if (denied) {
+    return (
+      <div className="flex justify-center rounded-lg bg-bg-app">
+        <PermissionOffMessage
+          device={mode === "audio" ? "microphone" : "camera"}
+          onRetry={() => void handleRetryWarm()}
+          onDismiss={onCancel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

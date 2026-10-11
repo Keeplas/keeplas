@@ -8,6 +8,7 @@ import { ShellAccountProvider } from "@/components/shell/shell-account";
 import { UnlockGate } from "@/components/unlock-gate";
 import { ForcedRotationGate } from "@/components/forced-rotation-gate";
 import { LifeCheckPrompt } from "@/components/life-check-prompt";
+import { OfflineNotice } from "@/components/offline-notice";
 import { UploadQueueProvider } from "@/lib/upload-queue";
 import { useTranslations } from "@/lib/i18n";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
@@ -90,6 +91,7 @@ function DashboardLayout() {
         <PendingShareBackfill />
         <ForcedRotationGate />
         <LifeCheckPrompt />
+        <OfflineNotice />
         <ShellAccountProvider
           account={{
             initials: getInitials(viewer?.name, 1),

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, Dialog, DialogContent, DialogTitle } from "@keeplas/ui";
+import { Button } from "@keeplas/ui";
+import { StateDialog } from "@/components/state-dialog";
 import { StateMessage } from "@/components/state-message";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
@@ -37,14 +38,12 @@ export function ForcedRotationGate() {
   if (!viewer?.masterKeyRotationRequired || dismissed) return null;
 
   return (
-    <Dialog open onOpenChange={(open) => setDismissed(!open)}>
-      <DialogContent
-        overlayClassName="bg-scrim backdrop-blur-none"
-        className="w-[456px] max-w-[calc(100%-32px)] rounded-lg border border-border-default bg-bg-surface p-0 shadow-card"
-      >
-        <DialogTitle className="sr-only">{t("title")}</DialogTitle>
-        <SecureOnPhoneMessage onClose={() => setDismissed(true)} />
-      </DialogContent>
-    </Dialog>
+    <StateDialog
+      open
+      onOpenChange={(open) => setDismissed(!open)}
+      title={t("title")}
+    >
+      <SecureOnPhoneMessage onClose={() => setDismissed(true)} />
+    </StateDialog>
   );
 }

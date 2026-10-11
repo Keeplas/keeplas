@@ -10,6 +10,7 @@ import {
   DialogTitle,
   toast,
 } from "@keeplas/ui";
+import { StateDialog } from "@/components/state-dialog";
 import { StateMessage } from "@/components/state-message";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
@@ -62,51 +63,48 @@ export function LifeCheckModal({
   busy: boolean;
 }) {
   const t = useTranslations("lifeCheck.prompt");
+  // Answering is the only way out: Escape and outside clicks do nothing.
+  const stayOpen = () => {};
+  if (missed) {
+    return (
+      <StateDialog open onOpenChange={stayOpen} title={t("missed.title")}>
+        <LifeCheckMissedMessage onConfirm={onConfirm} busy={busy} />
+      </StateDialog>
+    );
+  }
   return (
-    <Dialog open>
+    <Dialog open onOpenChange={stayOpen}>
       <DialogContent
         overlayClassName="bg-scrim backdrop-blur-none"
-        onEscapeKeyDown={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
         className={cn(
-          "flex max-w-[calc(100%-32px)] flex-col items-center gap-[18px] rounded-lg border border-border-default bg-bg-surface text-center shadow-card",
-          missed ? "w-[456px] p-0" : "w-[520px] p-[40px]",
+          "flex w-[520px] max-w-[calc(100%-32px)] flex-col items-center gap-[18px] rounded-lg border border-border-default bg-bg-surface p-[40px] text-center shadow-card",
           // Figma centers the modal on the main column, 147 px from the top.
           "md:left-[calc(50%+124px)] md:top-[max(24px,calc(50%-303px))] md:translate-y-0",
         )}
       >
-        {missed ? (
-          <>
-            <DialogTitle className="sr-only">{t("missed.title")}</DialogTitle>
-            <LifeCheckMissedMessage onConfirm={onConfirm} busy={busy} />
-          </>
-        ) : (
-          <>
-            <img
-              src="/assets/illustrations/desktop-modal-crest.svg"
-              alt=""
-              width={440}
-              height={275}
-              className="h-auto w-full max-w-[440px]"
-            />
-            <DialogTitle className="text-h1 text-text-primary">
-              {t("title")}
-            </DialogTitle>
-            <DialogDescription className="text-body-lg text-text-muted">
-              {t("body")}
-            </DialogDescription>
-            <Button
-              variant="primary"
-              size="cta"
-              className="w-full"
-              onClick={onConfirm}
-              disabled={busy}
-            >
-              {t("confirm")}
-            </Button>
-            <p className="text-body-sm text-text-muted">{t("footer")}</p>
-          </>
-        )}
+        <img
+          src="/assets/illustrations/desktop-modal-crest.svg"
+          alt=""
+          width={440}
+          height={275}
+          className="h-auto w-full max-w-[440px]"
+        />
+        <DialogTitle className="text-h1 text-text-primary">
+          {t("title")}
+        </DialogTitle>
+        <DialogDescription className="text-body-lg text-text-muted">
+          {t("body")}
+        </DialogDescription>
+        <Button
+          variant="primary"
+          size="cta"
+          className="w-full"
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {t("confirm")}
+        </Button>
+        <p className="text-body-sm text-text-muted">{t("footer")}</p>
       </DialogContent>
     </Dialog>
   );
