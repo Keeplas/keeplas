@@ -10,6 +10,7 @@
 
 import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
+import type * as account_migration from "../account_migration.js";
 import type * as admin_access from "../admin/access.js";
 import type * as admin_activity from "../admin/activity.js";
 import type * as admin_analytics from "../admin/analytics.js";
@@ -45,6 +46,7 @@ import type * as lib_phone from "../lib/phone.js";
 import type * as lib_plans from "../lib/plans.js";
 import type * as lib_rate_limit from "../lib/rate_limit.js";
 import type * as lib_require_env from "../lib/require_env.js";
+import type * as lib_sessions from "../lib/sessions.js";
 import type * as lib_storage from "../lib/storage.js";
 import type * as lib_stripe_webhook from "../lib/stripe_webhook.js";
 import type * as life_check from "../life_check.js";
@@ -81,6 +83,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
+  account_migration: typeof account_migration;
   "admin/access": typeof admin_access;
   "admin/activity": typeof admin_activity;
   "admin/analytics": typeof admin_analytics;
@@ -116,6 +119,7 @@ declare const fullApi: ApiFromModules<{
   "lib/plans": typeof lib_plans;
   "lib/rate_limit": typeof lib_rate_limit;
   "lib/require_env": typeof lib_require_env;
+  "lib/sessions": typeof lib_sessions;
   "lib/storage": typeof lib_storage;
   "lib/stripe_webhook": typeof lib_stripe_webhook;
   life_check: typeof life_check;
