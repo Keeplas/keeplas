@@ -19,6 +19,7 @@ import { Route as GetTheAppIndexRouteImport } from './routes/get-the-app/index'
 import { Route as LinkIndexRouteImport } from './routes/link/index'
 import { Route as SecurityIndexRouteImport } from './routes/security/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
+import { Route as DashboardDevicesIndexRouteImport } from './routes/_dashboard/devices/index'
 import { Route as DashboardDocsIndexRouteImport } from './routes/_dashboard/docs/index'
 import { Route as DashboardHubIndexRouteImport } from './routes/_dashboard/hub/index'
 import { Route as DashboardLifeCheckIndexRouteImport } from './routes/_dashboard/life-check/index'
@@ -38,13 +39,12 @@ import { Route as DashboardDocsLifeCheckIndexRouteImport } from './routes/_dashb
 import { Route as DashboardDocsRecoveryIndexRouteImport } from './routes/_dashboard/docs/recovery/index'
 import { Route as DashboardDocsTrustedContactsIndexRouteImport } from './routes/_dashboard/docs/trusted-contacts/index'
 import { Route as DashboardDocsVaultIndexRouteImport } from './routes/_dashboard/docs/vault/index'
+import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/_dashboard/settings/account/index'
 import { Route as DashboardSettingsContactIndexRouteImport } from './routes/_dashboard/settings/contact/index'
-import { Route as DashboardSettingsContinuityIndexRouteImport } from './routes/_dashboard/settings/continuity/index'
 import { Route as DashboardSettingsPreferencesIndexRouteImport } from './routes/_dashboard/settings/preferences/index'
+import { Route as DashboardSettingsRecoveryIndexRouteImport } from './routes/_dashboard/settings/recovery/index'
 import { Route as DashboardSettingsRoadmapIndexRouteImport } from './routes/_dashboard/settings/roadmap/index'
-import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/_dashboard/settings/security/index'
 import { Route as DashboardSettingsSubscriptionIndexRouteImport } from './routes/_dashboard/settings/subscription/index'
-import { Route as DashboardSettingsUsageIndexRouteImport } from './routes/_dashboard/settings/usage/index'
 import { Route as DashboardVaultItemIdIndexRouteImport } from './routes/_dashboard/vault/$itemId/index'
 import { Route as DashboardSharedWithMeContactIdMemorialIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/index'
 import { Route as DashboardSharedWithMeContactIdMemorialItemIdIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/$itemId/index'
@@ -96,6 +96,11 @@ const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
   id: '/login/',
   path: '/login/',
   getParentRoute: () => AuthRoute,
+} as any)
+const DashboardDevicesIndexRoute = DashboardDevicesIndexRouteImport.update({
+  id: '/devices/',
+  path: '/devices/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDocsIndexRoute = DashboardDocsIndexRouteImport.update({
   id: '/docs/',
@@ -200,16 +205,16 @@ const DashboardDocsVaultIndexRoute = DashboardDocsVaultIndexRouteImport.update({
   path: '/docs/vault/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSettingsAccountIndexRoute =
+  DashboardSettingsAccountIndexRouteImport.update({
+    id: '/account/',
+    path: '/account/',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
 const DashboardSettingsContactIndexRoute =
   DashboardSettingsContactIndexRouteImport.update({
     id: '/contact/',
     path: '/contact/',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsContinuityIndexRoute =
-  DashboardSettingsContinuityIndexRouteImport.update({
-    id: '/continuity/',
-    path: '/continuity/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardSettingsPreferencesIndexRoute =
@@ -218,28 +223,22 @@ const DashboardSettingsPreferencesIndexRoute =
     path: '/preferences/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
+const DashboardSettingsRecoveryIndexRoute =
+  DashboardSettingsRecoveryIndexRouteImport.update({
+    id: '/recovery/',
+    path: '/recovery/',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
 const DashboardSettingsRoadmapIndexRoute =
   DashboardSettingsRoadmapIndexRouteImport.update({
     id: '/roadmap/',
     path: '/roadmap/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
-const DashboardSettingsSecurityIndexRoute =
-  DashboardSettingsSecurityIndexRouteImport.update({
-    id: '/security/',
-    path: '/security/',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
 const DashboardSettingsSubscriptionIndexRoute =
   DashboardSettingsSubscriptionIndexRouteImport.update({
     id: '/subscription/',
     path: '/subscription/',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
-const DashboardSettingsUsageIndexRoute =
-  DashboardSettingsUsageIndexRouteImport.update({
-    id: '/usage/',
-    path: '/usage/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
 const DashboardVaultItemIdIndexRoute =
@@ -270,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
   '/login/': typeof AuthLoginIndexRoute
+  '/devices/': typeof DashboardDevicesIndexRoute
   '/docs/': typeof DashboardDocsIndexRoute
   '/hub/': typeof DashboardHubIndexRoute
   '/life-check/': typeof DashboardLifeCheckIndexRoute
@@ -289,13 +289,12 @@ export interface FileRoutesByFullPath {
   '/docs/recovery/': typeof DashboardDocsRecoveryIndexRoute
   '/docs/trusted-contacts/': typeof DashboardDocsTrustedContactsIndexRoute
   '/docs/vault/': typeof DashboardDocsVaultIndexRoute
+  '/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/settings/contact/': typeof DashboardSettingsContactIndexRoute
-  '/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
+  '/settings/recovery/': typeof DashboardSettingsRecoveryIndexRoute
   '/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
-  '/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
-  '/settings/usage/': typeof DashboardSettingsUsageIndexRoute
   '/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
   '/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
@@ -308,6 +307,7 @@ export interface FileRoutesByTo {
   '/link': typeof LinkIndexRoute
   '/security': typeof SecurityIndexRoute
   '/login': typeof AuthLoginIndexRoute
+  '/devices': typeof DashboardDevicesIndexRoute
   '/docs': typeof DashboardDocsIndexRoute
   '/hub': typeof DashboardHubIndexRoute
   '/life-check': typeof DashboardLifeCheckIndexRoute
@@ -327,13 +327,12 @@ export interface FileRoutesByTo {
   '/docs/recovery': typeof DashboardDocsRecoveryIndexRoute
   '/docs/trusted-contacts': typeof DashboardDocsTrustedContactsIndexRoute
   '/docs/vault': typeof DashboardDocsVaultIndexRoute
+  '/settings/account': typeof DashboardSettingsAccountIndexRoute
   '/settings/contact': typeof DashboardSettingsContactIndexRoute
-  '/settings/continuity': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences': typeof DashboardSettingsPreferencesIndexRoute
+  '/settings/recovery': typeof DashboardSettingsRecoveryIndexRoute
   '/settings/roadmap': typeof DashboardSettingsRoadmapIndexRoute
-  '/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription': typeof DashboardSettingsSubscriptionIndexRoute
-  '/settings/usage': typeof DashboardSettingsUsageIndexRoute
   '/vault/$itemId': typeof DashboardVaultItemIdIndexRoute
   '/shared-with-me/$contactId/memorial': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
@@ -350,6 +349,7 @@ export interface FileRoutesById {
   '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
+  '/_dashboard/devices/': typeof DashboardDevicesIndexRoute
   '/_dashboard/docs/': typeof DashboardDocsIndexRoute
   '/_dashboard/hub/': typeof DashboardHubIndexRoute
   '/_dashboard/life-check/': typeof DashboardLifeCheckIndexRoute
@@ -369,13 +369,12 @@ export interface FileRoutesById {
   '/_dashboard/docs/recovery/': typeof DashboardDocsRecoveryIndexRoute
   '/_dashboard/docs/trusted-contacts/': typeof DashboardDocsTrustedContactsIndexRoute
   '/_dashboard/docs/vault/': typeof DashboardDocsVaultIndexRoute
+  '/_dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/_dashboard/settings/contact/': typeof DashboardSettingsContactIndexRoute
-  '/_dashboard/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/_dashboard/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
+  '/_dashboard/settings/recovery/': typeof DashboardSettingsRecoveryIndexRoute
   '/_dashboard/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
-  '/_dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/_dashboard/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
-  '/_dashboard/settings/usage/': typeof DashboardSettingsUsageIndexRoute
   '/_dashboard/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
@@ -391,6 +390,7 @@ export interface FileRouteTypes {
     | '/link/'
     | '/security/'
     | '/login/'
+    | '/devices/'
     | '/docs/'
     | '/hub/'
     | '/life-check/'
@@ -410,13 +410,12 @@ export interface FileRouteTypes {
     | '/docs/recovery/'
     | '/docs/trusted-contacts/'
     | '/docs/vault/'
+    | '/settings/account/'
     | '/settings/contact/'
-    | '/settings/continuity/'
     | '/settings/preferences/'
+    | '/settings/recovery/'
     | '/settings/roadmap/'
-    | '/settings/security/'
     | '/settings/subscription/'
-    | '/settings/usage/'
     | '/vault/$itemId/'
     | '/shared-with-me/$contactId/memorial/'
     | '/shared-with-me/$contactId/memorial/$itemId/'
@@ -429,6 +428,7 @@ export interface FileRouteTypes {
     | '/link'
     | '/security'
     | '/login'
+    | '/devices'
     | '/docs'
     | '/hub'
     | '/life-check'
@@ -448,13 +448,12 @@ export interface FileRouteTypes {
     | '/docs/recovery'
     | '/docs/trusted-contacts'
     | '/docs/vault'
+    | '/settings/account'
     | '/settings/contact'
-    | '/settings/continuity'
     | '/settings/preferences'
+    | '/settings/recovery'
     | '/settings/roadmap'
-    | '/settings/security'
     | '/settings/subscription'
-    | '/settings/usage'
     | '/vault/$itemId'
     | '/shared-with-me/$contactId/memorial'
     | '/shared-with-me/$contactId/memorial/$itemId'
@@ -470,6 +469,7 @@ export interface FileRouteTypes {
     | '/link/'
     | '/security/'
     | '/_auth/login/'
+    | '/_dashboard/devices/'
     | '/_dashboard/docs/'
     | '/_dashboard/hub/'
     | '/_dashboard/life-check/'
@@ -489,13 +489,12 @@ export interface FileRouteTypes {
     | '/_dashboard/docs/recovery/'
     | '/_dashboard/docs/trusted-contacts/'
     | '/_dashboard/docs/vault/'
+    | '/_dashboard/settings/account/'
     | '/_dashboard/settings/contact/'
-    | '/_dashboard/settings/continuity/'
     | '/_dashboard/settings/preferences/'
+    | '/_dashboard/settings/recovery/'
     | '/_dashboard/settings/roadmap/'
-    | '/_dashboard/settings/security/'
     | '/_dashboard/settings/subscription/'
-    | '/_dashboard/settings/usage/'
     | '/_dashboard/vault/$itemId/'
     | '/_dashboard/shared-with-me/$contactId/memorial/'
     | '/_dashboard/shared-with-me/$contactId/memorial/$itemId/'
@@ -587,6 +586,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login/'
       preLoaderRoute: typeof AuthLoginIndexRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_dashboard/devices/': {
+      id: '/_dashboard/devices/'
+      path: '/devices'
+      fullPath: '/devices/'
+      preLoaderRoute: typeof DashboardDevicesIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/_dashboard/docs/': {
       id: '/_dashboard/docs/'
@@ -721,18 +727,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDocsVaultIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/settings/account/': {
+      id: '/_dashboard/settings/account/'
+      path: '/account'
+      fullPath: '/settings/account/'
+      preLoaderRoute: typeof DashboardSettingsAccountIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
     '/_dashboard/settings/contact/': {
       id: '/_dashboard/settings/contact/'
       path: '/contact'
       fullPath: '/settings/contact/'
       preLoaderRoute: typeof DashboardSettingsContactIndexRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/_dashboard/settings/continuity/': {
-      id: '/_dashboard/settings/continuity/'
-      path: '/continuity'
-      fullPath: '/settings/continuity/'
-      preLoaderRoute: typeof DashboardSettingsContinuityIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/_dashboard/settings/preferences/': {
@@ -742,6 +748,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsPreferencesIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
+    '/_dashboard/settings/recovery/': {
+      id: '/_dashboard/settings/recovery/'
+      path: '/recovery'
+      fullPath: '/settings/recovery/'
+      preLoaderRoute: typeof DashboardSettingsRecoveryIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
     '/_dashboard/settings/roadmap/': {
       id: '/_dashboard/settings/roadmap/'
       path: '/roadmap'
@@ -749,25 +762,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRoadmapIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
-    '/_dashboard/settings/security/': {
-      id: '/_dashboard/settings/security/'
-      path: '/security'
-      fullPath: '/settings/security/'
-      preLoaderRoute: typeof DashboardSettingsSecurityIndexRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
     '/_dashboard/settings/subscription/': {
       id: '/_dashboard/settings/subscription/'
       path: '/subscription'
       fullPath: '/settings/subscription/'
       preLoaderRoute: typeof DashboardSettingsSubscriptionIndexRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
-    '/_dashboard/settings/usage/': {
-      id: '/_dashboard/settings/usage/'
-      path: '/usage'
-      fullPath: '/settings/usage/'
-      preLoaderRoute: typeof DashboardSettingsUsageIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
     '/_dashboard/vault/$itemId/': {
@@ -806,26 +805,24 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardSettingsRouteChildren {
   DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+  DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
   DashboardSettingsContactIndexRoute: typeof DashboardSettingsContactIndexRoute
-  DashboardSettingsContinuityIndexRoute: typeof DashboardSettingsContinuityIndexRoute
   DashboardSettingsPreferencesIndexRoute: typeof DashboardSettingsPreferencesIndexRoute
+  DashboardSettingsRecoveryIndexRoute: typeof DashboardSettingsRecoveryIndexRoute
   DashboardSettingsRoadmapIndexRoute: typeof DashboardSettingsRoadmapIndexRoute
-  DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsSubscriptionIndexRoute: typeof DashboardSettingsSubscriptionIndexRoute
-  DashboardSettingsUsageIndexRoute: typeof DashboardSettingsUsageIndexRoute
 }
 
 const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  DashboardSettingsAccountIndexRoute: DashboardSettingsAccountIndexRoute,
   DashboardSettingsContactIndexRoute: DashboardSettingsContactIndexRoute,
-  DashboardSettingsContinuityIndexRoute: DashboardSettingsContinuityIndexRoute,
   DashboardSettingsPreferencesIndexRoute:
     DashboardSettingsPreferencesIndexRoute,
+  DashboardSettingsRecoveryIndexRoute: DashboardSettingsRecoveryIndexRoute,
   DashboardSettingsRoadmapIndexRoute: DashboardSettingsRoadmapIndexRoute,
-  DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsSubscriptionIndexRoute:
     DashboardSettingsSubscriptionIndexRoute,
-  DashboardSettingsUsageIndexRoute: DashboardSettingsUsageIndexRoute,
 }
 
 const DashboardSettingsRouteWithChildren =
@@ -833,6 +830,7 @@ const DashboardSettingsRouteWithChildren =
 
 interface DashboardRouteChildren {
   DashboardSettingsRoute: typeof DashboardSettingsRouteWithChildren
+  DashboardDevicesIndexRoute: typeof DashboardDevicesIndexRoute
   DashboardDocsIndexRoute: typeof DashboardDocsIndexRoute
   DashboardHubIndexRoute: typeof DashboardHubIndexRoute
   DashboardLifeCheckIndexRoute: typeof DashboardLifeCheckIndexRoute
@@ -854,6 +852,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRouteWithChildren,
+  DashboardDevicesIndexRoute: DashboardDevicesIndexRoute,
   DashboardDocsIndexRoute: DashboardDocsIndexRoute,
   DashboardHubIndexRoute: DashboardHubIndexRoute,
   DashboardLifeCheckIndexRoute: DashboardLifeCheckIndexRoute,
