@@ -6,6 +6,7 @@ import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { endSession, endSessions } from "./lib/sessions";
+import { cancelActiveRecovery } from "./recovery";
 
 const MAX_LABEL_LENGTH = 100;
 
@@ -150,7 +151,8 @@ export const revoke = auditedMutation({
 
 /**
  * "It wasn't me" (M09-1 → M09-2): revoke the device, end every other session,
- * and require a master-key rotation, which this device performs next.
+ * cancel a recovery in progress, and require a master-key rotation, which
+ * this device performs next.
  */
 export const notMe = auditedMutation({
   action: "device.not_me",
@@ -168,10 +170,11 @@ export const notMe = auditedMutation({
     // Counts the device's own session too; revokeDevice then finds it gone.
     const sessionsEnded = await endSessions(ctx, userId, currentSession);
     await revokeDevice(ctx, device);
+    const recoveryCancelled = await cancelActiveRecovery(ctx, userId);
     await ctx.db.patch(userId, {
       masterKeyRotationRequired: true,
       updatedAt: Date.now(),
     });
-    return { deviceLabel: device.label, sessionsEnded };
+    return { deviceLabel: device.label, sessionsEnded, recoveryCancelled };
   },
 });

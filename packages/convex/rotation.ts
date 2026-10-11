@@ -69,9 +69,15 @@ export const finalizeRotation = auditedMutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
+    // The social envelope seals the previous MasterKey: renew it.
+    const socialSetup = await ctx.db
+      .query("social_envelopes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
     await ctx.db.patch(userId, {
       encryptedAsymmetricSecretKeyPrev: undefined,
       masterKeyRotationRequired: undefined,
+      ...(socialSetup ? { socialRecoveryRenewalRequired: true } : {}),
       updatedAt: Date.now(),
     });
     return { success: true };

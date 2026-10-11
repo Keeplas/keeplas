@@ -112,6 +112,7 @@ describe("devices", () => {
     expect(result).toEqual({
       deviceLabel: "Chrome on macOS",
       sessionsEnded: 2,
+      recoveryCancelled: false,
     });
     expect(await t.run((ctx) => ctx.db.get(browser.sessionId))).toBeNull();
     expect(await t.run((ctx) => ctx.db.get(tablet.sessionId))).toBeNull();

@@ -108,12 +108,12 @@ Each step lists its verification. A phase is done when every check passes.
 - [x] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9) — `attestation.test.ts`
 - [x] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused — `account_migration.test.ts`
 - [ ] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works
-- [ ] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action
+- [x] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action — `devices.test.ts`, `recovery.test.ts`
 
 ### Phase 5: Owner recovery (F3, D3, D4, D7)
 
-- [ ] `@keeplas/crypto`: recovery secret split 2-of-3, social envelope, 6-digit code → verify: unit tests
-- [ ] Convex: `recovery_requests`, `recovery_approvals`, `recovery_secret_shares`, `social_envelopes`, `gate_keys`; KMS `use node` action; **72 h** window → verify: state-machine tests (pending → approved_1 → approved_2 → released → rotated; cancel; expire; reject)
+- [x] `@keeplas/crypto`: recovery secret split 2-of-3, social envelope, 6-digit code → verify: unit tests — `packages/crypto/__tests__/social.test.ts`
+- [x] Convex: `recovery_requests`, `recovery_approvals`, `recovery_secret_shares`, `social_envelopes`, `gate_keys`; KMS `use node` action; **72 h** window → verify: state-machine tests (pending → approved_1 → approved_2 → released → rotated; cancel; expire; reject) — `recovery.test.ts` (KMS: AWS in production, local KEK in dev)
 - [ ] States M09-4, M09-5, M09-6, M09-10 → verify: each state reachable in tests
 - [ ] Cloud backup (iCloud Keychain / Google Block Store), on by default with an onboarding explanation → verify: toggle off deletes both halves
 

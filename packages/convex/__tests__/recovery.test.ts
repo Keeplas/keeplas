@@ -1,0 +1,366 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  generateRecipientKeyPair,
+  serializePublicKey,
+} from "@keeplas/crypto/kem";
+import { generateIdentityKeyPair } from "@keeplas/crypto/sig";
+import {
+  approveRecovery,
+  createSocialRecovery,
+  openSocialRecovery,
+  recoveryCode,
+} from "@keeplas/crypto/social";
+import { api, internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
+import { RECOVERY_REQUEST_TTL_MS, RECOVERY_WINDOW_MS } from "../recovery";
+import {
+  asUser,
+  asUserSession,
+  makeT,
+  seedSession,
+  signedAudit,
+  type TestConvex,
+} from "./test.helpers";
+
+// Phase 5 (F3, D3, D4): owner recovery with trust contacts. Real crypto on
+// every side; Convex only relays sealed shares and holds G under KMS.
+//   pending → approved_1 → approved_2 → released → rotated
+//   cancel · reject · expire
+
+type Contact = {
+  userId: Id<"users">;
+  contactId: Id<"trusted_contacts">;
+  kem: ReturnType<typeof generateRecipientKeyPair>;
+  identity: ReturnType<typeof generateIdentityKeyPair>;
+};
+
+async function seedContact(
+  t: TestConvex,
+  ownerId: Id<"users">,
+  n: number,
+): Promise<Contact> {
+  const kem = generateRecipientKeyPair();
+  const identity = generateIdentityKeyPair();
+  const userId = await t.run((ctx) =>
+    ctx.db.insert("users", { name: `Contact ${n}` }),
+  );
+  const now = Date.now();
+  const contactId = await t.run((ctx) =>
+    ctx.db.insert("trusted_contacts", {
+      userId: ownerId,
+      contactUserId: userId,
+      name: `Contact ${n}`,
+      email: `c${n}@example.com`,
+      role: "friend",
+      contactType: "trust",
+      invitationStatus: "accepted",
+      invitationToken: `tok-${n}`,
+      invitedAt: now,
+      contactPublicKey: serializePublicKey(kem.publicKey),
+      contactIdentityPublicKey: identity.publicKey,
+      createdAt: now,
+      updatedAt: now,
+    }),
+  );
+  return { userId, contactId, kem, identity };
+}
+
+async function setupOwner(t: TestConvex, contactCount = 3) {
+  const ownerId = await t.run((ctx) =>
+    ctx.db.insert("users", { name: "Alex" }),
+  );
+  const contacts: Contact[] = [];
+  for (let i = 0; i < contactCount; i++) {
+    contacts.push(await seedContact(t, ownerId, i));
+  }
+  const masterKey = crypto.getRandomValues(new Uint8Array(32));
+  const owner = asUser(t, ownerId);
+  const targets = await owner.query(api.recovery.getSetupTargets, {});
+  const setup = await createSocialRecovery({
+    masterKey,
+    userId: ownerId,
+    generation: targets.nextGeneration,
+    contacts: targets.contacts,
+  });
+  await owner.action(api.recovery_node.setup, {
+    generation: setup.generation,
+    socialEnvelope: setup.socialEnvelope,
+    shares: setup.shares as {
+      contactId: Id<"trusted_contacts">;
+      wrappedShare: string;
+    }[],
+    gateKey: setup.gateKey,
+    _audit: await signedAudit(),
+  });
+  return { ownerId, owner, contacts, masterKey };
+}
+
+async function startRequest(t: TestConvex, ownerId: Id<"users">) {
+  const device = generateRecipientKeyPair();
+  const devicePublicKey = serializePublicKey(device.publicKey);
+  const session = await seedSession(t, ownerId);
+  const newDevice = asUserSession(t, ownerId, session);
+  const requestId = await newDevice.mutation(api.recovery.start, {
+    newDevicePublicKey: devicePublicKey,
+    _audit: await signedAudit(),
+  });
+  return { requestId, device, devicePublicKey, newDevice };
+}
+
+async function contactApproves(
+  t: TestConvex,
+  ownerId: Id<"users">,
+  contact: Contact,
+) {
+  const as = asUser(t, contact.userId);
+  const [pending] = await as.query(api.recovery.getRequestsForMe, {});
+  const approval = await approveRecovery({
+    wrappedShare: pending.wrappedShare,
+    contactSecretKey: contact.kem.secretKey,
+    contactIdentitySecretKey: contact.identity.secretKey,
+    ownerUserId: ownerId,
+    contactId: pending.contactId,
+    generation: pending.generation,
+    requestId: pending.requestId,
+    devicePublicKey: pending.newDevicePublicKey,
+  });
+  await as.mutation(api.recovery.approve, {
+    requestId: pending.requestId,
+    ...approval,
+    _audit: await signedAudit(),
+  });
+}
+
+async function statusOf(t: TestConvex, id: Id<"recovery_requests">) {
+  return (await t.run((ctx) => ctx.db.get(id)))?.status;
+}
+
+describe("owner recovery", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    process.env.GATE_KEY_KMS = "local";
+    process.env.GATE_KEY_LOCAL_KEK = Buffer.alloc(32, 9).toString("base64");
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("goes pending → approved_1 → approved_2 → released → rotated and restores the MasterKey", async () => {
+    const t = makeT();
+    const { ownerId, contacts, masterKey } = await setupOwner(t);
+    const { requestId, device, devicePublicKey, newDevice } =
+      await startRequest(t, ownerId);
+    expect(await statusOf(t, requestId)).toBe("pending");
+
+    // Both sides compute the same code locally (D4).
+    const [forContact] = await asUser(t, contacts[0].userId).query(
+      api.recovery.getRequestsForMe,
+      {},
+    );
+    expect(
+      await recoveryCode(forContact.requestId, forContact.newDevicePublicKey),
+    ).toBe(await recoveryCode(requestId, devicePublicKey));
+
+    await contactApproves(t, ownerId, contacts[0]);
+    expect(await statusOf(t, requestId)).toBe("approved_1");
+    await contactApproves(t, ownerId, contacts[2]);
+    expect(await statusOf(t, requestId)).toBe("approved_2");
+
+    // Nothing is released before the 72 h window.
+    expect(await t.action(internal.recovery_node.release, { requestId })).toBe(
+      false,
+    );
+    expect(
+      await newDevice.query(api.recovery.getReleasePackage, { requestId }),
+    ).toBeNull();
+
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("released");
+
+    const pkg = (await newDevice.query(api.recovery.getReleasePackage, {
+      requestId,
+    }))!;
+    const restored = await openSocialRecovery({
+      ownerUserId: ownerId,
+      generation: pkg.generation,
+      requestId,
+      devicePublicKey,
+      deviceSecretKey: device.secretKey,
+      wrappedGateKey: pkg.wrappedGateKey,
+      socialEnvelope: pkg.socialEnvelope,
+      approvals: pkg.approvals,
+    });
+    expect(restored).toEqual(masterKey);
+
+    // Renewal on the new device closes the request and replaces RS and G.
+    const targets = await newDevice.query(api.recovery.getSetupTargets, {});
+    const renewed = await createSocialRecovery({
+      masterKey: restored,
+      userId: ownerId,
+      generation: targets.nextGeneration,
+      contacts: targets.contacts,
+    });
+    await newDevice.action(api.recovery_node.setup, {
+      generation: renewed.generation,
+      socialEnvelope: renewed.socialEnvelope,
+      shares: renewed.shares as {
+        contactId: Id<"trusted_contacts">;
+        wrappedShare: string;
+      }[],
+      gateKey: renewed.gateKey,
+      completesRequestId: requestId,
+      _audit: await signedAudit(),
+    });
+    expect(await statusOf(t, requestId)).toBe("rotated");
+    const rows = await t.run(async (ctx) => ({
+      shares: await ctx.db.query("recovery_secret_shares").collect(),
+      gates: await ctx.db.query("gate_keys").collect(),
+      request: await ctx.db.get(requestId),
+    }));
+    expect(new Set(rows.shares.map((s) => s.generation))).toEqual(new Set([2]));
+    expect(rows.gates.map((g) => g.generation)).toEqual([2]);
+    expect(rows.request?.wrappedGateKey).toBeUndefined();
+  });
+
+  it("stores G only under KMS, never in clear", async () => {
+    const t = makeT();
+    await setupOwner(t);
+    const gates = await t.run((ctx) => ctx.db.query("gate_keys").collect());
+    expect(gates).toHaveLength(1);
+    expect(gates[0].kmsCiphertext).toMatch(/^local:v1:/);
+  });
+
+  it("releases at once when the 2nd approval comes after the window", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[0]);
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS + 1);
+    expect(await statusOf(t, requestId)).toBe("approved_1");
+    await contactApproves(t, ownerId, contacts[1]);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("released");
+  });
+
+  it("cancel from any owner device stops the release and requires a renewal", async () => {
+    const t = makeT();
+    const { ownerId, owner, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[0]);
+    await contactApproves(t, ownerId, contacts[1]);
+    await owner.mutation(api.recovery.cancel, { _audit: await signedAudit() });
+    expect(await statusOf(t, requestId)).toBe("cancelled");
+
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("cancelled");
+    const user = await t.run((ctx) => ctx.db.get(ownerId));
+    expect(user?.socialRecoveryRenewalRequired).toBe(true);
+    const health = await owner.query(api.recovery.getHealth, {});
+    expect(health?.trustContacts.renewalRequired).toBe(true);
+  });
+
+  it("'It wasn't me' cancels a recovery in progress", async () => {
+    const t = makeT();
+    const { ownerId } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    const phoneSession = await seedSession(t, ownerId);
+    const phone = asUserSession(t, ownerId, phoneSession);
+    const browserSession = await seedSession(t, ownerId);
+    const browserId = await t.run((ctx) =>
+      ctx.db.insert("devices", {
+        userId: ownerId,
+        kind: "web",
+        label: "Chrome",
+        trusted: false,
+        sessionId: browserSession,
+        lastSeenAt: 0,
+        createdAt: 0,
+      }),
+    );
+    const result = await phone.mutation(api.devices.notMe, {
+      deviceId: browserId,
+      _audit: await signedAudit(),
+    });
+    expect(result.recoveryCancelled).toBe(true);
+    expect(await statusOf(t, requestId)).toBe("cancelled");
+  });
+
+  it("a contact's refusal or code mismatch rejects the request (M09-5)", async () => {
+    const t = makeT();
+    const { ownerId, owner, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await asUser(t, contacts[1].userId).mutation(api.recovery.reject, {
+      requestId,
+      reason: "code_mismatch",
+      _audit: await signedAudit(),
+    });
+    expect(await statusOf(t, requestId)).toBe("rejected");
+    const mine = await owner.query(api.recovery.getMyRequest, {});
+    expect(
+      mine?.contacts.find((c) => c.contactId === contacts[1].contactId),
+    ).toMatchObject({ decision: "reject", rejectReason: "code_mismatch" });
+    await expect(contactApproves(t, ownerId, contacts[0])).rejects.toThrow();
+  });
+
+  it("expires after 7 days without 2 approvals", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[0]);
+    vi.advanceTimersByTime(RECOVERY_REQUEST_TTL_MS);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("expired");
+  });
+
+  it("refuses a request with fewer than 2 contacts set up (M09-6)", async () => {
+    const t = makeT();
+    const ownerId = await t.run((ctx) => ctx.db.insert("users", {}));
+    await expect(startRequest(t, ownerId)).rejects.toThrow(
+      "FEWER_THAN_2_CONTACTS",
+    );
+  });
+
+  it("allows one request at a time and one answer per contact", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    await startRequest(t, ownerId);
+    await expect(startRequest(t, ownerId)).rejects.toThrow(
+      "already in progress",
+    );
+    await contactApproves(t, ownerId, contacts[0]);
+    // The request no longer shows up for a contact who answered.
+    expect(
+      await asUser(t, contacts[0].userId).query(
+        api.recovery.getRequestsForMe,
+        {},
+      ),
+    ).toEqual([]);
+  });
+
+  it("refuses an approval from someone who is not a trust contact", async () => {
+    const t = makeT();
+    const { ownerId } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    const stranger = await t.run((ctx) => ctx.db.insert("users", {}));
+    await expect(
+      asUser(t, stranger).mutation(api.recovery.approve, {
+        requestId,
+        wrappedShareForDevice: "x",
+        signature: "y",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("not a trust contact");
+  });
+
+  it("a MasterKey rotation requires a renewal of the recovery material", async () => {
+    const t = makeT();
+    const { ownerId, owner } = await setupOwner(t);
+    await owner.mutation(api.rotation.finalizeRotation, {
+      _audit: await signedAudit(),
+    });
+    const user = await t.run((ctx) => ctx.db.get(ownerId));
+    expect(user?.socialRecoveryRenewalRequired).toBe(true);
+  });
+});

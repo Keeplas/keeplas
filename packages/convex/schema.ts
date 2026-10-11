@@ -81,6 +81,10 @@ export default defineSchema({
     // contact's device, so the owner must rotate the MasterKey. Cleared by
     // `rotation.finalizeRotation`.
     masterKeyRotationRequired: v.optional(v.boolean()),
+    // Set when the social-recovery material must be renewed (new generation):
+    // after a MasterKey rotation, or a cancelled request that already
+    // collected contact shares. Cleared by `recovery_node.setup`.
+    socialRecoveryRenewalRequired: v.optional(v.boolean()),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),
@@ -256,6 +260,79 @@ export default defineSchema({
   })
     .index("by_challenge", ["challenge"])
     .index("by_expiry", ["expiresAt"]),
+
+  // ═══════════════════════════════════════════════
+  // OWNER RECOVERY WITH TRUST CONTACTS (v2 workflow 7, F3)
+  // ═══════════════════════════════════════════════
+  //
+  // A random Recovery Secret RS is split 2-of-n between trust contacts; a
+  // random gate key G is held under KMS; the social envelope is
+  // AES-GCM(HKDF(RS ‖ G), MasterKey). One current generation per user; a new
+  // setup replaces the previous rows.
+
+  // One row per user: the current generation's sealed MasterKey.
+  social_envelopes: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    envelope: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // ML-KEM envelope of one Shamir share of RS, sealed to a trust contact.
+  recovery_secret_shares: defineTable({
+    userId: v.id("users"),
+    contactId: v.id("trusted_contacts"),
+    generation: v.number(),
+    wrappedShare: v.string(),
+  })
+    .index("by_user_generation", ["userId", "generation"])
+    .index("by_contact", ["contactId"]),
+
+  // G encrypted by the KMS; only `recovery_node.release` decrypts it.
+  gate_keys: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    kmsCiphertext: v.string(),
+  }).index("by_user_generation", ["userId", "generation"]),
+
+  recovery_requests: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    // ML-KEM-768 public key of the recovering device.
+    newDevicePublicKey: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved_1"),
+      v.literal("approved_2"),
+      v.literal("released"),
+      v.literal("rotated"),
+      v.literal("cancelled"),
+      v.literal("rejected"),
+      v.literal("expired"),
+    ),
+    // createdAt + 72 h (D3): G is never released before.
+    windowEndsAt: v.number(),
+    // createdAt + 7 days: pending / approved_1 expire.
+    expiresAt: v.number(),
+    // G sealed to `newDevicePublicKey`, set at release.
+    wrappedGateKey: v.optional(v.string()),
+    releasedAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  recovery_approvals: defineTable({
+    requestId: v.id("recovery_requests"),
+    contactId: v.id("trusted_contacts"),
+    decision: v.union(v.literal("approve"), v.literal("reject")),
+    rejectReason: v.optional(
+      v.union(v.literal("declined"), v.literal("code_mismatch")),
+    ),
+    // RS share re-sealed to the device key + ML-DSA-65 signature.
+    wrappedShareForDevice: v.optional(v.string()),
+    signature: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_request", ["requestId"]),
 
   // ═══════════════════════════════════════════════
   // MOBILE SIGN-UP ATTESTATION (App Attest / Play Integrity, M09-9)

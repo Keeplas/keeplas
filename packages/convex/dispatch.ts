@@ -1150,6 +1150,47 @@ const TC_RELEASE_COPY = {
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
+/** Email + WhatsApp alert with localized copy; each channel best-effort. */
+async function sendAlert(args: {
+  email?: string;
+  phoneNumber?: string;
+  greetingName: string | undefined;
+  bodyName: string;
+  language?: string;
+  copy: Record<Locale, CtaEmailCopy>;
+  path: string;
+  templateEnv: string | undefined;
+  templateBase: string;
+}): Promise<string> {
+  if (isNotificationsPaused()) return "paused";
+  const locale = resolveLocale(args.language);
+  const email = await safeSend(() =>
+    sendCtaEmail({
+      to: args.email,
+      copy: args.copy[locale],
+      greetingName: args.greetingName,
+      bodyName: args.bodyName,
+      path: args.path,
+    }),
+  );
+  const whatsapp = await safeSend(() =>
+    sendTemplateWhatsApp({
+      to: args.phoneNumber,
+      envName: args.templateEnv,
+      base: args.templateBase,
+      placeholder: args.bodyName,
+      locale,
+    }),
+  );
+  return `email:${email} whatsapp:${whatsapp}`;
+}
+
+const alertArgs = {
+  email: v.optional(v.string()),
+  phoneNumber: v.optional(v.string()),
+  language: v.optional(v.string()),
+};
+
 const NEW_DEVICE_COPY = {
   en: {
     subject: "Keeplas — a new device was linked to your account",
@@ -1172,40 +1213,99 @@ const NEW_DEVICE_COPY = {
 
 /**
  * New-device alert (M08-4) to the owner: every new link or sign-in is
- * announced on the other channels. Email + WhatsApp; the in-app alert is the
+ * announced on the other channels. The in-app alert is the
  * `devices.pendingAlerts` query.
  */
 export const notifyNewDevice = internalAction({
   args: {
-    email: v.optional(v.string()),
-    phoneNumber: v.optional(v.string()),
+    ...alertArgs,
     ownerName: v.optional(v.string()),
     deviceLabel: v.string(),
-    language: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
-    if (isNotificationsPaused()) return "paused";
-    const locale = resolveLocale(args.language);
-    const email = await safeSend(() =>
-      sendCtaEmail({
-        to: args.email,
-        copy: NEW_DEVICE_COPY[locale],
-        greetingName: args.ownerName,
-        bodyName: args.deviceLabel,
-        path: "/settings/security",
-      }),
-    );
-    const whatsapp = await safeSend(() =>
-      sendTemplateWhatsApp({
-        to: args.phoneNumber,
-        envName: process.env.WHATSAPP_NEW_DEVICE_TEMPLATE_NAME,
-        base: "keeplas_new_device",
-        placeholder: args.deviceLabel,
-        locale,
-      }),
-    );
-    return `email:${email} whatsapp:${whatsapp}`;
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: args.deviceLabel,
+      copy: NEW_DEVICE_COPY,
+      path: "/settings/security",
+      templateEnv: process.env.WHATSAPP_NEW_DEVICE_TEMPLATE_NAME,
+      templateBase: "keeplas_new_device",
+    }),
+});
+
+const RECOVERY_STARTED_COPY = {
+  en: {
+    subject: "Keeplas — someone asked to recover your account",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: () =>
+      "A request to recover your Keeplas account was just made from a new phone. Your trust contacts are asked to confirm it by calling you. Nothing is released for 72 hours. If it wasn't you, open Keeplas on one of your devices and cancel the request.",
+    button: "Review the request",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
+  fr: {
+    subject: "Keeplas — une demande de récupération de votre compte",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: () =>
+      "Une demande de récupération de votre compte Keeplas vient d'être faite depuis un nouveau téléphone. Vos contacts de confiance doivent la confirmer en vous appelant. Rien n'est libéré pendant 72 heures. Si ce n'est pas vous, ouvrez Keeplas sur l'un de vos appareils et annulez la demande.",
+    button: "Voir la demande",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/** Owner-facing alert: a recovery request started (cancel within 72 h). */
+export const notifyRecoveryStarted = internalAction({
+  args: { ...alertArgs, ownerName: v.optional(v.string()) },
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: args.ownerName ?? "",
+      copy: RECOVERY_STARTED_COPY,
+      path: "/settings/security",
+      templateEnv: process.env.WHATSAPP_RECOVERY_STARTED_TEMPLATE_NAME,
+      templateBase: "keeplas_recovery_started",
+    }),
+});
+
+const RECOVERY_CONTACT_COPY = {
+  en: {
+    subject: "Keeplas — someone needs your help",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (owner?: string) =>
+      `${owner ?? "Someone"} is trying to get back into their Keeplas account and named you as a trust contact. Call them first and compare the 6-digit code shown in your Keeplas app. Approve only if you recognise them and the codes match. You will not see their files.`,
+    button: "Open Keeplas",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — quelqu'un a besoin de votre aide",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (owner?: string) =>
+      `${owner ?? "Quelqu'un"} essaie de récupérer l'accès à son compte Keeplas et vous a désigné comme contact de confiance. Appelez-le d'abord et comparez le code à 6 chiffres affiché dans votre application Keeplas. N'approuvez que si vous le reconnaissez et que les codes correspondent. Vous ne verrez pas ses fichiers.`,
+    button: "Ouvrir Keeplas",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/** Trust-contact notice: the owner needs help recovering access (M02-3). */
+export const notifyRecoveryContact = internalAction({
+  args: {
+    ...alertArgs,
+    contactName: v.optional(v.string()),
+    ownerName: v.string(),
+  },
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.contactName,
+      bodyName: args.ownerName,
+      copy: RECOVERY_CONTACT_COPY,
+      path: "/shared-with-me",
+      templateEnv: process.env.WHATSAPP_RECOVERY_CONTACT_TEMPLATE_NAME,
+      templateBase: "keeplas_recovery_contact",
+    }),
 });
 
 /**

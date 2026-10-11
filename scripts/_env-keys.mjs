@@ -113,6 +113,14 @@ export const CONVEX_OPTIONAL_GROUPS = {
     "STRIPE_PRICE_LIFETIME",
   ],
   "Kill switches": ["NOTIFICATIONS_PAUSED", "LIFE_CHECK_PAUSED"],
+  "Owner recovery gate key (KMS)": [
+    "GATE_KEY_KMS",
+    "GATE_KEY_LOCAL_KEK",
+    "AWS_REGION",
+    "AWS_KMS_GATE_KEY_ID",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+  ],
   "Mobile sign-up attestation": [
     "APPLE_TEAM_ID",
     "IOS_BUNDLE_ID",
@@ -160,6 +168,12 @@ export const CONVEX_SYNC_KEYS = [
   "IOS_BUNDLE_ID",
   "ANDROID_PACKAGE_NAME",
   "GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT",
+  "GATE_KEY_KMS",
+  "GATE_KEY_LOCAL_KEK",
+  "AWS_REGION",
+  "AWS_KMS_GATE_KEY_ID",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
 ];
 
 // Subset of CONVEX_SYNC_KEYS that MUST have a non-empty local value when syncing
