@@ -161,7 +161,6 @@ export const getOnboardingState = query({
       onboardingStep: user.onboardingStep ?? "auth_complete",
       recoveryVerified: user.recoveryVerified ?? false,
       hasEncryptedKeyBundle: !!user.encryptedKeyBundle,
-      vaultThreshold: user.vaultThreshold ?? null,
       language: user.language ?? null,
     };
   },
@@ -240,26 +239,18 @@ export const storeRecoveryPhraseHash = mutation({
 });
 
 /**
- * Store the encrypted key bundle, the Argon2id phrase salt, and the chosen
- * Shamir threshold after key generation. All values are produced client-side —
- * the server never sees plaintext keys nor the recovery phrase.
- *
- * The server deliberately holds NO Shamir shard (finding #3): a server-held
- * shard plus one trusted-contact shard would reach a threshold-2 quorum and
- * let a malicious server reconstruct the master key on its own, breaking
- * zero-knowledge. Only the device (client) and trusted contacts hold shards.
+ * Store the encrypted key bundle and the Argon2id phrase salt after key
+ * generation. Both are produced client-side — the server never sees plaintext
+ * keys nor the recovery phrase. The MasterKey is never split: nobody but the
+ * owner (24 words + unlocked devices) can rebuild it.
  */
 export const storeKeyBundle = mutation({
   args: {
     encryptedKeyBundle: v.string(),
     phraseSalt: v.string(),
-    vaultThreshold: v.number(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    if (args.vaultThreshold < 2 || args.vaultThreshold > 3) {
-      throw new Error("vaultThreshold must be between 2 and 3");
-    }
 
     const user = await ctx.db.get(userId);
     // Send the welcome message only on the first time onboarding completes —
@@ -269,7 +260,6 @@ export const storeKeyBundle = mutation({
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       phraseSalt: args.phraseSalt,
-      vaultThreshold: args.vaultThreshold,
       onboardingStep: "complete",
       updatedAt: Date.now(),
       ...(sendWelcome ? { welcomeSentAt: Date.now() } : {}),

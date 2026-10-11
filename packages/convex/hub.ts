@@ -36,22 +36,17 @@ export const getHubData = query({
       .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
       .collect();
 
-    // Recovery shards distributed? A trust contact becomes an eligible
-    // distribution target once it has accepted and uploaded its public key
-    // (mirrors trusted_contacts.getDistributionTargets). The axis is "done"
-    // only when at least MIN_TRUST_CONTACTS_FOR_RECOVERY targets each hold a
-    // confirmed shard — a single guardian cannot recover (no peer, quorum
-    // unreachable), so it must not light the Hub green. Onboarding a new
-    // guardian re-surfaces the action until shards are re-distributed.
-    const distributionTargets = contacts.filter(
+    // Trust contacts ready? A trust contact is ready once it has accepted and
+    // published its public key. The axis is "done" only with at least
+    // MIN_TRUST_CONTACTS_FOR_RECOVERY ready contacts — the unreachability
+    // quorum needs two votes, so a lone guardian must not light the Hub green.
+    const readyTrustContacts = contacts.filter(
       (c) =>
         (c.contactType ?? "trust") === "trust" &&
-        typeof c.shardIndex === "number" &&
         typeof c.contactPublicKey === "string",
     );
-    const shardsDistributed =
-      distributionTargets.length >= MIN_TRUST_CONTACTS_FOR_RECOVERY &&
-      distributionTargets.every((c) => c.shardConfirmed === true);
+    const contactsReady =
+      readyTrustContacts.length >= MIN_TRUST_CONTACTS_FOR_RECOVERY;
 
     // Life Check configured?
     const lifeCheckConfig = await ctx.db
@@ -99,12 +94,12 @@ export const getHubData = query({
     // Continuity score: 9 equally-weighted axes, identical to the Priority
     // Action conditions. Guarantees the invariant:
     // priorityActions.every((a) => a.done) ⇔ continuityScore === 100.
-    // Note: the shards axis requires ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY
-    // confirmed guardians, so a lone contact never completes this axis.
+    // Note: the contacts-ready axis requires ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY
+    // ready guardians, so a lone contact never completes this axis.
     const axes = [
       items.length > 0,
       contacts.length > 0,
-      shardsDistributed,
+      contactsReady,
       !!lifeCheckConfig,
       releasePolicySet,
       hasStrongAuth,
@@ -138,10 +133,10 @@ export const getHubData = query({
         done: contacts.length > 0,
       },
       {
-        key: "distribute_shards",
-        label: "Distribute recovery shards",
+        key: "contacts_ready",
+        label: "Get two trusted contacts ready",
         href: "/trusted-contacts",
-        done: shardsDistributed,
+        done: contactsReady,
       },
       {
         key: "life_check",

@@ -33,10 +33,10 @@ async function seedAccessRequest(
 }
 
 describe("revokeReleasedAccess", () => {
-  it("revokes approved access, deletes recovery shards, leaves pending untouched", async () => {
+  it("revokes approved access, leaves pending untouched", async () => {
     const t = makeT();
     const owner = await seedUser(t);
-    const contactId = await seedTrustContact(t, owner, { shardIndex: 2 });
+    const contactId = await seedTrustContact(t, owner, { n: 2 });
 
     const approved = await seedAccessRequest(t, owner, contactId, "approved", [
       "item:abc",
@@ -44,18 +44,6 @@ describe("revokeReleasedAccess", () => {
     const pending = await seedAccessRequest(t, owner, contactId, "pending", [
       "all",
     ]);
-
-    // A wrapped recovery shard tied to the approved request.
-    await t.run((ctx) =>
-      ctx.db.insert("recovery_shard_submissions", {
-        accessRequestId: approved,
-        vaultUserId: owner,
-        submitterContactId: contactId,
-        recipientContactId: contactId,
-        wrappedShard: "envelope",
-        createdAt: Date.now(),
-      }),
-    );
 
     const result = await asUser(t, owner).mutation(
       api.access_requests.revokeReleasedAccess,
@@ -70,14 +58,6 @@ describe("revokeReleasedAccess", () => {
 
     const pendingRow = await t.run((ctx) => ctx.db.get(pending));
     expect(pendingRow?.status).toBe("pending");
-
-    const shards = await t.run((ctx) =>
-      ctx.db
-        .query("recovery_shard_submissions")
-        .withIndex("by_request", (q) => q.eq("accessRequestId", approved))
-        .collect(),
-    );
-    expect(shards).toHaveLength(0);
   });
 
   it("is a no-op when no access has been granted", async () => {

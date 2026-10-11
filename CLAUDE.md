@@ -100,14 +100,14 @@ The web app was migrated off Next.js to TanStack Start (Vite). Conventions:
 
 ## Security model (zero-knowledge)
 
-- Master Key, Recovery Phrase (24 words), and Shamir shards NEVER leave the client unencrypted.
+- Master Key and Recovery Phrase (24 words) NEVER leave the client unencrypted. The Master Key is never split: trusted contacts hold no part of it (`pnpm check:zk` forbids `@keeplas/crypto/shamir` in `apps/web`).
 - 24 words = root crypto secret (Argon2id-derived). Password is pure auth (resettable via 24 words). No OAuth. No direct phrase recovery — trusted contacts only.
 - Per-device unlock: PIN, Biometric (PRF), Hardware key (PRF) coexist via local RootKey wraps in IndexedDB; the 24-word phrase is required on first login per device.
-- Post-quantum: ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs and shards. Replaces RSA-OAEP.
-- Authenticated key distribution (TOFU): each user has an ML-DSA-65 (FIPS 204) identity key; ML-KEM public keys are signed with it. Clients MUST verify the signature and check the pinned fingerprint before wrapping a DEK/shard to a contact — never wrap to a server-provided pubkey unverified (blocks malicious-server key substitution). Identity secret key is wrapped under the master key, never sent in clear.
-- Recovery-phrase verifier is salted Argon2id (`derivePhraseVerifier`), computed client-side, compared server-side with `constantTimeStringEquals` (`packages/convex/lib/crypto.ts`). The phrase never reaches the server. No Shamir shard is held by the server in a way that counts toward the reconstruction threshold.
+- Post-quantum: ML-KEM-768 (NIST FIPS 203) wraps per-recipient DEKs. Replaces RSA-OAEP.
+- Authenticated key distribution (TOFU): each user has an ML-DSA-65 (FIPS 204) identity key; ML-KEM public keys are signed with it. Clients MUST verify the signature and check the pinned fingerprint before wrapping a DEK to a contact — never wrap to a server-provided pubkey unverified (blocks malicious-server key substitution). Identity secret key is wrapped under the master key, never sent in clear.
+- Recovery-phrase verifier is salted Argon2id (`derivePhraseVerifier`), computed client-side, compared server-side with `constantTimeStringEquals` (`packages/convex/lib/crypto.ts`). The phrase never reaches the server.
 - Sensitive Convex queries/mutations enforce the step-up gates via `requireFullAuth` (login-OTP + TOTP), not bare `requireAuth`. Auth/onboarding/public flows are intentionally exempt.
-- Vault auto-locks after inactivity (clears in-memory + persisted keys); CSP + strict security headers are set in `apps/web` middleware. The master key stays extractable by design (needed for Shamir `exportKey` + rotation) — auto-lock + CSP are its mitigations.
+- Vault auto-locks after inactivity (clears in-memory + persisted keys); CSP + strict security headers are set in `apps/web` middleware. The master key stays extractable by design (needed for master-key rotation) — auto-lock + CSP are its mitigations.
 - Framing: this is **client-side / zero-access** encryption (server is blind in normal operation), not zero-knowledge _proofs_. It is not infallible against a simultaneously malicious server + compromised client.
 - Sensitive crypto code lives in `packages/crypto/` and is gated by CODEOWNERS. Invariants are enforced by `pnpm check:zk` (`scripts/check-zk.mjs`).
 

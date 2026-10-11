@@ -63,8 +63,8 @@ describe("C1 — quorum dedups by distinct human", () => {
     // One human, invited (and accepted) twice — e.g. once by email, once by
     // phone — so two rows share the same contactUserId.
     const personUser = await seedUser(t);
-    const rowA = await seedTrustContact(t, owner, { shardIndex: 2 });
-    const rowB = await seedTrustContact(t, owner, { shardIndex: 3 });
+    const rowA = await seedTrustContact(t, owner, { n: 2 });
+    const rowB = await seedTrustContact(t, owner, { n: 3 });
     await t.run((ctx) => ctx.db.patch(rowA, { contactUserId: personUser }));
     await t.run((ctx) => ctx.db.patch(rowB, { contactUserId: personUser }));
     await seedAwaitingConfirmation(t, owner);
@@ -81,62 +81,6 @@ describe("C1 — quorum dedups by distinct human", () => {
       { contactId: rowB, _audit: await signedAudit() },
     );
     expect(r2.quorumReached).toBe(false);
-  });
-});
-
-describe("C1 — one person contributes at most one shard", () => {
-  it("rejects a second shard submission from the same human", async () => {
-    const t = makeT();
-    const owner = await seedUser(t);
-    const personUser = await seedUser(t);
-    const rowA = await seedTrustContact(t, owner, { shardIndex: 2 });
-    const rowB = await seedTrustContact(t, owner, { shardIndex: 3 });
-    await t.run((ctx) => ctx.db.patch(rowA, { contactUserId: personUser }));
-    await t.run((ctx) => ctx.db.patch(rowB, { contactUserId: personUser }));
-    // A distinct third person, so the first submission has a valid fan-out
-    // recipient and actually writes a submission row to dedup against.
-    const otherUser = await seedUser(t);
-    const rowC = await seedTrustContact(t, owner, { shardIndex: 4 });
-    await t.run((ctx) => ctx.db.patch(rowC, { contactUserId: otherUser }));
-
-    const now = Date.now();
-    const requestId = await t.run((ctx) =>
-      ctx.db.insert("access_requests", {
-        vaultUserId: owner,
-        requestedBy: rowA,
-        sectionsRequested: ["all"],
-        status: "pending",
-        autoResponseAt: now,
-        quorumRequired: 2,
-        quorumReached: true,
-        gracePeriodEndsAt: now - 1000, // grace already expired
-        contactsInitiated: [rowA],
-        createdAt: now,
-        updatedAt: now,
-      }),
-    );
-
-    // First submission via row A fans out to the distinct third person.
-    const first = await asUser(t, personUser).mutation(
-      api.access_requests.submitRecoveryShards,
-      {
-        accessRequestId: requestId,
-        submitterContactId: rowA,
-        submissions: [{ recipientContactId: rowC, wrappedShard: "envelope" }],
-        _audit: await signedAudit(),
-      },
-    );
-    expect(first.submitted).toBe(1);
-
-    // Second submission via the SAME person's other row must be rejected.
-    await expect(
-      asUser(t, personUser).mutation(api.access_requests.submitRecoveryShards, {
-        accessRequestId: requestId,
-        submitterContactId: rowB,
-        submissions: [{ recipientContactId: rowC, wrappedShard: "envelope" }],
-        _audit: await signedAudit(),
-      }),
-    ).rejects.toThrow(/already been submitted/);
   });
 });
 

@@ -161,7 +161,6 @@
       "keyGeneration": {
         "phases": {
           "derivingRoot": "Deriving your Root Key from your 24 words...",
-          "splittingShards": "Creating recovery fragments...",
           "wrappingMasterKey": "Sealing your Master Key...",
           "storing": "Securing your vault...",
           "complete": "Vault secured!",
@@ -174,15 +173,7 @@
         "description": "Your keys are derived and sealed entirely on your device. We never see your phrase.",
         "redirecting": "Redirecting to your hub...",
         "tryAgain": "Try again",
-        "genericError": "Key generation failed. Please try again.",
-        "thresholdHeading": "Recovery threshold",
-        "thresholdDescription": "How many trusted contacts must agree to reconstruct your vault when you become unreachable. Lower = easier recovery, higher = stronger against collusion.",
-        "thresholdOf": "of 4",
-        "thresholdEasiestStrong": "Easiest recovery.",
-        "thresholdEasiest": "Any two contacts can collaborate. Recommended unless your contacts face a high collusion risk.",
-        "thresholdBalancedStrong": "Balanced.",
-        "thresholdBalanced": "Any three contacts must collaborate. Resistant to single-pair collusion.",
-        "thresholdContinue": "Continue with {value}-of-4"
+        "genericError": "Key generation failed. Please try again."
       },
       "passkey": {
         "badge": "Optional · Faster sign in",
@@ -483,14 +474,14 @@
     "priorityActions": "Priority Actions",
     "hints": {
       "add_item": "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
-      "invite_contact": "Trust contacts are the guardians who can help recover your vault. Invite someone you trust; they accept with their own Keeplas key.",
-      "distribute_shards": "Split your master key into encrypted shards and seal one to each trust contact. Recovery needs a threshold of shards, so no single contact can unlock your vault alone. Re-distribute after adding a new guardian.",
+      "invite_contact": "Trust contacts are the guardians who confirm if something happens to you. Invite someone you trust; they accept with their own Keeplas key.",
       "life_check": "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
-      "release_policy": "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable, how long they have, and whether to release anyway or keep everything sealed if no one confirms.",
+      "release_policy": "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable and how long they have. Without their confirmation, nothing is ever released.",
       "welcome_message": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
       "two_factor": "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
       "verify_whatsapp": "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
-      "more_categories": "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out."
+      "more_categories": "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out.",
+      "contacts_ready": "Your Life Check needs two trusted contacts to confirm you're unreachable. A contact is ready once they accept your invitation and set up their Keeplas key. They never hold a key to your vault."
     },
     "recentActivity": {
       "title": "Recent Activity",
@@ -674,15 +665,12 @@
         "released": {
           "dayLabel": "Outcome",
           "title": "Vault released",
-          "descriptionAnyway": "Once {contacts} confirm, your vault is released to them — and released anyway if the window passes without any confirmation.",
-          "descriptionAbort": "Once {contacts} confirm, your vault is released to them. If no one confirms in time, nothing is released.",
-          "help": "Controlled by the \"Release anyway if no one confirms\" toggle in Release policy. On (recommended): release even if none confirm once the window passes. Off: release only if your contacts confirm."
+          "help": "Nothing is ever released on silence: your trusted contacts must confirm first, and you still get a 72-hour grace window to cancel.",
+          "description": "Once {contacts} confirm, each recipient receives the items you assigned to them. If no one confirms in time, nothing is released."
         }
       },
       "recap": {
-        "text": "{contacts} to confirm · {days}-day window · {fallback}",
-        "fallbackAnyway": "released anyway after the window",
-        "fallbackAbort": "nothing released without confirmation"
+        "text": "{contacts} to confirm · {days}-day window · nothing released without confirmation"
       }
     },
     "welcome": {
@@ -721,17 +709,15 @@
     },
     "policy": {
       "title": "Release policy",
-      "help": "If you stop responding to check-ins, your trusted contacts are asked to confirm you're unavailable before anything is released. Set how many must confirm, how long they have, and what happens if none do.",
+      "help": "If you stop responding to check-ins, your trusted contacts are asked to confirm you're unavailable before anything is released. Set how many must confirm and how long they have. If none do, nothing is released.",
       "description": "The human safeguard before your vault is ever released.",
       "thresholdLabel": "Contacts that must confirm you're unavailable",
       "thresholdHelp": "The minimum number of trusted contacts who must independently confirm they can't reach you before your vault can be released. A higher number guards against any single contact acting alone.",
       "windowLabel": "Days they have to confirm",
       "windowHelp": "How long your trusted contacts have to reach the required number once Keeplas alerts them. This is separate from the fixed 72-hour grace window you get to cancel the release after they confirm.",
       "windowDays": "{count} days",
-      "releaseAnywayLabel": "Release anyway if no one confirms",
-      "releaseAnywayOn": "Recommended: if no contact confirms, your vault is still released after the window, so your recipients are reached.",
-      "releaseAnywayOff": "If no contact confirms, nothing is released.",
-      "saveError": "Failed to save release policy"
+      "saveError": "Failed to save release policy",
+      "noConfirmation": "If no contact confirms in time, nothing is released. A missed check-in alone never opens your vault."
     },
     "travel": {
       "title": "Travel Mode",
@@ -793,10 +779,14 @@
       "status": {
         "validating": "Verifying your recovery phrase…",
         "rotatingKeys": "Generating a new master key…",
-        "redistributing": "Re-sealing recovery shards…",
         "reencrypting": "Re-encrypting your vault…",
         "finalizing": "Finalizing…",
         "done": "Done"
+      },
+      "forced": {
+        "dialogDescription": "Your master key was once split among your trusted contacts. That's no longer how Keeplas works, so we're retiring that key. Enter your 24-word recovery phrase: we'll generate a fresh master key and re-encrypt every item. Your contacts and recipients keep their access.",
+        "submit": "Re-key my vault",
+        "successDescription": "Your vault now uses a fresh master key."
       }
     }
   },
@@ -810,7 +800,7 @@
       },
       "security": {
         "title": "Security Center",
-        "description": "Social recovery, Shamir shards, biometrics and hash-chained audit log."
+        "description": "Recovery words, trusted contacts, biometrics and hash-chained audit log."
       },
       "preferences": {
         "title": "Preferences",
@@ -1105,17 +1095,6 @@
       "saving": "Saving…",
       "confirm": "Confirm update"
     },
-    "redistribute": {
-      "title": "Re-distribute recovery shards",
-      "help": "Re-splits your master key with your chosen threshold and re-seals every trust contact's shard to their public key. Any previously held shard becomes obsolete the moment you click — by design. Use this after onboarding a replacement guardian, or as a periodic hygiene task.",
-      "statusNone": "Invite at least 2 trust contacts and wait for them to accept before you can distribute.",
-      "statusBelowMin": "Only 1 eligible trust contact. Recovery needs at least 2 — invite and confirm one more before distributing.",
-      "statusReady": "{count} eligible trust contacts · current threshold {threshold}.",
-      "distributing": "Distributing…",
-      "distribute": "Distribute now",
-      "success": "Shards re-distributed. Contacts will pick up the new envelopes on their next visit to /shared-with-me.",
-      "missingMasterKey": "Unlock your vault first, then retry."
-    },
     "enroll": {
       "pinMismatch": "PINs do not match",
       "pinTooShort": "PIN must be at least {min} digits",
@@ -1245,16 +1224,13 @@
     },
     "masterRecovery": {
       "title": "Master Recovery",
-      "descriptionBefore": "Your master key is split into",
-      "shardsEmphasis": "4 cryptographic shards",
-      "descriptionMiddle": "using Shamir's Secret Sharing — one on this device and three held by your trusted contacts. You chose a threshold of",
-      "descriptionAfter": "shards to reconstruct the vault. Any combination meeting that threshold works — your contacts collaborate on-device, never on the server. Keeplas holds no shard.",
       "recoveryPhraseLabel": "Recovery phrase",
       "recoveryPhraseHashed": "Hashed and verified",
       "recoveryPhraseNotGenerated": "Not generated yet",
-      "guardianShardLabel": "Guardian shard #{index}",
-      "guardianShardHint": "Held by {name}",
-      "configureAdditional": "Configure Additional Shard"
+      "configureAdditional": "Manage trusted contacts",
+      "description": "Your master key is sealed by your 24 recovery words and never leaves your devices. It is never split: your trusted contacts confirm if something happens to you, but hold no part of your key and can't open your vault.",
+      "guardianLabel": "Trusted contact #{index}",
+      "guardianHint": "{name} · confirms if you're unreachable"
     },
     "activityLog": {
       "title": "Activity Log",
@@ -1312,13 +1288,11 @@
       "empty": {
         "title": "No vaults entrusted to you yet",
         "description": "When someone adds you as a trusted contact and you accept the invitation, the vault they protect will appear here."
-      },
-      "restoring": "Restoring your shards on this device — your encrypted fragments are being unwrapped locally and never leave your browser."
+      }
     },
     "card": {
       "phase": {
         "released": "Released",
-        "recovery": "Recovery",
         "actionNeeded": "Action needed",
         "guarding": "Guarding",
         "awaitingRelease": "Awaiting release"
@@ -1331,8 +1305,6 @@
         "months": "{count}mo ago",
         "years": "{count}y ago"
       },
-      "verifiedAt": "Verified {relative}",
-      "verifying": "Verifying…",
       "type": {
         "recipient": "Recipient",
         "trust": "Trust"
@@ -1345,9 +1317,6 @@
         "other": "Other",
         "contact": "Contact"
       },
-      "fragmentHeld": "Fragment held · {status}",
-      "noFragment": "No fragment yet",
-      "fragmentHint": "An encrypted recovery fragment of this vault is sealed to your public key and stored on this device. With the other trust contacts (threshold set by the owner) you can help reopen the vault — alone you cannot. It re-verifies automatically each time you open this page, so the owner knows you can still unwrap it.",
       "guarding": {
         "recipient": "You'll receive what {ownerName} left you here if their vault is ever released.",
         "trust": "Nothing to do for now — you'll be asked to help only if {ownerName} stops responding to their check-ins."
@@ -1359,7 +1328,7 @@
       },
       "actionNeeded": {
         "prompt": "{ownerName} stopped responding to their check-ins. If you genuinely can't reach them, confirm it.",
-        "hint": "Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes can the vault be recovered/released.",
+        "hint": "Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes are the items the owner assigned released to their recipients.",
         "confirm": "Confirm — they are unreachable",
         "cancel": "Cancel",
         "done": "Confirmation recorded. Other trust contacts will be notified.",
@@ -1367,20 +1336,9 @@
         "mark": "Mark as unreachable",
         "error": "Could not confirm unreachability."
       },
-      "recovery": {
-        "title": "Recovery in progress",
-        "hint": "The 72h grace window passed without the owner cancelling. You and the other trust contacts can now submit your shards. Once the threshold is reached, any submitter can reconstruct the master key entirely on-device — the server never sees raw shards.",
-        "submissionCountOne": "{count} submission",
-        "submissionCountOther": "{count} submissions",
-        "sealing": "Sealing your shard for peers…",
-        "submit": "Submit my shard",
-        "submittedToPeersOne": "Your shard was submitted to {count} peer.",
-        "submittedToPeersOther": "Your shard was submitted to {count} peers.",
-        "reconstructed": "Master key reconstructed on this device. Memorial vault access available.",
-        "reconstructing": "Reconstructing…",
-        "awaitingPeers": "Awaiting peer submissions…",
-        "reconstruct": "Reconstruct master key"
-      }
+      "availableAt": "Available · confirmed {relative}",
+      "confirmingAvailability": "Confirming your availability…",
+      "availabilityHint": "Opening this page confirms to the owner that you can still act as their trusted contact. You never hold a key to their vault and can't read their data."
     },
     "memorial": {
       "noAccess": {
@@ -1451,25 +1409,25 @@
     "guardians": {
       "heading": "The Role of Guardians",
       "roles": {
-        "holdsShard": {
-          "title": "Holds a recovery shard",
-          "description": "Each trust contact stores one encrypted fragment of your master key. Two of them confirming, then submitting their shards, is what unlocks the vault."
-        },
         "confirmsUnreachable": {
           "title": "Confirms you are unreachable",
           "description": "After Life Check has exhausted every channel, your trust contacts are notified. Two of them must confirm you are unreachable to open the 72-hour grace window."
         },
         "releasesVault": {
           "title": "Releases vault & recipients",
-          "description": "Once the grace window passes without your reply, shard submissions reach quorum and the vault unlocks. Recipients then receive their pre-assigned items."
+          "description": "Once the grace window passes without your reply, each recipient receives only the items you assigned to them."
+        },
+        "noVaultAccess": {
+          "title": "Never reads your vault",
+          "description": "Trust contacts hold no key to your vault. They can't open your items — not alone, not together."
         }
       }
     },
     "recoveryNetwork": {
       "title": "Recovery Network",
-      "help": "Tracks whether your social recovery is operational. The big number is how many guardians have accepted out of the {threshold} needed to unlock the vault (your quorum, set during onboarding). Below quorum, recovery is impossible. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer. Pending invites and shard distribution are shown so you know exactly what's left to do.",
+      "help": "Tracks whether your continuity protocol can run. The big number is how many guardians have accepted out of the {threshold} needed to confirm you are unreachable (your quorum). Below quorum, nothing can be released. At quorum, it works but a single missing guardian breaks it. Above quorum, you have buffer.",
       "quorum": "quorum",
-      "stepLabel": "Step 2 · Shamir shards needed to unlock the vault",
+      "stepLabel": "Confirmations needed to start the release",
       "state": {
         "unprotected": "Unprotected — invite your first guardian",
         "atRisk": "At risk — {count} more to reach quorum",
@@ -1479,28 +1437,27 @@
       },
       "accepted": "Accepted",
       "pendingInvites": "Pending invites",
-      "shardsDistributed": "Shards distributed",
       "maxGuardians": "Max guardians"
     },
     "oneGuardianWarning": {
       "title": "One guardian is not enough",
-      "body": "Only {name} is accepted so far — invite at least one more. Recovery cannot work with a single guardian for two reasons: at least 2 trust contacts must vote that you are unreachable before the grace window opens, and a lone guardian has no peer to exchange shards with, so the vault can never reach the 2 shards needed to reconstruct your key."
+      "body": "Only {name} is accepted so far — invite at least one more. At least 2 trust contacts must confirm you are unreachable before the grace window opens, so a single guardian can never start the release."
     },
     "emptyState": {
       "title": "Invite Your First Guardian",
-      "description": "Invite at least 2 trusted guardians for recovery. The current shard model uses up to 3 shard holders; recipients have no cap."
+      "description": "Invite at least 2 trusted guardians — two of them must confirm before anything is released. Recipients have no cap."
     },
     "trustContacts": {
       "heading": "Trust Contacts",
-      "help": "Trust contacts each hold one encrypted shard of your recovery key. They can collectively help you regain vault access. Capped at 5 by design — fewer is fine, more would weaken the security model.",
+      "help": "Trust contacts confirm if something happens to you. They hold no key to your vault and can't read it. Capped at 5 by design — fewer is fine.",
       "inviteNext": "Invite Next Trust Contact",
       "slotsRemaining": "{count} slots remaining"
     },
     "recipientsOnly": {
       "heading": "Recipients Only",
-      "help": "People who only receive items when a trigger fires (conditional message, vault release). They don't hold a recovery shard, so there's no cap on how many you can add.",
+      "help": "People who only receive items when a trigger fires (conditional message, vault release). They have no confirmation role, so there's no cap on how many you can add.",
       "addTitle": "Add a Recipient",
-      "addDescription": "People who only receive items at trigger — no recovery role, no shard, no cap.",
+      "addDescription": "People who only receive items at trigger — no confirmation role, no cap.",
       "addButton": "Add Recipient"
     },
     "howGroups": {
@@ -1516,7 +1473,7 @@
     },
     "accessRequests": {
       "heading": "Emergency Access",
-      "help": "Trust contacts open this request when Life Check has exhausted every channel and you can no longer be reached. Once the quorum confirms your unavailability, a 72-hour grace window opens — sign in and click I am well to cancel. After the window, contacts submit their shards and the vault opens in read-only memorial mode.",
+      "help": "Trust contacts open this request when Life Check has exhausted every channel and you can no longer be reached. Once the quorum confirms your unavailability, a 72-hour grace window opens — sign in and click I am well to cancel. After the window, each recipient receives only the items you assigned to them.",
       "status": {
         "pending": "Pending",
         "approved": "Approved",
@@ -1537,7 +1494,6 @@
     "contactCard": {
       "recipient": "Recipient",
       "trust": "Trust",
-      "fragmentAssigned": "Fragment Assigned",
       "awaitingKey": "Awaiting key"
     },
     "detail": {
@@ -1549,14 +1505,11 @@
       "invited": "Invited",
       "accepted": "Accepted",
       "recoveryRole": "Recovery role",
-      "recipientOnlyDescription": "Recipient only — holds no recovery shard. They only receive the vault items routed to them when a trigger fires.",
-      "shardIndex": "Shard index",
+      "recipientOnlyDescription": "Recipient only — no confirmation role. They only receive the vault items routed to them when a trigger fires.",
       "awaitingKey": "Awaiting encryption key",
       "awaitingKeyHelp": "This contact accepted the invitation but hasn't published their encryption key yet. They'll get access automatically once they finish setting up their account — no action needed from you.",
-      "fragmentAssigned": "Fragment assigned",
-      "fragmentAssignedHelp": "An encrypted Shamir share of your master key has been wrapped to this contact's public key and stored. They will need to submit it together with the recovery threshold for the vault to be reconstructible.",
-      "verificationHelp": "Round-trip cryptographic check that the contact's keypair is functional. The owner wraps a known plaintext to the contact's public key, and the contact unwraps it on-device — proving they hold the matching private key without exposing any vault content.",
-      "lastVerified": "Last verified {relative} ({date}).",
+      "verificationHelp": "Confirmed each time this contact opens Keeplas and their own key unlocks on their device — proof they can still act as your trusted contact. It never gives them access to your vault.",
+      "lastVerified": "Last confirmed {relative} ({date}).",
       "itemsReleased": "Items released to this contact",
       "noItemsRouted": "No vault items are routed to this contact yet.",
       "recipientMode": {
@@ -1603,18 +1556,6 @@
       "saving": "Saving…",
       "submit": "Save Changes"
     },
-    "distribute": {
-      "heading": "Distribute shards",
-      "help": "Splits your master key into 5 Shamir shares with your chosen threshold and seals each share to a trust contact's public key. Re-running this re-splits and invalidates any previously distributed shard — by design.",
-      "belowMin": "Recovery needs at least 2 trusted contacts. Invite and confirm one more before distributing.",
-      "pendingOne": "{pending} of {total} trust contact still needs a shard.",
-      "pendingMany": "{pending} of {total} trust contacts still needs a shard.",
-      "allCurrent": "All trust contacts have a current shard.",
-      "distributing": "Distributing…",
-      "distributeNow": "Distribute now",
-      "success": "Shards distributed to all eligible contacts.",
-      "missingMasterKey": "Unlock your vault first, then retry."
-    },
     "invite": {
       "errorMissingContact": "Add an email or a phone number",
       "errorInvalidEmail": "Please enter a valid email",
@@ -1622,8 +1563,8 @@
       "errorSend": "Failed to send invitation",
       "titleRecipient": "Add Recipient",
       "titleTrust": "Invite Trusted Contact",
-      "descriptionRecipient": "This person will receive vault items only when one of your triggers fires. They don't hold a recovery shard.",
-      "descriptionTrust": "This person will receive a recovery fragment and can help you regain access to your vault.",
+      "descriptionRecipient": "This person will receive vault items only when one of your triggers fires.",
+      "descriptionTrust": "This person will help confirm if something happens to you. They will never hold a key to your vault.",
       "fullNameLabel": "Full Name *",
       "fullNamePlaceholder": "Enter their full name",
       "emailLabel": "Email",
@@ -1640,14 +1581,14 @@
         "other": "Other"
       },
       "roleInKeeplasLabel": "Role in Keeplas",
-      "roleInKeeplasHelp": "Trust contact = holds a recovery shard, counts toward your 5-trust cap, can help recover your account. Recipient only = receives items at trigger but no recovery role and no cap.",
+      "roleInKeeplasHelp": "Trust contact = confirms if you're unreachable, counts toward your 5-trust cap. Recipient only = receives items at trigger, no confirmation role and no cap. Neither ever holds a key to your vault.",
       "trustOption": {
         "title": "Trust contact",
-        "description": "Holds a recovery shard. Counts toward your 5-trust-contacts cap."
+        "description": "Confirms if you're unreachable. Counts toward your 5-trust-contacts cap."
       },
       "recipientOption": {
         "title": "Recipient only",
-        "description": "Receives items at trigger. No shard, no cap, no recovery role."
+        "description": "Receives items at trigger. No cap, no confirmation role."
       },
       "cancel": "Cancel",
       "sending": "Sending...",
@@ -2583,7 +2524,7 @@
       "badge": "Confirmed",
       "heading": "You're now a Trusted Contact",
       "bodyPre": "You are now part of ",
-      "bodyPost": "'s recovery network. You may receive a recovery fragment to help protect their vault."
+      "bodyPost": "'s trusted circle. You'll help confirm if something happens to them — you won't hold any part of their key."
     },
     "invite": {
       "badge": "Trusted Contact Invitation",
@@ -2601,8 +2542,8 @@
     "roleFallback": "trusted contact",
     "meaning": {
       "title": "What this means",
-      "bullet1": "You will receive an encrypted recovery fragment.",
-      "bullet2": "You may be asked to help recover the vault in an emergency.",
+      "bullet1": "You hold no key to their vault and can't read it.",
+      "bullet2": "You may be asked to confirm whether they can be reached.",
       "bullet3": "You will never see vault contents unless access is explicitly granted."
     },
     "needAccount": "You need a Keeplas account to accept this invitation.",
@@ -2662,7 +2603,7 @@
       "recovery": {
         "badge": "Pillar 4",
         "title": "Recovery",
-        "intro": "Your 24 words are the only secret without a server-side reset path. If you lose them, only your trusted contacts can help — through Shamir Secret Sharing wrapped with a post-quantum KEM. We have no master key. No backdoor.",
+        "intro": "Your 24 words are the only way to rebuild your master key — there is no server-side reset, and your trusted contacts never hold any part of it. We have no master key. No backdoor.",
         "bullets": [
           "Lost password → reset with your 24 words. Vault unaffected.",
           "Lost 2FA → reset with your 24 words.",

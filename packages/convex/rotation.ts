@@ -60,7 +60,8 @@ export const rotateKeyMaterial = auditedMutation({
 
 /**
  * Close the rotation: every item is now wrapped under the new keypair, so the
- * transitional previous secret key can be discarded.
+ * transitional previous secret key can be discarded. Also satisfies a forced
+ * rotation (`masterKeyRotationRequired`, set by the v2 shard purge).
  */
 export const finalizeRotation = auditedMutation({
   action: "vault.rotation_finalized",
@@ -70,6 +71,7 @@ export const finalizeRotation = auditedMutation({
     const userId = await requireFullAuth(ctx);
     await ctx.db.patch(userId, {
       encryptedAsymmetricSecretKeyPrev: undefined,
+      masterKeyRotationRequired: undefined,
       updatedAt: Date.now(),
     });
     return { success: true };

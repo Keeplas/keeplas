@@ -204,7 +204,6 @@ describe("requireFullAuth — onboarding/setup is NOT gated (d)", () => {
       {
         encryptedKeyBundle: "bundle",
         phraseSalt: "salt",
-        vaultThreshold: 2,
       },
     );
     const user = await t.run((ctx) => ctx.db.get(userId));

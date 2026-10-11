@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Link } from "@/lib/navigation";
-import { useQuery } from "convex/react";
 import { cn, HelpHint } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useTranslations } from "@/lib/i18n";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
-import { useRecoveryFlow } from "./use-recovery-flow";
 
 const ROLE_KEYS: Record<string, string> = {
   family: "family",
@@ -37,7 +35,7 @@ interface SharedVaultCardProps {
   vault: SharedVault;
 }
 
-type PhaseKey = "guarding" | "action_needed" | "recovery" | "released";
+type PhaseKey = "guarding" | "action_needed" | "released";
 
 interface Phase {
   key: PhaseKey;
@@ -49,12 +47,10 @@ interface Phase {
 /**
  * Collapse the contact's many possible states into ONE lifecycle phase so the
  * card can foreground a single status + primary action. Precedence is
- * most-advanced-wins: released > recovery > action needed > guarding. (Recovery
- * can still co-exist with released — it's then shown as a secondary action.)
+ * most-advanced-wins: released > action needed > guarding.
  */
 function getVaultPhase(opts: {
   released: boolean;
-  showRecovery: boolean;
   canMarkUnreachable: boolean;
   isRecipientOnly: boolean;
 }): Phase {
@@ -64,14 +60,6 @@ function getVaultPhase(opts: {
       labelKey: "card.phase.released",
       pillClass: "bg-primary/10 text-primary",
       dotClass: "bg-primary",
-    };
-  }
-  if (opts.showRecovery) {
-    return {
-      key: "recovery",
-      labelKey: "card.phase.recovery",
-      pillClass: "bg-error text-on-error",
-      dotClass: "bg-on-error",
     };
   }
   if (opts.canMarkUnreachable) {
@@ -111,29 +99,11 @@ function formatRelative(
   return t("card.relative.years", { count: year });
 }
 
-function isGraceExpired(gracePeriodEndsAt: number | null | undefined): boolean {
-  if (!gracePeriodEndsAt) return false;
-  return Date.now() > gracePeriodEndsAt;
-}
-
 export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const t = useTranslations("sharedWithMe");
   const markUnreachable = useAuditedMutation(
     api.access_requests.markUserUnreachable,
   );
-  const activeRequest = useQuery(
-    api.access_requests.getActiveAccessRequestForContact,
-    vault.invitationStatus === "accepted"
-      ? { contactId: vault._id as Id<"trusted_contacts"> }
-      : "skip",
-  );
-
-  const recovery = useRecoveryFlow({
-    contactId: vault._id as Id<"trusted_contacts">,
-    ownerUserId: vault.userId as unknown as string,
-    accessRequestId: activeRequest?._id ?? null,
-  });
-
   const [unreachableState, setUnreachableState] = useState<
     "idle" | "confirming" | "running" | "done" | "error"
   >("idle");
@@ -147,27 +117,11 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   const canMarkUnreachable =
     !isRecipientOnly && isAccepted && isAwaitingConfirmation;
 
-  const graceExpired = isGraceExpired(activeRequest?.gracePeriodEndsAt);
-  const showRecovery =
-    !isRecipientOnly &&
-    isAccepted &&
-    !!activeRequest?.quorumReached &&
-    !activeRequest?.cancelledDuringGrace &&
-    graceExpired;
-  const recoveryComplete = recovery.reconstructStatus === "ok";
-
   const phase = getVaultPhase({
     released: vault.released,
-    showRecovery,
     canMarkUnreachable,
     isRecipientOnly,
   });
-
-  // Recovery surfaces as the primary action in its own phase, and as a
-  // secondary action under the memorial link once released — collapsed once the
-  // master key is reconstructed so the memorial stays the focus.
-  const showRecoveryBlock =
-    showRecovery && !(phase.key === "released" && recoveryComplete);
 
   const initials = vault.ownerName
     .split(" ")
@@ -176,14 +130,14 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  // Verification is automatic: useReceiveShard unwraps the real shard on load
-  // and stamps lastVerifiedAt. The label just reflects that server state.
-  const verifiedLabel =
+  // Confirmation is automatic: useConfirmAvailability stamps lastVerifiedAt
+  // when this page loads. The label just reflects that server state.
+  const availabilityLabel =
     vault.lastVerifiedAt !== undefined
-      ? t("card.verifiedAt", {
+      ? t("card.availableAt", {
           relative: formatRelative(vault.lastVerifiedAt, t),
         })
-      : t("card.verifying");
+      : t("card.confirmingAvailability");
 
   async function handleMarkUnreachable() {
     if (unreachableState !== "confirming") {
@@ -246,15 +200,13 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         </span>
       </div>
 
-      {/* Compact custody + verification status (trust contacts only) */}
-      {!isRecipientOnly && (
+      {/* Compact availability status (trust contacts only) */}
+      {!isRecipientOnly && isAccepted && (
         <div className="flex items-center gap-1.5 mt-4 min-w-0">
           <span className="text-label-md text-on-surface-variant truncate">
-            {vault.shardConfirmed
-              ? t("card.fragmentHeld", { status: verifiedLabel })
-              : t("card.noFragment")}
+            {availabilityLabel}
           </span>
-          <HelpHint content={t("card.fragmentHint")} />
+          <HelpHint content={t("card.availabilityHint")} />
         </div>
       )}
 
@@ -327,96 +279,6 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
           )}
           {unreachableState === "error" && unreachableError && (
             <p className="text-label-md text-error">{unreachableError}</p>
-          )}
-        </div>
-      )}
-
-      {/* Recovery: primary in its phase, secondary under the memorial link */}
-      {showRecoveryBlock && (
-        <div
-          className={cn(
-            "space-y-3",
-            phase.key === "released"
-              ? "pt-4 mt-4 border-t border-outline-variant/15"
-              : "mt-5",
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <h4 className="text-label-md font-bold uppercase tracking-wide text-error inline-flex items-center gap-2">
-              {t("card.recovery.title")}
-              <HelpHint content={t("card.recovery.hint")} />
-            </h4>
-            <span className="text-label-md text-on-surface-variant">
-              {recovery.submissionCount === 1
-                ? t("card.recovery.submissionCountOne", {
-                    count: recovery.submissionCount,
-                  })
-                : t("card.recovery.submissionCountOther", {
-                    count: recovery.submissionCount,
-                  })}
-            </span>
-          </div>
-
-          {recovery.submitStatus !== "ok" &&
-          recovery.submitStatus !== "already_submitted" ? (
-            <button
-              onClick={() => void recovery.submitShard()}
-              disabled={recovery.submitStatus === "running"}
-              className="w-full text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
-            >
-              {recovery.submitStatus === "running"
-                ? t("card.recovery.sealing")
-                : t("card.recovery.submit")}
-            </button>
-          ) : (
-            <p className="text-label-md text-secondary font-medium">
-              {recovery.peerCount === 1
-                ? t("card.recovery.submittedToPeersOne", {
-                    count: recovery.peerCount,
-                  })
-                : t("card.recovery.submittedToPeersOther", {
-                    count: recovery.peerCount,
-                  })}
-            </p>
-          )}
-
-          {recovery.submitStatus === "error" && recovery.submitError && (
-            <p className="text-label-md text-error">{recovery.submitError}</p>
-          )}
-          {recovery.submitStatus === "no_local_shard" && (
-            <p className="text-label-md text-error">{recovery.submitError}</p>
-          )}
-
-          {(recovery.submitStatus === "ok" ||
-            recovery.submitStatus === "already_submitted") && (
-            <div className="pt-2">
-              {recovery.reconstructStatus === "ok" ? (
-                <p className="text-label-md text-secondary font-medium">
-                  {t("card.recovery.reconstructed")}
-                </p>
-              ) : (
-                <button
-                  onClick={() => void recovery.reconstructMasterKey()}
-                  disabled={
-                    recovery.reconstructStatus === "running" ||
-                    recovery.wrappedForMeCount === 0
-                  }
-                  className="w-full text-sm px-3 py-2 rounded-lg bg-primary text-on-primary font-medium cursor-pointer disabled:opacity-60"
-                >
-                  {recovery.reconstructStatus === "running"
-                    ? t("card.recovery.reconstructing")
-                    : recovery.wrappedForMeCount === 0
-                      ? t("card.recovery.awaitingPeers")
-                      : t("card.recovery.reconstruct")}
-                </button>
-              )}
-              {recovery.reconstructStatus === "error" &&
-                recovery.reconstructError && (
-                  <p className="text-label-md text-error mt-2">
-                    {recovery.reconstructError}
-                  </p>
-                )}
-            </div>
           )}
         </div>
       )}

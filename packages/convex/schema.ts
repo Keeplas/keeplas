@@ -41,7 +41,7 @@ export default defineSchema({
 
     // Crypto fields — populated during onboarding (Phase 2)
     // Base64-serialized ML-KEM-768 public key (FIPS 203). Used by other
-    // users to wrap per-recipient DEKs and shards for this user.
+    // users to wrap per-recipient DEKs for this user.
     publicKey: v.optional(v.string()),
     // JSON envelope { version, phraseSalt, iv, encryptedMasterKey }. The
     // MasterKey is wrapped client-side by a RootKey derived from the user's
@@ -76,11 +76,15 @@ export default defineSchema({
     phraseSalt: v.optional(v.string()),
     recoveryPhraseHash: v.optional(v.string()),
     recoveryVerified: v.optional(v.boolean()),
-    // Shamir threshold chosen at onboarding: how many trusted contacts must
-    // collaborate to reconstruct the MasterKey. Min 2, max 3 (only the 3
-    // contact shards participate in contacts-only recovery). Once shards are
-    // distributed, changing this requires a full re-split + re-distribution.
+    // DEPRECATED (v2 phase 2, F2): the MasterKey is no longer Shamir-split.
+    // Kept optional only until `migrations:purgeMasterKeyShards` has cleared
+    // every row; remove in the follow-up narrowing deploy.
     vaultThreshold: v.optional(v.number()),
+    // Set by `migrations:purgeMasterKeyShards` for owners whose MasterKey was
+    // ever split to trusted contacts: those shards may still sit on a
+    // contact's device, so the owner must rotate the MasterKey. Cleared by
+    // `rotation.finalizeRotation`.
+    masterKeyRotationRequired: v.optional(v.boolean()),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),
@@ -506,14 +510,16 @@ export default defineSchema({
       v.union(v.literal("trust"), v.literal("recipient_only")),
     ),
 
+    // DEPRECATED (v2 phase 2, F2): the MasterKey is no longer Shamir-split.
+    // Kept optional only until `migrations:purgeMasterKeyShards` has cleared
+    // every row; remove in the follow-up narrowing deploy.
     shardIndex: v.optional(v.number()),
     encryptedShard: v.optional(v.string()),
     shardPublicKeyUsed: v.optional(v.string()),
     shardConfirmed: v.optional(v.boolean()),
 
-    // Stamped automatically after a successful on-device shard unwrap (see
-    // useReceiveShard) — the contact decrypting their real `encryptedShard` is
-    // the verification.
+    // Stamped when the contact's own key material unlocks on /shared-with-me
+    // (see useConfirmAvailability) — the periodic availability proof.
     lastVerifiedAt: v.optional(v.number()),
 
     contactPublicKey: v.optional(v.string()),
@@ -521,7 +527,7 @@ export default defineSchema({
     // malicious-server key substitution). `contactIdentityPublicKey` is the
     // contact's ML-DSA-65 public key; `contactPublicKeySignature` is their
     // ML-DSA signature over `contactPublicKey`'s ML-KEM public-key bytes. The
-    // owner verifies the signature before wrapping any DEK/shard to this
+    // owner verifies the signature before wrapping any DEK to this
     // contact, so a server cannot substitute the encryption key.
     contactIdentityPublicKey: v.optional(v.string()),
     contactPublicKeySignature: v.optional(v.string()),
@@ -554,7 +560,6 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_contact_user", ["contactUserId"])
-    .index("by_shard_index", ["userId", "shardIndex"])
     .index("by_invitation_token", ["invitationToken"]),
 
   // ═══════════════════════════════════════════════
@@ -600,10 +605,13 @@ export default defineSchema({
     // to CHECK_IN_WINDOW_DAYS in life_check.ts. Used by the dev fast-test mode.
     checkInWindowDays: v.optional(v.number()),
     // Stage-2 human confirmation. Defaults applied in life_check.ts: threshold
-    // 2 trusted contacts, window 7 days, fallback "abort" (release nothing
-    // unless a human confirms). Edited via the release-policy settings (Phase 6).
+    // 2 trusted contacts, window 7 days. Edited via the release-policy settings.
     confirmationThreshold: v.optional(v.number()),
     confirmationWindowDays: v.optional(v.number()),
+    // Always "abort" once the policy is saved (nothing is released unless a
+    // human confirms). "release_anyway" is DEPRECATED (v2 phase 2, F5): no
+    // longer honoured, rewritten by `migrations:retireReleaseAnyway`; drop the
+    // literal in the follow-up narrowing deploy.
     fallbackBehavior: v.optional(
       v.union(v.literal("abort"), v.literal("release_anyway")),
     ),
@@ -712,20 +720,12 @@ export default defineSchema({
     .index("by_status", ["vaultUserId", "status"]),
 
   // ═══════════════════════════════════════════════
-  // RECOVERY SHARD SUBMISSIONS (post-mortem reconstruction)
+  // RECOVERY SHARD SUBMISSIONS — DEPRECATED (v2 phase 2, F1)
   // ═══════════════════════════════════════════════
   //
-  // When an access_request reaches its quorum and the 72h grace window
-  // expires, each participating trust contact submits their stored shard.
-  // To preserve zero-knowledge, the raw shard is never sent to the server:
-  // each submitter wraps a copy of their shard to every OTHER trust contact's
-  // ML-KEM public key, then uploads the resulting fan-out as one row per
-  // (submitter, recipient) pair.
-  //
-  // Any contact who is one of the submitters can later fetch the rows where
-  // they are `recipientContactId`, unwrap them with their own private key,
-  // and combine those raw shards with their own to reconstruct the master
-  // key — entirely on-device.
+  // Former post-mortem MasterKey reconstruction. No code path writes here any
+  // more; `migrations:purgeMasterKeyShards` empties it. Kept until the admin
+  // app stops reading `admin.security.recoverySubmissionStats`.
 
   recovery_shard_submissions: defineTable({
     accessRequestId: v.id("access_requests"),

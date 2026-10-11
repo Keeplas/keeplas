@@ -5,9 +5,11 @@ import { Loader } from "@keeplas/ui";
 import { Sidebar } from "@/components/sidebar";
 import { FabAddEntry } from "@/components/fab-add-entry";
 import { UnlockGate } from "@/components/unlock-gate";
+import { ForcedRotationGate } from "@/components/forced-rotation-gate";
 import { UploadQueueProvider } from "@/lib/upload-queue";
 import { useTranslations } from "@/lib/i18n";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
+import { purgeLegacyShards } from "@/lib/purge-legacy-shards";
 import { api } from "@keeplas/backend/_generated/api";
 
 export const Route = createFileRoute("/_dashboard")({
@@ -40,6 +42,10 @@ function DashboardLayout() {
     api.login_otp.getMyLoginOtpGate,
     isAuthenticated ? {} : "skip",
   );
+
+  useEffect(() => {
+    purgeLegacyShards();
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -96,6 +102,7 @@ function DashboardLayout() {
     <UnlockGate>
       <UploadQueueProvider>
         <PendingShareBackfill />
+        <ForcedRotationGate />
         <div className="flex flex-col md:flex-row min-h-screen">
           <Sidebar />
           <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">

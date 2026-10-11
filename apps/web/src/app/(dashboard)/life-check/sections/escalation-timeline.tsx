@@ -28,7 +28,6 @@ type Tone = keyof typeof TONE_STYLES;
 interface ReleasePolicy {
   confirmationThreshold: number;
   confirmationWindowDays: number;
-  fallbackBehavior: "abort" | "release_anyway";
 }
 
 interface EscalationTimelineProps extends ReleasePolicy {
@@ -87,8 +86,7 @@ function buildSteps(
   // Only channels that are enabled AND verified actually go out — an
   // unverified email/phone can't be reached, so keep it out of the timeline.
   const enabled = channels.filter((c) => c.isEnabled && c.isVerified !== false);
-  const { confirmationThreshold, confirmationWindowDays, fallbackBehavior } =
-    policy;
+  const { confirmationThreshold, confirmationWindowDays } = policy;
 
   return [
     {
@@ -155,14 +153,9 @@ function buildSteps(
       dayLabel: t("timeline.steps.released.dayLabel"),
       title: t("timeline.steps.released.title"),
       titleClass: "text-on-primary text-headline-sm",
-      description:
-        fallbackBehavior === "release_anyway"
-          ? t("timeline.steps.released.descriptionAnyway", {
-              contacts: trustedContactsLabel(confirmationThreshold, t),
-            })
-          : t("timeline.steps.released.descriptionAbort", {
-              contacts: trustedContactsLabel(confirmationThreshold, t),
-            }),
+      description: t("timeline.steps.released.description", {
+        contacts: trustedContactsLabel(confirmationThreshold, t),
+      }),
       tone: "triggered",
       isFinal: true,
       help: t("timeline.steps.released.help"),
@@ -171,21 +164,12 @@ function buildSteps(
 }
 
 function policyRecap(
-  {
-    confirmationThreshold,
-    confirmationWindowDays,
-    fallbackBehavior,
-  }: ReleasePolicy,
+  { confirmationThreshold, confirmationWindowDays }: ReleasePolicy,
   t: Translator,
 ): string {
-  const fallback =
-    fallbackBehavior === "release_anyway"
-      ? t("timeline.recap.fallbackAnyway")
-      : t("timeline.recap.fallbackAbort");
   return t("timeline.recap.text", {
     contacts: contactsLabel(confirmationThreshold, t),
     days: confirmationWindowDays,
-    fallback,
   });
 }
 
@@ -194,7 +178,6 @@ export function EscalationTimeline({
   frequency,
   confirmationThreshold,
   confirmationWindowDays,
-  fallbackBehavior,
   travelModeEnabled,
   travelModeUntil,
 }: EscalationTimelineProps) {
@@ -202,7 +185,6 @@ export function EscalationTimeline({
   const policy: ReleasePolicy = {
     confirmationThreshold,
     confirmationWindowDays,
-    fallbackBehavior,
   };
   const steps = buildSteps(channels, policy, t);
   const cadence = cadenceLabel(frequency, t);

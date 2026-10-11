@@ -11,13 +11,13 @@
  * - Stored only in IndexedDB on this device. Never sent to the server — the
  *   zero-knowledge model is preserved.
  * - The CryptoKey object itself is stored via structured clone (not raw bytes).
- *   It stays extractable because shard distribution (use-distribute-shards.ts)
+ *   It stays extractable because master-key rotation (use-rotate-vault.ts)
  *   exports it; a script running on this origin while unlocked could therefore
  *   read it. The trade-off is deliberate: the vault no longer re-locks on
  *   refresh. Cleared on sign-out via clearPersistedMasterKeys().
  */
 
-import { STORAGE_KEYS } from "./storage-keys";
+import { purgeLegacyShards } from "./purge-legacy-shards";
 
 const DB_NAME = "keeplas-master-key";
 // v2: keyed by userId instead of email. The MasterKey is identifier-agnostic
@@ -101,17 +101,11 @@ export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
 /**
  * Wipe every persisted MasterKey. Called on sign-out / session loss so a
  * logged-out browser never keeps a usable key on disk. This is the single
- * chokepoint for clearing device-local crypto material, so it also removes the
- * plaintext Shamir device shard — otherwise it would survive sign-out and an
- * account switch on a shared browser, leaving the previous user's shard behind.
+ * chokepoint for clearing device-local crypto material, so it also removes any
+ * legacy pre-v2 Shamir shard left in this browser.
  */
 export async function clearPersistedMasterKeys(): Promise<void> {
-  // Remove the plaintext device shard first; it never depends on IndexedDB.
-  try {
-    localStorage.removeItem(STORAGE_KEYS.deviceShard);
-  } catch {
-    // localStorage may be unavailable (private mode, SSR) — non-fatal.
-  }
+  purgeLegacyShards();
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {

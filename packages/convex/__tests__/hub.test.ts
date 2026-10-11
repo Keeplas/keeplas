@@ -2,32 +2,32 @@ import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
 import { makeT, seedUser, asUser, seedTrustContact } from "./test.helpers";
 
-function distributeDone(
+function contactsReadyDone(
   hub: Awaited<ReturnType<ReturnType<typeof makeT>["query"]>>,
 ): boolean {
   const actions = (
     hub as { priorityActions: Array<{ key: string; done: boolean }> }
   ).priorityActions;
-  return actions.find((a) => a.key === "distribute_shards")!.done;
+  return actions.find((a) => a.key === "contacts_ready")!.done;
 }
 
-describe("hub shardsDistributed floor", () => {
-  it("is not done with a single confirmed trust contact", async () => {
+describe("hub contacts-ready floor", () => {
+  it("is not done with a single ready trust contact", async () => {
     const t = makeT();
     const owner = await seedUser(t);
-    await seedTrustContact(t, owner, { shardIndex: 2, confirmed: true });
+    await seedTrustContact(t, owner, { n: 2 });
 
     const hub = await asUser(t, owner).query(api.hub.getHubData, {});
-    expect(distributeDone(hub)).toBe(false);
+    expect(contactsReadyDone(hub)).toBe(false);
   });
 
-  it("is done with two confirmed trust contacts", async () => {
+  it("is done with two ready trust contacts", async () => {
     const t = makeT();
     const owner = await seedUser(t);
-    await seedTrustContact(t, owner, { shardIndex: 2, confirmed: true });
-    await seedTrustContact(t, owner, { shardIndex: 3, confirmed: true });
+    await seedTrustContact(t, owner, { n: 2 });
+    await seedTrustContact(t, owner, { n: 3 });
 
     const hub = await asUser(t, owner).query(api.hub.getHubData, {});
-    expect(distributeDone(hub)).toBe(true);
+    expect(contactsReadyDone(hub)).toBe(true);
   });
 });
