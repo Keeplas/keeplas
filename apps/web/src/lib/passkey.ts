@@ -4,6 +4,8 @@ import {
   startAuthentication as browserStartAuthentication,
   browserSupportsWebAuthn,
 } from "@simplewebauthn/browser";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { fromBase64Url } from "./device-unlock";
 import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -16,13 +18,14 @@ export type RegisterOptions = {
   finishRegistration: (args: {
     response: unknown;
     deviceName?: string;
+    keeplasDeviceId?: Id<"devices">;
   }) => Promise<{ success: boolean }>;
 };
 
 export type AuthenticateOptions = {
-  startAuthentication: (args: {
-    email?: string;
-  }) => Promise<PublicKeyCredentialRequestOptionsJSON>;
+  startAuthentication: (
+    args: Record<string, never>,
+  ) => Promise<PublicKeyCredentialRequestOptionsJSON>;
   signInWithPasskey: (response: unknown) => Promise<unknown>;
 };
 
@@ -47,39 +50,43 @@ export function usePasskeySupport(): boolean {
   );
 }
 
-function detectDeviceName(): string {
-  if (typeof navigator === "undefined") return "This device";
-  const ua = navigator.userAgent;
-  if (/iPhone/i.test(ua)) return "iPhone";
-  if (/iPad/i.test(ua)) return "iPad";
-  if (/Android/i.test(ua)) return "Android device";
-  if (/Macintosh/i.test(ua)) return "Mac";
-  if (/Windows/i.test(ua)) return "Windows PC";
-  if (/Linux/i.test(ua)) return "Linux device";
-  return "This device";
-}
-
+/**
+ * Registers a server passkey (sign-in) with the PRF extension enabled, so the
+ * same credential can also wrap the MasterKey on this device (device-unlock
+ * "biometric" entry). Returns the raw credential id. `prf: {}` only asks the
+ * authenticator to enable PRF: no PRF output is produced here, so nothing
+ * secret reaches the server with the registration response.
+ */
 export async function registerPasskey(
   api: RegisterOptions,
-  deviceName?: string,
-): Promise<void> {
+  deviceName: string,
+  keeplasDeviceId?: Id<"devices">,
+): Promise<Uint8Array> {
   if (!isPasskeySupported()) {
     throw new Error("Passkeys are not supported in this browser.");
   }
-  const name = deviceName?.trim() || detectDeviceName();
-  const options = await api.startRegistration({ deviceName: name });
-  const response = await browserStartRegistration({ optionsJSON: options });
-  await api.finishRegistration({ response, deviceName: name });
+  const options = await api.startRegistration({ deviceName });
+  const response = await browserStartRegistration({
+    optionsJSON: {
+      ...options,
+      extensions: {
+        ...options.extensions,
+        prf: {},
+      } as AuthenticationExtensionsClientInputs,
+    },
+  });
+  await api.finishRegistration({ response, deviceName, keeplasDeviceId });
+  return fromBase64Url(response.rawId);
 }
 
+/** Discoverable-credential sign-in: the passkey identifies the account. */
 export async function loginWithPasskey(
   api: AuthenticateOptions,
-  email?: string,
 ): Promise<void> {
   if (!isPasskeySupported()) {
     throw new Error("Passkeys are not supported in this browser.");
   }
-  const options = await api.startAuthentication({ email });
+  const options = await api.startAuthentication({});
   const response = await browserStartAuthentication({ optionsJSON: options });
   await api.signInWithPasskey(response);
 }

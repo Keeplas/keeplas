@@ -47,6 +47,10 @@ export const WEB_REQUIRED = [
 ];
 
 export const WEB_OPTIONAL_GROUPS = {
+  "Mobile app stores": [
+    "NEXT_PUBLIC_APP_STORE_URL",
+    "NEXT_PUBLIC_PLAY_STORE_URL",
+  ],
   "Email (Resend)": [
     "RESEND_API_KEY",
     "RESEND_FROM_EMAIL",
