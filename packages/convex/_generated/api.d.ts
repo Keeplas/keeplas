@@ -25,6 +25,7 @@ import type * as attestation_node from "../attestation_node.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
+import type * as cloud_backup from "../cloud_backup.js";
 import type * as crons from "../crons.js";
 import type * as devices from "../devices.js";
 import type * as dispatch from "../dispatch.js";
@@ -100,6 +101,7 @@ declare const fullApi: ApiFromModules<{
   audit: typeof audit;
   auth: typeof auth;
   billing: typeof billing;
+  cloud_backup: typeof cloud_backup;
   crons: typeof crons;
   devices: typeof devices;
   dispatch: typeof dispatch;

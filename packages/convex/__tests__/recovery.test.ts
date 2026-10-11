@@ -363,4 +363,21 @@ describe("owner recovery", () => {
     const user = await t.run((ctx) => ctx.db.get(ownerId));
     expect(user?.socialRecoveryRenewalRequired).toBe(true);
   });
+
+  it("reports a single way back in (M09-10)", async () => {
+    const t = makeT();
+    const ownerId = await t.run((ctx) =>
+      ctx.db.insert("users", { recoveryVerified: true }),
+    );
+    expect(await asUser(t, ownerId).query(api.recovery.getHealth, {})).toEqual({
+      trustContacts: {
+        configured: false,
+        contactCount: 0,
+        eligibleCount: 0,
+        renewalRequired: false,
+      },
+      recoveryKit: true,
+      activeDevices: 0,
+    });
+  });
 });

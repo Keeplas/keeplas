@@ -114,8 +114,8 @@ Each step lists its verification. A phase is done when every check passes.
 
 - [x] `@keeplas/crypto`: recovery secret split 2-of-3, social envelope, 6-digit code → verify: unit tests — `packages/crypto/__tests__/social.test.ts`
 - [x] Convex: `recovery_requests`, `recovery_approvals`, `recovery_secret_shares`, `social_envelopes`, `gate_keys`; KMS `use node` action; **72 h** window → verify: state-machine tests (pending → approved_1 → approved_2 → released → rotated; cancel; expire; reject) — `recovery.test.ts` (KMS: AWS in production, local KEK in dev)
-- [ ] States M09-4, M09-5, M09-6, M09-10 → verify: each state reachable in tests
-- [ ] Cloud backup (iCloud Keychain / Google Block Store), on by default with an onboarding explanation → verify: toggle off deletes both halves
+- [x] States M09-4, M09-5, M09-6, M09-10 → verify: each state reachable in tests — `recovery.test.ts`
+- [x] Cloud backup (iCloud Keychain / Google Block Store), on by default with an onboarding explanation → verify: toggle off deletes both halves — server half `cloud_backup.test.ts`, crypto `cloud.test.ts`; the app deletes the CBK (phase 8)
 
 ### Phase 6: Metadata (F4)
 

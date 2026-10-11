@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./aes": "./src/aes/index.ts",
+    "./cloud": "./src/cloud/index.ts",
     "./encoding": "./src/encoding.ts",
     "./kdf": "./src/kdf/index.ts",
     "./kem": "./src/kem/index.ts",

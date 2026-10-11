@@ -334,6 +334,16 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_request", ["requestId"]),
 
+  // iCloud Keychain / Google Block Store backup (workflows 10–11, D7):
+  // AES-GCM(CBK, RootKey). CBK lives only in the platform keychain.
+  cloud_backup_envelopes: defineTable({
+    userId: v.id("users"),
+    provider: v.union(v.literal("icloud"), v.literal("google")),
+    envelope: v.string(),
+    createdAt: v.number(),
+    lastRestoredAt: v.optional(v.number()),
+  }).index("by_user", ["userId"]),
+
   // ═══════════════════════════════════════════════
   // MOBILE SIGN-UP ATTESTATION (App Attest / Play Integrity, M09-9)
   // ═══════════════════════════════════════════════

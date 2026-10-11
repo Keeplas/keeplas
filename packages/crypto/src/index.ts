@@ -1,4 +1,5 @@
 export * from "./aes";
+export * from "./cloud";
 export * from "./encoding";
 export * from "./kdf";
 export * from "./kem";
