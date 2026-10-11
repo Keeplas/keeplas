@@ -150,7 +150,7 @@ export function RecoveryPhraseStep({
         <div className="flex flex-row flex-nowrap gap-2 md:gap-3 print:hidden">
           <button
             onClick={handleCopyAll}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
           >
             <svg
               className="w-5 h-5"
@@ -170,7 +170,7 @@ export function RecoveryPhraseStep({
           <button
             onClick={handleDownload}
             disabled={exporting}
-            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-label font-bold text-sm rounded-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg
               className="w-5 h-5"
@@ -191,7 +191,7 @@ export function RecoveryPhraseStep({
       </section>
 
       {/* Warning Banner */}
-      <div className="bg-primary-container text-on-primary-container p-5 md:p-8 rounded-2xl mb-8 md:mb-10 flex items-start gap-4 md:gap-6 relative overflow-hidden">
+      <div className="bg-primary-container text-on-primary-container p-5 md:p-8 rounded-sm mb-8 md:mb-10 flex items-start gap-4 md:gap-6 relative overflow-hidden">
         <div className="absolute right-0 top-0 opacity-10 translate-x-1/4 -translate-y-1/4">
           <svg
             className="w-48 h-48 text-on-primary-container"
@@ -225,12 +225,12 @@ export function RecoveryPhraseStep({
       </div>
 
       {/* Recovery Words Grid */}
-      <div className="bg-surface-container-low p-1 rounded-3xl mb-8 md:mb-10">
+      <div className="bg-surface-container-low p-1 rounded-sm mb-8 md:mb-10">
         <div className="bg-surface p-4 sm:p-6 md:p-10 rounded-[1.25rem] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 print:grid-cols-4">
           {phrase.map((word, index) => (
             <div
               key={index}
-              className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl"
+              className="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xs"
             >
               <span className="font-label text-[10px] text-primary/30 font-bold w-5 text-right tabular-nums">
                 {index + 1}
@@ -245,7 +245,7 @@ export function RecoveryPhraseStep({
 
       {/* Guidance Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10 print:hidden">
-        <div className="p-6 bg-surface-container-low rounded-2xl">
+        <div className="p-6 bg-surface-container-low rounded-sm">
           <svg
             className="w-6 h-6 text-secondary mb-3"
             fill="none"
@@ -266,7 +266,7 @@ export function RecoveryPhraseStep({
             {t("offlineBody")}
           </p>
         </div>
-        <div className="p-6 bg-surface-container-low rounded-2xl">
+        <div className="p-6 bg-surface-container-low rounded-sm">
           <svg
             className="w-6 h-6 text-secondary mb-3"
             fill="none"
@@ -287,7 +287,7 @@ export function RecoveryPhraseStep({
             {t("legacyBody")}
           </p>
         </div>
-        <div className="p-6 bg-surface-container-low rounded-2xl">
+        <div className="p-6 bg-surface-container-low rounded-sm">
           <svg
             className="w-6 h-6 text-secondary mb-3"
             fill="none"
@@ -317,7 +317,7 @@ export function RecoveryPhraseStep({
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-1 w-5 h-5 rounded-lg border-2 border-outline-variant/30 text-secondary focus:ring-secondary/20 focus:ring-offset-0 accent-secondary cursor-pointer"
+            className="mt-1 w-5 h-5 rounded-xs border-2 border-outline-variant/30 text-secondary focus:ring-secondary/20 focus:ring-offset-0 accent-secondary cursor-pointer"
           />
           <span className="text-sm text-on-surface font-body">
             {t("confirmLabel")}

@@ -16,7 +16,7 @@ export default function SettingsContactPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-surface-container-lowest ghost-border rounded-2xl p-6 md:p-8">
+      <div className="bg-surface-container-lowest ghost-border rounded-sm p-6 md:p-8">
         <ContactForm initialTopic={initialTopic} />
       </div>
     </div>

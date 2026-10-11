@@ -102,7 +102,7 @@ export function ReleaseIntroductionEditor() {
   return (
     <section
       id="welcome-message"
-      className="bg-surface-container-low rounded-2xl p-6 space-y-5 scroll-mt-24"
+      className="bg-surface-container-low rounded-sm p-6 space-y-5 scroll-mt-24"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -132,7 +132,7 @@ export function ReleaseIntroductionEditor() {
           {t("welcome.loading")}
         </p>
       ) : rows.length === 0 ? (
-        <div className="border-2 border-dashed border-outline-variant/30 rounded-2xl p-6 text-center">
+        <div className="border-2 border-dashed border-outline-variant/30 rounded-sm p-6 text-center">
           <Icon
             path={ICON_PATHS.mail}
             className="w-8 h-8 text-on-surface-variant/40 mx-auto mb-2"
@@ -146,14 +146,14 @@ export function ReleaseIntroductionEditor() {
           {rows.map((row) => (
             <li
               key={row._id}
-              className="bg-surface rounded-xl flex items-stretch justify-between gap-2"
+              className="bg-surface rounded-xs flex items-stretch justify-between gap-2"
             >
               <Link
                 href={`/vault/${row._id}`}
                 aria-label={t("welcome.openAria", {
                   title: titles[row._id] ?? "",
                 })}
-                className="min-w-0 flex-1 p-4 rounded-xl hover:bg-surface-container-high transition-colors cursor-pointer"
+                className="min-w-0 flex-1 p-4 rounded-xs hover:bg-surface-container-high transition-colors cursor-pointer"
               >
                 <p className="text-body-md font-bold text-primary truncate">
                   {titles[row._id] ?? ""}
@@ -173,7 +173,7 @@ export function ReleaseIntroductionEditor() {
                 aria-label={t("welcome.deleteAria", {
                   title: titles[row._id] ?? "",
                 })}
-                className="m-2 p-2 self-start rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
+                className="m-2 p-2 self-start rounded-xs text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
               >
                 <Icon path={ICON_PATHS.trash} className="w-4 h-4" />
               </button>

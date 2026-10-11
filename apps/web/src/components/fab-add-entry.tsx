@@ -26,7 +26,7 @@ export function FabAddEntry() {
         size="icon"
         aria-label={t("fab.addEntry")}
         onClick={() => setOpen(true)}
-        className="fixed right-6 bottom-24 md:bottom-6 z-40 h-16 w-16 rounded-full shadow-2xl shadow-primary/30 cursor-pointer"
+        className="fixed right-6 bottom-24 md:bottom-6 z-40 h-16 w-16 rounded-sm shadow-2xl shadow-primary/30 cursor-pointer"
       >
         <svg
           className="w-7 h-7"

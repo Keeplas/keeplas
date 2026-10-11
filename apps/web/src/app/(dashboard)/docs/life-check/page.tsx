@@ -41,7 +41,7 @@ export default function LifeCheckDocPage() {
       {/* How it works */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("lifeCheck.howItWorks")}
           </h2>
@@ -60,7 +60,7 @@ export default function LifeCheckDocPage() {
       </section>
 
       {/* After inactivity */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border space-y-4">
         <h2 className="text-headline-sm text-primary">
           {t("lifeCheck.afterInactivity.heading")}
         </h2>
@@ -80,7 +80,7 @@ export default function LifeCheckDocPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/life-check"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon
             path={ICON_PATHS.heartbeat}
@@ -92,7 +92,7 @@ export default function LifeCheckDocPage() {
         </Link>
         <Link
           href="/docs/trusted-contacts"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -114,8 +114,8 @@ function Detail({
   body: string;
 }) {
   return (
-    <article className="bg-surface-container-lowest rounded-2xl p-6 ghost-border flex gap-4">
-      <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+    <article className="bg-surface-container-lowest rounded-sm p-6 ghost-border flex gap-4">
+      <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
         <Icon path={iconPath} className="w-5 h-5" />
       </span>
       <div className="space-y-1">

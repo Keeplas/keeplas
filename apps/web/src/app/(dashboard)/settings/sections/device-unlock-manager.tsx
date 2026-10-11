@@ -46,7 +46,7 @@ export function DeviceUnlockManager() {
 
   if (user === undefined || loading) {
     return (
-      <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-2xl">
+      <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-sm">
         <Loader label={t("deviceUnlock.loading")} />
       </section>
     );
@@ -77,7 +77,7 @@ export function DeviceUnlockManager() {
   const canEnroll = !!masterKey;
 
   return (
-    <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-2xl flex flex-col space-y-5">
+    <section className="md:col-span-12 bg-surface-container-highest p-6 md:p-8 rounded-sm flex flex-col space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-headline-md text-primary">
@@ -94,13 +94,13 @@ export function DeviceUnlockManager() {
       </div>
 
       {error ? (
-        <div className="bg-error-container/40 p-3 rounded-xl">
+        <div className="bg-error-container/40 p-3 rounded-xs">
           <p className="text-body-md text-on-error-container">{error}</p>
         </div>
       ) : null}
 
       {!canEnroll ? (
-        <div className="bg-error-container/30 p-4 rounded-xl">
+        <div className="bg-error-container/30 p-4 rounded-xs">
           <p className="text-body-md text-on-error-container">
             {t("deviceUnlock.locked")}
           </p>
@@ -108,7 +108,7 @@ export function DeviceUnlockManager() {
       ) : null}
 
       {entries.length === 0 ? (
-        <div className="border-2 border-dashed border-outline-variant/40 rounded-xl p-6 text-center">
+        <div className="border-2 border-dashed border-outline-variant/40 rounded-xs p-6 text-center">
           <Icon
             path={ICON_PATHS.lock}
             className="w-10 h-10 mx-auto mb-3 text-outline-variant"
@@ -144,10 +144,10 @@ export function DeviceUnlockManager() {
             return (
               <li
                 key={entry.id}
-                className="flex items-center justify-between gap-3 p-3.5 bg-surface-container-lowest rounded-xl"
+                className="flex items-center justify-between gap-3 p-3.5 bg-surface-container-lowest rounded-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                  <div className="w-9 h-9 rounded-xs bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
                     <Icon
                       path={METHOD_ICON[entry.method]}
                       className="w-5 h-5"
@@ -195,7 +195,7 @@ export function DeviceUnlockManager() {
         <span>{t("deviceUnlock.addMethod")}</span>
       </Button>
 
-      <div className="flex items-start gap-3 bg-surface-container/40 p-4 rounded-xl">
+      <div className="flex items-start gap-3 bg-surface-container/40 p-4 rounded-xs">
         <Icon
           path={ICON_PATHS.warning}
           className="w-5 h-5 text-on-surface-variant shrink-0 mt-0.5"

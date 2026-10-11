@@ -27,7 +27,7 @@ function SettingsLayout() {
         if (!open) handleClose();
       }}
     >
-      <DialogContent className="w-[95vw] md:w-[90vw] h-[90vh] max-w-[1400px] p-0 overflow-hidden flex rounded-2xl">
+      <DialogContent className="w-[95vw] md:w-[90vw] h-[90vh] max-w-[1400px] p-0 overflow-hidden flex rounded-sm">
         <div className="relative flex w-full h-full">
           <SettingsSidebar
             mobileOpen={mobileNavOpen}

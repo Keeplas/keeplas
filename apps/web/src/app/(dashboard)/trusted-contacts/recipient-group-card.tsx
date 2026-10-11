@@ -58,19 +58,19 @@ export function RecipientGroupCard({
   return (
     <div
       className={cn(
-        "bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all",
+        "bg-surface-container-low p-6 rounded-sm group hover:bg-surface-container transition-all",
         group.isDefault && "ring-1 ring-secondary/40",
       )}
     >
       <div className="flex items-start justify-between mb-5">
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-on-secondary shrink-0"
+          className="w-12 h-12 rounded-sm flex items-center justify-center text-on-secondary shrink-0"
           style={{ backgroundColor: group.color ?? "var(--color-secondary)" }}
         >
           <Icon path={ICON_PATHS.users} className="w-6 h-6" strokeWidth={1.5} />
         </div>
         {group.isDefault && (
-          <span className="px-3 py-1 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
+          <span className="px-3 py-1 text-label-md rounded-sm bg-secondary-container text-on-secondary-container">
             {t("groupCard.default")}
           </span>
         )}
@@ -98,14 +98,14 @@ export function RecipientGroupCard({
           memberContacts.slice(0, 5).map((c) => (
             <span
               key={c._id}
-              className="text-label-md px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant"
+              className="text-label-md px-2.5 py-1 rounded-xs bg-surface-container text-on-surface-variant"
             >
               {c.name}
             </span>
           ))
         )}
         {memberContacts.length > 5 && (
-          <span className="text-label-md px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant">
+          <span className="text-label-md px-2.5 py-1 rounded-xs bg-surface-container text-on-surface-variant">
             +{memberContacts.length - 5}
           </span>
         )}
@@ -138,7 +138,7 @@ export function RecipientGroupCard({
           <button
             onClick={handleSetDefault}
             disabled={busy}
-            className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
+            className="w-full text-left text-sm px-3 py-2 rounded-xs hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
           >
             {t("groupCard.setDefault")}
           </button>
@@ -147,13 +147,13 @@ export function RecipientGroupCard({
               <button
                 onClick={handleDelete}
                 disabled={busy}
-                className="flex-1 text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                className="flex-1 text-sm px-3 py-2 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
               >
                 {busy ? t("groupCard.deleting") : t("groupCard.confirmDelete")}
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 text-sm px-3 py-2 rounded-lg bg-surface-container-high text-on-surface cursor-pointer"
+                className="flex-1 text-sm px-3 py-2 rounded-xs bg-surface-container-high text-on-surface cursor-pointer"
               >
                 {t("groupCard.cancel")}
               </button>
@@ -161,7 +161,7 @@ export function RecipientGroupCard({
           ) : (
             <button
               onClick={handleDelete}
-              className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-error/10 transition-colors cursor-pointer text-error"
+              className="w-full text-left text-sm px-3 py-2 rounded-xs hover:bg-error/10 transition-colors cursor-pointer text-error"
             >
               {t("groupCard.deleteGroup")}
             </button>

@@ -32,7 +32,7 @@ function InvitationShell({
         <MobileBrand />
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-sm mb-4 shadow-sm">
               <svg
                 className="w-5 h-5 text-secondary"
                 fill="currentColor"
@@ -199,21 +199,21 @@ export default function InvitationPage() {
         </>
       }
     >
-      <div className="bg-surface-container-low rounded-2xl p-5 mb-6 space-y-3">
+      <div className="bg-surface-container-low rounded-sm p-5 mb-6 space-y-3">
         <p className="text-label-md text-secondary uppercase tracking-widest font-bold">
           {t("meaning.title")}
         </p>
         <ul className="text-body-md text-on-surface-variant space-y-2">
           <li className="flex gap-2">
-            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-sm bg-secondary shrink-0" />
             {t("meaning.bullet1")}
           </li>
           <li className="flex gap-2">
-            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-sm bg-secondary shrink-0" />
             {t("meaning.bullet2")}
           </li>
           <li className="flex gap-2">
-            <span className="text-secondary mt-1.5 w-1 h-1 rounded-full bg-secondary shrink-0" />
+            <span className="text-secondary mt-1.5 w-1 h-1 rounded-sm bg-secondary shrink-0" />
             {t("meaning.bullet3")}
           </li>
         </ul>
@@ -238,7 +238,7 @@ export default function InvitationPage() {
           </Link>
           <Link
             href={`/login?redirect=/invite/${token}`}
-            className="bg-surface-container text-primary w-full py-3 rounded-xl font-headline font-bold block text-center hover:bg-surface-container-high transition-colors"
+            className="bg-surface-container text-primary w-full py-3 rounded-xs font-headline font-bold block text-center hover:bg-surface-container-high transition-colors"
           >
             {t("signIn")}
           </Link>
@@ -257,7 +257,7 @@ export default function InvitationPage() {
           <button
             onClick={handleDecline}
             disabled={accepting || declining}
-            className="bg-surface-container text-on-surface-variant w-full py-3 rounded-xl font-headline font-bold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-60"
+            className="bg-surface-container text-on-surface-variant w-full py-3 rounded-xs font-headline font-bold hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-60"
           >
             {declining ? t("declining") : t("decline")}
           </button>

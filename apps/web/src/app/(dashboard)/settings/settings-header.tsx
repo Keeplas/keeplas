@@ -40,7 +40,7 @@ export function SettingsHeader({
           type="button"
           onClick={onOpenMenu}
           aria-label={t("header.openNav")}
-          className="lg:hidden shrink-0 p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors cursor-pointer -ml-1"
+          className="lg:hidden shrink-0 p-2 rounded-xs hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors cursor-pointer -ml-1"
         >
           <Icon path={ICON_PATHS.menu} className="w-5 h-5" />
         </button>
@@ -57,7 +57,7 @@ export function SettingsHeader({
         type="button"
         onClick={onClose}
         aria-label={t("header.close")}
-        className="shrink-0 p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+        className="shrink-0 p-2 rounded-xs hover:bg-surface-container-high text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
       >
         <Icon path={ICON_PATHS.close} className="w-5 h-5" />
       </button>

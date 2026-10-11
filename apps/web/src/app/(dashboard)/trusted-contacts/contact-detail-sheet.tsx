@@ -130,11 +130,11 @@ function ContactDetailBody({
         <div className="flex items-center gap-3 min-w-0">
           <div
             className={cn(
-              "w-11 h-11 rounded-full border-2 p-0.5 shrink-0",
+              "w-11 h-11 rounded-sm border-2 p-0.5 shrink-0",
               statusConfig.avatarBorder,
             )}
           >
-            <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
+            <div className="w-full h-full rounded-sm bg-primary-container flex items-center justify-center">
               <span className="text-label-md text-on-primary-container">
                 {getInitials(contact.name)}
               </span>
@@ -145,7 +145,7 @@ function ContactDetailBody({
             <div className="flex items-center gap-1.5 mt-1">
               <span
                 className={cn(
-                  "px-2 py-0.5 text-label-md rounded-full",
+                  "px-2 py-0.5 text-label-md rounded-sm",
                   isRecipientOnly
                     ? "bg-surface-container-high text-on-surface-variant"
                     : "bg-primary/10 text-primary",
@@ -157,7 +157,7 @@ function ContactDetailBody({
               </span>
               <span
                 className={cn(
-                  "px-2 py-0.5 text-label-md rounded-full",
+                  "px-2 py-0.5 text-label-md rounded-sm",
                   statusConfig.className,
                 )}
               >
@@ -168,7 +168,7 @@ function ContactDetailBody({
         </div>
         <SheetClose
           aria-label={t("detail.close")}
-          className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer shrink-0"
+          className="p-2 rounded-sm text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer shrink-0"
         >
           <Icon path={ICON_PATHS.close} className="w-5 h-5" />
         </SheetClose>
@@ -217,7 +217,7 @@ function ContactDetailBody({
               <div className="flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    "text-label-md px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5",
+                    "text-label-md px-3 py-1.5 rounded-xs inline-flex items-center gap-1.5",
                     verificationBadge.className,
                   )}
                 >
@@ -247,7 +247,7 @@ function ContactDetailBody({
           )}
           {isAwaitingKey(contact) && (
             <div className="mt-3">
-              <span className="text-label-md px-3 py-1.5 rounded-lg bg-tertiary-container text-on-tertiary-container inline-flex items-center gap-1.5">
+              <span className="text-label-md px-3 py-1.5 rounded-xs bg-tertiary-container text-on-tertiary-container inline-flex items-center gap-1.5">
                 {t("detail.awaitingKey")}
                 <HelpHint content={t("detail.awaitingKeyHelp")} />
               </span>
@@ -270,7 +270,7 @@ function ContactDetailBody({
                 <li key={item._id}>
                   <Link
                     href={`/vault/${item._id}`}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-xs bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors"
                   >
                     <Icon
                       path={getCategoryConfig(item.category).icon}
@@ -312,7 +312,7 @@ function ContactDetailBody({
               {summary.memberGroups.map((g) => (
                 <span
                   key={g._id}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface text-label-md"
+                  className="px-3 py-1.5 rounded-xs bg-surface-container-high text-on-surface text-label-md"
                 >
                   {g.name}
                 </span>
@@ -329,7 +329,7 @@ function ContactDetailBody({
               type="button"
               onClick={handleResend}
               disabled={resending}
-              className="w-full text-body-md font-bold text-secondary px-3 py-2.5 rounded-xl hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full text-body-md font-bold text-secondary px-3 py-2.5 rounded-xs hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {resending
                 ? t("detail.resending")
@@ -344,14 +344,14 @@ function ContactDetailBody({
                 type="button"
                 onClick={handleRevoke}
                 disabled={revoking}
-                className="flex-1 text-body-md px-3 py-2.5 rounded-xl bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                className="flex-1 text-body-md px-3 py-2.5 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
               >
                 {revoking ? t("detail.revoking") : t("detail.confirmRevoke")}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmRevoke(false)}
-                className="flex-1 text-body-md px-3 py-2.5 rounded-xl bg-surface-container-high text-on-surface cursor-pointer"
+                className="flex-1 text-body-md px-3 py-2.5 rounded-xs bg-surface-container-high text-on-surface cursor-pointer"
               >
                 {t("detail.cancel")}
               </button>
@@ -360,7 +360,7 @@ function ContactDetailBody({
             <button
               type="button"
               onClick={handleRevoke}
-              className="w-full text-left text-body-md text-error px-3 py-2.5 rounded-xl hover:bg-error/10 transition-colors cursor-pointer"
+              className="w-full text-left text-body-md text-error px-3 py-2.5 rounded-xs hover:bg-error/10 transition-colors cursor-pointer"
             >
               {t("detail.revokeContact")}
             </button>

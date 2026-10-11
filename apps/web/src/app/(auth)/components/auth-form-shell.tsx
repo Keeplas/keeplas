@@ -57,7 +57,7 @@ export function AuthFormShell({
             </div>
 
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-sm mb-4 shadow-sm">
                 <svg
                   className="w-5 h-5 text-secondary"
                   fill="currentColor"

@@ -5,117 +5,235 @@
 /* Scan the shared UI package so Tailwind compiles its classes (required in v4 monorepos). */
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
 
-/* Font family stacks. The actual @font-face declarations are pulled in from
-   Fontsource (imported in src/routes/__root.tsx). The Tailwind typography
-   tokens in `@theme inline` below reference these variables. */
+/* ═══════════════════════════════════════════════
+   KEEPLAS DESIGN SYSTEM v2
+   Source of truth: Figma Foundations, snapshot in
+   PRD/v2-mobile-first/figma/tokens.json (guarded by
+   src/app/__tests__/design-tokens.test.ts).
+   Names mirror Figma: `navy/900` → --kp-navy-900, `bg/app` → --kp-bg-app.
+   ═══════════════════════════════════════════════ */
+
+/* Dark (Noir): set `.dark` on <html>. Nothing toggles it yet; screens are
+   rebuilt light + dark in v2 phase 7. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  /* Font stacks. @font-face comes from Fontsource (src/routes/__root.tsx). */
   --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-manrope: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-geist: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-source-serif: "Source Serif 4 Variable", Georgia, serif;
+
+  /* ── Primitives · Light ── */
+  --kp-navy-50: #eef5fa;
+  --kp-navy-100: #dce8f2;
+  --kp-navy-200: #c5d7e8;
+  --kp-navy-300: #9dbad6;
+  --kp-navy-400: #7493b3;
+  --kp-navy-500: #4b6e95;
+  --kp-navy-600: #2f567f;
+  --kp-navy-700: #1e3b5e;
+  --kp-navy-800: #102844;
+  --kp-navy-900: #0e2340;
+  --kp-navy-950: #071a30;
+  --kp-sky-100: #e1f1fa;
+  --kp-sky-500: #238bca;
+  --kp-sky-600: #1b76ae;
+  --kp-ivory-50: #fdfbf7;
+  --kp-ivory-100: #f7f4ee;
+  --kp-ivory-200: #efe9e0;
+  --kp-sand-100: #f6efe9;
+  --kp-sand-200: #eadccd;
+  --kp-dawn-100: #fdefd4;
+  --kp-dawn-300: #f9ddb4;
+  --kp-dawn-500: #f2b866;
+  --kp-success-100: #e3f3ec;
+  --kp-success-600: #2e8b6a;
+  --kp-warning-100: #fef3dc;
+  --kp-warning-500: #f2a20c;
+  --kp-warning-600: #b87503;
+  --kp-danger-100: #fde8e8;
+  --kp-danger-600: #d92d35;
+  --kp-neutral-white: #ffffff;
+  --kp-neutral-border: #e3e7ec;
+  --kp-neutral-body: #3a4a60;
+  --kp-neutral-muted: #5e6e83;
+  --kp-neutral-subtle: #8a97a8;
+  --kp-category-document: #238bca;
+  --kp-category-account: #6e56cf;
+  --kp-category-instruction: #d92d35;
+  --kp-category-other: #1e8a8a;
+  --kp-category-note: #f07f22;
+
+  /* ── Primitives · Dark (Noir) ── */
+  --kp-noir-1000: #000000;
+  --kp-noir-950: #0a0a0b;
+  --kp-noir-900: #141416;
+  --kp-noir-850: #1c1c1f;
+  --kp-noir-800: #26262a;
+  --kp-noir-700: #3a3a40;
+  --kp-noir-500: #5a5a60;
+  --kp-noir-400: #8e8e93;
+  --kp-noir-200: #c9c6c0;
+  --kp-noir-50: #f2efea;
+  --kp-noir-info: #1a2233;
+  --kp-noir-link: #a9c1e8;
+  --kp-noir-sky: #4fa8e0;
+  --kp-noir-success: #3fb68b;
+  --kp-noir-warning: #f2b23a;
+  --kp-noir-danger: #f0565c;
+
+  /* ── Semantic · Light ── */
+  --kp-bg-app: var(--kp-ivory-50);
+  --kp-bg-surface: var(--kp-neutral-white);
+  --kp-bg-subtle: var(--kp-ivory-100);
+  --kp-bg-info: var(--kp-navy-50);
+  --kp-bg-warm: var(--kp-sand-100);
+  --kp-bg-header: var(--kp-navy-900);
+  --kp-text-primary: var(--kp-navy-900);
+  --kp-text-body: var(--kp-neutral-body);
+  --kp-text-muted: var(--kp-neutral-muted);
+  --kp-text-subtle: var(--kp-neutral-subtle);
+  --kp-text-inverse: var(--kp-neutral-white);
+  --kp-text-link: var(--kp-navy-800);
+  --kp-border-default: var(--kp-neutral-border);
+  --kp-border-strong: var(--kp-navy-200);
+  --kp-border-focus: var(--kp-sky-500);
+  --kp-action-primary: var(--kp-navy-800);
+  --kp-action-primary-hover: var(--kp-navy-700);
+  --kp-action-danger: var(--kp-danger-600);
+  --kp-status-active: var(--kp-success-600);
+  --kp-status-pending: var(--kp-warning-500);
+  --kp-status-revoked: var(--kp-danger-600);
+  --kp-progress-track: var(--kp-navy-100);
+  --kp-progress-fill: var(--kp-sky-500);
+
+  /* ── Spacing (4 px grid) ── */
+  --kp-space-1: 4px;
+  --kp-space-2: 8px;
+  --kp-space-3: 12px;
+  --kp-space-4: 16px;
+  --kp-space-5: 20px;
+  --kp-space-6: 24px;
+  --kp-space-8: 32px;
+  --kp-space-10: 40px;
+  --kp-space-12: 48px;
+  --kp-space-16: 64px;
 }
 
-/* ═══════════════════════════════════════════════
-   KEEPLAS DESIGN SYSTEM — "The Digital Curator"
-   Ref: PRD/Design/design-guidelines.md
-   ═══════════════════════════════════════════════ */
+/* ── Semantic · Dark (Noir): surfaces step up in grey, primary actions invert
+   to cream ── */
+.dark {
+  --kp-bg-app: var(--kp-noir-950);
+  --kp-bg-surface: var(--kp-noir-900);
+  --kp-bg-subtle: var(--kp-noir-850);
+  --kp-bg-info: var(--kp-noir-info);
+  --kp-bg-warm: var(--kp-noir-850);
+  --kp-bg-header: var(--kp-noir-1000);
+  --kp-text-primary: var(--kp-noir-50);
+  --kp-text-body: var(--kp-noir-200);
+  --kp-text-muted: var(--kp-noir-400);
+  --kp-text-subtle: var(--kp-noir-500);
+  --kp-text-inverse: var(--kp-noir-950);
+  --kp-text-link: var(--kp-noir-link);
+  --kp-border-default: var(--kp-noir-800);
+  --kp-border-strong: var(--kp-noir-700);
+  --kp-border-focus: var(--kp-noir-sky);
+  --kp-action-primary: var(--kp-noir-50);
+  --kp-action-primary-hover: var(--kp-neutral-white);
+  --kp-action-danger: var(--kp-noir-danger);
+  --kp-status-active: var(--kp-noir-success);
+  --kp-status-pending: var(--kp-noir-warning);
+  --kp-status-revoked: var(--kp-noir-danger);
+  --kp-progress-track: var(--kp-noir-800);
+  --kp-progress-fill: var(--kp-noir-sky);
+  color-scheme: dark;
+}
 
 @theme inline {
   /* ── Typography ── */
   --font-sans: var(--font-inter);
-  --font-headline: var(--font-manrope);
-  --font-heading: var(--font-manrope);
+  --font-serif: var(--font-source-serif);
   --font-body: var(--font-inter);
   --font-label: var(--font-inter);
 
-  /* ── Primary — Vault Navy ── */
-  --color-primary: #041632;
-  --color-primary-container: #1b2b48;
-  --color-primary-fixed: #d4e3ff;
-  --color-primary-fixed-dim: #a4c4f0;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #b8cfe8;
-  --color-on-primary-fixed: #041632;
-  --color-on-primary-fixed-variant: #1b2b48;
-  --color-primary-foreground: #ffffff;
+  /* ── Semantic colors: use these in new code (`bg-bg-surface`,
+     `text-text-primary`, `border-border-default`, `bg-action-primary`) ── */
+  --color-bg-app: var(--kp-bg-app);
+  --color-bg-surface: var(--kp-bg-surface);
+  --color-bg-subtle: var(--kp-bg-subtle);
+  --color-bg-info: var(--kp-bg-info);
+  --color-bg-warm: var(--kp-bg-warm);
+  --color-bg-header: var(--kp-bg-header);
+  --color-text-primary: var(--kp-text-primary);
+  --color-text-body: var(--kp-text-body);
+  --color-text-muted: var(--kp-text-muted);
+  --color-text-subtle: var(--kp-text-subtle);
+  --color-text-inverse: var(--kp-text-inverse);
+  --color-text-link: var(--kp-text-link);
+  --color-border-default: var(--kp-border-default);
+  --color-border-strong: var(--kp-border-strong);
+  --color-border-focus: var(--kp-border-focus);
+  --color-action-primary: var(--kp-action-primary);
+  --color-action-primary-hover: var(--kp-action-primary-hover);
+  --color-action-danger: var(--kp-action-danger);
+  --color-status-active: var(--kp-status-active);
+  --color-status-pending: var(--kp-status-pending);
+  --color-status-revoked: var(--kp-status-revoked);
+  --color-progress-track: var(--kp-progress-track);
+  --color-progress-fill: var(--kp-progress-fill);
+  --color-category-document: var(--kp-category-document);
+  --color-category-account: var(--kp-category-account);
+  --color-category-instruction: var(--kp-category-instruction);
+  --color-category-other: var(--kp-category-other);
+  --color-category-note: var(--kp-category-note);
 
-  /* ── Secondary — Reassurance Teal ── */
-  --color-secondary: #28657a;
-  --color-secondary-container: #3a7d91;
-  --color-secondary-fixed: #b9eaff;
-  --color-secondary-fixed-dim: #8ec8d8;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #c5e4ed;
-  --color-on-secondary-fixed: #001f2a;
-  --color-on-secondary-fixed-variant: #28657a;
-  --color-secondary-foreground: #ffffff;
+  /* ── Legacy "Digital Curator" names, re-pointed to v2 values so current
+     screens take the new palette. Light only. Do not use in new code; they
+     go away as screens are rebuilt (v2 phase 7). ── */
+  --font-headline: var(--font-source-serif);
+  --color-primary: var(--kp-action-primary);
+  --color-primary-container: var(--kp-action-primary-hover);
+  --color-on-primary: var(--kp-text-inverse);
+  --color-on-primary-container: var(--kp-navy-200);
+  --color-secondary: var(--kp-sky-600);
+  --color-secondary-container: var(--kp-sky-500);
+  --color-secondary-fixed: var(--kp-sky-100);
+  --color-secondary-fixed-dim: var(--kp-navy-300);
+  --color-on-secondary: var(--kp-neutral-white);
+  --color-on-secondary-container: var(--kp-sky-100);
+  --color-on-secondary-fixed: var(--kp-navy-950);
+  --color-tertiary: var(--kp-navy-950);
+  --color-tertiary-container: var(--kp-navy-800);
+  --color-tertiary-fixed: var(--kp-success-100);
+  --color-on-tertiary-container: var(--kp-success-100);
+  --color-background: var(--kp-bg-app);
+  --color-foreground: var(--kp-text-primary);
+  --color-surface: var(--kp-bg-app);
+  --color-surface-dim: var(--kp-ivory-200);
+  --color-surface-variant: var(--kp-neutral-border);
+  --color-surface-container-lowest: var(--kp-bg-surface);
+  --color-surface-container-low: var(--kp-bg-subtle);
+  --color-surface-container: var(--kp-bg-warm);
+  --color-surface-container-high: var(--kp-ivory-200);
+  --color-surface-container-highest: var(--kp-neutral-border);
+  --color-on-surface: var(--kp-text-primary);
+  --color-on-surface-variant: var(--kp-text-body);
+  --color-outline: var(--kp-text-subtle);
+  --color-outline-variant: var(--kp-border-strong);
+  --color-error: var(--kp-action-danger);
+  --color-error-container: var(--kp-danger-100);
+  --color-on-error: var(--kp-neutral-white);
+  --color-on-error-container: var(--kp-danger-600);
+  --color-warning: var(--kp-warning-500);
+  --color-warning-container: var(--kp-warning-100);
+  --color-on-warning-container: var(--kp-warning-600);
 
-  /* ── Tertiary — Deep Shadow ── */
-  --color-tertiary: #001a20;
-  --color-tertiary-container: #0a2e38;
-  --color-tertiary-fixed: #a0f0d4;
-  --color-tertiary-fixed-dim: #6fd4b8;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #b0f0d8;
-  --color-on-tertiary-fixed: #001a20;
-  --color-on-tertiary-fixed-variant: #0a2e38;
-
-  /* ── Surface tiers (tonal layering, NO borders) ── */
-  --color-background: #fcf9f8;
-  --color-on-background: #1d1b1a;
-  --color-surface: #fcf9f8;
-  --color-surface-dim: #d9d5d4;
-  --color-surface-variant: #e2dfe0;
-  --color-surface-tint: #041632;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f6f3f2;
-  --color-surface-container: #f0eded;
-  --color-surface-container-high: #eae7e7;
-  --color-surface-container-highest: #e5e2e1;
-
-  /* ── On-surface ── */
-  --color-on-surface: #1d1b1a;
-  --color-on-surface-variant: #4a4644;
-  --color-foreground: #1d1b1a;
-
-  /* ── Outline ── */
-  --color-outline: #7b7674;
-  --color-outline-variant: #c5c6ce;
-
-  /* ── Inverse ── */
-  --color-inverse-surface: #322f2e;
-  --color-inverse-on-surface: #f5f0ee;
-  --color-inverse-primary: #a4c4f0;
-
-  /* ── Error ── */
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-on-error: #ffffff;
-  --color-on-error-container: #410002;
-  --color-destructive: #ba1a1a;
-
-  /* ── shadcn compatibility tokens ── */
-  --color-muted: #f0eded;
-  --color-muted-foreground: #4a4644;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #1d1b1a;
-  --color-card: #f6f3f2;
-  --color-card-foreground: #1d1b1a;
-  --color-border: #c5c6ce;
-  --color-input: #c5c6ce;
-  --color-ring: #28657a;
-  --color-accent: #eae7e7;
-  --color-accent-foreground: #1d1b1a;
-
-  /* ── Border radius — Subtle architectural scale ── */
-  --radius-DEFAULT: 0.125rem;
-  --radius-sm: 0.075rem;
-  --radius-md: 0.1rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.625rem;
-  --radius-3xl: 0.75rem;
-  --radius-4xl: 0.875rem;
-  --radius-full: 0.75rem;
+  /* ── Radius (Figma Foundations) ── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
 
   /* ── Animation ── */
   --animate-fade-in: fade-in 0.3s ease-out;
@@ -162,8 +280,8 @@ html {
 }
 
 body {
-  background: var(--color-surface);
-  color: var(--color-on-surface);
+  background: var(--kp-bg-app);
+  color: var(--kp-text-primary);
 }
 
 /* Tailwind v4's Preflight resets buttons to the default arrow cursor. Restore a
@@ -176,9 +294,94 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-/* ── Typography utilities ── */
+/* ── Type scale v2 (Figma Foundations, px so it ignores the 85% root) ── */
+@utility text-display {
+  font-family: var(--font-source-serif);
+  font-size: 36px;
+  line-height: 40px;
+  letter-spacing: -0.014em;
+  font-weight: 600;
+}
+
+@utility text-h1 {
+  font-family: var(--font-source-serif);
+  font-size: 30px;
+  line-height: 34px;
+  letter-spacing: -0.013em;
+  font-weight: 600;
+}
+
+@utility text-h2 {
+  font-family: var(--font-source-serif);
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.008em;
+  font-weight: 600;
+}
+
+@utility text-h3 {
+  font-family: var(--font-source-serif);
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+@utility text-body-lg {
+  font-family: var(--font-inter);
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 400;
+}
+
+@utility text-body {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+@utility text-label {
+  font-family: var(--font-inter);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+@utility text-body-sm {
+  font-family: var(--font-inter);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+
+@utility text-caption {
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.008em;
+  font-weight: 500;
+}
+
+@utility text-code {
+  font-family: var(--font-inter);
+  font-size: 34px;
+  line-height: 40px;
+  letter-spacing: 0.118em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility text-button {
+  font-family: var(--font-inter);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+/* ── Legacy type scale (rem, scaled by the 85% root). Do not use in new
+   code; removed as screens are rebuilt (v2 phase 7). ── */
 @utility text-display-lg {
-  font-family: var(--font-manrope);
+  font-family: var(--font-source-serif);
   font-size: 3.5rem;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -186,7 +389,7 @@ button:not(:disabled),
 }
 
 @utility text-display-md {
-  font-family: var(--font-manrope);
+  font-family: var(--font-source-serif);
   font-size: 2.75rem;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -194,7 +397,7 @@ button:not(:disabled),
 }
 
 @utility text-headline-lg {
-  font-family: var(--font-manrope);
+  font-family: var(--font-source-serif);
   font-size: 2rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -202,23 +405,17 @@ button:not(:disabled),
 }
 
 @utility text-headline-md {
-  font-family: var(--font-manrope);
+  font-family: var(--font-source-serif);
   font-size: 1.5rem;
   line-height: 1.3;
   font-weight: 600;
 }
 
 @utility text-headline-sm {
-  font-family: var(--font-manrope);
+  font-family: var(--font-source-serif);
   font-size: 1.25rem;
   line-height: 1.35;
   font-weight: 600;
-}
-
-@utility text-body-lg {
-  font-family: var(--font-inter);
-  font-size: 1rem;
-  line-height: 1.6;
 }
 
 @utility text-body-md {
@@ -258,16 +455,24 @@ button:not(:disabled),
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 
-/* ── Signature gradient (135deg primary → primary-container) ── */
+/* ── Signature gradient (legacy, navy 900 → 700) ── */
 @utility gradient-signature {
-  background: linear-gradient(135deg, #041632 0%, #1b2b48 100%);
+  background: linear-gradient(
+    135deg,
+    var(--kp-navy-900) 0%,
+    var(--kp-navy-700) 100%
+  );
 }
 
 @utility vault-gradient {
-  background: linear-gradient(135deg, #041632 0%, #1b2b48 100%);
+  background: linear-gradient(
+    135deg,
+    var(--kp-navy-900) 0%,
+    var(--kp-navy-700) 100%
+  );
 }
 
-/* ── Ghost border (outline-variant at 15% opacity — only allowed border) ── */
+/* ── Ghost border (legacy: outline-variant at 15% opacity) ── */
 @utility ghost-border {
   border: 1px solid
     color-mix(in srgb, var(--color-outline-variant) 15%, transparent);
@@ -284,7 +489,7 @@ button:not(:disabled),
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-outline-variant);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
 }
 
 ::-webkit-scrollbar-thumb:hover {

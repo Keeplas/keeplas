@@ -119,7 +119,7 @@ function buildSteps(
       help: t("timeline.steps.protocolBegins.help"),
       extra: (
         <div className="flex gap-2 flex-wrap mt-3">
-          <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-full">
+          <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-sm">
             {t("timeline.steps.protocolBegins.badge")}
           </span>
         </div>
@@ -191,7 +191,7 @@ export function EscalationTimeline({
 
   return (
     <aside className="lg:col-span-5">
-      <div className="vault-gradient rounded-2xl p-8 text-on-primary h-full shadow-2xl relative overflow-hidden">
+      <div className="vault-gradient rounded-sm p-8 text-on-primary h-full shadow-2xl relative overflow-hidden">
         <h3 className="text-headline-md mb-1.5 flex items-center gap-2">
           {t("timeline.title")}
           <HelpHint
@@ -207,7 +207,7 @@ export function EscalationTimeline({
         </p>
 
         {travelModeEnabled && (
-          <div className="mb-8 p-4 bg-on-primary/5 rounded-xl ghost-border flex items-start gap-3">
+          <div className="mb-8 p-4 bg-on-primary/5 rounded-xs ghost-border flex items-start gap-3">
             <Icon
               path={ICON_PATHS.globe}
               className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
@@ -229,10 +229,10 @@ export function EscalationTimeline({
             {steps.map((step) => (
               <div key={step.dayLabel} className="relative pl-12">
                 <div
-                  className={`absolute left-0 top-1 w-6 h-6 rounded-full z-10 ${TONE_STYLES[step.tone]}`}
+                  className={`absolute left-0 top-1 w-6 h-6 rounded-sm z-10 ${TONE_STYLES[step.tone]}`}
                 />
                 {step.isFinal ? (
-                  <div className="bg-on-primary/5 p-4 rounded-xl backdrop-blur-sm">
+                  <div className="bg-on-primary/5 p-4 rounded-xs backdrop-blur-sm">
                     <p
                       className={`text-headline-sm mb-1.5 flex items-center gap-1.5 ${step.titleClass}`}
                     >
@@ -273,7 +273,7 @@ export function EscalationTimeline({
           </div>
         </div>
 
-        <div className="mt-8 p-4 bg-on-primary/5 rounded-xl ghost-border">
+        <div className="mt-8 p-4 bg-on-primary/5 rounded-xs ghost-border">
           <div className="flex items-start gap-3">
             <Icon
               path={ICON_PATHS.shieldCheck}

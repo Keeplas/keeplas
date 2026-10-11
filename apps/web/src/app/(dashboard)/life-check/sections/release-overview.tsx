@@ -24,7 +24,7 @@ export function ReleaseOverview() {
   const titles = useDecryptedTitles(allTitles);
 
   return (
-    <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+    <section className="bg-surface-container-lowest rounded-sm p-6 shadow-sm">
       <h3 className="text-headline-sm text-primary mb-1.5">
         {t("overview.title")}
       </h3>
@@ -43,7 +43,7 @@ export function ReleaseOverview() {
           {preview.map((r) => (
             <div
               key={r.contactId}
-              className="flex items-start justify-between gap-4 p-4 bg-surface-container-low rounded-xl"
+              className="flex items-start justify-between gap-4 p-4 bg-surface-container-low rounded-xs"
             >
               <div className="min-w-0">
                 <p className="text-body-md font-bold text-primary">{r.name}</p>
@@ -69,7 +69,7 @@ export function ReleaseOverview() {
                   </p>
                 )}
               </div>
-              <span className="text-label-md px-3 py-1 rounded-full bg-secondary-container/30 text-secondary shrink-0">
+              <span className="text-label-md px-3 py-1 rounded-sm bg-secondary-container/30 text-secondary shrink-0">
                 {t("overview.readOnly")}
               </span>
             </div>

@@ -129,19 +129,23 @@ export default function <Feature>Page() {
 
 ## Styling tokens
 
-Use semantic Tailwind tokens defined in `globals.css`. Prefer them over raw
-colors:
+Use the v2 semantic Tailwind tokens defined in `globals.css` (they switch for
+dark mode). Never use raw colors or the legacy Material names
+(`bg-surface-container-*`, `text-on-surface*`, …), which only remain for
+screens not yet rebuilt:
 
-| Surface                                           | Foreground                                   |
-| ------------------------------------------------- | -------------------------------------------- |
-| `bg-surface`, `bg-surface-container[-low\|-high]` | `text-on-surface`, `text-on-surface-variant` |
-| `bg-primary-container`                            | `text-on-primary-container`                  |
-| `bg-secondary`, `vault-gradient`                  | `text-on-secondary`, `text-on-primary`       |
-| `bg-error-container`                              | `text-error`, `text-on-error-container`      |
+| Surface                                      | Foreground                                               |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `bg-bg-app`, `bg-bg-surface`, `bg-bg-subtle` | `text-text-primary`, `text-text-body`, `text-text-muted` |
+| `bg-bg-header`, `bg-action-primary`          | `text-text-inverse`                                      |
+| `bg-bg-info`, `bg-bg-warm`                   | `text-text-primary`, `text-text-link`                    |
+| Borders                                      | `border-border-default`, `border-border-strong`          |
 
-Typography scale: `text-headline-lg`, `text-headline-md`, `text-headline-sm`,
-`text-body-lg`, `text-body-md`, `text-label-md`. Fonts: Manrope (display) +
-Inter (body), wired via Fontsource in `src/routes/__root.tsx`.
+Typography scale (v2): `text-display`, `text-h1`, `text-h2`, `text-h3`,
+`text-body-lg`, `text-body`, `text-label`, `text-body-sm`, `text-caption`,
+`text-code`, `text-button`. Fonts: Source Serif 4 (headings) + Inter (UI),
+wired via Fontsource in `src/routes/__root.tsx`. See the `/design-system` skill
+for the full spec.
 
 ## Sidebar integration
 

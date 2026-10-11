@@ -198,14 +198,14 @@ export default function SubscriptionPage() {
           <article
             key={plan.id}
             className={cn(
-              "relative rounded-3xl p-8 flex flex-col justify-between",
+              "relative rounded-sm p-8 flex flex-col justify-between",
               plan.dark
                 ? "bg-primary text-white shadow-2xl shadow-primary/30"
                 : "bg-surface-container-low",
             )}
           >
             {plan.popular && (
-              <span className="absolute top-6 right-6 text-label-md bg-secondary text-on-secondary px-3 py-1 rounded-full">
+              <span className="absolute top-6 right-6 text-label-md bg-secondary text-on-secondary px-3 py-1 rounded-sm">
                 {t("subscription.popular")}
               </span>
             )}
@@ -237,7 +237,7 @@ export default function SubscriptionPage() {
                   <li key={feature.key} className="flex items-start gap-3">
                     <span
                       className={cn(
-                        "shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5",
+                        "shrink-0 w-5 h-5 rounded-sm flex items-center justify-center mt-0.5",
                         feature.included
                           ? plan.dark
                             ? "bg-white/15 text-secondary-fixed"
@@ -253,7 +253,7 @@ export default function SubscriptionPage() {
                           className="w-3.5 h-3.5"
                         />
                       ) : (
-                        <span className="block w-2 h-0.5 bg-current rounded-full" />
+                        <span className="block w-2 h-0.5 bg-current rounded-sm" />
                       )}
                     </span>
                     <span

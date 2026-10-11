@@ -10,7 +10,7 @@ export function ConfirmResult({ ok }: { ok: boolean }) {
       <MobileBrand />
       <div className="w-full max-w-md">
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-full mb-4 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-surface-container-lowest rounded-sm mb-4 shadow-sm">
             <span className="text-label-md text-primary">{t("badge")}</span>
           </div>
           <h3 className="text-headline-md text-primary mb-2">

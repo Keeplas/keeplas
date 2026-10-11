@@ -95,7 +95,7 @@ interface AddItemDialogProps {
 function SectionHeading({ step, title }: { step: string; title: string }) {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <div className="w-9 h-9 bg-primary text-on-primary rounded-full flex items-center justify-center text-body-md font-bold shrink-0">
+      <div className="w-9 h-9 bg-primary text-on-primary rounded-sm flex items-center justify-center text-body-md font-bold shrink-0">
         {step}
       </div>
       <h3 className="text-headline-sm text-primary">{title}</h3>
@@ -545,7 +545,7 @@ export function AddItemDialog({
                 : t("dialog.descriptionVault")}
             </DialogDescription>
           </div>
-          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
+          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xs transition-colors cursor-pointer">
             <Icon
               path={ICON_PATHS.close}
               className="w-5 h-5 text-on-surface-variant"
@@ -562,7 +562,7 @@ export function AddItemDialog({
           <ErrorAlert message={error} />
 
           {/* Section 01 — Asset Identity */}
-          <section className="bg-surface-container-low rounded-2xl p-6">
+          <section className="bg-surface-container-low rounded-sm p-6">
             <SectionHeading
               step="01"
               title={
@@ -700,7 +700,7 @@ export function AddItemDialog({
           </section>
 
           {/* Section 02 — Secure Documentation */}
-          <section className="bg-surface-container-low rounded-2xl p-6">
+          <section className="bg-surface-container-low rounded-sm p-6">
             <SectionHeading step="02" title={t("dialog.section02")} />
 
             <AttachmentCapture
@@ -715,9 +715,9 @@ export function AddItemDialog({
                   return (
                     <div
                       key={file.id}
-                      className="bg-surface px-3 py-2.5 rounded-xl flex items-center gap-3 max-w-full"
+                      className="bg-surface px-3 py-2.5 rounded-xs flex items-center gap-3 max-w-full"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xs bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
                         <Icon
                           path={iconForKind(file.kind)}
                           className="w-4 h-4"
@@ -737,7 +737,7 @@ export function AddItemDialog({
                         type="button"
                         onClick={() => removeFile(file.id)}
                         aria-label={t("dialog.removeFile", { name: file.name })}
-                        className="ml-1 p-1 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
+                        className="ml-1 p-1 rounded-xs text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer"
                       >
                         <Icon
                           path={ICON_PATHS.close}
@@ -754,14 +754,14 @@ export function AddItemDialog({
 
           {/* Section 03 — Linked URLs (hidden for intro mode) */}
           {!isIntroMode && (
-            <section className="bg-surface-container-low rounded-2xl p-6">
+            <section className="bg-surface-container-low rounded-sm p-6">
               <SectionHeading step="03" title={t("dialog.section03")} />
               <VaultLinkInputList urls={linkUrls} onChange={setLinkUrls} />
             </section>
           )}
 
           {/* Section 04 — Transmission Logic */}
-          <section className="bg-surface-container-low rounded-2xl p-6">
+          <section className="bg-surface-container-low rounded-sm p-6">
             <SectionHeading
               step={isIntroMode ? "03" : "04"}
               title={

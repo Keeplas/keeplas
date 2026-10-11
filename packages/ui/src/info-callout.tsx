@@ -50,7 +50,7 @@ export function InfoCallout({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-xl border",
+        "flex items-start gap-3 p-3 rounded-xs border",
         tones.container,
         className,
       )}

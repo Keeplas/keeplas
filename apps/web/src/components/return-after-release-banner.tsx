@@ -30,7 +30,7 @@ export function ReturnAfterReleaseBanner() {
 
   return (
     <>
-      <div className="mb-8 rounded-2xl bg-error-container text-on-error-container p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="mb-8 rounded-sm bg-error-container text-on-error-container p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <Icon
             path={ICON_PATHS.shieldCheck}

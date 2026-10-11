@@ -129,7 +129,7 @@ export function RotateVaultDialog({
             disabled={working}
             rows={4}
             placeholder={t("return.phrasePlaceholder")}
-            className="w-full rounded-xl bg-surface-container-low p-4 text-body-md outline-none focus-visible:ring-2 focus-visible:ring-secondary resize-none"
+            className="w-full rounded-xs bg-surface-container-low p-4 text-body-md outline-none focus-visible:ring-2 focus-visible:ring-secondary resize-none"
             autoComplete="off"
             spellCheck={false}
           />

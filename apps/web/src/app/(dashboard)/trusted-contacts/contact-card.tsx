@@ -28,17 +28,17 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
     <button
       type="button"
       onClick={() => onSelect(contact)}
-      className="w-full text-left bg-surface-container-low p-6 rounded-2xl group cursor-pointer hover:bg-surface-container transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+      className="w-full text-left bg-surface-container-low p-6 rounded-sm group cursor-pointer hover:bg-surface-container transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div
           className={cn(
-            "w-12 h-12 rounded-full border-2 p-0.5",
+            "w-12 h-12 rounded-sm border-2 p-0.5",
             statusConfig.avatarBorder,
           )}
         >
-          <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
+          <div className="w-full h-full rounded-sm bg-primary-container flex items-center justify-center">
             <span className="text-label-md text-on-primary-container">
               {getInitials(contact.name)}
             </span>
@@ -47,7 +47,7 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
         <div className="flex items-center gap-2">
           <span
             className={cn(
-              "px-3 py-1 text-label-md rounded-full",
+              "px-3 py-1 text-label-md rounded-sm",
               isRecipientOnly
                 ? "bg-surface-container-high text-on-surface-variant"
                 : "bg-primary/10 text-primary",
@@ -59,7 +59,7 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
           </span>
           <span
             className={cn(
-              "px-3 py-1 text-label-md rounded-full",
+              "px-3 py-1 text-label-md rounded-sm",
               statusConfig.className,
             )}
           >
@@ -76,7 +76,7 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
 
       {/* Role + verification badges (details live in the contact sheet) */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-lg">
+        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-xs">
           <svg
             className="w-3.5 h-3.5 text-primary"
             fill="none"
@@ -89,14 +89,14 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
           <span className="text-label-md text-primary">{roleLabel}</span>
         </span>
         {isAwaitingKey(contact) && (
-          <span className="text-label-md px-3 py-1.5 rounded-lg bg-tertiary-container text-on-tertiary-container">
+          <span className="text-label-md px-3 py-1.5 rounded-xs bg-tertiary-container text-on-tertiary-container">
             {t("contactCard.awaitingKey")}
           </span>
         )}
         {verificationBadge && (
           <span
             className={cn(
-              "text-label-md px-3 py-1.5 rounded-lg",
+              "text-label-md px-3 py-1.5 rounded-xs",
               verificationBadge.className,
             )}
           >

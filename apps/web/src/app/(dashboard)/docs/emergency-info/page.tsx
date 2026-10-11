@@ -33,7 +33,7 @@ export default function EmergencyInfoDocPage() {
       </header>
 
       {/* Why we redirect */}
-      <section className="bg-primary text-on-primary rounded-2xl p-8 space-y-3">
+      <section className="bg-primary text-on-primary rounded-sm p-8 space-y-3">
         <h2 className="text-headline-sm">{t("emergencyInfo.why.heading")}</h2>
         <p className="text-body-md text-on-primary-container">
           {t("emergencyInfo.why.body")}
@@ -43,7 +43,7 @@ export default function EmergencyInfoDocPage() {
       {/* iPhone */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("emergencyInfo.ios.heading")}
           </h2>
@@ -74,7 +74,7 @@ export default function EmergencyInfoDocPage() {
       {/* Android */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-primary rounded-full" />
+          <span className="w-2 h-8 bg-primary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("emergencyInfo.android.heading")}
           </h2>
@@ -106,7 +106,7 @@ export default function EmergencyInfoDocPage() {
       </section>
 
       {/* What Keeplas does instead */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border space-y-4">
         <h2 className="text-headline-sm text-primary">
           {t("emergencyInfo.covers.heading")}
         </h2>
@@ -116,7 +116,7 @@ export default function EmergencyInfoDocPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
           <Link
             href="/trusted-contacts"
-            className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+            className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
           >
             <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
             <span className="text-body-md font-medium text-primary">
@@ -125,7 +125,7 @@ export default function EmergencyInfoDocPage() {
           </Link>
           <Link
             href="/life-check"
-            className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+            className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
           >
             <Icon
               path={ICON_PATHS.heartbeat}
@@ -152,7 +152,7 @@ function Step({
 }) {
   return (
     <li className="relative">
-      <span className="absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface bg-secondary" />
+      <span className="absolute -left-[41px] top-1 w-4 h-4 rounded-sm border-4 border-surface bg-secondary" />
       <p className="text-label-md text-on-surface-variant">{value}</p>
       <h3 className="text-headline-sm text-primary mt-1">{title}</h3>
       <p className="text-body-md text-on-surface-variant mt-1">{body}</p>

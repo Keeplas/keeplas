@@ -26,7 +26,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
       <DialogContent className="max-w-lg p-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-6 py-5 items-start static">
           <DialogTitle>{t("sidebar.contact")}</DialogTitle>
-          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
+          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xs transition-colors cursor-pointer">
             <Icon
               path={ICON_PATHS.close}
               className="w-5 h-5 text-on-surface-variant"

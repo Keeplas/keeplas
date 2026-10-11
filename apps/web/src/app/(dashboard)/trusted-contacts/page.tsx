@@ -180,14 +180,14 @@ export default function TrustedContactsPage() {
         <TabsContent value="contacts">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <aside className="lg:col-span-4 space-y-6">
-              <section className="bg-surface-container-low p-6 rounded-2xl">
+              <section className="bg-surface-container-low p-6 rounded-sm">
                 <h3 className="text-headline-sm text-primary mb-5">
                   {t("guardians.heading")}
                 </h3>
                 <div className="space-y-6">
                   {GUARDIAN_ROLES.map((role) => (
                     <div key={role.key} className="flex gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center shrink-0">
+                      <div className="w-10 h-10 rounded-xs bg-primary-container flex items-center justify-center shrink-0">
                         <svg
                           className="w-5 h-5 text-secondary-fixed"
                           fill="none"
@@ -215,7 +215,7 @@ export default function TrustedContactsPage() {
                 </div>
               </section>
 
-              <section className="bg-primary-container p-6 rounded-2xl text-on-primary-container relative overflow-hidden">
+              <section className="bg-primary-container p-6 rounded-sm text-on-primary-container relative overflow-hidden">
                 <svg
                   className="absolute top-3 right-3 w-16 h-16 opacity-10 text-on-primary"
                   fill="currentColor"
@@ -266,7 +266,7 @@ export default function TrustedContactsPage() {
                         }))}
                 </p>
 
-                <div className="h-1.5 w-full bg-primary rounded-full overflow-hidden flex mb-4">
+                <div className="h-1.5 w-full bg-primary rounded-sm overflow-hidden flex mb-4">
                   <div
                     className="h-full bg-secondary-fixed transition-all"
                     style={{ width: `${quorumPct}%` }}
@@ -305,7 +305,7 @@ export default function TrustedContactsPage() {
             <div className="lg:col-span-8 space-y-6">
               {acceptedCount > 0 &&
                 acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
-                  <div className="p-4 bg-error-container/30 rounded-xl">
+                  <div className="p-4 bg-error-container/30 rounded-xs">
                     <p className="text-label-md uppercase tracking-wider text-error mb-1">
                       {t("oneGuardianWarning.title")}
                     </p>
@@ -319,10 +319,10 @@ export default function TrustedContactsPage() {
 
               {activeContacts.length === 0 ? (
                 <div
-                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
                   onClick={() => openInvite("trust")}
                 >
-                  <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-sm bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <svg
                       className="w-8 h-8 text-secondary"
                       fill="none"
@@ -367,9 +367,9 @@ export default function TrustedContactsPage() {
                       {canInviteTrust && (
                         <button
                           onClick={() => openInvite("trust")}
-                          className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                          className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
-                          <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                          <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                             <svg
                               className="w-6 h-6 text-secondary"
                               fill="none"
@@ -412,7 +412,7 @@ export default function TrustedContactsPage() {
                       {recipientContacts.length === 0 ? (
                         <button
                           onClick={() => openInvite("recipient_only")}
-                          className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                          className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
                         >
                           <p className="text-headline-sm text-primary">
                             {t("recipientsOnly.addTitle")}
@@ -432,9 +432,9 @@ export default function TrustedContactsPage() {
                           ))}
                           <button
                             onClick={() => openInvite("recipient_only")}
-                            className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                            className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
                           >
-                            <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                            <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                               <svg
                                 className="w-6 h-6 text-secondary"
                                 fill="none"
@@ -470,7 +470,7 @@ export default function TrustedContactsPage() {
         <TabsContent value="groups">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <aside className="lg:col-span-4 space-y-6">
-              <section className="bg-surface-container-low p-6 rounded-2xl">
+              <section className="bg-surface-container-low p-6 rounded-sm">
                 <h3 className="text-headline-sm text-primary mb-3">
                   {t("howGroups.heading")}
                 </h3>
@@ -479,19 +479,19 @@ export default function TrustedContactsPage() {
                 </p>
                 <ul className="space-y-3 text-body-md text-on-surface-variant">
                   <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
+                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       1
                     </span>
                     <span>{t("howGroups.step1")}</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
+                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       2
                     </span>
                     <span>{t("howGroups.step2")}</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-full bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
+                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
                       3
                     </span>
                     <span>{t("howGroups.step3")}</span>
@@ -504,7 +504,7 @@ export default function TrustedContactsPage() {
                 // Transient state for existing users while the self-heal
                 // mutation seeds their default group — the live query flips
                 // to non-empty within a tick.
-                <div className="flex items-center justify-center p-12 rounded-2xl bg-surface-container-low/40">
+                <div className="flex items-center justify-center p-12 rounded-sm bg-surface-container-low/40">
                   <Loader size="sm" />
                 </div>
               ) : (
@@ -518,9 +518,9 @@ export default function TrustedContactsPage() {
                   ))}
                   <button
                     onClick={() => setShowCreateGroup(true)}
-                    className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-2xl hover:bg-surface-container-low transition-colors cursor-pointer group"
+                    className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
                   >
-                    <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                       <Icon
                         path={ICON_PATHS.plus}
                         className="w-6 h-6 text-secondary"

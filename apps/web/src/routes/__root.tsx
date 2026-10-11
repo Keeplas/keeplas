@@ -9,8 +9,7 @@ import { Toaster } from "@keeplas/ui";
 import AppProviders from "@/providers";
 import { NotFoundContent } from "@/app/not-found-content";
 import "@fontsource-variable/inter";
-import "@fontsource-variable/manrope";
-import "@fontsource-variable/geist";
+import "@fontsource-variable/source-serif-4";
 import "@/app/globals.css";
 
 // Production origin the app is served from. Social crawlers require an absolute

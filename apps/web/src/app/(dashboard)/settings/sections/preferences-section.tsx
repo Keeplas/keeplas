@@ -91,7 +91,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   return (
     <section className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+        <div className="bg-surface-container-low rounded-sm p-6 space-y-5">
           <div className="space-y-1.5">
             <h2 className="text-headline-sm text-primary">
               {t("preferences.localization.title")}
@@ -158,7 +158,7 @@ export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
           </div>
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+        <div className="bg-surface-container-low rounded-sm p-6 space-y-5">
           <div className="space-y-1.5">
             <h2 className="text-headline-sm text-primary">
               {t("preferences.alerts.title")}

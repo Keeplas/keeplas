@@ -311,7 +311,7 @@ export function SignupForm() {
     >
       <Link
         href="/security"
-        className="block mb-5 p-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors group"
+        className="block mb-5 p-3.5 rounded-xs bg-surface-container-low hover:bg-surface-container-high transition-colors group"
       >
         <p className="text-label-md text-secondary uppercase tracking-widest mb-1.5">
           {t("securityEyebrow")}
@@ -485,25 +485,25 @@ function LegacyCardPreview() {
         {/* Layered cards behind for depth */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 rounded-2xl bg-primary-container/30 translate-x-3 translate-y-3 rotate-6"
+          className="absolute inset-0 -z-10 rounded-sm bg-primary-container/30 translate-x-3 translate-y-3 rotate-6"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 rounded-2xl bg-primary-container/60 translate-x-1.5 translate-y-1.5 rotate-3 ring-1 ring-secondary-fixed/10"
+          className="absolute inset-0 -z-10 rounded-sm bg-primary-container/60 translate-x-1.5 translate-y-1.5 rotate-3 ring-1 ring-secondary-fixed/10"
         />
 
         {/* Front card */}
-        <div className="relative bg-primary-container text-on-primary-container p-6 rounded-2xl shadow-2xl rotate-3 ring-1 ring-secondary-fixed/20 overflow-hidden">
+        <div className="relative bg-primary-container text-on-primary-container p-6 rounded-sm shadow-2xl rotate-3 ring-1 ring-secondary-fixed/20 overflow-hidden">
           {/* Subtle radial highlight */}
           <div
             aria-hidden
-            className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-secondary-fixed/10 blur-2xl pointer-events-none"
+            className="absolute -top-12 -right-12 w-40 h-40 rounded-sm bg-secondary-fixed/10 blur-2xl pointer-events-none"
           />
 
           {/* Header */}
           <div className="relative flex justify-between items-start mb-5">
             <div className="flex items-center gap-2">
-              <span className="w-9 h-9 rounded-xl bg-secondary-fixed/15 flex items-center justify-center text-secondary-fixed">
+              <span className="w-9 h-9 rounded-xs bg-secondary-fixed/15 flex items-center justify-center text-secondary-fixed">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -524,8 +524,8 @@ function LegacyCardPreview() {
                 </span>
                 <span className="inline-flex items-center gap-1.5 mt-0.5">
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inset-0 rounded-full bg-secondary-fixed animate-ping opacity-70" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-secondary-fixed" />
+                    <span className="absolute inset-0 rounded-sm bg-secondary-fixed animate-ping opacity-70" />
+                    <span className="relative inline-flex rounded-sm h-1.5 w-1.5 bg-secondary-fixed" />
                   </span>
                   <span className="font-label text-[10px] tracking-widest uppercase text-secondary-fixed font-bold">
                     Sealed
@@ -552,7 +552,7 @@ function LegacyCardPreview() {
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="flex-1 h-1.5 rounded-full bg-secondary-fixed/40"
+                className="flex-1 h-1.5 rounded-sm bg-secondary-fixed/40"
                 style={{
                   opacity: 0.25 + ((i * 17) % 75) / 100,
                 }}
@@ -562,7 +562,7 @@ function LegacyCardPreview() {
 
           {/* Footer: PQ tag */}
           <div className="relative flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary-fixed/15 text-secondary-fixed">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xs bg-secondary-fixed/15 text-secondary-fixed">
               <svg
                 className="w-3 h-3"
                 fill="none"
