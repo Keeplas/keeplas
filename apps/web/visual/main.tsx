@@ -29,6 +29,8 @@ const theme = params.get("theme") === "dark" ? "dark" : "light";
 window.localStorage.setItem(LANGUAGE_STORAGE_KEY, params.get("lang") ?? "en");
 window.localStorage.setItem(STORAGE_KEYS.theme, theme);
 document.documentElement.classList.toggle("dark", theme === "dark");
+// Figma exports state cards with transparent corners: diff them on white.
+if (screen?.frame === "state") document.body.style.background = "white";
 
 // Components that still call Convex hooks (language switcher) get a client
 // that never connects: queries stay loading, nothing reaches a backend.

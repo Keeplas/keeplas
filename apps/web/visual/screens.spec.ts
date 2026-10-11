@@ -9,14 +9,14 @@ const FIGMA_SCREENS = fileURLToPath(
 );
 
 /**
- * Agreed threshold for light screens vs Figma: at most 4 % of pixels may
+ * Agreed threshold for light screens vs Figma: at most 3 % of pixels may
  * differ, a pixel counting as different when its YIQ color distance exceeds
  * 0.1 (pixelmatch `threshold`), anti-aliased pixels ignored. Browser text
  * rasterization never matches Figma's exactly, so a few percent of glyph
  * edges always differ even on a faithful build; layout or color mistakes
  * show up well above that.
  */
-const MAX_DIFF_RATIO = 0.04;
+const MAX_DIFF_RATIO = 0.03;
 const PIXEL_THRESHOLD = 0.1;
 
 /** Screens without a Figma reference vs their own committed baseline. */
@@ -35,6 +35,11 @@ interface Case {
 }
 
 const SHELL = { width: 1440, height: 900 };
+
+// The dialog focuses its only action on open (keyboard users); Figma draws
+// it at rest.
+const blurAutoFocus = (page: Page) =>
+  page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 
 const CASES: Case[] = [
   { id: "W04-3", figma: "W04-3_Dashboard.png", ...SHELL },
@@ -55,6 +60,38 @@ const CASES: Case[] = [
   },
   { id: "W04-6", figma: "W04-6_Devices_and_security.png", ...SHELL },
   { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
+  {
+    id: "W05-3",
+    figma: "W05-3_Life_check_modal_EN_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  {
+    id: "W05-4",
+    figma: "W05-4_Life_check_modal_FR_.png",
+    ...SHELL,
+    lang: "fr",
+    prepare: blurAutoFocus,
+  },
+  // Section 10 states that apply to the web (393 px State Message cards).
+  {
+    id: "state-vault-empty",
+    figma: "Empty_states_Your_vault_is_empty.png",
+    width: 393,
+    height: 350,
+  },
+  {
+    id: "state-nothing-shared",
+    figma: "Empty_states_Nothing_shared_with_you_yet.png",
+    width: 393,
+    height: 286,
+  },
+  {
+    id: "state-we-missed-you",
+    figma: "Life_check_We_missed_you.png",
+    width: 393,
+    height: 350,
+  },
 ];
 
 async function open(page: Page, item: Case, theme: "light" | "dark") {
