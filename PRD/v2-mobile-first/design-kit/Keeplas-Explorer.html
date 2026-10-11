@@ -466,7 +466,7 @@ function go(h) {
 }
 function route() {
   const h = current.replace(/^#\/?/, ''); const [r, arg] = h.split('/');
-  const view = V[r] ? r : '';
+  const view = Object.hasOwn(V, r) ? r : '';
   $('#main').innerHTML = `<div class="wrap">${V[view](arg)}</div>`;
   $('#main').scrollTop = 0;
   $$('.side a').forEach(a => a.classList.toggle('on', a.dataset.r === view));

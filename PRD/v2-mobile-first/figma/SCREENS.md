@@ -149,7 +149,9 @@ Each row links to the Figma node and to the PNG export in `screens/`. Full on-sc
 | M08-4 · New device detected · Dark  | 393×852 | [75:20056](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=75-20056) | [png](screens/M08-4_New_device_detected_Dark.png)  |
 | M08-7 · Settings · Dark             | 393×960 | [75:20080](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=75-20080) | [png](screens/M08-7_Settings_Dark.png)             |
 
-## Landing page (out of current scope)
+## Landing page (built in keeplas-website)
+
+Out of the app plan. Specs: `specs/L-*.json`, same format as the app screens.
 
 ### Landing (7)
 
