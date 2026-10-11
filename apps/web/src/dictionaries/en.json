@@ -574,32 +574,15 @@
       }
     },
     "return": {
-      "phraseError": "Enter all 24 words of your recovery phrase.",
-      "successTitle": "Vault secured",
-      "successDescription": "Access was revoked and your vault was re-keyed.",
-      "bannerTitleResume": "Finish securing your vault",
-      "bannerTitleReleased": "Your vault was released",
-      "bannerBodyResume": "A re-keying was started but not finished. Resume it to fully retire the old keys.",
-      "bannerBodyReleased": "Trusted contacts were granted access. If you are back, revoke that access and re-key your vault. This protects everything from now on — it cannot recover what was already read.",
-      "resumeCta": "Resume re-keying",
-      "secureCta": "I'm back — secure my vault",
-      "dialogTitle": "Secure my vault",
-      "dialogDescription": "Enter your 24-word recovery phrase. We'll revoke the released access and generate a fresh master key, re-encrypting every item. Items a contact already opened during the release cannot be taken back — this secures everything going forward.",
-      "phrasePlaceholder": "Paste or type your 24 words…",
-      "cancel": "Cancel",
-      "working": "Securing…",
-      "submit": "Revoke & re-key",
-      "status": {
-        "validating": "Verifying your recovery phrase…",
-        "rotatingKeys": "Generating a new master key…",
-        "reencrypting": "Re-encrypting your vault…",
-        "finalizing": "Finalizing…",
-        "done": "Done"
-      },
-      "forced": {
-        "dialogDescription": "Your master key was once split among your trusted contacts. That's no longer how Keeplas works, so we're retiring that key. Enter your 24-word recovery phrase: we'll generate a fresh master key and re-encrypt every item. Your contacts and recipients keep their access.",
-        "submit": "Re-key my vault",
-        "successDescription": "Your vault now uses a fresh master key."
+      "releasedTitle": "Your vault was released",
+      "releasedBody": "Trusted contacts were given access. If you're back, revoke it now, then re-key your vault in the Keeplas app on your phone.",
+      "revoke": "Revoke access",
+      "revoked": "Access revoked. Now re-key your vault on your phone.",
+      "failed": "Couldn't revoke the access. Try again.",
+      "onPhone": {
+        "title": "Finish securing your vault on your phone",
+        "body": "Open the Keeplas app on your phone to re-key your vault with a fresh master key. This browser keeps working in the meantime.",
+        "ok": "OK"
       }
     },
     "prompt": {

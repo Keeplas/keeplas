@@ -574,32 +574,15 @@
       }
     },
     "return": {
-      "phraseError": "Saisissez les 24 mots de votre phrase de récupération.",
-      "successTitle": "Coffre sécurisé",
-      "successDescription": "L'accès a été révoqué et votre coffre a été rechiffré avec une nouvelle clé.",
-      "bannerTitleResume": "Terminez la sécurisation de votre coffre",
-      "bannerTitleReleased": "Votre coffre a été transmis",
-      "bannerBodyResume": "Une rotation de clé a été lancée mais non terminée. Reprenez-la pour retirer entièrement les anciennes clés.",
-      "bannerBodyReleased": "Des contacts de confiance ont obtenu un accès. Si vous êtes de retour, révoquez cet accès et rechiffrez votre coffre avec une nouvelle clé. Cela protège tout à partir de maintenant — cela ne peut pas récupérer ce qui a déjà été consulté.",
-      "resumeCta": "Reprendre la rotation de clé",
-      "secureCta": "Je suis de retour — sécuriser mon coffre",
-      "dialogTitle": "Sécuriser mon coffre",
-      "dialogDescription": "Saisissez votre phrase de récupération de 24 mots. Nous révoquerons l'accès transmis et générerons une nouvelle clé maîtresse, en rechiffrant chaque élément. Les éléments qu'un contact a déjà ouverts pendant la transmission ne peuvent pas être repris — cela sécurise tout pour l'avenir.",
-      "phrasePlaceholder": "Collez ou saisissez vos 24 mots…",
-      "cancel": "Annuler",
-      "working": "Sécurisation…",
-      "submit": "Révoquer et changer de clé",
-      "status": {
-        "validating": "Vérification de votre phrase de récupération…",
-        "rotatingKeys": "Génération d'une nouvelle clé maîtresse…",
-        "reencrypting": "Rechiffrement de votre coffre…",
-        "finalizing": "Finalisation…",
-        "done": "Terminé"
-      },
-      "forced": {
-        "dialogDescription": "Votre clé maîtresse a autrefois été divisée entre vos contacts de confiance. Keeplas ne fonctionne plus ainsi : nous retirons donc cette clé. Saisissez votre phrase de récupération de 24 mots : nous générerons une nouvelle clé maîtresse et rechiffrerons chaque élément. Vos contacts et destinataires conservent leur accès.",
-        "submit": "Changer la clé de mon coffre",
-        "successDescription": "Votre coffre utilise désormais une nouvelle clé maîtresse."
+      "releasedTitle": "Votre coffre a été transmis",
+      "releasedBody": "Vos contacts de confiance ont reçu l'accès. Si vous êtes de retour, révoquez-le maintenant, puis renouvelez les clés de votre coffre dans l'app Keeplas sur votre téléphone.",
+      "revoke": "Révoquer l'accès",
+      "revoked": "Accès révoqué. Renouvelez maintenant les clés sur votre téléphone.",
+      "failed": "Impossible de révoquer l'accès. Réessayez.",
+      "onPhone": {
+        "title": "Terminez la sécurisation sur votre téléphone",
+        "body": "Ouvrez l'app Keeplas sur votre téléphone pour renouveler la clé maîtresse de votre coffre. Ce navigateur continue de fonctionner en attendant.",
+        "ok": "OK"
       }
     },
     "prompt": {
