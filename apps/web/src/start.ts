@@ -1,6 +1,7 @@
 import { createMiddleware, createStart } from "@tanstack/react-start";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { buildSecurityHeaders } from "@/lib/security-headers";
+import { wellKnownResponse } from "@/lib/well-known";
 
 /**
  * Server request pipeline for the Keeplas web app (TanStack Start).
@@ -139,6 +140,12 @@ function buildSealCookie(sealed: SealedContext): string {
 const securityMiddleware = createMiddleware({ type: "request" }).server(
   async ({ request, pathname, next }) => {
     const method = request.method.toUpperCase();
+
+    // ── /.well-known app association files (Universal / App Links). ──
+    if (method === "GET") {
+      const wellKnown = wellKnownResponse(pathname, process.env);
+      if (wellKnown) return wellKnown;
+    }
 
     // ── GET /api/context — hand the sealed context back to the client. ──
     // Browsers get their cookie back; native apps (no cookie jar) get a
