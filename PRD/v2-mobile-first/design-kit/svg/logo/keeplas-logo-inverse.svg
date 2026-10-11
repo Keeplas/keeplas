@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="56" viewBox="0 0 220 56" role="img" aria-label="Keeplas">
+<g transform="translate(0,4)">
+<path d="M24 3 6 9.5v12c0 11 7.6 19.6 18 23.5 10.4-3.9 18-12.5 18-23.5v-12z" fill="#FFFFFF"/>
+<path d="M24 8.6 10.6 13.4v8.2c0 8.6 5.7 15.5 13.4 18.8 7.7-3.3 13.4-10.2 13.4-18.8v-8.2z" fill="none" stroke="#0E2340" stroke-opacity=".35" stroke-width="1"/>
+<circle cx="24" cy="22" r="9" fill="none" stroke="#0E2340" stroke-width="1.6"/>
+<circle cx="24" cy="19.6" r="2.9" fill="#0E2340"/>
+<path d="M22.4 21.4h3.2l.9 7.1h-5z" fill="#0E2340"/>
+</g>
+<text x="60" y="38" font-family="'Source Serif 4','Source Serif Pro',Georgia,serif" font-weight="600" font-size="32" letter-spacing="-.5" fill="#FFFFFF">Keeplas</text>
+</svg>

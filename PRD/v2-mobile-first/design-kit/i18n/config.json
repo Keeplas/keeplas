@@ -1,0 +1,13 @@
+{
+  "defaultLocale": "en",
+  "locales": [
+    "en",
+    "fr"
+  ],
+  "fallbackLocale": "en",
+  "autoDetectDeviceLanguage": false,
+  "persist": [
+    "account",
+    "device"
+  ]
+}
