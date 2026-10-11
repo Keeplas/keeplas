@@ -15,6 +15,7 @@ import {
   verifyAuditContext,
 } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
+import { activePushTokens } from "./devices";
 
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3, D3, D4).
@@ -275,11 +276,18 @@ export const start = auditedMutation({
       phoneNumber: user?.phoneNumber,
       ownerName: user?.name,
       language: user?.language,
+      pushTokens: await activePushTokens(ctx, userId),
     });
     for (const share of shares) {
       const contact = await ctx.db.get(share.contactId);
       if (!contact) continue;
+      const contactUser = contact.contactUserId
+        ? await ctx.db.get(contact.contactUserId)
+        : null;
       await ctx.scheduler.runAfter(0, internal.dispatch.notifyRecoveryContact, {
+        pushTokens: contactUser
+          ? await activePushTokens(ctx, contactUser._id)
+          : [],
         email: contact.email,
         phoneNumber: contact.phoneNumber,
         contactName: contact.name,

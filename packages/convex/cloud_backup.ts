@@ -4,6 +4,8 @@ import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { enforceIpRateLimit } from "./lib/rate_limit";
+import { activePushTokens } from "./devices";
+import { getAuthSessionId } from "@convex-dev/auth/server";
 
 /**
  * Cloud backup of the RootKey (D7: on by default, explained at onboarding).
@@ -100,6 +102,11 @@ export const restore = auditedMutation({
           ? "A phone restored from iCloud"
           : "A phone restored from Google",
       language: user?.language,
+      pushTokens: await activePushTokens(
+        ctx,
+        userId,
+        await getAuthSessionId(ctx),
+      ),
     });
     return { provider: row.provider, envelope: row.envelope };
   },

@@ -1161,9 +1161,17 @@ async function sendAlert(args: {
   path: string;
   templateEnv: string | undefined;
   templateBase: string;
+  pushTokens?: string[];
 }): Promise<string> {
   if (isNotificationsPaused()) return "paused";
   const locale = resolveLocale(args.language);
+  const push = await safeSend(() =>
+    sendExpoPush(args.pushTokens ?? [], {
+      title: args.copy[locale].subject,
+      body: args.copy[locale].body(args.bodyName),
+      path: args.path,
+    }),
+  );
   const email = await safeSend(() =>
     sendCtaEmail({
       to: args.email,
@@ -1182,13 +1190,37 @@ async function sendAlert(args: {
       locale,
     }),
   );
-  return `email:${email} whatsapp:${whatsapp}`;
+  return `push:${push} email:${email} whatsapp:${whatsapp}`;
+}
+
+/** Native push to the user's phones through the Expo push service. */
+async function sendExpoPush(
+  tokens: string[],
+  message: { title: string; body: string; path: string },
+): Promise<string> {
+  if (tokens.length === 0) return "no_device";
+  const res = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      tokens.map((to) => ({
+        to,
+        title: message.title,
+        body: message.body,
+        data: { path: message.path },
+        sound: "default",
+      })),
+    ),
+  });
+  if (!res.ok) throw new Error(`expo push ${res.status}`);
+  return "sent";
 }
 
 const alertArgs = {
   email: v.optional(v.string()),
   phoneNumber: v.optional(v.string()),
   language: v.optional(v.string()),
+  pushTokens: v.optional(v.array(v.string())),
 };
 
 const NEW_DEVICE_COPY = {

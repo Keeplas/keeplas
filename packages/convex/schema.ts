@@ -382,6 +382,8 @@ export default defineSchema({
     trusted: v.boolean(),
     // Convex Auth session the device registered from; ended on revoke.
     sessionId: v.optional(v.id("authSessions")),
+    // Expo push token of a phone, for security alerts (mobile only).
+    pushToken: v.optional(v.string()),
     // Set when the owner answered "It was me" (M08-4). The first device of
     // an account is acknowledged at registration.
     acknowledgedAt: v.optional(v.number()),

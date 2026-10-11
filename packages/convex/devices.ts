@@ -1,6 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
-import { query, type MutationCtx } from "./_generated/server";
+import { query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
@@ -53,9 +53,50 @@ export const register = auditedMutation({
         ownerName: user?.name,
         deviceLabel: label,
         language: user?.language,
+        pushTokens: await activePushTokens(
+          ctx,
+          userId,
+          await getAuthSessionId(ctx),
+        ),
       });
     }
     return deviceId;
+  },
+});
+
+/**
+ * Expo push tokens of the user's active phones, except the one on
+ * `exceptSessionId` (the device that caused the alert).
+ */
+export async function activePushTokens(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  exceptSessionId: Id<"authSessions"> | null = null,
+): Promise<string[]> {
+  const devices = await ctx.db
+    .query("devices")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  return devices
+    .filter(
+      (d) =>
+        d.revokedAt === undefined &&
+        d.pushToken !== undefined &&
+        d.sessionId !== exceptSessionId,
+    )
+    .map((d) => d.pushToken!);
+}
+
+/** Phone: store its Expo push token for security alerts. */
+export const setPushToken = auditedMutation({
+  action: "device.push_token_set",
+  resourceType: "device",
+  args: { deviceId: v.id("devices"), pushToken: v.string() },
+  getResourceId: (args) => args.deviceId,
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    await requireOwnDevice(ctx, userId, args.deviceId);
+    await ctx.db.patch(args.deviceId, { pushToken: args.pushToken });
   },
 });
 

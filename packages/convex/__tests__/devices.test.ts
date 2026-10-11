@@ -132,4 +132,23 @@ describe("devices", () => {
       }),
     ).rejects.toThrow("This is the device you are using");
   });
+
+  it("alerts the other phones by push, never the new device itself", async () => {
+    const { t, userId, phone, phoneId } = await setup();
+    await phone.as.mutation(api.devices.setPushToken, {
+      deviceId: phoneId,
+      pushToken: "ExponentPushToken[phone]",
+      _audit: await signedAudit(),
+    });
+    const tablet = await signIn(t, userId);
+    await register(tablet.as, "android", "Pixel");
+    const alerts = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    const last = alerts[alerts.length - 1];
+    expect(last.args[0]).toMatchObject({
+      deviceLabel: "Pixel",
+      pushTokens: ["ExponentPushToken[phone]"],
+    });
+  });
 });
