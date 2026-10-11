@@ -107,7 +107,7 @@ Each step lists its verification. A phase is done when every check passes.
 - [x] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3) — `pairing.test.ts`
 - [x] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9) — `attestation.test.ts`
 - [x] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused — `account_migration.test.ts`
-- [ ] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works
+- [x] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works — routes removed; protocol e2e in `pairing_e2e.test.ts`, W04-2 state machine unit-tested (not yet run against a live deployment). Vault rotation still needs the 24 words on the web: moves to the phone (phase 8)
 - [x] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action — `devices.test.ts`, `recovery.test.ts`
 
 ### Phase 5: Owner recovery (F3, D3, D4, D7)
