@@ -82,12 +82,20 @@ export function LifeCheckModal({
           "md:left-[calc(50%+124px)] md:top-[max(24px,calc(50%-303px))] md:translate-y-0",
         )}
       >
+        {/* The crest paints a daylight sky; Noir uses the night landscape. */}
         <img
           src="/assets/illustrations/desktop-modal-crest.svg"
           alt=""
           width={440}
           height={275}
-          className="h-auto w-full max-w-[440px]"
+          className="h-auto w-full max-w-[440px] dark:hidden"
+        />
+        <img
+          src="/assets/illustrations/desktop-landscape-night.svg"
+          alt=""
+          width={440}
+          height={275}
+          className="hidden h-auto w-full max-w-[440px] rounded-md dark:block"
         />
         <DialogTitle className="text-h1 text-text-primary">
           {t("title")}
