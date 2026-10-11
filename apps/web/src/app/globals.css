@@ -105,6 +105,8 @@
   --kp-status-revoked: var(--kp-danger-600);
   --kp-progress-track: var(--kp-navy-100);
   --kp-progress-fill: var(--kp-sky-500);
+  /* Soft card shadow (Figma: navy 10 %, y 14, blur 32). Dark uses borders. */
+  --kp-shadow-card: 0 14px 32px rgb(14 35 64 / 0.1);
 
   /* ── Spacing (4 px grid) ── */
   --kp-space-1: 4px;
@@ -145,6 +147,7 @@
   --kp-status-revoked: var(--kp-noir-danger);
   --kp-progress-track: var(--kp-noir-800);
   --kp-progress-fill: var(--kp-noir-sky);
+  --kp-shadow-card: none;
   color-scheme: dark;
 }
 
@@ -185,6 +188,7 @@
   --color-category-instruction: var(--kp-category-instruction);
   --color-category-other: var(--kp-category-other);
   --color-category-note: var(--kp-category-note);
+  --shadow-card: var(--kp-shadow-card);
 
   /* ── Legacy "Digital Curator" names, re-pointed to v2 values so current
      screens take the new palette. Light only. Do not use in new code; they
@@ -528,9 +532,7 @@ button:not(:disabled),
   }
 
   #emergency-card-printable,
-  #emergency-card-printable *,
-  #recovery-kit-printable,
-  #recovery-kit-printable * {
+  #emergency-card-printable * {
     visibility: visible !important;
   }
 
@@ -547,18 +549,6 @@ button:not(:disabled),
     border: 1px solid #e5e2e1;
     font-size: 8px;
     page-break-after: avoid;
-  }
-
-  /* Recovery Kit — full-page architectural document */
-  #recovery-kit-printable {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    min-height: 100vh;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    page-break-inside: avoid;
   }
 
   .print\:hidden {

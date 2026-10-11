@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   DeviceUnlockEntry,
   DeviceUnlockError,
+  DeviceUnlockOwner,
   EnrollOptions,
   enrollMethod as enrollMethodImpl,
   deleteMethod as deleteMethodImpl,
@@ -9,24 +11,34 @@ import {
   unlockWith,
 } from "./device-unlock";
 
-interface UseDeviceUnlockOptions {
-  userEmail: string | null | undefined;
+type DeviceUnlockUser = Pick<Doc<"users">, "_id" | "email" | "phoneNumber">;
+
+/** Owner of this browser's device-unlock entries for `user`. */
+export function deviceUnlockOwner(user: DeviceUnlockUser): DeviceUnlockOwner {
+  return {
+    userId: user._id,
+    accountName: user.email ?? user.phoneNumber ?? "Keeplas",
+  };
 }
 
-export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
+/** Device-unlock entries of the signed-in user (`users.viewer`). */
+export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
+  const userId = user?._id ?? null;
+  const legacyEmail = user?.email;
+  const accountName = user ? deviceUnlockOwner(user).accountName : null;
   const [entries, setEntries] = useState<DeviceUnlockEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<DeviceUnlockError | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    if (!userEmail) {
+    if (!userId) {
       setEntries([]);
       setLoading(false);
       return;
     }
     try {
-      const list = await listMethods(userEmail);
+      const list = await listMethods(userId, legacyEmail);
       setEntries(list);
       setError(null);
     } catch (err) {
@@ -40,7 +52,7 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
     } finally {
       setLoading(false);
     }
-  }, [userEmail]);
+  }, [userId, legacyEmail]);
 
   useEffect(() => {
     void (async () => {
@@ -50,14 +62,18 @@ export function useDeviceUnlock({ userEmail }: UseDeviceUnlockOptions) {
 
   const enroll = useCallback(
     async (masterKey: CryptoKey, options: EnrollOptions) => {
-      if (!userEmail) {
-        throw new DeviceUnlockError("No user email", "io");
+      if (!userId || !accountName) {
+        throw new DeviceUnlockError("No signed-in user", "io");
       }
-      const entry = await enrollMethodImpl(userEmail, masterKey, options);
+      const entry = await enrollMethodImpl(
+        { userId, accountName },
+        masterKey,
+        options,
+      );
       await refresh();
       return entry;
     },
-    [userEmail, refresh],
+    [userId, accountName, refresh],
   );
 
   const unlock = useCallback(

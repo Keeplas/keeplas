@@ -1,27 +1,8 @@
 {
   "common": {
     "language": "Language",
-    "phone": "Phone",
-    "email": "Email",
-    "phoneNumber": "Phone Number",
-    "emailAddress": "Email Address",
-    "password": "Password",
-    "resendCode": "Resend code",
     "resendIn": "Resend code in {seconds}s",
-    "invalidCode": "Invalid or expired code.",
-    "codePlaceholder": "123456",
-    "learnMore": "Learn more",
-    "back": "Back",
-    "passwordStrength": {
-      "weak": "Weak",
-      "medium": "Medium",
-      "strong": "Strong",
-      "length": "Be at least 8 characters long",
-      "uppercase": "At least one uppercase letter (A-Z)",
-      "lowercase": "At least one lowercase letter (a-z)",
-      "number": "At least one number (0-9)",
-      "special": "At least one special character (!@#$%^&*)"
-    }
+    "back": "Back"
   },
   "auth": {
     "hero": {
@@ -32,163 +13,6 @@
       "encryptionStandard": "Encryption Standard",
       "architecture": "Architecture",
       "quantumSafe": "Quantum-Safe (FIPS 203)"
-    },
-    "login": {
-      "badge": "Identification Required",
-      "heading": "Welcome back, Curator",
-      "description": "Access your encrypted archives by verifying your credentials.",
-      "footerPrompt": "New Curator?",
-      "footerLabel": "Request Access",
-      "sendCode": "Send code",
-      "sending": "Sending...",
-      "unlock": "Unlock Vault",
-      "unlocking": "Unlocking...",
-      "emailCode": "Email code",
-      "whatsappCode": "WhatsApp code",
-      "lostAccess": "Lost access? 24 words",
-      "lostPhone": "Lost phone? 24 words",
-      "resetWords": "Reset with 24 words",
-      "phoneInvalid": "Please enter a valid phone number.",
-      "sendFailed": "Could not send the code. Try again.",
-      "resendFailed": "Could not resend the code. Try again in a moment.",
-      "invalidCredentials": "Invalid email or password.",
-      "noEmailAccount": "No account found for this email. Sign up to create one.",
-      "emailOtpHint": "This account signs in with an emailed code — no password.",
-      "protectedLink": "How is your data protected?",
-      "passkey": "Biometric Authorization",
-      "passkeyFailed": "Could not authenticate with your passkey."
-    },
-    "signup": {
-      "badge": "Zero-Knowledge Encryption",
-      "heading": "Create your sanctuary",
-      "description": "Enter your details to begin your digital legacy.",
-      "footerPrompt": "Already an owner?",
-      "footerLabel": "Access Vault",
-      "fullName": "Full Name",
-      "phoneOptional": "Phone (optional)",
-      "passwordMin": "Password must be at least 8 characters.",
-      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
-      "phoneInvalid": "Please enter a valid phone number.",
-      "startFailed": "Could not start signup. Try again.",
-      "createFailed": "Could not create account. Try again.",
-      "accountExists": "An account with this email already exists. Sign in instead.",
-      "verifyCode": "Verification Code",
-      "verifying": "Verifying...",
-      "confirmNumber": "Confirm Number",
-      "confirmEmail": "Confirm Email",
-      "initializing": "Initializing...",
-      "initializeVault": "Initialize Vault",
-      "whatsappConfirmation": "WhatsApp Confirmation",
-      "emailConfirmation": "Email Confirmation",
-      "confirmNumberHeading": "Confirm your number",
-      "confirmEmailHeading": "Confirm your email",
-      "phoneCodeSent": "We sent a 6-digit code to your WhatsApp at {phone}. Enter it below to activate your vault.",
-      "emailCodeSent": "We sent a 6-digit code to {email}. Enter it below to activate your vault.",
-      "wrongNumber": "Wrong number?",
-      "wrongEmail": "Wrong email?",
-      "startOver": "Start over",
-      "resendFailed": "Could not resend the code. Try again in a moment.",
-      "lockedEmail": "Locked — this is the email your inviter used to send you the invitation.",
-      "lockedPhone": "Locked — this is the number your inviter used to send you the invitation.",
-      "securityEyebrow": "Before you sign up · Quantum-safe end-to-end",
-      "securityText": "Your password lets you sign in. The 24 recovery words generated in the next step are what actually encrypt your vault, we never see them.",
-      "readHow": "Read how it works →",
-      "phoneHelp": "Used for WhatsApp verification and Life Check alerts. You can also reply to a Life Check on WhatsApp to confirm you are well.",
-      "phoneOnlyHelp": "We'll send your verification code and Life Check alerts to this WhatsApp number."
-    },
-    "onboarding": {
-      "steps": {
-        "identity": "Identity",
-        "recoveryPhrase": "Recovery Words",
-        "verification": "Verification",
-        "keyGeneration": "Secure Vault",
-        "passkey": "Biometrics"
-      },
-      "legalInfo": {
-        "badge": "Step 1 · Legal identity",
-        "heading": "Confirm who you are",
-        "description": "Your age determines legal capacity, and your country sets the inheritance jurisdiction that will apply to your vault. Both are recorded in the tamper-evident audit log so a court can later verify who you were when you set this up.",
-        "birthday": "Date of birth",
-        "birthdayPlaceholder": "Select your date of birth",
-        "country": "Country of residence",
-        "saving": "Saving…",
-        "securing": "Securing your session…",
-        "submit": "Confirm and continue",
-        "invalidDate": "Please pick a valid date.",
-        "minAge": "You must be at least 18 to use Keeplas.",
-        "saveFailed": "Could not save your information."
-      },
-      "recoveryPhrase": {
-        "badge": "Cryptographic Foundation",
-        "heading": "Master Recovery Words",
-        "copyAll": "Copy all",
-        "copied": "Copied!",
-        "download": "Download",
-        "generatingPdf": "Generating PDF…",
-        "generating": "Generating your Recovery Words",
-        "warningTitle": "Absolute Recovery Authority",
-        "warningBody": "These words are the only way to recover your vault. Keep them offline and safe. Anyone with access to these words possesses full authority over your digital legacy. We recommend writing them on paper and storing in a secure, fireproof location.",
-        "offlineTitle": "Offline Storage",
-        "offlineBody": "Never store these words digitally — no screenshots, cloud notes, or email drafts.",
-        "legacyTitle": "Legacy Access",
-        "legacyBody": "Consider sharing the location of these words with a trusted beneficiary.",
-        "verificationTitle": "Verification",
-        "verificationBody": "We will ask you to verify these words to confirm your backup is secure.",
-        "confirmLabel": "I have written down my 24 Recovery Words and stored them in a safe place. I understand that losing these words means I cannot recover my vault.",
-        "continue": "I saved my words — continue",
-        "pdfTitle": "Keeplas — Master Recovery Words",
-        "pdfAccountLabel": "Account",
-        "pdfWarning": "These 24 words are the only way to recover your vault. Keep this document offline and in a secure, fireproof location. Anyone with these words has full authority over your digital legacy.",
-        "pdfCopyLine": "Copy-paste line"
-      },
-      "verification": {
-        "back": "Back to Recovery Words",
-        "badge": "Backup Confirmation",
-        "heading": "Verify your Recovery Words",
-        "description": "To make sure you saved your words correctly, enter the 3 words below from your Recovery Words. This confirms your backup is complete and you will be able to recover your vault if needed.",
-        "whyTitle": "Why is this important?",
-        "whyBodyBefore": "These 24 words are the",
-        "whyKeyTerm": "only key",
-        "whyBodyAfter": "that encrypts your vault — we never see them. Your password just authenticates you and can be reset with these same 24 words. But the words themselves cannot be reset: only your trusted contacts can recover them later via shared shards. Save them somewhere safe now.",
-        "wordLabel": "{ordinal} word",
-        "wordPlaceholder": "Enter the {ordinal} word",
-        "mismatch": "The {ordinal} word does not match. Please check and try again.",
-        "verifying": "Verifying...",
-        "verifyContinue": "Verify and continue",
-        "seeAgain": "I need to see my Recovery Words again",
-        "error": "An error occurred. Please try again."
-      },
-      "keyGeneration": {
-        "phases": {
-          "derivingRoot": "Deriving your Root Key from your 24 words...",
-          "wrappingMasterKey": "Sealing your Master Key...",
-          "storing": "Securing your vault...",
-          "complete": "Vault secured!",
-          "error": "An error occurred"
-        },
-        "badge": "Securing Vault",
-        "headingComplete": "Your vault is ready",
-        "heading": "Setting up your protection",
-        "descriptionComplete": "Your Master Key is sealed by your 24 words. You can now start adding items to your vault.",
-        "description": "Your keys are derived and sealed entirely on your device. We never see your phrase.",
-        "redirecting": "Redirecting to your hub...",
-        "tryAgain": "Try again",
-        "genericError": "Key generation failed. Please try again."
-      },
-      "passkey": {
-        "badge": "Optional · Faster sign in",
-        "headingDone": "Passkey ready",
-        "heading": "Sign in with your face",
-        "descriptionDone": "You can now unlock Keeplas with your device biometrics.",
-        "description": "Use Face ID, Touch ID, or your device biometrics next time you sign in. Your password still works as a backup.",
-        "unsupportedBefore": "Passkeys are not supported on this browser. You can set this up later from",
-        "unsupportedTerm": "Settings · Security Center",
-        "unsupportedAfter": "on a compatible device.",
-        "enable": "Enable biometric sign in",
-        "redirecting": "Redirecting...",
-        "skip": "Skip for now",
-        "registerFailed": "Could not register your passkey."
-      }
     },
     "otp": {
       "heading": "Confirm it's you",
@@ -204,9 +28,8 @@
       "verify": "Verify",
       "sending": "Sending…",
       "resend": "Didn't get it? Resend code",
-      "useRecovery": "Can't receive the code? Use your recovery phrase",
-      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "recoverInApp": "Lost access to this code? Recover your account from the Keeplas app on your phone."
     },
     "totp": {
       "verifyingSession": "Verifying session",
@@ -215,58 +38,52 @@
       "subtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
       "codeLabel": "6-digit code",
       "verify": "Verify",
-      "useRecovery": "Lost your phone? Use your recovery phrase",
-      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "recoverInApp": "Lost access to this code? Recover your account from the Keeplas app on your phone."
     },
-    "recovery": {
-      "notConfigured": "Recovery is not configured for this account.",
-      "allWords": "Please enter all 24 words of your recovery phrase.",
-      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
-      "validPhone": "Enter a valid phone number for your account.",
-      "phoneFailed": "Recovery failed. Check that your number and 24 words match.",
-      "enterEmail": "Enter the email for your account.",
-      "emailFailed": "Recovery failed. Check that your email and 24 words match.",
-      "passwordMin": "Password must be at least 8 characters.",
-      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
-      "passwordsMismatch": "Passwords do not match.",
-      "successTitle": "Password reset successful",
-      "successBody": "Your password was reset. You will be redirected to login. Your vault contents remain encrypted by your 24 words and stay safe.",
-      "heading": "Recover access with your 24 words",
-      "subtitle": "Email accounts reset their password; phone accounts regain access directly. Either way your encrypted vault is untouched — your 24 words remain the crypto root.",
-      "phraseLabel": "Recovery phrase (24 words)",
-      "phrasePlaceholder": "word1 word2 word3 ...",
-      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "phraseHint2": "Words never leave this device — only a derived verifier is sent.",
-      "emailOtpHint": "This account signs in with an emailed code — your 24 words restore access directly, no new password needed.",
-      "newPassword": "New password",
-      "confirmPassword": "Confirm new password",
-      "recoverAccess": "Recover access",
-      "resetPassword": "Reset password",
-      "backToLogin": "Back to login"
+    "signIn": {
+      "heroTitle": "Your life,\nwell kept",
+      "heroBody": "A private place for your important documents, accounts, instructions and more. So you and the people you care about are prepared, today and tomorrow.",
+      "title": "Sign in to Keeplas",
+      "body": "Use your passkey to safely access your account. No password needed.",
+      "continueWithPasskey": "Continue with passkey",
+      "or": "or",
+      "linkWithPhone": "Link with my phone",
+      "lostAccess": "Lost access?",
+      "newVisitor": "New to Keeplas?",
+      "getTheApp": "Get the app",
+      "passkeyFailed": "Could not sign in with your passkey.",
+      "lostAccessDialog": {
+        "title": "Lost access?",
+        "body": "Account recovery happens in the Keeplas app. Open it on your phone, or install it on a new phone, then choose “Lost access?” to get back into your vault.",
+        "close": "Close"
+      }
     },
-    "phraseRecovery": {
-      "verifyingSession": "Verifying session",
-      "notConfiguredTitle": "Recovery not configured",
-      "backToCode": "Back to code entry",
-      "useHeading": "Use your recovery phrase",
-      "allWords": "Please enter all 24 words of your recovery phrase.",
-      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
-      "notConfigured": "Recovery is not configured for this account.",
-      "recoveryFailed": "Recovery failed.",
-      "phraseLabel": "Recovery phrase",
-      "phrasePlaceholder": "word1 word2 word3 ...",
-      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "phraseHint2": "The phrase never leaves your device — only a derived verifier is sent.",
-      "otp": {
-        "notConfiguredBody": "This account never bound a recovery phrase. Contact support if you cannot receive the login code.",
-        "subtitle": "Paste the 24 words you saved during onboarding to finish signing in on this device.",
-        "submit": "Unlock this device"
-      },
-      "totp": {
-        "notConfiguredBody": "This account never bound the recovery phrase to its authenticator. Contact support if you cannot access your authenticator app.",
-        "subtitle": "Paste the 24 words you saved during onboarding. Two-factor authentication will be disabled and you can set it up again from settings.",
-        "submit": "Reset two-factor"
+    "connect": {
+      "heroTitle": "Connect with\nmy phone",
+      "heroBody": "Use your phone with Keeplas to link this browser. It's fast, secure and password-free.",
+      "usePasskey": "Use a passkey instead",
+      "step1": "Open Keeplas",
+      "step1Detail": "on your phone",
+      "step2": "Scan the QR code",
+      "step2Detail": "with the app",
+      "step3": "Approve",
+      "step3Detail": "this browser with Face ID",
+      "expiresIn": "Expires in",
+      "trust": "Trust this browser",
+      "trustDetail": "On a shared computer, leave this off.",
+      "expired": "This code has expired.",
+      "newCode": "Generate a new code",
+      "rejected": "The link was declined on your phone.",
+      "error": "Something went wrong while linking this browser.",
+      "retry": "Try again",
+      "linking": "Linking this browser…",
+      "passkey": {
+        "title": "Create a passkey for this browser",
+        "body": "Next time, sign in and unlock your vault with your fingerprint, face or device PIN. No phone needed.",
+        "create": "Create passkey",
+        "skip": "Not now",
+        "failed": "Could not create the passkey."
       }
     }
   },
@@ -310,19 +127,12 @@
       "checkingDeviceUnlock": "Checking device unlock",
       "couldNotUnlock": "Could not unlock",
       "authCancelled": "Authentication cancelled",
-      "enterAll24": "Please enter all 24 words",
-      "wrongPhrase": "Wrong recovery phrase — vault could not be decrypted",
-      "phraseCouldNotUnlock": "Recovery phrase could not unlock the vault",
-      "heading": "Unlock vault",
-      "subheading": "Your vault is encrypted on this device. Choose how to unlock.",
-      "noDeviceUnlock": "No device unlock set up yet on this device.",
-      "use24Words": "Use 24 recovery words",
+      "heading": "Unlock your vault",
+      "subheading": "Your vault is encrypted on this device. Choose how to unlock it.",
+      "noDeviceUnlock": "This browser can't unlock your vault on its own yet. Link it with your phone to continue.",
       "pinPlaceholder": "At least {min} digits",
       "unlockButton": "Unlock",
       "back": "Back",
-      "phraseLabel": "Enter your 24 words",
-      "phraseHint": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "unlockWithWords": "Unlock with recovery words",
       "legacyTitle": "Account needs re-keying",
       "legacyBody": "Your vault was secured with a legacy key format that is no longer supported. To restore zero-knowledge access, your account must be re-keyed with your 24 recovery words. Please contact support to migrate this account.",
       "unavailableSuffix": "(unavailable on this device)",
@@ -330,7 +140,11 @@
       "methodBiometric": "Biometric",
       "methodHardwareKey": "Hardware key",
       "contact": "Contact us",
-      "logout": "Log out"
+      "logout": "Log out",
+      "heroTitle": "Your life,\nwell kept",
+      "heroBody": "A private place for your important documents, accounts, instructions and more.",
+      "or": "or",
+      "linkWithPhone": "Link with my phone"
     },
     "emailVerify": {
       "invalidEmail": "Enter a valid email address",
@@ -805,10 +619,6 @@
         "title": "Preferences",
         "description": "Localization and alert preferences for your legacy system."
       },
-      "recoveryKit": {
-        "title": "Recovery Kit",
-        "description": "Export the printable kit that rebuilds your vault if access is lost."
-      },
       "subscription": {
         "title": "Subscription",
         "description": "Plans, billing, and the lifetime tier for your legacy."
@@ -844,7 +654,6 @@
         "identity": "Identity",
         "preferences": "Preferences",
         "securityCenter": "Security Center",
-        "recoveryKit": "Recovery Kit",
         "continuityProtocol": "Continuity Protocol",
         "usage": "Usage",
         "subscription": "Subscription"
@@ -1210,11 +1019,6 @@
       "inviteGuardian": "Invite Guardian",
       "manageRules": "Manage Guardian Rules"
     },
-    "recoveryKitShortcut": {
-      "title": "Recovery Kit",
-      "description": "Generate a physical, offline recovery sheet containing encrypted metadata shards for your vault.",
-      "cta": "Print Physical Kit"
-    },
     "masterRecovery": {
       "title": "Master Recovery",
       "recoveryPhraseLabel": "Recovery phrase",
@@ -1240,40 +1044,6 @@
       "from": "from {country}",
       "verifiedSession": "Verified device · Zero-Knowledge session",
       "label": "Last access"
-    },
-    "recoveryKit": {
-      "loading": "Loading recovery kit",
-      "title": "Master Recovery Key",
-      "intro": "This document is the sole method for recovering your Keeplas Architectural Vault should you lose access. Keep it in a physically secure, fireproof location. Do not share these credentials with anyone.",
-      "relock": "Re-lock",
-      "printSecureCopy": "Print Secure Copy",
-      "generatingPdf": "Generating PDF…",
-      "downloadPdf": "Download PDF",
-      "architecturalVault": "The Architectural Vault",
-      "identityTitle": "Identity Verification",
-      "identityDescription": "This key is cryptographically bound to your biometric footprint and verified life-ledger.",
-      "coldStorageTitle": "Cold Storage",
-      "coldStorageDescription": "Recommended for physical storage only. Offline backups prevent digital extraction.",
-      "documentId": "Document ID",
-      "account": "Account",
-      "step01": "Step 01",
-      "step02": "Step 02",
-      "qrTitle": "Recovery QR Code",
-      "qrDescription": "Scan this code using the Keeplas Recovery portal or any secure Material-compatible device to initiate the vault restoration process.",
-      "checkE2e": "End-to-end encrypted protocol",
-      "checkSingleUse": "Single-use recovery token",
-      "seedTitle": "Recovery Seed Phrase",
-      "finalWarningTitle": "Final Warning",
-      "finalWarningDescription": "Losing this document means permanent loss of all legacy assets. Keeplas does not store copies of your recovery phrase.",
-      "userValidationTitle": "User Validation",
-      "generatedOn": "Generated on {date}.",
-      "qrSealed": "QR sealed until unlock",
-      "secureScanPoint": "Secure Scan Point",
-      "phraseLengthError": "Your recovery phrase must be exactly 12 or 24 words.",
-      "unlockReveal": "Unlock & Reveal",
-      "unlockDescription": "Enter your recovery phrase to render the QR and seed grid. Your phrase is processed locally and never sent to Keeplas.",
-      "pasteHint": "Paste all 24 words (or 12 if your phrase is 12-word). Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "revealCta": "Reveal Recovery Kit"
     }
   },
   "sharedWithMe": {
@@ -1982,7 +1752,6 @@
         "items": {
           "hub": "Hub",
           "security": "Security Center",
-          "recoveryKit": "Recovery Kit",
           "subscription": "Subscription"
         }
       },
@@ -2376,8 +2145,7 @@
           "body": "Without the phrase, they can't unlock their master key — so they can't decrypt their ML-KEM secret key — so they can't unwrap their shard. Their slot is effectively permanent dead weight. As the vault owner, you should revoke them, invite a replacement, then click Distribute now to issue fresh shards to all current trust contacts."
         }
       },
-      "trustedLink": "Trusted Contacts in detail",
-      "recoveryKitLink": "Export your Recovery Kit"
+      "trustedLink": "Trusted Contacts in detail"
     },
     "insights": {
       "eyebrow": "Reflect & Prepare",
@@ -2500,54 +2268,27 @@
     "openApp": "Open Keeplas"
   },
   "invite": {
-    "invalid": {
-      "badge": "Invitation Link",
-      "heading": "Invalid invitation",
-      "body": "This invitation link is invalid or has expired. Ask the vault owner to send you a new one."
+    "openOnPhone": {
+      "title": "Open this on your phone",
+      "body": "Keeplas works on mobile. Open this link on your phone, or scan the QR code shown on this page.",
+      "action": "Open in the Keeplas app"
     },
-    "goToKeeplas": "Go to Keeplas",
-    "processed": {
-      "badge": "Invitation Status",
-      "heading": "Invitation already processed",
-      "accepted": "You have already accepted this invitation.",
-      "declined": "You have already declined this invitation."
+    "expired": {
+      "title": "This invitation has expired",
+      "body": "Ask {name} to send you a new link.",
+      "bodyNoName": "Ask the person who invited you to send you a new link.",
+      "action": "OK"
     },
-    "goToHub": "Go to Hub",
-    "confirmed": {
-      "badge": "Confirmed",
-      "heading": "You're now a Trusted Contact",
-      "bodyPre": "You are now part of ",
-      "bodyPost": "'s trusted circle. You'll help confirm if something happens to them — you won't hold any part of their key."
+    "accepted": {
+      "title": "You’ve already accepted",
+      "body": "You’re a trusted contact for {name}. Nothing else to do.",
+      "action": "Open Keeplas"
     },
-    "invite": {
-      "badge": "Trusted Contact Invitation",
-      "heading": "{name} invited you",
-      "bodyPre": "You have been designated as a ",
-      "bodyPost": " in {name}'s Keeplas vault."
-    },
-    "roles": {
-      "family": "Family member",
-      "friend": "Friend",
-      "lawyer": "Lawyer",
-      "doctor": "Doctor",
-      "other": "Trusted contact"
-    },
-    "roleFallback": "trusted contact",
-    "meaning": {
-      "title": "What this means",
-      "bullet1": "You hold no key to their vault and can't read it.",
-      "bullet2": "You may be asked to confirm whether they can be reached.",
-      "bullet3": "You will never see vault contents unless access is explicitly granted."
-    },
-    "needAccount": "You need a Keeplas account to accept this invitation.",
-    "createAccount": "Create Account",
-    "signIn": "Sign In",
-    "accepting": "Accepting...",
-    "accept": "Accept Invitation",
-    "declining": "Declining...",
-    "decline": "Decline",
-    "acceptFailed": "Failed to accept invitation",
-    "declineFailed": "Failed to decline invitation"
+    "declined": {
+      "title": "Invitation declined",
+      "body": "We’ll let {name} know you said no. You can’t undo this, but {name} can invite you again.",
+      "action": "Done"
+    }
   },
   "security": {
     "badge1": "Security & Privacy",
@@ -2620,7 +2361,7 @@
     },
     "cta": {
       "prompt": "Ready to set up your vault?",
-      "create": "Create your vault",
+      "create": "Get the app",
       "have": "I already have one"
     },
     "faq": [
@@ -2733,6 +2474,23 @@
       "heading": "Missing something?",
       "description": "Tell us what would make Keeplas indispensable to you. We read every request.",
       "cta": "Request a feature"
+    }
+  },
+  "getApp": {
+    "heroTitle": "Your life,\nwell kept",
+    "heroBody": "A private place for your important documents, accounts, instructions and more.",
+    "title": "Keeplas starts on your phone",
+    "body": "Create your account in the Keeplas app, then link this computer by scanning a QR code.",
+    "scan": "Scan to download the app",
+    "haveApp": "I already have the app",
+    "linkWithPhone": "Link with my phone",
+    "stores": {
+      "appStoreCaption": "Download on the",
+      "playCaption": "Get it on"
+    },
+    "scanInApp": {
+      "title": "Open the Keeplas app to scan this code",
+      "body": "This code links a computer to a Keeplas account. Scan it from the Keeplas app on your phone."
     }
   }
 }

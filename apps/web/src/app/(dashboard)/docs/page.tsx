@@ -70,11 +70,6 @@ const QUICK_LINKS: Array<{ key: string; href: string; iconPath: string }> = [
     iconPath: ICON_PATHS.key,
   },
   {
-    key: "recoveryKit",
-    href: "/settings/recovery-kit",
-    iconPath: ICON_PATHS.key,
-  },
-  {
     key: "subscription",
     href: "/settings/subscription",
     iconPath: ICON_PATHS.creditCard,

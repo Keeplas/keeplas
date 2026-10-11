@@ -30,9 +30,8 @@ const METHOD_ICON: Record<DeviceUnlockEntry["method"], string> = {
 export function DeviceUnlockManager() {
   const t = useTranslations("settingsSecurity");
   const user = useQuery(api.users.viewer);
-  const userEmail = user?.email ?? null;
   const { masterKey } = useMasterKey();
-  const { entries, loading, remove } = useDeviceUnlock({ userEmail });
+  const { entries, loading, remove } = useDeviceUnlock(user);
   const confirm = useConfirm();
   const [showEnroll, setShowEnroll] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -205,9 +204,9 @@ export function DeviceUnlockManager() {
         </p>
       </div>
 
-      {showEnroll && userEmail && masterKey ? (
+      {showEnroll && user && masterKey ? (
         <EnrollDeviceUnlockDialog
-          userEmail={userEmail}
+          user={user}
           onClose={() => setShowEnroll(false)}
         />
       ) : null}

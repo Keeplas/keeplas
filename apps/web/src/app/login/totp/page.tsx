@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "@/lib/navigation";
 import { useRouter } from "@/lib/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -103,18 +102,9 @@ export default function TotpLoginPage() {
         </form>
 
         <div className="text-center space-y-3">
-          {gate.recoveryBound ? (
-            <Link
-              href="/login/totp/recovery"
-              className="text-body-md text-secondary hover:underline"
-            >
-              {t("useRecovery")}
-            </Link>
-          ) : (
-            <p className="text-body-md text-on-surface-variant">
-              {t("recoveryNotConfigured")}
-            </p>
-          )}
+          <p className="text-body-md text-on-surface-variant">
+            {t("recoverInApp")}
+          </p>
           <button
             type="button"
             onClick={() => signOut()}

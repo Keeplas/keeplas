@@ -9,7 +9,6 @@ const SECTION_KEYS: Record<string, string> = {
   "/settings": "identity",
   "/settings/security": "security",
   "/settings/preferences": "preferences",
-  "/settings/recovery-kit": "recoveryKit",
   "/settings/subscription": "subscription",
   "/settings/contact": "contact",
   "/settings/roadmap": "roadmap",

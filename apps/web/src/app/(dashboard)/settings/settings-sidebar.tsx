@@ -40,11 +40,6 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
         iconPath: ICON_PATHS.shieldCheck,
       },
       {
-        labelKey: "recoveryKit",
-        href: "/settings/recovery-kit",
-        iconPath: ICON_PATHS.key,
-      },
-      {
         labelKey: "continuityProtocol",
         href: "/settings/continuity",
         iconPath: ICON_PATHS.heartbeat,

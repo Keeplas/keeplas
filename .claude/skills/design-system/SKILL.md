@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"; // re-exported from @keeplas/ui
 
 Available exports (from `packages/ui/src/index.ts` — grep it before creating anything new):
 
-`Avatar` · `Badge` · `Button` · `Calendar` · `DatePicker` · `Card` (+ Header/Title/Description/Content/Footer) · `Dialog` (+ parts) · `ConfirmDialogProvider`/`useConfirm` · `DropdownMenu` · `Popover` · `Command` · `ErrorAlert` · `Icon` · `Input` · `Label` · `LegacyCard` · `PasswordInput` · `PhoneInput` · `Progress` · `Select` · `Separator` · `Sheet` · `Switch` · `Tabs` · `Spinner` · `Loader` / `KeeplasLogoMark` · `Textarea` · `Toast`/`Toaster`/`toast`/`useToast` · `Tooltip` · `UserAvatar` · `RichTextEditor` · `HelpHint` · `InfoCallout` · helpers `isValidEmail`, `isValidPhone`, `normalizePhone`, `cn`
+`Avatar` · `Badge` · `Button` (v2: `variant="primary" | "outlined" | "link"`, `size="cta"`; the other variants are legacy) · `Calendar` · `Checkbox` · `DatePicker` · `Card` (+ Header/Title/Description/Content/Footer) · `Dialog` (+ parts) · `ConfirmDialogProvider`/`useConfirm` · `DropdownMenu` · `Popover` · `Command` · `ErrorAlert` · `Icon` · `Input` · `Label` · `LegacyCard` · `PhoneInput` · `Progress` · `Select` · `Separator` · `Sheet` · `Switch` · `Tabs` · `Spinner` · `Loader` / `KeeplasLogoMark` · `Textarea` · `Toast`/`Toaster`/`toast`/`useToast` · `Tooltip` · `UserAvatar` · `RichTextEditor` · `HelpHint` · `InfoCallout` · helpers `isValidEmail`, `isValidPhone`, `normalizePhone`, `cn`
 
 ## Color tokens
 

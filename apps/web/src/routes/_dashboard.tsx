@@ -30,10 +30,6 @@ function DashboardLayout() {
   const t = useTranslations("chrome");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const navigate = useNavigate();
-  const onboardingState = useQuery(
-    api.onboarding.getOnboardingState,
-    isAuthenticated ? {} : "skip",
-  );
   const totpGate = useQuery(
     api.totp.getMyTotpGate,
     isAuthenticated ? {} : "skip",
@@ -54,12 +50,6 @@ function DashboardLayout() {
   }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
-    if (onboardingState && onboardingState.onboardingStep !== "complete") {
-      navigate({ to: "/onboarding" });
-    }
-  }, [onboardingState, navigate]);
-
-  useEffect(() => {
     if (totpGate?.required) {
       navigate({ to: "/login/totp" });
     }
@@ -73,20 +63,11 @@ function DashboardLayout() {
     }
   }, [totpGate, loginOtpGate?.required, navigate]);
 
-  if (
-    isLoading ||
-    onboardingState === undefined ||
-    totpGate === undefined ||
-    loginOtpGate === undefined
-  ) {
+  if (isLoading || totpGate === undefined || loginOtpGate === undefined) {
     return <Loader fullscreen label={t("layout.unlockingVault")} />;
   }
 
   if (!isAuthenticated) {
-    return null;
-  }
-
-  if (onboardingState && onboardingState.onboardingStep !== "complete") {
     return null;
   }
 
