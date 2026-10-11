@@ -813,7 +813,8 @@
         "subscription": "Subscriptions & Services",
         "contacts": "Contacts",
         "wishes": "Wishes",
-        "other": "Other"
+        "other": "Other",
+        "inbox": "Encrypted inbox"
       },
       "needCapacity": {
         "title": "Need more capacity?",
@@ -1420,7 +1421,8 @@
       "subscription": "Subscriptions & Services",
       "contacts": "Contacts",
       "wishes": "Wishes",
-      "other": "Other"
+      "other": "Other",
+      "inbox": "Encrypted inbox"
     },
     "sections": {
       "documents": {

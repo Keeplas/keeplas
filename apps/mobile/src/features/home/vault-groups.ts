@@ -54,7 +54,10 @@ export const VAULT_GROUPS = [
 
 export type VaultGroupKey = (typeof VAULT_GROUPS)[number]["key"];
 
-/** Sum per-category counts into the four Home groups (unknown → other). */
+/**
+ * Sum per-category counts into the four Home groups (unknown → other).
+ * "inbox" (unsorted captures) is shown on its own row, not in a tile.
+ */
 export function groupCategoryCounts(
   counts: Record<string, number>,
 ): Record<VaultGroupKey, number> {

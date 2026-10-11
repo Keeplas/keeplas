@@ -813,7 +813,8 @@
         "subscription": "Abonnements et services",
         "contacts": "Contacts",
         "wishes": "Volontés",
-        "other": "Autre"
+        "other": "Autre",
+        "inbox": "Boîte de réception chiffrée"
       },
       "needCapacity": {
         "title": "Besoin de plus de capacité ?",
@@ -1420,7 +1421,8 @@
       "subscription": "Abonnements et services",
       "contacts": "À contacter",
       "wishes": "Dernières volontés",
-      "other": "Autre"
+      "other": "Autre",
+      "inbox": "Boîte de réception chiffrée"
     },
     "sections": {
       "documents": {
