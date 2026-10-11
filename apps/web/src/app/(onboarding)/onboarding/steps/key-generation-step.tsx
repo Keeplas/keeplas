@@ -5,9 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { deriveRootKey } from "@keeplas/crypto/kdf";
-import { split } from "@keeplas/crypto/shamir";
 import { useMasterKey } from "@/lib/master-key-context";
-import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 import { Button, Spinner } from "@keeplas/ui";
@@ -21,17 +19,11 @@ interface KeyGenerationStepProps {
 }
 
 type GenerationPhase =
-  | "deriving_root"
-  | "splitting_shards"
-  | "wrapping_master_key"
-  | "storing"
-  | "complete"
-  | "error";
+  "deriving_root" | "wrapping_master_key" | "storing" | "complete" | "error";
 
 // Maps each phase to its translation key under `auth.onboarding.keyGeneration.phases`.
 const PHASE_KEYS: Record<GenerationPhase, string> = {
   deriving_root: "derivingRoot",
-  splitting_shards: "splittingShards",
   wrapping_master_key: "wrappingMasterKey",
   storing: "storing",
   complete: "complete",
@@ -39,9 +31,8 @@ const PHASE_KEYS: Record<GenerationPhase, string> = {
 };
 
 const PHASE_PROGRESS: Record<GenerationPhase, number> = {
-  deriving_root: 25,
-  splitting_shards: 50,
-  wrapping_master_key: 75,
+  deriving_root: 30,
+  wrapping_master_key: 65,
   storing: 90,
   complete: 100,
   error: 0,
@@ -49,23 +40,9 @@ const PHASE_PROGRESS: Record<GenerationPhase, number> = {
 
 const VISIBLE_PHASES = [
   "deriving_root",
-  "splitting_shards",
   "wrapping_master_key",
   "storing",
 ] as const;
-
-const MIN_THRESHOLD = 2;
-// Capped at 3: only the 3 trusted-contact shards (slots 2-4) participate in
-// the contacts-only recovery path. The device shard helps the owner locally
-// but is cleared on logout, so a threshold of 4 would make the vault
-// unrecoverable after the owner is gone (the server holds NO shard).
-const MAX_THRESHOLD = 3;
-const DEFAULT_THRESHOLD = 2;
-// Total Shamir shares: 1 device + 3 trusted contacts. The server deliberately
-// holds NONE — a server-held shard plus one contact shard would reach a
-// threshold-2 quorum and let a malicious server reconstruct the master key,
-// breaking zero-knowledge. See finding #3.
-const TOTAL_SHARES = 4;
 
 export function KeyGenerationStep({
   phrase,
@@ -79,14 +56,11 @@ export function KeyGenerationStep({
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const [phase, setPhase] = useState<GenerationPhase>("deriving_root");
   const [error, setError] = useState("");
-  const [threshold, setThreshold] = useState<number | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
-    if (threshold === null) return;
     startedRef.current = true;
-    const chosenThreshold = threshold;
 
     async function generateAndStore() {
       try {
@@ -99,20 +73,14 @@ export function KeyGenerationStep({
           extractable: false,
         });
 
-        // Phase 2: generate a fresh MasterKey, then Shamir-split it for
-        // trusted-contact recovery. RootKey wraps MasterKey; trusted-contact
-        // shards reconstruct the MasterKey directly without RootKey. The
-        // threshold (chosen by the user) controls how many shares are needed
-        // to reconstruct.
+        // Phase 2: generate a fresh MasterKey and wrap it with the RootKey ->
+        // bundle stored on the server. The MasterKey is never split: nobody
+        // but the owner (24 words + unlocked devices) can rebuild it.
         const masterKey = await generateMasterKey();
         const rawMasterKey = new Uint8Array(
           await crypto.subtle.exportKey("raw", masterKey),
         );
 
-        setPhase("splitting_shards");
-        const shards = await split(rawMasterKey, TOTAL_SHARES, chosenThreshold);
-
-        // Phase 3: wrap MasterKey with RootKey -> bundle stored on the server
         setPhase("wrapping_master_key");
         const iv = crypto.getRandomValues(new Uint8Array(12));
         const wrapped = await crypto.subtle.encrypt(
@@ -128,21 +96,11 @@ export function KeyGenerationStep({
           encryptedMasterKey: uint8ToBase64(new Uint8Array(wrapped)),
         };
 
-        // Shard 1 stays on this device. Shards 2–4 are reserved for trusted
-        // contacts (distributed in a later step). The server holds NO shard.
-        const shard1Base64 = uint8ToBase64(shards[0]);
-        try {
-          localStorage.setItem(STORAGE_KEYS.deviceShard, shard1Base64);
-        } catch {
-          // localStorage may be unavailable (private mode) — non-fatal.
-        }
-
-        // Phase 4: persist
+        // Phase 3: persist
         setPhase("storing");
         await storeKeyBundle({
           encryptedKeyBundle: JSON.stringify(bundle),
           phraseSalt: phraseSaltB64,
-          vaultThreshold: chosenThreshold,
         });
 
         // Keep the live MasterKey for the rest of the session.
@@ -175,18 +133,8 @@ export function KeyGenerationStep({
     router,
     setMasterKey,
     onComplete,
-    threshold,
     t,
   ]);
-
-  if (threshold === null) {
-    return (
-      <ThresholdPicker
-        onSelect={setThreshold}
-        defaultValue={DEFAULT_THRESHOLD}
-      />
-    );
-  }
 
   return (
     <div className="w-full max-w-lg mx-auto text-center">
@@ -310,84 +258,6 @@ export function KeyGenerationStep({
           </Button>
         </div>
       )}
-    </div>
-  );
-}
-
-interface ThresholdPickerProps {
-  onSelect: (threshold: number) => void;
-  defaultValue: number;
-}
-
-function ThresholdPicker({ onSelect, defaultValue }: ThresholdPickerProps) {
-  const t = useTranslations("auth.onboarding.keyGeneration");
-  const [value, setValue] = useState(defaultValue);
-
-  return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="mb-8 text-center">
-        <h2 className="text-headline-lg text-primary mb-3 break-words">
-          {t("thresholdHeading")}
-        </h2>
-        <p className="text-body-md md:text-body-lg text-on-surface-variant max-w-md mx-auto">
-          {t("thresholdDescription")}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {Array.from(
-          { length: MAX_THRESHOLD - MIN_THRESHOLD + 1 },
-          (_, i) => i + MIN_THRESHOLD,
-        ).map((n) => {
-          const selected = value === n;
-          return (
-            <button
-              key={n}
-              onClick={() => setValue(n)}
-              className={`p-4 rounded-2xl border-2 transition-all text-center cursor-pointer ${
-                selected
-                  ? "border-secondary bg-secondary-container/40"
-                  : "border-outline-variant/30 hover:border-outline-variant/60 bg-surface-container-low"
-              }`}
-            >
-              <div className="text-headline-md text-primary font-bold">{n}</div>
-              <div className="text-label-md text-on-surface-variant">
-                {t("thresholdOf")}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="p-4 bg-surface-container-low rounded-xl mb-6">
-        <p className="text-body-md text-on-surface-variant">
-          {value === 2 && (
-            <>
-              <strong className="text-primary">
-                {t("thresholdEasiestStrong")}
-              </strong>{" "}
-              {t("thresholdEasiest")}
-            </>
-          )}
-          {value === 3 && (
-            <>
-              <strong className="text-primary">
-                {t("thresholdBalancedStrong")}
-              </strong>{" "}
-              {t("thresholdBalanced")}
-            </>
-          )}
-        </p>
-      </div>
-
-      <Button
-        variant="vault"
-        size="lg"
-        onClick={() => onSelect(value)}
-        className="w-full cursor-pointer"
-      >
-        {t("thresholdContinue", { value })}
-      </Button>
     </div>
   );
 }

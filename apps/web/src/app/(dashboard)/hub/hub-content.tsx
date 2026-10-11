@@ -35,7 +35,7 @@ const DOCUMENT_CATEGORIES: VaultCategory[] = [
 const ACTION_ICONS: Record<string, string> = {
   add_item: ICON_PATHS.archive,
   invite_contact: ICON_PATHS.userPlus,
-  distribute_shards: ICON_PATHS.shieldCheck,
+  contacts_ready: ICON_PATHS.shieldCheck,
   life_check: ICON_PATHS.heartbeat,
   release_policy: ICON_PATHS.group,
   welcome_message: ICON_PATHS.mail,
@@ -51,7 +51,7 @@ const ACTION_ICONS: Record<string, string> = {
 const ACTION_HINT_KEYS = new Set<string>([
   "add_item",
   "invite_contact",
-  "distribute_shards",
+  "contacts_ready",
   "life_check",
   "release_policy",
   "welcome_message",

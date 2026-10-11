@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { HelpHint, Switch, toast } from "@keeplas/ui";
+import { HelpHint, toast } from "@keeplas/ui";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
@@ -16,8 +16,9 @@ const UNSELECTED_CLS =
 
 /**
  * Stage-2 release policy editor: how many trusted contacts must confirm
- * unavailability, how long they have, and the fallback if none do. Auto-saves
- * each change (mirrors the cadence selector's pattern).
+ * unavailability and how long they have. If none do, nothing is released —
+ * there is no "release anyway" option (v2 F5). Auto-saves each change (mirrors
+ * the cadence selector's pattern).
  */
 export function ReleasePolicySettings() {
   const t = useTranslations("lifeCheck");
@@ -26,9 +27,6 @@ export function ReleasePolicySettings() {
 
   const [threshold, setThreshold] = useState(2);
   const [windowDays, setWindowDays] = useState(7);
-  // Default OFF (abort): releasing the vault with zero human confirmation must
-  // always be an explicit owner opt-in, never the preselected state.
-  const [releaseAnyway, setReleaseAnyway] = useState(false);
 
   // Seed the editable form from the server config the first time it resolves
   // (and again if it changes), without an effect. Tracking the seeded source
@@ -39,22 +37,15 @@ export function ReleasePolicySettings() {
     setSeededFrom(config);
     setThreshold(config.confirmationThreshold ?? 2);
     setWindowDays(config.confirmationWindowDays ?? 7);
-    // Default OFF when unset — must match the server's "abort" default (H1).
-    setReleaseAnyway(config.fallbackBehavior === "release_anyway");
   }
 
   if (config === null) return null;
 
-  async function persist(values: {
-    threshold: number;
-    windowDays: number;
-    releaseAnyway: boolean;
-  }) {
+  async function persist(values: { threshold: number; windowDays: number }) {
     try {
       await save({
         confirmationThreshold: values.threshold,
         confirmationWindowDays: values.windowDays,
-        fallbackBehavior: values.releaseAnyway ? "release_anyway" : "abort",
       });
     } catch (err) {
       toast({
@@ -87,7 +78,7 @@ export function ReleasePolicySettings() {
               key={n}
               onClick={() => {
                 setThreshold(n);
-                void persist({ threshold: n, windowDays, releaseAnyway });
+                void persist({ threshold: n, windowDays });
               }}
               className={threshold === n ? SELECTED_CLS : UNSELECTED_CLS}
             >
@@ -108,7 +99,7 @@ export function ReleasePolicySettings() {
               key={n}
               onClick={() => {
                 setWindowDays(n);
-                void persist({ threshold, windowDays: n, releaseAnyway });
+                void persist({ threshold, windowDays: n });
               }}
               className={windowDays === n ? SELECTED_CLS : UNSELECTED_CLS}
             >
@@ -118,25 +109,9 @@ export function ReleasePolicySettings() {
         </div>
       </div>
 
-      <div className="flex items-start justify-between gap-4 pt-1">
-        <div>
-          <p className="text-body-md font-bold text-primary">
-            {t("policy.releaseAnywayLabel")}
-          </p>
-          <p className="text-label-md text-on-surface-variant">
-            {releaseAnyway
-              ? t("policy.releaseAnywayOn")
-              : t("policy.releaseAnywayOff")}
-          </p>
-        </div>
-        <Switch
-          checked={releaseAnyway}
-          onCheckedChange={(next) => {
-            setReleaseAnyway(next);
-            void persist({ threshold, windowDays, releaseAnyway: next });
-          }}
-        />
-      </div>
+      <p className="text-label-md text-on-surface-variant pt-1">
+        {t("policy.noConfirmation")}
+      </p>
     </section>
   );
 }

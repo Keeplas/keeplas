@@ -987,10 +987,9 @@ export const enterConfirmationStage = internalMutation({
 /**
  * Confirmation window elapsed. If contacts reached the confirmation threshold,
  * a release is already pending behind its owner-cancel grace — do nothing.
- * Otherwise apply the owner's fallback: "abort" (release nothing, notify the
- * owner) or "release_anyway" (release without human confirmation). The default
- * when unset is "abort" — releasing on cron timers alone must be an explicit
- * owner opt-in (see finding H1).
+ * Otherwise close the cycle without releasing anything and notify the owner:
+ * a missed Life Check alone must never cause disclosure (v2 F5 — the former
+ * "release_anyway" fallback is gone, whatever a legacy config still says).
  */
 export const resolveConfirmationWindow = internalMutation({
   args: { cycleId: v.id("life_check_cycles") },
@@ -1016,18 +1015,8 @@ export const resolveConfirmationWindow = internalMutation({
       .first();
     if (confirmed) return; // release will fire after its grace window
 
-    const config = await ctx.db.get(cycle.configId);
-    // Safe default: when the owner never explicitly opted into "release_anyway",
-    // a confirmation window that elapses without human quorum must NOT release
-    // the vault. An attacker who suppresses the owner's check-ins must not be
-    // able to force a release purely on cron timers. Absent config => "abort".
-    const fallback = config?.fallbackBehavior ?? "abort";
-
-    if (fallback === "release_anyway") {
-      await markCycleTriggered(ctx, cycle._id, "life_check_fallback_release");
-      return;
-    }
-
+    // No human quorum → no release. An attacker who suppresses the owner's
+    // check-ins must not be able to force a release purely on cron timers.
     const now = Date.now();
     await ctx.db.patch(cycle._id, {
       status: "cancelled",
@@ -1048,7 +1037,7 @@ export const resolveConfirmationWindow = internalMutation({
 
     // Notify the owner: the vault stayed locked because no human confirmed
     // unreachability within the window. If they are in fact away, this is the
-    // signal to add/re-confirm trusted contacts or switch to "release_anyway".
+    // signal to add or re-confirm trusted contacts.
     await createNotification(ctx, {
       userId: cycle.userId,
       type: "security_alert",
@@ -1155,8 +1144,9 @@ export const toggleActive = auditedMutation({
 
 /**
  * Persist the Stage-2 release policy: how many trusted contacts must confirm
- * unavailability, how long they have, and what happens if they don't. Read by
- * `enterConfirmationStage` / `resolveConfirmationWindow` / `markUserUnreachable`.
+ * unavailability and how long they have. If they don't, nothing is released —
+ * `fallbackBehavior` is always "abort" (it also marks the policy as set for the
+ * Hub). Read by `enterConfirmationStage` / `markUserUnreachable`.
  */
 export const saveReleasePolicy = auditedMutation({
   action: "life_check_release_policy_saved",
@@ -1166,12 +1156,10 @@ export const saveReleasePolicy = auditedMutation({
   getMetadata: (args) => ({
     confirmationThreshold: args.confirmationThreshold,
     confirmationWindowDays: args.confirmationWindowDays,
-    fallbackBehavior: args.fallbackBehavior,
   }),
   args: {
     confirmationThreshold: v.number(),
     confirmationWindowDays: v.number(),
-    fallbackBehavior: v.union(v.literal("abort"), v.literal("release_anyway")),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -1191,7 +1179,7 @@ export const saveReleasePolicy = auditedMutation({
     await ctx.db.patch(config._id, {
       confirmationThreshold: args.confirmationThreshold,
       confirmationWindowDays: args.confirmationWindowDays,
-      fallbackBehavior: args.fallbackBehavior,
+      fallbackBehavior: "abort",
       updatedAt: Date.now(),
     });
 

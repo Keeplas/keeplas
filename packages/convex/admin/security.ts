@@ -43,7 +43,11 @@ export const accessRequestStats = query({
   },
 });
 
-/** Total number of recovery-shard submission rows. */
+/**
+ * Total number of recovery-shard submission rows. Legacy: the table is no
+ * longer written (v2 phase 2) and is emptied by the shard purge migration, so
+ * this reports 0. Kept until the admin app (keeplas-website) stops reading it.
+ */
 export const recoverySubmissionStats = query({
   args: {},
   handler: async (ctx) => {

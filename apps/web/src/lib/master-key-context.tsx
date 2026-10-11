@@ -55,8 +55,8 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
     [userId],
   );
 
-  // Lock the vault: wipe the in-memory MasterKey, the persisted copy + device
-  // shard (clearPersistedMasterKeys chokepoint), AND the cached decrypted owner
+  // Lock the vault: wipe the in-memory MasterKey, the persisted copy + any
+  // legacy shard (clearPersistedMasterKeys chokepoint), AND the cached decrypted owner
   // secret keys (ML-KEM + ML-DSA identity). Used for explicit clears, sign-out,
   // and the inactivity auto-lock below. Leaving masterKey null re-shows the
   // UnlockGate, forcing a re-unlock.
@@ -68,7 +68,7 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
 
   // Inactivity auto-lock: bounds how long the extractable, persisted MasterKey
   // sits available on this device (defense-in-depth — the key stays extractable
-  // + persisted by design so sharding/rotation can export it). Only armed while
+  // + persisted by design so rotation can export it). Only armed while
   // the vault is actually unlocked; genuine activity resets the countdown.
   useIdleTimer({ onIdle: clearMasterKey, enabled: masterKey !== null });
 

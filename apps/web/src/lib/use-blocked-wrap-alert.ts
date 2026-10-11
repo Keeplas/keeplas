@@ -14,7 +14,7 @@ import type { BlockedContact } from "./verify-contact-key";
  * Returns `true` only when the caller may RETRY the wrap (the owner explicitly
  * re-pinned every changed contact). Returns `false` otherwise — the caller must
  * abort the save. This keeps the blocking policy in one place so every wrap
- * call site (vault items, shards, recovery, rotation) behaves identically.
+ * call site (vault items, rotation) behaves identically.
  *
  * Policy:
  *  - `unverifiable`      → contact has no identity material. BLOCK: the contact

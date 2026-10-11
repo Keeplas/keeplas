@@ -380,7 +380,7 @@ export const sendRecipientInvitationWhatsApp = internalAction({
 
 /**
  * WhatsApp availability re-confirmation nudge to a trusted contact whose
- * shard verification is stale/missing. Utility template
+ * availability check is stale/missing. Utility template
  * `keeplas_tc_reconfirm_en` (`_fr` variant auto-selected by locale): body
  * placeholder = vault owner name; static URL button (no parameter). No-op when
  * Infobip is not configured.
@@ -1135,7 +1135,7 @@ const TC_RELEASE_COPY = {
     subject: "You can now access a Keeplas vault",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (owner?: string) =>
-      `The 72-hour cancellation window has elapsed. You can now help unlock ${owner ?? "a Keeplas user"}'s vault. Open Keeplas and follow the recovery steps — you'll combine your recovery shard with the other trusted contacts to restore access.`,
+      `The 72-hour cancellation window has elapsed. ${owner ?? "A Keeplas user"} left items for you. Open Keeplas to see what they assigned to you.`,
     button: "Open Keeplas",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
@@ -1143,7 +1143,7 @@ const TC_RELEASE_COPY = {
     subject: "Vous pouvez désormais accéder à un coffre Keeplas",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (owner?: string) =>
-      `Le délai d'annulation de 72 heures est écoulé. Vous pouvez maintenant aider à déverrouiller le coffre Keeplas de ${owner ?? "un utilisateur Keeplas"}. Ouvrez Keeplas et suivez les étapes de récupération — vous combinerez votre fragment de récupération avec celui des autres contacts de confiance pour restaurer l'accès.`,
+      `Le délai d'annulation de 72 heures est écoulé. ${owner ?? "Un utilisateur Keeplas"} vous a laissé des éléments. Ouvrez Keeplas pour voir ce qui vous a été assigné.`,
     button: "Ouvrir Keeplas",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",

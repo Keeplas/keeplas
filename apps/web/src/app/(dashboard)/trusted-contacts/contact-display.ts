@@ -50,6 +50,14 @@ export const STATUS_CONFIG: Record<
   },
 };
 
+/**
+ * Minimum trust contacts for a working continuity setup: the unreachability
+ * quorum needs two votes. Mirrors MIN_TRUST_CONTACTS_FOR_RECOVERY in
+ * packages/convex/trusted_contacts.ts (Convex constants can't be imported into
+ * the web build).
+ */
+export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
+
 export const STALE_VERIFICATION_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function getInitials(name: string): string {
@@ -98,20 +106,16 @@ export function computeVerificationBadge(
 ): { label: string; className: string; lastVerifiedAt?: number } | null {
   if (contact.invitationStatus !== "accepted") return null;
   if ((contact.contactType ?? "trust") === "recipient_only") return null;
-  // No fragment distributed yet → nothing to verify, so no badge. Verification
-  // is the contact unwrapping their real shard, which can't exist pre-distribution.
-  if (!contact.shardConfirmed) return null;
-
   if (contact.lastVerifiedAt === undefined) {
     return {
-      label: "Hash not yet verified",
+      label: "Availability not yet confirmed",
       className: "bg-surface-container-high text-on-surface-variant",
     };
   }
   const isStale =
     Date.now() - contact.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS;
   return {
-    label: isStale ? "Verification stale" : "Hash verified",
+    label: isStale ? "Availability stale" : "Available",
     className: isStale
       ? "bg-tertiary-container text-on-tertiary-container"
       : "bg-secondary-container text-on-secondary-container",

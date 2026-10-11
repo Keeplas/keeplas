@@ -19,17 +19,16 @@ import { ContactCard } from "./contact-card";
 import { ContactDetailSheet } from "./contact-detail-sheet";
 import { InviteContactDialog } from "./invite-contact-dialog";
 import { AccessRequestsSection } from "./access-requests-section";
-import { DistributeShardsSection } from "./distribute-shards-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
-import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "@/lib/use-distribute-shards";
+import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./contact-display";
 
 const MAX_TRUST_CONTACTS = 5;
 
 const GUARDIAN_ROLES = [
   {
     icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    key: "holdsShard",
+    key: "noVaultAccess",
   },
   {
     icon: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
@@ -45,7 +44,6 @@ export default function TrustedContactsPage() {
   const t = useTranslations("trustedContacts");
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
-  const me = useQuery(api.onboarding.getOnboardingState);
   const ensureDefaults = useMutation(api.onboarding.ensureDefaults);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
@@ -112,10 +110,8 @@ export default function TrustedContactsPage() {
   const pendingTrustCount = trustContacts.filter(
     (c) => c.invitationStatus === "pending",
   ).length;
-  const shardsConfirmedCount = acceptedTrustContacts.filter(
-    (c) => c.shardConfirmed,
-  ).length;
-  const threshold = me?.vaultThreshold ?? 2;
+  // Quorum = trust contacts needed to confirm the owner is unreachable.
+  const threshold = MIN_TRUST_CONTACTS_FOR_RECOVERY;
   const acceptedCount = acceptedTrustContacts.length;
   const quorumPct = Math.min(
     100,
@@ -294,12 +290,6 @@ export default function TrustedContactsPage() {
                       {pendingTrustCount}
                     </span>
                   </li>
-                  <li className="flex justify-between">
-                    <span>{t("recoveryNetwork.shardsDistributed")}</span>
-                    <span className="font-bold text-on-primary">
-                      {shardsConfirmedCount} / {acceptedCount}
-                    </span>
-                  </li>
                   <li className="flex justify-between pt-1 border-t border-on-primary/10 mt-1">
                     <span className="text-on-primary-container/60">
                       {t("recoveryNetwork.maxGuardians")}
@@ -326,8 +316,6 @@ export default function TrustedContactsPage() {
                     </p>
                   </div>
                 )}
-
-              <DistributeShardsSection />
 
               {activeContacts.length === 0 ? (
                 <div

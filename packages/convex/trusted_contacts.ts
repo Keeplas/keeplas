@@ -26,11 +26,9 @@ import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 const MAX_TRUST_CONTACTS = 5;
 
 /**
- * Minimum trust contacts required before recovery shards can be distributed.
- * A single guardian is useless for continuity: the unreachability quorum needs
- * ≥2 votes, and a lone contact has no peer to exchange shards with, so Shamir
- * reconstruction can never reach 2 shares. Exported so the Hub can reflect the
- * same floor in its continuity score.
+ * Minimum trust contacts for a working continuity setup. A single guardian is
+ * useless: the unreachability quorum needs ≥2 votes. Exported so the Hub can
+ * reflect the same floor in its continuity score.
  */
 export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
 
@@ -75,8 +73,8 @@ export const getContact = query({
  * It lists the vault items that would be released to them on trigger (computed
  * with the exact same precedence used at release time, via
  * `resolveItemRecipients`, so the view can never drift from real behaviour)
- * plus the recipient groups they belong to. Recovery/shard state already
- * lives on the contact doc, so it is not re-fetched here.
+ * plus the recipient groups they belong to. Invitation / availability state
+ * already lives on the contact doc, so it is not re-fetched here.
  */
 export const getContactAccessSummary = query({
   args: { contactId: v.id("trusted_contacts") },
@@ -146,7 +144,7 @@ export const getContactCount = query({
 
 /**
  * Invite a new contact. Pass contactType="recipient_only" to skip the
- * social-recovery role (no shard, no 5-cap).
+ * trust role (no quorum vote, no 5-cap).
  */
 export const inviteContact = auditedMutation({
   action: "trusted_contact.invited",
@@ -215,8 +213,8 @@ export const inviteContact = auditedMutation({
     // already has a Keeplas account whose verified email/phone backs a
     // non-revoked contact row for this owner, the same person is being invited
     // through a second channel. Block it — otherwise one person would hold two
-    // rows (two shard slots + two quorum votes) and could reach the
-    // unreachability quorum and reconstruct the master key alone.
+    // rows (two quorum votes) and could reach the unreachability quorum
+    // alone.
     const inviteeUserId = await resolveInviteePersonId(ctx, {
       email,
       phoneNumber,
@@ -250,29 +248,7 @@ export const inviteContact = auditedMutation({
       updatedAt: now,
     };
 
-    let contactId;
-    if (contactType === "trust") {
-      const usedIndices = new Set(
-        existing
-          .filter((c) => (c.contactType ?? "trust") === "trust")
-          .map((c) => c.shardIndex)
-          .filter((i): i is number => typeof i === "number"),
-      );
-      let shardIndex = 2;
-      while (usedIndices.has(shardIndex) && shardIndex <= 4) {
-        shardIndex++;
-      }
-
-      contactId = await ctx.db.insert("trusted_contacts", {
-        ...baseFields,
-        shardIndex,
-        encryptedShard: "",
-        shardPublicKeyUsed: "",
-        shardConfirmed: false,
-      });
-    } else {
-      contactId = await ctx.db.insert("trusted_contacts", baseFields);
-    }
+    const contactId = await ctx.db.insert("trusted_contacts", baseFields);
 
     // Trust contacts are auto-added to the user's default group so vault items
     // with recipientMode="default" route to them out of the box. Recipient-only
@@ -388,7 +364,7 @@ export const getInvitationByToken = query({
 
 /**
  * Resolve an invitee's identifiers to an existing Keeplas account, if any.
- * Used to dedup quorum/shard participation by the distinct human (C1): two
+ * Used to dedup quorum participation by the distinct human (C1): two
  * contact rows must never resolve to the same `contactUserId` for one owner.
  * Matches only on a VERIFIED identifier (a user must have proven ownership of
  * the email/phone) so an unverified backfilled identifier can't be used to
@@ -517,7 +493,7 @@ export const acceptInvitation = auditedMutation({
 
     // C1: never attach a `contactUserId` that already backs another non-revoked
     // contact row for the same owner. A single human must map to at most one
-    // row (one shard slot, one quorum vote). Guards the path where two distinct
+    // row (one quorum vote). Guards the path where two distinct
     // invites (e.g. one by email, one by phone) only resolve to the same person
     // at acceptance time.
     const ownerRows = await ctx.db
@@ -656,85 +632,13 @@ export const declineInvitation = auditedMutation({
 });
 
 /**
- * Store an encrypted shard for a contact (called by the vault owner after
- * contact accepts). Sends an in-app notification to the contact on the
- * first distribution; subsequent re-distributions (e.g., threshold change)
- * are silent — the contact's /shared-with-me page picks up the new envelope
- * automatically via useReceiveShard.
+ * Stamp `lastVerifiedAt` after the contact unlocked their own key material on
+ * /shared-with-me (see useConfirmAvailability) — proof they can still open
+ * what the owner wraps to them. Called by the contact, not the vault owner, so
+ * the audit entry lives on the owner's chain.
  */
-export const storeEncryptedShard = auditedMutation({
-  action: "trusted_contact.shard_distributed",
-  resourceType: "trusted_contact",
-  getResourceId: (args) => args.contactId,
-  args: {
-    contactId: v.id("trusted_contacts"),
-    encryptedShard: v.string(),
-    shardPublicKeyUsed: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
-
-    const contact = await ctx.db.get(args.contactId);
-    if (!contact || contact.userId !== userId) {
-      throw new Error("Contact not found");
-    }
-    if (contact.invitationStatus !== "accepted") {
-      throw new Error("Contact must accept the invitation first");
-    }
-
-    // Refuse to seal a shard while the trusted circle is below the recovery
-    // floor — a lone guardian creates a broken-but-silent setup (no peer to
-    // exchange shards with, quorum unreachable). Authoritative across every
-    // distribution path.
-    const acceptedTrustCount = (
-      await ctx.db
-        .query("trusted_contacts")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
-        .collect()
-    ).filter((c) => (c.contactType ?? "trust") === "trust").length;
-    if (acceptedTrustCount < MIN_TRUST_CONTACTS_FOR_RECOVERY) {
-      throw new Error(
-        "Recovery needs at least 2 trusted contacts before shards can be distributed.",
-      );
-    }
-
-    const isFirstDistribution = !contact.shardConfirmed;
-
-    await ctx.db.patch(args.contactId, {
-      encryptedShard: args.encryptedShard,
-      shardPublicKeyUsed: args.shardPublicKeyUsed,
-      shardConfirmed: true,
-      updatedAt: Date.now(),
-    });
-
-    if (isFirstDistribution && contact.contactUserId) {
-      const owner = await ctx.db.get(userId);
-      const ownerName = formatSenderIdentity(owner);
-      await createNotification(ctx, {
-        userId: contact.contactUserId,
-        type: "vault_update",
-        title: "You now safeguard a recovery shard",
-        body: `${ownerName} has distributed your encrypted recovery shard. It will be used together with the other trust contacts' shards if their vault ever needs to be reconstructed.`,
-        actionUrl: "/shared-with-me",
-        channels: ["push", "email"],
-        relatedId: contact._id,
-        relatedType: "trusted_contact",
-      });
-    }
-
-    return { success: true };
-  },
-});
-
-/**
- * Stamp `lastVerifiedAt` after the contact successfully unwrapped their
- * encrypted shard on their device (see useReceiveShard) — a fresh unwrap is
- * the liveness proof. Called by the contact, not the vault owner, so the
- * audit entry lives on the owner's chain.
- */
-export const confirmShardVerified = auditedMutation({
-  action: "trusted_contact.shard_verified",
+export const confirmAvailability = auditedMutation({
+  action: "trusted_contact.availability_confirmed",
   resourceType: "trusted_contact",
   args: { contactId: v.id("trusted_contacts") },
   resolveActor: async (ctx, args) => {
@@ -752,10 +656,10 @@ export const confirmShardVerified = auditedMutation({
   },
   getResourceId: (args) => args.contactId,
   handler: async (ctx, args) => {
-    // Contact-side recovery op: step-up gated. The contact has long since
-    // accepted the invitation by the time they re-verify a shard, so the gate
-    // is reliably clearable for them (unlike acceptInvitation, which can run
-    // in the same breath as their signup).
+    // Contact-side op: step-up gated. The contact has long since accepted the
+    // invitation by the time they re-confirm, so the gate is reliably
+    // clearable for them (unlike acceptInvitation, which can run in the same
+    // breath as their signup).
     const contactUserId = await requireFullAuth(ctx);
 
     const contact = await ctx.db.get(args.contactId);
@@ -765,11 +669,8 @@ export const confirmShardVerified = auditedMutation({
     if (contact.invitationStatus !== "accepted") {
       throw new Error("Access has been revoked");
     }
-    // Verification proves the contact can unwrap their shard — it is
-    // meaningless before one has been distributed. Enforce at the boundary so
-    // the badge can never light up without a real fragment in custody.
-    if (!contact.shardConfirmed) {
-      throw new Error("No shard distributed to verify");
+    if ((contact.contactType ?? "trust") !== "trust") {
+      throw new Error("Only trust contacts confirm availability");
     }
 
     await ctx.db.patch(args.contactId, {
@@ -803,8 +704,6 @@ export const revokeContact = auditedMutation({
 
     await ctx.db.patch(args.contactId, {
       invitationStatus: "revoked",
-      encryptedShard: "",
-      shardConfirmed: false,
       updatedAt: Date.now(),
     });
 
@@ -897,42 +796,6 @@ export const resendInvitation = auditedMutation({
     }
 
     return { invitationToken };
-  },
-});
-
-/**
- * Get all accepted trust contacts of the calling user with their public
- * keys — used by the Distribute Shards flow to know who to wrap shards for.
- */
-export const getDistributionTargets = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireFullAuth(ctx);
-    const contacts = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
-      .collect();
-
-    return contacts
-      .filter((c) => (c.contactType ?? "trust") === "trust")
-      .filter(
-        (c) =>
-          typeof c.shardIndex === "number" &&
-          typeof c.contactPublicKey === "string",
-      )
-      .map((c) => ({
-        contactId: c._id,
-        name: c.name,
-        shardIndex: c.shardIndex as number,
-        contactPublicKey: c.contactPublicKey as string,
-        // Identity material for verify-before-wrap (finding #2). Optional so
-        // legacy rows still resolve; the client blocks a wrap when missing.
-        contactIdentityPublicKey: c.contactIdentityPublicKey,
-        contactPublicKeySignature: c.contactPublicKeySignature,
-        pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
-        shardConfirmed: c.shardConfirmed ?? false,
-      }));
   },
 });
 
@@ -1082,8 +945,17 @@ export const getVaultsWhereIAmContact = query({
       const localPart = email.split("@")[0] ?? "";
       const displayName = trimmedName || localPart || "Keeplas user";
 
+      // Never hand a legacy MasterKey shard back to the contact (v2 F1/F2):
+      // rows written before the shard purge may still carry one.
+      const {
+        encryptedShard: _encryptedShard,
+        shardPublicKeyUsed: _shardPublicKeyUsed,
+        shardIndex: _shardIndex,
+        shardConfirmed: _shardConfirmed,
+        ...relationship
+      } = contact;
       result.push({
-        ...contact,
+        ...relationship,
         ownerName: displayName,
         ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
@@ -1206,7 +1078,7 @@ const INVITE_EMAIL_COPY = {
     trustBody: (inviter: string) =>
       `<strong>${inviter}</strong> has chosen you as a trusted contact on Keeplas, the zero-knowledge life-continuity platform.`,
     trustExplain:
-      "As a trusted contact, you'll hold one encrypted shard of their recovery key — together with their other contacts you can help them regain access to their vault if they ever lose their credentials. You won't see any of their data.",
+      "As a trusted contact, you'll help confirm if something happens to them, so the items they chose reach the right people. You won't see any of their data.",
     accept: "Accept invitation",
     expiry: (url: string) =>
       `This link expires in 7 days. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
@@ -1228,7 +1100,7 @@ const INVITE_EMAIL_COPY = {
     trustBody: (inviter: string) =>
       `<strong>${inviter}</strong> vous a choisi comme contact de confiance sur Keeplas, la plateforme de continuité de vie à connaissance nulle.`,
     trustExplain:
-      "En tant que contact de confiance, vous conserverez un fragment chiffré de sa clé de récupération. Avec ses autres contacts, vous pourrez l'aider à retrouver l'accès à son coffre si cette personne perd ses identifiants. Vous n'aurez accès à aucune de ses données.",
+      "En tant que contact de confiance, vous aiderez à confirmer s'il lui arrive quelque chose, afin que les éléments qu'elle a choisis parviennent aux bonnes personnes. Vous n'aurez accès à aucune de ses données.",
     accept: "Accepter l'invitation",
     expiry: (url: string) =>
       `Ce lien est valable 7 jours. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
@@ -1302,7 +1174,7 @@ const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL
  * Weekly availability re-confirmation sweep (driven by crons.ts). Two gaps
  * it closes:
  *
- *  - An accepted trust contact whose shard verification is missing or older
+ *  - An accepted trust contact whose availability check is missing or older
  *    than 30 days gets nudged (in-app + email, plus WhatsApp when a phone is
  *    on file) to re-verify. After 3 ignored nudges the vault owner is alerted
  *    once to replace the unresponsive contact.
@@ -1351,7 +1223,7 @@ export const runAvailabilityReconfirm = internalMutation({
         continue;
       }
 
-      // Gap 1: accepted but shard verification missing/stale.
+      // Gap 1: accepted but availability check missing/stale.
       const verificationStale =
         c.lastVerifiedAt === undefined ||
         now - c.lastVerifiedAt > RECONFIRM_STALE_MS;
@@ -1374,8 +1246,8 @@ export const runAvailabilityReconfirm = internalMutation({
       await createNotification(ctx, {
         userId: c.contactUserId,
         type: "vault_update",
-        title: "Can you still safeguard their recovery shard?",
-        body: `Please re-verify that you can still access ${ownerName}'s recovery shard on Keeplas so their continuity protection stays active.`,
+        title: "Are you still available as a trusted contact?",
+        body: `Please open Keeplas to confirm you can still act as ${ownerName}'s trusted contact so their continuity protection stays active.`,
         channels: ["push", "email"],
         actionUrl: "/shared-with-me",
         relatedId: c._id,
@@ -1412,7 +1284,7 @@ export const runAvailabilityReconfirm = internalMutation({
           userId: c.userId,
           type: "security_alert",
           title: "Trusted contact unresponsive",
-          body: `${formatSenderIdentity(c)} hasn't re-verified their recovery shard after several reminders. Replace them so your continuity protocol stays operational.`,
+          body: `${formatSenderIdentity(c)} hasn't confirmed their availability after several reminders. Replace them so your continuity protocol stays operational.`,
           channels: ["push", "email"],
           actionUrl: "/trusted-contacts",
           relatedId: c._id,
