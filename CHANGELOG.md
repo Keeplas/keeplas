@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 
 ## [Unreleased]
 
+### Security
+
+- Trusted contacts can no longer rebuild an owner's master key: the master key is never split, and the "Reconstruct master key" flow is removed.
+- The plaintext device share in `localStorage` is gone; leftover shares are purged from browsers and the server.
+- Owners whose master key was ever shared with contacts must rotate it (forced rotation dialog).
+- A missed Life Check never releases anything: the "Release anyway if no one confirms" option is removed.
+
 ### Added
 
 - One-command contributor bootstrap: `pnpm bootstrap` copies `.env.local`, installs deps, links per-package env files, and prints the manual Convex steps. Renamed from `pnpm setup` (collided with pnpm's reserved built-in command).

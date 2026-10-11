@@ -76,12 +76,8 @@ export default defineSchema({
     phraseSalt: v.optional(v.string()),
     recoveryPhraseHash: v.optional(v.string()),
     recoveryVerified: v.optional(v.boolean()),
-    // DEPRECATED (v2 phase 2, F2): the MasterKey is no longer Shamir-split.
-    // Kept optional only until `migrations:purgeMasterKeyShards` has cleared
-    // every row; remove in the follow-up narrowing deploy.
-    vaultThreshold: v.optional(v.number()),
-    // Set by `migrations:purgeMasterKeyShards` for owners whose MasterKey was
-    // ever split to trusted contacts: those shards may still sit on a
+    // Set by the v2 shard purge (Oct 2026) for owners whose MasterKey was once
+    // Shamir-split to trusted contacts: those shards may still sit on a
     // contact's device, so the owner must rotate the MasterKey. Cleared by
     // `rotation.finalizeRotation`.
     masterKeyRotationRequired: v.optional(v.boolean()),
@@ -344,8 +340,8 @@ export default defineSchema({
     userId: v.id("users"),
 
     encryptedItemsCount: v.number(),
-    // Stamped on creation and refreshed when a trusted contact verifies their
-    // shard; read by the recipient UI to show a "Verified Xm ago" badge.
+    // Stamped on creation; read by the recipient UI to show a "Verified Xm ago"
+    // badge.
     lastVerifiedAt: v.number(),
 
     createdAt: v.number(),
@@ -510,14 +506,6 @@ export default defineSchema({
       v.union(v.literal("trust"), v.literal("recipient_only")),
     ),
 
-    // DEPRECATED (v2 phase 2, F2): the MasterKey is no longer Shamir-split.
-    // Kept optional only until `migrations:purgeMasterKeyShards` has cleared
-    // every row; remove in the follow-up narrowing deploy.
-    shardIndex: v.optional(v.number()),
-    encryptedShard: v.optional(v.string()),
-    shardPublicKeyUsed: v.optional(v.string()),
-    shardConfirmed: v.optional(v.boolean()),
-
     // Stamped when the contact's own key material unlocks on /shared-with-me
     // (see useConfirmAvailability) — the periodic availability proof.
     lastVerifiedAt: v.optional(v.number()),
@@ -548,7 +536,7 @@ export default defineSchema({
     acceptedAt: v.optional(v.number()),
 
     // Availability re-confirmation tracking (weekly cron). `reconfirmReminders`
-    // counts nudges sent to a contact whose shard verification is stale/missing;
+    // counts nudges sent to a contact whose availability check is stale/missing;
     // `ownerNotifiedUnavailableAt` is stamped once the owner has been alerted to
     // replace an unresponsive contact (prevents repeat owner alerts).
     reconfirmReminders: v.optional(v.number()),
@@ -608,13 +596,10 @@ export default defineSchema({
     // 2 trusted contacts, window 7 days. Edited via the release-policy settings.
     confirmationThreshold: v.optional(v.number()),
     confirmationWindowDays: v.optional(v.number()),
-    // Always "abort" once the policy is saved (nothing is released unless a
-    // human confirms). "release_anyway" is DEPRECATED (v2 phase 2, F5): no
-    // longer honoured, rewritten by `migrations:retireReleaseAnyway`; drop the
-    // literal in the follow-up narrowing deploy.
-    fallbackBehavior: v.optional(
-      v.union(v.literal("abort"), v.literal("release_anyway")),
-    ),
+    // Set to "abort" once the policy is saved: nothing is released unless a
+    // human confirms (v2 F5 retired "release_anyway"). Also marks the policy
+    // as set for the Hub.
+    fallbackBehavior: v.optional(v.literal("abort")),
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -718,29 +703,6 @@ export default defineSchema({
     .index("by_vault_user", ["vaultUserId"])
     .index("by_requester", ["requestedBy"])
     .index("by_status", ["vaultUserId", "status"]),
-
-  // ═══════════════════════════════════════════════
-  // RECOVERY SHARD SUBMISSIONS — DEPRECATED (v2 phase 2, F1)
-  // ═══════════════════════════════════════════════
-  //
-  // Former post-mortem MasterKey reconstruction. No code path writes here any
-  // more; `migrations:purgeMasterKeyShards` empties it. Kept until the admin
-  // app stops reading `admin.security.recoverySubmissionStats`.
-
-  recovery_shard_submissions: defineTable({
-    accessRequestId: v.id("access_requests"),
-    vaultUserId: v.id("users"),
-    submitterContactId: v.id("trusted_contacts"),
-    recipientContactId: v.id("trusted_contacts"),
-    // ML-KEM-768 + AES-GCM envelope wrapping the submitter's raw Shamir share.
-    // Only `recipientContactId` (the holder of the matching private key) can
-    // decrypt this row.
-    wrappedShard: v.string(),
-    createdAt: v.number(),
-  })
-    .index("by_request", ["accessRequestId"])
-    .index("by_request_recipient", ["accessRequestId", "recipientContactId"])
-    .index("by_request_submitter", ["accessRequestId", "submitterContactId"]),
 
   // ═══════════════════════════════════════════════
   // AUDIT LOGS — IMMUTABLE

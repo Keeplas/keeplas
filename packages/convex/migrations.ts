@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { deleteBlob } from "./lib/storage";
-import type { Id } from "./_generated/dataModel";
 
 /**
  * DANGER — full data wipe. Deletes every document in every application table
@@ -26,7 +25,6 @@ export const wipeAllData = internalMutation({
       "support_tickets",
       "audit_logs",
       "ip_rate_limits",
-      "recovery_shard_submissions",
       "access_requests",
       "push_subscriptions",
       "life_check_cycles",
@@ -172,100 +170,5 @@ export const migrateTestCadence = internalMutation({
     }
 
     return { scanned: configs.length, migrated: stale.length };
-  },
-});
-
-/**
- * v2 phase 2 (F1 + F2): the MasterKey is no longer Shamir-split. Clears every
- * legacy shard the server still holds — the per-contact `encryptedShard`
- * envelopes (+ slot bookkeeping), every `recovery_shard_submissions` row and
- * the obsolete `users.vaultThreshold`.
- *
- * Deleting server copies does not undo shards a contact already unwrapped on
- * their device, so every owner whose MasterKey ever reached a contact is
- * flagged `masterKeyRotationRequired`; the web app then forces a MasterKey
- * rotation, which turns those old shards into dead material.
- *
- * Run after deploying the code that stops writing shards. Idempotent: a second
- * run finds no shard and flags nobody new.
- *   npx convex run migrations:purgeMasterKeyShards        # dev
- *   npx convex run migrations:purgeMasterKeyShards --prod # prod
- */
-export const purgeMasterKeyShards = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const exposedOwners = new Set<Id<"users">>();
-
-    let contactsCleared = 0;
-    const contacts = await ctx.db.query("trusted_contacts").collect();
-    for (const contact of contacts) {
-      if (contact.encryptedShard) exposedOwners.add(contact.userId);
-      const hasShardFields =
-        contact.shardIndex !== undefined ||
-        contact.encryptedShard !== undefined ||
-        contact.shardPublicKeyUsed !== undefined ||
-        contact.shardConfirmed !== undefined;
-      if (!hasShardFields) continue;
-      // Passing `undefined` removes the field from the document.
-      await ctx.db.patch(contact._id, {
-        shardIndex: undefined,
-        encryptedShard: undefined,
-        shardPublicKeyUsed: undefined,
-        shardConfirmed: undefined,
-      });
-      contactsCleared++;
-    }
-
-    const submissions = await ctx.db
-      .query("recovery_shard_submissions")
-      .collect();
-    for (const submission of submissions) {
-      exposedOwners.add(submission.vaultUserId);
-      await ctx.db.delete(submission._id);
-    }
-
-    let usersPatched = 0;
-    const users = await ctx.db.query("users").collect();
-    for (const user of users) {
-      const exposed = exposedOwners.has(user._id);
-      if (user.vaultThreshold === undefined && !exposed) continue;
-      await ctx.db.patch(user._id, {
-        vaultThreshold: undefined,
-        ...(exposed ? { masterKeyRotationRequired: true } : {}),
-      });
-      usersPatched++;
-    }
-
-    return {
-      contactsCleared,
-      submissionsDeleted: submissions.length,
-      usersPatched,
-      ownersFlaggedForRotation: exposedOwners.size,
-    };
-  },
-});
-
-/**
- * v2 phase 2 (F5): a missed Life Check must never release anything, so the
- * "release_anyway" fallback is gone. Rewrites legacy configs to "abort" (the
- * resolver already ignores the old value; this clears it before the schema
- * literal is dropped). Idempotent:
- *   npx convex run migrations:retireReleaseAnyway        # dev
- *   npx convex run migrations:retireReleaseAnyway --prod # prod
- */
-export const retireReleaseAnyway = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const configs = await ctx.db.query("life_check_configs").collect();
-    const legacy = configs.filter(
-      (c) => c.fallbackBehavior === "release_anyway",
-    );
-    for (const config of legacy) {
-      await ctx.db.patch(config._id, {
-        fallbackBehavior: "abort",
-        updatedAt: Date.now(),
-      });
-    }
-    return { scanned: configs.length, migrated: legacy.length };
   },
 });
