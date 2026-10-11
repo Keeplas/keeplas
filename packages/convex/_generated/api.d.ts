@@ -31,6 +31,7 @@ import type * as devices from "../devices.js";
 import type * as dispatch from "../dispatch.js";
 import type * as email_auth from "../email_auth.js";
 import type * as email_verification from "../email_verification.js";
+import type * as folders from "../folders.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as hub from "../hub.js";
@@ -107,6 +108,7 @@ declare const fullApi: ApiFromModules<{
   dispatch: typeof dispatch;
   email_auth: typeof email_auth;
   email_verification: typeof email_verification;
+  folders: typeof folders;
   helpers: typeof helpers;
   http: typeof http;
   hub: typeof hub;

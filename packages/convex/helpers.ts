@@ -143,6 +143,27 @@ export async function requireAdmin(ctx: QueryCtx) {
 }
 
 /**
+ * The approved per-recipient release row for a contact (one carrying `item:`
+ * sections), or null. The recovery-quorum request uses the `["all"]` sentinel
+ * and is ignored: it must not count as a release of content.
+ */
+export async function approvedReleaseRequest(
+  ctx: QueryCtx,
+  contactId: Id<"trusted_contacts">,
+) {
+  const approved = await ctx.db
+    .query("access_requests")
+    .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
+    .filter((q) => q.eq(q.field("status"), "approved"))
+    .collect();
+  return (
+    approved.find((r) =>
+      r.sectionsRequested.some((s) => s.startsWith("item:")),
+    ) ?? null
+  );
+}
+
+/**
  * Get the user's vault by userId.
  */
 export async function getUserVault(ctx: QueryCtx, userId: Id<"users">) {

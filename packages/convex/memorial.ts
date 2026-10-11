@@ -1,7 +1,7 @@
 import { query, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
-import { requireFullAuth } from "./helpers";
+import { approvedReleaseRequest, requireFullAuth } from "./helpers";
 import { getBlobDownloadUrl } from "./lib/storage";
 
 /**
@@ -44,18 +44,9 @@ async function resolveApprovedRelease(
   const contact = await ctx.db.get(contactId);
   if (!contact || contact.contactUserId !== requesterId) return null;
 
-  // A contact may hold both a recovery-quorum request (sentinel `["all"]`) and a
-  // per-recipient release request (`item:` sections). The memorial reads the
-  // bequest, so select the release row and ignore the recovery sentinel; a
-  // contact with no `item:` row is recovery-only (no items left to them).
-  const approved = await ctx.db
-    .query("access_requests")
-    .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
-    .filter((q) => q.eq(q.field("status"), "approved"))
-    .collect();
-  const request = approved.find((r) =>
-    r.sectionsRequested.some((s) => s.startsWith(ITEM_PREFIX)),
-  );
+  // A contact with no `item:` release row is recovery-only (no items left to
+  // them).
+  const request = await approvedReleaseRequest(ctx, contactId);
   if (!request) return null;
 
   const itemIds = request.sectionsRequested

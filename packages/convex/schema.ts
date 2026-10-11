@@ -590,6 +590,9 @@ export default defineSchema({
     ),
     releasedAt: v.optional(v.number()),
 
+    // Folder the item lives in (v2 "sharing per folder"); none = loose item.
+    folderId: v.optional(v.id("folders")),
+
     // When true, the item is a "release introduction": a welcome message the
     // owner authors for trusted contacts who unlock the memorial vault after
     // release. Hidden from the owner's regular /vault listings and surfaced
@@ -600,9 +603,36 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_vault", ["vaultId"])
+    .index("by_folder", ["folderId"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
     .index("by_trigger", ["triggerType", "status"]),
+
+  // v2 sharing per folder (M06-4, M06-6, M03-1, M03-2). The folder name is
+  // sealed: under the master key for the owner, to each grantee's ML-KEM key
+  // on the grant. Item DEKs are wrapped to grantees in
+  // vault_item_recipient_keys, like item-level sharing.
+  folders: defineTable({
+    userId: v.id("users"),
+    // JSON {ciphertext, iv} under the owner's master key.
+    encryptedName: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  folder_grants: defineTable({
+    folderId: v.id("folders"),
+    ownerId: v.id("users"),
+    contactId: v.id("trusted_contacts"),
+    // "now": readable at once. "after_verification": readable once the
+    // owner's release is approved (death confirmed + 72 h grace).
+    timing: v.union(v.literal("now"), v.literal("after_verification")),
+    // Folder name sealed to the contact's ML-KEM key.
+    sealedName: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_folder", ["folderId"])
+    .index("by_contact", ["contactId"]),
 
   recipient_groups: defineTable({
     userId: v.id("users"),
