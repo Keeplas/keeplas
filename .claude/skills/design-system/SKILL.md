@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"; // re-exported from @keeplas/ui
 
 Available exports (from `packages/ui/src/index.ts` — grep it before creating anything new):
 
-`Avatar` · `Badge` · `Button` (v2: `variant="primary" | "outlined" | "link"`, `size="cta"`; the other variants are legacy) · `Calendar` · `Checkbox` · `DatePicker` · `Card` (+ Header/Title/Description/Content/Footer) · `Dialog` (+ parts) · `ConfirmDialogProvider`/`useConfirm` · `DropdownMenu` · `Popover` · `Command` · `ErrorAlert` · `Icon` · `Input` · `Label` · `LegacyCard` · `PhoneInput` · `Progress` · `Select` · `Separator` · `Sheet` · `Switch` · `Tabs` · `Spinner` · `Loader` / `KeeplasLogoMark` · `Textarea` · `Toast`/`Toaster`/`toast`/`useToast` · `Tooltip` · `UserAvatar` · `RichTextEditor` · `HelpHint` · `InfoCallout` · helpers `isValidEmail`, `isValidPhone`, `normalizePhone`, `cn`
+`Avatar` · `Badge` · `Button` (v2: `variant="primary" | "outlined" | "link" | "danger"`, `size="cta" | "compact"`; the other variants are legacy) · `Calendar` · `Checkbox` · `DatePicker` · `Card` (+ Header/Title/Description/Content/Footer) · `Dialog` (+ parts) · `ConfirmDialogProvider`/`useConfirm` · `DropdownMenu` · `Popover` · `Command` · `ErrorAlert` · `Icon` · `Input` · `Label` · `LegacyCard` · `PhoneInput` · `Progress` · `Select` · `Separator` · `Sheet` · `Switch` · `Tabs` · `Spinner` · `Loader` / `KeeplasLogoMark` · `Textarea` · `Toast`/`Toaster`/`toast`/`useToast` · `Tooltip` · `UserAvatar` · `RichTextEditor` · `HelpHint` · `InfoCallout` · helpers `isValidEmail`, `isValidPhone`, `normalizePhone`, `cn`
 
 ## Color tokens
 
@@ -57,11 +57,13 @@ Defined in `apps/web/src/app/globals.css`: primitives and semantic tokens as `--
 | `progress/track`, `progress/fill`                    | `bg-progress-track`, `bg-progress-fill`                 | `#DCE8F2`, sky           |
 | `category/{document,account,instruction,other,note}` | `bg-category-document` … (same in both themes)          | —                        |
 
+Web extensions (not in Foundations; colors the W04 / W05 frames paint from primitives, each with a Noir value): `text-header-text` / `text-header-text-muted` (sidebar), `text-icon-default`, `text-icon-subtle` (chevrons, more), `bg-bg-accent` + `text-text-accent` (sky tiles, permission chip), `bg-bg-danger`, `bg-bg-pending` + `text-text-pending` (status chips, alerts), `bg-scrim` (modal overlay), `shadow-menu`.
+
 Primitives (`--kp-navy-*`, `--kp-sky-*`, `--kp-ivory-*`, `--kp-sand-*`, `--kp-dawn-*`, `--kp-noir-*` …) exist as CSS variables only; reach for them in CSS, not in components.
 
 ### Dark mode (Noir)
 
-`.dark` on `<html>` switches every semantic token (`@custom-variant dark` = `.dark`). Only 5 screens are drawn dark in Figma, on purpose: every screen binds to the semantic tokens and gets dark for free. Surfaces step up in grey, thin borders replace shadows, primary actions invert to cream. Nothing toggles `.dark` yet; that ships with the rebuilt screens (phase 7).
+`.dark` on `<html>` switches every semantic token (`@custom-variant dark` = `.dark`). Only 5 screens are drawn dark in Figma, on purpose: every screen binds to the semantic tokens and gets dark for free. Surfaces step up in grey, thin borders replace shadows, primary actions invert to cream. The account menu toggles `.dark` (`src/lib/theme.ts`, saved per browser, light by default while legacy screens remain).
 
 ### Legacy names (existing screens only)
 

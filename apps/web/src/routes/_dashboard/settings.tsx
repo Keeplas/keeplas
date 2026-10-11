@@ -15,7 +15,7 @@ const V2_SCREENS = new Set(["/settings", "/settings/recovery"]);
 function SettingsLayout() {
   const t = useTranslations("settings.overview");
   const pathname = usePathname();
-  if (V2_SCREENS.has(pathname)) return <Outlet />;
+  if (V2_SCREENS.has(pathname.replace(/\/$/, ""))) return <Outlet />;
   return (
     <div className="flex flex-col gap-[20px]">
       <Link

@@ -107,7 +107,7 @@ Each step lists its verification. A phase is done when every check passes.
 - [x] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3) — `pairing.test.ts`
 - [x] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9) — `attestation.test.ts`
 - [x] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused — `account_migration.test.ts`
-- [x] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works — routes removed; protocol e2e in `pairing_e2e.test.ts`, W04-2 state machine unit-tested (not yet run against a live deployment). Vault rotation still needs the 24 words on the web: moves to the phone (phase 8)
+- [x] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works — routes removed; protocol e2e in `pairing_e2e.test.ts`, W04-2 state machine unit-tested (not yet run against a live deployment). Vault rotation needs the 24 words, so the web now tells the owner to finish it in the phone app (phase 8 builds it)
 - [x] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action — `devices.test.ts`, `recovery.test.ts`
 
 ### Phase 5: Owner recovery (F3, D3, D4, D7)
@@ -127,7 +127,9 @@ Each step lists its verification. A phase is done when every check passes.
 
 Pixel-perfect rule (phases 7 and 8): build each component once from `figma/specs/` values bound to tokens; never paste generated Figma code.
 
-- [ ] W04-3 dashboard, W04-3b, W04-4, W04-5 (status only), W04-6, W04-7, W05-3 / W05-4 + section 10 states, light + dark → verify: Playwright visual regression per screen at 1440×900, pixel diff against `figma/screens/` under an agreed threshold (diff image on failure)
+- [x] W04-3 dashboard, W04-3b, W04-4, W04-5 (status only), W04-6, W04-7, W05-3 / W05-4 + section 10 states, light + dark → verify: Playwright visual regression per screen at 1440×900, pixel diff against `figma/screens/` under an agreed threshold (diff image on failure) — `pnpm --filter @keeplas/web test:visual` (harness in `apps/web/visual/`, fixtures, no backend): light screens vs Figma ≤ 3 % differing pixels (pixelmatch threshold 0.1; measured 0.7 to 1.6 % for W04/W05, 1.5 to 2.5 % for the 393 px state cards), dark against committed baselines. Routes: `/hub` (W04-3, W04-3b), `/shared-with-me` (W04-4), `/settings/recovery` (W04-5), `/devices` (W04-6), `/settings` (W04-7), life check modal on every dashboard page (W05-3 / W05-4). Section 10 states built for the web: vault empty, no trusted contacts, nothing shared, we missed you, travel mode, offline, upload failed, storage full, camera / microphone off. Not on the web: "You're all caught up" (no alerts list on the web) and "Vault list item states" (offline outbox, mobile). Dark mode is a saved preference (account menu), light by default while the legacy screens are light-only
+  - [ ] Backend for the remaining Figma content: per-file stored bytes for the W04-7 storage breakdown (the bar shows the total until then); an Encrypted inbox category (the web counts "Other" as the inbox)
+  - [ ] Run the rebuilt screens against a live deployment (only fixtures were rendered)
 
 ### Phase 8: Mobile app build-out
 
