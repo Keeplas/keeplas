@@ -117,6 +117,7 @@ export function IconTile({
   iconSize = 24,
   background,
   color = "text.primary",
+  tint,
 }: {
   icon: IconName;
   size?: number;
@@ -124,6 +125,8 @@ export function IconTile({
   /** Raw tint for category tiles; defaults to `bg.info`. */
   background?: string;
   color?: SemanticToken;
+  /** Raw icon colour (category tiles). */
+  tint?: string;
 }) {
   const { colors } = useTheme();
   return (
@@ -137,7 +140,7 @@ export function IconTile({
         justifyContent: "center",
       }}
     >
-      <Icon name={icon} size={iconSize} color={color} />
+      <Icon name={icon} size={iconSize} color={color} tint={tint} />
     </View>
   );
 }

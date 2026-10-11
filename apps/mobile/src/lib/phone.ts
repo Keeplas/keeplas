@@ -7,6 +7,8 @@ import {
 } from "libphonenumber-js/mobile";
 import examples from "libphonenumber-js/mobile/examples";
 
+import { countryName } from "./format";
+
 export type { CountryCode };
 
 export interface Country {
@@ -20,14 +22,6 @@ export function flagEmoji(code: CountryCode): string {
   return String.fromCodePoint(
     ...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
   );
-}
-
-function countryName(code: CountryCode, locale: string): string {
-  try {
-    return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code;
-  } catch {
-    return code;
-  }
 }
 
 /** Every dialable country, sorted by its name in `locale`. */
