@@ -1,7 +1,17 @@
 import type { ReactNode } from "react";
+import { DevicesView } from "@/app/(dashboard)/devices/devices-view";
 import { HubView } from "@/app/(dashboard)/hub/hub-view";
+import { RecoveryCenterView } from "@/app/(dashboard)/settings/recovery/recovery-center-view";
+import { SettingsView } from "@/app/(dashboard)/settings/settings-view";
 import { SharedWithMeView } from "@/app/(dashboard)/shared-with-me/shared-with-me-view";
-import { hub, noop, sharedFolders } from "./fixtures";
+import {
+  devices,
+  hub,
+  noop,
+  recovery,
+  settings,
+  sharedFolders,
+} from "./fixtures";
 
 export interface HarnessScreen {
   /** Route the shell sees (active sidebar item). */
@@ -28,4 +38,9 @@ export const SCREENS: Record<string, HarnessScreen> = {
   "W04-4-empty": shell("/shared-with-me", () => (
     <SharedWithMeView folders={[]} onDownload={noop} />
   )),
+  "W04-5": shell("/settings/recovery", () => (
+    <RecoveryCenterView {...recovery} />
+  )),
+  "W04-6": shell("/devices", () => <DevicesView {...devices} />),
+  "W04-7": shell("/settings", () => <SettingsView {...settings} />),
 };

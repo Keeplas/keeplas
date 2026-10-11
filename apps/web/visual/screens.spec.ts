@@ -48,6 +48,13 @@ const CASES: Case[] = [
   { id: "W04-3-empty", figma: null, ...SHELL },
   { id: "W04-4", figma: "W04-4_Shared_with_me.png", ...SHELL },
   { id: "W04-4-empty", figma: null, ...SHELL },
+  {
+    id: "W04-5",
+    figma: "W04-5_Recovery_center_status_only_.png",
+    ...SHELL,
+  },
+  { id: "W04-6", figma: "W04-6_Devices_and_security.png", ...SHELL },
+  { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
 ];
 
 async function open(page: Page, item: Case, theme: "light" | "dark") {
