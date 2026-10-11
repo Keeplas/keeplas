@@ -218,7 +218,8 @@ export const startAuthentication = mutation({
         allowCredentials = credentials.map((c) => ({
           id: c.credentialId,
           transports: c.transports as
-            AuthenticatorTransportFuture[] | undefined,
+            | AuthenticatorTransportFuture[]
+            | undefined,
         }));
       }
     }
@@ -310,7 +311,8 @@ export async function verifyAssertionAndGetUserId(
       ) as Uint8Array<ArrayBuffer>,
       counter: credential.counter,
       transports: credential.transports as
-        AuthenticatorTransportFuture[] | undefined,
+        | AuthenticatorTransportFuture[]
+        | undefined,
     },
     // Reject possession-only assertions missing user verification.
     requireUserVerification: true,
