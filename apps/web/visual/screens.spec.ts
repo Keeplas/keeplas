@@ -92,6 +92,48 @@ const CASES: Case[] = [
     width: 393,
     height: 350,
   },
+  {
+    id: "state-no-contacts",
+    figma: "Empty_states_No_trusted_contacts_yet.png",
+    width: 393,
+    height: 350,
+  },
+  {
+    id: "state-travel-mode",
+    figma: "Life_check_Travel_mode_is_on.png",
+    width: 393,
+    height: 386,
+  },
+  {
+    id: "state-offline",
+    figma: "Offline_and_upload_You_re_offline.png",
+    width: 393,
+    height: 350,
+  },
+  {
+    id: "state-upload-failed",
+    figma: "Offline_and_upload_Upload_failed.png",
+    width: 393,
+    height: 386,
+  },
+  {
+    id: "state-storage-full",
+    figma: "Offline_and_upload_Your_100_MB_are_full.png",
+    width: 393,
+    height: 386,
+  },
+  {
+    id: "state-camera-off",
+    figma: "Permissions_Camera_access_is_off.png",
+    width: 393,
+    height: 386,
+  },
+  {
+    id: "state-microphone-off",
+    figma: "Permissions_Microphone_access_is_off.png",
+    width: 393,
+    height: 364,
+  },
 ];
 
 async function open(page: Page, item: Case, theme: "light" | "dark") {
