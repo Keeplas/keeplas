@@ -34,7 +34,7 @@ const buttonVariants = cva(
         cta: "h-[52px] px-6 text-button font-semibold rounded-md",
         // v2 "Small button" (Figma: 36 px, 8/14 padding, 13/18 semibold, radius 10).
         compact:
-          "h-9 gap-[6px] px-[14px] text-[13px] leading-[18px] font-semibold rounded-sm",
+          "h-[36px] gap-[6px] px-[14px] text-[13px] leading-[18px] font-semibold rounded-sm",
       },
     },
     defaultVariants: {

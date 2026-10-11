@@ -2,7 +2,8 @@
   "common": {
     "language": "Language",
     "resendIn": "Resend code in {seconds}s",
-    "back": "Back"
+    "back": "Back",
+    "moreActions": "More actions for {name}"
   },
   "auth": {
     "hero": {
@@ -239,68 +240,6 @@
     }
   },
   "hub": {
-    "loading": "Loading Hub",
-    "title": "Hub",
-    "subtitle": {
-      "line1": "Your central command for protected legacy",
-      "line2": "and continuity readiness."
-    },
-    "jumpToPriorityActions": "Jump to priority actions",
-    "actionsRequired": "Actions required",
-    "score": {
-      "strong": "Strong Protection",
-      "partial": "Partial Coverage",
-      "actionRequired": "Action Required"
-    },
-    "centerNode": {
-      "title": "Your Legacy",
-      "subtitle": "Central Node"
-    },
-    "nodes": {
-      "empty": "Empty",
-      "protected": "Protected",
-      "assets": {
-        "title": "Assets",
-        "empty": "No assets recorded yet."
-      },
-      "contacts": {
-        "title": "Contacts",
-        "empty": "No guardians linked yet.",
-        "guardianLinked": "{count} Primary Guardian Linked",
-        "guardiansLinked": "{count} Primary Guardians Linked"
-      },
-      "directives": {
-        "title": "Directives",
-        "empty": "No directives recorded yet."
-      },
-      "documents": {
-        "title": "Documents",
-        "empty": "No documents stored yet."
-      }
-    },
-    "priorityActions": "Priority Actions",
-    "hints": {
-      "add_item": "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
-      "invite_contact": "Trust contacts are the guardians who confirm if something happens to you. Invite someone you trust; they accept with their own Keeplas key.",
-      "life_check": "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
-      "release_policy": "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable and how long they have. Without their confirmation, nothing is ever released.",
-      "welcome_message": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
-      "two_factor": "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
-      "verify_whatsapp": "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
-      "contacts_ready": "Your Life Check needs two trusted contacts to confirm you're unreachable. A contact is ready once they accept your invitation and set up their Keeplas key. They never hold a key to your vault."
-    },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "viewAll": "View all",
-      "empty": "No items in your vault yet.",
-      "addFirst": "Add your first item"
-    },
-    "reflect": {
-      "title": "Reflect & Prepare",
-      "subtitle": "A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond.",
-      "previous": "Show previous reflection cards",
-      "next": "Show next reflection cards"
-    },
     "terminate": {
       "hero": {
         "line1": "Irreversible",
@@ -337,6 +276,86 @@
       "errors": {
         "typeDelete": "Type DELETE exactly to confirm.",
         "failed": "Failed to terminate plan."
+      }
+    },
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}"
+    },
+    "subtitle": "Your important information is safe and ready for tomorrow.",
+    "setup": {
+      "complete": "Required setup complete",
+      "incomplete": "Finish your required setup",
+      "progress": "{done} of {total} complete",
+      "completeBody": "Your account is protected and ready to use.",
+      "incompleteBody": "Finish it in the Keeplas app on your phone."
+    },
+    "optional": {
+      "title": "Optional protection",
+      "trustContacts": {
+        "title": "Add trust contacts",
+        "description": "Choose up to 3 people who can help you recover your account."
+      },
+      "recoveryKit": {
+        "title": "Export recovery kit",
+        "description": "Keep your optional 24-word recovery kit safe. Done from your phone."
+      }
+    },
+    "tiles": {
+      "inbox": "Encrypted inbox",
+      "toOrganize": "{count} items to organize",
+      "documents": "Documents",
+      "accounts": "Accounts",
+      "one": "1 item",
+      "other": "{count} items",
+      "toOrganizeOne": "1 item to organize"
+    },
+    "recent": {
+      "title": "Recent items",
+      "name": "Name",
+      "type": "Type",
+      "updated": "Last updated",
+      "open": "Open"
+    },
+    "types": {
+      "document": "Document",
+      "account": "Account",
+      "instruction": "Instruction",
+      "other": "To sort"
+    },
+    "empty": {
+      "title": "Your vault is empty",
+      "body": "Add your first document, account or note. It's encrypted before it leaves this device.",
+      "action": "Add an item"
+    },
+    "add": {
+      "button": "Add item",
+      "title": "Add to your vault",
+      "document": {
+        "title": "Document",
+        "description": "Upload a PDF or Word file, or drop it"
+      },
+      "photo": {
+        "title": "Photo",
+        "description": "Upload images from this computer"
+      },
+      "note": {
+        "title": "Note",
+        "description": "Write something down"
+      },
+      "voice": {
+        "title": "Voice note",
+        "description": "Record with your microphone"
+      },
+      "video": {
+        "title": "Video",
+        "description": "Upload or record a video"
+      },
+      "scan": {
+        "title": "Scan with my phone",
+        "description": "Capture paper documents with your camera",
+        "onPhone": "Open Keeplas on your phone and tap Scan. The document appears here once it's encrypted."
       }
     }
   },

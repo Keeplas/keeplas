@@ -2,7 +2,8 @@
   "common": {
     "language": "Langue",
     "resendIn": "Renvoyer le code dans {seconds}s",
-    "back": "Retour"
+    "back": "Retour",
+    "moreActions": "Plus d'actions pour {name}"
   },
   "auth": {
     "hero": {
@@ -239,68 +240,6 @@
     }
   },
   "hub": {
-    "loading": "Chargement de l'accueil",
-    "title": "Accueil",
-    "subtitle": {
-      "line1": "Votre poste de commande central pour un héritage protégé",
-      "line2": "et une continuité prête à toute épreuve."
-    },
-    "jumpToPriorityActions": "Aller aux actions prioritaires",
-    "actionsRequired": "Actions requises",
-    "score": {
-      "strong": "Protection solide",
-      "partial": "Couverture partielle",
-      "actionRequired": "Action requise"
-    },
-    "centerNode": {
-      "title": "Votre héritage",
-      "subtitle": "Nœud central"
-    },
-    "nodes": {
-      "empty": "Vide",
-      "protected": "Protégé",
-      "assets": {
-        "title": "Actifs",
-        "empty": "Aucun actif enregistré pour le moment."
-      },
-      "contacts": {
-        "title": "Contacts",
-        "empty": "Aucun contact de confiance lié pour le moment.",
-        "guardianLinked": "{count} contact de confiance principal lié",
-        "guardiansLinked": "{count} contacts de confiance principaux liés"
-      },
-      "directives": {
-        "title": "Directives",
-        "empty": "Aucune directive enregistrée pour le moment."
-      },
-      "documents": {
-        "title": "Documents",
-        "empty": "Aucun document conservé pour le moment."
-      }
-    },
-    "priorityActions": "Actions prioritaires",
-    "hints": {
-      "add_item": "Conservez votre premier actif, document ou identifiant dans le coffre. Tout est chiffré de bout en bout — vous seul et les personnes que vous choisissez pourrez jamais le lire.",
-      "invite_contact": "Les contacts de confiance sont les gardiens qui confirment s'il vous arrive quelque chose. Invitez une personne de confiance ; elle accepte avec sa propre clé Keeplas.",
-      "life_check": "Life Check prend régulièrement de vos nouvelles. Si vous cessez de répondre, Keeplas amorce le processus de continuité et prévient vos gardiens.",
-      "release_policy": "Décidez de ce qui se passe si vous cessez de répondre : combien de contacts de confiance doivent confirmer votre indisponibilité et de combien de temps ils disposent. Sans leur confirmation, rien n'est jamais transmis.",
-      "welcome_message": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'ils ne consultent les éléments.",
-      "two_factor": "Ajoutez une clé d'accès ou une application d'authentification afin qu'un mot de passe dérobé ne suffise pas à atteindre votre compte.",
-      "verify_whatsapp": "Vérifiez votre numéro WhatsApp pour que les contrôles de Life Check et les alertes de sécurité vous parviennent de façon fiable.",
-      "contacts_ready": "Votre Life Check a besoin de deux contacts de confiance pour confirmer que vous êtes injoignable. Un contact est prêt dès qu'il accepte votre invitation et configure sa clé Keeplas. Il ne détient jamais de clé de votre coffre."
-    },
-    "recentActivity": {
-      "title": "Activité récente",
-      "viewAll": "Tout voir",
-      "empty": "Aucun élément dans votre coffre pour le moment.",
-      "addFirst": "Ajouter votre premier élément"
-    },
-    "reflect": {
-      "title": "Réfléchir et préparer",
-      "subtitle": "Quelques questions honnêtes, de vraies difficultés et des étapes concrètes pour la continuité — au sein de Keeplas et au-delà.",
-      "previous": "Afficher les cartes de réflexion précédentes",
-      "next": "Afficher les cartes de réflexion suivantes"
-    },
     "terminate": {
       "hero": {
         "line1": "Destruction",
@@ -337,6 +276,86 @@
       "errors": {
         "typeDelete": "Saisissez DELETE exactement pour confirmer.",
         "failed": "Échec de la suppression du plan."
+      }
+    },
+    "greeting": {
+      "morning": "Bonjour, {name}",
+      "afternoon": "Bon après-midi, {name}",
+      "evening": "Bonsoir, {name}"
+    },
+    "subtitle": "Vos informations importantes sont en sécurité et prêtes pour demain.",
+    "setup": {
+      "complete": "Configuration requise terminée",
+      "incomplete": "Terminez la configuration requise",
+      "progress": "{done} sur {total} terminées",
+      "completeBody": "Votre compte est protégé et prêt à l'emploi.",
+      "incompleteBody": "Terminez-la dans l'app Keeplas sur votre téléphone."
+    },
+    "optional": {
+      "title": "Protection facultative",
+      "trustContacts": {
+        "title": "Ajouter des contacts de confiance",
+        "description": "Choisissez jusqu'à 3 personnes qui peuvent vous aider à récupérer votre compte."
+      },
+      "recoveryKit": {
+        "title": "Exporter le kit de récupération",
+        "description": "Gardez votre kit facultatif de 24 mots en lieu sûr. Depuis votre téléphone."
+      }
+    },
+    "tiles": {
+      "inbox": "Boîte chiffrée",
+      "toOrganize": "{count} éléments à classer",
+      "documents": "Documents",
+      "accounts": "Comptes",
+      "one": "1 élément",
+      "other": "{count} éléments",
+      "toOrganizeOne": "1 élément à classer"
+    },
+    "recent": {
+      "title": "Éléments récents",
+      "name": "Nom",
+      "type": "Type",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    },
+    "types": {
+      "document": "Document",
+      "account": "Compte",
+      "instruction": "Instruction",
+      "other": "À classer"
+    },
+    "empty": {
+      "title": "Votre coffre est vide",
+      "body": "Ajoutez un premier document, compte ou note. Il est chiffré avant de quitter cet appareil.",
+      "action": "Ajouter un élément"
+    },
+    "add": {
+      "button": "Ajouter",
+      "title": "Ajouter à votre coffre",
+      "document": {
+        "title": "Document",
+        "description": "Importez un PDF ou un fichier Word, ou déposez-le"
+      },
+      "photo": {
+        "title": "Photo",
+        "description": "Importez des images depuis cet ordinateur"
+      },
+      "note": {
+        "title": "Note",
+        "description": "Écrivez quelque chose"
+      },
+      "voice": {
+        "title": "Note vocale",
+        "description": "Enregistrez avec votre micro"
+      },
+      "video": {
+        "title": "Vidéo",
+        "description": "Importez ou enregistrez une vidéo"
+      },
+      "scan": {
+        "title": "Scanner avec mon téléphone",
+        "description": "Numérisez des documents papier avec l'appareil photo",
+        "onPhone": "Ouvrez Keeplas sur votre téléphone et touchez Scanner. Le document apparaît ici une fois chiffré."
       }
     }
   },

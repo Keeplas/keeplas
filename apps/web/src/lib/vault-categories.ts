@@ -71,3 +71,27 @@ export const CATEGORIES: CategoryConfig[] = [
 export function getCategoryConfig(key: VaultCategory): CategoryConfig {
   return CATEGORIES.find((c) => c.key === key)!;
 }
+
+/**
+ * v2 groups the detailed categories into Documents, Accounts, Instructions
+ * and Other (design kit). "Other" is what still needs sorting: the web shows
+ * it as the Encrypted inbox.
+ */
+export type CategoryGroup = "document" | "account" | "instruction" | "other";
+
+export const CATEGORY_GROUP: Record<VaultCategory, CategoryGroup> = {
+  personal_document: "document",
+  legal_document: "document",
+  property: "document",
+  insurance_policy: "document",
+  business_continuity: "document",
+  financial_asset: "account",
+  digital_asset: "account",
+  credential: "account",
+  subscription: "account",
+  health_directive: "instruction",
+  conditional_message: "instruction",
+  wishes: "instruction",
+  contacts: "instruction",
+  other: "other",
+};
