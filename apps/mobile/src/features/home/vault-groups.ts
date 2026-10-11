@@ -55,9 +55,19 @@ export const VAULT_GROUPS = [
 export type VaultGroupKey = (typeof VAULT_GROUPS)[number]["key"];
 
 /**
- * Sum per-category counts into the four Home groups (unknown → other).
- * "inbox" (unsorted captures) is shown on its own row, not in a tile.
+ * Home tile of a stored category (unknown → other); null for "inbox"
+ * (unsorted captures), which has its own row instead of a tile.
  */
+export function groupOf(category: string): VaultGroupKey | null {
+  if (category === "inbox") return null;
+  return (
+    VAULT_GROUPS.find((g) =>
+      (g.categories as readonly string[]).includes(category),
+    )?.key ?? "other"
+  );
+}
+
+/** Sum per-category counts into the four Home groups. */
 export function groupCategoryCounts(
   counts: Record<string, number>,
 ): Record<VaultGroupKey, number> {
@@ -68,11 +78,8 @@ export function groupCategoryCounts(
     other: 0,
   };
   for (const [category, count] of Object.entries(counts)) {
-    const group =
-      VAULT_GROUPS.find((g) =>
-        (g.categories as readonly string[]).includes(category),
-      )?.key ?? "other";
-    totals[group] += count;
+    const group = groupOf(category);
+    if (group) totals[group] += count;
   }
   return totals;
 }

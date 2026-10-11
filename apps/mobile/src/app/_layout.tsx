@@ -7,6 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { OutboxProvider } from "@/features/outbox/outbox-provider";
 import { AccountLanguageSync } from "@/lib/use-change-language";
 import { ConvexProvider } from "@/providers/convex-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
@@ -34,8 +35,10 @@ export default function RootLayout() {
           <ConvexProvider>
             <VaultProvider>
               <SessionProvider>
-                <AccountLanguageSync />
-                <Routes />
+                <OutboxProvider>
+                  <AccountLanguageSync />
+                  <Routes />
+                </OutboxProvider>
               </SessionProvider>
             </VaultProvider>
           </ConvexProvider>
