@@ -11,3 +11,6 @@ dist/
 .nitro/
 .vite/
 .turbo/
+
+# Design pack (handed-off static wireframes) — keep files as delivered
+New-keeplas-design/

@@ -1,0 +1,1110 @@
+[
+  {
+    "id": "welcome",
+    "category": "Access",
+    "en": "Your life, well kept",
+    "fr": "Votre vie, bien préservée",
+    "body": "A private place for your important documents, accounts and instructions.",
+    "bfr": "Un espace privé pour vos documents, comptes et instructions.",
+    "items": [],
+    "actions": [
+      [
+        "Get started",
+        "Commencer",
+        "setup"
+      ],
+      [
+        "I already have an account",
+        "J’ai déjà un compte",
+        "signin"
+      ]
+    ]
+  },
+  {
+    "id": "setup",
+    "category": "Setup",
+    "en": "Set up your account",
+    "fr": "Configurer votre compte",
+    "body": "Your phone identifies your account. A passkey protects access. No email required.",
+    "bfr": "Votre téléphone identifie votre compte. Une passkey protège l’accès. Aucun email requis.",
+    "items": [],
+    "actions": [
+      [
+        "Verify phone",
+        "Vérifier le numéro",
+        "verify"
+      ]
+    ]
+  },
+  {
+    "id": "verify",
+    "category": "Setup",
+    "en": "Verify your number",
+    "fr": "Vérifier votre numéro",
+    "body": "Enter the code sent to your phone through WhatsApp.",
+    "bfr": "Saisissez le code envoyé à votre téléphone via WhatsApp.",
+    "items": [],
+    "actions": [
+      [
+        "Confirm number",
+        "Confirmer le numéro",
+        "passkey"
+      ],
+      [
+        "Resend code",
+        "Renvoyer le code",
+        "demo"
+      ]
+    ]
+  },
+  {
+    "id": "passkey",
+    "category": "Setup",
+    "en": "Create your passkey",
+    "fr": "Créer votre passkey",
+    "body": "Use your device’s supported biometric or PIN authentication.",
+    "bfr": "Utilisez la biométrie ou le code de votre appareil.",
+    "items": [
+      [
+        "key",
+        "Device authentication",
+        "Authentification de l’appareil"
+      ]
+    ],
+    "actions": [
+      [
+        "Create passkey",
+        "Créer la passkey",
+        "create-vault"
+      ]
+    ]
+  },
+  {
+    "id": "create-vault",
+    "category": "Setup",
+    "en": "Create your private vault",
+    "fr": "Créer votre coffre privé",
+    "body": "Your vault is created and encrypted on this device.",
+    "bfr": "Votre coffre est créé et chiffré sur cet appareil.",
+    "items": [
+      [
+        "lock",
+        "Encrypted on your device",
+        "Chiffré sur votre appareil"
+      ]
+    ],
+    "actions": [
+      [
+        "Create vault",
+        "Créer le coffre",
+        "optional"
+      ]
+    ]
+  },
+  {
+    "id": "optional",
+    "category": "Setup",
+    "en": "Optional protection",
+    "fr": "Protection facultative",
+    "body": "Required steps: 3/3. Configure additional protection now or later.",
+    "bfr": "Étapes obligatoires : 3/3. Configurez une protection supplémentaire maintenant ou plus tard.",
+    "items": [
+      [
+        "people",
+        "Add trusted contacts",
+        "Ajouter des contacts de confiance",
+        "contacts"
+      ],
+      [
+        "file",
+        "Export recovery kit",
+        "Exporter le kit de récupération",
+        "kit"
+      ]
+    ],
+    "actions": [
+      [
+        "Configure contacts",
+        "Configurer les contacts",
+        "contacts"
+      ],
+      [
+        "Skip for now",
+        "Passer pour le moment",
+        "complete"
+      ]
+    ]
+  },
+  {
+    "id": "complete",
+    "category": "Setup",
+    "en": "Your account is ready",
+    "fr": "Votre compte est prêt",
+    "body": "Required steps 3/3 complete. Optional protection remains available in Settings.",
+    "bfr": "Les 3 étapes obligatoires sont terminées. La protection facultative reste disponible dans les paramètres.",
+    "items": [],
+    "actions": [
+      [
+        "Open my vault",
+        "Ouvrir mon coffre",
+        "home"
+      ]
+    ]
+  },
+  {
+    "id": "signin",
+    "category": "Access",
+    "en": "Sign in to Keeplas",
+    "fr": "Se connecter à Keeplas",
+    "body": "Use a passkey or link this browser with your phone.",
+    "bfr": "Utilisez une passkey ou associez ce navigateur avec votre téléphone.",
+    "items": [],
+    "actions": [
+      [
+        "Continue with passkey",
+        "Continuer avec une passkey",
+        "unlock"
+      ],
+      [
+        "Link with my phone",
+        "Associer avec mon téléphone",
+        "web-qr"
+      ],
+      [
+        "Lost access?",
+        "Accès perdu ?",
+        "recovery"
+      ]
+    ]
+  },
+  {
+    "id": "home",
+    "category": "Vault",
+    "en": "Good morning, Alex",
+    "fr": "Bonjour Alex",
+    "body": "Your important information is safe and ready for tomorrow.",
+    "bfr": "Vos informations importantes sont protégées et prêtes pour demain.",
+    "items": [
+      [
+        "shield",
+        "Recovery protection · 2 of 3 contacts ready",
+        "Protection de récupération · 2 contacts sur 3 prêts",
+        "contacts"
+      ],
+      [
+        "file",
+        "Documents · 12 items",
+        "Documents · 12 éléments",
+        "item"
+      ],
+      [
+        "key",
+        "Accounts · 8 items",
+        "Comptes · 8 éléments",
+        "item"
+      ],
+      [
+        "folder",
+        "Encrypted inbox · 3 items to organize",
+        "Boîte chiffrée · 3 éléments à classer",
+        "capture"
+      ]
+    ],
+    "actions": [
+      [
+        "Add item",
+        "Ajouter un élément",
+        "capture"
+      ]
+    ]
+  },
+  {
+    "id": "unlock",
+    "category": "Access",
+    "en": "Unlock your vault",
+    "fr": "Déverrouiller votre coffre",
+    "body": "Use your passkey. Optional Keeplas PIN follows biometrics if enabled.",
+    "bfr": "Utilisez votre passkey. Le PIN Keeplas facultatif suit la biométrie si activé.",
+    "items": [],
+    "actions": [
+      [
+        "Continue with passkey",
+        "Continuer avec une passkey",
+        "home"
+      ],
+      [
+        "Lost access?",
+        "Accès perdu ?",
+        "recovery"
+      ]
+    ]
+  },
+  {
+    "id": "capture",
+    "category": "Capture",
+    "en": "Add to Keeplas",
+    "fr": "Ajouter à Keeplas",
+    "body": "Save now, organize later. Your information is encrypted on your device.",
+    "bfr": "Enregistrez maintenant, classez plus tard. Vos informations sont chiffrées sur votre appareil.",
+    "items": [
+      [
+        "file",
+        "Upload a file",
+        "Importer un fichier",
+        "encrypt"
+      ],
+      [
+        "camera",
+        "Scan a document",
+        "Scanner un document",
+        "scan"
+      ],
+      [
+        "camera",
+        "Take a photo",
+        "Prendre une photo",
+        "scan"
+      ],
+      [
+        "mic",
+        "Record audio",
+        "Enregistrer un audio",
+        "audio"
+      ],
+      [
+        "video",
+        "Record video",
+        "Enregistrer une vidéo",
+        "video"
+      ],
+      [
+        "file",
+        "Write a note",
+        "Écrire une note",
+        "note"
+      ],
+      [
+        "monitor",
+        "Record your screen (desktop)",
+        "Enregistrer l’écran (desktop)",
+        "screen-record"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "scan",
+    "category": "Capture",
+    "en": "Scan document",
+    "fr": "Scanner un document",
+    "body": "Adjust the crop before saving.",
+    "bfr": "Ajustez le cadrage avant d’enregistrer.",
+    "items": [],
+    "actions": [
+      [
+        "Capture document",
+        "Capturer le document",
+        "review"
+      ]
+    ]
+  },
+  {
+    "id": "audio",
+    "category": "Capture",
+    "en": "Voice note",
+    "fr": "Note vocale",
+    "body": "Recording controls are a prototype demonstration.",
+    "bfr": "Les commandes d’enregistrement sont une démonstration.",
+    "items": [],
+    "actions": [
+      [
+        "Start recording",
+        "Démarrer l’enregistrement",
+        "record"
+      ],
+      [
+        "Stop and review",
+        "Arrêter et vérifier",
+        "review"
+      ]
+    ]
+  },
+  {
+    "id": "video",
+    "category": "Capture",
+    "en": "Record video",
+    "fr": "Enregistrer une vidéo",
+    "body": "Use your camera to record instructions for your loved ones.",
+    "bfr": "Utilisez votre caméra pour enregistrer des instructions pour vos proches.",
+    "items": [],
+    "actions": [
+      [
+        "Start recording",
+        "Démarrer l’enregistrement",
+        "record"
+      ],
+      [
+        "Stop and review",
+        "Arrêter et vérifier",
+        "review"
+      ]
+    ]
+  },
+  {
+    "id": "screen-record",
+    "category": "Capture",
+    "en": "Record your screen",
+    "fr": "Enregistrer votre écran",
+    "body": "Choose a browser tab, a window or your entire screen. Your browser will ask for permission.",
+    "bfr": "Choisissez un onglet, une fenêtre ou tout votre écran. Votre navigateur demandera une autorisation.",
+    "items": [],
+    "actions": [
+      [
+        "Choose what to share",
+        "Choisir quoi partager",
+        "review"
+      ]
+    ]
+  },
+  {
+    "id": "review",
+    "category": "Capture",
+    "en": "Review recording",
+    "fr": "Vérifier l’enregistrement",
+    "body": "Preview and name this item before saving it to your vault.",
+    "bfr": "Vérifiez et nommez cet élément avant de l’enregistrer dans votre coffre.",
+    "items": [],
+    "actions": [
+      [
+        "Save to vault",
+        "Enregistrer dans le coffre",
+        "encrypt"
+      ],
+      [
+        "Retake",
+        "Recommencer",
+        "capture"
+      ],
+      [
+        "Discard",
+        "Supprimer",
+        "capture"
+      ]
+    ]
+  },
+  {
+    "id": "note",
+    "category": "Capture",
+    "en": "Write a note",
+    "fr": "Écrire une note",
+    "body": "Capture instructions in a few words.",
+    "bfr": "Notez vos instructions en quelques mots.",
+    "items": [],
+    "actions": [
+      [
+        "Save note",
+        "Enregistrer la note",
+        "encrypt"
+      ]
+    ]
+  },
+  {
+    "id": "encrypt",
+    "category": "Capture",
+    "en": "Securing your item",
+    "fr": "Protection de votre élément",
+    "body": "Encrypting on device → uploading encrypted copy → protected.",
+    "bfr": "Chiffrement sur l’appareil → envoi de la copie chiffrée → protégé.",
+    "items": [
+      [
+        "lock",
+        "Encrypting on device",
+        "Chiffrement sur l’appareil"
+      ],
+      [
+        "upload",
+        "Uploading encrypted copy",
+        "Envoi de la copie chiffrée"
+      ],
+      [
+        "check",
+        "Protected",
+        "Protégé"
+      ]
+    ],
+    "actions": [
+      [
+        "View item",
+        "Voir l’élément",
+        "item"
+      ]
+    ]
+  },
+  {
+    "id": "item",
+    "category": "Vault",
+    "en": "Home insurance policy",
+    "fr": "Assurance habitation",
+    "body": "PDF · 2.4 MB. Only you can access this item until you share it.",
+    "bfr": "PDF · 2,4 Mo. Vous seul avez accès à cet élément avant son partage.",
+    "items": [
+      [
+        "file",
+        "Category · Insurance",
+        "Catégorie · Assurance"
+      ],
+      [
+        "folder",
+        "Folder · Inbox",
+        "Dossier · Boîte de réception"
+      ],
+      [
+        "lock",
+        "Access · Only you",
+        "Accès · Vous seul"
+      ]
+    ],
+    "actions": [
+      [
+        "Share item",
+        "Partager l’élément",
+        "share"
+      ]
+    ]
+  },
+  {
+    "id": "people",
+    "category": "People",
+    "en": "Trusted people",
+    "fr": "Personnes de confiance",
+    "body": "Recovery contacts and beneficiaries have separate permissions.",
+    "bfr": "Les contacts de récupération et les bénéficiaires ont des permissions distinctes.",
+    "items": [
+      [
+        "people",
+        "Trust contacts",
+        "Contacts de confiance",
+        "contacts"
+      ],
+      [
+        "people",
+        "Beneficiaries",
+        "Bénéficiaires",
+        "beneficiaries"
+      ]
+    ],
+    "actions": [
+      [
+        "Add a person",
+        "Ajouter une personne",
+        "add-person"
+      ]
+    ]
+  },
+  {
+    "id": "contacts",
+    "category": "People",
+    "en": "Trust contacts",
+    "fr": "Contacts de confiance",
+    "body": "Up to 3 contacts. Any 2 can approve recovery or confirm a death. This role does not allow reading your files.",
+    "bfr": "Jusqu’à 3 contacts. Deux peuvent approuver une récupération ou confirmer un décès. Ce rôle ne permet pas de lire vos fichiers.",
+    "items": [
+      [
+        "people",
+        "Marie · Active",
+        "Marie · Actif"
+      ],
+      [
+        "people",
+        "Paul · Active",
+        "Paul · Actif"
+      ],
+      [
+        "people",
+        "Samir · Invited",
+        "Samir · Invité"
+      ]
+    ],
+    "actions": [
+      [
+        "Add or replace a contact",
+        "Ajouter ou remplacer un contact",
+        "add-person"
+      ]
+    ]
+  },
+  {
+    "id": "add-person",
+    "category": "People",
+    "en": "Add trusted person",
+    "fr": "Ajouter une personne de confiance",
+    "body": "Choose their roles independently. Invitations use a phone number.",
+    "bfr": "Choisissez ses rôles indépendamment. Les invitations utilisent un numéro de téléphone.",
+    "items": [],
+    "actions": [
+      [
+        "Send invitation",
+        "Envoyer l’invitation",
+        "contacts"
+      ]
+    ]
+  },
+  {
+    "id": "beneficiaries",
+    "category": "People",
+    "en": "Beneficiaries",
+    "fr": "Bénéficiaires",
+    "body": "Each person receives only the content you assign.",
+    "bfr": "Chaque personne reçoit uniquement le contenu que vous lui attribuez.",
+    "items": [
+      [
+        "people",
+        "Marie · Family documents",
+        "Marie · Documents de famille"
+      ],
+      [
+        "people",
+        "Paul · Emergency instructions",
+        "Paul · Instructions d’urgence"
+      ]
+    ],
+    "actions": [
+      [
+        "Assign content",
+        "Attribuer du contenu",
+        "share"
+      ]
+    ]
+  },
+  {
+    "id": "share",
+    "category": "Sharing",
+    "en": "Share content",
+    "fr": "Partager du contenu",
+    "body": "Choose the person, the scope and when access becomes available.",
+    "bfr": "Choisissez la personne, le périmètre et le moment où l’accès devient disponible.",
+    "items": [],
+    "actions": [
+      [
+        "Create private access",
+        "Créer un accès privé",
+        "access"
+      ]
+    ]
+  },
+  {
+    "id": "invitation",
+    "category": "Sharing",
+    "en": "Alex invited you",
+    "fr": "Alex vous a invité",
+    "body": "A trust-contact role can help recovery. A beneficiary role receives assigned content under the selected conditions.",
+    "bfr": "Le rôle de contact aide la récupération. Le bénéficiaire reçoit le contenu attribué selon les conditions choisies.",
+    "items": [
+      [
+        "people",
+        "Trust contact · Cannot read files",
+        "Contact de confiance · Ne peut pas lire les fichiers"
+      ],
+      [
+        "folder",
+        "Beneficiary · Family documents only",
+        "Bénéficiaire · Documents de famille uniquement"
+      ]
+    ],
+    "actions": [
+      [
+        "Accept invitation",
+        "Accepter l’invitation",
+        "shared"
+      ]
+    ]
+  },
+  {
+    "id": "access",
+    "category": "Sharing",
+    "en": "Access management",
+    "fr": "Gestion des accès",
+    "body": "Immediate access and access after verification are distinct.",
+    "bfr": "L’accès immédiat et l’accès après vérification sont distincts.",
+    "items": [
+      [
+        "people",
+        "Marie · Active now · Access available now",
+        "Marie · Actif · Accès disponible maintenant"
+      ],
+      [
+        "clock",
+        "Paul · After verification and 72-hour grace period",
+        "Paul · Après vérification et délai de grâce de 72 h"
+      ]
+    ],
+    "actions": [
+      [
+        "Edit access",
+        "Modifier l’accès",
+        "share"
+      ],
+      [
+        "Revoke access",
+        "Révoquer l’accès",
+        "demo"
+      ]
+    ]
+  },
+  {
+    "id": "shared",
+    "category": "Sharing",
+    "en": "Shared with me",
+    "fr": "Partagé avec moi",
+    "body": "Only assigned folders are visible. You cannot access the owner’s full vault.",
+    "bfr": "Seuls les dossiers attribués sont visibles. Vous n’avez pas accès à tout le coffre du propriétaire.",
+    "items": [
+      [
+        "folder",
+        "Family documents · Available now",
+        "Documents de famille · Disponibles maintenant",
+        "shared-folder"
+      ],
+      [
+        "lock",
+        "Emergency instructions · After verification",
+        "Instructions d’urgence · Après vérification",
+        "shared-locked"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "shared-folder",
+    "category": "Sharing",
+    "en": "Family documents",
+    "fr": "Documents de famille",
+    "body": "Shared by Alex. View and download these documents only.",
+    "bfr": "Partagé par Alex. Consultez et téléchargez uniquement ces documents.",
+    "items": [
+      [
+        "file",
+        "Home insurance",
+        "Assurance habitation"
+      ],
+      [
+        "file",
+        "Will",
+        "Testament"
+      ],
+      [
+        "file",
+        "Useful contacts",
+        "Contacts utiles"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "shared-locked",
+    "category": "Sharing",
+    "en": "Not available yet",
+    "fr": "Pas encore disponible",
+    "body": "Two trust contacts must confirm a death, followed by a 72-hour grace period. A missed check-in alone never releases documents.",
+    "bfr": "Deux contacts doivent confirmer le décès, puis un délai de grâce de 72 h s’applique. Un check-in manqué ne libère jamais les documents à lui seul.",
+    "items": [
+      [
+        "check",
+        "Assigned to you",
+        "Attribué à vous"
+      ],
+      [
+        "people",
+        "Waiting for two confirmations",
+        "En attente de deux confirmations"
+      ],
+      [
+        "clock",
+        "72-hour grace period",
+        "Délai de grâce de 72 h"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "recovery",
+    "category": "Recovery",
+    "en": "Lost access to your vault?",
+    "fr": "Accès à votre coffre perdu ?",
+    "body": "Your phone identifies the account; a verification code alone cannot unlock the vault.",
+    "bfr": "Votre téléphone identifie le compte ; un code de vérification seul ne déverrouille pas le coffre.",
+    "items": [
+      [
+        "monitor",
+        "Another signed-in device",
+        "Un autre appareil connecté",
+        "devices"
+      ],
+      [
+        "people",
+        "Ask trust contacts",
+        "Demander aux contacts de confiance",
+        "recovery-pending"
+      ],
+      [
+        "key",
+        "Use recovery kit",
+        "Utiliser le kit de récupération",
+        "kit"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "recovery-pending",
+    "category": "Recovery",
+    "en": "Recovery request in progress",
+    "fr": "Demande de récupération en cours",
+    "body": "Access requires 2 approvals AND expiry of the 48-hour window starting when the request is made.",
+    "bfr": "L’accès nécessite 2 validations ET la fin du délai de 48 h démarrant dès la demande.",
+    "items": [
+      [
+        "check",
+        "Marie · Approved",
+        "Marie · Approuvée"
+      ],
+      [
+        "clock",
+        "Paul · Awaiting approval",
+        "Paul · En attente"
+      ],
+      [
+        "clock",
+        "36 hours remaining · 1/2 approved",
+        "36 h restantes · 1/2 validée"
+      ]
+    ],
+    "actions": [
+      [
+        "Cancel request",
+        "Annuler la demande",
+        "recovery"
+      ]
+    ]
+  },
+  {
+    "id": "recovery-approve",
+    "category": "Recovery",
+    "en": "Alex needs help recovering access",
+    "fr": "Alex a besoin de récupérer son accès",
+    "body": "Call Alex and compare code 4729 before approving. Approval does not let you read their files.",
+    "bfr": "Appelez Alex et comparez le code 4729 avant de valider. La validation ne permet pas de lire ses fichiers.",
+    "items": [],
+    "actions": [
+      [
+        "Approve",
+        "Approuver",
+        "restored"
+      ],
+      [
+        "Reject",
+        "Refuser",
+        "recovery"
+      ]
+    ]
+  },
+  {
+    "id": "restored",
+    "category": "Recovery",
+    "en": "Vault restored",
+    "fr": "Coffre restauré",
+    "body": "Access is restored. Review your devices and recovery protection.",
+    "bfr": "L’accès est rétabli. Vérifiez vos appareils et votre protection de récupération.",
+    "items": [],
+    "actions": [
+      [
+        "Review devices",
+        "Vérifier les appareils",
+        "devices"
+      ],
+      [
+        "Open vault",
+        "Ouvrir le coffre",
+        "home"
+      ]
+    ]
+  },
+  {
+    "id": "kit",
+    "category": "Recovery",
+    "en": "Recovery kit",
+    "fr": "Kit de récupération",
+    "body": "Optional. Keep the exported kit in a safe place. Never share it in chat or with support.",
+    "bfr": "Facultatif. Conservez le kit exporté en lieu sûr. Ne le partagez jamais par chat ou avec le support.",
+    "items": [],
+    "actions": [
+      [
+        "Export kit (demo)",
+        "Exporter le kit (démo)",
+        "demo"
+      ]
+    ]
+  },
+  {
+    "id": "life-check",
+    "category": "Life check",
+    "en": "Are you okay?",
+    "fr": "Tout va bien ?",
+    "body": "Your regular check-in helps us know you are okay. A missed response alone never releases information.",
+    "bfr": "Votre réponse régulière nous aide à savoir que vous allez bien. Une absence de réponse seule ne transmet jamais vos informations.",
+    "items": [],
+    "actions": [
+      [
+        "Yes, I’m okay",
+        "Oui, je vais bien",
+        "checkin"
+      ]
+    ]
+  },
+  {
+    "id": "succession",
+    "category": "Life check",
+    "en": "Your succession plan",
+    "fr": "Votre plan de transmission",
+    "body": "Only assigned content is released after the conditions are met. You can cancel before release.",
+    "bfr": "Seul le contenu attribué est transmis lorsque les conditions sont réunies. Vous pouvez annuler avant la transmission.",
+    "items": [
+      [
+        "bell",
+        "Owner reminders and follow-up",
+        "Rappels au propriétaire et suivi"
+      ],
+      [
+        "people",
+        "Two trust contacts confirm death",
+        "Deux contacts confirment le décès"
+      ],
+      [
+        "clock",
+        "72-hour grace period",
+        "Délai de grâce de 72 h"
+      ],
+      [
+        "folder",
+        "Assigned content released to beneficiaries",
+        "Contenu attribué transmis aux bénéficiaires"
+      ]
+    ],
+    "actions": [
+      [
+        "Manage beneficiaries",
+        "Gérer les bénéficiaires",
+        "beneficiaries"
+      ]
+    ]
+  },
+  {
+    "id": "web-qr",
+    "category": "Devices",
+    "en": "Link with your phone",
+    "fr": "Associer avec votre téléphone",
+    "body": "Open Keeplas on your phone, scan the QR and approve this browser.",
+    "bfr": "Ouvrez Keeplas sur votre téléphone, scannez le QR et autorisez ce navigateur.",
+    "items": [],
+    "actions": [
+      [
+        "Simulate QR scan",
+        "Simuler le scan QR",
+        "qr-scan"
+      ],
+      [
+        "Use a passkey",
+        "Utiliser une passkey",
+        "signin"
+      ]
+    ]
+  },
+  {
+    "id": "qr-scan",
+    "category": "Devices",
+    "en": "Scan QR code",
+    "fr": "Scanner le QR code",
+    "body": "Scan the code shown on your own computer.",
+    "bfr": "Scannez le code affiché sur votre ordinateur.",
+    "items": [],
+    "actions": [
+      [
+        "Simulate scan",
+        "Simuler le scan",
+        "browser-approve"
+      ]
+    ]
+  },
+  {
+    "id": "browser-approve",
+    "category": "Devices",
+    "en": "Link this browser?",
+    "fr": "Associer ce navigateur ?",
+    "body": "Chrome on macOS · Paris, France. Approve only a browser you recognize.",
+    "bfr": "Chrome sur macOS · Paris, France. Autorisez uniquement un navigateur que vous reconnaissez.",
+    "items": [
+      [
+        "shield",
+        "Confirm with biometrics",
+        "Confirmer avec la biométrie"
+      ]
+    ],
+    "actions": [
+      [
+        "Approve browser",
+        "Autoriser le navigateur",
+        "browser-linked"
+      ],
+      [
+        "Cancel",
+        "Annuler",
+        "home"
+      ]
+    ]
+  },
+  {
+    "id": "browser-linked",
+    "category": "Devices",
+    "en": "Browser linked",
+    "fr": "Navigateur associé",
+    "body": "Your other devices have been notified.",
+    "bfr": "Vos autres appareils ont été avertis.",
+    "items": [],
+    "actions": [
+      [
+        "Manage devices",
+        "Gérer les appareils",
+        "devices"
+      ]
+    ]
+  },
+  {
+    "id": "devices",
+    "category": "Devices",
+    "en": "Devices & sync",
+    "fr": "Appareils et synchronisation",
+    "body": "Only encrypted information is synchronized. Revoke devices you no longer recognize.",
+    "bfr": "Seules les informations chiffrées sont synchronisées. Révoquez les appareils inconnus.",
+    "items": [
+      [
+        "phone",
+        "iPhone · This device",
+        "iPhone · Cet appareil"
+      ],
+      [
+        "monitor",
+        "Chrome on Mac · Last active 2 h ago",
+        "Chrome sur Mac · Actif il y a 2 h"
+      ],
+      [
+        "phone",
+        "iPad · Last active 3 days ago",
+        "iPad · Actif il y a 3 jours"
+      ]
+    ],
+    "actions": [
+      [
+        "Link browser",
+        "Associer un navigateur",
+        "web-qr"
+      ],
+      [
+        "Review new device",
+        "Vérifier le nouvel appareil",
+        "new-device"
+      ]
+    ]
+  },
+  {
+    "id": "security",
+    "category": "Security",
+    "en": "Privacy & security",
+    "fr": "Confidentialité et sécurité",
+    "body": "Manage access and review recent activity.",
+    "bfr": "Gérez les accès et consultez l’activité récente.",
+    "items": [
+      [
+        "key",
+        "Passkey · Enabled",
+        "Passkey · Activée"
+      ],
+      [
+        "lock",
+        "Optional PIN after biometrics",
+        "PIN facultatif après la biométrie"
+      ],
+      [
+        "shield",
+        "Recovery protection",
+        "Protection de récupération",
+        "contacts"
+      ],
+      [
+        "file",
+        "Recovery kit",
+        "Kit de récupération",
+        "kit"
+      ],
+      [
+        "monitor",
+        "Devices",
+        "Appareils",
+        "devices"
+      ],
+      [
+        "clock",
+        "Security activity",
+        "Activité de sécurité",
+        "activity"
+      ]
+    ],
+    "actions": []
+  },
+  {
+    "id": "new-device",
+    "category": "Security",
+    "en": "A new device accessed your account",
+    "fr": "Un nouvel appareil a accédé à votre compte",
+    "body": "Chrome on macOS · Today 09:14 · Paris, France.",
+    "bfr": "Chrome sur macOS · Aujourd’hui 09:14 · Paris, France.",
+    "items": [],
+    "actions": [
+      [
+        "This was me",
+        "C’était moi",
+        "home"
+      ],
+      [
+        "This wasn’t me",
+        "Ce n’était pas moi",
+        "revoke"
+      ]
+    ]
+  },
+  {
+    "id": "activity",
+    "category": "Security",
+    "en": "Security activity",
+    "fr": "Activité de sécurité",
+    "body": "Recent account activity. Example data only.",
+    "bfr": "Activité récente du compte. Données d’exemple uniquement.",
+    "items": [
+      [
+        "key",
+        "Successful sign-in · Today 09:14",
+        "Connexion réussie · Aujourd’hui 09:14"
+      ],
+      [
+        "file",
+        "Item viewed · Today 09:20",
+        "Élément consulté · Aujourd’hui 09:20"
+      ],
+      [
+        "monitor",
+        "Device revoked · Yesterday",
+        "Appareil révoqué · Hier"
+      ]
+    ],
+    "actions": []
+  }
+]

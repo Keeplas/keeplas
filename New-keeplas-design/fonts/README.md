@@ -1,0 +1,1 @@
+Local fonts: DejaVu Serif for editorial headings; DejaVu Sans for body. These are explicitly bundled substitutes for the generated serif mockups, not Manrope/Inter. Landing uses Manrope/Inter; see typography notes. Full license included. No network required.
