@@ -31,14 +31,7 @@ export default function LifeCheckPage() {
       <header className="mb-10 max-w-2xl">
         <h1 className="text-headline-lg text-primary mb-3">Life Check</h1>
         <p className="text-body-lg text-on-surface-variant">
-          {t("page.intro")}{" "}
-          <a
-            href="/settings/continuity"
-            className="underline font-medium text-secondary"
-          >
-            {t("page.introLink")}
-          </a>
-          .
+          {t("page.intro")}
         </p>
       </header>
 

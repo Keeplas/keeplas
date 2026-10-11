@@ -370,8 +370,7 @@
       "toggleActiveError": "Impossible de modifier l'état du Life Check"
     },
     "page": {
-      "intro": "Keeplas vous demande régulièrement de confirmer que vous allez bien. Si vous cessez de répondre, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis. Mettez tout en pause depuis",
-      "introLink": "Paramètres → Protocole de continuité"
+      "intro": "Keeplas vous demande régulièrement de confirmer que tout va bien. Si vous ne répondez plus, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis."
     },
     "nextCheckIn": {
       "label": "Prochaine vérification",
@@ -555,17 +554,6 @@
       "returnDatePlaceholder": "Choisissez votre date de retour",
       "enable": "Activer"
     },
-    "controls": {
-      "toggleError": "Échec de la mise à jour du Life Check",
-      "travelError": "Échec de l'activation du mode voyage",
-      "statusTravel": "Mode voyage",
-      "statusActive": "Actif",
-      "statusPaused": "En pause",
-      "notConfigured": "Le Life Check n'est pas encore configuré. Rendez-vous sur",
-      "notConfiguredLink": "Life Check",
-      "notConfiguredSuffix": "pour le configurer.",
-      "pauseDescription": "Mettez entièrement en pause votre Life Check — aucune vérification, aucune transmission. Statut :"
-    },
     "badge": {
       "status": {
         "active": "Actif",
@@ -616,61 +604,6 @@
     }
   },
   "settings": {
-    "header": {
-      "openNav": "Ouvrir la navigation des paramètres",
-      "close": "Fermer les paramètres",
-      "identity": {
-        "title": "Identité",
-        "description": "Mettez à jour les informations de votre compte et la façon dont les autres vous voient sur la plateforme."
-      },
-      "security": {
-        "title": "Centre de sécurité",
-        "description": "Mots de récupération, contacts de confiance, biométrie et journal d'audit chaîné par hachage."
-      },
-      "preferences": {
-        "title": "Préférences",
-        "description": "Préférences de localisation et d'alertes pour votre système de continuité."
-      },
-      "subscription": {
-        "title": "Abonnement",
-        "description": "Forfaits, facturation et offre à vie pour votre continuité."
-      },
-      "contact": {
-        "title": "Nous contacter",
-        "description": "Questions, retours ou préoccupations de sécurité — notre équipe est là pour vous aider."
-      },
-      "roadmap": {
-        "title": "Feuille de route",
-        "description": "Ce que nous construisons ensuite — guidé par ce qui compte le plus pour protéger votre succession."
-      },
-      "fallback": {
-        "title": "Paramètres",
-        "description": "Configurez votre sanctuaire numérique."
-      }
-    },
-    "sidebar": {
-      "userAlt": "Utilisateur",
-      "defaultName": "Curateur",
-      "secureSession": "Session sécurisée",
-      "closeNav": "Fermer la navigation",
-      "roadmap": "Feuille de route",
-      "documentation": "Documentation",
-      "contact": "Nous contacter",
-      "signOut": "Se déconnecter",
-      "groups": {
-        "account": "Compte",
-        "security": "Sécurité",
-        "plansBilling": "Forfaits et facturation"
-      },
-      "items": {
-        "identity": "Identité",
-        "preferences": "Préférences",
-        "securityCenter": "Centre de sécurité",
-        "continuityProtocol": "Protocole de continuité",
-        "usage": "Utilisation",
-        "subscription": "Abonnement"
-      }
-    },
     "preferences": {
       "saveError": "Échec de l'enregistrement des préférences",
       "localization": {
@@ -780,59 +713,6 @@
         "prioritySupport": "Support prioritaire"
       }
     },
-    "usage": {
-      "title": "Ressources et utilisation",
-      "description": "Suivez le stockage chiffré et les éléments consommés par votre coffre. Lorsque vous approchez de la capacité de votre forfait, passez à un forfait supérieur pour continuer à ajouter des éléments sans interruption.",
-      "encryptedStorage": "Stockage chiffré",
-      "ofQuota": "sur {quota}",
-      "remainingPrefix": "{amount} restants sur le forfait",
-      "planNameFree": "Gratuit",
-      "planNameLifetime": "Lifetime",
-      "remainingSuffix": "",
-      "percentUsed": "{percent}% utilisé",
-      "nearLimit": "Vous approchez de votre limite de stockage. Passez à l'offre À vie pour 10 Go de capacité chiffrée et des outils de continuité supplémentaires.",
-      "upgradePlan": "Mettre à niveau le forfait",
-      "cards": {
-        "activeItems": {
-          "label": "Éléments actifs",
-          "hint": "Éléments du coffre non archivés"
-        },
-        "encryptedFiles": {
-          "label": "Fichiers chiffrés",
-          "hint": "Fichiers stockés dans votre coffre"
-        },
-        "categoriesUsed": {
-          "label": "Catégories utilisées",
-          "hint": "Catégories distinctes renseignées"
-        }
-      },
-      "itemsByCategory": "Éléments par catégorie",
-      "filesByType": "Fichiers",
-      "total": "{count} au total",
-      "noItems": "Aucun élément pour l'instant. Commencez à constituer votre coffre depuis l'accueil.",
-      "noFiles": "Aucun fichier chiffré joint pour l'instant.",
-      "categories": {
-        "personal_document": "Documents personnels",
-        "financial_asset": "Actifs financiers",
-        "digital_asset": "Actifs numériques",
-        "health_directive": "Directives de santé",
-        "legal_document": "Documents juridiques",
-        "business_continuity": "Continuité d'activité",
-        "conditional_message": "Messages conditionnels",
-        "credential": "Identifiants",
-        "property": "Biens immobiliers",
-        "insurance_policy": "Assurances",
-        "subscription": "Abonnements et services",
-        "contacts": "Contacts",
-        "wishes": "Volontés",
-        "other": "Autre"
-      },
-      "needCapacity": {
-        "title": "Besoin de plus de capacité ?",
-        "description": "L'offre À vie débloque 10 Go de stockage à connaissance nulle, des messages vidéo de continuité et le moteur de scénarios complet — pour toujours, en un seul paiement."
-      },
-      "comparePlans": "Comparer les forfaits"
-    },
     "identity": {
       "updateError": "Échec de la mise à jour du profil",
       "unknown": "Inconnu",
@@ -888,16 +768,59 @@
         "notSet": "Non défini",
         "notDeclared": "Non déclaré"
       }
+    },
+    "overview": {
+      "title": "Paramètres",
+      "subtitle": "Gérez votre offre, votre stockage et vos préférences.",
+      "back": "Paramètres",
+      "on": "Activées",
+      "off": "Désactivées",
+      "languages": {
+        "en": "English",
+        "fr": "Français"
+      },
+      "frequency": {
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuel",
+        "quarterly": "Trimestriel",
+        "off": "Désactivé"
+      },
+      "storage": {
+        "title": "Stockage",
+        "of": "sur {quota} utilisés",
+        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement."
+      },
+      "plan": {
+        "label": "Votre offre",
+        "free": {
+          "name": "Gratuite",
+          "summary": "Coffre de 100 Mo · Jusqu'à 3 contacts de confiance · Life check"
+        },
+        "lifetime": {
+          "name": "À vie",
+          "summary": "Coffre de 10 Go · Jusqu'à 3 contacts de confiance · Life check"
+        },
+        "upgrade": "Passer à l'offre À vie · 199 $",
+        "upgradeNote": "Coffre de 10 Go. Paiement unique."
+      },
+      "preferences": {
+        "language": "Langue",
+        "lifeCheck": "Life check",
+        "notifications": "Notifications"
+      },
+      "more": {
+        "recoveryCenter": "Centre de récupération",
+        "account": "Compte",
+        "contact": "Nous contacter",
+        "roadmap": "À venir",
+        "signOut": "Se déconnecter"
+      }
     }
   },
   "settingsSecurity": {
     "countryCombobox": {
       "placeholder": "Rechercher un pays…",
       "empty": "Aucun pays ne correspond à votre recherche."
-    },
-    "continuity": {
-      "title": "Protocole de continuité",
-      "description": "Pause générale et mode voyage pour l'ensemble du protocole de continuité. Le désactiver ici suspend simultanément l'escalade du Life Check et le moteur de scénarios — idéal pour les séjours hors réseau. Utilisez le mode voyage lorsque vous avez une date de retour, afin que tout reprenne automatiquement."
     },
     "residence": {
       "error": "Échec de la mise à jour de la résidence légale",
@@ -1017,45 +940,6 @@
       "skip": "Ignorer",
       "bindButton": "Lier la récupération",
       "skipHint": "Ignorer est sans risque. Sans liaison, perdre votre téléphone signifie que vous devrez contacter le support pour réinitialiser la 2FA."
-    },
-    "center": {
-      "loading": "Chargement du Centre de sécurité"
-    },
-    "socialRecovery": {
-      "title": "Récupération sociale",
-      "statusActive": "Statut : active et sécurisée",
-      "statusAwaiting": "Statut : en attente de gardiens",
-      "guardiansVerified": "{count} gardiens vérifiés sur {total}",
-      "pending": "En attente…",
-      "resendInvites": "Renvoyer les invitations",
-      "inviteGuardian": "Inviter un gardien",
-      "manageRules": "Gérer les règles des gardiens"
-    },
-    "masterRecovery": {
-      "title": "Récupération maîtresse",
-      "recoveryPhraseLabel": "Phrase de récupération",
-      "recoveryPhraseHashed": "Hachée et vérifiée",
-      "recoveryPhraseNotGenerated": "Pas encore générée",
-      "configureAdditional": "Gérer les contacts de confiance",
-      "description": "Votre clé maîtresse est scellée par vos 24 mots de récupération et ne quitte jamais vos appareils. Elle n'est jamais divisée : vos contacts de confiance confirment s'il vous arrive quelque chose, mais ne détiennent aucune partie de votre clé et ne peuvent pas ouvrir votre coffre.",
-      "guardianLabel": "Contact de confiance n°{index}",
-      "guardianHint": "{name} · confirme si vous êtes injoignable"
-    },
-    "activityLog": {
-      "title": "Journal d'activité",
-      "hashChained": "Chaîné par hachage · {count} entrées",
-      "totalEvents": "Total des événements",
-      "lastActivity": "Dernière activité",
-      "pendingAccess": "Accès en attente",
-      "approvedAccess": "Accès approuvés",
-      "empty": "Aucun événement enregistré pour l'instant.",
-      "actor": "acteur : {actor}"
-    },
-    "lastAccess": {
-      "today": "Aujourd'hui, {time}",
-      "from": "depuis {country}",
-      "verifiedSession": "Appareil vérifié · session à connaissance nulle",
-      "label": "Dernier accès"
     }
   },
   "sharedWithMe": {
@@ -2519,6 +2403,114 @@
     "scanInApp": {
       "title": "Ouvrez l'application Keeplas pour scanner ce code",
       "body": "Ce code associe un ordinateur à un compte Keeplas. Scannez-le depuis l'application Keeplas sur votre téléphone."
+    }
+  },
+  "recoveryCenter": {
+    "title": "Centre de récupération",
+    "subtitle": "La récupération commence sur votre téléphone. Ici, vous pouvez suivre une demande en cours et l'annuler.",
+    "account": {
+      "title": "Votre compte",
+      "identified": "Identifié par numéro de téléphone",
+      "note": "Il nous aide à retrouver votre compte. Votre téléphone seul ne peut pas le déverrouiller."
+    },
+    "options": {
+      "title": "Options de récupération",
+      "onPhone": "Sur votre téléphone",
+      "ready": "Configuré",
+      "anotherDevice": {
+        "title": "Un autre appareil",
+        "description": "Utilisez un appareil sur lequel vous êtes déjà connecté."
+      },
+      "trustContacts": {
+        "title": "Contacts de confiance",
+        "description": "Demandez l'accord de vos contacts de confiance."
+      },
+      "recoveryKit": {
+        "title": "Kit de récupération",
+        "description": "Utilisez votre kit de récupération de 24 mots."
+      }
+    },
+    "request": {
+      "title": "Demande de récupération en cours",
+      "approved": "{count} sur 2 validations",
+      "code": "Code de récupération",
+      "hoursLeft": "{hours} heures restantes",
+      "hourLeft": "1 heure restante",
+      "windowEnded": "Fenêtre de protection terminée",
+      "cancel": "Annuler la demande"
+    },
+    "cancelDialog": {
+      "title": "Annuler cette demande de récupération ?",
+      "body": "Si vous n'en êtes pas à l'origine, annulez-la maintenant. Le nouvel appareil n'aura pas accès et vos contacts sont prévenus que la demande est close.",
+      "done": "Demande de récupération annulée",
+      "failed": "Impossible d'annuler la demande. Réessayez."
+    }
+  },
+  "devices": {
+    "title": "Appareils et sécurité",
+    "subtitle": "Gérez les appareils connectés et les réglages de sécurité.",
+    "connected": "Appareils connectés",
+    "current": "{label} (actuel)",
+    "thisDevice": "Cet appareil",
+    "connectedNow": "Connecté maintenant",
+    "lastActive": "Actif {time}",
+    "revoke": "Révoquer",
+    "failed": "Une erreur est survenue. Réessayez.",
+    "kind": {
+      "ios": "iOS · App Keeplas",
+      "android": "Android · App Keeplas",
+      "web": "Navigateur"
+    },
+    "revokeDialog": {
+      "title": "Révoquer {label} ?",
+      "body": "Il est déconnecté et ne pourra revenir qu'avec une nouvelle validation depuis votre téléphone.",
+      "done": "Appareil révoqué"
+    },
+    "alert": {
+      "title": "Nouvelle connexion",
+      "notMe": "Ce n'était pas moi ?"
+    },
+    "notMeDialog": {
+      "title": "Sécuriser votre compte ?",
+      "body": "Nous révoquons {label}, déconnectons vos autres sessions et annulons toute récupération en cours. Terminez ensuite la sécurisation de votre coffre dans l'app Keeplas sur votre téléphone.",
+      "confirm": "Sécuriser mon compte",
+      "done": "Compte sécurisé. Terminez sur votre téléphone."
+    },
+    "pin": {
+      "title": "Code PIN (après la biométrie)",
+      "description": "Demander un PIN après Face ID ou l'empreinte.",
+      "removeTitle": "Désactiver le PIN sur ce navigateur ?",
+      "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
+      "removeConfirm": "Désactiver",
+      "removed": "PIN désactivé"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "seeAll": "Tout voir",
+      "empty": "Aucune activité pour l'instant.",
+      "actions": {
+        "device_registered": "Nouvel appareil associé",
+        "device_confirmed": "Connexion confirmée",
+        "device_revoked": "Appareil révoqué",
+        "device_not_me": "Appareil inconnu bloqué",
+        "pairing_session_approved": "Navigateur associé",
+        "passkey_registered": "Clé d'accès ajoutée",
+        "passkey_removed": "Clé d'accès supprimée",
+        "vault_item_created": "Élément ajouté",
+        "vault_item_updated": "Élément modifié",
+        "vault_item_deleted": "Élément supprimé",
+        "folder_access_granted": "Dossier partagé",
+        "folder_access_revoked": "Accès au dossier retiré",
+        "trusted_contact_invited": "Contact invité",
+        "trusted_contact_accepted": "Contact inscrit",
+        "trusted_contact_revoked": "Contact retiré",
+        "recovery_request_started": "Récupération demandée",
+        "recovery_request_cancelled": "Récupération annulée",
+        "recovery_request_released": "Récupération validée",
+        "life_check_user_confirmed": "Life check confirmé",
+        "cloud_backup_enabled": "Sauvegarde activée",
+        "cloud_backup_disabled": "Sauvegarde désactivée"
+      }
     }
   }
 }
