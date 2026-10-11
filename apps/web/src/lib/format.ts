@@ -52,6 +52,20 @@ export function formatRelative(
   return format.format(Math.round(value), "year");
 }
 
+const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB"];
+
+/** "1.2 MB", "850 KB", "62 MB": one decimal below 10, binary units. */
+export function formatBytes(bytes: number): string {
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < BYTE_UNITS.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  const rounded = value < 10 ? Math.round(value * 10) / 10 : Math.round(value);
+  return `${rounded} ${BYTE_UNITS[unit]}`;
+}
+
 /** "Jan 12, 2026" (FR "12 janv. 2026"). */
 export function formatDate(timestamp: number, locale: string): string {
   return new Intl.DateTimeFormat(locale, {

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { HubView, type HubViewProps } from "@/app/(dashboard)/hub/hub-view";
+import { HubView } from "@/app/(dashboard)/hub/hub-view";
+import { SharedWithMeView } from "@/app/(dashboard)/shared-with-me/shared-with-me-view";
+import { hub, noop, sharedFolders } from "./fixtures";
 
 export interface HarnessScreen {
   /** Route the shell sees (active sidebar item). */
@@ -9,56 +11,21 @@ export interface HarnessScreen {
   render: () => ReactNode;
 }
 
-const NOW = Date.now();
-const HOUR = 3_600_000;
-const DAY = 24 * HOUR;
-const noop = () => {};
+const shell = (path: string, render: () => ReactNode): HarnessScreen => ({
+  path,
+  frame: "shell",
+  render,
+});
 
-const hub: HubViewProps = {
-  firstName: "Alex",
-  setupDone: 3,
-  trustContactsReady: false,
-  recoveryKitReady: false,
-  counts: { inbox: 3, documents: 12, accounts: 8 },
-  recentItems: [
-    {
-      id: "1",
-      title: "Will and estate plan",
-      group: "document",
-      updatedAt: NOW - 2 * DAY,
-    },
-    {
-      id: "2",
-      title: "House account",
-      group: "account",
-      updatedAt: NOW - 4 * DAY,
-    },
-    {
-      id: "3",
-      title: "Healthcare instructions",
-      group: "document",
-      updatedAt: NOW - 7 * DAY,
-    },
-  ],
-  onAdd: noop,
-  onScan: noop,
-};
-
-/** Fixture data mirrors the Figma frames (`figma/copy.md`). */
+/** Screen ids match the Figma frames (and screens.spec.ts). */
 export const SCREENS: Record<string, HarnessScreen> = {
-  "W04-3": {
-    path: "/hub",
-    frame: "shell",
-    render: () => <HubView {...hub} />,
-  },
-  "W04-3b": {
-    path: "/hub",
-    frame: "shell",
-    render: () => <HubView {...hub} addMenuOpen />,
-  },
-  "W04-3-empty": {
-    path: "/hub",
-    frame: "shell",
-    render: () => <HubView {...hub} recentItems={[]} />,
-  },
+  "W04-3": shell("/hub", () => <HubView {...hub} />),
+  "W04-3b": shell("/hub", () => <HubView {...hub} addMenuOpen />),
+  "W04-3-empty": shell("/hub", () => <HubView {...hub} recentItems={[]} />),
+  "W04-4": shell("/shared-with-me", () => (
+    <SharedWithMeView folders={sharedFolders} onDownload={noop} />
+  )),
+  "W04-4-empty": shell("/shared-with-me", () => (
+    <SharedWithMeView folders={[]} onDownload={noop} />
+  )),
 };

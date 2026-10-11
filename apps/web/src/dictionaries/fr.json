@@ -1060,10 +1060,7 @@
   },
   "sharedWithMe": {
     "list": {
-      "empty": {
-        "title": "Aucun coffre ne vous est encore confié",
-        "description": "Lorsqu'une personne vous ajoute comme contact de confiance et que vous acceptez l'invitation, le coffre qu'elle protège apparaîtra ici."
-      }
+      "title": "Coffres que vous protégez"
     },
     "card": {
       "phase": {
@@ -1166,6 +1163,25 @@
       "open": "Ouvrir",
       "enlarge": "Agrandir",
       "close": "Fermer"
+    },
+    "folders": {
+      "title": "Partagé avec moi",
+      "subtitle": "Les documents partagés avec vous par des personnes qui vous font confiance.",
+      "sharedBy": "Partagé par {name}",
+      "permission": "Autorisation",
+      "view": "Consultation",
+      "name": "Nom",
+      "size": "Taille",
+      "updated": "Mis à jour",
+      "download": "Télécharger",
+      "locked": {
+        "title": "Accès après vérification",
+        "body": "{name}, de {owner}. Après 2 confirmations et un délai de grâce de 72 heures."
+      },
+      "empty": {
+        "title": "Rien n'a encore été partagé avec vous",
+        "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
+      }
     }
   },
   "trustedContacts": {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatCountdown, formatDate, formatRelative } from "../format";
+import {
+  formatBytes,
+  formatCountdown,
+  formatDate,
+  formatRelative,
+} from "../format";
 
 describe("formatCountdown", () => {
   it.each([
@@ -28,6 +33,18 @@ describe("formatRelative", () => {
     [ago(3 * DAY), "fr", "il y a 3 jours"],
   ])("formats %d in %s as %s", (timestamp, locale, text) => {
     expect(formatRelative(timestamp, locale, now)).toBe(text);
+  });
+});
+
+describe("formatBytes", () => {
+  it.each([
+    [0, "0 B"],
+    [870_400, "850 KB"],
+    [1_258_291, "1.2 MB"],
+    [4 * 1024 * 1024, "4 MB"],
+    [62 * 1024 * 1024, "62 MB"],
+  ])("formats %d as %s", (bytes, text) => {
+    expect(formatBytes(bytes)).toBe(text);
   });
 });
 

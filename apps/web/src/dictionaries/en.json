@@ -1060,10 +1060,7 @@
   },
   "sharedWithMe": {
     "list": {
-      "empty": {
-        "title": "No vaults entrusted to you yet",
-        "description": "When someone adds you as a trusted contact and you accept the invitation, the vault they protect will appear here."
-      }
+      "title": "Vaults you protect"
     },
     "card": {
       "phase": {
@@ -1166,6 +1163,25 @@
       "open": "Open",
       "enlarge": "Enlarge",
       "close": "Close"
+    },
+    "folders": {
+      "title": "Shared with me",
+      "subtitle": "Documents shared with you by people who trust you.",
+      "sharedBy": "Shared by {name}",
+      "permission": "Permission",
+      "view": "View",
+      "name": "Name",
+      "size": "Size",
+      "updated": "Updated",
+      "download": "Download",
+      "locked": {
+        "title": "Access after verification",
+        "body": "{name}, from {owner}. After 2 confirmations and a 72-hour grace period."
+      },
+      "empty": {
+        "title": "Nothing shared with you yet",
+        "body": "When someone makes you a trusted contact, their shared items appear here."
+      }
     }
   },
   "trustedContacts": {

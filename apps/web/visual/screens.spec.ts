@@ -46,6 +46,8 @@ const CASES: Case[] = [
     prepare: (page) => page.keyboard.press("ArrowDown"),
   },
   { id: "W04-3-empty", figma: null, ...SHELL },
+  { id: "W04-4", figma: "W04-4_Shared_with_me.png", ...SHELL },
+  { id: "W04-4-empty", figma: null, ...SHELL },
 ];
 
 async function open(page: Page, item: Case, theme: "light" | "dark") {
