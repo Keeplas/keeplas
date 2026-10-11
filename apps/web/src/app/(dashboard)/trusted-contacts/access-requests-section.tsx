@@ -70,7 +70,7 @@ export function AccessRequestsSection() {
             return (
               <div
                 key={req._id}
-                className="bg-surface-container-low rounded-xl p-5"
+                className="bg-surface-container-low rounded-xs p-5"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -92,7 +92,7 @@ export function AccessRequestsSection() {
                 </div>
 
                 {req.quorumReached && (
-                  <div className="mb-3 p-3 bg-error/5 rounded-lg">
+                  <div className="mb-3 p-3 bg-error/5 rounded-xs">
                     <p className="text-sm text-error font-medium">
                       {t("accessRequests.unlockWindowOpen")}
                     </p>
@@ -108,7 +108,7 @@ export function AccessRequestsSection() {
                     <button
                       onClick={() => handleCancelEmergency(req._id)}
                       disabled={processing === req._id}
-                      className="mt-2 text-sm px-4 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                      className="mt-2 text-sm px-4 py-2 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
                     >
                       {processing === req._id
                         ? t("accessRequests.cancelling")
@@ -137,7 +137,7 @@ export function AccessRequestsSection() {
               return (
                 <div
                   key={req._id}
-                  className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-lg"
+                  className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xs"
                 >
                   <div>
                     <span className="text-sm font-medium text-on-surface">

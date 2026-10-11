@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Keeplas Vault">
   <title>Keeplas Vault</title>
 
-  <rect width="1280" height="360" fill="#041632"/>
-  <rect x="12" y="12" width="1256" height="336" fill="none" stroke="#28657a" stroke-width="2" stroke-opacity="0.45"/>
+  <rect width="1280" height="360" fill="#0E2340"/>
+  <rect x="12" y="12" width="1256" height="336" fill="none" stroke="#1B76AE" stroke-width="2" stroke-opacity="0.45"/>
 
   <defs>
     <g id="K">
@@ -88,7 +88,7 @@
     </g>
   </defs>
 
-  <g fill="#28657a">
+  <g fill="#1B76AE">
     <use href="#K" x="275" y="40"/>
     <use href="#E" x="383" y="40"/>
     <use href="#E" x="491" y="40"/>
@@ -103,7 +103,7 @@
     <use href="#T" x="815" y="202"/>
   </g>
 
-  <g fill="#b9eaff">
+  <g fill="#E1F1FA">
     <use href="#K" x="271" y="36"/>
     <use href="#E" x="379" y="36"/>
     <use href="#E" x="487" y="36"/>

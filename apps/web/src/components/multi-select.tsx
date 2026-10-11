@@ -92,7 +92,7 @@ export function MultiSelect({
         type="button"
         disabled={disabled}
         className={cn(
-          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
+          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xs px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
           "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           "data-[state=open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
@@ -120,7 +120,7 @@ export function MultiSelect({
         align="start"
         className="w-[var(--radix-popover-trigger-width)] p-0 overflow-hidden"
       >
-        <Command className="rounded-2xl">
+        <Command className="rounded-sm">
           <CommandInput placeholder={resolvedSearchPlaceholder} />
           <CommandList>
             <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
@@ -139,7 +139,7 @@ export function MultiSelect({
                     >
                       <div
                         className={cn(
-                          "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
+                          "w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 transition-colors",
                           isSelected
                             ? "bg-secondary border-secondary text-on-secondary"
                             : "border-outline-variant",

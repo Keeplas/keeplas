@@ -183,12 +183,12 @@ export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "border-2 border-dashed border-outline-variant/30 rounded-2xl p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
+          "border-2 border-dashed border-outline-variant/30 rounded-sm p-10 text-center flex flex-col items-center gap-4 transition-colors group cursor-pointer",
           "hover:bg-surface-container-high/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           isDragging && "bg-surface-container-high/80 border-secondary/40",
         )}
       >
-        <div className="w-14 h-14 bg-surface-container-high rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+        <div className="w-14 h-14 bg-surface-container-high rounded-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
           <Icon
             path={ICON_PATHS.download}
             className="w-7 h-7 rotate-180"
@@ -203,7 +203,7 @@ export function AttachmentCapture({ onAdd, onError }: AttachmentCaptureProps) {
             {t("dialog.dropHint")}
           </p>
         </div>
-        <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-full text-label-md hover:bg-surface-container-highest transition-colors">
+        <span className="mt-1 px-5 py-2 bg-surface-container-high text-primary rounded-sm text-label-md hover:bg-surface-container-highest transition-colors">
           {t("dialog.browseSystem")}
         </span>
       </div>

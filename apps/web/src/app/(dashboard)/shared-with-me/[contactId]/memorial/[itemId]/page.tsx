@@ -66,7 +66,7 @@ export default function MemorialItemPage() {
   if (data === null) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl">
+        <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-sm">
           <h3 className="text-headline-sm text-primary">
             {t("item.notAvailable.title")}
           </h3>

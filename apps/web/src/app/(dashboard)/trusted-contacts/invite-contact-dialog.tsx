@@ -195,7 +195,7 @@ export function InviteContactDialog({
                 type="button"
                 onClick={() => setContactType("trust")}
                 className={cn(
-                  "text-left p-4 rounded-xl border transition-colors cursor-pointer",
+                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
                   contactType === "trust"
                     ? "border-secondary bg-secondary/10"
                     : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
@@ -212,7 +212,7 @@ export function InviteContactDialog({
                 type="button"
                 onClick={() => setContactType("recipient_only")}
                 className={cn(
-                  "text-left p-4 rounded-xl border transition-colors cursor-pointer",
+                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
                   contactType === "recipient_only"
                     ? "border-secondary bg-secondary/10"
                     : "border-outline-variant bg-surface-container-low hover:bg-surface-container",

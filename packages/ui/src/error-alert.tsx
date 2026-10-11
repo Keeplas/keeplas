@@ -12,7 +12,7 @@ export function ErrorAlert({
   return (
     <div
       className={cn(
-        "mb-6 p-3 rounded-xl bg-error-container text-on-error-container text-sm",
+        "mb-6 p-3 rounded-xs bg-error-container text-on-error-container text-sm",
         className,
       )}
     >

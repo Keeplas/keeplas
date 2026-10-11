@@ -12,7 +12,7 @@ const LegacyCard = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-full bg-primary-container p-6 text-on-primary-container",
+      "rounded-sm bg-primary-container p-6 text-on-primary-container",
       className,
     )}
     {...props}

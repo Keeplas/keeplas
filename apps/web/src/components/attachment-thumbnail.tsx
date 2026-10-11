@@ -58,7 +58,7 @@ export function AttachmentThumbnail({
   }
 
   return (
-    <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-surface-container-low p-3 text-center">
+    <div className="flex aspect-square w-full items-center justify-center rounded-xs bg-surface-container-low p-3 text-center">
       {error ? (
         <p className="text-label-sm text-error">{error}</p>
       ) : decrypting ? (

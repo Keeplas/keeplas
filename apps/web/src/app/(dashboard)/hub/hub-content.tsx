@@ -174,7 +174,7 @@ export function HubContent() {
 
         <a
           href="#priority-actions"
-          className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+          className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
           aria-label={t("jumpToPriorityActions")}
         >
           <ContinuityScoreBadge
@@ -275,7 +275,7 @@ export function HubContent() {
                   />
                 ))}
                 {contacts.length > 3 && (
-                  <div className="w-10 h-10 rounded-full ring-2 ring-surface bg-surface-container-high flex items-center justify-center font-headline font-bold text-sm text-on-surface-variant">
+                  <div className="w-10 h-10 rounded-sm ring-2 ring-surface bg-surface-container-high flex items-center justify-center font-headline font-bold text-sm text-on-surface-variant">
                     +{contacts.length - 3}
                   </div>
                 )}
@@ -362,9 +362,9 @@ export function HubContent() {
         </NodeCard>
 
         {/* Decorative connection lines (desktop only) */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 hidden md:block">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 hidden md:block text-primary">
           <line
-            stroke="#041632"
+            stroke="currentColor"
             strokeDasharray="8 8"
             strokeWidth="2"
             x1="25%"
@@ -373,7 +373,7 @@ export function HubContent() {
             y2="50%"
           />
           <line
-            stroke="#041632"
+            stroke="currentColor"
             strokeDasharray="8 8"
             strokeWidth="2"
             x1="25%"
@@ -382,7 +382,7 @@ export function HubContent() {
             y2="50%"
           />
           <line
-            stroke="#041632"
+            stroke="currentColor"
             strokeDasharray="8 8"
             strokeWidth="2"
             x1="75%"
@@ -391,7 +391,7 @@ export function HubContent() {
             y2="50%"
           />
           <line
-            stroke="#041632"
+            stroke="currentColor"
             strokeDasharray="8 8"
             strokeWidth="2"
             x1="75%"
@@ -407,7 +407,7 @@ export function HubContent() {
         {/* Priority Actions */}
         <div
           id="priority-actions"
-          className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm scroll-mt-24"
+          className="bg-surface-container-lowest p-6 rounded-sm shadow-sm scroll-mt-24"
         >
           <h4 className="text-label-md text-on-surface-variant mb-6">
             {t("priorityActions")}
@@ -420,7 +420,7 @@ export function HubContent() {
               <div
                 key={action.key}
                 className={cn(
-                  "flex items-center transition-colors rounded-xl group",
+                  "flex items-center transition-colors rounded-xs group",
                   action.done
                     ? "bg-surface-container-low/50 hover:bg-surface-container-low"
                     : "bg-error/10 hover:bg-error/15",
@@ -432,7 +432,7 @@ export function HubContent() {
                 >
                   <span
                     className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center shadow-sm shrink-0",
+                      "w-9 h-9 rounded-xs flex items-center justify-center shadow-sm shrink-0",
                       action.done
                         ? "bg-secondary-container/30"
                         : "bg-surface-container-lowest",
@@ -481,7 +481,7 @@ export function HubContent() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-surface-container-lowest p-6 rounded-2xl shadow-sm">
+        <div className="bg-surface-container-lowest p-6 rounded-sm shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h4 className="text-label-md text-on-surface-variant">
               {t("recentActivity.title")}
@@ -515,9 +515,9 @@ export function HubContent() {
                   <Link
                     key={item._id}
                     href={`/vault/${item._id}`}
-                    className="flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xl group cursor-pointer"
+                    className="flex items-center gap-3 p-4 bg-surface-container-low hover:bg-surface-container transition-colors rounded-xs group cursor-pointer"
                   >
-                    <span className="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center shadow-sm shrink-0">
+                    <span className="w-9 h-9 rounded-xs bg-surface-container-lowest flex items-center justify-center shadow-sm shrink-0">
                       <Icon
                         path={cat.icon}
                         className="w-4 h-4 text-secondary"
@@ -564,7 +564,7 @@ export function HubContent() {
               <button
                 type="button"
                 className={cn(
-                  "w-9 h-9 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  "w-9 h-9 rounded-sm border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
                   reflectSliderState.canScrollPrevious
                     ? "hover:bg-surface-container-low"
                     : "opacity-40 cursor-default",
@@ -578,7 +578,7 @@ export function HubContent() {
               <button
                 type="button"
                 className={cn(
-                  "w-9 h-9 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  "w-9 h-9 rounded-sm border border-outline-variant/40 bg-surface-container-lowest text-primary flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
                   reflectSliderState.canScrollNext
                     ? "hover:bg-surface-container-low"
                     : "opacity-40 cursor-default",
@@ -600,7 +600,7 @@ export function HubContent() {
             <Link
               key={tip.slug}
               href={tipHref(tip)}
-              className="group block shrink-0 basis-full sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] rounded-xl snap-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+              className="group block shrink-0 basis-full sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] rounded-xs snap-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
             >
               <InfoCallout
                 icon={ICON_PATHS[tip.iconKey]}
@@ -657,7 +657,7 @@ function NodeCard({
           >
             <Icon path={iconPath} className="w-6 h-6" />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-secondary bg-secondary-container/20 px-2 py-1 rounded-xs">
             {isEmpty ? emptyLabel : protectedLabel}
           </span>
         </div>
@@ -680,7 +680,7 @@ function ContinuityScoreBadge({
   const circumference = 2 * Math.PI * 20;
   const scoreOffset = circumference - (circumference * score) / 100;
   return (
-    <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-full px-6">
+    <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-sm px-6">
       <div className="relative w-12 h-12 flex items-center justify-center">
         <svg
           className="absolute inset-0 w-full h-full -rotate-90"

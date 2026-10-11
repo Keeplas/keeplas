@@ -38,9 +38,9 @@ export function HelpHint({
         aria-label={label}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative inline-flex items-center justify-center text-outline-variant hover:text-secondary transition-colors cursor-pointer align-middle bg-transparent p-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 rounded-full",
+          "relative inline-flex items-center justify-center text-outline-variant hover:text-secondary transition-colors cursor-pointer align-middle bg-transparent p-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 rounded-sm",
           // Touch target ≥44px without affecting inline layout
-          "before:content-[''] before:absolute before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-11 before:h-11 before:rounded-full",
+          "before:content-[''] before:absolute before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-11 before:h-11 before:rounded-sm",
           className,
         )}
       >

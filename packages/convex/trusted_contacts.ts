@@ -1072,7 +1072,7 @@ const INVITE_EMAIL_COPY = {
       "As a trusted contact, you'll help confirm if something happens to them, so the items they chose reach the right people. You won't see any of their data.",
     accept: "Accept invitation",
     expiry: (url: string) =>
-      `This link expires in 7 days. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+      `This link expires in 7 days. If the button doesn't work, open this URL in your browser:<br/><a href="${url}" style="color:#0E2340;word-break:break-all">${url}</a>`,
     ignoreInvite:
       "If you weren't expecting this invitation, you can ignore this email.",
     recipientHi: "Hi!",
@@ -1094,7 +1094,7 @@ const INVITE_EMAIL_COPY = {
       "En tant que contact de confiance, vous aiderez à confirmer s'il lui arrive quelque chose, afin que les éléments qu'elle a choisis parviennent aux bonnes personnes. Vous n'aurez accès à aucune de ses données.",
     accept: "Accepter l'invitation",
     expiry: (url: string) =>
-      `Ce lien est valable 7 jours. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#041632;word-break:break-all">${url}</a>`,
+      `Ce lien est valable 7 jours. Si le bouton ne fonctionne pas, ouvrez cette URL dans votre navigateur :<br/><a href="${url}" style="color:#0E2340;word-break:break-all">${url}</a>`,
     ignoreInvite:
       "Si vous n'attendiez pas cette invitation, vous pouvez ignorer cet e-mail.",
     recipientHi: "Bonjour !",
@@ -1120,7 +1120,7 @@ function trustInvitationHtml(opts: {
 <p>${copy.greeting(escapeHtml(opts.recipientName))}</p>
 <p>${copy.trustBody(escapeHtml(opts.inviterName))}</p>
 <p>${copy.trustExplain}</p>
-<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.accept}</a></p>
+<p style="margin:32px 0;text-align:center"><a href="${opts.acceptUrl}" style="display:inline-block;padding:12px 28px;background:#0E2340;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.accept}</a></p>
 <p style="color:#666;font-size:13px">${copy.expiry(opts.acceptUrl)}</p>
 <p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreInvite}</p>
 </body></html>`;
@@ -1137,7 +1137,7 @@ function recipientIntroHtml(opts: {
 <p>${copy.recipientHi}</p>
 <p>${copy.recipientBody(escapeHtml(opts.inviterName))}</p>
 <p>${copy.recipientThanks}</p>
-<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#041632;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.discover}</a></p>
+<p style="margin:32px 0;text-align:center"><a href="https://app.keeplas.com" style="display:inline-block;padding:12px 28px;background:#0E2340;color:#fff;text-decoration:none;border-radius:10px;font-weight:600">${copy.discover}</a></p>
 <p style="color:#666;font-size:13px;margin-top:24px">${copy.ignoreMistake}</p>
 </body></html>`;
 }

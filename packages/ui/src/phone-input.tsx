@@ -342,7 +342,7 @@ export function PhoneInput({
             disabled={disabled}
             aria-label="Select country"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-3 bg-surface-container-low border border-outline-variant rounded-l-xl border-r-0 text-on-surface hover:border-outline focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shrink-0",
+              "flex items-center gap-1.5 px-3 py-3 bg-surface-container-low border border-outline-variant rounded-l-xs border-r-0 text-on-surface hover:border-outline focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shrink-0",
               showInvalid && "border-error",
             )}
           >

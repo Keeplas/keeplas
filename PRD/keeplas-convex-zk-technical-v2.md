@@ -1,5 +1,7 @@
 # Keeplas — Technical Architecture: Convex, ZK & Recovery
 
+> **Superseded (2026-10-11).** Historical document, kept for context. Where it disagrees with the code or with [`v2-mobile-first/README.md`](v2-mobile-first/README.md), those win. In particular: the MasterKey is never split (no Shamir 3-of-5, no "Shard 5" held by Keeplas, decision D14); there are no ZK proofs (Noir / Barretenberg was never built; encryption is client-side / zero-access); a user has up to 3 trust contacts and 2 confirmations are enough (D13).
+
 > Technical document — April 2026 — v1
 
 ---

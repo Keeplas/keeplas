@@ -39,9 +39,9 @@ export default function SettingsRoadmapPage() {
         {items.map((item, i) => (
           <li
             key={item.title}
-            className="bg-surface-container-lowest ghost-border rounded-2xl p-5 flex gap-4"
+            className="bg-surface-container-lowest ghost-border rounded-sm p-5 flex gap-4"
           >
-            <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+            <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
               <Icon
                 path={ROADMAP_ICONS[i] ?? ICON_PATHS.settingsSuggest}
                 className="w-5 h-5"
@@ -57,7 +57,7 @@ export default function SettingsRoadmapPage() {
         ))}
       </ul>
 
-      <div className="bg-primary text-on-primary rounded-2xl p-6 space-y-4">
+      <div className="bg-primary text-on-primary rounded-sm p-6 space-y-4">
         <div className="space-y-2">
           <h2 className="text-headline-sm">{t("requestFeature.heading")}</h2>
           <p className="text-body-md text-on-primary-container">
@@ -67,7 +67,7 @@ export default function SettingsRoadmapPage() {
         <Link
           href="/settings/contact?topic=feature_request"
           replace
-          className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xl hover:opacity-90 transition-all active:scale-95"
+          className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xs hover:opacity-90 transition-all active:scale-95"
         >
           {t("requestFeature.cta")}
           <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />

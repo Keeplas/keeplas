@@ -155,7 +155,7 @@ export function PhoneVerificationDialog({
                 : t("phoneVerify.descAdd")}
             </DialogDescription>
           </div>
-          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer">
+          <DialogClose className="p-2 hover:bg-surface-container-high rounded-xs transition-colors cursor-pointer">
             <Icon
               path={ICON_PATHS.close}
               className="w-5 h-5 text-on-surface-variant"

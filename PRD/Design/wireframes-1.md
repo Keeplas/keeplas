@@ -1,4 +1,7 @@
 <!-- Trusted Contacts -->
+
+> **Superseded (2026-10-11)** by design system v2: [`../v2-mobile-first/README.md`](../v2-mobile-first/README.md), Figma snapshot in `../v2-mobile-first/figma/`, rules in `.claude/skills/design-system/SKILL.md`. The "Digital Curator" brand (Manrope, `#041632`, no-border rule) below is no longer used.
+
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>

@@ -14,10 +14,10 @@ export function VaultItemCard({ item }: VaultItemCardProps) {
   return (
     <Link
       href={`/vault/${item._id}`}
-      className="block p-5 rounded-full transition-all group cursor-pointer space-y-3 bg-surface-container hover:bg-surface-container-high"
+      className="block p-5 rounded-sm transition-all group cursor-pointer space-y-3 bg-surface-container hover:bg-surface-container-high"
     >
       <div className="flex items-start justify-between">
-        <div className="p-2.5 rounded-xl shadow-sm transition-colors bg-surface-container-lowest text-primary group-hover:bg-secondary group-hover:text-on-secondary">
+        <div className="p-2.5 rounded-xs shadow-sm transition-colors bg-surface-container-lowest text-primary group-hover:bg-secondary group-hover:text-on-secondary">
           <svg
             className="w-4 h-4"
             fill="none"

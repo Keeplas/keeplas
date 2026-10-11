@@ -30,7 +30,7 @@ export function ChannelList({
   const [verifyOpen, setVerifyOpen] = useState(false);
 
   return (
-    <section className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+    <section className="bg-surface-container-lowest rounded-sm p-6 shadow-sm">
       <h3 className="text-headline-sm text-primary mb-5 flex items-center gap-2">
         <Icon path={ICON_PATHS.bell} className="w-5 h-5 text-secondary" />
         {t("channels.title")}
@@ -45,12 +45,12 @@ export function ChannelList({
           return (
             <div
               key={ch.type}
-              className={`flex items-center justify-between p-3 bg-surface-container-low rounded-xl ${
+              className={`flex items-center justify-between p-3 bg-surface-container-low rounded-xs ${
                 dimmed ? "opacity-60" : ""
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center bg-surface-container-lowest rounded-lg shadow-sm">
+                <div className="w-10 h-10 flex items-center justify-center bg-surface-container-lowest rounded-xs shadow-sm">
                   <Icon path={ch.iconPath} className="w-4 h-4 text-primary" />
                 </div>
                 <div>

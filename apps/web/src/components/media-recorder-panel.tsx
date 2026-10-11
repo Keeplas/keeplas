@@ -878,14 +878,14 @@ export function MediaRecorderPanel({
       ref={containerRef}
       className={cn(
         "bg-surface-container-low space-y-5",
-        expanded ? "overflow-auto rounded-none p-6 md:p-10" : "rounded-2xl p-6",
+        expanded ? "overflow-auto rounded-none p-6 md:p-10" : "rounded-sm p-6",
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+              "w-10 h-10 rounded-sm flex items-center justify-center shrink-0",
               mode === "audio"
                 ? "bg-secondary/10 text-secondary"
                 : "bg-primary/10 text-primary",
@@ -922,7 +922,7 @@ export function MediaRecorderPanel({
                 <TooltipTrigger
                   type="button"
                   onClick={toggleExpand}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xs bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer transition-colors"
                   aria-label={
                     expanded ? t("recorder.collapse") : t("recorder.expand")
                   }
@@ -946,7 +946,7 @@ export function MediaRecorderPanel({
               <TooltipTrigger
                 type="button"
                 onClick={handleCloseClick}
-                className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
+                className="p-2 rounded-xs hover:bg-surface-container-high text-on-surface-variant cursor-pointer"
                 aria-label={t("recorder.cancelRecording")}
               >
                 <Icon path={ICON_PATHS.close} className="w-4 h-4" />
@@ -960,7 +960,7 @@ export function MediaRecorderPanel({
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-3 bg-error-container/40 text-on-error-container text-body-md rounded-xl px-4 py-3"
+          className="flex items-start gap-3 bg-error-container/40 text-on-error-container text-body-md rounded-xs px-4 py-3"
         >
           <Icon path={ICON_PATHS.warning} className="w-4 h-4 mt-0.5 shrink-0" />
           <span className="flex-1">{error}</span>
@@ -980,7 +980,7 @@ export function MediaRecorderPanel({
       {mode !== "audio" && phase !== "stopped" && (
         <div
           className={cn(
-            "relative w-full rounded-xl bg-primary/5 overflow-hidden mx-auto",
+            "relative w-full rounded-xs bg-primary/5 overflow-hidden mx-auto",
             // Match the container to the real screen aspect so the canvas fills
             // it without letterboxing — that keeps the drag handle aligned.
             // (No max-height: capping it would break the ratio and re-letterbox.)
@@ -1023,7 +1023,7 @@ export function MediaRecorderPanel({
               {/* Purely visual affordance — positioned by the same geometry as
                   the canvas circle, so it is always centered on the camera. */}
               <div
-                className="pointer-events-none absolute rounded-full ring-1 ring-white/40"
+                className="pointer-events-none absolute rounded-sm ring-1 ring-white/40"
                 style={{
                   width: 2 * cameoGeom.r * Math.min(layerSize.w, layerSize.h),
                   height: 2 * cameoGeom.r * Math.min(layerSize.w, layerSize.h),
@@ -1034,7 +1034,7 @@ export function MediaRecorderPanel({
               >
                 {/* Resize grip on the circle edge (≈45°). */}
                 <div
-                  className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-md ring-1 ring-black/10"
+                  className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white shadow-md ring-1 ring-black/10"
                   style={{ left: "85.4%", top: "85.4%" }}
                 />
               </div>
@@ -1043,8 +1043,8 @@ export function MediaRecorderPanel({
           {phase === "warming" && (
             <div className="absolute inset-0 flex items-center justify-center text-body-md text-on-surface-variant gap-2 bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-secondary/70 opacity-75" />
+                <span className="relative inline-flex rounded-sm h-2 w-2 bg-secondary" />
               </span>
               {mode === "screen"
                 ? t("recorder.startingScreenShare")
@@ -1059,10 +1059,10 @@ export function MediaRecorderPanel({
           )}
           {(phase === "recording" ||
             (phase === "live" && mode !== "screen")) && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-label-md px-3 py-1 rounded-full">
+            <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-primary/80 text-on-primary text-label-md px-3 py-1 rounded-sm">
               <span
                 className={cn(
-                  "h-1.5 w-1.5 rounded-full",
+                  "h-1.5 w-1.5 rounded-sm",
                   phase !== "recording"
                     ? "bg-secondary"
                     : paused
@@ -1081,13 +1081,13 @@ export function MediaRecorderPanel({
       )}
 
       {mode === "audio" && phase !== "stopped" && (
-        <div className="relative w-full h-28 rounded-xl bg-surface overflow-hidden flex items-center justify-center">
+        <div className="relative w-full h-28 rounded-xs bg-surface overflow-hidden flex items-center justify-center">
           <canvas ref={canvasRef} className="w-full h-full" aria-hidden />
           {phase === "warming" && (
             <div className="absolute inset-0 flex items-center justify-center gap-2 text-body-md text-on-surface-variant bg-surface-container-high/60">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary/70 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-secondary/70 opacity-75" />
+                <span className="relative inline-flex rounded-sm h-2 w-2 bg-secondary" />
               </span>
               {t("recorder.enablingMic")}
             </div>
@@ -1096,7 +1096,7 @@ export function MediaRecorderPanel({
             <div className="absolute top-2 right-3 flex items-center gap-2 text-label-md text-on-surface-variant">
               <span
                 className={cn(
-                  "h-1.5 w-1.5 rounded-full",
+                  "h-1.5 w-1.5 rounded-sm",
                   phase === "recording"
                     ? "bg-error animate-pulse"
                     : "bg-secondary",
@@ -1111,14 +1111,14 @@ export function MediaRecorderPanel({
       )}
 
       {phase === "recording" && (
-        <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3">
+        <div className="flex items-center gap-3 bg-surface rounded-xs px-4 py-3">
           <span className="relative flex h-3 w-3 shrink-0">
             {!paused && (
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error/70 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-error/70 opacity-75" />
             )}
             <span
               className={cn(
-                "relative inline-flex rounded-full h-3 w-3",
+                "relative inline-flex rounded-sm h-3 w-3",
                 paused ? "bg-on-surface-variant" : "bg-error",
               )}
             />
@@ -1140,7 +1140,7 @@ export function MediaRecorderPanel({
       )}
 
       {phase === "stopped" && previewUrl && (
-        <div className="rounded-xl overflow-hidden bg-surface">
+        <div className="rounded-xs overflow-hidden bg-surface">
           {mode === "audio" ? (
             <audio controls src={previewUrl} className="w-full" />
           ) : (
@@ -1168,7 +1168,7 @@ export function MediaRecorderPanel({
               onClick={toggleCamera}
               aria-pressed={cameraEnabled}
               className={cn(
-                "flex items-center gap-2 px-3 py-2 rounded-lg text-label-md cursor-pointer transition-colors",
+                "flex items-center gap-2 px-3 py-2 rounded-xs text-label-md cursor-pointer transition-colors",
                 cameraEnabled
                   ? "bg-primary/10 text-primary"
                   : "bg-surface-container-high text-on-surface-variant",

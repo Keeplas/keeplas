@@ -26,7 +26,9 @@ pnpm format             # Prettier on **/*.{ts,tsx,js,jsx,json,css,md}
 # Deploy Convex (prod) — ALWAYS use this, never bare `convex deploy`
 pnpm deploy:convex      # Guarded prod deploy: dry-run preflight refuses an
                         # empty / mass-index-deleting push before it can wipe
-                        # production (see scripts/check-convex-deploy.mjs)
+                        # production (see scripts/check-convex-deploy.mjs).
+                        # Env comes from Infisical `prod` (/keeplas_app) via
+                        # `pnpm with-env`; needs `infisical login` + `npx convex login`
 
 # Build / clean
 pnpm build              # Turbo build (web: vite build)
@@ -93,9 +95,9 @@ The web app was migrated off Next.js to TanStack Start (Vite). Conventions:
 
 ## UI / design system
 
-- **Before any UI work, load the `/design-system` skill** (`.claude/skills/design-system/SKILL.md`) — it encodes the full "Digital Curator" spec: color tokens, surface tiers, typography scale, the no-border rule, button/input/card patterns, and the `@keeplas/ui` component list. It auto-triggers on `.tsx`/styling edits; invoke `/design-system` manually if not.
+- **Before any UI work, load the `/design-system` skill** (`.claude/skills/design-system/SKILL.md`) — it encodes the v2 design system: light + dark semantic tokens, type scale, radius, icons, illustrations, legacy-token rules, and the `@keeplas/ui` component list. It auto-triggers on `.tsx`/styling edits; invoke `/design-system` manually if not.
 - All interactive components must use the **shadcn/ui** pattern with Radix UI primitives. Do not write custom interactive components.
-- Follow `PRD/Design/` wireframes for exact tokens (radius, colors, fonts). Brand: editorial "Digital Curator" — Manrope + Inter, Vault Navy `#041632`, no 1px borders, tonal layering.
+- Build from `PRD/v2-mobile-first/figma/specs/` (layout values) and `figma/tokens.json` (tokens); `PRD/Design/` is superseded. Brand v2: Source Serif 4 + Inter, navy `#0E2340`, ivory `#FDFBF7`, sky `#238BCA`, thin borders allowed, light + dark (Noir). New code uses only the semantic tokens (`bg-bg-surface`, `text-text-primary`, …), never hex or legacy Material names.
 - Standardize on Radix. Tooltip and DatePicker still use Base UI — migrate them when touched.
 
 ## Security model (zero-knowledge)

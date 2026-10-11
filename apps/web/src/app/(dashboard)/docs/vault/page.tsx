@@ -43,7 +43,7 @@ export default function VaultDocPage() {
       {/* How encryption works */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-primary rounded-full" />
+          <span className="w-2 h-8 bg-primary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("vault.encryption.heading")}
           </h2>
@@ -53,9 +53,9 @@ export default function VaultDocPage() {
           {ENCRYPTION_POINTS.map((point) => (
             <article
               key={point.key}
-              className="bg-surface-container-low rounded-2xl p-6 space-y-3 ghost-border"
+              className="bg-surface-container-low rounded-sm p-6 space-y-3 ghost-border"
             >
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
                 <Icon path={point.iconPath} className="w-5 h-5" />
               </span>
               <h3 className="text-headline-sm text-primary">
@@ -72,7 +72,7 @@ export default function VaultDocPage() {
       {/* What you can store */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("vault.store.heading")}
           </h2>
@@ -91,7 +91,7 @@ export default function VaultDocPage() {
       </section>
 
       {/* Storage quotas */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border space-y-4">
         <h2 className="text-headline-sm text-primary">
           {t("vault.storage.heading")}
         </h2>
@@ -111,7 +111,7 @@ export default function VaultDocPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/vault"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.lock} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -120,7 +120,7 @@ export default function VaultDocPage() {
         </Link>
         <Link
           href="/docs/letters"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.notes} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -142,8 +142,8 @@ function StoreItem({
   body: string;
 }) {
   return (
-    <article className="bg-surface-container-lowest rounded-2xl p-6 ghost-border flex gap-4">
-      <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+    <article className="bg-surface-container-lowest rounded-sm p-6 ghost-border flex gap-4">
+      <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
         <Icon path={iconPath} className="w-5 h-5" />
       </span>
       <div className="space-y-1">

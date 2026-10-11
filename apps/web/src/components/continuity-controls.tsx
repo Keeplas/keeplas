@@ -70,7 +70,7 @@ export function ContinuityControls() {
 
   if (!isConfigured) {
     return (
-      <div className="bg-surface-container-low p-6 rounded-2xl">
+      <div className="bg-surface-container-low p-6 rounded-sm">
         <p className="text-body-md text-on-surface-variant">
           {t("controls.notConfigured")}{" "}
           <a href="/life-check" className="underline font-medium">
@@ -84,7 +84,7 @@ export function ContinuityControls() {
 
   return (
     <div className="space-y-4">
-      <section className="bg-surface-container-low p-6 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <section className="bg-surface-container-low p-6 rounded-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h3 className="text-headline-sm text-primary">Life Check</h3>
           <p className="text-body-md text-on-surface-variant">

@@ -62,7 +62,7 @@ function ToolbarButton({
       aria-pressed={active}
       disabled={disabled}
       className={cn(
-        "p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
+        "p-2 rounded-xs text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
         active && "bg-secondary/15 text-secondary",
       )}
     >
@@ -73,7 +73,7 @@ function ToolbarButton({
 
 function Toolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-outline-variant/40 bg-surface-container-low rounded-t-xl">
+    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-outline-variant/40 bg-surface-container-low rounded-t-xs">
       <ToolbarButton
         label="Heading"
         icon={TOOLBAR_ICONS.heading}
@@ -189,7 +189,7 @@ export function RichTextEditor({
         className={cn(
           readOnly
             ? "w-full"
-            : "w-full bg-surface-container-low border border-outline-variant rounded-xl",
+            : "w-full bg-surface-container-low border border-outline-variant rounded-xs",
           className,
         )}
         style={readOnly ? { minHeight } : { minHeight: minHeight + 50 }}
@@ -208,7 +208,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        "w-full bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden focus-within:border-secondary/40 focus-within:bg-surface-container-high transition-all",
+        "w-full bg-surface-container-low border border-outline-variant rounded-xs overflow-hidden focus-within:border-secondary/40 focus-within:bg-surface-container-high transition-all",
         disabled && "opacity-60",
         className,
       )}

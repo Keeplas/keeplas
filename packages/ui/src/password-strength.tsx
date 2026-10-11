@@ -12,11 +12,7 @@ const RULES: { key: PasswordRuleKey; test: (pw: string) => boolean }[] = [
 ];
 
 export type PasswordRuleKey =
-  | "length"
-  | "uppercase"
-  | "lowercase"
-  | "number"
-  | "special";
+  "length" | "uppercase" | "lowercase" | "number" | "special";
 
 export interface PasswordEvaluation {
   results: { key: PasswordRuleKey; met: boolean }[];
@@ -81,9 +77,9 @@ export function PasswordStrength({
         </span>
       </div>
 
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+      <div className="h-1.5 w-full overflow-hidden rounded-sm bg-surface-container-high">
         <div
-          className={cn("h-full rounded-full transition-all", style.bar)}
+          className={cn("h-full rounded-sm transition-all", style.bar)}
           style={{ width: `${(metCount / RULES.length) * 100}%` }}
         />
       </div>

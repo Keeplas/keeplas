@@ -301,7 +301,7 @@ function VaultSection({
     <section className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-headline-md flex items-center gap-3 text-primary min-w-0">
-          <span className={cn("w-2 h-8 rounded-full shrink-0", accent)} />
+          <span className={cn("w-2 h-8 rounded-sm shrink-0", accent)} />
           <span className="truncate">{title}</span>
           {count !== undefined && count > 0 && (
             <span className="text-on-surface-variant shrink-0">({count})</span>
@@ -317,7 +317,7 @@ function VaultSection({
         )}
       </div>
       {isEmpty ? (
-        <div className="bg-surface-container-low rounded-full p-10 text-center">
+        <div className="bg-surface-container-low rounded-sm p-10 text-center">
           <p className="text-body-lg text-on-surface-variant mb-4">
             {emptyMessage}
           </p>
@@ -336,7 +336,7 @@ function VaultSection({
           {viewAllHref && (
             <Link
               href={viewAllHref}
-              className="md:hidden flex items-center justify-center gap-2 mt-4 py-3 px-4 rounded-full bg-surface-container-low hover:bg-surface-container-high text-secondary font-label font-bold text-body-md transition-colors cursor-pointer"
+              className="md:hidden flex items-center justify-center gap-2 mt-4 py-3 px-4 rounded-sm bg-surface-container-low hover:bg-surface-container-high text-secondary font-label font-bold text-body-md transition-colors cursor-pointer"
             >
               {t("section.viewAllCount", { count: count ?? 0 })}
               <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />
@@ -413,14 +413,14 @@ function VaultItemCard({
   return (
     <Link
       href={`/vault/${item._id}`}
-      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-full transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
+      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-sm transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
     >
       <div className="flex justify-between items-start gap-3 mb-4">
-        <div className="bg-white p-3 rounded-xl shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
+        <div className="bg-white p-3 rounded-xs shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
           <Icon path={category.icon} className="w-5 h-5" />
         </div>
         <span
-          className="text-label-md normal-case tracking-normal text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-full inline-flex items-center gap-1.5 max-w-[60%]"
+          className="text-label-md normal-case tracking-normal text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-sm inline-flex items-center gap-1.5 max-w-[60%]"
           title={transmission.label}
         >
           <Icon

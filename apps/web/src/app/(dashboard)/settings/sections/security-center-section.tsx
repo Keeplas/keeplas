@@ -80,7 +80,7 @@ export function SecurityCenterSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Social Recovery */}
-        <section className="md:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border flex flex-col justify-between">
+        <section className="md:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
               <div>
@@ -93,7 +93,7 @@ export function SecurityCenterSection() {
                     : t("socialRecovery.statusAwaiting")}
                 </p>
               </div>
-              <div className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-full text-body-md font-bold whitespace-nowrap">
+              <div className="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-sm text-body-md font-bold whitespace-nowrap">
                 {t("socialRecovery.guardiansVerified", {
                   count: accepted.length,
                   total: TOTAL_GUARDIAN_SLOTS,
@@ -173,7 +173,7 @@ export function SecurityCenterSection() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/trusted-contacts"
-              className="bg-surface-container-highest hover:bg-surface-variant text-primary px-5 py-2.5 rounded-xl text-body-md font-bold transition-all flex items-center justify-center space-x-2"
+              className="bg-surface-container-highest hover:bg-surface-variant text-primary px-5 py-2.5 rounded-xs text-body-md font-bold transition-all flex items-center justify-center space-x-2"
             >
               <Icon path={ICON_PATHS.mail} className="w-4 h-4" />
               <span>
@@ -192,7 +192,7 @@ export function SecurityCenterSection() {
         </section>
 
         {/* Recovery Kit shortcut */}
-        <section className="md:col-span-4 bg-primary-container text-on-primary-container p-6 md:p-8 rounded-2xl flex flex-col justify-between">
+        <section className="md:col-span-4 bg-primary-container text-on-primary-container p-6 md:p-8 rounded-sm flex flex-col justify-between">
           <div>
             <Icon
               path={ICON_PATHS.description}
@@ -207,7 +207,7 @@ export function SecurityCenterSection() {
           </div>
           <Link
             href="/settings/recovery-kit"
-            className="vault-gradient text-white w-full py-3 rounded-xl font-bold flex items-center justify-center space-x-3 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+            className="vault-gradient text-white w-full py-3 rounded-xs font-bold flex items-center justify-center space-x-3 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
           >
             <Icon path={ICON_PATHS.print} className="w-5 h-5" />
             <span>{t("recoveryKitShortcut.cta")}</span>
@@ -215,7 +215,7 @@ export function SecurityCenterSection() {
         </section>
 
         {/* Master Recovery: 24 words + trusted contacts (no key split) */}
-        <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-2xl">
+        <section className="md:col-span-12 bg-surface-container p-6 md:p-8 rounded-sm">
           <div className="flex items-center space-x-3 mb-5">
             <Icon path={ICON_PATHS.hub} className="w-6 h-6 text-secondary" />
             <h2 className="text-headline-md text-primary">
@@ -250,7 +250,7 @@ export function SecurityCenterSection() {
             ))}
             <Link
               href="/trusted-contacts"
-              className="w-full p-3.5 border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center space-x-2 text-on-surface-variant hover:bg-surface-container-low transition-colors"
+              className="w-full p-3.5 border-2 border-dashed border-outline-variant rounded-xs flex items-center justify-center space-x-2 text-on-surface-variant hover:bg-surface-container-low transition-colors"
             >
               <Icon path={ICON_PATHS.plus} className="w-5 h-5" />
               <span className="text-body-md font-bold">
@@ -264,7 +264,7 @@ export function SecurityCenterSection() {
       </div>
 
       {/* Activity Log */}
-      <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border">
+      <section className="bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border">
         <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
           <div className="flex items-center space-x-3">
             <Icon
@@ -314,7 +314,7 @@ export function SecurityCenterSection() {
                 <li key={log._id} className="py-3 flex items-start gap-3">
                   <span
                     className={cn(
-                      "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center",
+                      "shrink-0 w-9 h-9 rounded-xs flex items-center justify-center",
                       log.actorType === "system"
                         ? "bg-tertiary/15 text-tertiary"
                         : log.actorType === "trusted_contact"
@@ -363,9 +363,9 @@ function ShardRow({
   verified: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between p-3.5 bg-surface-container-lowest rounded-xl">
+    <div className="flex items-center justify-between p-3.5 bg-surface-container-lowest rounded-xs">
       <div className="flex items-center space-x-3">
-        <div className="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+        <div className="w-9 h-9 rounded-xs bg-secondary/10 flex items-center justify-center text-secondary">
           <Icon path={icon} className="w-5 h-5" />
         </div>
         <div>
@@ -392,7 +392,7 @@ function SummaryStat({
   value: string | number;
 }) {
   return (
-    <div className="bg-surface-container rounded-xl p-3.5">
+    <div className="bg-surface-container rounded-xs p-3.5">
       <p className="text-label-md text-on-surface-variant">{label}</p>
       <p className="text-headline-sm text-primary mt-1">{value}</p>
     </div>
@@ -429,8 +429,8 @@ function LastAccessPanel({
       : t("lastAccess.verifiedSession");
 
   return (
-    <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border flex items-center gap-4">
-      <div className="bg-secondary/15 text-secondary w-11 h-11 rounded-xl flex items-center justify-center shrink-0">
+    <section className="bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border flex items-center gap-4">
+      <div className="bg-secondary/15 text-secondary w-11 h-11 rounded-xs flex items-center justify-center shrink-0">
         <Icon path={ICON_PATHS.history} className="w-5 h-5" />
       </div>
       <div className="min-w-0">

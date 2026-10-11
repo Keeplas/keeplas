@@ -10,9 +10,9 @@ const THRESHOLDS = [1, 2, 3];
 const WINDOWS = [3, 7, 14];
 
 const SELECTED_CLS =
-  "flex items-center justify-center p-4 bg-secondary text-on-secondary rounded-xl shadow-lg scale-[1.03] transition-transform cursor-pointer font-headline font-bold";
+  "flex items-center justify-center p-4 bg-secondary text-on-secondary rounded-xs shadow-lg scale-[1.03] transition-transform cursor-pointer font-headline font-bold";
 const UNSELECTED_CLS =
-  "flex items-center justify-center p-4 bg-surface-container-highest rounded-xl hover:scale-[1.03] transition-transform cursor-pointer font-headline font-bold text-primary";
+  "flex items-center justify-center p-4 bg-surface-container-highest rounded-xs hover:scale-[1.03] transition-transform cursor-pointer font-headline font-bold text-primary";
 
 /**
  * Stage-2 release policy editor: how many trusted contacts must confirm
@@ -56,7 +56,7 @@ export function ReleasePolicySettings() {
   }
 
   return (
-    <section className="bg-surface-container-low rounded-2xl p-6 space-y-6">
+    <section className="bg-surface-container-low rounded-sm p-6 space-y-6">
       <div>
         <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
           {t("policy.title")}

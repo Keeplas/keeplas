@@ -16,12 +16,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
 export type Topic =
-  | "general"
-  | "security"
-  | "billing"
-  | "recovery"
-  | "feature_request"
-  | "other";
+  "general" | "security" | "billing" | "recovery" | "feature_request" | "other";
 
 export const TOPIC_VALUES: Topic[] = [
   "general",
@@ -88,7 +83,7 @@ export function ContactForm({ initialTopic = "general" }: ContactFormProps) {
   if (submitted) {
     return (
       <div className="text-center space-y-5 py-4">
-        <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container mx-auto">
+        <span className="inline-flex items-center justify-center w-14 h-14 rounded-sm bg-secondary-container text-on-secondary-container mx-auto">
           <Icon path={ICON_PATHS.checkCircle} className="w-7 h-7" />
         </span>
         <div className="space-y-2">

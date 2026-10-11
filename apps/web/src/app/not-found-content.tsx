@@ -9,7 +9,7 @@ export function NotFoundContent() {
       <p className="text-body-lg text-on-surface-variant">{t("message")}</p>
       <Link
         href="/"
-        className="mt-4 px-6 py-2 rounded-xl gradient-signature text-on-primary font-medium hover:opacity-90 transition-opacity"
+        className="mt-4 px-6 py-2 rounded-xs gradient-signature text-on-primary font-medium hover:opacity-90 transition-opacity"
       >
         {t("goHome")}
       </Link>

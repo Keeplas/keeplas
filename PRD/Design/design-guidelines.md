@@ -1,5 +1,7 @@
 # Design System Specification: The Architectural Vault
 
+> **Superseded (2026-10-11)** by design system v2: [`../v2-mobile-first/README.md`](../v2-mobile-first/README.md), Figma snapshot in `../v2-mobile-first/figma/`, rules in `.claude/skills/design-system/SKILL.md`. The "Digital Curator" brand (Manrope, `#041632`, no-border rule) below is no longer used.
+
 ## 1. Overview & Creative North Star: "The Digital Curator"
 
 This design system rejects the "standard dashboard" aesthetic in favor of a **High-End Editorial** experience. The Creative North Star is **The Digital Curator**: a philosophy where the UI feels like a bespoke, private gallery of a life’s most important legacies.

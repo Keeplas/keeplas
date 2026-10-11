@@ -5,11 +5,11 @@
 # Keeplas Vault
 
 <p align="center">
-  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-b9eaff?style=for-the-badge&logo=gitbook&logoColor=041632"></a>
-  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-b9eaff?style=for-the-badge&logo=github&logoColor=041632"></a>
-  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-b9eaff?style=for-the-badge&logo=keepassxc&logoColor=041632"></a>
-  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-b9eaff?style=for-the-badge&logo=gnu&logoColor=041632"></a>
-  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Need help" src="https://img.shields.io/badge/NEED%20HELP-b9eaff?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNjMyIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik05LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyIvPjxwYXRoIGQ9Ik0xMiAxN2guMDEiLz48L3N2Zz4K"></a>
+  <a href="https://keeplas.com/docs"><img alt="Docs" src="https://img.shields.io/badge/DOCS-E1F1FA?style=for-the-badge&logo=gitbook&logoColor=0E2340"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Discussions" src="https://img.shields.io/badge/DISCUSSIONS-E1F1FA?style=for-the-badge&logo=github&logoColor=0E2340"></a>
+  <a href="https://www.keeplas.com/security"><img alt="Security" src="https://img.shields.io/badge/SECURITY-E1F1FA?style=for-the-badge&logo=keepassxc&logoColor=0E2340"></a>
+  <a href="./license.md"><img alt="License" src="https://img.shields.io/badge/LICENSE-E1F1FA?style=for-the-badge&logo=gnu&logoColor=0E2340"></a>
+  <a href="https://github.com/Keeplas/keeplas/discussions"><img alt="Need help" src="https://img.shields.io/badge/NEED%20HELP-E1F1FA?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNjMyIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxwYXRoIGQ9Ik05LjA5IDlhMyAzIDAgMCAxIDUuODMgMWMwIDItMyAzLTMgMyIvPjxwYXRoIGQ9Ik0xMiAxN2guMDEiLz48L3N2Zz4K"></a>
 </p>
 
 > Open-source **Life Continuity Platform** — securely store, organize, and transmit vital information to trusted contacts.
@@ -158,10 +158,10 @@ For the full Convex workflow (provisioning, schema changes, JWT bootstrap, env s
 
 Keeplas ships with a deliberately simple two-tier model — **no monthly subscription**:
 
-| Plan         | Price           | Storage | Highlights                                                                                                                                                                        |
-| ------------ | --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Free**     | $0 / forever    | 100 MB  | Zero-knowledge vault, monthly Life Check, 1 emergency contact, digital Emergency Card                                                                                             |
-| **Lifetime** | $199 / one-time | 10 GB   | Full Scenario Engine, 5 emergency contacts, priority Social Recovery, physical Emergency Card, video legacy messages, weekly Life Check, priority support, more storage as add-on |
+| Plan         | Price           | Storage | Highlights                                                                                                                                                                          |
+| ------------ | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Free**     | $0 / forever    | 100 MB  | Zero-knowledge vault, monthly Life Check, 1 emergency contact, digital Emergency Card                                                                                               |
+| **Lifetime** | $199 / one-time | 10 GB   | Full Scenario Engine, up to 3 trust contacts, priority Social Recovery, physical Emergency Card, video legacy messages, weekly Life Check, priority support, more storage as add-on |
 
 Both tiers run the same zero-knowledge encryption — only the surface area changes. Switching plans never deletes your vault.
 

@@ -144,13 +144,13 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
   return (
     <section>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="col-span-full bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <div className="col-span-full bg-surface-container-low rounded-sm p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             disabled={uploadingAvatar}
             aria-label={t("identity.avatar.change")}
-            className="group relative shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-wait cursor-pointer"
+            className="group relative shrink-0 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-wait cursor-pointer"
           >
             <UserAvatar
               size="xl"
@@ -162,7 +162,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               onImageError={() => setAvatarUrl("")}
             />
             <span
-              className={`absolute inset-0 flex items-center justify-center rounded-full bg-primary/60 text-on-primary transition-opacity ${
+              className={`absolute inset-0 flex items-center justify-center rounded-sm bg-primary/60 text-on-primary transition-opacity ${
                 uploadingAvatar
                   ? "opacity-100 animate-pulse"
                   : "opacity-0 group-hover:opacity-100"
@@ -190,11 +190,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
               {t("identity.curatorSince", { date: curatorSince })}
             </p>
             <div className="pt-2 flex flex-wrap gap-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-label-md bg-secondary-container text-on-secondary-container">
                 {t("identity.verifiedIdentity")}
               </span>
               {user.recoveryVerified && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-primary-container text-on-primary-container">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-label-md bg-primary-container text-on-primary-container">
                   {t("identity.recoverySet")}
                 </span>
               )}
@@ -225,7 +225,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           </div>
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
+        <div className="bg-surface-container-low rounded-sm p-5 space-y-2">
           <Label
             htmlFor="display-name"
             className="text-label-md text-secondary"
@@ -241,14 +241,14 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           />
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
+        <div className="bg-surface-container-low rounded-sm p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="email" className="text-label-md text-secondary">
               {t("identity.email.label")}
             </Label>
             <div className="flex items-center gap-2">
               {user.emailVerificationTime && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-sm text-label-md bg-secondary-container text-on-secondary-container">
                   <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
                   {t("identity.verified")}
                 </span>
@@ -284,14 +284,14 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
           </p>
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
+        <div className="bg-surface-container-low rounded-sm p-5 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label htmlFor="phone" className="text-label-md text-secondary">
               {t("identity.phone.label")}
             </Label>
             <div className="flex items-center gap-2">
               {phoneStatus?.verifiedAt && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-label-md bg-secondary-container text-on-secondary-container">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-sm text-label-md bg-secondary-container text-on-secondary-container">
                   <Icon path={ICON_PATHS.checkCircle} className="w-3.5 h-3.5" />
                   {t("identity.verified")}
                 </span>
@@ -326,7 +326,7 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
       </div>
 
-      <div className="mt-10 bg-surface-container-low rounded-2xl p-6 space-y-5">
+      <div className="mt-10 bg-surface-container-low rounded-sm p-6 space-y-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">
             <h3 className="text-title-lg text-primary">
@@ -350,11 +350,11 @@ export function IdentitySection({ user, onError }: IdentitySectionProps) {
         </div>
 
         {!user.country && (
-          <div className="rounded-xl border border-error/30 bg-error/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="rounded-xs border border-error/30 bg-error/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-start gap-3 flex-1 min-w-0">
               <span
                 aria-hidden
-                className="shrink-0 mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-error/15 text-error"
+                className="shrink-0 mt-0.5 inline-flex items-center justify-center w-8 h-8 rounded-xs bg-error/15 text-error"
               >
                 <svg
                   className="w-5 h-5"
