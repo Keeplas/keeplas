@@ -484,6 +484,27 @@
       "revoked": "Retiré"
     }
   },
+  "folders": {
+    "title": "Dossier",
+    "mine": "Mes dossiers",
+    "new": "Nouveau dossier",
+    "newBody": "Les noms des dossiers sont chiffrés comme leur contenu.",
+    "name": "Nom du dossier",
+    "create": "Créer le dossier",
+    "items": "{n} éléments",
+    "share": "Partager le dossier",
+    "shareTitle": "Partager {name}",
+    "when": "Quand peut-il l'ouvrir ?",
+    "selected": "Sélectionné",
+    "select": "Choisir",
+    "from": "Partagé par {name}",
+    "move": "Déplacer vers un dossier",
+    "noFolder": "Boîte chiffrée",
+    "timing": {
+      "now": "Disponible maintenant",
+      "after_verification": "Après vérification"
+    }
+  },
   "lifeCheck": {
     "title": "Life check",
     "body": "Choisissez à quelle fréquence Keeplas doit vous demander de confirmer.",

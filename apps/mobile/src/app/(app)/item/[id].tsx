@@ -7,11 +7,14 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { NavBar } from "@/components/nav-bar";
 import { DetailRows } from "@/components/rows";
 import { Screen } from "@/components/screen";
-import { Callout } from "@/components/surfaces";
+import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { decryptText } from "@/crypto/envelope";
 import { parseItemMeta } from "@/crypto/item-meta";
 import { useVaultData } from "@/features/vault/vault-data";
+import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { wrapDek } from "@keeplas/crypto/kem";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
 /** M07-5: decrypted item details; plaintext exists only in component memory. */
@@ -22,7 +25,10 @@ export default function ItemDetails() {
   const { t } = useI18n();
   const raw = useQuery(api.vault_items.getItem, { itemId });
   const files = useQuery(api.vault_items.getItemFiles, { itemId });
-  const { itemKey } = useVaultData();
+  const contacts = useQuery(api.trusted_contacts.getContacts);
+  const { itemKey, folders } = useVaultData();
+  const moveItem = useAuditedMutation(api.folders.moveItem);
+  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
   const [opened, setOpened] = useState<{
     title: string;
     note: string;
@@ -47,6 +53,33 @@ export default function ItemDetails() {
     };
   }, [raw, itemKey]);
 
+  async function move(folderId: Id<"folders"> | null) {
+    if (!raw) return;
+    const folder = folders?.find((candidate) => candidate.id === folderId);
+    const dek = await itemKey(raw);
+    const recipientKeys = await Promise.all(
+      (folder?.grants ?? []).map(async (grant) => {
+        const contact = contacts?.find(
+          (candidate) => candidate._id === grant.contactId,
+        );
+        if (!contact) throw new Error("Contact unavailable");
+        const publicKey = await requireVerifiedKey(
+          contactKeyMaterial(contact),
+          (contactId, fingerprint) =>
+            pin({
+              contactId: contactId as Id<"trusted_contacts">,
+              fingerprint,
+            }),
+        );
+        return {
+          contactId: contact._id,
+          wrappedDek: await wrapDek(dek, publicKey),
+        };
+      }),
+    );
+    await moveItem({ itemId, folderId, recipientKeys });
+  }
+
   return (
     <Screen
       header={
@@ -70,6 +103,20 @@ export default function ItemDetails() {
         ]}
       />
       <Callout icon="lock" text={t("item.encrypted")} />
+      <Text variant="label">{t("folders.move")}</Text>
+      <ListRow
+        icon="mail"
+        title={t("folders.noFolder")}
+        onPress={() => void move(null)}
+      />
+      {(folders ?? []).map((folder) => (
+        <ListRow
+          key={folder.id}
+          icon="folder"
+          title={folder.name ?? t("folders.title")}
+          onPress={() => void move(folder.id)}
+        />
+      ))}
     </Screen>
   );
 }

@@ -494,6 +494,27 @@
       "revoked": "Removed"
     }
   },
+  "folders": {
+    "title": "Folder",
+    "mine": "My folders",
+    "new": "New folder",
+    "newBody": "Folder names are encrypted like the items inside them.",
+    "name": "Folder name",
+    "create": "Create folder",
+    "items": "{n} items",
+    "share": "Share folder",
+    "shareTitle": "Share {name}",
+    "when": "When can they open it?",
+    "selected": "Selected",
+    "select": "Select",
+    "from": "Shared by {name}",
+    "move": "Move to folder",
+    "noFolder": "Encrypted inbox",
+    "timing": {
+      "now": "Available now",
+      "after_verification": "After verification"
+    }
+  },
   "lifeCheck": {
     "title": "Life check",
     "body": "Choose how often Keeplas should ask you to check in.",

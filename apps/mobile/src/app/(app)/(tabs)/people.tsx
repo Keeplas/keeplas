@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
+import { useVaultData } from "@/features/vault/vault-data";
 
 /** M06-1 / M06-3 and M03-1: contacts and folders shared with this user. */
 export default function People() {
@@ -17,6 +18,7 @@ export default function People() {
   const { t } = useI18n();
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const shared = useQuery(api.folders.sharedWithMe);
+  const { folders } = useVaultData();
 
   return (
     <Screen header={<AppHeader />}>
@@ -51,6 +53,24 @@ export default function People() {
       {contacts?.length === 0 ? (
         <Text color="text.muted">{t("people.empty")}</Text>
       ) : null}
+      <SectionHeader
+        title={t("folders.mine")}
+        action={{
+          label: t("folders.new"),
+          onPress: () => router.push("/folder/new"),
+        }}
+      />
+      {(folders ?? []).map((folder) => (
+        <ListRow
+          key={folder.id}
+          icon="folder"
+          title={folder.name ?? t("folders.title")}
+          description={t("folders.items", { n: folder.itemCount })}
+          onPress={() =>
+            router.push({ pathname: "/folder/[id]", params: { id: folder.id } })
+          }
+        />
+      ))}
       <SectionHeader title={t("people.sharedWithMe")} />
       {(shared ?? []).map((folder) => (
         <ListRow
@@ -69,6 +89,15 @@ export default function People() {
               }
               tone={folder.available ? "success" : "neutral"}
             />
+          }
+          onPress={
+            folder.available
+              ? () =>
+                  router.push({
+                    pathname: "/shared-folder/[id]",
+                    params: { id: folder.grantId },
+                  })
+              : undefined
           }
         />
       ))}
