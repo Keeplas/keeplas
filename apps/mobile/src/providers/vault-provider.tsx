@@ -12,6 +12,7 @@ import { AppState, View } from "react-native";
 
 import { importMasterKey } from "@/crypto/vault-keys";
 import { unlockDeviceVault } from "@/crypto/device-vault";
+import { forgetOwnerKeys } from "@/crypto/owner-keys";
 import { IDLE_LOCK_MS, shouldLockOnResume } from "@/lib/auto-lock";
 
 interface VaultValue {
@@ -45,6 +46,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const lock = useCallback(() => {
     setMasterKey(null);
     setSetupPhrase(null);
+    forgetOwnerKeys();
   }, []);
 
   const adopt = useCallback(async (raw: Uint8Array) => {

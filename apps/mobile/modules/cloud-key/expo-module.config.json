@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["KeeplasCloudKeyModule"]
+  },
+  "android": {
+    "modules": ["com.keeplas.cloudkey.KeeplasCloudKeyModule"]
+  }
+}

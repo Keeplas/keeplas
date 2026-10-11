@@ -1,0 +1,23 @@
+// Gradle build for the local KeeplasCloudKey Expo module: stores the Cloud
+// Backup Key in Google Block Store so it is restored on a new Android phone.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.keeplas'
+version = '0.1.0'
+
+android {
+  namespace "com.keeplas.cloudkey"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  implementation "com.google.android.gms:play-services-auth-blockstore:16.4.0"
+  // Task.await(); version matches the kotlinx-coroutines pulled in by expo-modules-core.
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2"
+}

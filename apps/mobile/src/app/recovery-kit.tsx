@@ -30,9 +30,10 @@ export default function RecoveryKitEntry() {
     setBusy(true);
     setInvalid(false);
     try {
-      const raw = await openKeyBundle(viewer.encryptedKeyBundle, words);
-      await saveDeviceVault(viewer._id, raw, t("unlock.title"));
-      await adopt(raw);
+      const keys = await openKeyBundle(viewer.encryptedKeyBundle, words);
+      await saveDeviceVault(viewer._id, keys, t("unlock.title"));
+      keys.rootKey.fill(0);
+      await adopt(keys.masterKey);
       refreshDeviceVault();
     } catch {
       setInvalid(true);
