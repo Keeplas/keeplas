@@ -40,6 +40,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/with-ios-scene",
       [
         "expo-secure-store",
         {
