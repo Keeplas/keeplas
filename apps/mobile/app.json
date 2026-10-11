@@ -6,10 +6,15 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.keeplas.app"
+      "bundleIdentifier": "com.keeplas.app",
+      "associatedDomains": [
+        "webcredentials:keeplas.com",
+        "webcredentials:app.keeplas.com",
+        "applinks:app.keeplas.com"
+      ]
     },
     "android": {
       "package": "com.keeplas.app",
@@ -17,7 +22,40 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDFBF7"
       },
-      "predictiveBackGestureEnabled": false
-    }
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "app.keeplas.com",
+              "pathPrefix": "/link"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Keeplas uses Face ID to unlock your vault on this device."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Keeplas uses the camera to scan the QR code that links a computer to your account.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-localization",
+      "react-native-quick-crypto"
+    ]
   }
 }

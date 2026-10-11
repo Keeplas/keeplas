@@ -1,0 +1,17 @@
+// Metro config: Expo defaults (monorepo-aware) + SVG files imported as React
+// components through react-native-svg-transformer (illustrations, logos).
+const { getDefaultConfig } = require("expo/metro-config");
+
+const config = getDefaultConfig(__dirname);
+
+config.transformer = {
+  ...config.transformer,
+  babelTransformerPath: require.resolve("react-native-svg-transformer/expo"),
+};
+config.resolver = {
+  ...config.resolver,
+  assetExts: config.resolver.assetExts.filter((ext) => ext !== "svg"),
+  sourceExts: [...config.resolver.sourceExts, "svg"],
+};
+
+module.exports = config;
