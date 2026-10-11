@@ -23,8 +23,6 @@ export const register = auditedMutation({
     devicePublicKey: v.optional(v.string()),
     trusted: v.boolean(),
   },
-  getResourceId: (_args, deviceId) => deviceId as string,
-  getMetadata: (args) => ({ kind: args.kind, trusted: args.trusted }),
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     const now = Date.now();
@@ -62,6 +60,8 @@ export const register = auditedMutation({
     }
     return deviceId;
   },
+  getResourceId: (_args, deviceId) => deviceId,
+  getMetadata: (args) => ({ kind: args.kind, trusted: args.trusted }),
 });
 
 /**
@@ -92,12 +92,12 @@ export const setPushToken = auditedMutation({
   action: "device.push_token_set",
   resourceType: "device",
   args: { deviceId: v.id("devices"), pushToken: v.string() },
-  getResourceId: (args) => args.deviceId,
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     await requireOwnDevice(ctx, userId, args.deviceId);
     await ctx.db.patch(args.deviceId, { pushToken: args.pushToken });
   },
+  getResourceId: (args) => args.deviceId,
 });
 
 /** Active (non-revoked) devices of the signed-in user, newest first. */
@@ -166,12 +166,12 @@ export const confirm = auditedMutation({
   action: "device.confirmed",
   resourceType: "device",
   args: { deviceId: v.id("devices") },
-  getResourceId: (args) => args.deviceId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireOwnDevice(ctx, userId, args.deviceId);
     await ctx.db.patch(args.deviceId, { acknowledgedAt: Date.now() });
   },
+  getResourceId: (args) => args.deviceId,
 });
 
 /** Remove a device from W04-6 / M08-3. */
@@ -179,7 +179,6 @@ export const revoke = auditedMutation({
   action: "device.revoked",
   resourceType: "device",
   args: { deviceId: v.id("devices") },
-  getResourceId: (args) => args.deviceId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const device = await requireOwnDevice(ctx, userId, args.deviceId);
@@ -188,6 +187,7 @@ export const revoke = auditedMutation({
     }
     await revokeDevice(ctx, device);
   },
+  getResourceId: (args) => args.deviceId,
 });
 
 /**
@@ -199,8 +199,6 @@ export const notMe = auditedMutation({
   action: "device.not_me",
   resourceType: "device",
   args: { deviceId: v.id("devices") },
-  getResourceId: (args) => args.deviceId,
-  getMetadata: (_args, result) => result as Record<string, unknown>,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const device = await requireOwnDevice(ctx, userId, args.deviceId);
@@ -218,4 +216,6 @@ export const notMe = auditedMutation({
     });
     return { deviceLabel: device.label, sessionsEnded, recoveryCancelled };
   },
+  getResourceId: (args) => args.deviceId,
+  getMetadata: (_args, result) => result,
 });

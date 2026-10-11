@@ -230,7 +230,6 @@ export const start = auditedMutation({
   action: "recovery.request.started",
   resourceType: "recovery_request",
   args: { newDevicePublicKey: v.string() },
-  getResourceId: (_args, requestId) => requestId as string,
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     if (args.newDevicePublicKey.length !== ML_KEM_768_PUBLIC_KEY_LENGTH) {
@@ -297,6 +296,7 @@ export const start = auditedMutation({
     }
     return requestId;
   },
+  getResourceId: (_args, requestId) => requestId,
 });
 
 /**
@@ -480,7 +480,6 @@ export const approve = auditedMutation({
     signature: v.string(),
   },
   resolveActor: contactActor,
-  getResourceId: (args) => args.requestId,
   handler: async (ctx, args) => {
     const { request, contact } = await requireContactForRequest(
       ctx,
@@ -505,6 +504,7 @@ export const approve = auditedMutation({
       });
     }
   },
+  getResourceId: (args) => args.requestId,
 });
 
 /** Contact refuses, or reports that the code did not match (M09-5). */
@@ -516,8 +516,6 @@ export const reject = auditedMutation({
     reason: v.union(v.literal("declined"), v.literal("code_mismatch")),
   },
   resolveActor: contactActor,
-  getResourceId: (args) => args.requestId,
-  getMetadata: (args) => ({ reason: args.reason }),
   handler: async (ctx, args) => {
     const { request, contact } = await requireContactForRequest(
       ctx,
@@ -540,6 +538,8 @@ export const reject = auditedMutation({
       });
     }
   },
+  getResourceId: (args) => args.requestId,
+  getMetadata: (args) => ({ reason: args.reason }),
 });
 
 // ─── Expiry and release ──────────────────────────────────────────────────

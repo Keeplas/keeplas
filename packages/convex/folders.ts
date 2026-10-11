@@ -144,7 +144,6 @@ export const create = auditedMutation({
   action: "folder.created",
   resourceType: "folder",
   args: { encryptedName: v.string() },
-  getResourceId: (_args, folderId) => folderId as string,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const now = Date.now();
@@ -155,6 +154,7 @@ export const create = auditedMutation({
       updatedAt: now,
     });
   },
+  getResourceId: (_args, folderId) => folderId,
 });
 
 /** Rename: new owner ciphertext and the name re-sealed to every grantee. */
@@ -168,7 +168,6 @@ export const rename = auditedMutation({
       v.object({ grantId: v.id("folder_grants"), sealedName: v.string() }),
     ),
   },
-  getResourceId: (args) => args.folderId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireOwnFolder(ctx, args.folderId, userId);
@@ -183,6 +182,7 @@ export const rename = auditedMutation({
       }
     }
   },
+  getResourceId: (args) => args.folderId,
 });
 
 /** Delete a folder: its items stay in the vault, its grants end. */
@@ -190,7 +190,6 @@ export const remove = auditedMutation({
   action: "folder.deleted",
   resourceType: "folder",
   args: { folderId: v.id("folders") },
-  getResourceId: (args) => args.folderId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireOwnFolder(ctx, args.folderId, userId);
@@ -204,6 +203,7 @@ export const remove = auditedMutation({
     }
     await ctx.db.delete(args.folderId);
   },
+  getResourceId: (args) => args.folderId,
 });
 
 /**
@@ -224,7 +224,6 @@ export const moveItem = auditedMutation({
       }),
     ),
   },
-  getResourceId: (args) => args.itemId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const item = await requireItemOwnership(ctx, args.itemId, userId);
@@ -251,6 +250,7 @@ export const moveItem = auditedMutation({
       }
     }
   },
+  getResourceId: (args) => args.itemId,
 });
 
 /** M06-4: give a contact access to this folder only, now or later. */
@@ -264,8 +264,6 @@ export const grant = auditedMutation({
     sealedName: v.string(),
     itemKeys: v.array(itemKeyValidator),
   },
-  getResourceId: (args) => args.folderId,
-  getMetadata: (args) => ({ contactId: args.contactId, timing: args.timing }),
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireOwnFolder(ctx, args.folderId, userId);
@@ -292,6 +290,8 @@ export const grant = auditedMutation({
     await storeItemKeys(ctx, args.folderId, args.contactId, args.itemKeys);
     return grantId;
   },
+  getResourceId: (args) => args.folderId,
+  getMetadata: (args) => ({ contactId: args.contactId, timing: args.timing }),
 });
 
 /** Change when a grantee gets access (M06-6 Edit). */
@@ -299,14 +299,14 @@ export const updateGrant = auditedMutation({
   action: "folder.access_updated",
   resourceType: "folder_grant",
   args: { grantId: v.id("folder_grants"), timing: timingValidator },
-  getResourceId: (args) => args.grantId,
-  getMetadata: (args) => ({ timing: args.timing }),
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const grant = await ctx.db.get(args.grantId);
     if (grant?.ownerId !== userId) throw new ConvexError("Access not found");
     await ctx.db.patch(args.grantId, { timing: args.timing });
   },
+  getResourceId: (args) => args.grantId,
+  getMetadata: (args) => ({ timing: args.timing }),
 });
 
 /**
@@ -317,7 +317,6 @@ export const revokeGrant = auditedMutation({
   action: "folder.access_revoked",
   resourceType: "folder_grant",
   args: { grantId: v.id("folder_grants") },
-  getResourceId: (args) => args.grantId,
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const grant = await ctx.db.get(args.grantId);
@@ -329,6 +328,7 @@ export const revokeGrant = auditedMutation({
     );
     await ctx.db.delete(args.grantId);
   },
+  getResourceId: (args) => args.grantId,
 });
 
 /**

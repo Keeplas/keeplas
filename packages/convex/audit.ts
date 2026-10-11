@@ -151,6 +151,10 @@ export type ActorIdentity = {
   actorId: string;
 };
 
+// Declare `getResourceId` / `getMetadata` / `skipAudit` AFTER `handler`:
+// TypeScript infers `Output` from the first context-sensitive callback it
+// meets, so a result callback placed before the handler makes the mutation's
+// return type `unknown` for every client.
 export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
   action: string;
   resourceType: string;
@@ -164,7 +168,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
    */
   getResourceId?: (
     args: ObjectType<Args>,
-    result: Output,
+    result: NoInfer<Output>,
     userId: Id<"users">,
   ) => string;
   /**
@@ -172,7 +176,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
    */
   getMetadata?: (
     args: ObjectType<Args>,
-    result: Output,
+    result: NoInfer<Output>,
   ) => Record<string, unknown> | undefined;
   /**
    * Optional override for the actor identity. Defaults to treating the
@@ -184,6 +188,11 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
     ctx: MutationCtx,
     args: ObjectType<Args>,
   ) => Promise<ActorIdentity>;
+  /**
+   * Skip the entry when the call changed nothing it should record (e.g. a
+   * wrong one-time code, reported as a result rather than thrown).
+   */
+  skipAudit?: (result: NoInfer<Output>) => boolean;
 }): RegisteredMutation<
   "public",
   ObjectType<Args> & { _audit: AuditContext },
@@ -209,6 +218,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
         : await defaultActor(ctx);
 
       const result = await opts.handler(ctx, restArgs);
+      if (opts.skipAudit?.(result)) return result;
 
       const resourceId =
         opts.getResourceId?.(restArgs, result, actor.chainUserId) ??

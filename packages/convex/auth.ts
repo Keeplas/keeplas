@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import {
@@ -81,11 +82,15 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!phone) throw new Error("A valid phone number is required");
         const code = String(credentials.code ?? "");
 
-        await ctx.runMutation(internal.phone_auth.consumePhoneAuthCode, {
-          phoneNumber: phone,
-          code,
-          intent: credentials.flow === "signUp" ? "signup" : "signin",
-        });
+        const check = await ctx.runMutation(
+          internal.phone_auth.consumePhoneAuthCode,
+          {
+            phoneNumber: phone,
+            code,
+            intent: credentials.flow === "signUp" ? "signup" : "signin",
+          },
+        );
+        if (!check.ok) throw new ConvexError(check.error);
 
         if (credentials.flow === "signUp") {
           const name = (credentials.name as string | undefined)?.trim();
@@ -124,10 +129,11 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         const code = String(credentials.code ?? "");
 
         refuseNonMobileSignUp(credentials.flow);
-        await ctx.runMutation(internal.email_auth.consumeEmailAuthCode, {
-          email,
-          code,
-        });
+        const check = await ctx.runMutation(
+          internal.email_auth.consumeEmailAuthCode,
+          { email, code },
+        );
+        if (!check.ok) throw new ConvexError(check.error);
 
         const { user } = await retrieveAccount(ctx, {
           provider: "email-otp",

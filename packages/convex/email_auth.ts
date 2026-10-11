@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { MOBILE_ONLY_SIGNUP } from "./attestation";
+import { checkOtp, INVALID_CODE } from "./lib/otp";
 
 // Sibling of phone_auth.ts for the passwordless `email-otp` provider. Mirrors
 // its hashing/expiry/attempts/rate-limit semantics; the only difference is the
@@ -12,7 +13,6 @@ import { MOBILE_ONLY_SIGNUP } from "./attestation";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-const MAX_ATTEMPTS = 5;
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);
@@ -94,34 +94,15 @@ export const consumeEmailAuthCode = internalMutation({
   handler: async (ctx, args) => {
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new Error("Invalid email address");
-    const trimmed = args.code.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      throw new Error("Code must be 6 digits");
-    }
-
-    const now = Date.now();
     const candidates = await ctx.db
       .query("email_auth_codes")
       .withIndex("by_email", (q) => q.eq("email", email))
       .collect();
-    const active = candidates
-      .filter((c) => c.expiresAt > now)
-      .sort((a, b) => b._creationTime - a._creationTime)[0];
-    if (!active) throw new Error("Code expired or not requested");
+    const check = await checkOtp(ctx, candidates, args.code);
+    if ("wrong" in check) return { ok: false as const, error: INVALID_CODE };
 
-    if (active.attempts >= MAX_ATTEMPTS) {
-      await ctx.db.delete(active._id);
-      throw new Error("Too many attempts. Request a new code.");
-    }
-
-    const submittedHash = await sha256Hex(trimmed);
-    if (submittedHash !== active.codeHash) {
-      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
-      throw new Error("Invalid code");
-    }
-
-    await ctx.db.delete(active._id);
-    return { ok: true };
+    await ctx.db.delete(check.active._id);
+    return { ok: true as const };
   },
 });
 

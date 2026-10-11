@@ -11,10 +11,10 @@ export function errorText(error: unknown): string {
 }
 
 /**
- * Sign-in code failures. The phone-otp provider throws plain errors
- * ("Invalid code", "Code expired or not requested", "Too many attempts"),
- * which production Convex redacts: anything unrecognised counts as a wrong
- * code, the safest reading for the user.
+ * Sign-in code failures. The server reports "Invalid code", "Code expired
+ * or not requested" and "Too many attempts. Request a new code." (as
+ * ConvexError or a returned result, see packages/convex/lib/otp.ts); anything
+ * unrecognised counts as a wrong code, the safest reading for the user.
  */
 export type CodeFailure = "wrong" | "expired" | "tooMany";
 

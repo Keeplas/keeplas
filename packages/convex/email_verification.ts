@@ -6,6 +6,7 @@ import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
+import { checkOtp, INVALID_CODE } from "./lib/otp";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -17,7 +18,6 @@ import { sha256Hex } from "./lib/crypto";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-const MAX_ATTEMPTS = 5;
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);
@@ -116,31 +116,16 @@ export const verifyCodeAndLink = auditedMutation({
   args: { code: v.string() },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    const trimmed = args.code.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      throw new Error("Code must be 6 digits");
-    }
-
     const now = Date.now();
     const candidates = await ctx.db
       .query("email_verification_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const active = candidates
-      .filter((c) => c.expiresAt > now)
-      .sort((a, b) => b._creationTime - a._creationTime)[0];
-    if (!active) throw new Error("Code expired or not requested");
-
-    if (active.attempts >= MAX_ATTEMPTS) {
-      await ctx.db.delete(active._id);
-      throw new Error("Too many attempts. Request a new code.");
+    const check = await checkOtp(ctx, candidates, args.code);
+    if ("wrong" in check) {
+      return { verified: false as const, error: INVALID_CODE };
     }
-
-    const submittedHash = await sha256Hex(trimmed);
-    if (submittedHash !== active.codeHash) {
-      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
-      throw new Error("Invalid code");
-    }
+    const { active } = check;
 
     const email = active.email;
     // Re-check at the security boundary (transactional): the address must
@@ -209,8 +194,11 @@ export const verifyCodeAndLink = auditedMutation({
     });
     await ctx.db.delete(active._id);
 
-    return { verified: true, email, previousEmail };
+    return { verified: true as const, email, previousEmail };
   },
+  // A wrong code is returned, not thrown, so its attempt is counted (see
+  // lib/otp.ts); it changes nothing worth an audit entry.
+  skipAudit: (result) => !result.verified,
   getMetadata: (_args, result) => ({
     previousEmail: result.previousEmail,
     newEmail: result.email,

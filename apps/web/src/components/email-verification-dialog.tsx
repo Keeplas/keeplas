@@ -115,7 +115,11 @@ export function EmailVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await verifyCodeAndLink({ code: code.trim() });
+      const result = await verifyCodeAndLink({ code: code.trim() });
+      if (!result.verified) {
+        setError(result.error);
+        return;
+      }
       onVerified?.();
       onOpenChange(false);
     } catch (err) {

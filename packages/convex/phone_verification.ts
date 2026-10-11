@@ -6,11 +6,11 @@ import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
+import { checkOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-const MAX_ATTEMPTS = 5;
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);
@@ -114,34 +114,16 @@ export const verifyCode = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    const trimmed = args.code.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      throw new Error("Code must be 6 digits");
-    }
-
     const now = Date.now();
     const candidates = await ctx.db
       .query("phone_verification_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const active = candidates
-      .filter((c) => c.expiresAt > now)
-      .sort((a, b) => b._creationTime - a._creationTime)[0];
-
-    if (!active) {
-      throw new Error("Code expired or not requested");
+    const check = await checkOtp(ctx, candidates, args.code);
+    if ("wrong" in check) {
+      return { verified: false as const, error: INVALID_CODE };
     }
-
-    if (active.attempts >= MAX_ATTEMPTS) {
-      await ctx.db.delete(active._id);
-      throw new Error("Too many attempts. Request a new code.");
-    }
-
-    const submittedHash = await sha256Hex(trimmed);
-    if (submittedHash !== active.codeHash) {
-      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
-      throw new Error("Invalid code");
-    }
+    const { active } = check;
 
     const newPhone = active.phoneNumber;
     const user = await ctx.db.get(userId);
@@ -195,8 +177,11 @@ export const verifyCode = auditedMutation({
     });
     await ctx.db.delete(active._id);
 
-    return { verified: true, phoneNumber: newPhone, previousPhone };
+    return { verified: true as const, phoneNumber: newPhone, previousPhone };
   },
+  // A wrong code is returned, not thrown, so its attempt is counted (see
+  // lib/otp.ts); it changes nothing worth an audit entry.
+  skipAudit: (result) => !result.verified,
   getMetadata: (_args, result) => ({
     previousPhone: result.previousPhone,
     newPhone: result.phoneNumber,

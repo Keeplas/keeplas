@@ -27,7 +27,8 @@ export default function LoginOtp() {
       destination={channel}
       confirmLabel={t("email.otpCta")}
       onSubmit={async (code) => {
-        await submitCode({ code });
+        const result = await submitCode({ code });
+        if (!result.success) throw new Error(result.error);
       }}
       onResend={async () => {
         await requestCode();

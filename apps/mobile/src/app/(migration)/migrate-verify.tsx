@@ -25,7 +25,8 @@ export default function MigrateVerify() {
       confirmLabel={t("verify.confirm")}
       note={t("verify.note")}
       onSubmit={async (code) => {
-        await verifyCode({ code });
+        const result = await verifyCode({ code });
+        if (!result.verified) throw new Error(result.error);
         router.replace("/move-to-phone");
       }}
       onResend={async () => {

@@ -71,7 +71,11 @@ export default function LoginOtpPage() {
     setBusy(true);
     setError(null);
     try {
-      await submit({ code: code.trim() });
+      const result = await submit({ code: code.trim() });
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
       router.push("/hub");
     } catch (err) {
       setError(getErrorMessage(err, t("verifyFailed")));
