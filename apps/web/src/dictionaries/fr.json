@@ -92,34 +92,27 @@
       "unlockingVault": "Déverrouillage de votre coffre"
     },
     "nav": {
-      "hub": "Accueil",
-      "vault": "Coffre numérique",
-      "trustedCircle": "Cercle de confiance",
-      "continuityProtocol": "Protocole de continuité",
+      "label": "Navigation principale",
+      "openMenu": "Ouvrir la navigation",
+      "myVault": "Mon coffre",
       "sharedWithMe": "Partagé avec moi",
-      "settings": "Paramètres",
-      "documentation": "Documentation",
-      "goToHub": "Aller à l'accueil",
-      "openSettings": "Ouvrir les paramètres"
-    },
-    "mobileNav": {
-      "hub": "Accueil",
-      "vault": "Coffre",
-      "trust": "Confiance"
+      "people": "Contacts",
+      "lifeCheck": "Life check",
+      "devices": "Appareils",
+      "settings": "Paramètres"
     },
     "account": {
-      "curator": "Curateur",
-      "secureSession": "Session sécurisée",
-      "userAlt": "Utilisateur"
+      "menu": "Menu du compte",
+      "settings": "Paramètres",
+      "darkMode": "Mode sombre",
+      "lightMode": "Mode clair",
+      "signOut": "Se déconnecter"
     },
     "notifications": {
       "title": "Notifications",
       "markAllRead": "Tout marquer comme lu",
       "close": "Fermer les notifications",
       "empty": "Aucune notification pour le moment"
-    },
-    "fab": {
-      "addEntry": "Ajouter une nouvelle entrée"
     },
     "unlock": {
       "loadingVault": "Chargement du coffre",

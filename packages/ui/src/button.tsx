@@ -21,6 +21,8 @@ const buttonVariants = cva(
         outlined:
           "border-[1.5px] border-action-primary bg-bg-surface text-action-primary hover:bg-bg-subtle focus-visible:ring-border-focus",
         link: "text-text-link hover:underline underline-offset-4 focus-visible:ring-border-focus",
+        danger:
+          "border border-action-danger bg-bg-surface text-action-danger hover:bg-bg-danger focus-visible:ring-border-focus",
       },
       size: {
         sm: "h-9 px-4 text-sm rounded-xs",
@@ -30,6 +32,9 @@ const buttonVariants = cva(
         icon: "h-10 w-10 rounded-xs",
         // v2 full-height action (Figma: 52 px, radius md, Button type).
         cta: "h-[52px] px-6 text-button font-semibold rounded-md",
+        // v2 "Small button" (Figma: 36 px, 8/14 padding, 13/18 semibold, radius 10).
+        compact:
+          "h-9 gap-[6px] px-[14px] text-[13px] leading-[18px] font-semibold rounded-sm",
       },
     },
     defaultVariants: {

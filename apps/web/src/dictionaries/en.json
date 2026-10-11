@@ -92,34 +92,27 @@
       "unlockingVault": "Unlocking your vault"
     },
     "nav": {
-      "hub": "Hub",
-      "vault": "Digital Vault",
-      "trustedCircle": "Trusted Circle",
-      "continuityProtocol": "Continuity Protocol",
+      "label": "Main navigation",
+      "openMenu": "Open navigation",
+      "myVault": "My vault",
       "sharedWithMe": "Shared with me",
-      "settings": "Settings",
-      "documentation": "Documentation",
-      "goToHub": "Go to Hub",
-      "openSettings": "Open settings"
-    },
-    "mobileNav": {
-      "hub": "Hub",
-      "vault": "Vault",
-      "trust": "Trust"
+      "people": "People",
+      "lifeCheck": "Life check",
+      "devices": "Devices",
+      "settings": "Settings"
     },
     "account": {
-      "curator": "Curator",
-      "secureSession": "Secure session",
-      "userAlt": "User"
+      "menu": "Account menu",
+      "settings": "Settings",
+      "darkMode": "Dark mode",
+      "lightMode": "Light mode",
+      "signOut": "Sign out"
     },
     "notifications": {
       "title": "Notifications",
       "markAllRead": "Mark all as read",
       "close": "Close notifications",
       "empty": "No notifications yet"
-    },
-    "fab": {
-      "addEntry": "Add new entry"
     },
     "unlock": {
       "loadingVault": "Loading vault",
