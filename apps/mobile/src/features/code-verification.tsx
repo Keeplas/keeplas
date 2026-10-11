@@ -138,7 +138,6 @@ export function CodeVerification({
         label={confirmLabel}
         chevron
         loading={busy}
-        disabled={code.length !== OTP_LENGTH}
         onPress={() => submit()}
       />
       <Text variant="body-sm" color="text.muted" align="center">

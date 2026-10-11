@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import paintedLandscape from "../../../assets/images/landscape-painted.jpg";
-import LandscapeNight from "../../../assets/illustrations/landscape-night.svg";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Text } from "@/components/text";
@@ -56,7 +55,6 @@ export default function Welcome() {
         />
       ))}
       <View pointerEvents="none" style={styles.landscape}>
-        <LandscapeNight width={640} height={400} style={styles.landscapeSvg} />
         <Image
           source={paintedLandscape}
           style={styles.painted}
@@ -115,7 +113,6 @@ const styles = StyleSheet.create({
     bottom: 150,
     height: 232,
   },
-  landscapeSvg: { position: "absolute", left: -120, top: -18 },
   painted: { width: "100%", height: 232 },
   fadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
   fadeBottom: {

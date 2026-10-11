@@ -66,6 +66,10 @@ function Routes() {
       <Stack.Screen name="index" />
       <Stack.Screen name="invite/[token]" />
       <Stack.Screen name="migrated" />
+      {/* Development only: native crypto checks, reachable signed out too. */}
+      <Stack.Protected guard={__DEV__}>
+        <Stack.Screen name="self-test" />
+      </Stack.Protected>
       <Stack.Protected guard={stage === "signedOut"}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>

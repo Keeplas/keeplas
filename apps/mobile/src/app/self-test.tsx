@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -18,6 +18,12 @@ export default function SelfTest() {
   const { t } = useI18n();
   const [results, setResults] = useState<SelfTestResult[] | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // `keeplas://self-test?autorun=1` runs on open (simulator scripting).
+  const { autorun } = useLocalSearchParams<{ autorun?: string }>();
+  useEffect(() => {
+    if (autorun) runSelfTest().then(setResults);
+  }, [autorun]);
 
   async function run() {
     setBusy(true);
