@@ -989,7 +989,7 @@ export const enterConfirmationStage = internalMutation({
  * a release is already pending behind its owner-cancel grace — do nothing.
  * Otherwise close the cycle without releasing anything and notify the owner:
  * a missed Life Check alone must never cause disclosure (v2 F5 — the former
- * "release_anyway" fallback is gone, whatever a legacy config still says).
+ * "release_anyway" fallback is gone).
  */
 export const resolveConfirmationWindow = internalMutation({
   args: { cycleId: v.id("life_check_cycles") },

@@ -27,8 +27,9 @@ broke the zero-access promise (findings **F1** and **F2** in
 - No client splits the master key — `pnpm check:zk` forbids `@keeplas/crypto/shamir` in `apps/web`.
 - The shard endpoints (`storeEncryptedShard`, `submitRecoveryShards`, `getRecoveryShardsForMe`, …)
   are deleted.
-- `migrations:purgeMasterKeyShards` clears every server-side shard and flags owners whose key was
-  ever split with `users.masterKeyRotationRequired`. The web app then forces a master-key rotation
+- A one-off migration (Oct 2026) cleared every server-side shard, then the schema dropped the shard
+  fields and the `recovery_shard_submissions` table. Owners whose key was ever split were flagged
+  with `users.masterKeyRotationRequired`. The web app then forces a master-key rotation
   (`ForcedRotationGate` → `useRotateVault`), so any shard still sitting on a contact's device opens
   nothing.
 - `purgeLegacyShards()` removes leftover shards from browsers (dashboard load + sign-out).
@@ -88,15 +89,15 @@ whose stamp is missing or older than 30 days, then alerts the owner after 3 igno
 
 ## Key files reference
 
-| Concern                            | File                                                                       |
-| ---------------------------------- | -------------------------------------------------------------------------- |
-| Invite / accept / revoke contacts  | `packages/convex/trusted_contacts.ts`                                      |
-| Quorum, grace, revoke after return | `packages/convex/access_requests.ts`                                       |
-| Confirmation window resolution     | `packages/convex/life_check.ts`                                            |
-| Availability stamp (contact side)  | `apps/web/src/app/(dashboard)/shared-with-me/use-confirm-availability.ts`  |
-| Verify-before-wrap                 | `apps/web/src/lib/verify-contact-key.ts`                                   |
-| Master-key rotation                | `apps/web/src/lib/use-rotate-vault.ts`, `packages/convex/rotation.ts`      |
-| Legacy shard cleanup               | `packages/convex/migrations.ts`, `apps/web/src/lib/purge-legacy-shards.ts` |
+| Concern                            | File                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| Invite / accept / revoke contacts  | `packages/convex/trusted_contacts.ts`                                     |
+| Quorum, grace, revoke after return | `packages/convex/access_requests.ts`                                      |
+| Confirmation window resolution     | `packages/convex/life_check.ts`                                           |
+| Availability stamp (contact side)  | `apps/web/src/app/(dashboard)/shared-with-me/use-confirm-availability.ts` |
+| Verify-before-wrap                 | `apps/web/src/lib/verify-contact-key.ts`                                  |
+| Master-key rotation                | `apps/web/src/lib/use-rotate-vault.ts`, `packages/convex/rotation.ts`     |
+| Legacy shard cleanup (browser)     | `apps/web/src/lib/purge-legacy-shards.ts`                                 |
 
 ## See also
 

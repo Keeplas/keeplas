@@ -945,17 +945,8 @@ export const getVaultsWhereIAmContact = query({
       const localPart = email.split("@")[0] ?? "";
       const displayName = trimmedName || localPart || "Keeplas user";
 
-      // Never hand a legacy MasterKey shard back to the contact (v2 F1/F2):
-      // rows written before the shard purge may still carry one.
-      const {
-        encryptedShard: _encryptedShard,
-        shardPublicKeyUsed: _shardPublicKeyUsed,
-        shardIndex: _shardIndex,
-        shardConfirmed: _shardConfirmed,
-        ...relationship
-      } = contact;
       result.push({
-        ...relationship,
+        ...contact,
         ownerName: displayName,
         ownerEmail: email,
         ownerCycleStatus: activeCycle?.status ?? null,
