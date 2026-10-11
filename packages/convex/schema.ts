@@ -450,6 +450,9 @@ export default defineSchema({
     // Rows without verifiedAt are pending enrollments and may be replaced.
     verifiedAt: v.optional(v.number()),
     lastUsedAt: v.optional(v.number()),
+    // Wrong codes in the current lockout window (reset on success).
+    failedAttempts: v.optional(v.number()),
+    lastFailedAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
 

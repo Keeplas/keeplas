@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { api, internal } from "../_generated/api";
 import { sha256Hex } from "../lib/crypto";
-import { asUser, makeT, seedUser, signedAudit } from "./test.helpers";
+import {
+  asUser,
+  asUserSession,
+  makeT,
+  seedSession,
+  seedUser,
+  seedVerifiedTotp,
+  signedAudit,
+} from "./test.helpers";
 
 // A wrong code must count as an attempt even though the call fails: Convex
 // rolls back every write of a mutation that throws, so a limiter that patches
@@ -64,5 +72,21 @@ describe("one-time code attempts", () => {
     expect(await t.run((ctx) => ctx.db.query("audit_logs").collect())).toEqual(
       [],
     );
+  });
+
+  it("locks TOTP after 10 wrong codes", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    await seedVerifiedTotp(t, userId);
+    const sessionId = await seedSession(t, userId);
+    const as = asUserSession(t, userId, sessionId);
+    for (let i = 0; i < 10; i++) {
+      await expect(
+        as.mutation(api.totp.submitTotpForSession, { code: "000000" }),
+      ).resolves.toMatchObject({ success: false });
+    }
+    await expect(
+      as.mutation(api.totp.submitTotpForSession, { code: "000000" }),
+    ).rejects.toThrow("Too many attempts");
   });
 });
