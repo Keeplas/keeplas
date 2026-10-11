@@ -1,12 +1,13 @@
 import {
   internalMutation,
+  internalQuery,
   mutation,
   query,
   MutationCtx,
 } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { categoryValidator, accessLevelValidator } from "./validators";
+import { accessLevelValidator } from "./validators";
 import {
   requireFullAuth,
   getUserVault,
@@ -21,7 +22,10 @@ import {
   generateBlobUploadUrl,
   getBlobDownloadUrl,
   deleteBlob,
+  getBlobSize,
+  sizeBucket,
   storageRefValidator,
+  type StorageRef,
 } from "./lib/storage";
 
 const triggerTypeValidator = v.union(
@@ -56,32 +60,6 @@ export const getItems = query({
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
     return await getActiveItems(ctx, userId);
-  },
-});
-
-/**
- * Get vault items filtered by category.
- */
-export const getItemsByCategory = query({
-  args: { category: categoryValidator },
-  handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
-
-    const vault = await getUserVault(ctx, userId);
-    if (!vault) return [];
-
-    return await ctx.db
-      .query("vault_items")
-      .withIndex("by_category", (q) =>
-        q.eq("vaultId", vault._id).eq("category", args.category),
-      )
-      .filter((q) =>
-        q.and(
-          q.neq(q.field("status"), "archived"),
-          q.neq(q.field("isReleaseIntroduction"), true),
-        ),
-      )
-      .collect();
   },
 });
 
@@ -148,24 +126,6 @@ export const getItem = query({
 });
 
 /**
- * Get category counts for the current user's vault.
- */
-export const getCategoryCounts = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireFullAuth(ctx);
-
-    const items = await getActiveItems(ctx, userId);
-
-    const counts: Record<string, number> = {};
-    for (const item of items) {
-      counts[item.category] = (counts[item.category] ?? 0) + 1;
-    }
-    return counts;
-  },
-});
-
-/**
  * List the encrypted files attached to a vault item, sorted by their stored order.
  */
 export const getItemFiles = query({
@@ -224,35 +184,72 @@ const fileKindValidator = v.union(
   v.literal("image"),
 );
 
+// Name, type and size travel only inside `encryptedMeta` (F4); the server
+// measures the stored blob itself for the quota.
 const newFileValidator = v.object({
   storageId: storageRefValidator,
-  name: v.string(),
-  mimeType: v.string(),
-  size: v.number(),
   iv: v.string(),
-  kind: fileKindValidator,
-  durationSec: v.optional(v.number()),
+  encryptedMeta: v.string(),
 });
+
+type NewFile = { storageId: StorageRef; iv: string; encryptedMeta: string };
+
+/**
+ * Size bucket of each uploaded blob, measured from storage (the client
+ * cannot under-report). Throws if a blob is missing.
+ */
+async function measureFiles(ctx: MutationCtx, files: NewFile[]) {
+  return await Promise.all(
+    files.map(async (file) => {
+      const size = await getBlobSize(ctx, file.storageId);
+      if (size === null) throw new Error("Uploaded file not found");
+      return { ...file, sizeBucket: sizeBucket(size) };
+    }),
+  );
+}
 
 /**
  * Reject an upload that would push the user past their plan's storage ceiling
  * (Free 100 MB / Lifetime 10 GB — see lib/plans.ts). Throws
  * `"STORAGE_QUOTA_EXCEEDED"`, which the client maps to an upgrade prompt.
- * Sizes are the encrypted blob byte lengths the client just uploaded.
  */
 async function assertWithinStorageQuota(
   ctx: MutationCtx,
   userId: Id<"users">,
-  files: { size: number }[],
+  files: { sizeBucket: number }[],
 ): Promise<void> {
   if (files.length === 0) return;
-  const incoming = files.reduce((sum, f) => sum + f.size, 0);
+  const incoming = files.reduce((sum, f) => sum + f.sizeBucket, 0);
   const user = await ctx.db.get(userId);
   const plan = getUserPlan(user ?? { plan: undefined });
   const current = await getActiveStorageBytes(ctx, userId);
   if (current + incoming > PLAN_QUOTA_BYTES[plan]) {
     throw new Error("STORAGE_QUOTA_EXCEEDED");
   }
+}
+
+async function insertFiles(
+  ctx: MutationCtx,
+  itemId: Id<"vault_items">,
+  userId: Id<"users">,
+  files: (NewFile & { sizeBucket: number })[],
+  firstOrder: number,
+  now: number,
+) {
+  await Promise.all(
+    files.map((file, index) =>
+      ctx.db.insert("vault_item_files", {
+        itemId,
+        userId,
+        storageId: file.storageId,
+        iv: file.iv,
+        encryptedMeta: file.encryptedMeta,
+        sizeBucket: file.sizeBucket,
+        order: firstOrder + index,
+        createdAt: now,
+      }),
+    ),
+  );
 }
 
 /**
@@ -270,7 +267,6 @@ export const createItem = auditedMutation({
   resourceType: "vault_item",
   getResourceId: (_args, result) => result as string,
   getMetadata: (args) => ({
-    category: args.category,
     accessLevel: args.accessLevel,
     recipientMode: args.recipientMode ?? "default",
     fileCount: args.files?.length ?? 0,
@@ -278,7 +274,8 @@ export const createItem = auditedMutation({
   }),
   args: {
     vaultId: v.id("vaults"),
-    category: categoryValidator,
+    // JSON {v:1, category} under the item's DEK (F4).
+    encryptedMeta: v.string(),
     // Encrypted under the item's DEK (master key for legacy items), same
     // envelope as encryptedContent. Plaintext titles are no longer written.
     encryptedTitle: v.string(),
@@ -309,7 +306,8 @@ export const createItem = auditedMutation({
       throw new Error("Vault not found");
     }
 
-    await assertWithinStorageQuota(ctx, userId, args.files ?? []);
+    const files = await measureFiles(ctx, args.files ?? []);
+    await assertWithinStorageQuota(ctx, userId, files);
 
     const recipientMode = args.recipientMode ?? "default";
     const sharedWithContacts = args.sharedWithContacts ?? [];
@@ -351,7 +349,7 @@ export const createItem = auditedMutation({
     const itemId = await ctx.db.insert("vault_items", {
       vaultId: args.vaultId,
       userId,
-      category: args.category,
+      encryptedMeta: args.encryptedMeta,
       encryptedTitle: args.encryptedTitle,
       encryptedContent: args.encryptedContent,
       encryptedLinks: args.encryptedLinks,
@@ -383,25 +381,7 @@ export const createItem = auditedMutation({
       );
     }
 
-    if (args.files && args.files.length > 0) {
-      await Promise.all(
-        args.files.map((file, index) =>
-          ctx.db.insert("vault_item_files", {
-            itemId,
-            userId,
-            storageId: file.storageId,
-            name: file.name,
-            mimeType: file.mimeType,
-            size: file.size,
-            iv: file.iv,
-            kind: file.kind,
-            durationSec: file.durationSec,
-            order: index,
-            createdAt: now,
-          }),
-        ),
-      );
-    }
+    await insertFiles(ctx, itemId, userId, files, 0, now);
 
     await ctx.db.patch(args.vaultId, {
       encryptedItemsCount: vault.encryptedItemsCount + 1,
@@ -432,7 +412,7 @@ export const updateItem = auditedMutation({
     encryptedTitle: v.optional(v.string()),
     encryptedContent: v.optional(v.string()),
     encryptedLinks: v.optional(v.string()),
-    category: v.optional(categoryValidator),
+    encryptedMeta: v.optional(v.string()),
     accessLevel: v.optional(accessLevelValidator),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
@@ -629,6 +609,119 @@ export const backfillItemTitle = auditedMutation({
 });
 
 /**
+ * Owner items still carrying plaintext metadata (F4), with what the client
+ * needs to seal it: the legacy values and the DEK envelope.
+ */
+export const getItemsNeedingMetaBackfill = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const out = [];
+    for (const item of items) {
+      const files = await ctx.db
+        .query("vault_item_files")
+        .withIndex("by_item", (q) => q.eq("itemId", item._id))
+        .collect();
+      const legacyFiles = files.filter((f) => f.encryptedMeta === undefined);
+      if (item.encryptedMeta !== undefined && legacyFiles.length === 0) {
+        continue;
+      }
+      out.push({
+        itemId: item._id,
+        encryptionType: item.encryptionType,
+        ownerWrappedDek: item.ownerWrappedDek,
+        category: item.encryptedMeta === undefined ? item.category : undefined,
+        files: legacyFiles.map((f) => ({
+          fileId: f._id,
+          name: f.name ?? "",
+          mimeType: f.mimeType ?? "application/octet-stream",
+          size: f.size ?? 0,
+          kind: f.kind ?? "document",
+          durationSec: f.durationSec,
+        })),
+      });
+    }
+    return out;
+  },
+});
+
+/**
+ * Client-side metadata migration (F4): store the sealed metadata and drop the
+ * plaintext columns. The file's size becomes a bucket measured from storage.
+ */
+export const backfillItemMeta = auditedMutation({
+  action: "vault_item.meta_backfilled",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  args: {
+    itemId: v.id("vault_items"),
+    encryptedMeta: v.optional(v.string()),
+    files: v.array(
+      v.object({
+        fileId: v.id("vault_item_files"),
+        encryptedMeta: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    await requireItemOwnership(ctx, args.itemId, userId);
+    if (args.encryptedMeta !== undefined) {
+      await ctx.db.patch(args.itemId, {
+        encryptedMeta: args.encryptedMeta,
+        category: undefined,
+      });
+    }
+    for (const update of args.files) {
+      const file = await ctx.db.get(update.fileId);
+      if (!file || file.itemId !== args.itemId) {
+        throw new Error("File not found");
+      }
+      const size = await getBlobSize(ctx, file.storageId);
+      await ctx.db.patch(file._id, {
+        encryptedMeta: update.encryptedMeta,
+        sizeBucket: sizeBucket(size ?? file.size ?? 0),
+        name: undefined,
+        mimeType: undefined,
+        size: undefined,
+        kind: undefined,
+        durationSec: undefined,
+      });
+    }
+  },
+});
+
+/**
+ * Rows still holding plaintext metadata. The plaintext columns are dropped
+ * from the schema once both counts reach zero (F4 narrow step).
+ */
+export const countPlaintextMetadata = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    let items = 0;
+    for await (const item of ctx.db.query("vault_items")) {
+      if (item.category !== undefined) items++;
+    }
+    let files = 0;
+    for await (const file of ctx.db.query("vault_item_files")) {
+      if (
+        file.name !== undefined ||
+        file.mimeType !== undefined ||
+        file.size !== undefined ||
+        file.kind !== undefined
+      ) {
+        files++;
+      }
+    }
+    return { items, files };
+  },
+});
+
+/**
  * Attach already-uploaded encrypted blobs to an existing vault item. The
  * client must encrypt each blob under the item's existing DEK (unwrapped
  * via `ownerWrappedDek`) before calling this — the server only links the
@@ -648,32 +741,18 @@ export const addItemFiles = auditedMutation({
     await requireItemOwnership(ctx, args.itemId, userId);
     if (args.files.length === 0) return;
 
-    await assertWithinStorageQuota(ctx, userId, args.files);
+    const files = await measureFiles(ctx, args.files);
+    await assertWithinStorageQuota(ctx, userId, files);
 
     const existing = await ctx.db
       .query("vault_item_files")
       .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
       .collect();
-    let nextOrder = existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
+    const nextOrder =
+      existing.reduce((max, f) => Math.max(max, f.order), -1) + 1;
 
     const now = Date.now();
-    await Promise.all(
-      args.files.map((file) =>
-        ctx.db.insert("vault_item_files", {
-          itemId: args.itemId,
-          userId,
-          storageId: file.storageId,
-          name: file.name,
-          mimeType: file.mimeType,
-          size: file.size,
-          iv: file.iv,
-          kind: file.kind,
-          durationSec: file.durationSec,
-          order: nextOrder++,
-          createdAt: now,
-        }),
-      ),
-    );
+    await insertFiles(ctx, args.itemId, userId, files, nextOrder, now);
 
     await ctx.db.patch(args.itemId, { updatedAt: now });
   },

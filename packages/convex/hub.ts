@@ -3,8 +3,9 @@ import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
 import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./trusted_contacts";
 
 /**
- * Get all hub data in one query: continuity score, category counts,
- * recent items, contact count, feature status.
+ * Get all hub data in one query: continuity score, recent items, contact
+ * count, feature status. Categories are encrypted (F4), so per-category
+ * counts are computed on the client from the decrypted metadata.
  */
 export const getHubData = query({
   args: {},
@@ -14,14 +15,6 @@ export const getHubData = query({
 
     const vault = await getUserVault(ctx, userId);
     const items = await getActiveItems(ctx, userId);
-
-    // Category counts
-    const categoryCounts: Record<string, number> = {};
-    const categoriesPopulated = new Set<string>();
-    for (const item of items) {
-      categoryCounts[item.category] = (categoryCounts[item.category] ?? 0) + 1;
-      categoriesPopulated.add(item.category);
-    }
 
     // Recent items (last 7) — kept in sync with the Priority Actions count so
     // the Hub bottom row stays visually balanced.
@@ -104,14 +97,13 @@ export const getHubData = query({
       releasePolicySet,
       hasStrongAuth,
       phoneVerified,
-      categoriesPopulated.size >= 5 && items.length > 0,
       hasIntroduction,
     ];
     const continuityScore = Math.round(
       (axes.filter(Boolean).length / axes.length) * 100,
     );
 
-    // Priority actions: always emit all nine with their done flag, so the UI
+    // Priority actions: always emit all of them with their done flag, so the UI
     // can render the completed ones in a muted state ("trophée" feel).
     // Pending actions are listed first, completed ones at the bottom.
     const priorityActions: Array<{
@@ -168,19 +160,11 @@ export const getHubData = query({
         href: "/settings?verify=whatsapp",
         done: phoneVerified,
       },
-      {
-        key: "more_categories",
-        label: "Add items in more categories",
-        href: "/vault",
-        done: categoriesPopulated.size >= 5 && items.length > 0,
-      },
     ].sort((a, b) => Number(a.done) - Number(b.done));
 
     return {
       continuityScore,
       totalItems: items.length,
-      categoryCounts,
-      categoriesPopulated: categoriesPopulated.size,
       confirmedContacts: contacts.length,
       lifeCheckConfigured: !!lifeCheckConfig?.isActive,
       recentItems: recentItems.map((item) => ({
@@ -188,6 +172,8 @@ export const getHubData = query({
         title: item.title,
         encryptedTitle: item.encryptedTitle,
         ownerWrappedDek: item.ownerWrappedDek,
+        encryptionType: item.encryptionType,
+        encryptedMeta: item.encryptedMeta,
         category: item.category,
         updatedAt: item.updatedAt,
       })),

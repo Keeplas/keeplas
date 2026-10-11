@@ -526,7 +526,13 @@ export default defineSchema({
     vaultId: v.id("vaults"),
     userId: v.id("users"),
 
-    category: categoryValidator,
+    // Legacy plaintext category (F4). New writes put it in `encryptedMeta`;
+    // the owner's client backfills old rows (vault_items.backfillItemMeta).
+    // Dropped once `vault_items.countPlaintextMetadata` reaches zero.
+    category: v.optional(categoryValidator),
+    // Item metadata (JSON {v:1, category}) under the item DEK, same
+    // {ciphertext, iv} envelope as `encryptedContent`.
+    encryptedMeta: v.optional(v.string()),
 
     // Legacy plaintext title. Kept optional only to read rows not yet migrated
     // to `encryptedTitle`; new writes never set it. Removed once the
@@ -594,7 +600,6 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_vault", ["vaultId"])
-    .index("by_category", ["vaultId", "category"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
     .index("by_trigger", ["triggerType", "status"]),
@@ -632,19 +637,28 @@ export default defineSchema({
     userId: v.id("users"),
     storageId: v.id("_storage"),
 
-    name: v.string(),
-    mimeType: v.string(),
-    size: v.number(),
+    // Legacy plaintext metadata (F4), read-only until backfilled into
+    // `encryptedMeta`; dropped once `countPlaintextMetadata` reaches zero.
+    name: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
+    size: v.optional(v.number()),
+    kind: v.optional(
+      v.union(
+        v.literal("document"),
+        v.literal("audio"),
+        v.literal("video"),
+        v.literal("image"),
+      ),
+    ),
+    durationSec: v.optional(v.number()),
+    // File metadata (JSON {v:1, name, mimeType, size, kind, durationSec?})
+    // under the item DEK.
+    encryptedMeta: v.optional(v.string()),
+    // Stored blob size rounded up to a bucket (lib/storage.ts sizeBucket):
+    // enough for the quota, without the exact size in the row.
+    sizeBucket: v.optional(v.number()),
     iv: v.string(),
 
-    kind: v.union(
-      v.literal("document"),
-      v.literal("audio"),
-      v.literal("video"),
-      v.literal("image"),
-    ),
-
-    durationSec: v.optional(v.number()),
     order: v.number(),
     createdAt: v.number(),
   })

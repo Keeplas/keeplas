@@ -6,6 +6,7 @@ import {
   getActiveVaultFiles,
 } from "./helpers";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
+import { storedFileBytes } from "./lib/storage";
 
 /**
  * Get or create the user's vault.
@@ -43,12 +44,11 @@ export const getVault = query({
 
 /**
  * Aggregate the resources consumed by the current user: encrypted storage
- * bytes used, attached file count, active vault item count, and per-category
- * breakdown. Used by the "Usage" settings page so users can monitor their
- * footprint and see when an upgrade would be needed.
+ * bytes used, attached file count and active vault item count. Used by the
+ * "Usage" settings page. Category and file-kind breakdowns are computed on
+ * the client from the decrypted metadata (F4).
  *
- * Storage is computed from `vault_item_files.size` (raw ciphertext byte
- * length, which is what the storage backend actually holds) and counts only
+ * Storage sums the files' size buckets (the quota's unit) and counts only
  * files attached to non-archived items so archived data does not inflate the
  * displayed total.
  */
@@ -63,24 +63,10 @@ export const getUsageStats = query({
     const items = await getActiveItems(ctx, userId);
     const files = await getActiveVaultFiles(ctx, userId);
 
-    let storageBytes = 0;
-    const fileKindCounts: Record<string, number> = {};
-    for (const file of files) {
-      storageBytes += file.size;
-      fileKindCounts[file.kind] = (fileKindCounts[file.kind] ?? 0) + 1;
-    }
-
-    const categoryCounts: Record<string, number> = {};
-    for (const item of items) {
-      categoryCounts[item.category] = (categoryCounts[item.category] ?? 0) + 1;
-    }
-
     return {
-      storageBytes,
+      storageBytes: files.reduce((sum, f) => sum + storedFileBytes(f), 0),
       fileCount: files.length,
       activeItemsCount: items.length,
-      categoryCounts,
-      fileKindCounts,
       plan,
       quotaBytes: PLAN_QUOTA_BYTES[plan],
     };

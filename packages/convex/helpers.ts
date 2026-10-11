@@ -1,6 +1,7 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
+import { storedFileBytes } from "./lib/storage";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 export const LOGIN_OTP_REQUIRED_ERROR = "LOGIN_OTP_REQUIRED";
@@ -194,7 +195,7 @@ export async function getActiveStorageBytes(
   userId: Id<"users">,
 ): Promise<number> {
   const files = await getActiveVaultFiles(ctx, userId);
-  return files.reduce((sum, f) => sum + f.size, 0);
+  return files.reduce((sum, f) => sum + storedFileBytes(f), 0);
 }
 
 /**

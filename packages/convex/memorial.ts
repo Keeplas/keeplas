@@ -104,7 +104,10 @@ async function shapeItem(
     _id: item._id,
     title: item.title,
     encryptedTitle: item.encryptedTitle,
+    // Legacy plaintext category until backfilled; else sealed in
+    // encryptedMeta under the item DEK (F4).
     category: item.category,
+    encryptedMeta: item.encryptedMeta,
     encryptionType: item.encryptionType,
     encryptedContent: item.encryptedContent,
     encryptedLinks: item.encryptedLinks ?? null,

@@ -99,7 +99,9 @@ export const getContactAccessSummary = query({
           title: item.title,
           encryptedTitle: item.encryptedTitle,
           ownerWrappedDek: item.ownerWrappedDek,
+          encryptionType: item.encryptionType,
           category: item.category,
+          encryptedMeta: item.encryptedMeta,
           recipientMode: item.recipientMode ?? "default",
           isReleaseIntroduction: item.isReleaseIntroduction === true,
         });
