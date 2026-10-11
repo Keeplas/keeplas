@@ -84,10 +84,10 @@ Each step lists its verification. A phase is done when every check passes.
 
 - [x] Design kit, Figma snapshot and this file under `PRD/v2-mobile-first/` → verify: links in this file resolve
 
-### Phase 1: `apps/mobile` scaffold
+### Phase 1: `apps/mobile` scaffold (done)
 
-- [ ] Expo app in `apps/mobile`, wired into pnpm workspace + Turborepo, no features → verify: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm build` green; web unaffected
-- [ ] Load the design-kit tokens (`tokens/theme.ts`) and fonts (Source Serif 4, Inter via `expo-font`) → verify: app boots on iOS simulator with a token-styled placeholder screen
+- [x] Expo app in `apps/mobile`, wired into pnpm workspace + Turborepo, no features → verify: `pnpm install`, `pnpm lint`, `pnpm typecheck`, `pnpm build` green; web unaffected
+- [x] Load the design-kit tokens (`tokens/theme.ts`) and fonts (Source Serif 4, Inter via `expo-font`) → verify: app boots on iOS simulator with a token-styled placeholder screen
 
 ### Phase 2: Stop the leaks (F2 → F1 → F5)
 

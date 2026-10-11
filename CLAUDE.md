@@ -77,7 +77,7 @@ Don't ship parallel pages for overlapping features — favor variants / categori
 
 ## Monorepo & tooling
 
-- Turborepo + pnpm. Apps: `apps/web` (TanStack Start + Vite). Packages: `packages/crypto` (RESTRICTED — founders only via CODEOWNERS), `packages/convex`, `packages/ui`.
+- Turborepo + pnpm. Apps: `apps/web` (TanStack Start + Vite), `apps/mobile` (Expo / React Native — scaffold only, see `PRD/v2-mobile-first/README.md`; run with `pnpm --filter @keeplas/mobile ios`). Packages: `packages/crypto` (RESTRICTED — founders only via CODEOWNERS), `packages/convex`, `packages/ui`.
 - After editing anything under `packages/convex/`, run `npx convex dev` to regenerate types and sync the deployment.
 
 ## Web app (TanStack Start)

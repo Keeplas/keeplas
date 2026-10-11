@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Keeplas",
+    "slug": "keeplas",
+    "scheme": "keeplas",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.keeplas.app"
+    },
+    "android": {
+      "package": "com.keeplas.app",
+      "predictiveBackGestureEnabled": false
+    }
+  }
+}
