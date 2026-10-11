@@ -3,6 +3,7 @@ export const STORAGE_KEYS = {
   notifications: "keeplas.notifications",
   security: "keeplas.security",
   passiveSignalLastSentAt: "keeplas.passive_signal_last_sent_at",
+  theme: "keeplas.theme",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

@@ -18,6 +18,7 @@ import { useTranslations } from "@/lib/i18n";
 import { ContactCard } from "./contact-card";
 import { ContactDetailSheet } from "./contact-detail-sheet";
 import { InviteContactDialog } from "./invite-contact-dialog";
+import { NoContactsMessage } from "./no-contacts-message";
 import { AccessRequestsSection } from "./access-requests-section";
 import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
@@ -318,31 +319,8 @@ export default function TrustedContactsPage() {
                 )}
 
               {activeContacts.length === 0 ? (
-                <div
-                  className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
-                  onClick={() => openInvite("trust")}
-                >
-                  <div className="w-16 h-16 rounded-sm bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <svg
-                      className="w-8 h-8 text-secondary"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-headline-sm text-primary">
-                    {t("emptyState.title")}
-                  </h3>
-                  <p className="text-body-md text-on-surface-variant mt-2 text-center max-w-xs">
-                    {t("emptyState.description")}
-                  </p>
+                <div className="flex justify-center rounded-[16px] border border-border-default bg-bg-surface">
+                  <NoContactsMessage onAdd={() => openInvite("trust")} />
                 </div>
               ) : (
                 <div className="space-y-8">

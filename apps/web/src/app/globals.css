@@ -13,8 +13,8 @@
    Names mirror Figma: `navy/900` → --kp-navy-900, `bg/app` → --kp-bg-app.
    ═══════════════════════════════════════════════ */
 
-/* Dark (Noir): set `.dark` on <html>. Nothing toggles it yet; screens are
-   rebuilt light + dark in v2 phase 7. */
+/* Dark (Noir): `.dark` on <html>, toggled by the theme preference
+   (src/lib/theme.ts). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -108,6 +108,23 @@
   /* Soft card shadow (Figma: navy 10 %, y 14, blur 32). Dark uses borders. */
   --kp-shadow-card: 0 14px 32px rgb(14 35 64 / 0.1);
 
+  /* ── Web screen extensions (not in Figma Foundations). The web screens
+     (W04-*, W05-*) paint these from primitives; naming them here keeps
+     components on semantic tokens and gives each a Noir value. ── */
+  --kp-header-text: var(--kp-neutral-white);
+  --kp-header-text-muted: var(--kp-navy-200);
+  --kp-icon-default: var(--kp-navy-600);
+  --kp-icon-subtle: var(--kp-navy-400);
+  --kp-bg-accent: var(--kp-sky-100);
+  --kp-text-accent: var(--kp-sky-500);
+  --kp-bg-danger: var(--kp-danger-100);
+  --kp-bg-pending: var(--kp-dawn-100);
+  --kp-text-pending: var(--kp-warning-600);
+  --kp-scrim: rgb(7 26 48 / 0.45);
+  /* Floating menus (W04-3b): navy 16 %, y 16, blur 40 + navy 6 %, y 2, blur 6. */
+  --kp-shadow-menu:
+    0 16px 40px rgb(14 35 64 / 0.16), 0 2px 6px rgb(14 35 64 / 0.06);
+
   /* ── Spacing (4 px grid) ── */
   --kp-space-1: 4px;
   --kp-space-2: 8px;
@@ -148,6 +165,25 @@
   --kp-progress-track: var(--kp-noir-800);
   --kp-progress-fill: var(--kp-noir-sky);
   --kp-shadow-card: none;
+  --kp-header-text: var(--kp-noir-50);
+  --kp-header-text-muted: var(--kp-noir-200);
+  --kp-icon-default: var(--kp-noir-200);
+  --kp-icon-subtle: var(--kp-noir-400);
+  --kp-bg-accent: var(--kp-noir-info);
+  --kp-text-accent: var(--kp-noir-sky);
+  --kp-bg-danger: color-mix(
+    in srgb,
+    var(--kp-noir-danger) 16%,
+    var(--kp-noir-900)
+  );
+  --kp-bg-pending: color-mix(
+    in srgb,
+    var(--kp-noir-warning) 16%,
+    var(--kp-noir-900)
+  );
+  --kp-text-pending: var(--kp-noir-warning);
+  --kp-scrim: rgb(0 0 0 / 0.6);
+  --kp-shadow-menu: none;
   color-scheme: dark;
 }
 
@@ -189,6 +225,17 @@
   --color-category-other: var(--kp-category-other);
   --color-category-note: var(--kp-category-note);
   --shadow-card: var(--kp-shadow-card);
+  --shadow-menu: var(--kp-shadow-menu);
+  --color-header-text: var(--kp-header-text);
+  --color-header-text-muted: var(--kp-header-text-muted);
+  --color-icon-default: var(--kp-icon-default);
+  --color-icon-subtle: var(--kp-icon-subtle);
+  --color-bg-accent: var(--kp-bg-accent);
+  --color-text-accent: var(--kp-text-accent);
+  --color-bg-danger: var(--kp-bg-danger);
+  --color-bg-pending: var(--kp-bg-pending);
+  --color-text-pending: var(--kp-text-pending);
+  --color-scrim: var(--kp-scrim);
 
   /* ── Legacy "Digital Curator" names, re-pointed to v2 values so current
      screens take the new palette. Light only. Do not use in new code; they

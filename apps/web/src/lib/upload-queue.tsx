@@ -5,9 +5,13 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
 } from "react";
-import { toast, ToastAction } from "@keeplas/ui";
+import { useConvex } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "@keeplas/ui";
+import { StateDialog } from "@/components/state-dialog";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
@@ -15,6 +19,12 @@ import { useAuditedMutation } from "./use-audited-mutation";
 import { useVaultCrypto } from "./use-vault-crypto";
 import { fileMetaJson } from "./item-meta";
 import { useTranslations } from "./i18n";
+import { formatBytes } from "./format";
+import { useRouter } from "./navigation";
+import {
+  StorageFullMessage,
+  UploadFailedMessage,
+} from "@/components/upload-state-messages";
 
 type AttachmentKind = "document" | "audio" | "video" | "image";
 
@@ -39,17 +49,30 @@ interface UploadQueueContextValue {
 
 const UploadQueueContext = createContext<UploadQueueContextValue | null>(null);
 
+/**
+ * The server refuses an upload past the plan quota with
+ * `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })`; production redacts plain
+ * error messages, so the message check is only a fallback.
+ */
+function isQuotaError(err: Error): boolean {
+  if (err instanceof ConvexError) {
+    return (err.data as { code?: string } | null)?.code === QUOTA_CODE;
+  }
+  return err.message.includes(QUOTA_CODE);
+}
+
+const QUOTA_CODE = "STORAGE_QUOTA_EXCEEDED";
+
+/** Section 10 states shown when a job ends with failed files. */
+type UploadFailure =
+  | { kind: "failed"; name: string; retry: () => void }
+  | { kind: "full"; quotaBytes: number; plan: "free" | "lifetime" };
+
 const MAX_CONCURRENT_UPLOADS = 2;
 // Radix doesn't honour Infinity here. ~11 days is effectively persistent;
 // the toast is dismissed manually on terminal state.
 const PERSISTENT_DURATION_MS = 1_000_000_000;
 const TOAST_THROTTLE_MS = 250;
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function uploadWithProgress(
   url: string,
@@ -87,6 +110,9 @@ function uploadWithProgress(
 
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("vault.upload");
+  const convex = useConvex();
+  const router = useRouter();
+  const [failure, setFailure] = useState<UploadFailure | null>(null);
   const { encryptBlobWithKey, encryptContentWithKey } = useVaultCrypto();
   const generateUploadUrl = useAuditedMutation(
     api.vault_items.generateUploadUrl,
@@ -192,37 +218,30 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         // Let the success state breathe before auto-dismiss.
         setTimeout(() => handle.dismiss(), 5000);
       } else {
+        handle.dismiss();
         const retryFiles = failed.map((f) => files[f.index]);
-        const firstError = failed[0].error.message;
-        handle.update({
-          id: handle.id,
-          variant: "error",
-          title: t("failedTitle"),
-          description: t("failedDescription", {
-            label,
-            completed,
-            total: files.length,
-            failed: failed.length,
-            error: firstError,
-          }),
-          duration: PERSISTENT_DURATION_MS,
-          action: (
-            <ToastAction
-              altText={t("retryAltText")}
-              onClick={() => {
-                handle.dismiss();
-                void runJobRef.current?.({
-                  itemId,
-                  label,
-                  dek,
-                  files: retryFiles,
-                });
-              }}
-            >
-              {t("retry")}
-            </ToastAction>
-          ),
-        });
+        const stats = failed.some((f) => isQuotaError(f.error))
+          ? await convex.query(api.vaults.getUsageStats, {}).catch(() => null)
+          : null;
+        if (stats) {
+          setFailure({
+            kind: "full",
+            quotaBytes: stats.quotaBytes,
+            plan: stats.plan,
+          });
+        } else {
+          setFailure({
+            kind: "failed",
+            name: retryFiles[0].name,
+            retry: () =>
+              void runJobRef.current?.({
+                itemId,
+                label,
+                dek,
+                files: retryFiles,
+              }),
+          });
+        }
       }
     },
     [
@@ -230,6 +249,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       encryptContentWithKey,
       generateUploadUrl,
       addItemFiles,
+      convex,
       t,
     ],
   );
@@ -251,6 +271,40 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   return (
     <UploadQueueContext.Provider value={value}>
       {children}
+      <StateDialog
+        open={failure !== null}
+        onOpenChange={(open) => !open && setFailure(null)}
+        title={
+          failure?.kind === "full"
+            ? t("state.full.title", { quota: formatBytes(failure.quotaBytes) })
+            : t("state.failed.title")
+        }
+      >
+        {failure?.kind === "failed" ? (
+          <UploadFailedMessage
+            name={failure.name}
+            onRetry={() => {
+              setFailure(null);
+              failure.retry();
+            }}
+            onRemove={() => setFailure(null)}
+          />
+        ) : null}
+        {failure?.kind === "full" ? (
+          <StorageFullMessage
+            quota={formatBytes(failure.quotaBytes)}
+            canUpgrade={failure.plan === "free"}
+            onUpgrade={() => {
+              setFailure(null);
+              router.push("/settings/subscription");
+            }}
+            onManage={() => {
+              setFailure(null);
+              router.push("/settings");
+            }}
+          />
+        ) : null}
+      </StateDialog>
     </UploadQueueContext.Provider>
   );
 }

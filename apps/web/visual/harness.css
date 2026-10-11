@@ -1,0 +1,3 @@
+/* The harness server's root is visual/, so point Tailwind at the app sources. */
+@import "../src/app/globals.css";
+@source "../src";

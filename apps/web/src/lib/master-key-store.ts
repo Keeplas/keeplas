@@ -11,8 +11,8 @@
  * - Stored only in IndexedDB on this device. Never sent to the server — the
  *   zero-knowledge model is preserved.
  * - The CryptoKey object itself is stored via structured clone (not raw bytes).
- *   It stays extractable because master-key rotation (use-rotate-vault.ts)
- *   exports it; a script running on this origin while unlocked could therefore
+ *   It stays extractable because device unlock methods wrap its raw bytes
+ *   (device-unlock/key-import.ts); a script running on this origin while unlocked could therefore
  *   read it. The trade-off is deliberate: the vault no longer re-locks on
  *   refresh. Cleared on sign-out via clearPersistedMasterKeys().
  */

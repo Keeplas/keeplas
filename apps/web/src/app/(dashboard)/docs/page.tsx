@@ -66,7 +66,7 @@ const QUICK_LINKS: Array<{ key: string; href: string; iconPath: string }> = [
   { key: "hub", href: "/hub", iconPath: ICON_PATHS.hub },
   {
     key: "security",
-    href: "/settings/security",
+    href: "/devices",
     iconPath: ICON_PATHS.key,
   },
   {
@@ -116,7 +116,7 @@ export default function DocsPage() {
               {t("hub.hero.exportKit")}
             </Link>
             <Link
-              href="/settings/security"
+              href="/devices"
               className="inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-xs hover:bg-white/10 transition-all font-headline font-bold"
             >
               {t("hub.hero.securityCenter")}
