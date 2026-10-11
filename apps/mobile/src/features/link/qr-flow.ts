@@ -4,7 +4,7 @@ import { parsePairingQr, type PairingQr } from "@keeplas/crypto/pairing";
 export interface PairingSession {
   browserPublicKey: string;
   userAgent: string;
-  approxLocation: string;
+  approxLocation?: string;
   expiresAt: number;
 }
 
@@ -19,6 +19,8 @@ export interface ScanDeps {
   getSession: (sessionId: string) => Promise<PairingSession | null>;
   /** `pairingKeyHash` from @keeplas/crypto/pairing. */
   keyHash: (publicKey: string) => Promise<string>;
+  /** Web app origin the envelope may be sealed for (EXPO_PUBLIC_APP_URL). */
+  expectedOrigin: string;
 }
 
 /**
@@ -31,7 +33,8 @@ export async function evaluatePairingQr(
   deps: ScanDeps,
 ): Promise<ScanOutcome> {
   const qr = parsePairingQr(text.trim());
-  if (!qr) return { kind: "invalid" };
+  // A QR for another origin would seal the vault key to a look-alike site.
+  if (!qr || qr.origin !== deps.expectedOrigin) return { kind: "invalid" };
   let session: PairingSession | null;
   try {
     session = await deps.getSession(qr.sessionId);

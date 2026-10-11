@@ -66,6 +66,7 @@ function Routes() {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="invite/[token]" />
+      <Stack.Screen name="migrated" />
       <Stack.Protected guard={stage === "signedOut"}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>

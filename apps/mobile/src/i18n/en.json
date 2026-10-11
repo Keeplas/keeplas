@@ -252,6 +252,7 @@
     "title": "Link this browser?",
     "body": "A device is requesting access to your Keeplas account.",
     "unknownBrowser": "Unknown browser",
+    "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
     "faceTitle": "Use Face ID to approve",

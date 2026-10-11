@@ -242,6 +242,7 @@
     "title": "Associer ce navigateur ?",
     "body": "Un appareil demande l'accès à votre compte Keeplas.",
     "unknownBrowser": "Navigateur inconnu",
+    "deviceOn": "{browser} sur {os}",
     "unknownLocation": "Lieu inconnu",
     "today": "Aujourd'hui à {time}",
     "faceTitle": "Utilisez Face ID pour approuver",

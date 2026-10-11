@@ -1,4 +1,4 @@
-import { Alert, Linking, StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
@@ -7,9 +7,8 @@ import { Screen } from "@/components/screen";
 import { IconBadge } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
+import { contactSupport } from "@/lib/support";
 import { useTheme } from "@/providers/theme-provider";
-
-const SUPPORT_EMAIL = "support@keeplas.com";
 
 /** M09-9 Device check failed (App Attest / Play Integrity refused). */
 export default function DeviceCheckFailed() {
@@ -35,11 +34,7 @@ export default function DeviceCheckFailed() {
         variant="secondary"
         label={t("attestation.contactSupport")}
         style={styles.full}
-        onPress={() =>
-          Linking.openURL(
-            `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(ref)}`,
-          )
-        }
+        onPress={() => contactSupport(ref)}
       />
       <Button
         variant="text"

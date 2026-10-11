@@ -4,6 +4,7 @@ import { Linking } from "react-native";
 import { Button } from "@/components/button";
 import { StateSheet } from "@/components/state-message";
 import { canUseBiometrics } from "@/crypto/device-vault";
+import { contactSupport } from "@/lib/support";
 import { useRegisterPasskey } from "@/lib/use-register-passkey";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -56,7 +57,7 @@ export function PasskeyButton({
         primary={{ label: t("common.tryAgain"), onPress: create }}
         secondary={{
           label: t("common.getHelp"),
-          onPress: () => Linking.openURL("mailto:support@keeplas.com"),
+          onPress: () => contactSupport(),
         }}
       />
       <StateSheet
