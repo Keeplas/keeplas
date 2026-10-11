@@ -58,15 +58,6 @@ export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
-export { PasswordInput } from "./password-input";
-export {
-  PasswordStrength,
-  evaluatePassword,
-  type PasswordRuleKey,
-  type PasswordEvaluation,
-  type PasswordStrengthLabels,
-  type PasswordStrengthProps,
-} from "./password-strength";
 export {
   PhoneInput,
   type PhoneInputProps,

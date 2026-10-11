@@ -80,7 +80,7 @@ export function SecurityCenterSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Social Recovery */}
-        <section className="md:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border flex flex-col justify-between">
+        <section className="md:col-span-12 bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-start mb-6 gap-4 flex-wrap">
               <div>
@@ -189,29 +189,6 @@ export function SecurityCenterSection() {
               {t("socialRecovery.manageRules")}
             </Link>
           </div>
-        </section>
-
-        {/* Recovery Kit shortcut */}
-        <section className="md:col-span-4 bg-primary-container text-on-primary-container p-6 md:p-8 rounded-sm flex flex-col justify-between">
-          <div>
-            <Icon
-              path={ICON_PATHS.description}
-              className="w-10 h-10 mb-5 text-secondary-fixed"
-            />
-            <h2 className="text-headline-md text-white mb-3">
-              {t("recoveryKitShortcut.title")}
-            </h2>
-            <p className="text-body-md text-on-primary-container mb-6">
-              {t("recoveryKitShortcut.description")}
-            </p>
-          </div>
-          <Link
-            href="/settings/recovery-kit"
-            className="vault-gradient text-white w-full py-3 rounded-xs font-bold flex items-center justify-center space-x-3 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
-          >
-            <Icon path={ICON_PATHS.print} className="w-5 h-5" />
-            <span>{t("recoveryKitShortcut.cta")}</span>
-          </Link>
         </section>
 
         {/* Master Recovery: 24 words + trusted contacts (no key split) */}
