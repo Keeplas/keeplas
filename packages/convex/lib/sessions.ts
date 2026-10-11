@@ -2,9 +2,34 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 
 /**
- * End every Convex Auth session of `userId` except `keep`: deletes the
- * session, its refresh tokens and its step-up markers, so no client can
- * refresh into it again.
+ * Delete one Convex Auth session with its refresh tokens and step-up
+ * markers, so no client can refresh into it again (`requireAuth` also
+ * rejects its live JWT).
+ */
+export async function endSession(
+  ctx: MutationCtx,
+  sessionId: Id<"authSessions">,
+) {
+  const tokens = await ctx.db
+    .query("authRefreshTokens")
+    .withIndex("sessionId", (q) => q.eq("sessionId", sessionId))
+    .collect();
+  for (const token of tokens) await ctx.db.delete(token._id);
+  for (const table of [
+    "auth_session_totp",
+    "auth_session_login_otp",
+  ] as const) {
+    const markers = await ctx.db
+      .query(table)
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .collect();
+    for (const marker of markers) await ctx.db.delete(marker._id);
+  }
+  if (await ctx.db.get(sessionId)) await ctx.db.delete(sessionId);
+}
+
+/**
+ * End every session of `userId` except `keep`. Returns how many were ended.
  */
 export async function endSessions(
   ctx: MutationCtx,
@@ -15,23 +40,7 @@ export async function endSessions(
     .query("authSessions")
     .withIndex("userId", (q) => q.eq("userId", userId))
     .collect();
-  for (const session of sessions) {
-    if (session._id === keep) continue;
-    const tokens = await ctx.db
-      .query("authRefreshTokens")
-      .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
-      .collect();
-    for (const token of tokens) await ctx.db.delete(token._id);
-    for (const table of [
-      "auth_session_totp",
-      "auth_session_login_otp",
-    ] as const) {
-      const markers = await ctx.db
-        .query(table)
-        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-        .collect();
-      for (const marker of markers) await ctx.db.delete(marker._id);
-    }
-    await ctx.db.delete(session._id);
-  }
+  const ended = sessions.filter((s) => s._id !== keep);
+  for (const session of ended) await endSession(ctx, session._id);
+  return ended.length;
 }

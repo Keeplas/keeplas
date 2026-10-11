@@ -237,11 +237,15 @@ export default defineSchema({
     deviceType: v.optional(
       v.union(v.literal("singleDevice"), v.literal("multiDevice")),
     ),
+    // Device (browser / phone) the passkey was created on; deleted with it
+    // when the device is revoked, so a revoked browser cannot sign in again.
+    keeplasDeviceId: v.optional(v.id("devices")),
     createdAt: v.number(),
     lastUsedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_credential_id", ["credentialId"]),
+    .index("by_credential_id", ["credentialId"])
+    .index("by_keeplas_device", ["keeplasDeviceId"]),
 
   webauthn_challenges: defineTable({
     challenge: v.string(),
@@ -289,6 +293,11 @@ export default defineSchema({
     devicePublicKey: v.optional(v.string()),
     // True when the user ticked "Trust this browser".
     trusted: v.boolean(),
+    // Convex Auth session the device registered from; ended on revoke.
+    sessionId: v.optional(v.id("authSessions")),
+    // Set when the owner answered "It was me" (M08-4). The first device of
+    // an account is acknowledged at registration.
+    acknowledgedAt: v.optional(v.number()),
     lastSeenAt: v.number(),
     revokedAt: v.optional(v.number()),
     createdAt: v.number(),

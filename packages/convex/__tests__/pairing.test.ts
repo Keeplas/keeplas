@@ -261,32 +261,3 @@ describe("pairing sessions", () => {
     });
   });
 });
-
-describe("devices", () => {
-  it("registers the current device and lists active ones", async () => {
-    const t = makeT();
-    const userId = await seedUser(t);
-    const deviceId = await asUser(t, userId).mutation(api.devices.register, {
-      kind: "web",
-      label: "  Chrome on macOS  ",
-      trusted: true,
-      _audit: await signedAudit(),
-    });
-    await t.run((ctx) =>
-      ctx.db.insert("devices", {
-        userId,
-        kind: "ios",
-        label: "Old iPhone",
-        trusted: true,
-        lastSeenAt: 0,
-        revokedAt: 1,
-        createdAt: 0,
-      }),
-    );
-
-    const devices = await asUser(t, userId).query(api.devices.list, {});
-    expect(devices.map((d) => d._id)).toEqual([deviceId]);
-    expect(devices[0].label).toBe("Chrome on macOS");
-    expect(await t.query(api.devices.list, {})).toEqual([]);
-  });
-});

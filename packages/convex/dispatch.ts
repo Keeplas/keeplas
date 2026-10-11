@@ -1150,6 +1150,64 @@ const TC_RELEASE_COPY = {
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
+const NEW_DEVICE_COPY = {
+  en: {
+    subject: "Keeplas — a new device was linked to your account",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (device?: string) =>
+      `${device ?? "A new device"} was just linked to your Keeplas account. If it was you, there is nothing to do. If not, open Keeplas on your phone and tap "It wasn't me": we remove the device, end its sessions and rotate your keys.`,
+    button: "Review devices",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — un nouvel appareil a été associé à votre compte",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (device?: string) =>
+      `${device ?? "Un nouvel appareil"} vient d'être associé à votre compte Keeplas. Si c'était vous, rien à faire. Sinon, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » : nous retirons l'appareil, fermons ses sessions et changeons vos clés.`,
+    button: "Voir les appareils",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/**
+ * New-device alert (M08-4) to the owner: every new link or sign-in is
+ * announced on the other channels. Email + WhatsApp; the in-app alert is the
+ * `devices.pendingAlerts` query.
+ */
+export const notifyNewDevice = internalAction({
+  args: {
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    ownerName: v.optional(v.string()),
+    deviceLabel: v.string(),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
+    const locale = resolveLocale(args.language);
+    const email = await safeSend(() =>
+      sendCtaEmail({
+        to: args.email,
+        copy: NEW_DEVICE_COPY[locale],
+        greetingName: args.ownerName,
+        bodyName: args.deviceLabel,
+        path: "/settings/security",
+      }),
+    );
+    const whatsapp = await safeSend(() =>
+      sendTemplateWhatsApp({
+        to: args.phoneNumber,
+        envName: process.env.WHATSAPP_NEW_DEVICE_TEMPLATE_NAME,
+        base: "keeplas_new_device",
+        placeholder: args.deviceLabel,
+        locale,
+      }),
+    );
+    return `email:${email} whatsapp:${whatsapp}`;
+  },
+});
+
 /**
  * Stage-2 notice to a trust contact: the owner stopped responding; confirming
  * unavailability opens the owner's 72h cancel window, after which the contact
