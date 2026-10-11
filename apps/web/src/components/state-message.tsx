@@ -3,8 +3,9 @@ import { cn, Icon } from "@keeplas/ui";
 
 const TONE_CLASS = {
   neutral: "bg-bg-info text-text-primary",
-  warning: "bg-status-pending/15 text-status-pending",
+  warning: "bg-bg-pending text-text-pending",
   success: "bg-status-active/15 text-status-active",
+  danger: "bg-bg-danger text-action-danger",
 } as const;
 
 interface StateMessageProps {
@@ -28,7 +29,7 @@ export function StateMessage({
     <div className="flex w-full max-w-[456px] flex-col items-center gap-[12px] rounded-lg px-[20px] pb-[32px] pt-[40px] text-center">
       <div
         className={cn(
-          "mb-[4px] flex size-[80px] items-center justify-center rounded-full",
+          "mb-[16px] flex size-[80px] items-center justify-center rounded-full",
           TONE_CLASS[tone],
         )}
       >
@@ -37,7 +38,7 @@ export function StateMessage({
       <h1 className="text-h2 text-text-primary">{title}</h1>
       <p className="text-body text-text-muted">{body}</p>
       {children ? (
-        <div className="mt-[8px] flex w-full flex-col items-center gap-[12px]">
+        <div className="mt-[20px] flex w-full flex-col items-center gap-[12px]">
           {children}
         </div>
       ) : null}

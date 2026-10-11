@@ -25,6 +25,14 @@ export interface SharedFolder {
   files: SharedFile[];
 }
 
+/** Section 10 "Nothing shared with you yet". */
+export function NothingSharedMessage() {
+  const t = useTranslations("sharedWithMe.folders.empty");
+  return (
+    <StateMessage icon={ICON_PATHS.inbox} title={t("title")} body={t("body")} />
+  );
+}
+
 /**
  * W04-4 recipient view: each folder shared with me ("this folder only",
  * view and download), then the folders still locked until verification.
@@ -48,11 +56,7 @@ export function SharedWithMeView({
     <ShellPage title={t("title")} subtitle={t("subtitle")}>
       {folders.length === 0 ? (
         <Panel className="flex justify-center">
-          <StateMessage
-            icon={ICON_PATHS.inbox}
-            title={t("empty.title")}
-            body={t("empty.body")}
-          />
+          <NothingSharedMessage />
         </Panel>
       ) : null}
 

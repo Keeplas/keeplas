@@ -29,10 +29,13 @@ DialogOverlay.displayName = DialogPrimitives.Overlay.displayName;
 
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitives.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitives.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitives.Content> & {
+    /** v2 screens: e.g. the flat Figma scrim instead of the legacy blur. */
+    overlayClassName?: string;
+  }
+>(({ className, overlayClassName, children, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className={overlayClassName} />
     <DialogPrimitives.Content
       ref={ref}
       className={cn(

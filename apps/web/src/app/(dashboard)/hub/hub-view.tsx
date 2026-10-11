@@ -37,6 +37,18 @@ export interface HubViewProps {
 
 const SETUP_TOTAL = 3;
 
+/** Section 10 "Your vault is empty". */
+export function VaultEmptyMessage({ onAdd }: { onAdd: () => void }) {
+  const t = useTranslations("hub.empty");
+  return (
+    <StateMessage icon={ICON_PATHS.folder} title={t("title")} body={t("body")}>
+      <Button variant="primary" size="cta" className="w-full" onClick={onAdd}>
+        {t("action")}
+      </Button>
+    </StateMessage>
+  );
+}
+
 function greetingKey(hour: number) {
   if (hour < 12) return "morning";
   if (hour < 18) return "afternoon";
@@ -168,20 +180,7 @@ export function HubView({
         />
       ) : (
         <div className="flex justify-center rounded-[16px] border border-border-default bg-bg-surface">
-          <StateMessage
-            icon={ICON_PATHS.folder}
-            title={t("empty.title")}
-            body={t("empty.body")}
-          >
-            <Button
-              variant="primary"
-              size="cta"
-              className="w-full"
-              onClick={() => onAdd("document")}
-            >
-              {t("empty.action")}
-            </Button>
-          </StateMessage>
+          <VaultEmptyMessage onAdd={() => onAdd("document")} />
         </div>
       )}
     </ShellPage>

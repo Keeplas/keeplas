@@ -601,6 +601,19 @@
         "submit": "Changer la clé de mon coffre",
         "successDescription": "Votre coffre utilise désormais une nouvelle clé maîtresse."
       }
+    },
+    "prompt": {
+      "title": "Tout va bien ?",
+      "body": "Votre réponse régulière nous aide à garantir le respect de vos volontés et la protection de vos proches.",
+      "confirm": "Oui, je vais bien",
+      "footer": "Une absence de réponse ne suffit jamais à transmettre vos documents.",
+      "thanks": "Merci. À la prochaine vérification.",
+      "failed": "Impossible d'enregistrer votre réponse. Réessayez.",
+      "missed": {
+        "title": "Vous nous avez manqué",
+        "body": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
+        "confirm": "Je suis là"
+      }
     }
   },
   "settings": {

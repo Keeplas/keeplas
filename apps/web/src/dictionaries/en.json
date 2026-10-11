@@ -601,6 +601,19 @@
         "submit": "Re-key my vault",
         "successDescription": "Your vault now uses a fresh master key."
       }
+    },
+    "prompt": {
+      "title": "Are you okay?",
+      "body": "Your regular check-in helps us make sure your wishes are respected and your loved ones are protected.",
+      "confirm": "Yes, I'm okay",
+      "footer": "A missed check-in never releases your data.",
+      "thanks": "Thanks. See you at the next check-in.",
+      "failed": "We couldn't record your answer. Try again.",
+      "missed": {
+        "title": "We missed you",
+        "body": "You didn't answer your last life check. Nothing is shared yet. Let us know you're here.",
+        "confirm": "I'm here"
+      }
     }
   },
   "settings": {
