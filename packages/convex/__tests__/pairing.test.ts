@@ -84,6 +84,12 @@ describe("pairing sessions", () => {
     vi.useRealTimers();
   });
 
+  it("matches the client key-hash vector (@keeplas/crypto pairing)", async () => {
+    expect(await pairingKeyHash(BROWSER_PK)).toBe(
+      "23d14211db431ee6c40bbd452e048444",
+    );
+  });
+
   describe("create", () => {
     it("opens a waiting session that expires after 2 minutes", async () => {
       const sessionId = await createSession(t);
