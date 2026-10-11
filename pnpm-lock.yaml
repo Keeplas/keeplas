@@ -225,6 +225,9 @@ importers:
         specifier: ^3.6.7
         version: 3.6.7
     devDependencies:
+      '@keeplas/crypto':
+        specifier: workspace:^
+        version: link:../crypto
       '@types/node':
         specifier: ^25
         version: 25.9.9
