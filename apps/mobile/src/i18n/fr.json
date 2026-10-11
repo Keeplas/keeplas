@@ -227,7 +227,19 @@
     "activity": "Activité du compte",
     "activityBody": "Consultez les connexions et l'activité récente.",
     "recovery": "Centre de récupération",
-    "recoveryBody": "Contacts, demandes et état de récupération."
+    "recoveryBody": "Contacts, demandes et état de récupération.",
+    "rotation": "Renouveler les clés",
+    "rotationBody": "Sécuriser le coffre après un appareil suspect ou une récupération."
+  },
+  "rotation": {
+    "title": "Renouveler les clés de chiffrement",
+    "body": "Keeplas crée une nouvelle Master Key et une nouvelle identité, puis remballe chaque élément sur ce téléphone.",
+    "start": "Renouveler les clés",
+    "auth": "Confirmer le renouvellement",
+    "noRoot": "Ce téléphone ne détient pas la Root Key. Créez d'abord un nouveau kit.",
+    "legacy": "Certains anciens fichiers utilisent encore directement l'ancienne Master Key. Ouvrez-les une fois pour les migrer.",
+    "failed": "Le renouvellement n'a pas pu finir",
+    "note": "Gardez Keeplas ouvert et connecté jusqu'à 100 %."
   },
   "recoveryCenter": {
     "title": "Centre de récupération",
@@ -504,6 +516,11 @@
       "now": "Disponible maintenant",
       "after_verification": "Après vérification"
     }
+  },
+  "search": {
+    "label": "Rechercher dans le coffre",
+    "placeholder": "Titre ou catégorie",
+    "empty": "Aucun élément chiffré ne correspond."
   },
   "lifeCheck": {
     "title": "Life check",

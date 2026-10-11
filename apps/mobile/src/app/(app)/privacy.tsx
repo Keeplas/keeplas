@@ -23,6 +23,11 @@ export default function Privacy() {
       icon: "shield-check",
       onPress: () => router.push("/recovery"),
     },
+    {
+      key: "rotation",
+      icon: "sync",
+      onPress: () => router.push("/rotate-keys"),
+    },
     { key: "devices", icon: "laptop", onPress: () => router.push("/devices") },
     { key: "activity", icon: "activity" },
   ];

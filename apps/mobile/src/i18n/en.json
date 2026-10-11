@@ -237,7 +237,19 @@
     "activity": "Account activity",
     "activityBody": "Review sign-ins and recent activity.",
     "recovery": "Recovery center",
-    "recoveryBody": "Contacts, requests and recovery health."
+    "recoveryBody": "Contacts, requests and recovery health.",
+    "rotation": "Rotate encryption keys",
+    "rotationBody": "Secure the vault after a suspicious device or recovery."
+  },
+  "rotation": {
+    "title": "Rotate encryption keys",
+    "body": "Keeplas creates a new Master Key and owner identity, then re-wraps every item on this phone.",
+    "start": "Rotate keys",
+    "auth": "Confirm key rotation",
+    "noRoot": "This phone does not hold the Root Key. Create a new recovery kit first.",
+    "legacy": "Some legacy files still use the old Master Key directly. Open them once to migrate before rotating.",
+    "failed": "Key rotation could not finish",
+    "note": "Keep Keeplas open and connected until every item reaches 100%."
   },
   "recoveryCenter": {
     "title": "Recovery center",
@@ -514,6 +526,11 @@
       "now": "Available now",
       "after_verification": "After verification"
     }
+  },
+  "search": {
+    "label": "Search your vault",
+    "placeholder": "Title or category",
+    "empty": "No encrypted items match this search."
   },
   "lifeCheck": {
     "title": "Life check",

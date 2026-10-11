@@ -9,6 +9,7 @@ import { hasPendingLink } from "@/features/link/pending-link";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
+import { usePushNotifications } from "@/lib/use-push-notifications";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
 
@@ -31,6 +32,7 @@ export default function AppLayout() {
   const pathname = usePathname();
   const shownAlerts = useRef(new Set<string>());
   const publishing = useRef(false);
+  usePushNotifications(viewer._id);
 
   useEffect(() => {
     ensureDevice(viewer._id).catch(() => undefined); // Retried next launch.

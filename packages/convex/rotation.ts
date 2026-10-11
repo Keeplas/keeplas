@@ -38,6 +38,8 @@ export const rotateKeyMaterial = auditedMutation({
     // contacts verify-before-wrap against this, so it must be re-signed
     // atomically with the new key, never left dangling.
     publicKeySignature: v.string(),
+    identityPublicKey: v.string(),
+    encryptedIdentitySecretKey: v.string(),
     // New owner secret key, AES-GCM wrapped under the NEW master key.
     encryptedAsymmetricSecretKey: v.string(),
     // OLD owner secret key, AES-GCM wrapped under the NEW master key — keeps
@@ -50,6 +52,8 @@ export const rotateKeyMaterial = auditedMutation({
       encryptedKeyBundle: args.encryptedKeyBundle,
       publicKey: args.publicKey,
       publicKeySignature: args.publicKeySignature,
+      identityPublicKey: args.identityPublicKey,
+      encryptedIdentitySecretKey: args.encryptedIdentitySecretKey,
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: args.encryptedAsymmetricSecretKeyPrev,
       updatedAt: Date.now(),
