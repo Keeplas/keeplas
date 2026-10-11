@@ -1,7 +1,9 @@
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import {
+  CreatePrfCredential,
   DeviceUnlockEntry,
   DeviceUnlockError,
+  DeviceUnlockOwner,
   WebAuthnPrfEntryData,
 } from "./types";
 import {
@@ -20,7 +22,7 @@ function rpId(): string {
   return window.location.hostname;
 }
 
-function fromBase64Url(b64url: string): Uint8Array {
+export function fromBase64Url(b64url: string): Uint8Array {
   const b64 = b64url
     .replace(/-/g, "+")
     .replace(/_/g, "/")
@@ -54,18 +56,17 @@ interface PrfClientExtensionResults {
 function getPrfFirst(cred: PublicKeyCredential | null): Uint8Array | null {
   if (!cred) return null;
   const ext = cred.getClientExtensionResults() as
-    | PrfClientExtensionResults
-    | undefined;
+    PrfClientExtensionResults | undefined;
   const first = ext?.prf?.results?.first;
   if (!first) return null;
   return new Uint8Array(first);
 }
 
-async function createCredentialWithPrf(
+async function createLocalCredential(
   attachment: "platform" | "cross-platform",
-  userEmail: string,
+  accountName: string,
   prfSalt: Uint8Array,
-): Promise<PublicKeyCredential> {
+): Promise<Uint8Array> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const userId = crypto.getRandomValues(new Uint8Array(16));
 
@@ -75,8 +76,8 @@ async function createCredentialWithPrf(
       rp: { id: rpId(), name: RP_NAME },
       user: {
         id: userId,
-        name: userEmail,
-        displayName: userEmail,
+        name: accountName,
+        displayName: accountName,
       },
       pubKeyCredParams: [
         { type: "public-key", alg: -7 },
@@ -96,7 +97,7 @@ async function createCredentialWithPrf(
   if (!credential) {
     throw new DeviceUnlockError("Credential creation failed", "cancelled");
   }
-  return credential;
+  return new Uint8Array(credential.rawId);
 }
 
 async function evalPrf(
@@ -145,18 +146,20 @@ function detectLabel(attachment: "platform" | "cross-platform"): string {
 }
 
 export async function enrollWebAuthnPrf(
-  userEmail: string,
+  owner: DeviceUnlockOwner,
   masterKey: CryptoKey,
   attachment: "platform" | "cross-platform",
   label?: string,
+  createCredential: CreatePrfCredential = (salt) =>
+    createLocalCredential(attachment, owner.accountName, salt),
 ): Promise<DeviceUnlockEntry> {
   if (!isWebAuthnSupported()) {
     throw new DeviceUnlockError("WebAuthn not supported", "unsupported");
   }
   const prfSalt = crypto.getRandomValues(new Uint8Array(32));
-  let credential: PublicKeyCredential;
+  let credentialId: Uint8Array;
   try {
-    credential = await createCredentialWithPrf(attachment, userEmail, prfSalt);
+    credentialId = await createCredential(prfSalt);
   } catch (err) {
     if ((err as Error).name === "NotAllowedError") {
       throw new DeviceUnlockError("User cancelled", "cancelled", {
@@ -168,8 +171,6 @@ export async function enrollWebAuthnPrf(
     });
   }
 
-  const credentialId = new Uint8Array(credential.rawId);
-
   // Many platforms don't return PRF on create() — call get() once to fetch it.
   const prfSecret = await evalPrf(credentialId, prfSalt);
   const wrapKey = await importWrapKeyFromBytes(prfSecret);
@@ -179,7 +180,7 @@ export async function enrollWebAuthnPrf(
     const { iv, wrapped } = await wrapWithKey(raw, wrapKey);
     const entry: DeviceUnlockEntry = {
       id: crypto.randomUUID(),
-      userEmail,
+      userId: owner.userId,
       method: attachment === "platform" ? "biometric" : "hardware-key",
       label: label || detectLabel(attachment),
       createdAt: Date.now(),
