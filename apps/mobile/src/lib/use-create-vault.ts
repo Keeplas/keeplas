@@ -35,7 +35,11 @@ export function useCreateVault() {
 
       // Keep the setup screens reachable once the account has a vault.
       setSetupPhrase(m.phrase);
-      await saveDeviceVault(userId, m.rawMasterKey, t("unlock.title"));
+      await saveDeviceVault(
+        userId,
+        { masterKey: m.rawMasterKey, rootKey: m.rawRootKey },
+        t("unlock.title"),
+      );
       await adopt(m.rawMasterKey.slice());
 
       onPhase("saving");

@@ -83,6 +83,8 @@ const light = {
   // primitives into Noir: tints are the Noir status colour at 16 % alpha.
   accent: colors.sky["500"],
   "accent.text": colors.sky["600"],
+  // Add menu tiles, voice-note rings (sky/100).
+  "accent.soft": colors.sky["100"],
   "control.border": colors.navy["300"],
   "status.active.bg": colors.success["100"],
   "status.pending.bg": colors.warning["100"],
@@ -119,6 +121,7 @@ const dark: SemanticColors = {
   "progress.fill": colors.noir.sky,
   accent: colors.noir.sky,
   "accent.text": colors.noir.sky,
+  "accent.soft": colors.noir.info,
   "control.border": colors.noir["500"],
   "status.active.bg": "rgba(63, 182, 139, 0.16)",
   "status.pending.bg": "rgba(242, 178, 58, 0.16)",

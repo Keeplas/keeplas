@@ -1,4 +1,8 @@
-import { greetingKey, groupCategoryCounts } from "@/features/home/vault-groups";
+import {
+  greetingKey,
+  groupCategoryCounts,
+  groupOf,
+} from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
 import { classifyCodeError } from "../errors";
 import { formatBytes } from "../format";
@@ -90,6 +94,22 @@ describe("home groups", () => {
         mystery: 4,
       }),
     ).toEqual({ documents: 2, accounts: 3, instructions: 1, other: 5 });
+  });
+
+  it("leaves the encrypted inbox out of the tiles", () => {
+    expect(groupCategoryCounts({ inbox: 3, property: 1 })).toEqual({
+      documents: 1,
+      accounts: 0,
+      instructions: 0,
+      other: 0,
+    });
+  });
+
+  it("maps a category to its tile", () => {
+    expect(groupOf("insurance_policy")).toBe("documents");
+    expect(groupOf("subscription")).toBe("accounts");
+    expect(groupOf("mystery")).toBe("other");
+    expect(groupOf("inbox")).toBeNull();
   });
 
   it("greets by time of day", () => {

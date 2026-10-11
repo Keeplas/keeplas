@@ -1,12 +1,22 @@
-import { Alert } from "react-native";
 import { Tabs } from "expo-router";
 
 import { TabBar } from "@/components/tab-bar";
-import { useI18n } from "@/providers/i18n-provider";
+import {
+  AddSheetProvider,
+  useOpenAddSheet,
+} from "@/features/capture/add-sheet";
 
-/** M08-5 tab shell: Home, Search, (+), People, Settings. */
+/** M08-5 tab shell: Home, Search, (+) → M07-1 Add sheet, People, Settings. */
 export default function TabsLayout() {
-  const { t } = useI18n();
+  return (
+    <AddSheetProvider>
+      <TabsWithAdd />
+    </AddSheetProvider>
+  );
+}
+
+function TabsWithAdd() {
+  const openAdd = useOpenAddSheet();
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
@@ -14,8 +24,7 @@ export default function TabsLayout() {
         <TabBar
           state={props.state}
           navigation={props.navigation}
-          // Capture (M07) arrives with the next part.
-          onAdd={() => Alert.alert(t("nav.add"), t("common.comingSoon"))}
+          onAdd={openAdd}
         />
       )}
     >

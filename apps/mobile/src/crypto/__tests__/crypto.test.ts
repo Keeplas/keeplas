@@ -131,7 +131,8 @@ describe("vault material matches the web onboarding format", () => {
       m.encryptedKeyBundle,
       m.phrase.join(" "),
     );
-    expect(uint8ToHex(reopened)).toBe(uint8ToHex(m.rawMasterKey));
+    expect(uint8ToHex(reopened.masterKey)).toBe(uint8ToHex(m.rawMasterKey));
+    expect(uint8ToHex(reopened.rootKey)).toBe(uint8ToHex(m.rawRootKey));
   });
 
   it("refuses a wrong phrase and legacy v1 bundles", async () => {

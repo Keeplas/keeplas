@@ -1,9 +1,7 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/providers/theme-provider";
-import { radius } from "@/theme";
 import { Button } from "./button";
+import { BottomSheet } from "./sheet";
 import type { IconName } from "./icon";
 import { IconBadge, type Tone } from "./surfaces";
 import { Text } from "./text";
@@ -72,29 +70,10 @@ export function StateSheet({
   onDismiss,
   ...message
 }: StateMessageProps & { visible: boolean; onDismiss: () => void }) {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onDismiss}
-    >
-      <Pressable style={styles.backdrop} onPress={onDismiss}>
-        <Pressable
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors["bg.app"],
-              paddingBottom: Math.max(insets.bottom, 32),
-            },
-          ]}
-        >
-          <StateMessage {...message} />
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <BottomSheet visible={visible} onDismiss={onDismiss} background="bg.app">
+      <StateMessage {...message} />
+    </BottomSheet>
   );
 }
 
@@ -102,19 +81,9 @@ const styles = StyleSheet.create({
   message: {
     alignItems: "center",
     gap: 12,
-    paddingHorizontal: 20,
     paddingTop: 40,
   },
   spacer4: { height: 4 },
   spacer8: { height: 8 },
   full: { alignSelf: "stretch" },
-  backdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.35)",
-  },
-  sheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-  },
 });

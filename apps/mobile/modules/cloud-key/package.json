@@ -1,0 +1,10 @@
+{
+  "name": "keeplas-cloud-key",
+  "version": "0.1.0",
+  "description": "Synced platform keystore (iCloud Keychain / Google Block Store) for the Keeplas Cloud Backup Key",
+  "private": true,
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Keeplas",
+  "homepage": "https://keeplas.com"
+}

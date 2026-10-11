@@ -72,11 +72,11 @@ const CHECKS: { name: string; run: () => Promise<void> }[] = [
     name: "Vault creation + 24-word reopen",
     run: async () => {
       const material = await createVaultMaterial();
-      const raw = await openKeyBundle(
+      const { masterKey } = await openKeyBundle(
         material.encryptedKeyBundle,
         material.phrase,
       );
-      if (uint8ToHex(raw) !== uint8ToHex(material.rawMasterKey))
+      if (uint8ToHex(masterKey) !== uint8ToHex(material.rawMasterKey))
         throw new Error("bundle");
     },
   },

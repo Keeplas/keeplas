@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { hasPendingLink } from "@/features/link/pending-link";
+import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
 import { useViewer } from "@/providers/session-provider";
@@ -51,5 +52,9 @@ export default function AppLayout() {
     if (hasPendingLink()) router.push("/scan");
   }, [router]);
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <VaultDataProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </VaultDataProvider>
+  );
 }
