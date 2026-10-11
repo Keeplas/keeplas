@@ -12,11 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
-import { Route as OnboardingRouteImport } from './routes/_onboarding'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
+import { Route as ConnectIndexRouteImport } from './routes/connect/index'
+import { Route as DownloadIndexRouteImport } from './routes/download/index'
+import { Route as GetTheAppIndexRouteImport } from './routes/get-the-app/index'
+import { Route as LinkIndexRouteImport } from './routes/link/index'
 import { Route as SecurityIndexRouteImport } from './routes/security/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
-import { Route as AuthSignupIndexRouteImport } from './routes/_auth/signup/index'
 import { Route as DashboardDocsIndexRouteImport } from './routes/_dashboard/docs/index'
 import { Route as DashboardHubIndexRouteImport } from './routes/_dashboard/hub/index'
 import { Route as DashboardLifeCheckIndexRouteImport } from './routes/_dashboard/life-check/index'
@@ -25,11 +27,9 @@ import { Route as DashboardSharedWithMeIndexRouteImport } from './routes/_dashbo
 import { Route as DashboardTerminateIndexRouteImport } from './routes/_dashboard/terminate/index'
 import { Route as DashboardTrustedContactsIndexRouteImport } from './routes/_dashboard/trusted-contacts/index'
 import { Route as DashboardVaultIndexRouteImport } from './routes/_dashboard/vault/index'
-import { Route as OnboardingOnboardingIndexRouteImport } from './routes/_onboarding/onboarding/index'
 import { Route as InviteTokenIndexRouteImport } from './routes/invite/$token/index'
 import { Route as LifeCheckConfirmIndexRouteImport } from './routes/life-check/confirm/index'
 import { Route as LoginOtpIndexRouteImport } from './routes/login/otp/index'
-import { Route as LoginRecoveryIndexRouteImport } from './routes/login/recovery/index'
 import { Route as LoginTotpIndexRouteImport } from './routes/login/totp/index'
 import { Route as DashboardDocsEmergencyInfoIndexRouteImport } from './routes/_dashboard/docs/emergency-info/index'
 import { Route as DashboardDocsInsightsIndexRouteImport } from './routes/_dashboard/docs/insights/index'
@@ -41,14 +41,11 @@ import { Route as DashboardDocsVaultIndexRouteImport } from './routes/_dashboard
 import { Route as DashboardSettingsContactIndexRouteImport } from './routes/_dashboard/settings/contact/index'
 import { Route as DashboardSettingsContinuityIndexRouteImport } from './routes/_dashboard/settings/continuity/index'
 import { Route as DashboardSettingsPreferencesIndexRouteImport } from './routes/_dashboard/settings/preferences/index'
-import { Route as DashboardSettingsRecoveryKitIndexRouteImport } from './routes/_dashboard/settings/recovery-kit/index'
 import { Route as DashboardSettingsRoadmapIndexRouteImport } from './routes/_dashboard/settings/roadmap/index'
 import { Route as DashboardSettingsSecurityIndexRouteImport } from './routes/_dashboard/settings/security/index'
 import { Route as DashboardSettingsSubscriptionIndexRouteImport } from './routes/_dashboard/settings/subscription/index'
 import { Route as DashboardSettingsUsageIndexRouteImport } from './routes/_dashboard/settings/usage/index'
 import { Route as DashboardVaultItemIdIndexRouteImport } from './routes/_dashboard/vault/$itemId/index'
-import { Route as LoginOtpRecoveryIndexRouteImport } from './routes/login/otp/recovery/index'
-import { Route as LoginTotpRecoveryIndexRouteImport } from './routes/login/totp/recovery/index'
 import { Route as DashboardSharedWithMeContactIdMemorialIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/index'
 import { Route as DashboardSharedWithMeContactIdMemorialItemIdIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/$itemId/index'
 
@@ -65,14 +62,30 @@ const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/_onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ConnectIndexRoute = ConnectIndexRouteImport.update({
+  id: '/connect/',
+  path: '/connect/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DownloadIndexRoute = DownloadIndexRouteImport.update({
+  id: '/download/',
+  path: '/download/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetTheAppIndexRoute = GetTheAppIndexRouteImport.update({
+  id: '/get-the-app/',
+  path: '/get-the-app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinkIndexRoute = LinkIndexRouteImport.update({
+  id: '/link/',
+  path: '/link/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SecurityIndexRoute = SecurityIndexRouteImport.update({
   id: '/security/',
@@ -82,11 +95,6 @@ const SecurityIndexRoute = SecurityIndexRouteImport.update({
 const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
   id: '/login/',
   path: '/login/',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthSignupIndexRoute = AuthSignupIndexRouteImport.update({
-  id: '/signup/',
-  path: '/signup/',
   getParentRoute: () => AuthRoute,
 } as any)
 const DashboardDocsIndexRoute = DashboardDocsIndexRouteImport.update({
@@ -131,12 +139,6 @@ const DashboardVaultIndexRoute = DashboardVaultIndexRouteImport.update({
   path: '/vault/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const OnboardingOnboardingIndexRoute =
-  OnboardingOnboardingIndexRouteImport.update({
-    id: '/onboarding/',
-    path: '/onboarding/',
-    getParentRoute: () => OnboardingRoute,
-  } as any)
 const InviteTokenIndexRoute = InviteTokenIndexRouteImport.update({
   id: '/invite/$token/',
   path: '/invite/$token/',
@@ -150,11 +152,6 @@ const LifeCheckConfirmIndexRoute = LifeCheckConfirmIndexRouteImport.update({
 const LoginOtpIndexRoute = LoginOtpIndexRouteImport.update({
   id: '/login/otp/',
   path: '/login/otp/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRecoveryIndexRoute = LoginRecoveryIndexRouteImport.update({
-  id: '/login/recovery/',
-  path: '/login/recovery/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginTotpIndexRoute = LoginTotpIndexRouteImport.update({
@@ -221,12 +218,6 @@ const DashboardSettingsPreferencesIndexRoute =
     path: '/preferences/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
-const DashboardSettingsRecoveryKitIndexRoute =
-  DashboardSettingsRecoveryKitIndexRouteImport.update({
-    id: '/recovery-kit/',
-    path: '/recovery-kit/',
-    getParentRoute: () => DashboardSettingsRoute,
-  } as any)
 const DashboardSettingsRoadmapIndexRoute =
   DashboardSettingsRoadmapIndexRouteImport.update({
     id: '/roadmap/',
@@ -257,16 +248,6 @@ const DashboardVaultItemIdIndexRoute =
     path: '/vault/$itemId/',
     getParentRoute: () => DashboardRoute,
   } as any)
-const LoginOtpRecoveryIndexRoute = LoginOtpRecoveryIndexRouteImport.update({
-  id: '/login/otp/recovery/',
-  path: '/login/otp/recovery/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginTotpRecoveryIndexRoute = LoginTotpRecoveryIndexRouteImport.update({
-  id: '/login/totp/recovery/',
-  path: '/login/totp/recovery/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardSharedWithMeContactIdMemorialIndexRoute =
   DashboardSharedWithMeContactIdMemorialIndexRouteImport.update({
     id: '/shared-with-me/$contactId/memorial/',
@@ -283,9 +264,12 @@ const DashboardSharedWithMeContactIdMemorialItemIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof DashboardSettingsRouteWithChildren
+  '/connect/': typeof ConnectIndexRoute
+  '/download/': typeof DownloadIndexRoute
+  '/get-the-app/': typeof GetTheAppIndexRoute
+  '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
   '/login/': typeof AuthLoginIndexRoute
-  '/signup/': typeof AuthSignupIndexRoute
   '/docs/': typeof DashboardDocsIndexRoute
   '/hub/': typeof DashboardHubIndexRoute
   '/life-check/': typeof DashboardLifeCheckIndexRoute
@@ -294,11 +278,9 @@ export interface FileRoutesByFullPath {
   '/terminate/': typeof DashboardTerminateIndexRoute
   '/trusted-contacts/': typeof DashboardTrustedContactsIndexRoute
   '/vault/': typeof DashboardVaultIndexRoute
-  '/onboarding/': typeof OnboardingOnboardingIndexRoute
   '/invite/$token/': typeof InviteTokenIndexRoute
   '/life-check/confirm/': typeof LifeCheckConfirmIndexRoute
   '/login/otp/': typeof LoginOtpIndexRoute
-  '/login/recovery/': typeof LoginRecoveryIndexRoute
   '/login/totp/': typeof LoginTotpIndexRoute
   '/docs/emergency-info/': typeof DashboardDocsEmergencyInfoIndexRoute
   '/docs/insights/': typeof DashboardDocsInsightsIndexRoute
@@ -310,22 +292,22 @@ export interface FileRoutesByFullPath {
   '/settings/contact/': typeof DashboardSettingsContactIndexRoute
   '/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
-  '/settings/recovery-kit/': typeof DashboardSettingsRecoveryKitIndexRoute
   '/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/settings/usage/': typeof DashboardSettingsUsageIndexRoute
   '/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
-  '/login/otp/recovery/': typeof LoginOtpRecoveryIndexRoute
-  '/login/totp/recovery/': typeof LoginTotpRecoveryIndexRoute
   '/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectIndexRoute
+  '/download': typeof DownloadIndexRoute
+  '/get-the-app': typeof GetTheAppIndexRoute
+  '/link': typeof LinkIndexRoute
   '/security': typeof SecurityIndexRoute
   '/login': typeof AuthLoginIndexRoute
-  '/signup': typeof AuthSignupIndexRoute
   '/docs': typeof DashboardDocsIndexRoute
   '/hub': typeof DashboardHubIndexRoute
   '/life-check': typeof DashboardLifeCheckIndexRoute
@@ -334,11 +316,9 @@ export interface FileRoutesByTo {
   '/terminate': typeof DashboardTerminateIndexRoute
   '/trusted-contacts': typeof DashboardTrustedContactsIndexRoute
   '/vault': typeof DashboardVaultIndexRoute
-  '/onboarding': typeof OnboardingOnboardingIndexRoute
   '/invite/$token': typeof InviteTokenIndexRoute
   '/life-check/confirm': typeof LifeCheckConfirmIndexRoute
   '/login/otp': typeof LoginOtpIndexRoute
-  '/login/recovery': typeof LoginRecoveryIndexRoute
   '/login/totp': typeof LoginTotpIndexRoute
   '/docs/emergency-info': typeof DashboardDocsEmergencyInfoIndexRoute
   '/docs/insights': typeof DashboardDocsInsightsIndexRoute
@@ -350,14 +330,11 @@ export interface FileRoutesByTo {
   '/settings/contact': typeof DashboardSettingsContactIndexRoute
   '/settings/continuity': typeof DashboardSettingsContinuityIndexRoute
   '/settings/preferences': typeof DashboardSettingsPreferencesIndexRoute
-  '/settings/recovery-kit': typeof DashboardSettingsRecoveryKitIndexRoute
   '/settings/roadmap': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/security': typeof DashboardSettingsSecurityIndexRoute
   '/settings/subscription': typeof DashboardSettingsSubscriptionIndexRoute
   '/settings/usage': typeof DashboardSettingsUsageIndexRoute
   '/vault/$itemId': typeof DashboardVaultItemIdIndexRoute
-  '/login/otp/recovery': typeof LoginOtpRecoveryIndexRoute
-  '/login/totp/recovery': typeof LoginTotpRecoveryIndexRoute
   '/shared-with-me/$contactId/memorial': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
@@ -366,11 +343,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/_dashboard': typeof DashboardRouteWithChildren
-  '/_onboarding': typeof OnboardingRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/connect/': typeof ConnectIndexRoute
+  '/download/': typeof DownloadIndexRoute
+  '/get-the-app/': typeof GetTheAppIndexRoute
+  '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
-  '/_auth/signup/': typeof AuthSignupIndexRoute
   '/_dashboard/docs/': typeof DashboardDocsIndexRoute
   '/_dashboard/hub/': typeof DashboardHubIndexRoute
   '/_dashboard/life-check/': typeof DashboardLifeCheckIndexRoute
@@ -379,11 +358,9 @@ export interface FileRoutesById {
   '/_dashboard/terminate/': typeof DashboardTerminateIndexRoute
   '/_dashboard/trusted-contacts/': typeof DashboardTrustedContactsIndexRoute
   '/_dashboard/vault/': typeof DashboardVaultIndexRoute
-  '/_onboarding/onboarding/': typeof OnboardingOnboardingIndexRoute
   '/invite/$token/': typeof InviteTokenIndexRoute
   '/life-check/confirm/': typeof LifeCheckConfirmIndexRoute
   '/login/otp/': typeof LoginOtpIndexRoute
-  '/login/recovery/': typeof LoginRecoveryIndexRoute
   '/login/totp/': typeof LoginTotpIndexRoute
   '/_dashboard/docs/emergency-info/': typeof DashboardDocsEmergencyInfoIndexRoute
   '/_dashboard/docs/insights/': typeof DashboardDocsInsightsIndexRoute
@@ -395,14 +372,11 @@ export interface FileRoutesById {
   '/_dashboard/settings/contact/': typeof DashboardSettingsContactIndexRoute
   '/_dashboard/settings/continuity/': typeof DashboardSettingsContinuityIndexRoute
   '/_dashboard/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
-  '/_dashboard/settings/recovery-kit/': typeof DashboardSettingsRecoveryKitIndexRoute
   '/_dashboard/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/_dashboard/settings/security/': typeof DashboardSettingsSecurityIndexRoute
   '/_dashboard/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/_dashboard/settings/usage/': typeof DashboardSettingsUsageIndexRoute
   '/_dashboard/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
-  '/login/otp/recovery/': typeof LoginOtpRecoveryIndexRoute
-  '/login/totp/recovery/': typeof LoginTotpRecoveryIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
@@ -411,9 +385,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/connect/'
+    | '/download/'
+    | '/get-the-app/'
+    | '/link/'
     | '/security/'
     | '/login/'
-    | '/signup/'
     | '/docs/'
     | '/hub/'
     | '/life-check/'
@@ -422,11 +399,9 @@ export interface FileRouteTypes {
     | '/terminate/'
     | '/trusted-contacts/'
     | '/vault/'
-    | '/onboarding/'
     | '/invite/$token/'
     | '/life-check/confirm/'
     | '/login/otp/'
-    | '/login/recovery/'
     | '/login/totp/'
     | '/docs/emergency-info/'
     | '/docs/insights/'
@@ -438,22 +413,22 @@ export interface FileRouteTypes {
     | '/settings/contact/'
     | '/settings/continuity/'
     | '/settings/preferences/'
-    | '/settings/recovery-kit/'
     | '/settings/roadmap/'
     | '/settings/security/'
     | '/settings/subscription/'
     | '/settings/usage/'
     | '/vault/$itemId/'
-    | '/login/otp/recovery/'
-    | '/login/totp/recovery/'
     | '/shared-with-me/$contactId/memorial/'
     | '/shared-with-me/$contactId/memorial/$itemId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/connect'
+    | '/download'
+    | '/get-the-app'
+    | '/link'
     | '/security'
     | '/login'
-    | '/signup'
     | '/docs'
     | '/hub'
     | '/life-check'
@@ -462,11 +437,9 @@ export interface FileRouteTypes {
     | '/terminate'
     | '/trusted-contacts'
     | '/vault'
-    | '/onboarding'
     | '/invite/$token'
     | '/life-check/confirm'
     | '/login/otp'
-    | '/login/recovery'
     | '/login/totp'
     | '/docs/emergency-info'
     | '/docs/insights'
@@ -478,14 +451,11 @@ export interface FileRouteTypes {
     | '/settings/contact'
     | '/settings/continuity'
     | '/settings/preferences'
-    | '/settings/recovery-kit'
     | '/settings/roadmap'
     | '/settings/security'
     | '/settings/subscription'
     | '/settings/usage'
     | '/vault/$itemId'
-    | '/login/otp/recovery'
-    | '/login/totp/recovery'
     | '/shared-with-me/$contactId/memorial'
     | '/shared-with-me/$contactId/memorial/$itemId'
   id:
@@ -493,11 +463,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/_dashboard'
-    | '/_onboarding'
     | '/_dashboard/settings'
+    | '/connect/'
+    | '/download/'
+    | '/get-the-app/'
+    | '/link/'
     | '/security/'
     | '/_auth/login/'
-    | '/_auth/signup/'
     | '/_dashboard/docs/'
     | '/_dashboard/hub/'
     | '/_dashboard/life-check/'
@@ -506,11 +478,9 @@ export interface FileRouteTypes {
     | '/_dashboard/terminate/'
     | '/_dashboard/trusted-contacts/'
     | '/_dashboard/vault/'
-    | '/_onboarding/onboarding/'
     | '/invite/$token/'
     | '/life-check/confirm/'
     | '/login/otp/'
-    | '/login/recovery/'
     | '/login/totp/'
     | '/_dashboard/docs/emergency-info/'
     | '/_dashboard/docs/insights/'
@@ -522,14 +492,11 @@ export interface FileRouteTypes {
     | '/_dashboard/settings/contact/'
     | '/_dashboard/settings/continuity/'
     | '/_dashboard/settings/preferences/'
-    | '/_dashboard/settings/recovery-kit/'
     | '/_dashboard/settings/roadmap/'
     | '/_dashboard/settings/security/'
     | '/_dashboard/settings/subscription/'
     | '/_dashboard/settings/usage/'
     | '/_dashboard/vault/$itemId/'
-    | '/login/otp/recovery/'
-    | '/login/totp/recovery/'
     | '/_dashboard/shared-with-me/$contactId/memorial/'
     | '/_dashboard/shared-with-me/$contactId/memorial/$itemId/'
   fileRoutesById: FileRoutesById
@@ -538,15 +505,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
-  OnboardingRoute: typeof OnboardingRouteWithChildren
+  ConnectIndexRoute: typeof ConnectIndexRoute
+  DownloadIndexRoute: typeof DownloadIndexRoute
+  GetTheAppIndexRoute: typeof GetTheAppIndexRoute
+  LinkIndexRoute: typeof LinkIndexRoute
   SecurityIndexRoute: typeof SecurityIndexRoute
   InviteTokenIndexRoute: typeof InviteTokenIndexRoute
   LifeCheckConfirmIndexRoute: typeof LifeCheckConfirmIndexRoute
   LoginOtpIndexRoute: typeof LoginOtpIndexRoute
-  LoginRecoveryIndexRoute: typeof LoginRecoveryIndexRoute
   LoginTotpIndexRoute: typeof LoginTotpIndexRoute
-  LoginOtpRecoveryIndexRoute: typeof LoginOtpRecoveryIndexRoute
-  LoginTotpRecoveryIndexRoute: typeof LoginTotpRecoveryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -572,19 +539,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_onboarding': {
-      id: '/_onboarding'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_dashboard/settings': {
       id: '/_dashboard/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/connect/': {
+      id: '/connect/'
+      path: '/connect'
+      fullPath: '/connect/'
+      preLoaderRoute: typeof ConnectIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/download/': {
+      id: '/download/'
+      path: '/download'
+      fullPath: '/download/'
+      preLoaderRoute: typeof DownloadIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-the-app/': {
+      id: '/get-the-app/'
+      path: '/get-the-app'
+      fullPath: '/get-the-app/'
+      preLoaderRoute: typeof GetTheAppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/link/': {
+      id: '/link/'
+      path: '/link'
+      fullPath: '/link/'
+      preLoaderRoute: typeof LinkIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/security/': {
       id: '/security/'
@@ -598,13 +586,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login/'
       preLoaderRoute: typeof AuthLoginIndexRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/signup/': {
-      id: '/_auth/signup/'
-      path: '/signup'
-      fullPath: '/signup/'
-      preLoaderRoute: typeof AuthSignupIndexRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_dashboard/docs/': {
@@ -663,13 +644,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardVaultIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_onboarding/onboarding/': {
-      id: '/_onboarding/onboarding/'
-      path: '/onboarding'
-      fullPath: '/onboarding/'
-      preLoaderRoute: typeof OnboardingOnboardingIndexRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
     '/invite/$token/': {
       id: '/invite/$token/'
       path: '/invite/$token'
@@ -689,13 +663,6 @@ declare module '@tanstack/react-router' {
       path: '/login/otp'
       fullPath: '/login/otp/'
       preLoaderRoute: typeof LoginOtpIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login/recovery/': {
-      id: '/login/recovery/'
-      path: '/login/recovery'
-      fullPath: '/login/recovery/'
-      preLoaderRoute: typeof LoginRecoveryIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/totp/': {
@@ -775,13 +742,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsPreferencesIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
-    '/_dashboard/settings/recovery-kit/': {
-      id: '/_dashboard/settings/recovery-kit/'
-      path: '/recovery-kit'
-      fullPath: '/settings/recovery-kit/'
-      preLoaderRoute: typeof DashboardSettingsRecoveryKitIndexRouteImport
-      parentRoute: typeof DashboardSettingsRoute
-    }
     '/_dashboard/settings/roadmap/': {
       id: '/_dashboard/settings/roadmap/'
       path: '/roadmap'
@@ -817,20 +777,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardVaultItemIdIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/login/otp/recovery/': {
-      id: '/login/otp/recovery/'
-      path: '/login/otp/recovery'
-      fullPath: '/login/otp/recovery/'
-      preLoaderRoute: typeof LoginOtpRecoveryIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login/totp/recovery/': {
-      id: '/login/totp/recovery/'
-      path: '/login/totp/recovery'
-      fullPath: '/login/totp/recovery/'
-      preLoaderRoute: typeof LoginTotpRecoveryIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_dashboard/shared-with-me/$contactId/memorial/': {
       id: '/_dashboard/shared-with-me/$contactId/memorial/'
       path: '/shared-with-me/$contactId/memorial'
@@ -850,12 +796,10 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteChildren {
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
-  AuthSignupIndexRoute: typeof AuthSignupIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginIndexRoute: AuthLoginIndexRoute,
-  AuthSignupIndexRoute: AuthSignupIndexRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -865,7 +809,6 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsContactIndexRoute: typeof DashboardSettingsContactIndexRoute
   DashboardSettingsContinuityIndexRoute: typeof DashboardSettingsContinuityIndexRoute
   DashboardSettingsPreferencesIndexRoute: typeof DashboardSettingsPreferencesIndexRoute
-  DashboardSettingsRecoveryKitIndexRoute: typeof DashboardSettingsRecoveryKitIndexRoute
   DashboardSettingsRoadmapIndexRoute: typeof DashboardSettingsRoadmapIndexRoute
   DashboardSettingsSecurityIndexRoute: typeof DashboardSettingsSecurityIndexRoute
   DashboardSettingsSubscriptionIndexRoute: typeof DashboardSettingsSubscriptionIndexRoute
@@ -878,8 +821,6 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsContinuityIndexRoute: DashboardSettingsContinuityIndexRoute,
   DashboardSettingsPreferencesIndexRoute:
     DashboardSettingsPreferencesIndexRoute,
-  DashboardSettingsRecoveryKitIndexRoute:
-    DashboardSettingsRecoveryKitIndexRoute,
   DashboardSettingsRoadmapIndexRoute: DashboardSettingsRoadmapIndexRoute,
   DashboardSettingsSecurityIndexRoute: DashboardSettingsSecurityIndexRoute,
   DashboardSettingsSubscriptionIndexRoute:
@@ -939,31 +880,19 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
-interface OnboardingRouteChildren {
-  OnboardingOnboardingIndexRoute: typeof OnboardingOnboardingIndexRoute
-}
-
-const OnboardingRouteChildren: OnboardingRouteChildren = {
-  OnboardingOnboardingIndexRoute: OnboardingOnboardingIndexRoute,
-}
-
-const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
-  OnboardingRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
-  OnboardingRoute: OnboardingRouteWithChildren,
+  ConnectIndexRoute: ConnectIndexRoute,
+  DownloadIndexRoute: DownloadIndexRoute,
+  GetTheAppIndexRoute: GetTheAppIndexRoute,
+  LinkIndexRoute: LinkIndexRoute,
   SecurityIndexRoute: SecurityIndexRoute,
   InviteTokenIndexRoute: InviteTokenIndexRoute,
   LifeCheckConfirmIndexRoute: LifeCheckConfirmIndexRoute,
   LoginOtpIndexRoute: LoginOtpIndexRoute,
-  LoginRecoveryIndexRoute: LoginRecoveryIndexRoute,
   LoginTotpIndexRoute: LoginTotpIndexRoute,
-  LoginOtpRecoveryIndexRoute: LoginOtpRecoveryIndexRoute,
-  LoginTotpRecoveryIndexRoute: LoginTotpRecoveryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

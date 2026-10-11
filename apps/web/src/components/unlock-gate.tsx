@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, Input, Label, Loader, Spinner } from "@keeplas/ui";
-import { deriveRootKey } from "@keeplas/crypto/kdf";
-import { base64ToUint8 } from "@keeplas/crypto/encoding";
+import {
+  Button,
+  buttonVariants,
+  cn,
+  Input,
+  Label,
+  Loader,
+  Spinner,
+} from "@keeplas/ui";
 import {
   DeviceUnlockEntry,
   DeviceUnlockError,
@@ -15,58 +21,37 @@ import {
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
-import { parseRecoveryPhrase } from "@/lib/parse-recovery-phrase";
+import { Link } from "@/lib/navigation";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
-import { AuthHeroSection } from "@/app/(auth)/components/auth-hero-section";
-import { MobileBrand } from "@/app/(auth)/components/mobile-brand";
-import { EnrollDeviceUnlockDialog } from "./enroll-device-unlock-dialog";
+import { AuthScreen, authCardClass } from "./auth-screen";
 import { ContactDialog } from "./contact-dialog";
 
 interface UnlockGateProps {
   children: React.ReactNode;
 }
 
-type Mode = "list" | "pin" | "phrase";
-
+/**
+ * Shown while the vault key is not in memory: unlock with a method of this
+ * device (PIN, biometric, hardware key), or link this browser again from the
+ * phone (W04-2). The 24-word phrase is never entered on the web.
+ */
 export function UnlockGate({ children }: UnlockGateProps) {
   const t = useTranslations("chrome");
   const { signOut } = useAuthActions();
   const { masterKey, setMasterKey, restoring } = useMasterKey();
   const user = useQuery(api.users.viewer);
-  const userEmail = user?.email ?? null;
-  const {
-    entries,
-    loading: entriesLoading,
-    unlock,
-  } = useDeviceUnlock({
-    userEmail,
-  });
+  const { entries, loading: entriesLoading, unlock } = useDeviceUnlock(user);
 
-  const [mode, setMode] = useState<Mode>("list");
-  const [selectedEntry, setSelectedEntry] = useState<DeviceUnlockEntry | null>(
-    null,
-  );
+  const [pinEntry, setPinEntry] = useState<DeviceUnlockEntry | null>(null);
   const [pin, setPin] = useState("");
-  const [phrase, setPhrase] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [enrollOpen, setEnrollOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
 
   const bundleString = user?.encryptedKeyBundle ?? null;
   const bundle = useMemo(() => parseKeyBundle(bundleString), [bundleString]);
   const bundleKind = classifyKeyBundle(bundle);
-  const isV2 = bundleKind === "v2";
-  const isLegacyV1 = bundleKind === "legacy-v1";
-
-  // Reset the error when switching modes, adjusting during render instead of
-  // syncing in an effect.
-  const [prevMode, setPrevMode] = useState(mode);
-  if (mode !== prevMode) {
-    setPrevMode(mode);
-    setError("");
-  }
 
   if (user === undefined) {
     return <Loader fullscreen label={t("unlock.loadingVault")} />;
@@ -77,100 +62,13 @@ export function UnlockGate({ children }: UnlockGateProps) {
   // Legacy V1 bundle: no client-side unwrap path remains (it was
   // server-decryptable). Block vault access with a clear re-key instruction
   // rather than silently leaving the vault unusable.
-  if (isLegacyV1) {
+  if (bundleKind === "legacy-v1") {
     return <LegacyBundleNotice />;
   }
 
-  // No bundle yet (e.g. user mid-onboarding) — let children render
-  if (!bundle || !isV2) {
+  // No vault key yet: nothing to unlock.
+  if (bundleKind !== "v2" || masterKey) {
     return <>{children}</>;
-  }
-
-  if (masterKey) {
-    return <>{children}</>;
-  }
-
-  async function handlePinUnlock(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedEntry) return;
-    setBusy(true);
-    setError("");
-    try {
-      const key = await unlock(selectedEntry.id, pin);
-      setMasterKey(key);
-      setPin("");
-    } catch (err) {
-      setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleWebAuthnUnlock(entry: DeviceUnlockEntry) {
-    setBusy(true);
-    setError("");
-    try {
-      const key = await unlock(entry.id);
-      setMasterKey(key);
-    } catch (err) {
-      if (err instanceof DeviceUnlockError && err.code === "cancelled") {
-        setError(t("unlock.authCancelled"));
-      } else {
-        setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handlePhraseUnlock(e: React.FormEvent) {
-    e.preventDefault();
-    if (
-      !bundle ||
-      !bundle.phraseSalt ||
-      !bundle.iv ||
-      !bundle.encryptedMasterKey
-    )
-      return;
-    const words = parseRecoveryPhrase(phrase);
-    if (words.length !== 24) {
-      setError(t("unlock.enterAll24"));
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      const salt = base64ToUint8(bundle.phraseSalt);
-      const rootKey = await deriveRootKey(words, salt);
-      const iv = base64ToUint8(bundle.iv);
-      const ct = base64ToUint8(bundle.encryptedMasterKey);
-      const rawMaster = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv },
-        rootKey,
-        ct,
-      );
-      const master = await crypto.subtle.importKey(
-        "raw",
-        new Uint8Array(rawMaster),
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"],
-      );
-      setMasterKey(master);
-      setPhrase("");
-      // After phrase unlock, prompt to enroll a device unlock if none exists
-      if (entries.length === 0) {
-        setEnrollOpen(true);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error && err.name === "OperationError"
-          ? t("unlock.wrongPhrase")
-          : getErrorMessage(err, t("unlock.phraseCouldNotUnlock")),
-      );
-    } finally {
-      setBusy(false);
-    }
   }
 
   // Still reading the persisted key from IndexedDB — show a loader instead of
@@ -183,177 +81,145 @@ export function UnlockGate({ children }: UnlockGateProps) {
     return <Loader fullscreen label={t("unlock.checkingDeviceUnlock")} />;
   }
 
+  async function handleUnlock(entry: DeviceUnlockEntry, secret?: string) {
+    setBusy(true);
+    setError("");
+    try {
+      setMasterKey(await unlock(entry.id, secret));
+      setPin("");
+    } catch (err) {
+      setError(
+        err instanceof DeviceUnlockError && err.code === "cancelled"
+          ? t("unlock.authCancelled")
+          : getErrorMessage(err, t("unlock.couldNotUnlock")),
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <>
-      <main className="min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
-        <AuthHeroSection />
+      <AuthScreen title={t("unlock.heroTitle")} body={t("unlock.heroBody")}>
+        <div
+          className={cn(
+            authCardClass,
+            "flex max-w-[456px] flex-col gap-[14px] p-[32px] shadow-card",
+          )}
+        >
+          <h2 className="text-h2 text-text-primary">{t("unlock.heading")}</h2>
+          <p className="text-body text-text-muted">
+            {entries.length > 0
+              ? t("unlock.subheading")
+              : t("unlock.noDeviceUnlock")}
+          </p>
+          {error ? (
+            <p role="alert" className="text-body-sm text-action-danger">
+              {error}
+            </p>
+          ) : null}
 
-        <section className="flex-1 flex items-center justify-center p-8 md:p-10 lg:p-12 xl:p-16 relative bg-surface md:overflow-y-auto">
-          <MobileBrand />
-
-          <div className="w-full max-w-md">
-            <div className="mb-8 text-center">
-              <h1 className="text-headline-md text-primary mb-2">
-                {t("unlock.heading")}
-              </h1>
-              <p className="text-body-md text-on-surface-variant">
-                {t("unlock.subheading")}
-              </p>
-            </div>
-
-            {error ? (
-              <div className="mb-4 p-3 bg-error-container rounded-xs text-sm text-on-error-container">
-                {error}
-              </div>
-            ) : null}
-
-            {mode === "list" ? (
-              <div className="space-y-3">
-                {entries.length === 0 ? (
-                  <p className="text-body-md text-on-surface-variant text-center py-4">
-                    {t("unlock.noDeviceUnlock")}
-                  </p>
-                ) : null}
-                {entries.map((entry) => (
-                  <UnlockMethodButton
-                    key={entry.id}
-                    entry={entry}
-                    disabled={busy}
-                    onClick={() => {
-                      if (entry.method === "pin") {
-                        setSelectedEntry(entry);
-                        setMode("pin");
-                      } else {
-                        handleWebAuthnUnlock(entry);
-                      }
-                    }}
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setMode("phrase")}
-                  disabled={busy}
-                  className="w-full p-4 rounded-xs border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
-                >
-                  {t("unlock.use24Words")}
-                </button>
-              </div>
-            ) : null}
-
-            {mode === "pin" && selectedEntry ? (
-              <form onSubmit={handlePinUnlock} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="unlock-pin">{selectedEntry.label}</Label>
-                  <Input
-                    id="unlock-pin"
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    autoComplete="off"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder={t("unlock.pinPlaceholder", {
-                      min: PIN_MIN_LENGTH,
-                    })}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  variant="vault"
-                  size="md"
-                  disabled={busy || pin.length < PIN_MIN_LENGTH}
-                  className="w-full"
-                >
-                  {busy ? <Spinner size="sm" /> : t("unlock.unlockButton")}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("list");
-                    setPin("");
-                  }}
-                  disabled={busy}
-                  className="w-full text-sm text-on-surface-variant hover:underline"
-                >
-                  {t("unlock.back")}
-                </button>
-              </form>
-            ) : null}
-
-            {mode === "phrase" ? (
-              <form onSubmit={handlePhraseUnlock} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="unlock-phrase">
-                    {t("unlock.phraseLabel")}
-                  </Label>
-                  <textarea
-                    id="unlock-phrase"
-                    value={phrase}
-                    onChange={(e) => setPhrase(e.target.value)}
-                    placeholder="word1 word2 word3 ..."
-                    // Anti-cache: keep the recovery phrase out of browser
-                    // autofill, dictionaries, and spell-check suggestions.
-                    autoComplete="off"
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
-                    className="w-full min-h-[140px] p-3 rounded-xs bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
-                    required
-                  />
-                  <p className="text-label-md text-on-surface-variant">
-                    {t("unlock.phraseHint")}
-                  </p>
-                </div>
-                <Button
-                  type="submit"
-                  variant="vault"
-                  size="md"
-                  disabled={busy || !phrase.trim()}
-                  className="w-full"
-                >
-                  {busy ? <Spinner size="sm" /> : t("unlock.unlockWithWords")}
-                </Button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode("list");
-                    setPhrase("");
-                  }}
-                  disabled={busy}
-                  className="w-full text-sm text-on-surface-variant hover:underline"
-                >
-                  {t("unlock.back")}
-                </button>
-              </form>
-            ) : null}
-
-            <div className="mt-8 flex items-center justify-center gap-2 text-label-md text-on-surface-variant">
-              <button
-                type="button"
-                onClick={() => setContactOpen(true)}
-                className="font-bold hover:underline"
+          {pinEntry ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleUnlock(pinEntry, pin);
+              }}
+              className="flex flex-col gap-[14px]"
+            >
+              <Label htmlFor="unlock-pin">{pinEntry.label}</Label>
+              <Input
+                id="unlock-pin"
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                placeholder={t("unlock.pinPlaceholder", {
+                  min: PIN_MIN_LENGTH,
+                })}
+                required
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                size="cta"
+                disabled={busy || pin.length < PIN_MIN_LENGTH}
+                className="w-full"
               >
-                {t("unlock.contact")}
-              </button>
-              <span aria-hidden>·</span>
-              <button
+                {busy ? <Spinner size="sm" /> : t("unlock.unlockButton")}
+              </Button>
+              <Button
                 type="button"
-                onClick={() => signOut()}
-                className="font-bold hover:underline"
+                variant="link"
+                onClick={() => {
+                  setPinEntry(null);
+                  setPin("");
+                  setError("");
+                }}
+                disabled={busy}
+                className="text-button"
               >
-                {t("unlock.logout")}
-              </button>
-            </div>
+                {t("unlock.back")}
+              </Button>
+            </form>
+          ) : (
+            <>
+              {entries.map((entry) => (
+                <UnlockMethodButton
+                  key={entry.id}
+                  entry={entry}
+                  disabled={busy}
+                  onClick={() => {
+                    if (entry.method === "pin") {
+                      setPinEntry(entry);
+                      setError("");
+                    } else {
+                      void handleUnlock(entry);
+                    }
+                  }}
+                />
+              ))}
+              {entries.length > 0 ? (
+                <p className="text-center text-body-sm text-text-subtle">
+                  {t("unlock.or")}
+                </p>
+              ) : null}
+              <Link
+                href="/connect"
+                className={cn(
+                  buttonVariants({
+                    variant: entries.length > 0 ? "outlined" : "primary",
+                    size: "cta",
+                  }),
+                  "w-full",
+                )}
+              >
+                {t("unlock.linkWithPhone")}
+              </Link>
+            </>
+          )}
+
+          <div className="mt-[4px] flex items-center justify-center gap-[8px] border-t border-border-default pt-[14px] text-body-sm text-text-muted">
+            <button
+              type="button"
+              onClick={() => setContactOpen(true)}
+              className="font-semibold hover:underline"
+            >
+              {t("unlock.contact")}
+            </button>
+            <span aria-hidden>·</span>
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="font-semibold hover:underline"
+            >
+              {t("unlock.logout")}
+            </button>
           </div>
-        </section>
-      </main>
-      {enrollOpen && userEmail ? (
-        <EnrollDeviceUnlockDialog
-          userEmail={userEmail}
-          onClose={() => setEnrollOpen(false)}
-        />
-      ) : null}
+        </div>
+      </AuthScreen>
       <ContactDialog open={contactOpen} onOpenChange={setContactOpen} />
     </>
   );
@@ -362,9 +228,9 @@ export function UnlockGate({ children }: UnlockGateProps) {
 function LegacyBundleNotice() {
   const t = useTranslations("chrome");
   return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-surface">
+    <main className="min-h-screen flex items-center justify-center p-[32px] bg-surface">
       <div className="w-full max-w-md text-center">
-        <h1 className="text-headline-md text-primary mb-3">
+        <h1 className="text-headline-md text-primary mb-[12px]">
           {t("unlock.legacyTitle")}
         </h1>
         <p className="text-body-md text-on-surface-variant">
@@ -402,28 +268,24 @@ function UnlockMethodButton({
     };
   }, [entry.method]);
 
-  if (!available) {
-    return (
-      <div className="p-4 rounded-xs bg-surface-container-low text-on-surface-variant text-sm">
-        {entry.label} {t("unlock.unavailableSuffix")}
-      </div>
-    );
-  }
+  const method =
+    entry.method === "pin"
+      ? t("unlock.methodPin")
+      : entry.method === "biometric"
+        ? t("unlock.methodBiometric")
+        : t("unlock.methodHardwareKey");
+
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className="w-full p-4 rounded-xs bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
+      disabled={disabled || !available}
+      className="w-full rounded-sm border border-border-default bg-bg-surface p-[16px] text-left transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus disabled:opacity-60"
     >
-      <div className="font-bold text-on-surface">{entry.label}</div>
-      <div className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
-        {entry.method === "pin"
-          ? t("unlock.methodPin")
-          : entry.method === "biometric"
-            ? t("unlock.methodBiometric")
-            : t("unlock.methodHardwareKey")}
-      </div>
+      <span className="block text-label text-text-primary">{entry.label}</span>
+      <span className="mt-[4px] block text-body-sm text-text-muted">
+        {available ? method : `${method} ${t("unlock.unavailableSuffix")}`}
+      </span>
     </button>
   );
 }
