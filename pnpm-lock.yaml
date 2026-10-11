@@ -145,6 +145,9 @@ importers:
       globals:
         specifier: ^17.6.0
         version: 17.6.0
+      hash-wasm:
+        specifier: ^4.12.0
+        version: 4.12.0
       jest:
         specifier: ~29.7.0
         version: 29.7.0(@types/node@25.9.9)

@@ -5,3 +5,10 @@ declare module "*.svg" {
   const content: FC<SvgProps>;
   export default content;
 }
+
+// Raster images resolve to a Metro asset id.
+declare module "*.jpg" {
+  import type { ImageSourcePropType } from "react-native";
+  const source: ImageSourcePropType;
+  export default source;
+}

@@ -25,4 +25,10 @@ export default tseslint.config(
       ],
     },
   },
+  // Node-side tooling (Metro config, generators).
+  {
+    files: ["*.js", "scripts/**/*.mjs"],
+    languageOptions: { globals: { ...globals.node } },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 );

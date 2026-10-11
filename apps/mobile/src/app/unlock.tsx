@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
 import { AppHeader } from "@/components/app-header";
@@ -32,12 +32,6 @@ export default function Unlock() {
       setBusy(false);
     }
   }, [unlock, viewer._id, t]);
-
-  useEffect(() => {
-    void attempt();
-    // Prompt once on arrival; later attempts are user-initiated.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <Screen header={<AppHeader />}>

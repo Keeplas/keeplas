@@ -36,16 +36,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const viewer = useQuery(api.users.viewer, skip);
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
   const migration = useQuery(api.account_migration.getStatus, skip);
-  const [deviceVault, setDeviceVault] = useState<boolean | undefined>();
+  const [vaultState, setVaultState] = useState<{
+    userId: string;
+    has: boolean;
+  } | null>(null);
   const [migrationDeferred, setMigrationDeferred] = useState(false);
   const [vaultCheck, setVaultCheck] = useState(0);
   const userId = viewer?._id;
+  // Only trust a result read for the current user.
+  const deviceVault =
+    vaultState && vaultState.userId === userId ? vaultState.has : undefined;
 
   useEffect(() => {
-    setDeviceVault(undefined);
     if (!userId) return;
     let alive = true;
-    hasDeviceVault(userId).then((has) => alive && setDeviceVault(has));
+    hasDeviceVault(userId).then(
+      (has) => alive && setVaultState({ userId, has }),
+    );
     return () => {
       alive = false;
     };

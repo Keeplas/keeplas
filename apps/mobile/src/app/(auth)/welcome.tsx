@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import paintedLandscape from "../../../assets/images/landscape-painted.jpg";
 import LandscapeNight from "../../../assets/illustrations/landscape-night.svg";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -57,7 +58,7 @@ export default function Welcome() {
       <View pointerEvents="none" style={styles.landscape}>
         <LandscapeNight width={640} height={400} style={styles.landscapeSvg} />
         <Image
-          source={require("../../../assets/images/landscape-painted.jpg")}
+          source={paintedLandscape}
           style={styles.painted}
           resizeMode="cover"
         />
