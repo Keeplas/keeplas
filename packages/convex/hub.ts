@@ -151,7 +151,7 @@ export const getHubData = query({
       {
         key: "two_factor",
         label: "Activate two-factor authentication",
-        href: "/settings/security",
+        href: "/devices",
         done: hasStrongAuth,
       },
       {

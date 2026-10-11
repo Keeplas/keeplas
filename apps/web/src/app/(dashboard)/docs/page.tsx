@@ -110,7 +110,7 @@ export default function DocsPage() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
-              href="/settings/recovery-kit"
+              href="/settings/recovery"
               className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xs hover:opacity-90 transition-all active:scale-95"
             >
               {t("hub.hero.exportKit")}
