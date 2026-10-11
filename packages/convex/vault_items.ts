@@ -5,7 +5,7 @@ import {
   query,
   MutationCtx,
 } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { accessLevelValidator } from "./validators";
 import {
@@ -211,7 +211,8 @@ async function measureFiles(ctx: MutationCtx, files: NewFile[]) {
 /**
  * Reject an upload that would push the user past their plan's storage ceiling
  * (Free 100 MB / Lifetime 10 GB — see lib/plans.ts). Throws
- * `"STORAGE_QUOTA_EXCEEDED"`, which the client maps to an upgrade prompt.
+ * `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })` (a ConvexError survives
+ * production redaction), which the client maps to an upgrade prompt.
  */
 async function assertWithinStorageQuota(
   ctx: MutationCtx,
@@ -224,7 +225,7 @@ async function assertWithinStorageQuota(
   const plan = getUserPlan(user ?? { plan: undefined });
   const current = await getActiveStorageBytes(ctx, userId);
   if (current + incoming > PLAN_QUOTA_BYTES[plan]) {
-    throw new Error("STORAGE_QUOTA_EXCEEDED");
+    throw new ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" });
   }
 }
 
