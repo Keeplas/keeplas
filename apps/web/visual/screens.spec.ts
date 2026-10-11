@@ -175,8 +175,8 @@ for (const item of CASES) {
       });
       console.log(`[visual] ${item.id} light: ${(ratio * 100).toFixed(2)} %`);
       writeFileSync(info.outputPath("actual.png"), PNG.sync.write(actual));
+      writeFileSync(info.outputPath("diff.png"), PNG.sync.write(diff));
       if (ratio > MAX_DIFF_RATIO) {
-        writeFileSync(info.outputPath("diff.png"), PNG.sync.write(diff));
         await info.attach("diff", { path: info.outputPath("diff.png") });
       }
       expect(ratio).toBeLessThanOrEqual(MAX_DIFF_RATIO);

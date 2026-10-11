@@ -8,14 +8,15 @@ import { useTranslations } from "@/lib/i18n";
 import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { useItemCategories } from "@/lib/use-item-categories";
-import { CATEGORY_GROUP, type VaultCategory } from "@/lib/vault-categories";
+import { categoryGroup, type VaultCategory } from "@/lib/vault-categories";
 import type { AddKind } from "./add-item-menu";
 import { HubView } from "./hub-view";
 
 const RECENT_LIMIT = 5;
 
 // Where each "Add item" kind starts: documents and photos as documents, the
-// rest in the Encrypted inbox ("other") to sort later, like mobile capture.
+// rest as Other. The Encrypted inbox ("inbox") holds unsorted captures from
+// the phone app.
 const KIND_CATEGORY: Record<AddKind, VaultCategory> = {
   document: "personal_document",
   photo: "personal_document",
@@ -47,8 +48,8 @@ export default function HubPage() {
   const counts = useMemo(() => {
     const byGroup = { inbox: 0, documents: 0, accounts: 0 };
     for (const category of Object.values(categories)) {
-      const group = CATEGORY_GROUP[category];
-      if (group === "other") byGroup.inbox += 1;
+      const group = categoryGroup(category);
+      if (group === "inbox") byGroup.inbox += 1;
       if (group === "document") byGroup.documents += 1;
       if (group === "account") byGroup.accounts += 1;
     }
@@ -73,7 +74,7 @@ export default function HubPage() {
         recentItems={hub.recentItems.slice(0, RECENT_LIMIT).map((item) => ({
           id: item._id,
           title: titles[item._id] ?? "",
-          group: CATEGORY_GROUP[categories[item._id] ?? "other"],
+          group: categoryGroup(categories[item._id]),
           updatedAt: item.updatedAt,
         }))}
         onAdd={(kind) => setAdding(KIND_CATEGORY[kind])}

@@ -339,7 +339,8 @@
       "document": "Document",
       "account": "Account",
       "instruction": "Instruction",
-      "other": "To sort"
+      "other": "Other",
+      "inbox": "Inbox"
     },
     "empty": {
       "title": "Your vault is empty",

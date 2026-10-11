@@ -130,7 +130,7 @@ export function HubView({
 
       <div className="grid gap-[16px] md:grid-cols-3">
         <ListRow
-          href="/vault?section=other"
+          href="/vault?section=inbox"
           icon={ICON_PATHS.mail}
           title={t("tiles.inbox")}
           description={

@@ -74,12 +74,14 @@ export function getCategoryConfig(key: VaultCategory): CategoryConfig {
 
 /**
  * v2 groups the detailed categories into Documents, Accounts, Instructions
- * and Other (design kit). "Other" is what still needs sorting: the web shows
- * it as the Encrypted inbox.
+ * and Other (design kit), plus the Encrypted inbox: captures from the phone
+ * app waiting to be sorted (category "inbox").
  */
-export type CategoryGroup = "document" | "account" | "instruction" | "other";
+export type CategoryGroup =
+  "inbox" | "document" | "account" | "instruction" | "other";
 
-export const CATEGORY_GROUP: Record<VaultCategory, CategoryGroup> = {
+const CATEGORY_GROUP: Partial<Record<string, CategoryGroup>> = {
+  inbox: "inbox",
   personal_document: "document",
   legal_document: "document",
   property: "document",
@@ -95,3 +97,7 @@ export const CATEGORY_GROUP: Record<VaultCategory, CategoryGroup> = {
   contacts: "instruction",
   other: "other",
 };
+
+/** Group of a (decrypted) category; unknown values count as "other". */
+export const categoryGroup = (category: string | undefined): CategoryGroup =>
+  CATEGORY_GROUP[category ?? "other"] ?? "other";

@@ -339,7 +339,8 @@
       "document": "Document",
       "account": "Compte",
       "instruction": "Instruction",
-      "other": "À classer"
+      "other": "Autre",
+      "inbox": "Boîte chiffrée"
     },
     "empty": {
       "title": "Votre coffre est vide",
