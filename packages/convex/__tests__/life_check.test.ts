@@ -21,7 +21,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 async function seedAwaitingConfirmation(
   t: TestConvex,
   ownerId: Id<"users">,
-  fallbackBehavior?: "abort" | "release_anyway",
+  fallbackBehavior?: "abort",
 ): Promise<Id<"life_check_cycles">> {
   const now = Date.now();
   return await t.run(async (ctx) => {
@@ -76,29 +76,6 @@ describe("resolveConfirmationWindow fallback (finding H1)", () => {
     const cycle = await t.run((ctx) => ctx.db.get(cycleId));
     expect(cycle?.status).toBe("cancelled");
   });
-
-  it("never releases on a missed window, even with a legacy release_anyway config (F5)", async () => {
-    const t = makeT();
-    const owner = await seedUser(t);
-    const cycleId = await seedAwaitingConfirmation(t, owner, "release_anyway");
-
-    await t.mutation(internal.life_check.resolveConfirmationWindow, {
-      cycleId,
-    });
-
-    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
-    expect(cycle?.status).toBe("cancelled");
-    expect(cycle?.cancelledReason).toBe("no_contact_confirmation");
-    const approved = await t.run((ctx) =>
-      ctx.db
-        .query("access_requests")
-        .withIndex("by_status", (q) =>
-          q.eq("vaultUserId", owner).eq("status", "approved"),
-        )
-        .collect(),
-    );
-    expect(approved).toHaveLength(0);
-  });
 });
 
 describe("release_anyway is retired (F5)", () => {
@@ -118,23 +95,19 @@ describe("release_anyway is retired (F5)", () => {
     expect(config?.fallbackBehavior).toBe("abort");
   });
 
-  it("migrations:retireReleaseAnyway rewrites legacy configs to abort", async () => {
+  it("the schema refuses a release_anyway fallback", async () => {
     const t = makeT();
     const owner = await seedUser(t);
-    const cycleId = await seedAwaitingConfirmation(t, owner, "release_anyway");
+    const cycleId = await seedAwaitingConfirmation(t, owner);
     const cycle = await t.run((ctx) => ctx.db.get(cycleId));
 
-    const result = await t.mutation(
-      internal.migrations.retireReleaseAnyway,
-      {},
-    );
-    expect(result.migrated).toBe(1);
-    const config = await t.run((ctx) => ctx.db.get(cycle!.configId));
-    expect(config?.fallbackBehavior).toBe("abort");
-
-    // Idempotent.
-    const again = await t.mutation(internal.migrations.retireReleaseAnyway, {});
-    expect(again.migrated).toBe(0);
+    await expect(
+      t.run((ctx) =>
+        ctx.db.patch(cycle!.configId, {
+          fallbackBehavior: "release_anyway",
+        } as never),
+      ),
+    ).rejects.toThrow();
   });
 });
 
