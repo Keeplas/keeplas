@@ -33,6 +33,7 @@ export default function DevicesPage() {
   const logs = useQuery(api.audit.listLogs, { limit: 50 });
   const revoke = useAuditedMutation(api.devices.revoke);
   const notMe = useAuditedMutation(api.devices.notMe);
+  const itWasMe = useAuditedMutation(api.devices.confirm);
   const { entries, remove, refresh } = useDeviceUnlock(viewer);
   const [enrolling, setEnrolling] = useState(false);
   // Remounts the methods list after the PIN toggle changed the same storage.
@@ -139,6 +140,12 @@ export default function DevicesPage() {
         activity={activity}
         onRevoke={(id) => void handleRevoke(id)}
         onNotMe={(id) => void handleNotMe(id)}
+        onItWasMe={(id) =>
+          void run(
+            () => itWasMe({ deviceId: id as Id<"devices"> }),
+            t("alert.confirmed"),
+          )
+        }
         onPinChange={(enabled) => void handlePin(enabled)}
         onSeeAll={allActivity ? undefined : () => setAllActivity(true)}
       >

@@ -3,6 +3,8 @@ import { useConvex, useQueries, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { unwrapBytes } from "@keeplas/crypto/kem";
+import { toast } from "@keeplas/ui";
+import { useTranslations } from "@/lib/i18n";
 import { formatBytes } from "@/lib/format";
 import { parseFileMeta, type FileMeta } from "@/lib/item-meta";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -32,6 +34,7 @@ function fileDetail(meta: FileMeta): string {
  * while loading, plus `download` for the "more" menu.
  */
 export function useSharedFolders() {
+  const t = useTranslations("sharedWithMe.folders");
   const convex = useConvex();
   const grants = useQuery(api.folders.sharedWithMe);
   const { ensureOwnerKeypair, unwrapOwnerDek, isReady } = useRecipientCrypto();
@@ -128,26 +131,31 @@ export function useSharedFolders() {
     async (grantId: string, itemId: string) => {
       const entry = opened.current.get(`${grantId}/${itemId}`);
       if (!entry?.attachment) return;
-      const url = await convex.query(api.folders.getSharedFileUrl, {
-        grantId: grantId as FolderGrant,
-        fileId: entry.attachment.id,
-      });
-      if (!url) return;
-      const cipher = await (await fetch(url)).blob();
-      const plain = await decryptBlobWithKey(
-        cipher,
-        entry.attachment.iv,
-        entry.dek,
-      );
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(
-        new Blob([plain], { type: entry.attachment.meta.mimeType }),
-      );
-      link.download = entry.attachment.meta.name;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      try {
+        const url = await convex.query(api.folders.getSharedFileUrl, {
+          grantId: grantId as FolderGrant,
+          fileId: entry.attachment.id,
+        });
+        if (!url) throw new Error("File unavailable");
+        const cipher = await (await fetch(url)).blob();
+        const plain = await decryptBlobWithKey(
+          cipher,
+          entry.attachment.iv,
+          entry.dek,
+        );
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(
+          new Blob([plain], { type: entry.attachment.meta.mimeType }),
+        );
+        link.download = entry.attachment.meta.name;
+        link.click();
+        // Revoking right away can cancel the download in some browsers.
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      } catch {
+        toast({ variant: "error", title: t("downloadFailed") });
+      }
     },
-    [convex, decryptBlobWithKey],
+    [convex, decryptBlobWithKey, t],
   );
 
   const folders: SharedFolder[] | undefined = grants?.map((grant) => ({

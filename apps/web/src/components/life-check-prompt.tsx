@@ -14,6 +14,7 @@ import { StateDialog } from "@/components/state-dialog";
 import { StateMessage } from "@/components/state-message";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import { usePathname } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -121,11 +122,13 @@ export function LifeCheckModal({
 /** Shows the life check modal while a check is waiting for an answer. */
 export function LifeCheckPrompt() {
   const t = useTranslations("lifeCheck.prompt");
+  const pathname = usePathname();
   const cycle = useQuery(api.life_check.getActiveCycle);
   const validate = useAuditedMutation(api.life_check.validateCycle);
   const [busy, setBusy] = useState(false);
 
-  if (!cycle) return null;
+  // The Life check page answers, postpones or pauses the check itself.
+  if (!cycle || pathname.startsWith("/life-check")) return null;
 
   async function confirm() {
     setBusy(true);

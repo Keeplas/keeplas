@@ -138,6 +138,7 @@ export const devices: DevicesViewProps = {
   ],
   onRevoke: noop,
   onNotMe: noop,
+  onItWasMe: noop,
   onPinChange: noop,
   onSeeAll: noop,
 };

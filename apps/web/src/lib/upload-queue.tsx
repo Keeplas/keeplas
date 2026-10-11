@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useConvex } from "convex/react";
+import { ConvexError } from "convex/values";
 import { toast } from "@keeplas/ui";
 import { StateDialog } from "@/components/state-dialog";
 import { api } from "@keeplas/backend/_generated/api";
@@ -47,6 +48,20 @@ interface UploadQueueContextValue {
 }
 
 const UploadQueueContext = createContext<UploadQueueContextValue | null>(null);
+
+/**
+ * The server refuses an upload past the plan quota with
+ * `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })`; production redacts plain
+ * error messages, so the message check is only a fallback.
+ */
+function isQuotaError(err: Error): boolean {
+  if (err instanceof ConvexError) {
+    return (err.data as { code?: string } | null)?.code === QUOTA_CODE;
+  }
+  return err.message.includes(QUOTA_CODE);
+}
+
+const QUOTA_CODE = "STORAGE_QUOTA_EXCEEDED";
 
 /** Section 10 states shown when a job ends with failed files. */
 type UploadFailure =
@@ -205,10 +220,10 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       } else {
         handle.dismiss();
         const retryFiles = failed.map((f) => files[f.index]);
-        if (
-          failed.some((f) => f.error.message.includes("STORAGE_QUOTA_EXCEEDED"))
-        ) {
-          const stats = await convex.query(api.vaults.getUsageStats, {});
+        const stats = failed.some((f) => isQuotaError(f.error))
+          ? await convex.query(api.vaults.getUsageStats, {}).catch(() => null)
+          : null;
+        if (stats) {
           setFailure({
             kind: "full",
             quotaBytes: stats.quotaBytes,

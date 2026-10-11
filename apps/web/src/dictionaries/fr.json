@@ -1090,7 +1090,8 @@
       "empty": {
         "title": "Rien n'a encore été partagé avec vous",
         "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
-      }
+      },
+      "downloadFailed": "Impossible de télécharger ce fichier. Réessayez."
     }
   },
   "trustedContacts": {
@@ -2505,7 +2506,9 @@
     },
     "alert": {
       "title": "Nouvelle connexion",
-      "notMe": "Ce n'était pas moi ?"
+      "notMe": "Ce n'était pas moi ?",
+      "itWasMe": "C'était moi",
+      "confirmed": "Merci, la connexion est confirmée"
     },
     "notMeDialog": {
       "title": "Sécuriser votre compte ?",

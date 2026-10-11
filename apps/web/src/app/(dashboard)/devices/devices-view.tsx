@@ -35,6 +35,7 @@ export interface DevicesViewProps {
   activity: ActivityRow[];
   onRevoke: (deviceId: string) => void;
   onNotMe: (deviceId: string) => void;
+  onItWasMe: (deviceId: string) => void;
   onPinChange: (enabled: boolean) => void;
   onSeeAll?: () => void;
   /** Extra left-column content (unlock methods of this browser). */
@@ -55,6 +56,7 @@ export function DevicesView({
   activity,
   onRevoke,
   onNotMe,
+  onItWasMe,
   onPinChange,
   onSeeAll,
   children,
@@ -125,6 +127,13 @@ export function DevicesView({
                 title={t("alert.title")}
                 description={`${alert.label} · ${formatRelative(alert.createdAt, locale)}`}
               />
+              <Button
+                variant="link"
+                size="compact"
+                onClick={() => onItWasMe(alert.id)}
+              >
+                {t("alert.itWasMe")}
+              </Button>
               <Button
                 variant="danger"
                 size="compact"

@@ -1090,7 +1090,8 @@
       "empty": {
         "title": "Nothing shared with you yet",
         "body": "When someone makes you a trusted contact, their shared items appear here."
-      }
+      },
+      "downloadFailed": "Couldn't download this file. Try again."
     }
   },
   "trustedContacts": {
@@ -2505,7 +2506,9 @@
     },
     "alert": {
       "title": "New sign-in",
-      "notMe": "It wasn't me?"
+      "notMe": "It wasn't me?",
+      "itWasMe": "It was me",
+      "confirmed": "Thanks, the sign-in is confirmed"
     },
     "notMeDialog": {
       "title": "Secure your account?",
