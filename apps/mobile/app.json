@@ -5,6 +5,7 @@
     "scheme": "keeplas",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
@@ -12,6 +13,10 @@
     },
     "android": {
       "package": "com.keeplas.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FDFBF7"
+      },
       "predictiveBackGestureEnabled": false
     }
   }
