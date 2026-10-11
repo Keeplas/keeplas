@@ -1,0 +1,207 @@
+import { useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+  useAudioRecorderState,
+} from "expo-audio";
+
+import { Button } from "@/components/button";
+import { Icon } from "@/components/icon";
+import { NavBar } from "@/components/nav-bar";
+import { Screen } from "@/components/screen";
+import { Callout } from "@/components/surfaces";
+import { Text } from "@/components/text";
+import { PermissionSheet } from "@/features/capture/add-sheet";
+import { draftStore } from "@/features/capture/draft-store";
+import { formatDuration } from "@/lib/format";
+import { useI18n } from "@/providers/i18n-provider";
+import { useTheme } from "@/providers/theme-provider";
+
+const BARS = 32;
+const RECORDING = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
+
+/**
+ * M07-3 Voice note: records as soon as the microphone is allowed, shows
+ * the time and a live level waveform, then hands the m4a to compose.
+ */
+export default function VoiceNote() {
+  const router = useRouter();
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const recorder = useAudioRecorder(RECORDING);
+  const state = useAudioRecorderState(recorder, 120);
+  const [denied, setDenied] = useState(false);
+  const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
+  const started = useRef(false);
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void (async () => {
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
+        setDenied(true);
+        return;
+      }
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+    })();
+  }, [recorder]);
+
+  // dBFS (-60..0) → bar height ratio, newest bar on the right.
+  const metering = state.metering;
+  useEffect(() => {
+    if (!state.isRecording || metering === undefined) return;
+    const level = Math.max(0.08, Math.min(1, (metering + 60) / 60));
+    const frame = requestAnimationFrame(() => {
+      setLevels((bars) => [...bars.slice(1), level]);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [metering, state.isRecording]);
+
+  async function save() {
+    await recorder.stop();
+    await setAudioModeAsync({ allowsRecording: false });
+    if (!recorder.uri) return;
+    const durationSec = Math.round(state.durationMillis / 1000);
+    draftStore.start("voice", {
+      files: [
+        {
+          uri: recorder.uri,
+          name: `${t("capture.voiceTitle")}.m4a`,
+          mimeType: "audio/mp4",
+          kind: "audio",
+          durationSec,
+        },
+      ],
+    });
+    router.replace("/capture/compose");
+  }
+
+  function togglePause() {
+    if (state.isRecording) recorder.pause();
+    else recorder.record();
+  }
+
+  return (
+    <Screen
+      header={<NavBar title={t("capture.voiceTitle")} onBack={router.back} />}
+      contentStyle={styles.content}
+    >
+      <View style={styles.mic}>
+        <View
+          style={[
+            styles.ring,
+            styles.r200,
+            { backgroundColor: colors["accent.soft"] },
+          ]}
+        />
+        <View
+          style={[
+            styles.ring,
+            styles.r150,
+            { backgroundColor: colors["progress.fill"], opacity: 0.18 },
+          ]}
+        />
+        <View
+          style={[
+            styles.ring,
+            styles.r100,
+            { backgroundColor: colors["accent.text"] },
+          ]}
+        />
+        <Icon name="mic" size={44} color="text.inverse" />
+      </View>
+      <Text variant="display" align="center" style={styles.tabular}>
+        {formatDuration(state.durationMillis / 1000)}
+      </Text>
+      <Text color="text.muted" align="center">
+        {state.isRecording ? t("capture.recording") : t("capture.paused")}
+      </Text>
+      <View style={styles.wave}>
+        {levels.map((level, index) => (
+          <View
+            key={index}
+            style={[
+              styles.bar,
+              {
+                height: Math.round(60 * level),
+                backgroundColor: colors["progress.fill"],
+              },
+            ]}
+          />
+        ))}
+      </View>
+      <Callout icon="lock" text={t("capture.voiceEncrypted")} />
+      <View style={styles.controls}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={togglePause}
+          style={styles.pause}
+        >
+          <View
+            style={[
+              styles.pauseButton,
+              { backgroundColor: colors["accent.soft"] },
+            ]}
+          >
+            <Icon name={state.isRecording ? "pause" : "mic"} />
+          </View>
+          <Text variant="caption">
+            {state.isRecording ? t("capture.pause") : t("capture.resume")}
+          </Text>
+        </Pressable>
+        <Button
+          label={t("capture.save")}
+          onPress={save}
+          disabled={state.durationMillis < 500}
+          style={styles.flex}
+        />
+      </View>
+      <PermissionSheet
+        problem={denied ? "microphone" : null}
+        onDismiss={router.back}
+      />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { alignItems: "stretch" },
+  flex: { flex: 1 },
+  mic: {
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ring: { position: "absolute" },
+  r200: { width: 200, height: 200, borderRadius: 100 },
+  r150: { width: 150, height: 150, borderRadius: 75 },
+  r100: { width: 100, height: 100, borderRadius: 50 },
+  tabular: { fontVariant: ["tabular-nums"] },
+  wave: {
+    height: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  bar: { width: 4, borderRadius: 2 },
+  controls: { flexDirection: "row", alignItems: "center", gap: 16 },
+  pause: { alignItems: "center", gap: 4 },
+  pauseButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

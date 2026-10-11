@@ -1,0 +1,250 @@
+import { useEffect, useRef, useState } from "react";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useRouter } from "expo-router";
+
+import { Icon } from "@/components/icon";
+import { Text } from "@/components/text";
+import { PermissionSheet } from "@/features/capture/add-sheet";
+import { draftStore, useDraft } from "@/features/capture/draft-store";
+import {
+  chooseFiles,
+  chooseFromLibrary,
+  PermissionDenied,
+} from "@/features/capture/media";
+import { useI18n } from "@/providers/i18n-provider";
+import { colors as palette, radius, type } from "@/theme";
+
+/**
+ * M07-2 Scan document. The camera UI is dark in both themes. Each shot
+ * adds a page; pages are bound into one PDF on save (M07-8). The gallery
+ * button adds photos or files instead. Edge detection ("Auto") is not
+ * available on-device yet, so capture is manual.
+ */
+export default function ScanDocument() {
+  const router = useRouter();
+  const { t } = useI18n();
+  const draft = useDraft();
+  const camera = useRef<CameraView>(null);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [torch, setTorch] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      void requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const review = () => router.replace("/capture/compose");
+
+  async function shoot() {
+    if (!camera.current || busy) return;
+    setBusy(true);
+    try {
+      const photo = await camera.current.takePictureAsync({ quality: 0.8 });
+      if (photo) draftStore.addPages([photo.uri]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function addFromLibrary() {
+    Alert.alert(t("capture.document"), undefined, [
+      {
+        text: t("capture.chooseLibrary"),
+        onPress: async () => {
+          try {
+            const files = await chooseFromLibrary();
+            if (files.length) draftStore.addPages(files.map((f) => f.uri));
+          } catch (error) {
+            if (!(error instanceof PermissionDenied)) throw error;
+            Alert.alert(
+              t("permissions.photosTitle"),
+              t("permissions.photosBody"),
+            );
+          }
+        },
+      },
+      {
+        text: t("capture.chooseFile"),
+        onPress: async () => {
+          const files = await chooseFiles();
+          if (!files.length) return;
+          draftStore.update({ kind: "file", pages: [] });
+          draftStore.addFiles(files);
+          review();
+        },
+      },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
+  }
+
+  const pages = draft.pages.length;
+  const denied = permission && !permission.granted && !permission.canAskAgain;
+
+  return (
+    <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
+      <StatusBar style="light" />
+      <View style={styles.top}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("common.back")}
+          onPress={router.back}
+          hitSlop={12}
+        >
+          <Icon name="chevron-left" tint={palette.white} />
+        </Pressable>
+        <Text variant="label" style={styles.white}>
+          {t("capture.scanTitle")}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("capture.flash")}
+          accessibilityState={{ selected: torch }}
+          onPress={() => setTorch((on) => !on)}
+          hitSlop={12}
+        >
+          <Icon
+            name="flash"
+            size={22}
+            tint={torch ? palette.dawn["500"] : palette.white}
+          />
+        </Pressable>
+      </View>
+      <View style={styles.camera}>
+        {permission?.granted ? (
+          <CameraView
+            ref={camera}
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            enableTorch={torch}
+          />
+        ) : null}
+        <View style={styles.banner}>
+          <Icon name="lock" tint={palette.white} />
+          <View style={styles.bannerText}>
+            <Text variant="label" style={styles.white}>
+              {t("capture.encryptedTitle")}
+            </Text>
+            <Text variant="body-sm" style={{ color: palette.navy["200"] }}>
+              {t("capture.scanEncryptedBody")}
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.controls}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("capture.gallery")}
+          onPress={addFromLibrary}
+          style={styles.gallery}
+        >
+          <Icon name="image-gallery" size={22} tint={palette.white} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("capture.shutter")}
+          onPress={shoot}
+          disabled={!permission?.granted || busy}
+          style={styles.shutter}
+        >
+          <View style={styles.shutterDot} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={review}
+          disabled={pages === 0}
+          style={[styles.done, { opacity: pages === 0 ? 0.4 : 1 }]}
+        >
+          <Text style={[type.caption, styles.navy]}>
+            {pages === 1
+              ? t("capture.onePage")
+              : t("capture.pages", { n: pages })}
+          </Text>
+          <Icon name="arrow-right" size={16} tint={palette.navy["900"]} />
+        </Pressable>
+      </View>
+      <PermissionSheet
+        problem={denied ? "camera" : null}
+        onDismiss={router.back}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: palette.navy["950"] },
+  white: { color: palette.white },
+  navy: { color: palette.navy["900"] },
+  top: {
+    height: 40,
+    marginTop: 5,
+    marginHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  camera: {
+    height: 560,
+    marginTop: 8,
+    backgroundColor: palette.navy["700"],
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  banner: {
+    margin: 20,
+    marginBottom: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: radius.md,
+    backgroundColor: palette.navy["900"],
+  },
+  bannerText: { flex: 1, gap: 2 },
+  controls: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 28,
+  },
+  gallery: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.navy["800"],
+  },
+  shutter: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    borderColor: palette.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shutterDot: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: palette.white,
+  },
+  done: {
+    minWidth: 96,
+    height: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+    backgroundColor: palette.white,
+  },
+});

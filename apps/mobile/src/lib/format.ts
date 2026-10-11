@@ -22,6 +22,17 @@ export function formatDate(timestamp: number, locale: string): string {
   });
 }
 
+/** Elapsed time as M:SS (or H:MM:SS for long recordings). */
+export function formatDuration(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(total / 3_600);
+  const minutes = Math.floor((total % 3_600) / 60);
+  const remainder = total % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`
+    : `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
 /** "FR" → "France" in `locale`; the code itself when unknown. */
 export function countryName(code: string, locale: string): string {
   try {
