@@ -4,7 +4,7 @@ Entry point for the v2 redesign (mobile-first continuity and succession). Read t
 
 - **Started**: 2026-10-11
 - **Owner**: Prince
-- **Status**: in progress. Phases 0 to 3 done.
+- **Status**: in progress. Phases 0 to 5 and 7 done; phase 6 waits on the production backfill; phase 8 flows built, not yet verified end to end on a device.
 
 ## Sources
 
@@ -135,6 +135,11 @@ Pixel-perfect rule (phases 7 and 8): build each component once from `figma/specs
 
 - [ ] Setup (M01), home / unlock / settings (M08), capture (M07 incl. offline outbox in SQLCipher), people and sharing (M06), shared vault (M03), recovery and life check (M02), edge cases (M09), states (section 10), dark mode → verify: flows in `design-kit/docs/FLOWS.md` run end to end; simulator screenshots at 393×852 pixel-diffed against `figma/screens/` under an agreed threshold
 - [ ] Crypto on Hermes: `react-native-quick-crypto` (AES-GCM), native Argon2id, `@noble/post-quantum` as is; passkeys via `react-native-passkey` → verify: cross-platform test vectors match `packages/crypto`
+  - [x] Flows built: setup (M01), home / unlock / settings / devices (M08), QR approve and new-device alert (M09), capture with the SQLCipher outbox (M07), people, folders and sharing (M06, M03), owner and contact recovery, cloud backup, life check and push (M02), key rotation on the phone → `pnpm --filter @keeplas/mobile test`
+  - [x] Crypto parity in Jest: web ciphertext opens on mobile and back, stream format, owner keys, TOFU pin, shared Argon2id vector → `payload-compat.test.ts`, `crypto.test.ts`
+  - [x] iOS 27 SDK: UIScene lifecycle via `plugins/with-ios-scene.js` (the app crashed at launch without it)
+  - [ ] Run the flows end to end against a live deployment, and the `/self-test` screen on Hermes (iOS + Android devices)
+  - [ ] Simulator screenshots pixel-diffed against `figma/screens/`; dark mode pass
 
 ## Key numbers
 
