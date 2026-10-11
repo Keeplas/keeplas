@@ -74,7 +74,7 @@ export function Sidebar() {
         <Link
           href="/hub"
           aria-label={t("nav.goToHub")}
-          className="flex items-center gap-3 mb-8 outline-none rounded-xl"
+          className="flex items-center gap-3 mb-8 outline-none rounded-xs"
         >
           <img
             src="/assets/logo/logo.svg"
@@ -96,7 +96,7 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1",
+                      "flex items-center gap-4 px-4 py-3 rounded-xs text-label-md transition-transform hover:translate-x-1",
                       isActive
                         ? "bg-secondary text-on-secondary shadow-lg"
                         : "text-secondary/70 hover:bg-surface-container-highest",
@@ -116,7 +116,7 @@ export function Sidebar() {
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1",
+              "flex items-center gap-4 px-4 py-3 rounded-xs text-label-md transition-transform hover:translate-x-1",
               isSettingsActive
                 ? "bg-secondary text-on-secondary shadow-lg"
                 : "text-secondary/70 hover:bg-surface-container-highest",
@@ -130,7 +130,7 @@ export function Sidebar() {
             href="/docs"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-4 px-4 py-3 rounded-xl text-label-md transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
+            className="flex items-center gap-4 px-4 py-3 rounded-xs text-label-md transition-transform hover:translate-x-1 text-secondary/70 hover:bg-surface-container-highest"
           >
             <Icon path={ICON_PATHS.book} />
             <span className="flex-1 truncate">{t("nav.documentation")}</span>
@@ -142,7 +142,7 @@ export function Sidebar() {
 
           <Link
             href="/settings"
-            className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group outline-none cursor-pointer"
+            className="mt-2 w-full flex items-center gap-3 p-3 bg-surface-container rounded-xs hover:bg-surface-container-high transition-colors group outline-none cursor-pointer"
           >
             <UserAvatar
               size="md"
@@ -172,7 +172,7 @@ export function Sidebar() {
         <Link
           href="/hub"
           aria-label={t("nav.goToHub")}
-          className="flex items-center gap-2 outline-none rounded-xl"
+          className="flex items-center gap-2 outline-none rounded-xs"
         >
           <img
             src="/assets/logo/logo.svg"
@@ -186,7 +186,7 @@ export function Sidebar() {
           <Link
             href="/settings"
             aria-label={t("nav.openSettings")}
-            className="p-1 rounded-xl outline-none cursor-pointer"
+            className="p-1 rounded-xs outline-none cursor-pointer"
           >
             <UserAvatar
               size="sm"
@@ -209,7 +209,7 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
+                    "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xs text-label-md transition-colors",
                     isActive
                       ? "text-secondary-fixed"
                       : "text-on-primary/60 hover:text-on-primary/80",
@@ -227,7 +227,7 @@ export function Sidebar() {
             <Link
               href="/settings"
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-label-md transition-colors",
+                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xs text-label-md transition-colors",
                 isSettingsActive
                   ? "text-secondary-fixed"
                   : "text-on-primary/60 hover:text-on-primary/80",

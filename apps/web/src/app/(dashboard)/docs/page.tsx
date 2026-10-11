@@ -106,7 +106,7 @@ export default function DocsPage() {
       <section className="bg-primary text-on-primary rounded-[2rem] p-10 md:p-12 relative overflow-hidden">
         <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-secondary/10 blur-[100px] pointer-events-none" />
         <div className="relative z-10 space-y-5 max-w-2xl">
-          <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur rounded-full text-label-md border border-white/20">
+          <span className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur rounded-sm text-label-md border border-white/20">
             {t("hub.hero.badge")}
           </span>
           <h2 className="text-headline-lg">{t("hub.hero.title")}</h2>
@@ -116,13 +116,13 @@ export default function DocsPage() {
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
               href="/settings/recovery-kit"
-              className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xl hover:opacity-90 transition-all active:scale-95"
+              className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xs hover:opacity-90 transition-all active:scale-95"
             >
               {t("hub.hero.exportKit")}
             </Link>
             <Link
               href="/settings/security"
-              className="inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/10 transition-all font-headline font-bold"
+              className="inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-xs hover:bg-white/10 transition-all font-headline font-bold"
             >
               {t("hub.hero.securityCenter")}
             </Link>
@@ -133,7 +133,7 @@ export default function DocsPage() {
       {/* Core Features */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("hub.coreFeatures.heading")}
           </h2>
@@ -143,10 +143,10 @@ export default function DocsPage() {
             <Link
               key={feature.key}
               href={feature.href}
-              className="bg-surface-container-low rounded-2xl p-6 ghost-border hover:bg-surface-container transition-colors group flex flex-col gap-4"
+              className="bg-surface-container-low rounded-sm p-6 ghost-border hover:bg-surface-container transition-colors group flex flex-col gap-4"
             >
               <span
-                className={`inline-flex items-center justify-center w-11 h-11 rounded-xl ${feature.accent}`}
+                className={`inline-flex items-center justify-center w-11 h-11 rounded-xs ${feature.accent}`}
               >
                 <Icon path={feature.iconPath} className="w-5 h-5" />
               </span>
@@ -173,7 +173,7 @@ export default function DocsPage() {
       {/* Security model */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-primary rounded-full" />
+          <span className="w-2 h-8 bg-primary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("hub.securityModel.heading")}
           </h2>
@@ -182,9 +182,9 @@ export default function DocsPage() {
           {SECURITY_POINTS.map((point) => (
             <article
               key={point.key}
-              className="bg-surface-container-lowest rounded-2xl p-6 ghost-border flex gap-4"
+              className="bg-surface-container-lowest rounded-sm p-6 ghost-border flex gap-4"
             >
-              <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+              <span className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
                 <Icon path={point.iconPath} className="w-5 h-5" />
               </span>
               <div className="space-y-1">
@@ -203,7 +203,7 @@ export default function DocsPage() {
       {/* Lifecycle flow */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-error rounded-full" />
+          <span className="w-2 h-8 bg-error rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("hub.lifecycle.heading")}
           </h2>
@@ -231,7 +231,7 @@ export default function DocsPage() {
       </section>
 
       {/* Quick links */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
           <div>
             <h2 className="text-headline-sm text-primary">
@@ -247,7 +247,7 @@ export default function DocsPage() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container transition-colors text-body-md font-medium text-primary"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xs bg-surface-container-lowest hover:bg-surface-container transition-colors text-body-md font-medium text-primary"
               >
                 <Icon
                   path={link.iconPath}
@@ -283,7 +283,7 @@ function LifecycleStep({
   return (
     <li className="relative">
       <span
-        className={`absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface ${accent}`}
+        className={`absolute -left-[41px] top-1 w-4 h-4 rounded-sm border-4 border-surface ${accent}`}
       />
       <p className="text-label-md text-on-surface-variant">{value}</p>
       <h3 className="text-headline-sm text-primary mt-1">{title}</h3>

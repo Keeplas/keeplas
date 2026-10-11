@@ -12,7 +12,7 @@ interface FrequencySelectorProps {
 export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
   const t = useTranslations("lifeCheck");
   return (
-    <section className="bg-surface-container-low rounded-2xl p-6 relative overflow-hidden">
+    <section className="bg-surface-container-low rounded-sm p-6 relative overflow-hidden">
       <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
         <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
         {t("frequency.title")}
@@ -30,8 +30,8 @@ export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
               onClick={() => onChange(freq.value)}
               className={
                 selected
-                  ? "flex flex-col items-center justify-center p-5 bg-secondary text-on-secondary rounded-xl shadow-lg scale-[1.03] transition-transform cursor-pointer"
-                  : "flex flex-col items-center justify-center p-5 bg-surface-container-highest rounded-xl hover:scale-[1.03] transition-transform cursor-pointer group"
+                  ? "flex flex-col items-center justify-center p-5 bg-secondary text-on-secondary rounded-xs shadow-lg scale-[1.03] transition-transform cursor-pointer"
+                  : "flex flex-col items-center justify-center p-5 bg-surface-container-highest rounded-xs hover:scale-[1.03] transition-transform cursor-pointer group"
               }
             >
               <span

@@ -83,7 +83,7 @@ export function LegalInfoStep({ onComplete }: LegalInfoStepProps) {
   return (
     <div className="w-full max-w-lg mx-auto">
       <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-xs mb-6">
           <span className="text-label-md uppercase tracking-widest">
             {t("badge")}
           </span>

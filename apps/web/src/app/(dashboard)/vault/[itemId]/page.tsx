@@ -771,7 +771,7 @@ export default function VaultItemPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={startEditing}
-                className="p-2 hover:bg-surface-container-high rounded-xl transition-colors cursor-pointer"
+                className="p-2 hover:bg-surface-container-high rounded-xs transition-colors cursor-pointer"
                 title={t("detail.edit")}
               >
                 <svg
@@ -790,7 +790,7 @@ export default function VaultItemPage() {
               </button>
               <button
                 onClick={openDeleteDialog}
-                className="p-2 hover:bg-error-container rounded-xl transition-colors cursor-pointer"
+                className="p-2 hover:bg-error-container rounded-xs transition-colors cursor-pointer"
                 title={t("detail.deletePermanently")}
               >
                 <svg
@@ -835,7 +835,7 @@ export default function VaultItemPage() {
                       })
                     : t("detail.summaryReleasedAll");
               return (
-                <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-lg">
+                <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-xs">
                   {summary}
                 </span>
               );
@@ -845,7 +845,7 @@ export default function VaultItemPage() {
           {/* Decrypted Content */}
           {(decrypting ||
             (decryptedContent && decryptedContent.length > 0)) && (
-            <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
+            <div className="bg-surface-container-low rounded-sm p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <svg
                   className="w-4 h-4 text-secondary"
@@ -879,7 +879,7 @@ export default function VaultItemPage() {
           )}
 
           {decryptedLinks.length > 0 && (
-            <div className="bg-surface-container-low rounded-2xl p-6 mb-6">
+            <div className="bg-surface-container-low rounded-sm p-6 mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <Icon
                   path={ICON_PATHS.link}
@@ -940,7 +940,7 @@ export default function VaultItemPage() {
                 <button
                   type="button"
                   onClick={() => handleDeleteDialogChange(false)}
-                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xl font-label font-bold text-sm cursor-pointer"
+                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xs font-label font-bold text-sm cursor-pointer"
                 >
                   {t("delete.cancel")}
                 </button>
@@ -948,7 +948,7 @@ export default function VaultItemPage() {
                   type="button"
                   onClick={handleDelete}
                   disabled={!canConfirmDelete || deleting}
-                  className="flex-1 py-3 bg-error text-on-error rounded-xl font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-error text-on-error rounded-xs font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {deleting ? t("delete.deleting") : t("delete.deleteForever")}
                 </button>
@@ -973,11 +973,11 @@ function ExistingAttachmentRow({
   const t = useTranslations("vault");
   return (
     <div
-      className={`flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 ${
+      className={`flex items-center gap-3 bg-surface-container-low rounded-xs px-4 py-3 ${
         removed ? "opacity-50" : ""
       }`}
     >
-      <div className="w-9 h-9 bg-surface-container-high rounded-lg flex items-center justify-center shrink-0 text-primary">
+      <div className="w-9 h-9 bg-surface-container-high rounded-xs flex items-center justify-center shrink-0 text-primary">
         <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
@@ -996,7 +996,7 @@ function ExistingAttachmentRow({
       <button
         type="button"
         onClick={onToggle}
-        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
+        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-xs"
       >
         {removed ? t("editor.undo") : t("editor.remove")}
       </button>
@@ -1013,8 +1013,8 @@ function StagedAttachmentRow({
 }) {
   const t = useTranslations("vault");
   return (
-    <div className="flex items-center gap-3 bg-secondary/5 rounded-xl px-4 py-3">
-      <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center shrink-0 text-secondary">
+    <div className="flex items-center gap-3 bg-secondary/5 rounded-xs px-4 py-3">
+      <div className="w-9 h-9 bg-secondary/10 rounded-xs flex items-center justify-center shrink-0 text-secondary">
         <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
@@ -1026,7 +1026,7 @@ function StagedAttachmentRow({
       <button
         type="button"
         onClick={onRemove}
-        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-md"
+        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-xs"
       >
         {t("editor.remove")}
       </button>

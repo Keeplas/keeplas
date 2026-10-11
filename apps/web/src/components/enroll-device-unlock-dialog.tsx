@@ -84,7 +84,7 @@ export function EnrollDeviceUnlockDialog({
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="bg-surface rounded-sm p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-headline-sm text-primary mb-2">
@@ -95,7 +95,7 @@ export function EnrollDeviceUnlockDialog({
         </p>
 
         {error ? (
-          <div className="mb-4 p-3 bg-error-container rounded-xl text-sm text-on-error-container">
+          <div className="mb-4 p-3 bg-error-container rounded-xs text-sm text-on-error-container">
             {error}
           </div>
         ) : null}
@@ -105,7 +105,7 @@ export function EnrollDeviceUnlockDialog({
             <button
               type="button"
               onClick={() => setMethod("pin")}
-              className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors"
+              className="w-full p-4 rounded-xs bg-surface-container-low hover:bg-surface-container-high text-left transition-colors"
             >
               <div className="font-bold text-on-surface">
                 {t("enroll.pinOption")}
@@ -118,7 +118,7 @@ export function EnrollDeviceUnlockDialog({
               type="button"
               onClick={() => handleWebAuthnSubmit("platform")}
               disabled={!biometricAvailable || busy}
-              className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
+              className="w-full p-4 rounded-xs bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
             >
               <div className="font-bold text-on-surface">
                 {t("enroll.biometricOption")}
@@ -133,7 +133,7 @@ export function EnrollDeviceUnlockDialog({
               type="button"
               onClick={() => handleWebAuthnSubmit("cross-platform")}
               disabled={!hardwareAvailable || busy}
-              className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
+              className="w-full p-4 rounded-xs bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
             >
               <div className="font-bold text-on-surface">
                 {t("enroll.hardwareOption")}

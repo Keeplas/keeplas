@@ -41,8 +41,8 @@ function AuthLayout() {
     <>
       <Outlet />
       {/* Decorative floating blur elements */}
-      <div className="fixed top-0 right-0 w-96 h-96 bg-secondary/5 blur-[120px] pointer-events-none rounded-full" />
-      <div className="fixed bottom-0 left-0 w-96 h-96 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="fixed top-0 right-0 w-96 h-96 bg-secondary/5 blur-[120px] pointer-events-none rounded-sm" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-primary/5 blur-[120px] pointer-events-none rounded-sm" />
     </>
   );
 }

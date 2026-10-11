@@ -8,7 +8,7 @@ export interface IconProps extends React.SVGAttributes<SVGSVGElement> {
 }
 
 const Icon = React.forwardRef<SVGSVGElement, IconProps>(
-  ({ className, path, filled = false, strokeWidth = 1.5, ...props }, ref) => {
+  ({ className, path, filled = false, strokeWidth = 1.75, ...props }, ref) => {
     if (filled) {
       return (
         <svg

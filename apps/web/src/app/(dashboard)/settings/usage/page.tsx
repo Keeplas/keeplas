@@ -56,7 +56,7 @@ export default function SettingsUsagePage() {
         </p>
       </header>
 
-      <section className="bg-surface-container-low rounded-2xl p-6 space-y-5">
+      <section className="bg-surface-container-low rounded-sm p-6 space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-1">
             <p className="text-label-md text-secondary">
@@ -78,7 +78,7 @@ export default function SettingsUsagePage() {
           </div>
           <span
             className={
-              "inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md " +
+              "inline-flex items-center px-2.5 py-0.5 rounded-sm text-label-md " +
               (isNearLimit
                 ? "bg-error-container text-on-error-container"
                 : "bg-secondary-container text-on-secondary-container")
@@ -91,7 +91,7 @@ export default function SettingsUsagePage() {
         <Progress value={usedPercent} />
 
         {isNearLimit && (
-          <div className="flex items-start gap-3 rounded-xl border border-error/30 bg-error-container/40 p-4">
+          <div className="flex items-start gap-3 rounded-xs border border-error/30 bg-error-container/40 p-4">
             <Icon
               path={ICON_PATHS.warning}
               className="w-5 h-5 text-error shrink-0 mt-0.5"
@@ -133,7 +133,7 @@ export default function SettingsUsagePage() {
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
+        <div className="bg-surface-container-low rounded-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-headline-sm text-primary">
               {t("usage.itemsByCategory")}
@@ -165,7 +165,7 @@ export default function SettingsUsagePage() {
           )}
         </div>
 
-        <div className="bg-surface-container-low rounded-2xl p-6 space-y-4">
+        <div className="bg-surface-container-low rounded-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-headline-sm text-primary">
               {t("usage.filesByType")}
@@ -205,7 +205,7 @@ export default function SettingsUsagePage() {
         </div>
       </section>
 
-      <section className="rounded-2xl bg-surface-container-low p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+      <section className="rounded-sm bg-surface-container-low p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
         <div className="space-y-1">
           <h2 className="text-headline-sm text-primary">
             {t("usage.needCapacity.title")}
@@ -237,7 +237,7 @@ function UsageStatCard({
   hint: string;
 }) {
   return (
-    <div className="bg-surface-container-low rounded-2xl p-5 space-y-2">
+    <div className="bg-surface-container-low rounded-sm p-5 space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-label-md text-secondary">{label}</p>
         <Icon path={iconPath} className="w-4 h-4 text-on-surface-variant" />

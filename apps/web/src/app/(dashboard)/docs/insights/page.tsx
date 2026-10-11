@@ -32,7 +32,7 @@ export default function InsightsDocPage() {
       </header>
 
       {/* Table of contents */}
-      <nav className="bg-surface-container-low rounded-2xl p-6">
+      <nav className="bg-surface-container-low rounded-sm p-6">
         <h2 className="text-label-md text-on-surface-variant mb-4">
           {t("insights.toc")}
         </h2>
@@ -166,7 +166,7 @@ export default function InsightsDocPage() {
       </Section>
 
       {/* Footer back-link */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-3">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border space-y-3">
         <h2 className="text-headline-sm text-primary">
           {t("insights.footer.heading")}
         </h2>
@@ -205,7 +205,7 @@ function Section({
       className="scroll-mt-24 space-y-5 border-t border-outline-variant/30 pt-12"
     >
       <div className="flex items-center gap-3">
-        <span className="w-2 h-8 bg-secondary rounded-full" />
+        <span className="w-2 h-8 bg-secondary rounded-sm" />
         <span className="text-label-md text-secondary uppercase tracking-wide">
           {t(`insights.toneLabels.${tone}`)}
         </span>

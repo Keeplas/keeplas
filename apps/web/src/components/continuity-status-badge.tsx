@@ -71,12 +71,12 @@ export function ContinuityStatusBadge() {
     : null;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-highest">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-xs bg-surface-container-highest">
       <Link
         href="/settings/continuity"
         className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer group"
       >
-        <span className={cn("w-2 h-2 rounded-full shrink-0", meta.dot)} />
+        <span className={cn("w-2 h-2 rounded-sm shrink-0", meta.dot)} />
         <Icon path={meta.icon} className="w-4 h-4 text-secondary shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-label-md text-primary truncate group-hover:underline">

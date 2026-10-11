@@ -53,13 +53,13 @@ export function NotificationsMenu({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-label-md text-secondary/70 hover:bg-surface-container-highest hover:translate-x-1 transition-transform cursor-pointer"
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xs text-label-md text-secondary/70 hover:bg-surface-container-highest hover:translate-x-1 transition-transform cursor-pointer"
           aria-label={t("notifications.title")}
         >
           {bellIcon}
           <span className="flex-1 text-left">{t("notifications.title")}</span>
           {(unreadCount ?? 0) > 0 && (
-            <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-error text-on-error text-label-md flex items-center justify-center">
+            <span className="min-w-[20px] h-5 px-1.5 rounded-sm bg-error text-on-error text-label-md flex items-center justify-center">
               {unreadCount! > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -68,12 +68,12 @@ export function NotificationsMenu({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="relative p-2 rounded-xl text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer"
+          className="relative p-2 rounded-xs text-on-primary/80 hover:text-on-primary hover:bg-primary-container/50 transition-colors cursor-pointer"
           aria-label={t("notifications.title")}
         >
           {bellIcon}
           {(unreadCount ?? 0) > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-secondary" />
+            <span className="absolute top-1 right-1 w-2 h-2 rounded-sm bg-secondary" />
           )}
         </button>
       )}
@@ -92,14 +92,14 @@ export function NotificationsMenu({
               <button
                 type="button"
                 onClick={() => markAllAsRead()}
-                className="px-3 py-1.5 rounded-full border border-outline-variant/30 text-body-md text-secondary hover:bg-surface-container transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-sm border border-outline-variant/30 text-body-md text-secondary hover:bg-surface-container transition-colors cursor-pointer"
               >
                 {t("notifications.markAllRead")}
               </button>
             )}
             <SheetClose
               aria-label={t("notifications.close")}
-              className="p-2 rounded-full text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+              className="p-2 rounded-sm text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
             >
               <Icon path={ICON_PATHS.close} className="w-5 h-5" />
             </SheetClose>
@@ -131,7 +131,7 @@ export function NotificationsMenu({
                       setOpen(false);
                     }}
                     className={cn(
-                      "w-full text-left p-4 rounded-2xl bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors cursor-pointer",
+                      "w-full text-left p-4 rounded-sm bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors cursor-pointer",
                       !n.isRead && "border-secondary/30",
                     )}
                   >
@@ -156,7 +156,7 @@ export function NotificationsMenu({
                           <Icon path={ICON_PATHS.history} className="w-3 h-3" />
                           <span>{formatTimeAgo(n.createdAt)}</span>
                           {!n.isRead && (
-                            <span className="ml-1 w-1.5 h-1.5 rounded-full bg-secondary" />
+                            <span className="ml-1 w-1.5 h-1.5 rounded-sm bg-secondary" />
                           )}
                         </div>
                       </div>

@@ -245,9 +245,9 @@ function PillarSection({
   externalRefsLabel,
 }: PillarSectionProps) {
   return (
-    <section className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl ghost-border space-y-5">
+    <section className="bg-surface-container-lowest p-6 md:p-8 rounded-sm ghost-border space-y-5">
       <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+        <div className="w-12 h-12 rounded-xs bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
           <Icon path={icon} className="w-6 h-6" />
         </div>
         <div>
@@ -272,7 +272,7 @@ function PillarSection({
         ))}
       </ul>
 
-      <details className="group bg-surface-container/40 rounded-xl">
+      <details className="group bg-surface-container/40 rounded-xs">
         <summary className="cursor-pointer p-4 text-label-md text-primary font-bold flex items-center justify-between">
           <span>{technicalTitle}</span>
           <Icon
@@ -300,7 +300,7 @@ function PillarSection({
 
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <details className="group bg-surface-container-lowest rounded-2xl ghost-border">
+    <details className="group bg-surface-container-lowest rounded-sm ghost-border">
       <summary className="cursor-pointer p-5 flex items-center justify-between gap-4">
         <span className="text-body-lg text-primary font-bold">{question}</span>
         <Icon
@@ -324,14 +324,14 @@ export function SecurityContent() {
         {/* Hero */}
         <header className="space-y-4 text-center">
           <div className="inline-flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-full shadow-sm">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-lowest rounded-sm shadow-sm">
               <Icon
                 path={ICON_PATHS.shieldCheck}
                 className="w-5 h-5 text-secondary"
               />
               <span className="text-label-md text-primary">{s.badge1}</span>
             </span>
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full shadow-sm">
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-sm shadow-sm">
               <Icon path={ICON_PATHS.lock} className="w-5 h-5" />
               <span className="text-label-md font-bold">{s.badge2}</span>
             </span>
@@ -381,7 +381,7 @@ export function SecurityContent() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/signup"
-              className="vault-gradient text-white px-8 py-3 rounded-xl font-bold inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+              className="vault-gradient text-white px-8 py-3 rounded-xs font-bold inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
             >
               {s.cta.create}
               <Icon path={ICON_PATHS.arrowRight} className="w-5 h-5" />

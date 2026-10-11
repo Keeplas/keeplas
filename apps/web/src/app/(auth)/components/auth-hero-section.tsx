@@ -22,7 +22,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
       <div className="relative z-10">
         <div className="flex items-center gap-3">
           <img
-            src="/assets/logo/logo.svg"
+            src="/assets/logo/logo-inverse.svg"
             alt="Keeplas"
             width={36}
             height={36}
@@ -76,7 +76,7 @@ export function AuthHeroSection({ decoration }: AuthHeroSectionProps = {}) {
       </div>
 
       {/* Background blur */}
-      <div className="absolute -bottom-24 -right-24 w-[600px] h-[600px] opacity-10 blur-3xl rounded-full bg-secondary-fixed pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-[600px] h-[600px] opacity-10 blur-3xl rounded-sm bg-secondary-fixed pointer-events-none" />
 
       {decoration}
     </section>

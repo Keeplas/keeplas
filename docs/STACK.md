@@ -51,14 +51,14 @@ The UI runtime. Chosen for the ecosystem depth (Radix, TanStack, Convex's first-
 
 ### Tailwind CSS v4 + shadcn/ui + Radix UI
 
-- **Tailwind v4** for styling — utility-first, no runtime cost, design tokens declared inline via `@theme` (the "Digital Curator" design system: Vault Navy, Manrope + Inter, tonal layering, no 1px borders).
+- **Tailwind v4** for styling — utility-first, no runtime cost, design tokens declared inline via `@theme` (design system v2: semantic light + dark tokens from Figma, Source Serif 4 + Inter).
 - **shadcn/ui pattern on Radix primitives** for every interactive component (dialogs, popovers, selects, etc.). We **do not** hand-roll interactive components — Radix gives us accessibility (focus management, ARIA, keyboard nav) for free, and the shadcn pattern keeps the components in-repo and themeable. Standardized on Radix; the few remaining Base UI components (Tooltip, DatePicker) are migrated when touched.
 
 ### Supporting libraries
 
 - **Tiptap 3** — rich-text editor for vault content (letters, notes).
 - **lucide-react** — icon set. **cmdk** — command palette.
-- **Fontsource** (`@fontsource-variable/{inter,manrope,geist}`) — self-hosted variable fonts, no third-party font CDN (keeps `font-src 'self'` in the CSP and avoids a privacy leak).
+- **Fontsource** (`@fontsource-variable/{inter,source-serif-4}`) — self-hosted variable fonts, no third-party font CDN (keeps `font-src 'self'` in the CSP and avoids a privacy leak).
 - **libphonenumber-js** — phone parsing/validation for WhatsApp OTP.
 - **qrcode.react**, **html2canvas-pro**, **jspdf** — Emergency Card rendering and PDF export, all client-side.
 - **Preference-based i18n** (English / French) — a small custom context + JSON dictionaries (`en`/`fr`). The user's locale is a stored preference, not a URL segment, because the app is auth-gated and personal; there is no SEO surface to localize via routes.

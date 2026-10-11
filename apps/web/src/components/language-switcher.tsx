@@ -38,7 +38,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         }
       }}
       className={cn(
-        "inline-flex min-w-24 cursor-pointer items-center justify-center gap-2 rounded-xl border border-primary/25 px-4 py-2.5 text-sm font-bold uppercase tracking-widest text-primary/75 transition-colors hover:border-primary/45 hover:bg-primary/5 hover:text-primary",
+        "inline-flex min-w-24 cursor-pointer items-center justify-center gap-2 rounded-xs border border-primary/25 px-4 py-2.5 text-sm font-bold uppercase tracking-widest text-primary/75 transition-colors hover:border-primary/45 hover:bg-primary/5 hover:text-primary",
         className,
       )}
       aria-label="Language"

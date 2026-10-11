@@ -133,7 +133,7 @@ export function VerificationStep({
       </div>
 
       {/* Why this matters */}
-      <div className="bg-primary-container text-on-primary-container p-5 md:p-6 rounded-2xl mb-6 md:mb-8 flex items-start gap-3 md:gap-4 relative overflow-hidden">
+      <div className="bg-primary-container text-on-primary-container p-5 md:p-6 rounded-sm mb-6 md:mb-8 flex items-start gap-3 md:gap-4 relative overflow-hidden">
         <svg
           className="w-8 h-8 text-secondary-fixed shrink-0 mt-0.5"
           fill="none"

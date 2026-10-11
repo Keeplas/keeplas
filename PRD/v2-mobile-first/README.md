@@ -4,7 +4,7 @@ Entry point for the v2 redesign (mobile-first continuity and succession). Read t
 
 - **Started**: 2026-10-11
 - **Owner**: Prince
-- **Status**: planning. No product code changed yet.
+- **Status**: in progress. Phases 0 to 3 done.
 
 ## Sources
 
@@ -96,11 +96,11 @@ Each step lists its verification. A phase is done when every check passes.
 - [x] Remove master-key reconstruction (UI + Convex endpoints) → verify: `stop_leaks.test.ts` proves no contact endpoint serves a shard, even from a legacy row after a release; memorial release tests still green
 - [x] Remove `release_anyway` → verify: `life_check.test.ts` proves a missed confirmation window never releases, even with a legacy config; `retireReleaseAnyway` migration test
 
-### Phase 3: Design system v2
+### Phase 3: Design system v2 (done)
 
-- [ ] Replace tokens in `packages/ui` and `apps/web/src/app/globals.css` with light + dark semantic tokens from `figma/tokens.json` → verify: every token name in Foundations exists in CSS for both themes
-- [ ] Fonts (Source Serif 4 + Inter), icons and illustrations from `design-kit/svg/` → verify: no remaining Manrope / `#041632` references
-- [ ] Rewrite the `/design-system` skill and the UI section of `CLAUDE.md`; align PRD (F7) → verify: review in PR
+- [x] Replace tokens in `packages/ui` and `apps/web/src/app/globals.css` with light + dark semantic tokens from `figma/tokens.json` → verify: every token name in Foundations exists in CSS for both themes (`design-tokens.test.ts`). Legacy Material names stay as light-only aliases until phase 7 rebuilds the screens
+- [x] Fonts (Source Serif 4 + Inter), icons and illustrations from `design-kit/svg/` → verify: no remaining Manrope / `#041632` references outside `PRD/`
+- [x] Rewrite the `/design-system` skill and the UI section of `CLAUDE.md`; align PRD (F7) → verify: review in PR
 
 ### Phase 4: Devices, QR linking and mobile-only sign-up (F6, F8, D2, D5)
 

@@ -1,5 +1,7 @@
 # Keeplas — Architecture, Security & Product Decisions
 
+> **Superseded (2026-10-11).** Historical document, kept for context. Where it disagrees with the code or with [`v2-mobile-first/README.md`](v2-mobile-first/README.md), those win. In particular: the MasterKey is never split (no Shamir 3-of-5, no "Shard 5" held by Keeplas, decision D14); there are no ZK proofs (Noir / Barretenberg was never built; encryption is client-side / zero-access); a user has up to 3 trust contacts and 2 confirmations are enough (D13).
+
 > Complete recap document — May 2026 — v5.1
 >
 > **Changes v5 → v5.1**: simplified access model (removal of modes B1–B4 and the First Responder role, merge of Medical Contact / Legal Authority into the standard `role`), configurable Shamir threshold (2-of-5 by default, 5 max), peer-to-peer ML-KEM distribution + submission flow described.
@@ -104,16 +106,17 @@ Next.js (App Router)        ← Web-first + PWA ready
 - Theming via CSS variables: the teal/dark-navy palette from the mockups is easily configurable
 
 **ShadCN components used**
-| UI element | ShadCN component |
-|---|---|
-| Privacy Controls toggles | `Switch` |
-| Guide Readiness progress bars | `Progress` |
-| ENCRYPTED, PROTECTED badges | `Badge` |
-| Asset Registry tables | `Table` |
-| Life Map node cards | `Card` |
-| Chat input + quick replies | `Input` + `Button` |
-| Dropdown actions (⋮) | `DropdownMenu` |
-| Sidebar navigation | Custom layout |
+
+| UI element                    | ShadCN component   |
+| ----------------------------- | ------------------ |
+| Privacy Controls toggles      | `Switch`           |
+| Guide Readiness progress bars | `Progress`         |
+| ENCRYPTED, PROTECTED badges   | `Badge`            |
+| Asset Registry tables         | `Table`            |
+| Life Map node cards           | `Card`             |
+| Chat input + quick replies    | `Input` + `Button` |
+| Dropdown actions (⋮)          | `DropdownMenu`     |
+| Sidebar navigation            | Custom layout      |
 
 **Convex Auth + WebAuthn (Passkey)**
 

@@ -156,11 +156,11 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   }
 
   return (
-    <div className="bg-surface-container-low p-6 rounded-2xl group hover:bg-surface-container transition-all">
+    <div className="bg-surface-container-low p-6 rounded-sm group hover:bg-surface-container transition-all">
       {/* Header: identity + the single phase chip */}
       <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="w-12 h-12 rounded-full border-2 border-secondary p-0.5 shrink-0">
-          <div className="w-full h-full rounded-full bg-primary-container flex items-center justify-center">
+        <div className="w-12 h-12 rounded-sm border-2 border-secondary p-0.5 shrink-0">
+          <div className="w-full h-full rounded-sm bg-primary-container flex items-center justify-center">
             <span className="text-label-md text-on-primary-container">
               {initials}
             </span>
@@ -168,11 +168,11 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         </div>
         <span
           className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-md shrink-0",
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-sm text-label-md shrink-0",
             phase.pillClass,
           )}
         >
-          <span className={cn("w-1.5 h-1.5 rounded-full", phase.dotClass)} />
+          <span className={cn("w-1.5 h-1.5 rounded-sm", phase.dotClass)} />
           {t(phase.labelKey)}
         </span>
       </div>
@@ -185,7 +185,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       <div className="flex items-center gap-2 flex-wrap mt-3">
         <span
           className={cn(
-            "px-2.5 py-0.5 text-label-md rounded-full",
+            "px-2.5 py-0.5 text-label-md rounded-sm",
             isRecipientOnly
               ? "bg-surface-container-high text-on-surface-variant"
               : "bg-primary/10 text-primary",
@@ -193,7 +193,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         >
           {isRecipientOnly ? t("card.type.recipient") : t("card.type.trust")}
         </span>
-        <span className="px-2.5 py-0.5 text-label-md rounded-full bg-secondary-container text-on-secondary-container">
+        <span className="px-2.5 py-0.5 text-label-md rounded-sm bg-secondary-container text-on-secondary-container">
           {ROLE_KEYS[vault.role]
             ? t(`card.role.${ROLE_KEYS[vault.role]}`)
             : t("card.role.contact")}
@@ -223,7 +223,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       {phase.key === "released" && (
         <Link
           href={`/shared-with-me/${vault._id}/memorial`}
-          className="vault-gradient text-on-primary flex items-center justify-between gap-3 mt-5 px-4 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+          className="vault-gradient text-on-primary flex items-center justify-between gap-3 mt-5 px-4 py-3 rounded-xs font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
         >
           <span>{t("card.released.cta")}</span>
           <span className="text-label-md opacity-80">
@@ -251,13 +251,13 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
             <div className="flex gap-2">
               <button
                 onClick={handleMarkUnreachable}
-                className="flex-1 text-sm px-3 py-2 rounded-lg bg-error text-on-error font-medium cursor-pointer"
+                className="flex-1 text-sm px-3 py-2 rounded-xs bg-error text-on-error font-medium cursor-pointer"
               >
                 {t("card.actionNeeded.confirm")}
               </button>
               <button
                 onClick={() => setUnreachableState("idle")}
-                className="flex-1 text-sm px-3 py-2 rounded-lg bg-surface-container-high text-on-surface cursor-pointer"
+                className="flex-1 text-sm px-3 py-2 rounded-xs bg-surface-container-high text-on-surface cursor-pointer"
               >
                 {t("card.actionNeeded.cancel")}
               </button>
@@ -270,7 +270,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
             <button
               onClick={handleMarkUnreachable}
               disabled={unreachableState === "running"}
-              className="w-full text-sm px-3 py-2 rounded-lg bg-error/10 hover:bg-error/15 text-error font-medium transition-colors cursor-pointer disabled:opacity-60"
+              className="w-full text-sm px-3 py-2 rounded-xs bg-error/10 hover:bg-error/15 text-error font-medium transition-colors cursor-pointer disabled:opacity-60"
             >
               {unreachableState === "running"
                 ? t("card.actionNeeded.submitting")

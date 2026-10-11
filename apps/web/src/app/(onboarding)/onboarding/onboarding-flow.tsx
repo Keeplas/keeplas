@@ -90,7 +90,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                 className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0"
               >
                 <div
-                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg font-label transition-colors ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 md:px-3 py-1 md:py-1.5 rounded-xs font-label transition-colors ${
                     i <= currentStepIndex
                       ? "bg-secondary text-on-secondary font-bold"
                       : "bg-surface-container text-on-surface-variant"

@@ -42,7 +42,7 @@ export function CountryCombobox({
         type="button"
         disabled={disabled}
         className={cn(
-          "w-full flex items-center justify-between gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl text-sm text-left transition-colors font-body",
+          "w-full flex items-center justify-between gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xs text-sm text-left transition-colors font-body",
           "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           "data-[state=open]:bg-surface-container-high",
           "disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",

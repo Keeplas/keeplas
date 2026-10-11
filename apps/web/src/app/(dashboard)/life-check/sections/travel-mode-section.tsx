@@ -30,7 +30,7 @@ export function TravelModeSection({
   const { today, maxDate } = useMemo(() => computeDateBounds(), []);
 
   return (
-    <section className="bg-surface-container-low rounded-2xl p-6">
+    <section className="bg-surface-container-low rounded-sm p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-headline-sm text-primary flex items-center gap-2">
@@ -46,7 +46,7 @@ export function TravelModeSection({
 
       {enabled ? (
         <div className="space-y-3">
-          <div className="p-4 bg-secondary/10 rounded-xl">
+          <div className="p-4 bg-secondary/10 rounded-xs">
             <p className="text-body-md text-secondary font-medium">
               {until
                 ? t("travel.activeUntil", {
@@ -57,7 +57,7 @@ export function TravelModeSection({
           </div>
           <button
             onClick={onToggle}
-            className="text-sm px-4 py-2 rounded-xl bg-surface-container-high text-on-surface font-medium cursor-pointer"
+            className="text-sm px-4 py-2 rounded-xs bg-surface-container-high text-on-surface font-medium cursor-pointer"
           >
             {t("travel.disable")}
           </button>
@@ -83,7 +83,7 @@ export function TravelModeSection({
           <button
             onClick={onToggle}
             disabled={!until}
-            className="px-5 py-3 rounded-xl bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
+            className="px-5 py-3 rounded-xs bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
           >
             {t("travel.enable")}
           </button>

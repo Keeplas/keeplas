@@ -666,7 +666,7 @@ function welcomeEmailHtml(
 <p>${escapeHtml(copy.wordsBody)}</p>
 <p style="font-weight:700;margin-top:24px">${escapeHtml(copy.stepsTitle)}</p>
 <ul style="padding-left:20px;margin:8px 0">${steps}</ul>
-<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#041632;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
+<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#0E2340;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
 <p style="color:#666;font-size:13px">${escapeHtml(copy.closing)}<br>${escapeHtml(copy.signoff)}</p>
 </body></html>`;
 }
@@ -874,7 +874,7 @@ function setupReminderEmailHtml(
 <p>${escapeHtml(copy.stake)}</p>
 <p style="font-weight:700;margin-top:24px">${escapeHtml(copy.actionsTitle)}</p>
 <ul style="padding-left:20px;margin:8px 0">${actions}</ul>
-<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#041632;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
+<p style="margin:32px 0"><a href="${url}" style="display:inline-block;padding:12px 24px;background:#0E2340;color:#fff;text-decoration:none;border-radius:8px">${escapeHtml(copy.button)}</a></p>
 <p style="color:#666;font-size:13px">${escapeHtml(copy.signoff)}</p>
 </body></html>`;
 }

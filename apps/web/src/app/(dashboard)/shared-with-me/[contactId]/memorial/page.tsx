@@ -86,7 +86,7 @@ export default function MemorialVaultPage() {
   if (data === null) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl">
+        <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-sm">
           <h3 className="text-headline-sm text-primary">
             {t("memorial.noAccess.title")}
           </h3>
@@ -132,7 +132,7 @@ export default function MemorialVaultPage() {
       </header>
 
       {introductions.length > 0 && (
-        <section className="mb-12 bg-surface-container-low rounded-3xl p-8 space-y-8 max-w-3xl">
+        <section className="mb-12 bg-surface-container-low rounded-sm p-8 space-y-8 max-w-3xl">
           <div>
             <div className="flex items-center justify-between gap-3 mb-1">
               <p className="text-label-md text-secondary">
@@ -181,7 +181,7 @@ export default function MemorialVaultPage() {
                       <Link
                         key={item._id}
                         href={`/shared-with-me/${contactId}/memorial/${item._id}`}
-                        className="bg-surface-container-low hover:bg-surface-container transition-colors p-5 rounded-2xl block"
+                        className="bg-surface-container-low hover:bg-surface-container transition-colors p-5 rounded-sm block"
                       >
                         <p className="text-headline-sm text-primary truncate">
                           {titles[item._id] ?? ""}
@@ -196,7 +196,7 @@ export default function MemorialVaultPage() {
                     ) : (
                       <div
                         key={item._id}
-                        className="bg-surface-container-low/60 p-5 rounded-2xl opacity-60"
+                        className="bg-surface-container-low/60 p-5 rounded-sm opacity-60"
                       >
                         <p className="text-headline-sm text-primary truncate">
                           {titles[item._id] ?? ""}

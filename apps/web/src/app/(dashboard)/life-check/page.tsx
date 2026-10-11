@@ -109,7 +109,7 @@ function NextCheckInCard({
 }) {
   const t = useTranslations("lifeCheck");
   return (
-    <div className="mb-8 bg-surface-container-low rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+    <div className="mb-8 bg-surface-container-low rounded-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
         <p className="text-label-md text-on-surface-variant mb-4">
           {t("nextCheckIn.label")}

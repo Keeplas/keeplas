@@ -44,7 +44,7 @@ export function PasskeyStep() {
   return (
     <div className="w-full max-w-lg mx-auto text-center">
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-xs mb-6">
           <Icon path={ICON_PATHS.face} className="w-5 h-5" />
           <span className="text-label-md">{t("badge")}</span>
         </div>
@@ -57,7 +57,7 @@ export function PasskeyStep() {
       </div>
 
       {!supported && !done && (
-        <div className="bg-surface-container-low p-4 rounded-xl mb-6 text-left">
+        <div className="bg-surface-container-low p-4 rounded-xs mb-6 text-left">
           <p className="text-body-md text-on-surface-variant">
             {t("unsupportedBefore")} <strong>{t("unsupportedTerm")}</strong>{" "}
             {t("unsupportedAfter")}
@@ -66,7 +66,7 @@ export function PasskeyStep() {
       )}
 
       {error && (
-        <div className="bg-error-container p-4 rounded-xl mb-6 text-left">
+        <div className="bg-error-container p-4 rounded-xs mb-6 text-left">
           <p className="text-body-md text-on-error-container">{error}</p>
         </div>
       )}

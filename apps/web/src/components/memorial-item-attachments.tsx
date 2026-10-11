@@ -69,7 +69,7 @@ export function MemorialItemAttachments({
 
   if (files === undefined) {
     return (
-      <div className="bg-surface-container-low rounded-2xl p-6 flex items-center gap-3 text-body-md text-on-surface-variant">
+      <div className="bg-surface-container-low rounded-sm p-6 flex items-center gap-3 text-body-md text-on-surface-variant">
         <Spinner size="sm" />
         {t("attachments.loading")}
       </div>
@@ -182,12 +182,12 @@ function AttachmentCard({
   }, [file.size, duration, t]);
 
   return (
-    <article className="bg-surface-container-low rounded-2xl p-5 space-y-4">
+    <article className="bg-surface-container-low rounded-sm p-5 space-y-4">
       <header className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
           <div
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+              "w-10 h-10 rounded-xs flex items-center justify-center shrink-0",
               file.kind === "audio" && "bg-secondary/10 text-secondary",
               file.kind === "video" && "bg-primary/10 text-primary",
               file.kind === "image" && "bg-tertiary/10 text-tertiary",
@@ -226,7 +226,7 @@ function AttachmentCard({
       )}
 
       {error && (
-        <p className="text-body-md text-error bg-error-container/30 rounded-lg px-3 py-2">
+        <p className="text-body-md text-error bg-error-container/30 rounded-xs px-3 py-2">
           {error}
         </p>
       )}
@@ -239,12 +239,12 @@ function AttachmentCard({
         <video
           controls
           src={plainUrl}
-          className="w-full aspect-video rounded-xl bg-primary/5 object-contain"
+          className="w-full aspect-video rounded-xs bg-primary/5 object-contain"
         />
       )}
 
       {plainUrl && file.kind === "document" && (
-        <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3 text-body-md text-on-surface-variant">
+        <div className="flex items-center gap-3 bg-surface rounded-xs px-4 py-3 text-body-md text-on-surface-variant">
           <Icon
             path={ICON_PATHS.pictureAsPdf}
             className="w-4 h-4 text-secondary"

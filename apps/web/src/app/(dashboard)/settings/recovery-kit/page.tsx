@@ -122,7 +122,7 @@ export default function RecoveryKitPage() {
           {revealed && (
             <button
               onClick={() => setWords(null)}
-              className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-surface-container-high text-primary ghost-border rounded-xl transition-all font-semibold cursor-pointer"
+              className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-surface-container-high text-primary ghost-border rounded-xs transition-all font-semibold cursor-pointer"
             >
               <Icon path={ICON_PATHS.lock} className="w-5 h-5" />
               {t("recoveryKit.relock")}
@@ -131,7 +131,7 @@ export default function RecoveryKitPage() {
           <button
             onClick={() => window.print()}
             disabled={!revealed}
-            className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-surface-container-high text-primary ghost-border rounded-xl transition-all font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-surface-container-high text-primary ghost-border rounded-xs transition-all font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Icon path={ICON_PATHS.print} className="w-5 h-5" />
             {t("recoveryKit.printSecureCopy")}
@@ -139,7 +139,7 @@ export default function RecoveryKitPage() {
           <button
             onClick={handleExportPdf}
             disabled={!revealed || exporting}
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-white hover:opacity-90 rounded-xl transition-all font-semibold shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white hover:opacity-90 rounded-xs transition-all font-semibold shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Icon
               path={exporting ? ICON_PATHS.refresh : ICON_PATHS.download}
@@ -156,7 +156,7 @@ export default function RecoveryKitPage() {
       <article
         ref={printableRef}
         id="recovery-kit-printable"
-        className="relative bg-surface-container-lowest overflow-hidden shadow-2xl rounded-2xl flex flex-col md:flex-row min-h-[800px] print:shadow-none print:rounded-none"
+        className="relative bg-surface-container-lowest overflow-hidden shadow-2xl rounded-sm flex flex-col md:flex-row min-h-[800px] print:shadow-none print:rounded-none"
       >
         <div
           aria-hidden
@@ -310,7 +310,7 @@ function QRPanel({
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-surface-container-low rounded-2xl relative aspect-square">
+    <div className="flex flex-col items-center justify-center p-6 bg-surface-container-low rounded-sm relative aspect-square">
       <div className="w-full h-full flex items-center justify-center">
         {words ? (
           <QRCodeSVG value={words.join(" ")} size={240} />
@@ -323,7 +323,7 @@ function QRPanel({
           </div>
         )}
       </div>
-      <div className="absolute -bottom-3 bg-white px-4 py-1 shadow-sm ghost-border rounded-full text-label-md text-on-surface-variant">
+      <div className="absolute -bottom-3 bg-white px-4 py-1 shadow-sm ghost-border rounded-sm text-label-md text-on-surface-variant">
         {t("recoveryKit.secureScanPoint")}
       </div>
     </div>
@@ -361,7 +361,7 @@ function PhraseUnlockForm({
 
       <form
         onSubmit={handleSubmit}
-        className="bg-surface-container-low rounded-xl p-6 space-y-4"
+        className="bg-surface-container-low rounded-xs p-6 space-y-4"
       >
         <div className="space-y-2">
           <p className="text-label-md text-on-surface-variant">
@@ -397,7 +397,7 @@ function PhraseUnlockForm({
 
 function StepBadge({ label }: { label: string }) {
   return (
-    <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded">
+    <span className="inline-block px-3 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-xs">
       {label}
     </span>
   );
@@ -422,7 +422,7 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-6 bg-white/5 rounded-xl space-y-3">
+    <div className="p-6 bg-white/5 rounded-xs space-y-3">
       <Icon path={icon} className="w-7 h-7 text-secondary-fixed" />
       <h3 className="text-headline-sm text-white">{title}</h3>
       <p className="text-body-md opacity-80">{description}</p>
@@ -442,7 +442,7 @@ function PhraseBlock({
   return (
     <div
       className={cn(
-        "bg-surface-container-low p-4 rounded-xl flex items-center gap-4 group transition-all duration-300",
+        "bg-surface-container-low p-4 rounded-xs flex items-center gap-4 group transition-all duration-300",
         masked ? "opacity-60" : "hover:bg-primary",
       )}
     >

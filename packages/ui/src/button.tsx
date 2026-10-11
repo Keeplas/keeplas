@@ -17,11 +17,11 @@ const buttonVariants = cva(
         destructive: "bg-error text-on-error hover:opacity-90",
       },
       size: {
-        sm: "h-9 px-4 text-sm rounded-xl",
-        md: "h-11 px-6 text-base rounded-xl",
-        lg: "h-13 px-8 text-lg rounded-full",
-        xl: "h-14 px-8 text-base rounded-xl",
-        icon: "h-10 w-10 rounded-xl",
+        sm: "h-9 px-4 text-sm rounded-xs",
+        md: "h-11 px-6 text-base rounded-xs",
+        lg: "h-13 px-8 text-lg rounded-sm",
+        xl: "h-14 px-8 text-base rounded-xs",
+        icon: "h-10 w-10 rounded-xs",
       },
     },
     defaultVariants: {

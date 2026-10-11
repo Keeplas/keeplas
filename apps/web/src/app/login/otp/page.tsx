@@ -101,7 +101,7 @@ export default function LoginOtpPage() {
     <main className="min-h-screen flex items-center justify-center p-6 bg-surface">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-3">
-          <div className="inline-flex w-14 h-14 rounded-2xl bg-secondary/15 items-center justify-center text-secondary">
+          <div className="inline-flex w-14 h-14 rounded-sm bg-secondary/15 items-center justify-center text-secondary">
             <Icon path={ICON_PATHS.lockClock} className="w-7 h-7" />
           </div>
           <h1 className="text-headline-md text-primary">{t("heading")}</h1>
@@ -113,19 +113,19 @@ export default function LoginOtpPage() {
         </div>
 
         {error && (
-          <div className="bg-error-container/40 p-3 rounded-xl">
+          <div className="bg-error-container/40 p-3 rounded-xs">
             <p className="text-body-md text-on-error-container">{error}</p>
           </div>
         )}
         {notice && !error && (
-          <div className="bg-secondary/10 p-3 rounded-xl">
+          <div className="bg-secondary/10 p-3 rounded-xs">
             <p className="text-body-md text-on-surface-variant">{notice}</p>
           </div>
         )}
 
         <form
           onSubmit={handleSubmit}
-          className="bg-surface-container-lowest p-6 rounded-2xl space-y-4 ghost-border"
+          className="bg-surface-container-lowest p-6 rounded-sm space-y-4 ghost-border"
         >
           <div className="space-y-1.5">
             <Label htmlFor="login-otp-code">{t("codeLabel")}</Label>

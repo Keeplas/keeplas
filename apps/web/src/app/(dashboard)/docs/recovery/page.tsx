@@ -57,8 +57,8 @@ export default function RecoveryDocPage() {
 
       {/* Two paths */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <article className="bg-surface-container-low rounded-2xl p-6 space-y-3 ghost-border">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
+        <article className="bg-surface-container-low rounded-sm p-6 space-y-3 ghost-border">
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-primary/10 text-primary">
             <Icon path={ICON_PATHS.key} className="w-5 h-5" />
           </span>
           <h3 className="text-headline-sm text-primary">
@@ -72,8 +72,8 @@ export default function RecoveryDocPage() {
           </p>
         </article>
 
-        <article className="bg-primary text-on-primary rounded-2xl p-6 space-y-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
+        <article className="bg-primary text-on-primary rounded-sm p-6 space-y-3">
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-white/10">
             <Icon path={ICON_PATHS.heartbeat} className="w-5 h-5" />
           </span>
           <h3 className="text-headline-sm">
@@ -88,7 +88,7 @@ export default function RecoveryDocPage() {
       {/* The 24 words */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.words.heading")}
           </h2>
@@ -97,7 +97,7 @@ export default function RecoveryDocPage() {
         <div className="space-y-4 text-body-md text-on-surface-variant">
           <p>{t("recovery.words.p1")}</p>
           <p>{t("recovery.words.p2")}</p>
-          <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
+          <div className="bg-error-container/30 rounded-xs p-4 border-l-4 border-error">
             <p className="text-body-md text-on-surface font-medium">
               {t("recovery.words.callout")}
             </p>
@@ -108,7 +108,7 @@ export default function RecoveryDocPage() {
       {/* Threshold */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-tertiary rounded-full" />
+          <span className="w-2 h-8 bg-tertiary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.threshold.heading")}
           </h2>
@@ -122,7 +122,7 @@ export default function RecoveryDocPage() {
           {THRESHOLD_OPTIONS.map((option) => (
             <article
               key={option.value}
-              className={`rounded-2xl p-4 ghost-border ${option.accent}`}
+              className={`rounded-sm p-4 ghost-border ${option.accent}`}
             >
               <p className="text-headline-md font-bold text-primary">
                 {option.value}
@@ -145,7 +145,7 @@ export default function RecoveryDocPage() {
       {/* Post-mortem flow */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-error rounded-full" />
+          <span className="w-2 h-8 bg-error rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.postmortem.heading")}
           </h2>
@@ -167,7 +167,7 @@ export default function RecoveryDocPage() {
       {/* Zero-knowledge guarantees */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-primary rounded-full" />
+          <span className="w-2 h-8 bg-primary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.zk.heading")}
           </h2>
@@ -187,7 +187,7 @@ export default function RecoveryDocPage() {
             ))}
           </ul>
 
-          <div className="bg-primary/5 rounded-xl p-4 border-l-4 border-primary">
+          <div className="bg-primary/5 rounded-xs p-4 border-l-4 border-primary">
             <p className="text-body-md text-on-surface font-medium">
               {t("recovery.zk.callout")}
             </p>
@@ -198,7 +198,7 @@ export default function RecoveryDocPage() {
       {/* How a contact actually uses their shard */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.shardUse.heading")}
           </h2>
@@ -224,7 +224,7 @@ export default function RecoveryDocPage() {
       {/* Cross-device behaviour */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-tertiary rounded-full" />
+          <span className="w-2 h-8 bg-tertiary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("recovery.crossDevice.heading")}
           </h2>
@@ -255,7 +255,7 @@ export default function RecoveryDocPage() {
           </p>
         </div>
 
-        <div className="bg-error-container/30 rounded-xl p-4 border-l-4 border-error">
+        <div className="bg-error-container/30 rounded-xs p-4 border-l-4 border-error">
           <p className="text-body-md text-on-surface font-medium mb-2">
             {t("recovery.crossDevice.failure.title")}
           </p>
@@ -269,7 +269,7 @@ export default function RecoveryDocPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/docs/trusted-contacts"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -278,7 +278,7 @@ export default function RecoveryDocPage() {
         </Link>
         <Link
           href="/settings/recovery-kit"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.print} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -304,7 +304,7 @@ function Step({
   return (
     <li className="relative">
       <span
-        className={`absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface ${accent}`}
+        className={`absolute -left-[41px] top-1 w-4 h-4 rounded-sm border-4 border-surface ${accent}`}
       />
       <p className="text-label-md text-on-surface-variant uppercase tracking-wide">
         {stage}

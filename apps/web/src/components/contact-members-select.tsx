@@ -66,7 +66,7 @@ export function ContactMembersSelect({
               close();
               setInviteOpen(true);
             }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-secondary hover:bg-surface-container-high transition-colors cursor-pointer font-medium"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-xs text-secondary hover:bg-surface-container-high transition-colors cursor-pointer font-medium"
           >
             <Icon
               path={ICON_PATHS.userPlus}

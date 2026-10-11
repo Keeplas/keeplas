@@ -143,7 +143,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-surface-container-lowest rounded-2xl shadow-xl p-5 w-[312px] font-body border border-outline-variant/20",
+          "bg-surface-container-lowest rounded-sm shadow-xl p-5 w-[312px] font-body border border-outline-variant/20",
           className,
         )}
       >
@@ -157,7 +157,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                   {MONTHS[v]}
                 </span>
               )}
-              triggerClassName="w-auto px-2.5 py-1.5 rounded-lg bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
+              triggerClassName="w-auto px-2.5 py-1.5 rounded-xs bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
               align="start"
             >
               {MONTHS.map((label, m) => (
@@ -179,7 +179,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                   {v}
                 </span>
               )}
-              triggerClassName="w-auto px-2.5 py-1.5 rounded-lg bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
+              triggerClassName="w-auto px-2.5 py-1.5 rounded-xs bg-transparent border-transparent hover:bg-surface-container-high hover:border-transparent gap-1.5"
               align="start"
             >
               {years.map((y) => (
@@ -195,7 +195,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
               onClick={goPrevMonth}
               disabled={prevDisabled}
               aria-label="Previous month"
-              className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+              className="p-1.5 rounded-xs text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
             >
               <svg
                 className="w-4 h-4"
@@ -216,7 +216,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
               onClick={goNextMonth}
               disabled={nextDisabled}
               aria-label="Next month"
-              className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+              className="p-1.5 rounded-xs text-on-surface-variant hover:bg-surface-container-high hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
             >
               <svg
                 className="w-4 h-4"
@@ -267,7 +267,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                 disabled={disabled}
                 onClick={() => onChange?.(d)}
                 className={cn(
-                  "aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
+                  "aspect-square flex items-center justify-center rounded-xs text-sm font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
                   !inMonth && "text-outline-variant/70",
                   inMonth &&
                     !isSelected &&
@@ -293,7 +293,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
             <button
               type="button"
               onClick={() => onChange?.(null)}
-              className="text-[11px] font-headline font-bold uppercase tracking-widest text-on-surface-variant hover:text-error focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-md px-1 py-0.5 transition-colors cursor-pointer"
+              className="text-[11px] font-headline font-bold uppercase tracking-widest text-on-surface-variant hover:text-error focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-xs px-1 py-0.5 transition-colors cursor-pointer"
             >
               Clear
             </button>
@@ -303,7 +303,7 @@ export const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                 setViewDate(new Date(today.getFullYear(), today.getMonth(), 1));
                 onChange?.(today);
               }}
-              className="text-[11px] font-headline font-bold uppercase tracking-widest text-secondary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-md px-1 py-0.5 transition-colors cursor-pointer"
+              className="text-[11px] font-headline font-bold uppercase tracking-widest text-secondary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary rounded-xs px-1 py-0.5 transition-colors cursor-pointer"
             >
               Today
             </button>

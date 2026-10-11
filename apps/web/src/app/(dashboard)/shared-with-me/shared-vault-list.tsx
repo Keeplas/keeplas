@@ -18,7 +18,7 @@ export function SharedVaultList() {
 
   if (vaults.length === 0) {
     return (
-      <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-2xl">
+      <div className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-12 rounded-sm">
         <h3 className="text-headline-sm text-primary">
           {t("list.empty.title")}
         </h3>

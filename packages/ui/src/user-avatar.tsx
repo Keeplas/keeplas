@@ -36,7 +36,7 @@ const UserAvatar = React.forwardRef<HTMLDivElement, UserAvatarProps>(
     ref,
   ) => {
     const sizeClass = sizeClasses[size];
-    const baseRound = "rounded-full shrink-0";
+    const baseRound = "rounded-sm shrink-0";
 
     if (imageUrl) {
       return (

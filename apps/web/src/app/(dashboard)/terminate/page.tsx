@@ -44,10 +44,10 @@ export default function TerminatePage() {
 
   return (
     <div className="max-w-screen-2xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 rounded-sm overflow-hidden shadow-2xl">
         <aside className="vault-gradient text-on-primary p-10 flex flex-col justify-between min-h-[500px]">
           <div>
-            <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-on-primary/10 backdrop-blur">
+            <span className="inline-flex items-center justify-center w-14 h-14 rounded-sm bg-on-primary/10 backdrop-blur">
               <Icon path={ICON_PATHS.warning} className="w-7 h-7" />
             </span>
             <h1 className="text-headline-lg mt-6">
@@ -86,13 +86,13 @@ export default function TerminatePage() {
             </p>
           </div>
 
-          <div className="bg-error/10 border border-error/20 rounded-2xl p-4 text-body-md text-error">
+          <div className="bg-error/10 border border-error/20 rounded-sm p-4 text-body-md text-error">
             <p className="text-label-md mb-1">{t("terminate.warning.label")}</p>
             {t("terminate.warning.body")}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-surface-container-low rounded-2xl p-4">
+            <div className="bg-surface-container-low rounded-sm p-4">
               <p className="text-label-md text-on-surface-variant">
                 {t("terminate.cards.vaultData")}
               </p>
@@ -100,7 +100,7 @@ export default function TerminatePage() {
                 {t("terminate.cards.encryptedItems", { count: itemCount })}
               </p>
             </div>
-            <div className="bg-surface-container-low rounded-2xl p-4">
+            <div className="bg-surface-container-low rounded-sm p-4">
               <p className="text-label-md text-on-surface-variant">
                 {t("terminate.cards.protocols")}
               </p>

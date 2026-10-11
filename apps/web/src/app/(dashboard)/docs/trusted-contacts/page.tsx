@@ -36,15 +36,15 @@ export default function TrustedContactsDocPage() {
       {/* Two roles */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-primary rounded-full" />
+          <span className="w-2 h-8 bg-primary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("trustedContacts.roles.heading")}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <article className="bg-primary text-on-primary rounded-2xl p-6 space-y-3">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
+          <article className="bg-primary text-on-primary rounded-sm p-6 space-y-3">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-white/10">
               <Icon path={ICON_PATHS.shieldCheck} className="w-5 h-5" />
             </span>
             <h3 className="text-headline-sm">
@@ -62,8 +62,8 @@ export default function TrustedContactsDocPage() {
             </ul>
           </article>
 
-          <article className="bg-surface-container-low rounded-2xl p-6 space-y-3 ghost-border">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 text-secondary">
+          <article className="bg-surface-container-low rounded-sm p-6 space-y-3 ghost-border">
+            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
               <Icon path={ICON_PATHS.users} className="w-5 h-5" />
             </span>
             <h3 className="text-headline-sm text-primary">
@@ -86,7 +86,7 @@ export default function TrustedContactsDocPage() {
       {/* What a trust contact does */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <span className="w-2 h-8 bg-secondary rounded-full" />
+          <span className="w-2 h-8 bg-secondary rounded-sm" />
           <h2 className="text-headline-md text-primary">
             {t("trustedContacts.steps.heading")}
           </h2>
@@ -105,7 +105,7 @@ export default function TrustedContactsDocPage() {
       </section>
 
       {/* Threshold link */}
-      <section className="bg-surface-container-low rounded-2xl p-8 ghost-border space-y-4">
+      <section className="bg-surface-container-low rounded-sm p-8 ghost-border space-y-4">
         <h2 className="text-headline-sm text-primary">
           {t("trustedContacts.threshold.heading")}
         </h2>
@@ -125,7 +125,7 @@ export default function TrustedContactsDocPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link
           href="/trusted-contacts"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.users} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -134,7 +134,7 @@ export default function TrustedContactsDocPage() {
         </Link>
         <Link
           href="/docs/recovery"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xl p-4 flex items-center gap-3 transition-colors"
+          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
         >
           <Icon path={ICON_PATHS.key} className="w-5 h-5 text-secondary" />
           <span className="text-body-md font-medium text-primary">
@@ -157,7 +157,7 @@ function Step({
 }) {
   return (
     <li className="relative">
-      <span className="absolute -left-[41px] top-1 w-4 h-4 rounded-full border-4 border-surface bg-secondary" />
+      <span className="absolute -left-[41px] top-1 w-4 h-4 rounded-sm border-4 border-surface bg-secondary" />
       <p className="text-label-md text-on-surface-variant">{value}</p>
       <h3 className="text-headline-sm text-primary mt-1">{title}</h3>
       <p className="text-body-md text-on-surface-variant mt-1">{body}</p>

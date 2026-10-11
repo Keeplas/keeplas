@@ -48,7 +48,7 @@ export function ImageLightbox({
           type="button"
           aria-label={enlargeLabel}
           className={cn(
-            "group relative block w-full cursor-zoom-in overflow-hidden rounded-xl bg-surface-container",
+            "group relative block w-full cursor-zoom-in overflow-hidden rounded-xs bg-surface-container",
             triggerClassName,
           )}
         >
@@ -60,7 +60,7 @@ export function ImageLightbox({
               imgClassName,
             )}
           />
-          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-label-sm text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/60 px-3 py-1.5 text-label-sm text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
             <Icon path={ICON_PATHS.expand} className="h-4 w-4" />
             {enlargeLabel}
           </span>
@@ -71,21 +71,21 @@ export function ImageLightbox({
         <img
           src={src}
           alt={alt}
-          className="mx-auto max-h-[90vh] w-auto rounded-2xl object-contain"
+          className="mx-auto max-h-[90vh] w-auto rounded-sm object-contain"
         />
         {downloadUrl && (
           <a
             href={downloadUrl}
             download={downloadName}
             aria-label={downloadLabel}
-            className="absolute right-16 top-3 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-surface text-primary shadow-lg transition-colors hover:bg-surface-container-high"
+            className="absolute right-16 top-3 flex h-10 w-10 cursor-pointer items-center justify-center rounded-sm bg-surface text-primary shadow-lg transition-colors hover:bg-surface-container-high"
           >
             <Icon path={ICON_PATHS.download} className="h-5 w-5" />
           </a>
         )}
         <DialogClose
           aria-label={closeLabel}
-          className="absolute right-3 top-3 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-surface text-primary shadow-lg transition-colors hover:bg-surface-container-high"
+          className="absolute right-3 top-3 flex h-10 w-10 cursor-pointer items-center justify-center rounded-sm bg-surface text-primary shadow-lg transition-colors hover:bg-surface-container-high"
         >
           <Icon path={ICON_PATHS.close} className="h-5 w-5" />
         </DialogClose>

@@ -93,7 +93,7 @@ function SelectImpl<Value = string>({
       <SelectPrimitives.Trigger
         id={id}
         className={cn(
-          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
+          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xs px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
           "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
           "data-[state=open]:bg-surface-container-high",
           "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
@@ -137,7 +137,7 @@ function SelectImpl<Value = string>({
           align={align}
           className={cn(
             "z-[60] min-w-[var(--radix-select-trigger-width)]",
-            "bg-surface-container-lowest rounded-2xl shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
+            "bg-surface-container-lowest rounded-sm shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
             popupClassName,
           )}
@@ -176,7 +176,7 @@ export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
       disabled={disabled}
       textValue={label}
       className={cn(
-        "relative flex items-start gap-2 rounded-lg px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
+        "relative flex items-start gap-2 rounded-xs px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
         "data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary",
         "data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
         "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",

@@ -34,7 +34,7 @@ export function LifeCheckHistory() {
           return (
             <div
               key={cycle._id}
-              className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl"
+              className="flex items-center justify-between p-4 bg-surface-container-low rounded-xs"
             >
               <div className="flex items-center gap-4">
                 <div>

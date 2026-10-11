@@ -43,7 +43,7 @@ export function VaultLinkList({ urls }: VaultLinkListProps) {
         return (
           <li
             key={index}
-            className="flex items-center gap-3 bg-surface rounded-xl px-3 py-2"
+            className="flex items-center gap-3 bg-surface rounded-xs px-3 py-2"
           >
             {/* Render as <span>, never <a href>. Anchors get prefetched and
                 preview the URL on hover, which would leak the secret. */}

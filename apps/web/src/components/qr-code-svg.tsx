@@ -12,8 +12,8 @@ export function QRCodeSVG({ value, size = 128 }: QRCodeSVGProps) {
       size={size}
       level="M"
       bgColor="#ffffff"
-      fgColor="#041632"
-      className="rounded-lg"
+      fgColor="#0E2340"
+      className="rounded-xs"
     />
   );
 }

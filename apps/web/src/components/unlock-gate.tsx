@@ -202,7 +202,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
             </div>
 
             {error ? (
-              <div className="mb-4 p-3 bg-error-container rounded-xl text-sm text-on-error-container">
+              <div className="mb-4 p-3 bg-error-container rounded-xs text-sm text-on-error-container">
                 {error}
               </div>
             ) : null}
@@ -233,7 +233,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   type="button"
                   onClick={() => setMode("phrase")}
                   disabled={busy}
-                  className="w-full p-4 rounded-xl border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
+                  className="w-full p-4 rounded-xs border border-outline-variant/30 text-secondary font-bold hover:bg-surface-container-low transition-colors disabled:opacity-60"
                 >
                   {t("unlock.use24Words")}
                 </button>
@@ -298,7 +298,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
                     spellCheck={false}
                     autoCapitalize="off"
                     autoCorrect="off"
-                    className="w-full min-h-[140px] p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
+                    className="w-full min-h-[140px] p-3 rounded-xs bg-surface-container-low border border-outline-variant/30 text-on-surface font-mono text-sm focus:outline-none focus:border-secondary"
                     required
                   />
                   <p className="text-label-md text-on-surface-variant">
@@ -404,7 +404,7 @@ function UnlockMethodButton({
 
   if (!available) {
     return (
-      <div className="p-4 rounded-xl bg-surface-container-low text-on-surface-variant text-sm">
+      <div className="p-4 rounded-xs bg-surface-container-low text-on-surface-variant text-sm">
         {entry.label} {t("unlock.unavailableSuffix")}
       </div>
     );
@@ -414,7 +414,7 @@ function UnlockMethodButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full p-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
+      className="w-full p-4 rounded-xs bg-surface-container-low hover:bg-surface-container-high text-left transition-colors disabled:opacity-60"
     >
       <div className="font-bold text-on-surface">{entry.label}</div>
       <div className="text-xs text-on-surface-variant uppercase tracking-widest mt-1">
