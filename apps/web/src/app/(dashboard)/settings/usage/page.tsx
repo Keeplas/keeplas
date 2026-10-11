@@ -4,13 +4,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { buttonVariants, Icon, Loader, Progress } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
-
-const FILE_KINDS: Array<{ kind: string; iconPath: string }> = [
-  { kind: "document", iconPath: ICON_PATHS.description },
-  { kind: "image", iconPath: ICON_PATHS.image },
-  { kind: "audio", iconPath: ICON_PATHS.mic },
-  { kind: "video", iconPath: ICON_PATHS.videocam },
-];
+import { useItemCategories } from "@/lib/use-item-categories";
 
 function formatBytes(bytes: number) {
   if (bytes === 0) return "0 B";
@@ -27,6 +21,9 @@ function formatBytes(bytes: number) {
 export default function SettingsUsagePage() {
   const t = useTranslations("settings");
   const stats = useQuery(api.vaults.getUsageStats);
+  // Categories are end-to-end encrypted (F4): count them after decrypting.
+  const items = useQuery(api.vault_items.getItems);
+  const categories = useItemCategories(items);
 
   if (stats === undefined) return <Loader />;
   if (stats === null) return null;
@@ -43,7 +40,11 @@ export default function SettingsUsagePage() {
       ? t("usage.planNameLifetime")
       : t("usage.planNameFree");
 
-  const categoryEntries = Object.entries(stats.categoryCounts).sort(
+  const categoryCounts: Record<string, number> = {};
+  for (const category of Object.values(categories)) {
+    categoryCounts[category] = (categoryCounts[category] ?? 0) + 1;
+  }
+  const categoryEntries = Object.entries(categoryCounts).sort(
     (a, b) => b[1] - a[1],
   );
 
@@ -174,33 +175,10 @@ export default function SettingsUsagePage() {
               {t("usage.total", { count: stats.fileCount })}
             </span>
           </div>
-          {stats.fileCount === 0 ? (
+          {stats.fileCount === 0 && (
             <p className="text-body-md text-on-surface-variant">
               {t("usage.noFiles")}
             </p>
-          ) : (
-            <ul className="space-y-2">
-              {FILE_KINDS.map((meta) => {
-                const count = stats.fileKindCounts[meta.kind] ?? 0;
-                return (
-                  <li
-                    key={meta.kind}
-                    className="flex items-center justify-between py-1.5"
-                  >
-                    <span className="flex items-center gap-2 text-body-md text-on-surface">
-                      <Icon
-                        path={meta.iconPath}
-                        className="w-4 h-4 text-on-surface-variant"
-                      />
-                      {t(`usage.fileKinds.${meta.kind}`)}
-                    </span>
-                    <span className="text-label-md text-on-surface-variant">
-                      {count}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
           )}
         </div>
       </section>

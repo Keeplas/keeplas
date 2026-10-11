@@ -17,6 +17,8 @@ import { ReturnAfterReleaseBanner } from "@/components/return-after-release-bann
 import { LEGACY_TIPS, tipHref } from "@/lib/legacy-tips";
 import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { useCategoryLabel } from "@/lib/use-categories";
+import { useItemCategories } from "@/lib/use-item-categories";
+import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
 import { getInitials } from "@/lib/user";
 import { formatTimeAgo } from "@/lib/format";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
@@ -41,7 +43,6 @@ const ACTION_ICONS: Record<string, string> = {
   welcome_message: ICON_PATHS.mail,
   two_factor: ICON_PATHS.key,
   verify_whatsapp: ICON_PATHS.phone,
-  more_categories: ICON_PATHS.plus,
 };
 
 // Plain-language explanation surfaced via the per-action help icon, so users
@@ -57,7 +58,6 @@ const ACTION_HINT_KEYS = new Set<string>([
   "welcome_message",
   "two_factor",
   "verify_whatsapp",
-  "more_categories",
 ]);
 
 const REFLECT_SLIDER_GAP = 16;
@@ -71,6 +71,8 @@ export function HubContent() {
   // Item _ids in recentItems are a subset of `items`, so one decrypt pass
   // covers the asset/directive/document node cards and the recent-activity list.
   const titles = useDecryptedTitles(items);
+  const categories = useItemCategories(items);
+  useBackfillItemMeta();
   const hubContentReady =
     items !== undefined && contacts !== undefined && hubData !== undefined;
   const reflectRailRef = useRef<HTMLDivElement>(null);
@@ -142,13 +144,13 @@ export function HubContent() {
   if (hubData === null) return null;
 
   const assets = items.filter((i) =>
-    ASSET_CATEGORIES.includes(i.category as VaultCategory),
+    ASSET_CATEGORIES.includes(categories[i._id]),
   );
   const directives = items.filter((i) =>
-    DIRECTIVE_CATEGORIES.includes(i.category as VaultCategory),
+    DIRECTIVE_CATEGORIES.includes(categories[i._id]),
   );
   const documents = items.filter((i) =>
-    DOCUMENT_CATEGORIES.includes(i.category as VaultCategory),
+    DOCUMENT_CATEGORIES.includes(categories[i._id]),
   );
 
   const { continuityScore } = hubData;
@@ -510,7 +512,8 @@ export function HubContent() {
           ) : (
             <div className="space-y-2">
               {hubData.recentItems.map((item) => {
-                const cat = getCategoryConfig(item.category);
+                const category = categories[item._id] ?? "other";
+                const cat = getCategoryConfig(category);
                 return (
                   <Link
                     key={item._id}
@@ -528,7 +531,7 @@ export function HubContent() {
                         {titles[item._id] ?? ""}
                       </p>
                       <p className="text-[10px] text-on-surface-variant uppercase tracking-widest">
-                        {categoryLabel(item.category)} ·{" "}
+                        {categoryLabel(category)} ·{" "}
                         {formatTimeAgo(item.updatedAt)}
                       </p>
                     </div>

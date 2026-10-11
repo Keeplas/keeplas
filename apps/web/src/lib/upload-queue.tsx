@@ -13,6 +13,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { useVaultCrypto } from "./use-vault-crypto";
+import { fileMetaJson } from "./item-meta";
 import { useTranslations } from "./i18n";
 
 type AttachmentKind = "document" | "audio" | "video" | "image";
@@ -86,7 +87,7 @@ function uploadWithProgress(
 
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("vault.upload");
-  const { encryptBlobWithKey } = useVaultCrypto();
+  const { encryptBlobWithKey, encryptContentWithKey } = useVaultCrypto();
   const generateUploadUrl = useAuditedMutation(
     api.vault_items.generateUploadUrl,
   );
@@ -139,6 +140,16 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
           const file = files[i];
           try {
             const { cipherBlob, iv } = await encryptBlobWithKey(file.blob, dek);
+            const encryptedMeta = await encryptContentWithKey(
+              fileMetaJson({
+                name: file.name,
+                mimeType: file.mimeType,
+                size: file.blob.size,
+                kind: file.kind,
+                durationSec: file.durationSec,
+              }),
+              dek,
+            );
             const url = await generateUploadUrl();
             const storageId = await uploadWithProgress(
               url,
@@ -150,17 +161,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
             );
             await addItemFiles({
               itemId,
-              files: [
-                {
-                  storageId,
-                  name: file.name,
-                  mimeType: file.mimeType,
-                  size: cipherBlob.size,
-                  iv,
-                  kind: file.kind,
-                  durationSec: file.durationSec,
-                },
-              ],
+              files: [{ storageId, iv, encryptedMeta }],
             });
             fileBytesUploaded[i] = file.blob.size;
             completed += 1;
@@ -224,7 +225,13 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [encryptBlobWithKey, generateUploadUrl, addItemFiles, t],
+    [
+      encryptBlobWithKey,
+      encryptContentWithKey,
+      generateUploadUrl,
+      addItemFiles,
+      t,
+    ],
   );
 
   useEffect(() => {

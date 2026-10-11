@@ -480,7 +480,6 @@
       "welcome_message": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
       "two_factor": "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
       "verify_whatsapp": "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
-      "more_categories": "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out.",
       "contacts_ready": "Your Life Check needs two trusted contacts to confirm you're unreachable. A contact is ready once they accept your invitation and set up their Keeplas key. They never hold a key to your vault."
     },
     "recentActivity": {
@@ -987,7 +986,7 @@
         }
       },
       "itemsByCategory": "Items by Category",
-      "filesByType": "Files by Type",
+      "filesByType": "Files",
       "total": "{count} total",
       "noItems": "No items yet. Start building your vault from the Hub.",
       "noFiles": "No encrypted files attached yet.",
@@ -1006,12 +1005,6 @@
         "contacts": "Contacts",
         "wishes": "Wishes",
         "other": "Other"
-      },
-      "fileKinds": {
-        "document": "Documents",
-        "image": "Images",
-        "audio": "Audio",
-        "video": "Video"
       },
       "needCapacity": {
         "title": "Need more capacity?",

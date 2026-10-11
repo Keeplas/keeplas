@@ -120,6 +120,8 @@ Each step lists its verification. A phase is done when every check passes.
 ### Phase 6: Metadata (F4)
 
 - [ ] `encryptedMeta` on items and files, client backfill, drop plaintext columns, size buckets → verify: schema has no plaintext category / file name / MIME / size
+  - [x] Widen + migrate: writes carry only `encryptedMeta`; server-measured size buckets for the quota; client backfill (`useBackfillItemMeta`) → `metadata_backfill.test.ts`, `storage_quota.test.ts`
+  - [ ] Narrow: drop the plaintext columns once `vault_items.countPlaintextMetadata` returns `{ items: 0, files: 0 }` on production (needs every owner to unlock once)
 
 ### Phase 7: Web screens
 

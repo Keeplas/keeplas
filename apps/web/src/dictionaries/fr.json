@@ -480,7 +480,6 @@
       "welcome_message": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'ils ne consultent les éléments.",
       "two_factor": "Ajoutez une clé d'accès ou une application d'authentification afin qu'un mot de passe dérobé ne suffise pas à atteindre votre compte.",
       "verify_whatsapp": "Vérifiez votre numéro WhatsApp pour que les contrôles de Life Check et les alertes de sécurité vous parviennent de façon fiable.",
-      "more_categories": "Répartissez votre héritage entre plusieurs catégories — finances, directives de santé, documents juridiques, identifiants — afin que rien d'essentiel ne soit oublié.",
       "contacts_ready": "Votre Life Check a besoin de deux contacts de confiance pour confirmer que vous êtes injoignable. Un contact est prêt dès qu'il accepte votre invitation et configure sa clé Keeplas. Il ne détient jamais de clé de votre coffre."
     },
     "recentActivity": {
@@ -987,7 +986,7 @@
         }
       },
       "itemsByCategory": "Éléments par catégorie",
-      "filesByType": "Fichiers par type",
+      "filesByType": "Fichiers",
       "total": "{count} au total",
       "noItems": "Aucun élément pour l'instant. Commencez à constituer votre coffre depuis l'accueil.",
       "noFiles": "Aucun fichier chiffré joint pour l'instant.",
@@ -1006,12 +1005,6 @@
         "contacts": "Contacts",
         "wishes": "Volontés",
         "other": "Autre"
-      },
-      "fileKinds": {
-        "document": "Documents",
-        "image": "Images",
-        "audio": "Audio",
-        "video": "Vidéo"
       },
       "needCapacity": {
         "title": "Besoin de plus de capacité ?",

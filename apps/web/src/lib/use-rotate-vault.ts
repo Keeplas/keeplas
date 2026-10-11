@@ -20,6 +20,7 @@ import { useVaultCrypto } from "./use-vault-crypto";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { verifyContactKey } from "./verify-contact-key";
+import { fileMetaJson, legacyFileMeta } from "./item-meta";
 
 /**
  * Full master-key rotation, for two flows:
@@ -173,6 +174,7 @@ export function useRotateVault() {
         encryptedTitle?: string;
         encryptedContent: string;
         encryptedLinks?: string;
+        encryptedMeta?: string;
         ownerWrappedDek?: string;
       },
       keys: {
@@ -219,6 +221,14 @@ export function useRotateVault() {
             newDek,
           )
         : undefined;
+      // Same for the sealed metadata (F4); legacy rows are left to the
+      // metadata backfill.
+      const newMeta = item.encryptedMeta
+        ? await encryptContentWithKey(
+            await decryptContentWithKey(item.encryptedMeta, oldDek),
+            newDek,
+          )
+        : undefined;
 
       // Files: re-encrypt each blob under the new DEK and attach fresh rows
       // before dropping the old ones (add-then-remove never loses a file).
@@ -227,12 +237,8 @@ export function useRotateVault() {
       });
       const newFileRows: Array<{
         storageId: StorageRef;
-        name: string;
-        mimeType: string;
-        size: number;
         iv: string;
-        kind: "document" | "audio" | "video" | "image";
-        durationSec?: number;
+        encryptedMeta: string;
       }> = [];
       for (const f of files) {
         const url = await convex.query(api.vault_items.getItemFileUrl, {
@@ -254,14 +260,13 @@ export function useRotateVault() {
           newDek,
         );
         const storageId = await postBlob(await generateUploadUrl(), newCipher);
+        const metaJson = f.encryptedMeta
+          ? await decryptContentWithKey(f.encryptedMeta, oldDek)
+          : fileMetaJson(legacyFileMeta(f));
         newFileRows.push({
           storageId,
-          name: f.name,
-          mimeType: f.mimeType,
-          size: newCipher.size,
           iv: newIv,
-          kind: f.kind,
-          durationSec: f.durationSec,
+          encryptedMeta: await encryptContentWithKey(metaJson, newDek),
         });
       }
       if (newFileRows.length > 0) {
@@ -301,6 +306,7 @@ export function useRotateVault() {
         encryptedTitle: newTitle,
         encryptedContent: newContent,
         encryptedLinks: newLinks,
+        encryptedMeta: newMeta,
         ownerWrappedDek: ownerWrap,
         recipientKeys,
       });

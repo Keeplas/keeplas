@@ -27,8 +27,10 @@ import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
 import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useUploadQueue } from "@/lib/upload-queue";
+import { itemMetaJson, parseItemMeta } from "@/lib/item-meta";
+import { useOpenedFiles, type OpenedFile } from "@/lib/use-opened-files";
 import { useTranslations } from "@/lib/i18n";
-import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { AccessLevel } from "@keeplas/backend/shared_types";
 import {
   Button,
@@ -61,7 +63,7 @@ export default function VaultItemPage() {
   const itemId = params.itemId as Id<"vault_items">;
 
   const item = useQuery(api.vault_items.getItem, { itemId });
-  const itemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
+  const rawItemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
@@ -91,6 +93,8 @@ export default function VaultItemPage() {
   const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
 
   const [decryptedTitle, setDecryptedTitle] = useState<string>("");
+  const [decryptedCategory, setDecryptedCategory] =
+    useState<VaultCategory>("other");
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
   const [decrypting, setDecrypting] = useState(false);
@@ -99,6 +103,7 @@ export default function VaultItemPage() {
   const [itemDek, setItemDek] = useState<CryptoKey | null | undefined>(
     undefined,
   );
+  const itemFiles = useOpenedFiles(rawItemFiles, itemDek);
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
@@ -169,7 +174,7 @@ export default function VaultItemPage() {
         const decryptOne = (payload: string) =>
           dek ? decryptContentWithKey(payload, dek) : decryptContent(payload);
 
-        const [title, content, links] = await Promise.all([
+        const [title, content, links, category] = await Promise.all([
           item.encryptedTitle
             ? decryptOne(item.encryptedTitle).catch(() => item.title ?? "")
             : Promise.resolve(item.title ?? ""),
@@ -179,8 +184,14 @@ export default function VaultItemPage() {
                 .then(parseLinks)
                 .catch(() => [] as string[])
             : Promise.resolve([] as string[]),
+          item.encryptedMeta
+            ? decryptOne(item.encryptedMeta)
+                .then((json) => parseItemMeta(json).category)
+                .catch(() => item.category ?? "other")
+            : Promise.resolve(item.category ?? "other"),
         ]);
         setDecryptedTitle(title);
+        setDecryptedCategory(category);
         setDecryptedContent(content);
         setDecryptedLinks(links);
       } catch {
@@ -208,7 +219,7 @@ export default function VaultItemPage() {
     setEditTitle(decryptedTitle);
     setEditContent(normalizeContentForRichText(decryptedContent));
     setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
-    setEditCategory(item.category);
+    setEditCategory(decryptedCategory);
 
     const initial: string[] = [];
     const mode = item.recipientMode ?? "default";
@@ -447,12 +458,17 @@ export default function VaultItemPage() {
         nextEncryptionType = "aes_256_gcm";
       }
 
+      const metaJson = itemMetaJson(editCategory);
+      const encryptedMeta = attachmentDek
+        ? await encryptContentWithKey(metaJson, attachmentDek)
+        : await encryptContent(metaJson);
+
       await updateItem({
         itemId,
         encryptedTitle,
         encryptedContent,
         encryptedLinks,
-        category: editCategory,
+        encryptedMeta,
         accessLevel: config.derivedAccessLevel,
         recipientMode: config.mode,
         sharedWithGroups: config.sharedWithGroups,
@@ -573,7 +589,7 @@ export default function VaultItemPage() {
     );
   }
 
-  const category = getCategoryConfig(item.category);
+  const category = getCategoryConfig(decryptedCategory);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -761,7 +777,7 @@ export default function VaultItemPage() {
                   />
                 </svg>
                 <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
-                  {categoryLabel(item.category)}
+                  {categoryLabel(decryptedCategory)}
                 </span>
               </div>
               <h1 className="text-headline-lg text-primary">
@@ -966,7 +982,7 @@ function ExistingAttachmentRow({
   removed,
   onToggle,
 }: {
-  file: Doc<"vault_item_files">;
+  file: OpenedFile;
   removed: boolean;
   onToggle: () => void;
 }) {

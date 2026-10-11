@@ -1,15 +1,16 @@
 import { useCallback, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon, Spinner, cn } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useDecryptedAttachmentUrl } from "@/lib/use-decrypted-attachment-url";
 import { useTranslations } from "@/lib/i18n";
 import { AttachmentThumbnail } from "@/components/attachment-thumbnail";
+import { useOpenedFiles, type OpenedFile } from "@/lib/use-opened-files";
 
-type AttachmentFile = Doc<"vault_item_files">;
+type AttachmentFile = OpenedFile;
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -63,7 +64,10 @@ export function VaultItemAttachments({
   itemDek?: CryptoKey | null;
 }) {
   const t = useTranslations("vault");
-  const files = useQuery(api.vault_items.getItemFiles, { itemId });
+  const files = useOpenedFiles(
+    useQuery(api.vault_items.getItemFiles, { itemId }),
+    itemDek,
+  );
 
   if (files === undefined) {
     return (
