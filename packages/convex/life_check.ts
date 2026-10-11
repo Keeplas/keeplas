@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { FunctionArgs, SchedulableFunctionReference } from "convex/server";
 import {
   action,
   mutation,
@@ -7,12 +8,13 @@ import {
   internalQuery,
   MutationCtx,
 } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
+import { isLifeCheckPaused } from "./lib/pause";
 
 const FREQUENCY_DAYS: Record<string, number> = {
   weekly: 7,
@@ -21,6 +23,8 @@ const FREQUENCY_DAYS: Record<string, number> = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** How often a paused cycle re-checks whether it may resume its timeline. */
+const PAUSE_RECHECK_MS = DAY_MS;
 
 /**
  * Stage-1 user check-in window: once the cadence elapses the user has this many
@@ -73,10 +77,11 @@ export const getConfig = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
-    return await ctx.db
+    const config = await ctx.db
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
+    return config ? { ...config, paused: isLifeCheckPaused() } : null;
   },
 });
 
@@ -455,6 +460,26 @@ export const initiateCycle = internalMutation({
 });
 
 /**
+ * Kill switch for the escalation timeline (`LIFE_CHECK_PAUSED`). When set,
+ * a scheduled timeline step re-schedules itself instead of running, so the
+ * cycle keeps its state and resumes where it stopped once the flag is cleared.
+ * Returns true when the step was deferred and the caller must bail.
+ */
+async function deferWhilePaused<F extends SchedulableFunctionReference>(
+  ctx: MutationCtx,
+  cycle: Doc<"life_check_cycles">,
+  fn: F,
+  args: FunctionArgs<F>,
+): Promise<boolean> {
+  if (!isLifeCheckPaused()) return false;
+  const id = await ctx.scheduler.runAfter(PAUSE_RECHECK_MS, fn, args);
+  await ctx.db.patch(cycle._id, {
+    pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), id],
+  });
+  return true;
+}
+
+/**
  * Re-send the check-in on every enabled channel. Scheduled at each reminder
  * fraction of the check-in window. No-ops once the cycle leaves "running" (the
  * user confirmed, or the window already closed and the cycle handed off).
@@ -464,6 +489,10 @@ export const sendReminder = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle || cycle.status !== "running") return;
+    if (
+      await deferWhilePaused(ctx, cycle, internal.life_check.sendReminder, args)
+    )
+      return;
 
     const config = await ctx.db.get(cycle.configId);
     if (!config) return;
@@ -716,6 +745,9 @@ export const confirmFromEmailToken = action({
 export const evaluateAllConfigs = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // Kill switch: the inactivity counting is frozen — no new cycle starts.
+    if (isLifeCheckPaused()) return { evaluated: 0, initiated: 0 };
+
     const now = Date.now();
     const configs = await ctx.db
       .query("life_check_configs")
@@ -873,6 +905,15 @@ export const enterConfirmationStage = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle || cycle.status !== "running") return;
+    if (
+      await deferWhilePaused(
+        ctx,
+        cycle,
+        internal.life_check.enterConfirmationStage,
+        args,
+      )
+    )
+      return;
 
     const config = await ctx.db.get(cycle.configId);
     if (!config) return;
@@ -956,6 +997,15 @@ export const resolveConfirmationWindow = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle || cycle.status !== "awaiting_confirmation") return;
+    if (
+      await deferWhilePaused(
+        ctx,
+        cycle,
+        internal.life_check.resolveConfirmationWindow,
+        args,
+      )
+    )
+      return;
 
     const confirmed = await ctx.db
       .query("access_requests")
@@ -1043,6 +1093,15 @@ export const releaseAfterConfirmation = internalMutation({
 
     const cycle = await findInFlightCycle(ctx, args.userId);
     if (!cycle || cycle.status !== "awaiting_confirmation") return;
+    if (
+      await deferWhilePaused(
+        ctx,
+        cycle,
+        internal.life_check.releaseAfterConfirmation,
+        args,
+      )
+    )
+      return;
 
     const now = Date.now();
     await ctx.db.patch(request._id, {

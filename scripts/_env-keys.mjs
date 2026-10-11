@@ -112,6 +112,7 @@ export const CONVEX_OPTIONAL_GROUPS = {
     "STRIPE_WEBHOOK_SECRET",
     "STRIPE_PRICE_LIFETIME",
   ],
+  "Kill switches": ["NOTIFICATIONS_PAUSED", "LIFE_CHECK_PAUSED"],
 };
 
 // Keys pushed by `sync-convex-env.mjs` from local env files to Convex.
@@ -143,6 +144,8 @@ export const CONVEX_SYNC_KEYS = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "STRIPE_PRICE_LIFETIME",
+  "NOTIFICATIONS_PAUSED",
+  "LIFE_CHECK_PAUSED",
 ];
 
 // Subset of CONVEX_SYNC_KEYS that MUST have a non-empty local value when syncing

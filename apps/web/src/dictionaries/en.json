@@ -560,6 +560,7 @@
     "nextCheckIn": {
       "label": "Next check-in",
       "description": "We'll ask you to confirm you're well. Only your explicit reply resets the countdown — using the app doesn't.",
+      "paused": "Check-ins are paused. Your countdown will resume once Life Check is back on.",
       "reset": "I'm well — reset countdown"
     },
     "activeCycle": {

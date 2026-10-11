@@ -7,6 +7,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { requireEnv } from "./lib/require_env";
 import { signLifeCheckToken } from "./lib/life_check_token";
 import { type Locale, resolveLocale } from "./lib/locale";
+import { isNotificationsPaused } from "./lib/pause";
 
 const CHANNEL_TYPE = v.union(
   v.literal("push"),
@@ -47,20 +48,25 @@ export const sendChannel = internalAction({
 
     let response: string | undefined;
 
-    try {
-      switch (args.channelType) {
-        case "push":
-          response = await sendPush(dispatch);
-          break;
-        case "email":
-          response = await sendEmail(dispatch);
-          break;
-        case "whatsapp":
-          response = await sendWhatsApp(dispatch);
-          break;
+    if (isNotificationsPaused()) {
+      // Kill switch: leave a trace on the cycle instead of silently dropping.
+      response = "paused";
+    } else {
+      try {
+        switch (args.channelType) {
+          case "push":
+            response = await sendPush(dispatch);
+            break;
+          case "email":
+            response = await sendEmail(dispatch);
+            break;
+          case "whatsapp":
+            response = await sendWhatsApp(dispatch);
+            break;
+        }
+      } catch (error) {
+        response = `error:${error instanceof Error ? error.message : String(error)}`;
       }
-    } catch (error) {
-      response = `error:${error instanceof Error ? error.message : String(error)}`;
     }
 
     await ctx.runMutation(internal.life_check.recordChannelAttempt, {
@@ -328,6 +334,7 @@ export const sendInvitationWhatsApp = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
@@ -356,6 +363,7 @@ export const sendRecipientInvitationWhatsApp = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
@@ -384,6 +392,7 @@ export const sendReconfirmWhatsApp = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
@@ -674,6 +683,7 @@ export const sendWelcomeEmail = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       console.warn(
@@ -721,6 +731,7 @@ export const sendWelcomeWhatsApp = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     // The template body greets "{{1}}" — WhatsApp rejects an empty placeholder,
     // so fall back to a neutral word when the name is missing.
@@ -883,6 +894,7 @@ export const sendSetupReminderEmail = internalAction({
     missingItems: v.boolean(),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
       console.warn(
@@ -942,6 +954,7 @@ export const sendSetupReminderWhatsApp = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     const name = args.name?.trim() || (locale === "fr" ? "à vous" : "there");
     return sendWhatsAppTemplate({
@@ -1151,6 +1164,7 @@ export const notifyConfirmationRequest = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     const email = await safeSend(() =>
       sendCtaEmail({
@@ -1188,6 +1202,7 @@ export const notifyGraceCancel = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     const email = await safeSend(() =>
       sendCtaEmail({
@@ -1225,6 +1240,7 @@ export const notifyRelease = internalAction({
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
+    if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
     const email = await safeSend(() =>
       sendCtaEmail({

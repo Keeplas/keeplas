@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect } from "vitest";
 import { api, internal } from "../_generated/api";
 import {
   asUser,
@@ -273,5 +273,66 @@ describe("pause / travel mode suspend in-flight work and reset the counter", () 
     const config = await t.run((ctx) => ctx.db.get(configId));
     expect(config?.isActive).toBe(false);
     expect(await countCycles(t, owner)).toBe(0);
+  });
+});
+
+describe("LIFE_CHECK_PAUSED kill switch freezes the counting", () => {
+  beforeEach(() => {
+    process.env.LIFE_CHECK_PAUSED = "true";
+  });
+  afterEach(() => {
+    delete process.env.LIFE_CHECK_PAUSED;
+  });
+
+  it("evaluator starts no cycle for an overdue config while paused", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const overdue = Date.now() - 60 * DAY_MS;
+    await seedConfig(t, owner, {
+      lastActivityAt: overdue,
+      nextCheckAt: overdue + 30 * DAY_MS,
+    });
+
+    const result = await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    expect(result).toEqual({ evaluated: 0, initiated: 0 });
+    expect(await countCycles(t, owner)).toBe(0);
+  });
+
+  it("enterConfirmationStage defers instead of escalating while paused", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner);
+    const cycleId = await seedRunningCycle(t, owner, configId);
+
+    await t.mutation(internal.life_check.enterConfirmationStage, { cycleId });
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    // Still Stage-1, with a re-check scheduled so it resumes once unpaused.
+    expect(cycle?.status).toBe("running");
+    expect(cycle?.pendingScheduleIds).toHaveLength(1);
+  });
+
+  it("resolveConfirmationWindow defers instead of resolving while paused", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const cycleId = await seedAwaitingConfirmation(t, owner);
+
+    await t.mutation(internal.life_check.resolveConfirmationWindow, {
+      cycleId,
+    });
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("awaiting_confirmation");
+    expect(cycle?.pendingScheduleIds).toHaveLength(1);
+  });
+
+  it("getConfig reports the pause so the UI can freeze the countdown", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedConfig(t, owner);
+
+    const config = await asUser(t, owner).query(api.life_check.getConfig, {});
+    expect(config?.paused).toBe(true);
   });
 });
