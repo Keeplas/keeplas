@@ -13,6 +13,7 @@
     "./pairing": "./src/pairing/index.ts",
     "./recovery": "./src/recovery/index.ts",
     "./shamir": "./src/shamir/index.ts",
+    "./social": "./src/social/index.ts",
     "./sig": "./src/sig/index.ts"
   },
   "scripts": {
