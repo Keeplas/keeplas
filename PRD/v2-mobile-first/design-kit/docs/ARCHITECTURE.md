@@ -224,7 +224,7 @@ Screens: W04-1, W04-2, M03-4, M03-5, M03-6, M08-4
 
 1. Ephemeral ML-KEM-768 keypair (eph). @noble/post-quantum, in memory only. Lives for this pairing (2 minutes) and is then erased.
 2. Device wrap key DWK (non-extractable). WebCrypto AES-256-GCM key created with extractable: false and stored as a CryptoKey in IndexedDB. Scripts can use it but can never read its bytes, so an XSS cannot exfiltrate it.
-3. web → cx: pairing.create(eph pk, user agent). Creates a pairing_sessions row (status waiting, expiresAt = now + 2 min) and returns sessionId. Rate-limited per IP.
+3. web → cx: pairing.create(eph pk, SHA-256(login secret), user agent). The browser draws a random login secret and keeps it in memory; Convex stores only its hash. Creates a pairing_sessions row (status waiting, expiresAt = now + 2 min, purge scheduled at expiry) and returns sessionId. Rate-limited per IP.
 4. QR = sessionId + SHA-256(eph pk) + origin. Countdown 01:42 on W04-2. The 16-byte hash binds the QR to the browser's key, so Convex cannot substitute its own key.
    **Phone: approve and send the secret**
 5. app → cx: Scan → pairing.get(sessionId). Returns eph pk, user agent and approximate city. Requires the phone's full-auth session.
@@ -232,11 +232,11 @@ Screens: W04-1, W04-2, M03-4, M03-5, M03-6, M08-4
 7. Face ID / PRF → unlock MasterKey. Step-up biometrics: a locked phone cannot approve. M03-5 warns: approve only if this is your computer.
 8. Envelope = ML-KEM(eph pk) + AES-GCM. Encapsulate to eph pk, HKDF the shared secret, then AES-256-GCM encrypt {MasterKey, userId, bundleVersion, issuedAt} with AAD = sessionId ‖ origin.
 9. Sign envelope (ML-DSA identity key). Proves the envelope comes from a device holding the owner's identity key.
-10. app → cx: pairing.approve(envelope, signature). Convex stores the envelope, creates a one-time login token (stores only its SHA-256 hash) and sets status approved.
+10. app → cx: pairing.approve(key hash, envelope, signature). Convex re-checks the key hash, stores the envelope and sets status approved; the login secret becomes redeemable for 60 seconds.
     **Browser: authenticate, then receive the key**
-11. cx → web: Live query: approved + login token. Convex reactive query, no polling. The token is single-use and valid 60 seconds.
-12. web → cx: signIn('pairing', token). New ConvexCredentials provider 'pairing' consumes the token and opens a Convex Auth session for the same user. This is the web authentication: no password, no OTP.
-13. cx → web: Envelope + signature (once). Served once to that authenticated session, then deleted (status consumed).
+11. cx → web: Live query: status approved. Convex reactive query, no polling. It returns the status only: the QR carries the sessionId, so anything readable by sessionId must stay harmless.
+12. web → cx: signIn('pairing', sessionId + login secret). ConvexCredentials provider 'pairing' consumes it once (`pairing.redeemLoginToken`) and opens a Convex Auth session for the approver. Only the browser that created the session holds the secret. This is the web authentication: no password, no OTP.
+13. cx → web: pairing.readEnvelope(login secret). Served once to the approver's session that holds the secret, then wiped (status consumed).
 14. Verify signature; decapsulate → MasterKey. Signature checked against the user's identityPublicKey, then eph sk opens the envelope.
 15. Trust this browser? wrap with DWK. Checked: MasterKey wrapped by DWK and kept in IndexedDB for next time. Unchecked: memory only, gone when the tab closes. eph sk is erased either way.
 16. web → cx: devices.register + offer passkey. devices row (kind web, label, trusted). The browser then offers to create a passkey with PRF for later sign-ins (workflow 9).

@@ -183,6 +183,22 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return { userId };
       },
     }),
+    // QR pairing (workflow 8): a browser approved by the owner's phone signs
+    // in with the login secret it generated at `pairing.create`. Never creates
+    // a user; the session belongs to the approving account.
+    ConvexCredentials({
+      id: "pairing",
+      authorize: async (credentials, ctx) => {
+        const userId = await ctx.runMutation(
+          internal.pairing.redeemLoginToken,
+          {
+            sessionId: String(credentials.sessionId ?? ""),
+            secret: String(credentials.secret ?? ""),
+          },
+        );
+        return { userId };
+      },
+    }),
     ConvexCredentials({
       id: "passkey",
       authorize: async (credentials, ctx) => {

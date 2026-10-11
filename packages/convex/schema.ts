@@ -254,6 +254,58 @@ export default defineSchema({
     .index("by_expiry", ["expiresAt"]),
 
   // ═══════════════════════════════════════════════
+  // DEVICES + QR PAIRING (v2 workflow 8)
+  // ═══════════════════════════════════════════════
+
+  // One row per phone / browser linked to the account (W04-6, M08-3).
+  devices: defineTable({
+    userId: v.id("users"),
+    kind: v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    // Human label derived from the user agent, e.g. "Chrome on Mac".
+    label: v.string(),
+    // ML-KEM-768 public key of the device (for handoffs to it).
+    devicePublicKey: v.optional(v.string()),
+    // True when the user ticked "Trust this browser".
+    trusted: v.boolean(),
+    lastSeenAt: v.number(),
+    revokedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // Short-lived QR handoff from a signed-in phone to a new browser. Convex
+  // only relays ciphertext: the MasterKey envelope is sealed by the phone to
+  // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`
+  // (scheduled at creation), so no envelope outlives the 2-minute window.
+  pairing_sessions: defineTable({
+    // Ephemeral ML-KEM-768 public key of the new browser (base64).
+    browserPublicKey: v.string(),
+    // SHA-256 of the browser-held login secret; the secret is never stored.
+    // Only the browser that created the session can redeem the login.
+    secretHash: v.string(),
+    userAgent: v.string(),
+    // Server-attested country of the browser (from the sealed `_audit`).
+    approxLocation: v.optional(v.string()),
+    status: v.union(
+      v.literal("waiting"),
+      v.literal("approved"),
+      v.literal("consumed"),
+      v.literal("rejected"),
+    ),
+    // Set when the phone approves or rejects.
+    userId: v.optional(v.id("users")),
+    // ML-KEM + AES-GCM envelope of the MasterKey, read once.
+    envelope: v.optional(v.string()),
+    // ML-DSA-65 signature over the envelope by the approving device.
+    approvalSignature: v.optional(v.string()),
+    // Starts the 60 s login-token window.
+    approvedAt: v.optional(v.number()),
+    // Set when the `pairing` auth provider consumes the login token.
+    redeemedAt: v.optional(v.number()),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  }),
+
+  // ═══════════════════════════════════════════════
   // TOTP (RFC 6238 authenticator-app secrets)
   // ═══════════════════════════════════════════════
 

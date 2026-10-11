@@ -5,6 +5,7 @@ import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireAuth } from "./helpers";
 import { getAuditSecret } from "./lib/audit_secret";
+import { base64ToBytes } from "./lib/crypto";
 
 /**
  * Sealed envelope produced by the Next.js middleware. Carries the
@@ -51,13 +52,6 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   );
 
   if (!valid) throw new Error("Invalid audit context signature");
-}
-
-function base64ToBytes(b64: string): Uint8Array {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
 }
 
 function bytesToHex(bytes: Uint8Array): string {

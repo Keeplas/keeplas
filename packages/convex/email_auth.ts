@@ -1,7 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 
 // Sibling of phone_auth.ts for the passwordless `email-otp` provider. Mirrors
@@ -12,14 +12,6 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 const MAX_ATTEMPTS = 5;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);

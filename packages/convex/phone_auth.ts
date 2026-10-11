@@ -6,7 +6,7 @@ import {
   internalQuery,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
@@ -17,14 +17,6 @@ const RATE_LIMIT_MAX = 3;
 const MAX_ATTEMPTS = 5;
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);

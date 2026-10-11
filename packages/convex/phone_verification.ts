@@ -5,19 +5,12 @@ import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
+import { sha256Hex } from "./lib/crypto";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 const MAX_ATTEMPTS = 5;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);

@@ -5,6 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { isValidEmail, normalizeEmail } from "./lib/email";
+import { sha256Hex } from "./lib/crypto";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -17,14 +18,6 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 const MAX_ATTEMPTS = 5;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);

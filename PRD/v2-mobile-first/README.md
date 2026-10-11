@@ -104,7 +104,7 @@ Each step lists its verification. A phase is done when every check passes.
 
 ### Phase 4: Devices, QR linking and mobile-only sign-up (F6, F8, D2, D5)
 
-- [ ] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3)
+- [x] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3) — `pairing.test.ts`
 - [ ] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9)
 - [ ] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused
 - [ ] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works
