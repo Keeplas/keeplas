@@ -1,0 +1,18 @@
+# Expo
+.expo/
+dist/
+expo-env.d.ts
+
+# Generated native folders (expo prebuild)
+/ios
+/android
+
+# Metro
+.metro-health-check*
+
+# Signing material
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
