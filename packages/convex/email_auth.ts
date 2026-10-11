@@ -3,6 +3,7 @@ import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
+import { MOBILE_ONLY_SIGNUP } from "./attestation";
 
 // Sibling of phone_auth.ts for the passwordless `email-otp` provider. Mirrors
 // its hashing/expiry/attempts/rate-limit semantics; the only difference is the
@@ -20,9 +21,9 @@ function generateOtp(): string {
 }
 
 /**
- * Issue + dispatch a pre-auth email OTP for a passwordless email account.
- * `intent` distinguishes signup (must NOT already exist) from signin. The code
- * is consumed by the `email-otp` ConvexCredentials provider's authorize().
+ * Issue + dispatch a pre-auth email OTP for an existing account. `signup` is
+ * refused (mobile-only sign-up, F8). The code is consumed by the `email-otp`
+ * ConvexCredentials provider's authorize().
  * Rate-limited to 3 per rolling hour per address. ConvexError on existence
  * mismatches so the message survives prod error redaction.
  */
@@ -36,15 +37,14 @@ export const requestEmailAuthOtp = mutation({
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new Error("Invalid email address");
 
+    // Sign-up is mobile-only (F8): no code is ever issued to create an
+    // email account.
+    if (args.intent === "signup") throw new ConvexError(MOBILE_ONLY_SIGNUP);
+
     const existing = await ctx.db
       .query("users")
       .withIndex("email", (q) => q.eq("email", email))
       .first();
-    if (args.intent === "signup" && existing) {
-      throw new ConvexError(
-        "An account with this email already exists. Sign in instead.",
-      );
-    }
     if (args.intent === "signin" && !existing) {
       throw new ConvexError(
         "No account found for this email. Sign up to create one.",

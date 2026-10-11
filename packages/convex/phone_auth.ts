@@ -10,6 +10,7 @@ import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
+import { consumeSignupGrant } from "./attestation";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -61,6 +62,9 @@ export const requestPhoneAuthOtp = mutation({
       );
     }
 
+    // Mobile-only sign-up: the app must have attested first (M09-9).
+    if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
+
     const now = Date.now();
     const recent = await ctx.db
       .query("phone_auth_codes")
@@ -100,7 +104,11 @@ export const requestPhoneAuthOtp = mutation({
  * Throws on any failure; deletes the code on success.
  */
 export const consumePhoneAuthCode = internalMutation({
-  args: { phoneNumber: v.string(), code: v.string() },
+  args: {
+    phoneNumber: v.string(),
+    code: v.string(),
+    intent: v.union(v.literal("signup"), v.literal("signin")),
+  },
   handler: async (ctx, args) => {
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new Error("Invalid phone number");
@@ -118,6 +126,11 @@ export const consumePhoneAuthCode = internalMutation({
       .filter((c) => c.expiresAt > now)
       .sort((a, b) => b._creationTime - a._creationTime)[0];
     if (!active) throw new Error("Code expired or not requested");
+    // A sign-in code never creates an account: sign-up needs a code issued
+    // against an attestation grant.
+    if (active.intent !== args.intent) {
+      throw new Error("Code expired or not requested");
+    }
 
     if (active.attempts >= MAX_ATTEMPTS) {
       await ctx.db.delete(active._id);

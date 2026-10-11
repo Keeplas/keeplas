@@ -254,6 +254,28 @@ export default defineSchema({
     .index("by_expiry", ["expiresAt"]),
 
   // ═══════════════════════════════════════════════
+  // MOBILE SIGN-UP ATTESTATION (App Attest / Play Integrity, M09-9)
+  // ═══════════════════════════════════════════════
+
+  // One-time challenge the app attests over (5 min).
+  attestation_challenges: defineTable({
+    challenge: v.string(),
+    expiresAt: v.number(),
+  }),
+
+  // Verified attestation for a phone number (10 min, single use). A sign-up
+  // OTP is only issued against one of these.
+  signup_attestations: defineTable({
+    phoneNumber: v.string(),
+    platform: v.union(
+      v.literal("ios"),
+      v.literal("android"),
+      v.literal("simulator"),
+    ),
+    expiresAt: v.number(),
+  }).index("by_phone", ["phoneNumber"]),
+
+  // ═══════════════════════════════════════════════
   // DEVICES + QR PAIRING (v2 workflow 8)
   // ═══════════════════════════════════════════════
 

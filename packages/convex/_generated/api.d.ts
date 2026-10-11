@@ -19,6 +19,8 @@ import type * as admin_security from "../admin/security.js";
 import type * as admin_users from "../admin/users.js";
 import type * as admin_vault from "../admin/vault.js";
 import type * as analytics from "../analytics.js";
+import type * as attestation from "../attestation.js";
+import type * as attestation_node from "../attestation_node.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
@@ -88,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   "admin/users": typeof admin_users;
   "admin/vault": typeof admin_vault;
   analytics: typeof analytics;
+  attestation: typeof attestation;
+  attestation_node: typeof attestation_node;
   audit: typeof audit;
   auth: typeof auth;
   billing: typeof billing;
