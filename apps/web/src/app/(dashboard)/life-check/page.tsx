@@ -1,4 +1,4 @@
-import { Button, Loader, type CountryCode } from "@keeplas/ui";
+import { Button, Loader, Switch, type CountryCode } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { LifeCheckHistory } from "./life-check-history";
 import { ActiveCycleBanner } from "./sections/active-cycle-banner";
@@ -9,6 +9,8 @@ import { Countdown } from "./sections/countdown";
 import { ReleaseIntroductionEditor } from "./sections/release-introduction-editor";
 import { ReleaseOverview } from "./sections/release-overview";
 import { ReleasePolicySettings } from "./sections/release-policy-settings";
+import { TravelModeOnMessage } from "./sections/travel-mode-on";
+import { TravelModeSection } from "./sections/travel-mode-section";
 import { useLifeCheckConfig } from "./sections/use-life-check-config";
 
 export default function LifeCheckPage() {
@@ -24,7 +26,20 @@ export default function LifeCheckPage() {
     toggleChannel,
     handleValidate,
     handlePostpone,
+    travelMode,
+    travelUntil,
+    setTravelUntil,
+    handleTravelToggle,
+    handleToggleActive,
   } = useLifeCheckConfig();
+
+  // "Change dates": leave travel mode, then pick the new return date.
+  async function changeTravelDates() {
+    await handleTravelToggle();
+    requestAnimationFrame(() =>
+      document.getElementById("travel-until")?.focus(),
+    );
+  }
 
   return (
     <div className="max-w-screen-2xl mx-auto">
@@ -39,6 +54,16 @@ export default function LifeCheckPage() {
         <Loader />
       ) : (
         <div className="space-y-8">
+          {travelMode ? (
+            <div className="flex justify-center rounded-[16px] border border-border-default bg-bg-surface">
+              <TravelModeOnMessage
+                until={config?.travelModeUntil ?? null}
+                onChangeDates={() => void changeTravelDates()}
+                onTurnOff={() => void handleTravelToggle()}
+              />
+            </div>
+          ) : null}
+
           {activeCycle ? (
             <ActiveCycleBanner
               status={activeCycle.status}
@@ -66,6 +91,33 @@ export default function LifeCheckPage() {
               />
               <ReleasePolicySettings />
               <ReleaseIntroductionEditor />
+              {config ? (
+                <section className="bg-surface-container-low rounded-sm p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-headline-sm text-primary">
+                      {t("pause.title")}
+                    </h3>
+                    <p className="text-body-md text-on-surface-variant">
+                      {t("pause.description")}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.isActive}
+                    disabled={travelMode}
+                    onCheckedChange={(active) =>
+                      void handleToggleActive(active)
+                    }
+                    aria-label={t("pause.title")}
+                  />
+                </section>
+              ) : null}
+              {travelMode ? null : (
+                <TravelModeSection
+                  until={travelUntil}
+                  onUntilChange={setTravelUntil}
+                  onToggle={() => void handleTravelToggle()}
+                />
+              )}
             </div>
 
             <EscalationTimeline

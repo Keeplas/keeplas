@@ -597,6 +597,17 @@
         "body": "You didn't answer your last life check. Nothing is shared yet. Let us know you're here.",
         "confirm": "I'm here"
       }
+    },
+    "pause": {
+      "title": "Life check",
+      "description": "Turn it off to pause all check-ins. Nothing is released while it's off."
+    },
+    "travelOn": {
+      "title": "Travel mode is on",
+      "body": "Life checks are paused. Your contacts won't be contacted while you're away.",
+      "bodyUntil": "Life checks are paused until {date}. Your contacts won't be contacted while you're away.",
+      "changeDates": "Change dates",
+      "turnOff": "Turn off travel mode"
     }
   },
   "settings": {
@@ -1115,8 +1126,9 @@
       "body": "Only {name} is accepted so far — invite at least one more. At least 2 trust contacts must confirm you are unreachable before the grace window opens, so a single guardian can never start the release."
     },
     "emptyState": {
-      "title": "Invite Your First Guardian",
-      "description": "Invite at least 2 trusted guardians — two of them must confirm before anything is released. Recipients have no cap."
+      "title": "No trusted contacts yet",
+      "description": "Add at least 2 people who can help you get back in or receive your vault.",
+      "action": "Add a contact"
     },
     "trustContacts": {
       "heading": "Trust Contacts",

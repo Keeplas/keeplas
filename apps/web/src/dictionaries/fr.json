@@ -597,6 +597,17 @@
         "body": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
         "confirm": "Je suis là"
       }
+    },
+    "pause": {
+      "title": "Life check",
+      "description": "Désactivez-le pour suspendre toutes les vérifications. Rien n'est transmis tant qu'il est désactivé."
+    },
+    "travelOn": {
+      "title": "Le mode voyage est activé",
+      "body": "Les Life checks sont en pause. Vos contacts ne seront pas sollicités pendant votre absence.",
+      "bodyUntil": "Les Life checks sont en pause jusqu'au {date}. Vos contacts ne seront pas sollicités pendant votre absence.",
+      "changeDates": "Modifier les dates",
+      "turnOff": "Désactiver le mode voyage"
     }
   },
   "settings": {
@@ -1115,8 +1126,9 @@
       "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
     },
     "emptyState": {
-      "title": "Invitez votre premier gardien",
-      "description": "Invitez au moins 2 gardiens de confiance — deux d'entre eux doivent confirmer avant toute transmission. Les bénéficiaires ne sont soumis à aucune limite."
+      "title": "Aucun contact de confiance",
+      "description": "Ajoutez au moins 2 personnes qui peuvent vous aider à revenir ou recevoir votre coffre.",
+      "action": "Ajouter un contact"
     },
     "trustContacts": {
       "heading": "Contacts de confiance",
