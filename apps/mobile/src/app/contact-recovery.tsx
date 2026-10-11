@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   generateRecipientKeyPair,
@@ -16,6 +17,7 @@ import { Screen } from "@/components/screen";
 import { Callout, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { saveDeviceVault } from "@/crypto/device-vault";
+import { createKitMaterial } from "@/crypto/vault-keys";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -25,6 +27,7 @@ const secretKey = (userId: string) => `keeplas.recovery-device.${userId}`;
 
 /** M02-1 / M02-2 / M02-4: start, monitor and finish 2-of-3 recovery. */
 export default function ContactRecovery() {
+  const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
   const request = useQuery(api.recovery.getMyRequest);
@@ -34,8 +37,10 @@ export default function ContactRecovery() {
     api.recovery.getReleasePackage,
     request?.status === "released" ? { requestId: request.requestId } : "skip",
   );
-  const { adopt } = useVault();
+  const { adopt, setSetupPhrase } = useVault();
   const { refreshDeviceVault } = useSession();
+  const storePhraseHash = useMutation(api.onboarding.storeRecoveryPhraseHash);
+  const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -77,15 +82,29 @@ export default function ContactRecovery() {
         socialEnvelope: releasePackage.socialEnvelope,
         approvals: releasePackage.approvals,
       });
+      const kit = await createKitMaterial(masterKey);
+      await Promise.all([
+        storePhraseHash({
+          recoveryPhraseHash: kit.recoveryPhraseHash,
+          phraseSalt: kit.phraseSalt,
+        }),
+        storeKeyBundle({
+          encryptedKeyBundle: kit.encryptedKeyBundle,
+          phraseSalt: kit.phraseSalt,
+        }),
+      ]);
       await saveDeviceVault(
         viewer._id,
-        { masterKey, rootKey: null },
+        { masterKey, rootKey: kit.rawRootKey },
         t("unlock.title"),
       );
+      kit.rawRootKey.fill(0);
       await adopt(masterKey.slice());
+      setSetupPhrase(kit.phrase);
       masterKey.fill(0);
       await SecureStore.deleteItemAsync(secretKey(viewer._id));
       refreshDeviceVault();
+      router.replace("/(setup)/kit");
     } finally {
       setBusy(false);
     }

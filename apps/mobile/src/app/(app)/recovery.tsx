@@ -25,6 +25,7 @@ export default function RecoveryCenter() {
   const health = useQuery(api.recovery.getHealth);
   const targets = useQuery(api.recovery.getSetupTargets);
   const requests = useQuery(api.recovery.getRequestsForMe);
+  const myRequest = useQuery(api.recovery.getMyRequest);
   const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
   const setup = useAuditedAction(api.recovery_node.setup);
 
@@ -58,6 +59,8 @@ export default function RecoveryCenter() {
           contactId:
             share.contactId as (typeof targets.contacts)[number]["contactId"],
         })),
+        completesRequestId:
+          myRequest?.status === "released" ? myRequest.requestId : undefined,
       });
     } catch (error) {
       Alert.alert(
