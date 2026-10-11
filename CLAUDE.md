@@ -26,7 +26,9 @@ pnpm format             # Prettier on **/*.{ts,tsx,js,jsx,json,css,md}
 # Deploy Convex (prod) — ALWAYS use this, never bare `convex deploy`
 pnpm deploy:convex      # Guarded prod deploy: dry-run preflight refuses an
                         # empty / mass-index-deleting push before it can wipe
-                        # production (see scripts/check-convex-deploy.mjs)
+                        # production (see scripts/check-convex-deploy.mjs).
+                        # Env comes from Infisical `prod` (/keeplas_app) via
+                        # `pnpm with-env`; needs `infisical login` + `npx convex login`
 
 # Build / clean
 pnpm build              # Turbo build (web: vite build)
