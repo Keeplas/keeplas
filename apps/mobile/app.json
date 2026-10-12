@@ -2,6 +2,7 @@
   "expo": {
     "name": "Keeplas",
     "slug": "keeplas",
+    "owner": "keeplas",
     "scheme": "keeplas",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -79,6 +80,11 @@
       "expo-sharing",
       "expo-localization",
       "react-native-quick-crypto"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "84efc0af-1893-48d5-963d-b9c6fb73283a"
+      }
+    }
   }
 }

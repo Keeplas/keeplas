@@ -26,7 +26,6 @@ export const wipeAllData = internalMutation({
       "audit_logs",
       "ip_rate_limits",
       "access_requests",
-      "push_subscriptions",
       "life_check_cycles",
       "life_check_configs",
       "trusted_contacts",

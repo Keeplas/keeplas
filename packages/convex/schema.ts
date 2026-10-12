@@ -390,7 +390,9 @@ export default defineSchema({
     lastSeenAt: v.number(),
     revokedAt: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_push_token", ["pushToken"]),
 
   // Short-lived QR handoff from a signed-in phone to a new browser. Convex
   // only relays ciphertext: the MasterKey envelope is sealed by the phone to
@@ -870,22 +872,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_status", ["userId", "status"])
     .index("by_scheduled", ["scheduledAt"]),
-
-  // ═══════════════════════════════════════════════
-  // PUSH SUBSCRIPTIONS (Web Push)
-  // ═══════════════════════════════════════════════
-
-  push_subscriptions: defineTable({
-    userId: v.id("users"),
-    endpoint: v.string(),
-    p256dh: v.string(),
-    auth: v.string(),
-    deviceLabel: v.optional(v.string()),
-    createdAt: v.number(),
-    lastUsedAt: v.optional(v.number()),
-  })
-    .index("by_user", ["userId"])
-    .index("by_endpoint", ["endpoint"]),
 
   // ═══════════════════════════════════════════════
   // ACCESS REQUESTS
