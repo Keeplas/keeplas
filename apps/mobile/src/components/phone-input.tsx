@@ -87,7 +87,10 @@ export function PhoneInput({
         accessibilityLabel={t("phone.label")}
         value={value}
         onChangeText={(next) => {
-          if (!isTooLong(country, next)) onChangeText(next);
+          // Shorter is always allowed, so a value left too long by a country
+          // switch stays editable.
+          if (next.length < value.length || !isTooLong(country, next))
+            onChangeText(next);
         }}
         onSubmitEditing={onSubmit}
         placeholder={examplePlaceholder(country)}
