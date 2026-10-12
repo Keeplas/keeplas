@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Replaces apps/web/.env.local and packages/convex/.env.local with symlinks
+// Replaces apps/web, apps/mobile and packages/convex .env.local with symlinks
 // pointing to the root .env.local — single source of truth for monorepo env vars.
 // Idempotent: safe to re-run.
 
@@ -31,6 +31,7 @@ if (!existsSync(masterPath)) {
 
 const targets = [
   resolve(repoRoot, "apps/web/.env.local"),
+  resolve(repoRoot, "apps/mobile/.env.local"),
   resolve(repoRoot, "packages/convex/.env.local"),
 ];
 

@@ -66,7 +66,7 @@ describe("vault item titles are encrypted at rest", () => {
       api.vault_items.createItem,
       {
         vaultId,
-        category: "personal_document",
+        encryptedMeta: JSON.stringify({ ciphertext: "bWV0YQ==", iv: "aXY=" }),
         encryptedTitle: ENC,
         encryptedContent: ENC_CONTENT,
         accessLevel: "private",
@@ -87,7 +87,7 @@ describe("vault item titles are encrypted at rest", () => {
       api.vault_items.createItem,
       {
         vaultId,
-        category: "personal_document",
+        encryptedMeta: JSON.stringify({ ciphertext: "bWV0YQ==", iv: "aXY=" }),
         encryptedTitle: ENC,
         encryptedContent: ENC_CONTENT,
         accessLevel: "private",

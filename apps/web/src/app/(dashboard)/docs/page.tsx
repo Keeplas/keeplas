@@ -66,12 +66,7 @@ const QUICK_LINKS: Array<{ key: string; href: string; iconPath: string }> = [
   { key: "hub", href: "/hub", iconPath: ICON_PATHS.hub },
   {
     key: "security",
-    href: "/settings/security",
-    iconPath: ICON_PATHS.key,
-  },
-  {
-    key: "recoveryKit",
-    href: "/settings/recovery-kit",
+    href: "/devices",
     iconPath: ICON_PATHS.key,
   },
   {
@@ -115,13 +110,13 @@ export default function DocsPage() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link
-              href="/settings/recovery-kit"
+              href="/settings/recovery"
               className="inline-flex items-center gap-2 bg-secondary-fixed text-on-secondary-fixed font-headline font-extrabold px-6 py-3 rounded-xs hover:opacity-90 transition-all active:scale-95"
             >
               {t("hub.hero.exportKit")}
             </Link>
             <Link
-              href="/settings/security"
+              href="/devices"
               className="inline-flex items-center gap-2 border border-white/20 text-white px-6 py-3 rounded-xs hover:bg-white/10 transition-all font-headline font-bold"
             >
               {t("hub.hero.securityCenter")}

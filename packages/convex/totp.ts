@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
@@ -136,6 +136,9 @@ function buildOtpAuthUri(
   });
   return `otpauth://totp/${issuer}:${account_}?${params.toString()}`;
 }
+
+const TOTP_MAX_FAILURES = 10;
+const TOTP_LOCKOUT_MS = 15 * 60 * 1000;
 
 export const getMyTotpStatus = query({
   args: {},
@@ -364,14 +367,35 @@ export const submitTotpForSession = mutation({
     if (!totp || !totp.verifiedAt) {
       throw new Error("TOTP is not enrolled for this account.");
     }
-    const ok = await verifyTotp(totp.secret, code, Date.now());
-    if (!ok) throw new Error("Invalid or expired code. Try again.");
+    const now = Date.now();
+    const recentFailures =
+      totp.lastFailedAt && now - totp.lastFailedAt < TOTP_LOCKOUT_MS
+        ? (totp.failedAttempts ?? 0)
+        : 0;
+    if (recentFailures >= TOTP_MAX_FAILURES) {
+      throw new ConvexError("Too many attempts. Try again in 15 minutes.");
+    }
+    // A wrong code is returned, not thrown: Convex rolls back the writes of a
+    // mutation that throws, and the failure must be counted (lib/otp.ts).
+    if (!(await verifyTotp(totp.secret, code, now))) {
+      await ctx.db.patch(totp._id, {
+        failedAttempts: recentFailures + 1,
+        lastFailedAt: now,
+      });
+      return {
+        success: false as const,
+        error: "Invalid or expired code. Try again.",
+      };
+    }
 
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) throw new Error("No active session.");
 
-    const now = Date.now();
-    await ctx.db.patch(totp._id, { lastUsedAt: now });
+    await ctx.db.patch(totp._id, {
+      lastUsedAt: now,
+      failedAttempts: undefined,
+      lastFailedAt: undefined,
+    });
 
     const existing = await ctx.db
       .query("auth_session_totp")
@@ -384,7 +408,7 @@ export const submitTotpForSession = mutation({
         verifiedAt: now,
       });
     }
-    return { success: true };
+    return { success: true as const };
   },
 });
 

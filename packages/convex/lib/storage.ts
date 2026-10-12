@@ -50,3 +50,31 @@ export async function deleteBlob(
 ): Promise<void> {
   await ctx.storage.delete(ref);
 }
+
+/** Exact size of a stored (ciphertext) blob, from Convex's storage table. */
+export async function getBlobSize(
+  ctx: QueryCtx | MutationCtx,
+  ref: StorageRef,
+): Promise<number | null> {
+  return (await ctx.db.system.get(ref))?.size ?? null;
+}
+
+const MIN_BUCKET = 4096;
+
+/**
+ * Round a byte size up to a bucket (F4): 16 steps per power of two, so the
+ * row never carries the exact size while the quota overcounts by ≤ 6.25 %.
+ */
+export function sizeBucket(bytes: number): number {
+  if (bytes <= MIN_BUCKET) return MIN_BUCKET;
+  const step = 2 ** Math.max(Math.floor(Math.log2(bytes)) - 4, 0);
+  return Math.ceil(bytes / step) * step;
+}
+
+/** Bytes a file counts for: its bucket, or the legacy plaintext size. */
+export function storedFileBytes(file: {
+  sizeBucket?: number;
+  size?: number;
+}): number {
+  return file.sizeBucket ?? file.size ?? 0;
+}

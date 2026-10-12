@@ -1064,7 +1064,7 @@ async function sendCtaEmail(args: {
   return "sent";
 }
 
-/** Send a single-placeholder WhatsApp template (static URL button in template). */
+/** Send a WhatsApp template with at most one placeholder (static URL button). */
 async function sendTemplateWhatsApp(args: {
   to: string | undefined;
   envName: string | undefined;
@@ -1077,7 +1077,7 @@ async function sendTemplateWhatsApp(args: {
     to: args.to,
     templateName: localizedTemplateName(args.envName, args.base, args.locale),
     language: args.locale,
-    placeholders: [args.placeholder],
+    placeholders: args.placeholder ? [args.placeholder] : [],
   });
 }
 
@@ -1149,6 +1149,197 @@ const TC_RELEASE_COPY = {
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
   },
 } satisfies Record<Locale, CtaEmailCopy>;
+
+/** Email + WhatsApp alert with localized copy; each channel best-effort. */
+async function sendAlert(args: {
+  email?: string;
+  phoneNumber?: string;
+  greetingName: string | undefined;
+  bodyName: string;
+  language?: string;
+  copy: Record<Locale, CtaEmailCopy>;
+  path: string;
+  templateEnv: string | undefined;
+  templateBase: string;
+  pushTokens?: string[];
+}): Promise<string> {
+  if (isNotificationsPaused()) return "paused";
+  const locale = resolveLocale(args.language);
+  const push = await safeSend(() =>
+    sendExpoPush(args.pushTokens ?? [], {
+      title: args.copy[locale].subject,
+      body: args.copy[locale].body(args.bodyName),
+      path: args.path,
+    }),
+  );
+  const email = await safeSend(() =>
+    sendCtaEmail({
+      to: args.email,
+      copy: args.copy[locale],
+      greetingName: args.greetingName,
+      bodyName: args.bodyName,
+      path: args.path,
+    }),
+  );
+  const whatsapp = await safeSend(() =>
+    sendTemplateWhatsApp({
+      to: args.phoneNumber,
+      envName: args.templateEnv,
+      base: args.templateBase,
+      placeholder: args.bodyName,
+      locale,
+    }),
+  );
+  return `push:${push} email:${email} whatsapp:${whatsapp}`;
+}
+
+/** Native push to the user's phones through the Expo push service. */
+async function sendExpoPush(
+  tokens: string[],
+  message: { title: string; body: string; path: string },
+): Promise<string> {
+  if (tokens.length === 0) return "no_device";
+  const res = await fetch("https://exp.host/--/api/v2/push/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      tokens.map((to) => ({
+        to,
+        title: message.title,
+        body: message.body,
+        data: { path: message.path },
+        sound: "default",
+      })),
+    ),
+  });
+  if (!res.ok) throw new Error(`expo push ${res.status}`);
+  return "sent";
+}
+
+const alertArgs = {
+  email: v.optional(v.string()),
+  phoneNumber: v.optional(v.string()),
+  language: v.optional(v.string()),
+  pushTokens: v.optional(v.array(v.string())),
+};
+
+const NEW_DEVICE_COPY = {
+  en: {
+    subject: "Keeplas — a new device was linked to your account",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (device?: string) =>
+      `${device ?? "A new device"} was just linked to your Keeplas account. If it was you, there is nothing to do. If not, open Keeplas on your phone and tap "It wasn't me": we remove the device, end its sessions and rotate your keys.`,
+    button: "Review devices",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — un nouvel appareil a été associé à votre compte",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (device?: string) =>
+      `${device ?? "Un nouvel appareil"} vient d'être associé à votre compte Keeplas. Si c'était vous, rien à faire. Sinon, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » : nous retirons l'appareil, fermons ses sessions et changeons vos clés.`,
+    button: "Voir les appareils",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/**
+ * New-device alert (M08-4) to the owner: every new link or sign-in is
+ * announced on the other channels. The in-app alert is the
+ * `devices.pendingAlerts` query.
+ */
+export const notifyNewDevice = internalAction({
+  args: {
+    ...alertArgs,
+    ownerName: v.optional(v.string()),
+    deviceLabel: v.string(),
+  },
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: args.deviceLabel,
+      copy: NEW_DEVICE_COPY,
+      path: "/devices",
+      templateEnv: process.env.WHATSAPP_NEW_DEVICE_TEMPLATE_NAME,
+      templateBase: "keeplas_new_device",
+    }),
+});
+
+const RECOVERY_STARTED_COPY = {
+  en: {
+    subject: "Keeplas — someone asked to recover your account",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: () =>
+      "A request to recover your Keeplas account was just made from a new phone. Your trust contacts are asked to confirm it by calling you. Nothing is released for 72 hours. If it wasn't you, open Keeplas on one of your devices and cancel the request.",
+    button: "Review the request",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — une demande de récupération de votre compte",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: () =>
+      "Une demande de récupération de votre compte Keeplas vient d'être faite depuis un nouveau téléphone. Vos contacts de confiance doivent la confirmer en vous appelant. Rien n'est libéré pendant 72 heures. Si ce n'est pas vous, ouvrez Keeplas sur l'un de vos appareils et annulez la demande.",
+    button: "Voir la demande",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/** Owner-facing alert: a recovery request started (cancel within 72 h). */
+export const notifyRecoveryStarted = internalAction({
+  args: { ...alertArgs, ownerName: v.optional(v.string()) },
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.ownerName,
+      // The owner is the recipient: the template takes no placeholder.
+      bodyName: "",
+      copy: RECOVERY_STARTED_COPY,
+      path: "/settings/recovery",
+      templateEnv: process.env.WHATSAPP_RECOVERY_STARTED_TEMPLATE_NAME,
+      templateBase: "keeplas_recovery_started",
+    }),
+});
+
+const RECOVERY_CONTACT_COPY = {
+  en: {
+    subject: "Keeplas — someone needs your help",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (owner?: string) =>
+      `${owner ?? "Someone"} is trying to get back into their Keeplas account and named you as a trust contact. Call them first and compare the 6-digit code shown in your Keeplas app. Approve only if you recognise them and the codes match. You will not see their files.`,
+    button: "Open Keeplas",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — quelqu'un a besoin de votre aide",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (owner?: string) =>
+      `${owner ?? "Quelqu'un"} essaie de récupérer l'accès à son compte Keeplas et vous a désigné comme contact de confiance. Appelez-le d'abord et comparez le code à 6 chiffres affiché dans votre application Keeplas. N'approuvez que si vous le reconnaissez et que les codes correspondent. Vous ne verrez pas ses fichiers.`,
+    button: "Ouvrir Keeplas",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/** Trust-contact notice: the owner needs help recovering access (M02-3). */
+export const notifyRecoveryContact = internalAction({
+  args: {
+    ...alertArgs,
+    contactName: v.optional(v.string()),
+    ownerName: v.string(),
+  },
+  handler: (_ctx, args) =>
+    sendAlert({
+      ...args,
+      greetingName: args.contactName,
+      bodyName: args.ownerName,
+      copy: RECOVERY_CONTACT_COPY,
+      path: "/shared-with-me",
+      templateEnv: process.env.WHATSAPP_RECOVERY_CONTACT_TEMPLATE_NAME,
+      templateBase: "keeplas_recovery_contact",
+    }),
+});
 
 /**
  * Stage-2 notice to a trust contact: the owner stopped responding; confirming

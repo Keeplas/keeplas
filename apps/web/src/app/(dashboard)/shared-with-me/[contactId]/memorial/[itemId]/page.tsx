@@ -1,6 +1,6 @@
 import { useParams } from "@/lib/navigation";
 import { Link } from "@/lib/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { Loader, RichTextEditor } from "@keeplas/ui";
 import { api } from "@keeplas/backend/_generated/api";
@@ -11,6 +11,7 @@ import { MemorialItemAttachments } from "@/components/memorial-item-attachments"
 import { useMemorialCrypto } from "@/lib/use-memorial-crypto";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useCategoryLabel } from "@/lib/use-categories";
+import { useItemCategories } from "@/lib/use-item-categories";
 
 export default function MemorialItemPage() {
   const t = useTranslations("sharedWithMe");
@@ -24,6 +25,8 @@ export default function MemorialItemPage() {
     itemId,
   });
   const { decryptItem, isReady } = useMemorialCrypto();
+  const asList = useMemo(() => (data ? [data.item] : undefined), [data]);
+  const categories = useItemCategories(asList);
 
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string | null>(null);
@@ -98,7 +101,7 @@ export default function MemorialItemPage() {
       <h1 className="text-headline-lg text-primary mt-3 mb-1">{title}</h1>
       <p className="text-body-md text-on-surface-variant mb-8">
         {t("item.categoryInMemory", {
-          category: categoryLabel(item.category),
+          category: categoryLabel(categories[item._id] ?? "other"),
           ownerName: owner.name,
         })}
       </p>

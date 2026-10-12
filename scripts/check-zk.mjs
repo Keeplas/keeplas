@@ -57,13 +57,17 @@ const RULES = [
 		allow: (relPath) => relPath === STORAGE_WRAPPER_REL,
 	},
 	{
-		// Convex server code must use the local ./lib/crypto helper, never the
+		// Convex V8 code must use the local ./lib/crypto helper, never the
 		// browser crypto package (it pulls WebCrypto-only modules and breaks the
-		// convex bundle/typecheck). See packages/convex/lib/crypto.ts.
-		pattern: /from\s+["']@keeplas\/crypto["']/,
+		// convex bundle/typecheck). See packages/convex/lib/crypto.ts. Node
+		// actions (`*_node.ts`, "use node") and tests may reuse its envelopes.
+		pattern: /from\s+["']@keeplas\/crypto(\/[a-z-]+)?["']/,
 		message:
-			"Convex server code must not import @keeplas/crypto. Use packages/convex/lib/crypto.ts.",
-		allow: (relPath) => !relPath.startsWith("packages/convex"),
+			"Convex V8 code must not import @keeplas/crypto. Use packages/convex/lib/crypto.ts (only \"use node\" *_node.ts actions and tests may).",
+		allow: (relPath) =>
+			!relPath.startsWith(join("packages", "convex")) ||
+			relPath.endsWith("_node.ts") ||
+			relPath.includes(`${sep}__tests__${sep}`),
 	},
 	{
 		// WebAuthn must demand user verification (finding #6) — no possession-only.

@@ -2,10 +2,16 @@ import { v } from "convex/values";
 import { internalMutation, query, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { requireAuth, requireFullAuth, resolveItemRecipients } from "./helpers";
+import {
+  approvedReleaseRequest,
+  requireAuth,
+  requireFullAuth,
+  resolveItemRecipients,
+} from "./helpers";
 import { createAuditLog } from "./audit";
 import { createNotification } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
+import { releasedFolderItems } from "./folders";
 
 /**
  * Run the per-recipient release fan-out for a user. For each active vault
@@ -47,6 +53,11 @@ async function fanOutRelease(
       perRecipient.set(cid, list);
     }
   }
+  // Folders shared "after verification" open at release too.
+  for (const [cid, itemIds] of await releasedFolderItems(ctx, userId)) {
+    const merged = new Set([...(perRecipient.get(cid) ?? []), ...itemIds]);
+    perRecipient.set(cid, [...merged]);
+  }
 
   const now = Date.now();
   let requestsCreated = 0;
@@ -60,16 +71,7 @@ async function fanOutRelease(
     // `["all"]` sentinel and gets flipped to "approved" by releaseAfterConfirmation
     // for the contacts who confirmed unreachability — it must NOT shadow the
     // release fan-out, or those contacts would never receive their item list.
-    const approved = await ctx.db
-      .query("access_requests")
-      .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
-      .filter((q) => q.eq(q.field("status"), "approved"))
-      .collect();
-    const alreadyReleased = approved.some((r) =>
-      r.sectionsRequested.some((s) => s.startsWith("item:")),
-    );
-
-    if (alreadyReleased) continue;
+    if (await approvedReleaseRequest(ctx, contactId)) continue;
 
     await ctx.db.insert("access_requests", {
       vaultUserId: userId,

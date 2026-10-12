@@ -1,10 +1,10 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { v, Validator, ObjectType, PropertyValidators } from "convex/values";
 import type { RegisteredMutation } from "convex/server";
 import { mutation, MutationCtx, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { requireAuth } from "./helpers";
+import { optionalAuth, requireAuth } from "./helpers";
 import { getAuditSecret } from "./lib/audit_secret";
+import { base64ToBytes } from "./lib/crypto";
 
 /**
  * Sealed envelope produced by the Next.js middleware. Carries the
@@ -51,13 +51,6 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   );
 
   if (!valid) throw new Error("Invalid audit context signature");
-}
-
-function base64ToBytes(b64: string): Uint8Array {
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out;
 }
 
 function bytesToHex(bytes: Uint8Array): string {
@@ -158,6 +151,10 @@ export type ActorIdentity = {
   actorId: string;
 };
 
+// Declare `getResourceId` / `getMetadata` / `skipAudit` AFTER `handler`:
+// TypeScript infers `Output` from the first context-sensitive callback it
+// meets, so a result callback placed before the handler makes the mutation's
+// return type `unknown` for every client.
 export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
   action: string;
   resourceType: string;
@@ -171,7 +168,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
    */
   getResourceId?: (
     args: ObjectType<Args>,
-    result: Output,
+    result: NoInfer<Output>,
     userId: Id<"users">,
   ) => string;
   /**
@@ -179,7 +176,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
    */
   getMetadata?: (
     args: ObjectType<Args>,
-    result: Output,
+    result: NoInfer<Output>,
   ) => Record<string, unknown> | undefined;
   /**
    * Optional override for the actor identity. Defaults to treating the
@@ -191,6 +188,11 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
     ctx: MutationCtx,
     args: ObjectType<Args>,
   ) => Promise<ActorIdentity>;
+  /**
+   * Skip the entry when the call changed nothing it should record (e.g. a
+   * wrong one-time code, reported as a result rather than thrown).
+   */
+  skipAudit?: (result: NoInfer<Output>) => boolean;
 }): RegisteredMutation<
   "public",
   ObjectType<Args> & { _audit: AuditContext },
@@ -216,6 +218,7 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
         : await defaultActor(ctx);
 
       const result = await opts.handler(ctx, restArgs);
+      if (opts.skipAudit?.(result)) return result;
 
       const resourceId =
         opts.getResourceId?.(restArgs, result, actor.chainUserId) ??
@@ -255,7 +258,7 @@ export type { Validator };
 export const listLogs = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return [];
 
     const limit = args.limit ?? 50;
@@ -273,7 +276,7 @@ export const listLogs = query({
 export const getSecuritySummary = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
     const recentLogs = await ctx.db

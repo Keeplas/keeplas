@@ -1,6 +1,7 @@
 import { createMiddleware, createStart } from "@tanstack/react-start";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 import { buildSecurityHeaders } from "@/lib/security-headers";
+import { wellKnownResponse } from "@/lib/well-known";
 
 /**
  * Server request pipeline for the Keeplas web app (TanStack Start).
@@ -140,17 +141,28 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
   async ({ request, pathname, next }) => {
     const method = request.method.toUpperCase();
 
-    // ── GET /api/context — hand the sealed cookie back to the client. ──
+    // ── /.well-known app association files (Universal / App Links). ──
+    if (method === "GET") {
+      const wellKnown = wellKnownResponse(pathname, process.env);
+      if (wellKnown) return wellKnown;
+    }
+
+    // ── GET /api/context — hand the sealed context back to the client. ──
+    // Browsers get their cookie back; native apps (no cookie jar) get a
+    // freshly sealed context for the request's IP and country.
     if (pathname === "/api/context" && method === "GET") {
       const raw = readCookie(request, COOKIE_NAME);
-      if (!raw) return new Response(null, { status: 204 });
-      try {
-        return Response.json(JSON.parse(raw), {
-          headers: { "Cache-Control": "private, no-store" },
-        });
-      } catch {
-        return new Response(null, { status: 204 });
-      }
+      const secret = process.env.KEEPLAS_CTX_SECRET;
+      const sealed =
+        raw && isFreshSealed(raw)
+          ? (JSON.parse(raw) as SealedContext)
+          : secret
+            ? await sealContext(request, secret)
+            : null;
+      if (!sealed) return new Response(null, { status: 204 });
+      return Response.json(sealed, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
     }
 
     // ── POST /api/csp-report — CSP violation collector (always 204). ──
@@ -228,11 +240,19 @@ async function maybeSealCookie(request: Request): Promise<string | null> {
   }
   const existing = readCookie(request, COOKIE_NAME);
   if (existing && isFreshSealed(existing)) return null;
+  return buildSealCookie(await sealContext(request, secret));
+}
+
+/** HMAC-seal the request's IP + country for Convex's audited mutations. */
+async function sealContext(
+  request: Request,
+  secret: string,
+): Promise<SealedContext> {
   const ip = extractIp(request);
   const country = extractCountry(request);
   const ts = Date.now();
   const sig = await sign(`${ip}|${country}|${ts}`, secret);
-  return buildSealCookie({ ip, country, ts, sig });
+  return { ip, country, ts, sig };
 }
 
 export const startInstance = createStart(() => ({

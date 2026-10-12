@@ -15,6 +15,8 @@ export const categoryValidator = v.union(
   v.literal("contacts"),
   v.literal("wishes"),
   v.literal("other"),
+  // v2 encrypted inbox: captures waiting to be sorted.
+  v.literal("inbox"),
 );
 
 // TEMPORARY: "public" and "emergency_only" are kept here only so the schema

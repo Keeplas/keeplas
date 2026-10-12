@@ -12,6 +12,8 @@ import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
 import { useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
+import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
+import { useItemCategories } from "@/lib/use-item-categories";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 interface SectionConfig {
@@ -134,8 +136,10 @@ function VaultPageContent() {
   const vault = useQuery(api.vaults.getVault);
   const items = useQuery(api.vault_items.getItems);
   const titles = useDecryptedTitles(items);
-  // Owner-side migration of any legacy plaintext titles still in the vault.
+  const categories = useItemCategories(items);
+  // Owner-side migration of any legacy plaintext titles and metadata.
   useBackfillItemTitles(items);
+  useBackfillItemMeta();
   const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
   const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
@@ -161,11 +165,12 @@ function VaultPageContent() {
       map.set(section.category, []);
     }
     for (const item of items ?? []) {
-      const list = map.get(item.category as VaultCategory);
-      if (list) list.push(item);
+      const category = categories[item._id];
+      if (!category) continue; // still decrypting
+      map.get(category)?.push(item);
     }
     return map;
-  }, [items]);
+  }, [items, categories]);
 
   // Sections follow the active language alphabetically by their category label;
   // "other" is a catch-all and always sorts last.
@@ -254,6 +259,7 @@ function VaultPageContent() {
                   <VaultItemCard
                     key={item._id}
                     item={item}
+                    category={categories[item._id] ?? "other"}
                     title={titles[item._id] ?? ""}
                     groups={recipientGroups}
                     contacts={allContacts}
@@ -397,17 +403,19 @@ function transmissionSummary(
 // transmission target (Private / contact / group / "All trust contacts").
 function VaultItemCard({
   item,
+  category: categoryKey,
   title,
   groups,
   contacts,
 }: {
   item: Doc<"vault_items">;
+  category: VaultCategory;
   title: string;
   groups: Doc<"recipient_groups">[];
   contacts: Doc<"trusted_contacts">[];
 }) {
   const t = useTranslations("vault");
-  const category = getCategoryConfig(item.category as VaultCategory);
+  const category = getCategoryConfig(categoryKey);
   const transmission = transmissionSummary(item, groups, contacts, t);
 
   return (

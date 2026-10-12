@@ -5,6 +5,7 @@ import { ConfirmDialogProvider } from "@keeplas/ui";
 import { MasterKeyProvider } from "@/lib/master-key-context";
 import { I18nProvider, ViewerLocaleSync } from "@/lib/i18n";
 import { PageViewTracker } from "@/lib/page-view-tracker";
+import { ThemeSync } from "@/lib/theme";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -24,6 +25,7 @@ export default function AppProviders({ children }: { children: ReactNode }) {
   if (!client) {
     return (
       <I18nProvider>
+        <ThemeSync />
         <ConfirmDialogProvider>{children}</ConfirmDialogProvider>
       </I18nProvider>
     );
@@ -33,6 +35,7 @@ export default function AppProviders({ children }: { children: ReactNode }) {
     <ConvexAuthProvider client={client}>
       <I18nProvider>
         <ViewerLocaleSync />
+        <ThemeSync />
         <PageViewTracker />
         <MasterKeyProvider>
           <ConfirmDialogProvider>{children}</ConfirmDialogProvider>

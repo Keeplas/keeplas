@@ -2,6 +2,7 @@ export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
 export { Badge, type BadgeProps, badgeVariants } from "./badge";
 export { Button, type ButtonProps, buttonVariants } from "./button";
 export { Calendar, type CalendarProps } from "./calendar";
+export { Checkbox } from "./checkbox";
 export { DatePicker, type DatePickerProps } from "./date-picker";
 export {
   Card,
@@ -57,15 +58,6 @@ export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
-export { PasswordInput } from "./password-input";
-export {
-  PasswordStrength,
-  evaluatePassword,
-  type PasswordRuleKey,
-  type PasswordEvaluation,
-  type PasswordStrengthLabels,
-  type PasswordStrengthProps,
-} from "./password-strength";
 export {
   PhoneInput,
   type PhoneInputProps,

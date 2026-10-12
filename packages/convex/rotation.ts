@@ -38,6 +38,8 @@ export const rotateKeyMaterial = auditedMutation({
     // contacts verify-before-wrap against this, so it must be re-signed
     // atomically with the new key, never left dangling.
     publicKeySignature: v.string(),
+    identityPublicKey: v.string(),
+    encryptedIdentitySecretKey: v.string(),
     // New owner secret key, AES-GCM wrapped under the NEW master key.
     encryptedAsymmetricSecretKey: v.string(),
     // OLD owner secret key, AES-GCM wrapped under the NEW master key — keeps
@@ -50,6 +52,8 @@ export const rotateKeyMaterial = auditedMutation({
       encryptedKeyBundle: args.encryptedKeyBundle,
       publicKey: args.publicKey,
       publicKeySignature: args.publicKeySignature,
+      identityPublicKey: args.identityPublicKey,
+      encryptedIdentitySecretKey: args.encryptedIdentitySecretKey,
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: args.encryptedAsymmetricSecretKeyPrev,
       updatedAt: Date.now(),
@@ -69,9 +73,15 @@ export const finalizeRotation = auditedMutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
+    // The social envelope seals the previous MasterKey: renew it.
+    const socialSetup = await ctx.db
+      .query("social_envelopes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
     await ctx.db.patch(userId, {
       encryptedAsymmetricSecretKeyPrev: undefined,
       masterKeyRotationRequired: undefined,
+      ...(socialSetup ? { socialRecoveryRenewalRequired: true } : {}),
       updatedAt: Date.now(),
     });
     return { success: true };

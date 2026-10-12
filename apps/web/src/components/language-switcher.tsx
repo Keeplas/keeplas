@@ -1,50 +1,67 @@
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { cn } from "@keeplas/ui";
-import { useLocale, useSetLocale } from "@/lib/i18n";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Icon,
+} from "@keeplas/ui";
+import { ICON_PATHS } from "@/lib/icons";
+import { useLocale, useSetLocale, useTranslations } from "@/lib/i18n";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { userLanguageForLocale } from "@/lib/locale";
+import { locales, userLanguageForLocale, type Locale } from "@/lib/locale";
 
-interface LanguageSwitcherProps {
-  className?: string;
-}
+const LANGUAGE_NAMES: Record<Locale, string> = {
+  en: "English",
+  fr: "Français",
+};
 
-// Self-contained toggle driven by the i18n context. Used in the pre-auth and
-// onboarding flows; switching updates the active locale (and localStorage) for
-// the whole tree. Components that need the chosen value (e.g. to send an OTP in
-// the right language) read it with `useLocale()`.
+// Figma "Language Dropdown", used on the signed-out screens. Switching updates
+// the active locale (and localStorage) for the whole tree.
 //
 // For an authenticated viewer it also persists the choice to `users.language`,
 // so the preference survives navigation and reloads (otherwise `ViewerLocaleSync`
-// would re-apply the stale DB value). Pre-auth there is no viewer, so we only
-// touch the local context — the chosen locale is carried into signup separately.
-export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
+// would re-apply the stale DB value).
+export function LanguageSwitcher() {
+  const t = useTranslations("common");
   const locale = useLocale();
   const setLocale = useSetLocale();
   const viewer = useQuery(api.users.viewer);
   const updatePreferences = useAuditedMutation(api.users.updatePreferences);
-  const next = locale === "en" ? "fr" : "en";
-  const flag = next === "fr" ? "🇫🇷" : "🇺🇸";
+
+  function choose(next: Locale) {
+    setLocale(next);
+    if (viewer) {
+      void updatePreferences({
+        language: userLanguageForLocale(next),
+      }).catch(() => undefined);
+    }
+  }
 
   return (
-    <button
-      type="button"
-      onClick={() => {
-        setLocale(next);
-        if (viewer) {
-          void updatePreferences({
-            language: userLanguageForLocale(next),
-          }).catch(() => undefined);
-        }
-      }}
-      className={cn(
-        "inline-flex min-w-24 cursor-pointer items-center justify-center gap-2 rounded-xs border border-primary/25 px-4 py-2.5 text-sm font-bold uppercase tracking-widest text-primary/75 transition-colors hover:border-primary/45 hover:bg-primary/5 hover:text-primary",
-        className,
-      )}
-      aria-label="Language"
-    >
-      <span aria-hidden>{flag}</span>
-      <span>{next.toUpperCase()}</span>
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={t("language")}
+        className="inline-flex items-center gap-[4px] rounded-sm border border-border-default py-[5px] pl-[10px] pr-[8px] text-caption text-text-primary transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+      >
+        {locale.toUpperCase()}
+        <Icon path={ICON_PATHS.chevronDown} className="size-[14px]" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="min-w-[140px] border border-border-default bg-bg-surface"
+      >
+        {locales.map((value) => (
+          <DropdownMenuItem
+            key={value}
+            onSelect={() => choose(value)}
+            className="text-body-sm text-text-primary focus:bg-bg-subtle"
+          >
+            {LANGUAGE_NAMES[value]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

@@ -124,9 +124,16 @@ export const finishRegistration = mutation({
   args: {
     response: v.any(),
     deviceName: v.optional(v.string()),
+    keeplasDeviceId: v.optional(v.id("devices")),
   },
-  handler: async (ctx, { response, deviceName }) => {
+  handler: async (ctx, { response, deviceName, keeplasDeviceId }) => {
     const userId = await requireAuth(ctx);
+    if (keeplasDeviceId) {
+      const device = await ctx.db.get(keeplasDeviceId);
+      if (device?.userId !== userId || device.revokedAt !== undefined) {
+        throw new Error("Unknown device");
+      }
+    }
     const challenge = response?.response?.clientDataJSON
       ? extractChallenge(response.response.clientDataJSON)
       : undefined;
@@ -163,6 +170,7 @@ export const finishRegistration = mutation({
       deviceName: deviceName?.trim() || guessDeviceName(),
       backedUp: credentialBackedUp,
       deviceType: credentialDeviceType,
+      keeplasDeviceId,
       createdAt: now,
       lastUsedAt: now,
     });
@@ -218,8 +226,7 @@ export const startAuthentication = mutation({
         allowCredentials = credentials.map((c) => ({
           id: c.credentialId,
           transports: c.transports as
-            | AuthenticatorTransportFuture[]
-            | undefined,
+            AuthenticatorTransportFuture[] | undefined,
         }));
       }
     }
@@ -311,8 +318,7 @@ export async function verifyAssertionAndGetUserId(
       ) as Uint8Array<ArrayBuffer>,
       counter: credential.counter,
       transports: credential.transports as
-        | AuthenticatorTransportFuture[]
-        | undefined,
+        AuthenticatorTransportFuture[] | undefined,
     },
     // Reject possession-only assertions missing user verification.
     requireUserVerification: true,

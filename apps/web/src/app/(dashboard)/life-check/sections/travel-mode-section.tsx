@@ -6,7 +6,6 @@ const CALENDAR_ICON = "M3.75 9h16.5m-16.5 6.75h16.5M3.75 4.5h16.5M12 4.5v15";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 interface TravelModeSectionProps {
-  enabled: boolean;
   until: string;
   onUntilChange: (value: string) => void;
   onToggle: () => void;
@@ -21,7 +20,6 @@ function computeDateBounds() {
 }
 
 export function TravelModeSection({
-  enabled,
   until,
   onUntilChange,
   onToggle,
@@ -30,7 +28,10 @@ export function TravelModeSection({
   const { today, maxDate } = useMemo(() => computeDateBounds(), []);
 
   return (
-    <section className="bg-surface-container-low rounded-sm p-6">
+    <section
+      id="travel-mode"
+      className="bg-surface-container-low rounded-sm p-6"
+    >
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-headline-sm text-primary flex items-center gap-2">
@@ -44,51 +45,31 @@ export function TravelModeSection({
         </div>
       </div>
 
-      {enabled ? (
-        <div className="space-y-3">
-          <div className="p-4 bg-secondary/10 rounded-xs">
-            <p className="text-body-md text-secondary font-medium">
-              {until
-                ? t("travel.activeUntil", {
-                    date: new Date(until).toLocaleDateString(),
-                  })
-                : t("travel.active")}
-            </p>
-          </div>
-          <button
-            onClick={onToggle}
-            className="text-sm px-4 py-2 rounded-xs bg-surface-container-high text-on-surface font-medium cursor-pointer"
+      <div className="flex items-end gap-3">
+        <div className="flex-1 max-w-xs">
+          <label
+            htmlFor="travel-until"
+            className="text-label-md text-on-surface-variant block mb-1"
           >
-            {t("travel.disable")}
-          </button>
+            {t("travel.returnDate")}
+          </label>
+          <DatePicker
+            id="travel-until"
+            value={until}
+            onChange={onUntilChange}
+            min={today}
+            max={maxDate}
+            placeholder={t("travel.returnDatePlaceholder")}
+          />
         </div>
-      ) : (
-        <div className="flex items-end gap-3">
-          <div className="flex-1 max-w-xs">
-            <label
-              htmlFor="travel-until"
-              className="text-label-md text-on-surface-variant block mb-1"
-            >
-              {t("travel.returnDate")}
-            </label>
-            <DatePicker
-              id="travel-until"
-              value={until}
-              onChange={onUntilChange}
-              min={today}
-              max={maxDate}
-              placeholder={t("travel.returnDatePlaceholder")}
-            />
-          </div>
-          <button
-            onClick={onToggle}
-            disabled={!until}
-            className="px-5 py-3 rounded-xs bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
-          >
-            {t("travel.enable")}
-          </button>
-        </div>
-      )}
+        <button
+          onClick={onToggle}
+          disabled={!until}
+          className="px-5 py-3 rounded-xs bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
+        >
+          {t("travel.enable")}
+        </button>
+      </div>
     </section>
   );
 }

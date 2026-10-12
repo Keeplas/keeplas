@@ -276,15 +276,6 @@ export default function RecoveryDocPage() {
             {t("recovery.trustedLink")}
           </span>
         </Link>
-        <Link
-          href="/settings/recovery-kit"
-          className="bg-surface-container-lowest hover:bg-surface-container rounded-xs p-4 flex items-center gap-3 transition-colors"
-        >
-          <Icon path={ICON_PATHS.print} className="w-5 h-5 text-secondary" />
-          <span className="text-body-md font-medium text-primary">
-            {t("recovery.recoveryKitLink")}
-          </span>
-        </Link>
       </section>
     </div>
   );

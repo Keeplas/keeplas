@@ -21,6 +21,8 @@ describe("rotateKeyMaterial", () => {
       encryptedKeyBundle: "new-bundle",
       publicKey: "new-public-key",
       publicKeySignature: "new-signature",
+      identityPublicKey: "new-identity-public-key",
+      encryptedIdentitySecretKey: "new-identity-secret",
       encryptedAsymmetricSecretKey: "new-secret",
       encryptedAsymmetricSecretKeyPrev: "old-secret-rewrapped",
       _audit: await signedAudit(),
@@ -35,6 +37,8 @@ describe("rotateKeyMaterial", () => {
     // Finding #2: the public-key signature must be re-persisted atomically with
     // the new key — never left stale, or contacts' verify-before-wrap fails.
     expect(user?.publicKeySignature).toBe("new-signature");
+    expect(user?.identityPublicKey).toBe("new-identity-public-key");
+    expect(user?.encryptedIdentitySecretKey).toBe("new-identity-secret");
   });
 });
 

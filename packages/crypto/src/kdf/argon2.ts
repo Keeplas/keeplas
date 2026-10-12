@@ -43,17 +43,29 @@ async function importAesKey(
   );
 }
 
+/** Argon2id with the fixed params above; returns the raw 32-byte digest. */
+export type Argon2idImplementation = (
+  input: { password: string; salt: Uint8Array } & typeof ARGON2_PARAMS,
+) => Promise<Uint8Array>;
+
+let argon2idImplementation: Argon2idImplementation = (input) =>
+  argon2id({ ...input, outputType: "binary" });
+
+/**
+ * Replace the Argon2id engine. The default (hash-wasm) needs WebAssembly,
+ * which Hermes (React Native) lacks: the mobile app registers a native
+ * Argon2id at startup. Any engine must reproduce the test vectors in
+ * `__tests__/argon2.test.ts`.
+ */
+export function setArgon2idImplementation(fn: Argon2idImplementation) {
+  argon2idImplementation = fn;
+}
+
 async function runArgon2id(
   password: string,
   salt: Uint8Array,
 ): Promise<Uint8Array> {
-  const result = await argon2id({
-    password,
-    salt,
-    ...ARGON2_PARAMS,
-    outputType: "binary",
-  });
-  return result;
+  return argon2idImplementation({ password, salt, ...ARGON2_PARAMS });
 }
 
 /**

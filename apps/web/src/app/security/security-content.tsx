@@ -380,7 +380,7 @@ export function SecurityContent() {
           <p className="text-body-lg text-on-surface-variant">{s.cta.prompt}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/signup"
+              href="/get-the-app"
               className="vault-gradient text-white px-8 py-3 rounded-xs font-bold inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
             >
               {s.cta.create}

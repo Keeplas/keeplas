@@ -8,6 +8,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { useTranslations } from "@/lib/i18n";
 import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { useItemCategories } from "@/lib/use-item-categories";
 import { MemorialIntroductionCard } from "./memorial-introduction-card";
 import { MemorialIntroductionDialog } from "./memorial-introduction-dialog";
 
@@ -53,6 +54,7 @@ export default function MemorialVaultPage() {
   const data = useQuery(api.memorial.getReleasedVaultForMe, { contactId });
   // Recipient-side title decryption: each item carries its own wrappedDek.
   const titles = useDecryptedTitles(data?.items);
+  const categories = useItemCategories(data?.items);
   const [introOpen, setIntroOpen] = useState(false);
   const [lastIntroKey, setLastIntroKey] = useState<string | null>(null);
 
@@ -165,7 +167,9 @@ export default function MemorialVaultPage() {
       ) : (
         <div className="space-y-10">
           {sortedCategories.map((cat) => {
-            const catItems = items.filter((i) => i.category === cat.key);
+            const catItems = items.filter(
+              (i) => (categories[i._id] ?? "other") === cat.key,
+            );
             if (catItems.length === 0) return null;
             return (
               <section key={cat.key}>

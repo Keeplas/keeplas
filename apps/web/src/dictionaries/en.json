@@ -1,27 +1,9 @@
 {
   "common": {
     "language": "Language",
-    "phone": "Phone",
-    "email": "Email",
-    "phoneNumber": "Phone Number",
-    "emailAddress": "Email Address",
-    "password": "Password",
-    "resendCode": "Resend code",
     "resendIn": "Resend code in {seconds}s",
-    "invalidCode": "Invalid or expired code.",
-    "codePlaceholder": "123456",
-    "learnMore": "Learn more",
     "back": "Back",
-    "passwordStrength": {
-      "weak": "Weak",
-      "medium": "Medium",
-      "strong": "Strong",
-      "length": "Be at least 8 characters long",
-      "uppercase": "At least one uppercase letter (A-Z)",
-      "lowercase": "At least one lowercase letter (a-z)",
-      "number": "At least one number (0-9)",
-      "special": "At least one special character (!@#$%^&*)"
-    }
+    "moreActions": "More actions for {name}"
   },
   "auth": {
     "hero": {
@@ -32,163 +14,6 @@
       "encryptionStandard": "Encryption Standard",
       "architecture": "Architecture",
       "quantumSafe": "Quantum-Safe (FIPS 203)"
-    },
-    "login": {
-      "badge": "Identification Required",
-      "heading": "Welcome back, Curator",
-      "description": "Access your encrypted archives by verifying your credentials.",
-      "footerPrompt": "New Curator?",
-      "footerLabel": "Request Access",
-      "sendCode": "Send code",
-      "sending": "Sending...",
-      "unlock": "Unlock Vault",
-      "unlocking": "Unlocking...",
-      "emailCode": "Email code",
-      "whatsappCode": "WhatsApp code",
-      "lostAccess": "Lost access? 24 words",
-      "lostPhone": "Lost phone? 24 words",
-      "resetWords": "Reset with 24 words",
-      "phoneInvalid": "Please enter a valid phone number.",
-      "sendFailed": "Could not send the code. Try again.",
-      "resendFailed": "Could not resend the code. Try again in a moment.",
-      "invalidCredentials": "Invalid email or password.",
-      "noEmailAccount": "No account found for this email. Sign up to create one.",
-      "emailOtpHint": "This account signs in with an emailed code — no password.",
-      "protectedLink": "How is your data protected?",
-      "passkey": "Biometric Authorization",
-      "passkeyFailed": "Could not authenticate with your passkey."
-    },
-    "signup": {
-      "badge": "Zero-Knowledge Encryption",
-      "heading": "Create your sanctuary",
-      "description": "Enter your details to begin your digital legacy.",
-      "footerPrompt": "Already an owner?",
-      "footerLabel": "Access Vault",
-      "fullName": "Full Name",
-      "phoneOptional": "Phone (optional)",
-      "passwordMin": "Password must be at least 8 characters.",
-      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
-      "phoneInvalid": "Please enter a valid phone number.",
-      "startFailed": "Could not start signup. Try again.",
-      "createFailed": "Could not create account. Try again.",
-      "accountExists": "An account with this email already exists. Sign in instead.",
-      "verifyCode": "Verification Code",
-      "verifying": "Verifying...",
-      "confirmNumber": "Confirm Number",
-      "confirmEmail": "Confirm Email",
-      "initializing": "Initializing...",
-      "initializeVault": "Initialize Vault",
-      "whatsappConfirmation": "WhatsApp Confirmation",
-      "emailConfirmation": "Email Confirmation",
-      "confirmNumberHeading": "Confirm your number",
-      "confirmEmailHeading": "Confirm your email",
-      "phoneCodeSent": "We sent a 6-digit code to your WhatsApp at {phone}. Enter it below to activate your vault.",
-      "emailCodeSent": "We sent a 6-digit code to {email}. Enter it below to activate your vault.",
-      "wrongNumber": "Wrong number?",
-      "wrongEmail": "Wrong email?",
-      "startOver": "Start over",
-      "resendFailed": "Could not resend the code. Try again in a moment.",
-      "lockedEmail": "Locked — this is the email your inviter used to send you the invitation.",
-      "lockedPhone": "Locked — this is the number your inviter used to send you the invitation.",
-      "securityEyebrow": "Before you sign up · Quantum-safe end-to-end",
-      "securityText": "Your password lets you sign in. The 24 recovery words generated in the next step are what actually encrypt your vault, we never see them.",
-      "readHow": "Read how it works →",
-      "phoneHelp": "Used for WhatsApp verification and Life Check alerts. You can also reply to a Life Check on WhatsApp to confirm you are well.",
-      "phoneOnlyHelp": "We'll send your verification code and Life Check alerts to this WhatsApp number."
-    },
-    "onboarding": {
-      "steps": {
-        "identity": "Identity",
-        "recoveryPhrase": "Recovery Words",
-        "verification": "Verification",
-        "keyGeneration": "Secure Vault",
-        "passkey": "Biometrics"
-      },
-      "legalInfo": {
-        "badge": "Step 1 · Legal identity",
-        "heading": "Confirm who you are",
-        "description": "Your age determines legal capacity, and your country sets the inheritance jurisdiction that will apply to your vault. Both are recorded in the tamper-evident audit log so a court can later verify who you were when you set this up.",
-        "birthday": "Date of birth",
-        "birthdayPlaceholder": "Select your date of birth",
-        "country": "Country of residence",
-        "saving": "Saving…",
-        "securing": "Securing your session…",
-        "submit": "Confirm and continue",
-        "invalidDate": "Please pick a valid date.",
-        "minAge": "You must be at least 18 to use Keeplas.",
-        "saveFailed": "Could not save your information."
-      },
-      "recoveryPhrase": {
-        "badge": "Cryptographic Foundation",
-        "heading": "Master Recovery Words",
-        "copyAll": "Copy all",
-        "copied": "Copied!",
-        "download": "Download",
-        "generatingPdf": "Generating PDF…",
-        "generating": "Generating your Recovery Words",
-        "warningTitle": "Absolute Recovery Authority",
-        "warningBody": "These words are the only way to recover your vault. Keep them offline and safe. Anyone with access to these words possesses full authority over your digital legacy. We recommend writing them on paper and storing in a secure, fireproof location.",
-        "offlineTitle": "Offline Storage",
-        "offlineBody": "Never store these words digitally — no screenshots, cloud notes, or email drafts.",
-        "legacyTitle": "Legacy Access",
-        "legacyBody": "Consider sharing the location of these words with a trusted beneficiary.",
-        "verificationTitle": "Verification",
-        "verificationBody": "We will ask you to verify these words to confirm your backup is secure.",
-        "confirmLabel": "I have written down my 24 Recovery Words and stored them in a safe place. I understand that losing these words means I cannot recover my vault.",
-        "continue": "I saved my words — continue",
-        "pdfTitle": "Keeplas — Master Recovery Words",
-        "pdfAccountLabel": "Account",
-        "pdfWarning": "These 24 words are the only way to recover your vault. Keep this document offline and in a secure, fireproof location. Anyone with these words has full authority over your digital legacy.",
-        "pdfCopyLine": "Copy-paste line"
-      },
-      "verification": {
-        "back": "Back to Recovery Words",
-        "badge": "Backup Confirmation",
-        "heading": "Verify your Recovery Words",
-        "description": "To make sure you saved your words correctly, enter the 3 words below from your Recovery Words. This confirms your backup is complete and you will be able to recover your vault if needed.",
-        "whyTitle": "Why is this important?",
-        "whyBodyBefore": "These 24 words are the",
-        "whyKeyTerm": "only key",
-        "whyBodyAfter": "that encrypts your vault — we never see them. Your password just authenticates you and can be reset with these same 24 words. But the words themselves cannot be reset: only your trusted contacts can recover them later via shared shards. Save them somewhere safe now.",
-        "wordLabel": "{ordinal} word",
-        "wordPlaceholder": "Enter the {ordinal} word",
-        "mismatch": "The {ordinal} word does not match. Please check and try again.",
-        "verifying": "Verifying...",
-        "verifyContinue": "Verify and continue",
-        "seeAgain": "I need to see my Recovery Words again",
-        "error": "An error occurred. Please try again."
-      },
-      "keyGeneration": {
-        "phases": {
-          "derivingRoot": "Deriving your Root Key from your 24 words...",
-          "wrappingMasterKey": "Sealing your Master Key...",
-          "storing": "Securing your vault...",
-          "complete": "Vault secured!",
-          "error": "An error occurred"
-        },
-        "badge": "Securing Vault",
-        "headingComplete": "Your vault is ready",
-        "heading": "Setting up your protection",
-        "descriptionComplete": "Your Master Key is sealed by your 24 words. You can now start adding items to your vault.",
-        "description": "Your keys are derived and sealed entirely on your device. We never see your phrase.",
-        "redirecting": "Redirecting to your hub...",
-        "tryAgain": "Try again",
-        "genericError": "Key generation failed. Please try again."
-      },
-      "passkey": {
-        "badge": "Optional · Faster sign in",
-        "headingDone": "Passkey ready",
-        "heading": "Sign in with your face",
-        "descriptionDone": "You can now unlock Keeplas with your device biometrics.",
-        "description": "Use Face ID, Touch ID, or your device biometrics next time you sign in. Your password still works as a backup.",
-        "unsupportedBefore": "Passkeys are not supported on this browser. You can set this up later from",
-        "unsupportedTerm": "Settings · Security Center",
-        "unsupportedAfter": "on a compatible device.",
-        "enable": "Enable biometric sign in",
-        "redirecting": "Redirecting...",
-        "skip": "Skip for now",
-        "registerFailed": "Could not register your passkey."
-      }
     },
     "otp": {
       "heading": "Confirm it's you",
@@ -204,9 +29,8 @@
       "verify": "Verify",
       "sending": "Sending…",
       "resend": "Didn't get it? Resend code",
-      "useRecovery": "Can't receive the code? Use your recovery phrase",
-      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "recoverInApp": "Lost access to this code? Recover your account from the Keeplas app on your phone."
     },
     "totp": {
       "verifyingSession": "Verifying session",
@@ -215,58 +39,52 @@
       "subtitle": "Enter the 6-digit code from your authenticator app to finish signing in.",
       "codeLabel": "6-digit code",
       "verify": "Verify",
-      "useRecovery": "Lost your phone? Use your recovery phrase",
-      "recoveryNotConfigured": "Recovery via seed is not configured for this account.",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "recoverInApp": "Lost access to this code? Recover your account from the Keeplas app on your phone."
     },
-    "recovery": {
-      "notConfigured": "Recovery is not configured for this account.",
-      "allWords": "Please enter all 24 words of your recovery phrase.",
-      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
-      "validPhone": "Enter a valid phone number for your account.",
-      "phoneFailed": "Recovery failed. Check that your number and 24 words match.",
-      "enterEmail": "Enter the email for your account.",
-      "emailFailed": "Recovery failed. Check that your email and 24 words match.",
-      "passwordMin": "Password must be at least 8 characters.",
-      "passwordWeak": "Please choose a stronger password that meets all the requirements.",
-      "passwordsMismatch": "Passwords do not match.",
-      "successTitle": "Password reset successful",
-      "successBody": "Your password was reset. You will be redirected to login. Your vault contents remain encrypted by your 24 words and stay safe.",
-      "heading": "Recover access with your 24 words",
-      "subtitle": "Email accounts reset their password; phone accounts regain access directly. Either way your encrypted vault is untouched — your 24 words remain the crypto root.",
-      "phraseLabel": "Recovery phrase (24 words)",
-      "phrasePlaceholder": "word1 word2 word3 ...",
-      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "phraseHint2": "Words never leave this device — only a derived verifier is sent.",
-      "emailOtpHint": "This account signs in with an emailed code — your 24 words restore access directly, no new password needed.",
-      "newPassword": "New password",
-      "confirmPassword": "Confirm new password",
-      "recoverAccess": "Recover access",
-      "resetPassword": "Reset password",
-      "backToLogin": "Back to login"
+    "signIn": {
+      "heroTitle": "Your life,\nwell kept",
+      "heroBody": "A private place for your important documents, accounts, instructions and more. So you and the people you care about are prepared, today and tomorrow.",
+      "title": "Sign in to Keeplas",
+      "body": "Use your passkey to safely access your account. No password needed.",
+      "continueWithPasskey": "Continue with passkey",
+      "or": "or",
+      "linkWithPhone": "Link with my phone",
+      "lostAccess": "Lost access?",
+      "newVisitor": "New to Keeplas?",
+      "getTheApp": "Get the app",
+      "passkeyFailed": "Could not sign in with your passkey.",
+      "lostAccessDialog": {
+        "title": "Lost access?",
+        "body": "Account recovery happens in the Keeplas app. Open it on your phone, or install it on a new phone, then choose “Lost access?” to get back into your vault.",
+        "close": "Close"
+      }
     },
-    "phraseRecovery": {
-      "verifyingSession": "Verifying session",
-      "notConfiguredTitle": "Recovery not configured",
-      "backToCode": "Back to code entry",
-      "useHeading": "Use your recovery phrase",
-      "allWords": "Please enter all 24 words of your recovery phrase.",
-      "invalidPhrase": "That isn't a valid recovery phrase. Check for typos or transposed words.",
-      "notConfigured": "Recovery is not configured for this account.",
-      "recoveryFailed": "Recovery failed.",
-      "phraseLabel": "Recovery phrase",
-      "phrasePlaceholder": "word1 word2 word3 ...",
-      "phraseHint1": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "phraseHint2": "The phrase never leaves your device — only a derived verifier is sent.",
-      "otp": {
-        "notConfiguredBody": "This account never bound a recovery phrase. Contact support if you cannot receive the login code.",
-        "subtitle": "Paste the 24 words you saved during onboarding to finish signing in on this device.",
-        "submit": "Unlock this device"
-      },
-      "totp": {
-        "notConfiguredBody": "This account never bound the recovery phrase to its authenticator. Contact support if you cannot access your authenticator app.",
-        "subtitle": "Paste the 24 words you saved during onboarding. Two-factor authentication will be disabled and you can set it up again from settings.",
-        "submit": "Reset two-factor"
+    "connect": {
+      "heroTitle": "Connect with\nmy phone",
+      "heroBody": "Use your phone with Keeplas to link this browser. It's fast, secure and password-free.",
+      "usePasskey": "Use a passkey instead",
+      "step1": "Open Keeplas",
+      "step1Detail": "on your phone",
+      "step2": "Scan the QR code",
+      "step2Detail": "with the app",
+      "step3": "Approve",
+      "step3Detail": "this browser with Face ID",
+      "expiresIn": "Expires in",
+      "trust": "Trust this browser",
+      "trustDetail": "On a shared computer, leave this off.",
+      "expired": "This code has expired.",
+      "newCode": "Generate a new code",
+      "rejected": "The link was declined on your phone.",
+      "error": "Something went wrong while linking this browser.",
+      "retry": "Try again",
+      "linking": "Linking this browser…",
+      "passkey": {
+        "title": "Create a passkey for this browser",
+        "body": "Next time, sign in and unlock your vault with your fingerprint, face or device PIN. No phone needed.",
+        "create": "Create passkey",
+        "skip": "Not now",
+        "failed": "Could not create the passkey."
       }
     }
   },
@@ -275,25 +93,21 @@
       "unlockingVault": "Unlocking your vault"
     },
     "nav": {
-      "hub": "Hub",
-      "vault": "Digital Vault",
-      "trustedCircle": "Trusted Circle",
-      "continuityProtocol": "Continuity Protocol",
+      "label": "Main navigation",
+      "openMenu": "Open navigation",
+      "myVault": "My vault",
       "sharedWithMe": "Shared with me",
-      "settings": "Settings",
-      "documentation": "Documentation",
-      "goToHub": "Go to Hub",
-      "openSettings": "Open settings"
-    },
-    "mobileNav": {
-      "hub": "Hub",
-      "vault": "Vault",
-      "trust": "Trust"
+      "people": "People",
+      "lifeCheck": "Life check",
+      "devices": "Devices",
+      "settings": "Settings"
     },
     "account": {
-      "curator": "Curator",
-      "secureSession": "Secure session",
-      "userAlt": "User"
+      "menu": "Account menu",
+      "settings": "Settings",
+      "darkMode": "Dark mode",
+      "lightMode": "Light mode",
+      "signOut": "Sign out"
     },
     "notifications": {
       "title": "Notifications",
@@ -301,28 +115,18 @@
       "close": "Close notifications",
       "empty": "No notifications yet"
     },
-    "fab": {
-      "addEntry": "Add new entry"
-    },
     "unlock": {
       "loadingVault": "Loading vault",
       "unlockingVault": "Unlocking vault",
       "checkingDeviceUnlock": "Checking device unlock",
       "couldNotUnlock": "Could not unlock",
       "authCancelled": "Authentication cancelled",
-      "enterAll24": "Please enter all 24 words",
-      "wrongPhrase": "Wrong recovery phrase — vault could not be decrypted",
-      "phraseCouldNotUnlock": "Recovery phrase could not unlock the vault",
-      "heading": "Unlock vault",
-      "subheading": "Your vault is encrypted on this device. Choose how to unlock.",
-      "noDeviceUnlock": "No device unlock set up yet on this device.",
-      "use24Words": "Use 24 recovery words",
+      "heading": "Unlock your vault",
+      "subheading": "Your vault is encrypted on this device. Choose how to unlock it.",
+      "noDeviceUnlock": "This browser can't unlock your vault on its own yet. Link it with your phone to continue.",
       "pinPlaceholder": "At least {min} digits",
       "unlockButton": "Unlock",
       "back": "Back",
-      "phraseLabel": "Enter your 24 words",
-      "phraseHint": "Paste all 24 words. Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "unlockWithWords": "Unlock with recovery words",
       "legacyTitle": "Account needs re-keying",
       "legacyBody": "Your vault was secured with a legacy key format that is no longer supported. To restore zero-knowledge access, your account must be re-keyed with your 24 recovery words. Please contact support to migrate this account.",
       "unavailableSuffix": "(unavailable on this device)",
@@ -330,7 +134,11 @@
       "methodBiometric": "Biometric",
       "methodHardwareKey": "Hardware key",
       "contact": "Contact us",
-      "logout": "Log out"
+      "logout": "Log out",
+      "heroTitle": "Your life,\nwell kept",
+      "heroBody": "A private place for your important documents, accounts, instructions and more.",
+      "or": "or",
+      "linkWithPhone": "Link with my phone"
     },
     "emailVerify": {
       "invalidEmail": "Enter a valid email address",
@@ -429,72 +237,26 @@
       "stop": "Stop",
       "reRecord": "Re-record",
       "attachToVault": "Attach to vault"
+    },
+    "offline": {
+      "title": "You're offline",
+      "body": "Keeplas reconnects on its own. Changes you make now are saved once you're back online.",
+      "ok": "OK"
+    },
+    "permissionOff": {
+      "retry": "Try again",
+      "notNow": "Not now",
+      "camera": {
+        "title": "Camera access is off",
+        "body": "Allow the camera in your browser's site settings to record videos."
+      },
+      "microphone": {
+        "title": "Microphone access is off",
+        "body": "Allow the microphone in your browser settings."
+      }
     }
   },
   "hub": {
-    "loading": "Loading Hub",
-    "title": "Hub",
-    "subtitle": {
-      "line1": "Your central command for protected legacy",
-      "line2": "and continuity readiness."
-    },
-    "jumpToPriorityActions": "Jump to priority actions",
-    "actionsRequired": "Actions required",
-    "score": {
-      "strong": "Strong Protection",
-      "partial": "Partial Coverage",
-      "actionRequired": "Action Required"
-    },
-    "centerNode": {
-      "title": "Your Legacy",
-      "subtitle": "Central Node"
-    },
-    "nodes": {
-      "empty": "Empty",
-      "protected": "Protected",
-      "assets": {
-        "title": "Assets",
-        "empty": "No assets recorded yet."
-      },
-      "contacts": {
-        "title": "Contacts",
-        "empty": "No guardians linked yet.",
-        "guardianLinked": "{count} Primary Guardian Linked",
-        "guardiansLinked": "{count} Primary Guardians Linked"
-      },
-      "directives": {
-        "title": "Directives",
-        "empty": "No directives recorded yet."
-      },
-      "documents": {
-        "title": "Documents",
-        "empty": "No documents stored yet."
-      }
-    },
-    "priorityActions": "Priority Actions",
-    "hints": {
-      "add_item": "Store your first asset, document, or credential in the vault. Everything is end-to-end encrypted — only you and the people you choose can ever read it.",
-      "invite_contact": "Trust contacts are the guardians who confirm if something happens to you. Invite someone you trust; they accept with their own Keeplas key.",
-      "life_check": "Life Check periodically checks in with you. If you stop responding, Keeplas begins the continuity process and notifies your guardians.",
-      "release_policy": "Decide what happens if you stop responding: how many trusted contacts must confirm you're unavailable and how long they have. Without their confirmation, nothing is ever released.",
-      "welcome_message": "A short text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Use it to give context, say a few words, or leave instructions before they read the items.",
-      "two_factor": "Add a passkey or authenticator app so a stolen password alone can't reach your account.",
-      "verify_whatsapp": "Verify your WhatsApp number so Life Check check-ins and security alerts reach you reliably.",
-      "more_categories": "Spread your legacy across categories — finances, health directives, legal documents, credentials — so nothing critical is left out.",
-      "contacts_ready": "Your Life Check needs two trusted contacts to confirm you're unreachable. A contact is ready once they accept your invitation and set up their Keeplas key. They never hold a key to your vault."
-    },
-    "recentActivity": {
-      "title": "Recent Activity",
-      "viewAll": "View all",
-      "empty": "No items in your vault yet.",
-      "addFirst": "Add your first item"
-    },
-    "reflect": {
-      "title": "Reflect & Prepare",
-      "subtitle": "A few honest questions, real pain points, and practical steps for continuity — inside Keeplas and beyond.",
-      "previous": "Show previous reflection cards",
-      "next": "Show next reflection cards"
-    },
     "terminate": {
       "hero": {
         "line1": "Irreversible",
@@ -532,6 +294,87 @@
         "typeDelete": "Type DELETE exactly to confirm.",
         "failed": "Failed to terminate plan."
       }
+    },
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}"
+    },
+    "subtitle": "Your important information is safe and ready for tomorrow.",
+    "setup": {
+      "complete": "Required setup complete",
+      "incomplete": "Finish your required setup",
+      "progress": "{done} of {total} complete",
+      "completeBody": "Your account is protected and ready to use.",
+      "incompleteBody": "Finish it in the Keeplas app on your phone."
+    },
+    "optional": {
+      "title": "Optional protection",
+      "trustContacts": {
+        "title": "Add trust contacts",
+        "description": "Choose up to 3 people who can help you recover your account."
+      },
+      "recoveryKit": {
+        "title": "Export recovery kit",
+        "description": "Keep your optional 24-word recovery kit safe. Done from your phone."
+      }
+    },
+    "tiles": {
+      "inbox": "Encrypted inbox",
+      "toOrganize": "{count} items to organize",
+      "documents": "Documents",
+      "accounts": "Accounts",
+      "one": "1 item",
+      "other": "{count} items",
+      "toOrganizeOne": "1 item to organize"
+    },
+    "recent": {
+      "title": "Recent items",
+      "name": "Name",
+      "type": "Type",
+      "updated": "Last updated",
+      "open": "Open"
+    },
+    "types": {
+      "document": "Document",
+      "account": "Account",
+      "instruction": "Instruction",
+      "other": "Other",
+      "inbox": "Inbox"
+    },
+    "empty": {
+      "title": "Your vault is empty",
+      "body": "Add your first document, account or note. It's encrypted before it leaves this device.",
+      "action": "Add an item"
+    },
+    "add": {
+      "button": "Add item",
+      "title": "Add to your vault",
+      "document": {
+        "title": "Document",
+        "description": "Upload a PDF or Word file, or drop it"
+      },
+      "photo": {
+        "title": "Photo",
+        "description": "Upload images from this computer"
+      },
+      "note": {
+        "title": "Note",
+        "description": "Write something down"
+      },
+      "voice": {
+        "title": "Voice note",
+        "description": "Record with your microphone"
+      },
+      "video": {
+        "title": "Video",
+        "description": "Upload or record a video"
+      },
+      "scan": {
+        "title": "Scan with my phone",
+        "description": "Capture paper documents with your camera",
+        "onPhone": "Open Keeplas on your phone and tap Scan. The document appears here once it's encrypted."
+      }
     }
   },
   "lifeCheck": {
@@ -545,8 +388,7 @@
       "toggleActiveError": "Failed to toggle Life Check"
     },
     "page": {
-      "intro": "Keeplas periodically asks you to confirm you're well. If you stop responding, your trusted contacts confirm you're unavailable before your vault is released to them. Pause everything from",
-      "introLink": "Settings → Continuity Protocol"
+      "intro": "Keeplas periodically asks you to confirm you're well. If you stop responding, your trusted contacts confirm you're unavailable before your vault is released to them."
     },
     "nextCheckIn": {
       "label": "Next check-in",
@@ -730,17 +572,6 @@
       "returnDatePlaceholder": "Pick your return date",
       "enable": "Enable"
     },
-    "controls": {
-      "toggleError": "Failed to update Life Check",
-      "travelError": "Failed to toggle Travel Mode",
-      "statusTravel": "Travel Mode",
-      "statusActive": "Active",
-      "statusPaused": "Paused",
-      "notConfigured": "Life Check is not configured yet. Visit",
-      "notConfiguredLink": "Life Check",
-      "notConfiguredSuffix": "to set it up.",
-      "pauseDescription": "Pause your Life Check entirely — no check-ins, no release. Status:"
-    },
     "badge": {
       "status": {
         "active": "Active",
@@ -761,96 +592,43 @@
       }
     },
     "return": {
-      "phraseError": "Enter all 24 words of your recovery phrase.",
-      "successTitle": "Vault secured",
-      "successDescription": "Access was revoked and your vault was re-keyed.",
-      "bannerTitleResume": "Finish securing your vault",
-      "bannerTitleReleased": "Your vault was released",
-      "bannerBodyResume": "A re-keying was started but not finished. Resume it to fully retire the old keys.",
-      "bannerBodyReleased": "Trusted contacts were granted access. If you are back, revoke that access and re-key your vault. This protects everything from now on — it cannot recover what was already read.",
-      "resumeCta": "Resume re-keying",
-      "secureCta": "I'm back — secure my vault",
-      "dialogTitle": "Secure my vault",
-      "dialogDescription": "Enter your 24-word recovery phrase. We'll revoke the released access and generate a fresh master key, re-encrypting every item. Items a contact already opened during the release cannot be taken back — this secures everything going forward.",
-      "phrasePlaceholder": "Paste or type your 24 words…",
-      "cancel": "Cancel",
-      "working": "Securing…",
-      "submit": "Revoke & re-key",
-      "status": {
-        "validating": "Verifying your recovery phrase…",
-        "rotatingKeys": "Generating a new master key…",
-        "reencrypting": "Re-encrypting your vault…",
-        "finalizing": "Finalizing…",
-        "done": "Done"
-      },
-      "forced": {
-        "dialogDescription": "Your master key was once split among your trusted contacts. That's no longer how Keeplas works, so we're retiring that key. Enter your 24-word recovery phrase: we'll generate a fresh master key and re-encrypt every item. Your contacts and recipients keep their access.",
-        "submit": "Re-key my vault",
-        "successDescription": "Your vault now uses a fresh master key."
+      "releasedTitle": "Your vault was released",
+      "releasedBody": "Trusted contacts were given access. If you're back, revoke it now, then re-key your vault in the Keeplas app on your phone.",
+      "revoke": "Revoke access",
+      "revoked": "Access revoked. Now re-key your vault on your phone.",
+      "failed": "Couldn't revoke the access. Try again.",
+      "onPhone": {
+        "title": "Finish securing your vault on your phone",
+        "body": "Open the Keeplas app on your phone to re-key your vault with a fresh master key. This browser keeps working in the meantime.",
+        "ok": "OK"
       }
+    },
+    "prompt": {
+      "title": "Are you okay?",
+      "body": "Your regular check-in helps us make sure your wishes are respected and your loved ones are protected.",
+      "confirm": "Yes, I'm okay",
+      "footer": "A missed check-in never releases your data.",
+      "thanks": "Thanks. See you at the next check-in.",
+      "failed": "We couldn't record your answer. Try again.",
+      "missed": {
+        "title": "We missed you",
+        "body": "You didn't answer your last life check. Nothing is shared yet. Let us know you're here.",
+        "confirm": "I'm here"
+      }
+    },
+    "pause": {
+      "title": "Life check",
+      "description": "Turn it off to pause all check-ins. Nothing is released while it's off."
+    },
+    "travelOn": {
+      "title": "Travel mode is on",
+      "body": "Life checks are paused. Your contacts won't be contacted while you're away.",
+      "bodyUntil": "Life checks are paused until {date}. Your contacts won't be contacted while you're away.",
+      "changeDates": "Change dates",
+      "turnOff": "Turn off travel mode"
     }
   },
   "settings": {
-    "header": {
-      "openNav": "Open settings navigation",
-      "close": "Close settings",
-      "identity": {
-        "title": "Identity",
-        "description": "Update your account information and how others see you on the platform."
-      },
-      "security": {
-        "title": "Security Center",
-        "description": "Recovery words, trusted contacts, biometrics and hash-chained audit log."
-      },
-      "preferences": {
-        "title": "Preferences",
-        "description": "Localization and alert preferences for your legacy system."
-      },
-      "recoveryKit": {
-        "title": "Recovery Kit",
-        "description": "Export the printable kit that rebuilds your vault if access is lost."
-      },
-      "subscription": {
-        "title": "Subscription",
-        "description": "Plans, billing, and the lifetime tier for your legacy."
-      },
-      "contact": {
-        "title": "Contact Us",
-        "description": "Questions, feedback or security concerns — our concierge team is here to help."
-      },
-      "roadmap": {
-        "title": "Roadmap",
-        "description": "What we're building next — shaped by what matters most for protecting your succession."
-      },
-      "fallback": {
-        "title": "Settings",
-        "description": "Configure your digital sanctuary."
-      }
-    },
-    "sidebar": {
-      "userAlt": "User",
-      "defaultName": "Curator",
-      "secureSession": "Secure session",
-      "closeNav": "Close navigation",
-      "roadmap": "Roadmap",
-      "documentation": "Documentation",
-      "contact": "Contact Us",
-      "signOut": "Sign Out",
-      "groups": {
-        "account": "Account",
-        "security": "Security",
-        "plansBilling": "Plans & Billing"
-      },
-      "items": {
-        "identity": "Identity",
-        "preferences": "Preferences",
-        "securityCenter": "Security Center",
-        "recoveryKit": "Recovery Kit",
-        "continuityProtocol": "Continuity Protocol",
-        "usage": "Usage",
-        "subscription": "Subscription"
-      }
-    },
     "preferences": {
       "saveError": "Failed to save preferences",
       "localization": {
@@ -960,65 +738,6 @@
         "prioritySupport": "Priority Support"
       }
     },
-    "usage": {
-      "title": "Resources & Usage",
-      "description": "Monitor the encrypted storage and items consumed by your vault. When you approach your plan's capacity, upgrade to keep adding items without interruption.",
-      "encryptedStorage": "Encrypted Storage",
-      "ofQuota": "of {quota}",
-      "remainingPrefix": "{amount} remaining on the",
-      "planNameFree": "Free",
-      "planNameLifetime": "Lifetime",
-      "remainingSuffix": "plan",
-      "percentUsed": "{percent}% used",
-      "nearLimit": "You're close to your storage limit. Upgrade to Lifetime for 10 GB of encrypted capacity and additional continuity tools.",
-      "upgradePlan": "Upgrade plan",
-      "cards": {
-        "activeItems": {
-          "label": "Active Items",
-          "hint": "Non-archived vault items"
-        },
-        "encryptedFiles": {
-          "label": "Encrypted Files",
-          "hint": "Blobs stored in your vault"
-        },
-        "categoriesUsed": {
-          "label": "Categories Used",
-          "hint": "Distinct categories populated"
-        }
-      },
-      "itemsByCategory": "Items by Category",
-      "filesByType": "Files by Type",
-      "total": "{count} total",
-      "noItems": "No items yet. Start building your vault from the Hub.",
-      "noFiles": "No encrypted files attached yet.",
-      "categories": {
-        "personal_document": "Personal Documents",
-        "financial_asset": "Financial Assets",
-        "digital_asset": "Digital Assets",
-        "health_directive": "Health Directives",
-        "legal_document": "Legal Documents",
-        "business_continuity": "Business Continuity",
-        "conditional_message": "Conditional Messages",
-        "credential": "Credentials",
-        "property": "Real Estate / Property",
-        "insurance_policy": "Insurance Policies",
-        "subscription": "Subscriptions & Services",
-        "contacts": "Contacts",
-        "wishes": "Wishes",
-        "other": "Other"
-      },
-      "fileKinds": {
-        "document": "Documents",
-        "image": "Images",
-        "audio": "Audio",
-        "video": "Video"
-      },
-      "needCapacity": {
-        "title": "Need more capacity?",
-        "description": "Lifetime unlocks 10 GB of zero-knowledge storage, video legacy messages, and the full scenario engine — forever, in a single payment."
-      },
-      "comparePlans": "Compare plans"
-    },
     "identity": {
       "updateError": "Failed to update profile",
       "unknown": "Unknown",
@@ -1074,16 +793,59 @@
         "notSet": "Not set",
         "notDeclared": "Not declared"
       }
+    },
+    "overview": {
+      "title": "Settings",
+      "subtitle": "Manage your plan, storage and preferences.",
+      "back": "Settings",
+      "on": "On",
+      "off": "Off",
+      "languages": {
+        "en": "English",
+        "fr": "Français"
+      },
+      "frequency": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "quarterly": "Quarterly",
+        "off": "Off"
+      },
+      "storage": {
+        "title": "Storage",
+        "of": "of {quota} used",
+        "note": "Sizes are measured after on-device encryption. Deleted items free up space right away."
+      },
+      "plan": {
+        "label": "Your plan",
+        "free": {
+          "name": "Free",
+          "summary": "100 MB vault · Up to 3 trust contacts · Life check"
+        },
+        "lifetime": {
+          "name": "Lifetime",
+          "summary": "10 GB vault · Up to 3 trust contacts · Life check"
+        },
+        "upgrade": "Upgrade to Lifetime · $199",
+        "upgradeNote": "10 GB vault. Paid once."
+      },
+      "preferences": {
+        "language": "Language",
+        "lifeCheck": "Life check",
+        "notifications": "Notifications"
+      },
+      "more": {
+        "recoveryCenter": "Recovery center",
+        "account": "Account",
+        "contact": "Contact us",
+        "roadmap": "What's coming",
+        "signOut": "Sign out"
+      }
     }
   },
   "settingsSecurity": {
     "countryCombobox": {
       "placeholder": "Search a country…",
       "empty": "No country matches your search."
-    },
-    "continuity": {
-      "title": "Continuity Protocol",
-      "description": "Master pause and Travel Mode for the entire Continuity Protocol. Disabling here suspends Life Check escalation and the Scenario Engine in lock-step — perfect for off-grid trips. Use Travel Mode when you have a return date so everything resumes automatically."
     },
     "residence": {
       "error": "Failed to update legal residence",
@@ -1203,92 +965,11 @@
       "skip": "Skip",
       "bindButton": "Bind recovery",
       "skipHint": "Skipping is fine. Without binding, losing your phone means you must contact support to reset 2FA."
-    },
-    "center": {
-      "loading": "Loading Security Center"
-    },
-    "socialRecovery": {
-      "title": "Social Recovery",
-      "statusActive": "Status: Active & Secure",
-      "statusAwaiting": "Status: Awaiting Guardians",
-      "guardiansVerified": "{count} of {total} Guardians Verified",
-      "pending": "Pending...",
-      "resendInvites": "Resend Invites",
-      "inviteGuardian": "Invite Guardian",
-      "manageRules": "Manage Guardian Rules"
-    },
-    "recoveryKitShortcut": {
-      "title": "Recovery Kit",
-      "description": "Generate a physical, offline recovery sheet containing encrypted metadata shards for your vault.",
-      "cta": "Print Physical Kit"
-    },
-    "masterRecovery": {
-      "title": "Master Recovery",
-      "recoveryPhraseLabel": "Recovery phrase",
-      "recoveryPhraseHashed": "Hashed and verified",
-      "recoveryPhraseNotGenerated": "Not generated yet",
-      "configureAdditional": "Manage trusted contacts",
-      "description": "Your master key is sealed by your 24 recovery words and never leaves your devices. It is never split: your trusted contacts confirm if something happens to you, but hold no part of your key and can't open your vault.",
-      "guardianLabel": "Trusted contact #{index}",
-      "guardianHint": "{name} · confirms if you're unreachable"
-    },
-    "activityLog": {
-      "title": "Activity Log",
-      "hashChained": "Hash-chained · {count} entries",
-      "totalEvents": "Total events",
-      "lastActivity": "Last activity",
-      "pendingAccess": "Pending access",
-      "approvedAccess": "Approved access",
-      "empty": "No events recorded yet.",
-      "actor": "actor: {actor}"
-    },
-    "lastAccess": {
-      "today": "Today, {time}",
-      "from": "from {country}",
-      "verifiedSession": "Verified device · Zero-Knowledge session",
-      "label": "Last access"
-    },
-    "recoveryKit": {
-      "loading": "Loading recovery kit",
-      "title": "Master Recovery Key",
-      "intro": "This document is the sole method for recovering your Keeplas Architectural Vault should you lose access. Keep it in a physically secure, fireproof location. Do not share these credentials with anyone.",
-      "relock": "Re-lock",
-      "printSecureCopy": "Print Secure Copy",
-      "generatingPdf": "Generating PDF…",
-      "downloadPdf": "Download PDF",
-      "architecturalVault": "The Architectural Vault",
-      "identityTitle": "Identity Verification",
-      "identityDescription": "This key is cryptographically bound to your biometric footprint and verified life-ledger.",
-      "coldStorageTitle": "Cold Storage",
-      "coldStorageDescription": "Recommended for physical storage only. Offline backups prevent digital extraction.",
-      "documentId": "Document ID",
-      "account": "Account",
-      "step01": "Step 01",
-      "step02": "Step 02",
-      "qrTitle": "Recovery QR Code",
-      "qrDescription": "Scan this code using the Keeplas Recovery portal or any secure Material-compatible device to initiate the vault restoration process.",
-      "checkE2e": "End-to-end encrypted protocol",
-      "checkSingleUse": "Single-use recovery token",
-      "seedTitle": "Recovery Seed Phrase",
-      "finalWarningTitle": "Final Warning",
-      "finalWarningDescription": "Losing this document means permanent loss of all legacy assets. Keeplas does not store copies of your recovery phrase.",
-      "userValidationTitle": "User Validation",
-      "generatedOn": "Generated on {date}.",
-      "qrSealed": "QR sealed until unlock",
-      "secureScanPoint": "Secure Scan Point",
-      "phraseLengthError": "Your recovery phrase must be exactly 12 or 24 words.",
-      "unlockReveal": "Unlock & Reveal",
-      "unlockDescription": "Enter your recovery phrase to render the QR and seed grid. Your phrase is processed locally and never sent to Keeplas.",
-      "pasteHint": "Paste all 24 words (or 12 if your phrase is 12-word). Case, spacing, numbers and punctuation are ignored — you can paste directly from the PDF.",
-      "revealCta": "Reveal Recovery Kit"
     }
   },
   "sharedWithMe": {
     "list": {
-      "empty": {
-        "title": "No vaults entrusted to you yet",
-        "description": "When someone adds you as a trusted contact and you accept the invitation, the vault they protect will appear here."
-      }
+      "title": "Vaults you protect"
     },
     "card": {
       "phase": {
@@ -1391,6 +1072,26 @@
       "open": "Open",
       "enlarge": "Enlarge",
       "close": "Close"
+    },
+    "folders": {
+      "title": "Shared with me",
+      "subtitle": "Documents shared with you by people who trust you.",
+      "sharedBy": "Shared by {name}",
+      "permission": "Permission",
+      "view": "View",
+      "name": "Name",
+      "size": "Size",
+      "updated": "Updated",
+      "download": "Download",
+      "locked": {
+        "title": "Access after verification",
+        "body": "{name}, from {owner}. After 2 confirmations and a 72-hour grace period."
+      },
+      "empty": {
+        "title": "Nothing shared with you yet",
+        "body": "When someone makes you a trusted contact, their shared items appear here."
+      },
+      "downloadFailed": "Couldn't download this file. Try again."
     }
   },
   "trustedContacts": {
@@ -1444,8 +1145,9 @@
       "body": "Only {name} is accepted so far — invite at least one more. At least 2 trust contacts must confirm you are unreachable before the grace window opens, so a single guardian can never start the release."
     },
     "emptyState": {
-      "title": "Invite Your First Guardian",
-      "description": "Invite at least 2 trusted guardians — two of them must confirm before anything is released. Recipients have no cap."
+      "title": "No trusted contacts yet",
+      "description": "Add at least 2 people who can help you get back in or receive your vault.",
+      "action": "Add a contact"
     },
     "trustContacts": {
       "heading": "Trust Contacts",
@@ -1630,10 +1332,21 @@
       "savedTitle": "Attachments saved",
       "savedDescription": "{label} — {count} file encrypted and uploaded",
       "savedDescriptionPlural": "{label} — {count} files encrypted and uploaded",
-      "failedTitle": "Some attachments failed",
-      "failedDescription": "{label} — {completed}/{total} saved · {failed} failed ({error})",
-      "retryAltText": "Retry failed attachments",
-      "retry": "Retry"
+      "state": {
+        "failed": {
+          "title": "Upload failed",
+          "body": "“{name}” didn't upload. It stays on this page until you retry or leave.",
+          "retry": "Retry",
+          "remove": "Remove from queue"
+        },
+        "full": {
+          "title": "Your {quota} are full",
+          "bodyFree": "Free storage is used up. Delete items or go Lifetime for 10 GB.",
+          "body": "Your storage is used up. Delete items to free up space.",
+          "upgrade": "Get Lifetime",
+          "manage": "Manage storage"
+        }
+      }
     },
     "page": {
       "loading": "Loading your vault",
@@ -1657,7 +1370,8 @@
       "subscription": "Subscriptions & Services",
       "contacts": "Contacts",
       "wishes": "Wishes",
-      "other": "Other"
+      "other": "Other",
+      "inbox": "Encrypted inbox"
     },
     "sections": {
       "documents": {
@@ -1989,7 +1703,6 @@
         "items": {
           "hub": "Hub",
           "security": "Security Center",
-          "recoveryKit": "Recovery Kit",
           "subscription": "Subscription"
         }
       },
@@ -2383,8 +2096,7 @@
           "body": "Without the phrase, they can't unlock their master key — so they can't decrypt their ML-KEM secret key — so they can't unwrap their shard. Their slot is effectively permanent dead weight. As the vault owner, you should revoke them, invite a replacement, then click Distribute now to issue fresh shards to all current trust contacts."
         }
       },
-      "trustedLink": "Trusted Contacts in detail",
-      "recoveryKitLink": "Export your Recovery Kit"
+      "trustedLink": "Trusted Contacts in detail"
     },
     "insights": {
       "eyebrow": "Reflect & Prepare",
@@ -2507,54 +2219,27 @@
     "openApp": "Open Keeplas"
   },
   "invite": {
-    "invalid": {
-      "badge": "Invitation Link",
-      "heading": "Invalid invitation",
-      "body": "This invitation link is invalid or has expired. Ask the vault owner to send you a new one."
+    "openOnPhone": {
+      "title": "Open this on your phone",
+      "body": "Keeplas works on mobile. Open this link on your phone, or scan the QR code shown on this page.",
+      "action": "Open in the Keeplas app"
     },
-    "goToKeeplas": "Go to Keeplas",
-    "processed": {
-      "badge": "Invitation Status",
-      "heading": "Invitation already processed",
-      "accepted": "You have already accepted this invitation.",
-      "declined": "You have already declined this invitation."
+    "expired": {
+      "title": "This invitation has expired",
+      "body": "Ask {name} to send you a new link.",
+      "bodyNoName": "Ask the person who invited you to send you a new link.",
+      "action": "OK"
     },
-    "goToHub": "Go to Hub",
-    "confirmed": {
-      "badge": "Confirmed",
-      "heading": "You're now a Trusted Contact",
-      "bodyPre": "You are now part of ",
-      "bodyPost": "'s trusted circle. You'll help confirm if something happens to them — you won't hold any part of their key."
+    "accepted": {
+      "title": "You’ve already accepted",
+      "body": "You’re a trusted contact for {name}. Nothing else to do.",
+      "action": "Open Keeplas"
     },
-    "invite": {
-      "badge": "Trusted Contact Invitation",
-      "heading": "{name} invited you",
-      "bodyPre": "You have been designated as a ",
-      "bodyPost": " in {name}'s Keeplas vault."
-    },
-    "roles": {
-      "family": "Family member",
-      "friend": "Friend",
-      "lawyer": "Lawyer",
-      "doctor": "Doctor",
-      "other": "Trusted contact"
-    },
-    "roleFallback": "trusted contact",
-    "meaning": {
-      "title": "What this means",
-      "bullet1": "You hold no key to their vault and can't read it.",
-      "bullet2": "You may be asked to confirm whether they can be reached.",
-      "bullet3": "You will never see vault contents unless access is explicitly granted."
-    },
-    "needAccount": "You need a Keeplas account to accept this invitation.",
-    "createAccount": "Create Account",
-    "signIn": "Sign In",
-    "accepting": "Accepting...",
-    "accept": "Accept Invitation",
-    "declining": "Declining...",
-    "decline": "Decline",
-    "acceptFailed": "Failed to accept invitation",
-    "declineFailed": "Failed to decline invitation"
+    "declined": {
+      "title": "Invitation declined",
+      "body": "We’ll let {name} know you said no. You can’t undo this, but {name} can invite you again.",
+      "action": "Done"
+    }
   },
   "security": {
     "badge1": "Security & Privacy",
@@ -2627,7 +2312,7 @@
     },
     "cta": {
       "prompt": "Ready to set up your vault?",
-      "create": "Create your vault",
+      "create": "Get the app",
       "have": "I already have one"
     },
     "faq": [
@@ -2740,6 +2425,133 @@
       "heading": "Missing something?",
       "description": "Tell us what would make Keeplas indispensable to you. We read every request.",
       "cta": "Request a feature"
+    }
+  },
+  "getApp": {
+    "heroTitle": "Your life,\nwell kept",
+    "heroBody": "A private place for your important documents, accounts, instructions and more.",
+    "title": "Keeplas starts on your phone",
+    "body": "Create your account in the Keeplas app, then link this computer by scanning a QR code.",
+    "scan": "Scan to download the app",
+    "haveApp": "I already have the app",
+    "linkWithPhone": "Link with my phone",
+    "stores": {
+      "appStoreCaption": "Download on the",
+      "playCaption": "Get it on"
+    },
+    "scanInApp": {
+      "title": "Open the Keeplas app to scan this code",
+      "body": "This code links a computer to a Keeplas account. Scan it from the Keeplas app on your phone."
+    }
+  },
+  "recoveryCenter": {
+    "title": "Recovery center",
+    "subtitle": "Recovery starts on your phone. Here you can follow a request in progress and cancel it.",
+    "account": {
+      "title": "Your account",
+      "identified": "Identified by phone number",
+      "note": "This helps us find your account. Your phone alone cannot unlock it."
+    },
+    "options": {
+      "title": "Recovery options",
+      "onPhone": "On your phone",
+      "ready": "Set up",
+      "anotherDevice": {
+        "title": "Another device",
+        "description": "Use a device where you're already signed in."
+      },
+      "trustContacts": {
+        "title": "Trust contacts",
+        "description": "Request approval from your trusted contacts."
+      },
+      "recoveryKit": {
+        "title": "Recovery kit",
+        "description": "Use your 24-word recovery kit."
+      }
+    },
+    "request": {
+      "title": "Recovery request in progress",
+      "approved": "{count} of 2 approved",
+      "code": "Recovery code",
+      "hoursLeft": "{hours} hours remaining",
+      "hourLeft": "1 hour remaining",
+      "windowEnded": "Protection window ended",
+      "cancel": "Cancel request"
+    },
+    "cancelDialog": {
+      "title": "Cancel this recovery request?",
+      "body": "If you didn't start it, cancel it now. The new device won't get access, and your contacts are told the request is closed.",
+      "done": "Recovery request cancelled",
+      "failed": "Couldn't cancel the request. Try again."
+    }
+  },
+  "devices": {
+    "title": "Devices and security",
+    "subtitle": "Manage connected devices and security settings.",
+    "connected": "Connected devices",
+    "current": "{label} (current)",
+    "thisDevice": "This device",
+    "connectedNow": "Connected now",
+    "lastActive": "Last active {time}",
+    "revoke": "Revoke",
+    "failed": "Something went wrong. Try again.",
+    "kind": {
+      "ios": "iOS · Keeplas app",
+      "android": "Android · Keeplas app",
+      "web": "Browser"
+    },
+    "revokeDialog": {
+      "title": "Revoke {label}?",
+      "body": "It is signed out and can only come back with a new approval from your phone.",
+      "done": "Device revoked"
+    },
+    "alert": {
+      "title": "New sign-in",
+      "notMe": "It wasn't me?",
+      "itWasMe": "It was me",
+      "confirmed": "Thanks, the sign-in is confirmed"
+    },
+    "notMeDialog": {
+      "title": "Secure your account?",
+      "body": "We'll revoke {label}, sign out your other sessions and cancel any recovery in progress. Then finish securing your vault in the Keeplas app on your phone.",
+      "confirm": "Secure my account",
+      "done": "Account secured. Finish on your phone."
+    },
+    "pin": {
+      "title": "PIN code (after biometrics)",
+      "description": "Ask for a PIN after Face ID or fingerprint.",
+      "removeTitle": "Turn off the PIN on this browser?",
+      "removeBody": "You'll unlock this browser with your other methods, or link it again from your phone.",
+      "removeConfirm": "Turn off",
+      "removed": "PIN turned off"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "seeAll": "See all",
+      "empty": "No activity yet.",
+      "actions": {
+        "device_registered": "New device linked",
+        "device_confirmed": "Sign-in confirmed",
+        "device_revoked": "Device revoked",
+        "device_not_me": "Unknown device blocked",
+        "pairing_session_approved": "Browser linked",
+        "passkey_registered": "Passkey added",
+        "passkey_removed": "Passkey removed",
+        "vault_item_created": "Item added",
+        "vault_item_updated": "Item updated",
+        "vault_item_deleted": "Item deleted",
+        "folder_access_granted": "Folder shared",
+        "folder_access_revoked": "Folder access revoked",
+        "trusted_contact_invited": "Contact invited",
+        "trusted_contact_accepted": "Contact joined",
+        "trusted_contact_revoked": "Contact removed",
+        "recovery_request_started": "Recovery requested",
+        "recovery_request_cancelled": "Recovery cancelled",
+        "recovery_request_released": "Recovery approved",
+        "life_check_user_confirmed": "Life check answered",
+        "cloud_backup_enabled": "Backup turned on",
+        "cloud_backup_disabled": "Backup turned off"
+      }
     }
   }
 }

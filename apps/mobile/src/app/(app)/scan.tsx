@@ -1,0 +1,289 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useRouter } from "expo-router";
+import { useConvex } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { pairingKeyHash } from "@keeplas/crypto/pairing";
+
+import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/button";
+import { Icon } from "@/components/icon";
+import { Screen } from "@/components/screen";
+import { StateMessage, StateSheet } from "@/components/state-message";
+import { Text } from "@/components/text";
+import { TextField } from "@/components/text-field";
+import { takePendingLink } from "@/features/link/pending-link";
+import { evaluatePairingQr } from "@/features/link/qr-flow";
+import { env } from "@/lib/env";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useI18n } from "@/providers/i18n-provider";
+import { useTheme } from "@/providers/theme-provider";
+import { colors as palette, radius } from "@/theme";
+
+/**
+ * M03-4 Scan the QR code. Each scan (or pasted / universal link) goes
+ * through `evaluatePairingQr`: invalid QR, expired session, key mismatch
+ * (M09-3, reported to Convex) or M03-5 to approve.
+ */
+export default function Scan() {
+  const router = useRouter();
+  const convex = useConvex();
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [permission, requestPermission] = useCameraPermissions();
+  const reject = useAuditedMutation(api.pairing.reject);
+  const [torch, setTorch] = useState(false);
+  const [manual, setManual] = useState(false);
+  const [pasted, setPasted] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [problem, setProblem] = useState<"invalid" | "expired" | null>(null);
+  const busy = useRef(false);
+
+  const handle = useCallback(
+    async (text: string) => {
+      if (busy.current) return;
+      busy.current = true;
+      setChecking(true);
+      try {
+        const outcome = await evaluatePairingQr(text, {
+          getSession: (sessionId) =>
+            convex.query(api.pairing.get, {
+              sessionId: sessionId as Id<"pairing_sessions">,
+            }),
+          keyHash: pairingKeyHash,
+          expectedOrigin: env.appUrl,
+        });
+        if (outcome.kind === "invalid" || outcome.kind === "expired") {
+          setProblem(outcome.kind);
+          return;
+        }
+        const { qr } = outcome;
+        if (outcome.kind === "mismatch") {
+          await reject({
+            sessionId: qr.sessionId as Id<"pairing_sessions">,
+            reason: "key_mismatch",
+          }).catch(() => undefined); // The block below matters more than the report.
+          router.replace({
+            pathname: "/link-blocked",
+            params: { expected: qr.keyHash, received: outcome.receivedHash },
+          });
+          return;
+        }
+        router.replace({
+          pathname: "/link-approve",
+          params: { s: qr.sessionId, h: qr.keyHash, o: qr.origin },
+        });
+      } finally {
+        busy.current = false;
+        setChecking(false);
+      }
+    },
+    [convex, reject, router],
+  );
+
+  useEffect(() => {
+    const link = takePendingLink();
+    if (link) void handle(link);
+  }, [handle]);
+
+  useEffect(() => {
+    if (permission && !permission.granted && permission.canAskAgain) {
+      void requestPermission();
+    }
+  }, [permission, requestPermission]);
+
+  const header = <AppHeader onBack={router.back} />;
+
+  if (permission && !permission.granted && !permission.canAskAgain) {
+    return (
+      <Screen header={header}>
+        <StateMessage
+          icon="camera"
+          tone="neutral"
+          title={t("scan.cameraOffTitle")}
+          body={t("scan.cameraOffBody")}
+          primary={{
+            label: t("common.openSettings"),
+            onPress: () => Linking.openSettings(),
+          }}
+          secondary={{ label: t("common.notNow"), onPress: router.back }}
+        />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen header={header}>
+      <Text variant="h1">{t("scan.title")}</Text>
+      <Text variant="body-lg" color="text.muted">
+        {t("scan.body")}
+      </Text>
+      <View style={[styles.camera, { backgroundColor: palette.navy["700"] }]}>
+        {permission?.granted ? (
+          <CameraView
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            enableTorch={torch}
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+            onBarcodeScanned={
+              checking || problem ? undefined : ({ data }) => handle(data)
+            }
+          />
+        ) : null}
+        <Viewfinder />
+        {checking ? (
+          <View style={styles.checking}>
+            <ActivityIndicator color={palette.white} />
+            <Text variant="body-sm" style={{ color: palette.white }}>
+              {t("scan.checking")}
+            </Text>
+          </View>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ selected: torch }}
+          onPress={() => setTorch((on) => !on)}
+          style={[styles.round, styles.flash]}
+        >
+          <Icon name="flash" size={22} tint={palette.white} />
+        </Pressable>
+      </View>
+      {permission?.granted ? (
+        <View style={[styles.allowed, { backgroundColor: colors["bg.info"] }]}>
+          <Icon name="camera" size={18} />
+          <Text variant="body-sm">{t("scan.cameraAllowed")}</Text>
+          <Icon name="check-circle" size={18} color="accent" />
+        </View>
+      ) : null}
+      {manual ? (
+        <>
+          <TextField
+            label={t("scan.manualLabel")}
+            value={pasted}
+            onChangeText={setPasted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Button
+            label={t("scan.manualCta")}
+            disabled={!pasted.trim()}
+            loading={checking}
+            onPress={() => handle(pasted)}
+          />
+        </>
+      ) : (
+        <Button
+          variant="text"
+          label={t("scan.manual")}
+          onPress={() => setManual(true)}
+        />
+      )}
+      <StateSheet
+        visible={problem !== null}
+        onDismiss={() => setProblem(null)}
+        icon={problem === "expired" ? "clock" : "qr"}
+        tone={problem === "expired" ? "warning" : "danger"}
+        title={t(
+          problem === "expired" ? "scan.expiredTitle" : "scan.invalidTitle",
+        )}
+        body={t(
+          problem === "expired" ? "scan.expiredBody" : "scan.invalidBody",
+        )}
+        primary={{
+          label: t("scan.scanAgain"),
+          onPress: () => setProblem(null),
+        }}
+      />
+    </Screen>
+  );
+}
+
+/** Four white corner brackets around a 200 pt square (Figma viewfinder). */
+function Viewfinder() {
+  return (
+    <View pointerEvents="none" style={styles.viewfinder}>
+      {(["tl", "tr", "bl", "br"] as const).map((corner) => (
+        <View key={corner} style={[styles.corner, cornerStyle[corner]]} />
+      ))}
+    </View>
+  );
+}
+
+const CORNER = { width: 44, height: 44, borderColor: palette.white };
+const cornerStyle = StyleSheet.create({
+  tl: {
+    ...CORNER,
+    top: 0,
+    left: 0,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderTopLeftRadius: 12,
+  },
+  tr: {
+    ...CORNER,
+    top: 0,
+    right: 0,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderTopRightRadius: 12,
+  },
+  bl: {
+    ...CORNER,
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderBottomLeftRadius: 12,
+  },
+  br: {
+    ...CORNER,
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderBottomRightRadius: 12,
+  },
+});
+
+const styles = StyleSheet.create({
+  camera: {
+    height: 330,
+    borderRadius: radius.lg,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewfinder: { width: 200, height: 200, marginTop: -40 },
+  corner: { position: "absolute" },
+  checking: {
+    position: "absolute",
+    alignItems: "center",
+    gap: 8,
+  },
+  round: {
+    position: "absolute",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(7, 26, 48, 0.85)",
+  },
+  flash: { left: 20, bottom: 20 },
+  allowed: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+});

@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   deriveRootKey,
   deriveDeviceWrapKey,
+  argon2idRaw,
+  setArgon2idImplementation,
   ARGON2_OWASP_PARAMS,
 } from "../src/kdf";
+import { uint8ToHex } from "../src/encoding";
 
 const TEST_PHRASE_24 = [
   "abandon",
@@ -179,5 +182,44 @@ describe("KDF Argon2id", () => {
         deriveDeviceWrapKey("123456", new Uint8Array(4)),
       ).rejects.toThrow(/salt/i);
     });
+  });
+});
+
+describe("Argon2id engine", () => {
+  // Cross-platform vector: every engine (hash-wasm on the web, native
+  // Argon2id on React Native) must produce exactly this digest.
+  const VECTOR = {
+    password: "keeplas test vector",
+    salt: new Uint8Array(16).map((_, i) => i),
+    digest: "fd1a6d4b92128de61f22d991c6ad7de24ee800c5ae9ef7269bfbe84285ec50ea",
+  };
+
+  it("matches the shared test vector", async () => {
+    const out = await argon2idRaw(VECTOR.password, VECTOR.salt);
+    expect(uint8ToHex(out)).toBe(VECTOR.digest);
+  });
+
+  it("uses an injected implementation with the fixed params", async () => {
+    const calls: unknown[] = [];
+    setArgon2idImplementation(async (input) => {
+      calls.push(input);
+      return new Uint8Array(32).fill(1);
+    });
+    try {
+      const out = await argon2idRaw(VECTOR.password, VECTOR.salt);
+      expect(out).toEqual(new Uint8Array(32).fill(1));
+      expect(calls).toEqual([
+        {
+          password: VECTOR.password,
+          salt: VECTOR.salt,
+          ...ARGON2_OWASP_PARAMS,
+        },
+      ]);
+    } finally {
+      setArgon2idImplementation(async (input) => {
+        const { argon2id } = await import("hash-wasm");
+        return argon2id({ ...input, outputType: "binary" });
+      });
+    }
   });
 });
