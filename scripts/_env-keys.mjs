@@ -126,10 +126,10 @@ export const CONVEX_OPTIONAL_GROUPS = {
   "Owner recovery gate key (KMS)": [
     "GATE_KEY_KMS",
     "GATE_KEY_LOCAL_KEK",
-    "AWS_REGION",
-    "AWS_KMS_GATE_KEY_ID",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
+    "INFISICAL_KMS_SITE_URL",
+    "INFISICAL_KMS_KEY_ID",
+    "INFISICAL_KMS_CLIENT_ID",
+    "INFISICAL_KMS_CLIENT_SECRET",
   ],
   "Mobile sign-up attestation": [
     "APPLE_TEAM_ID",
@@ -180,10 +180,10 @@ export const CONVEX_SYNC_KEYS = [
   "GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT",
   "GATE_KEY_KMS",
   "GATE_KEY_LOCAL_KEK",
-  "AWS_REGION",
-  "AWS_KMS_GATE_KEY_ID",
-  "AWS_ACCESS_KEY_ID",
-  "AWS_SECRET_ACCESS_KEY",
+  "INFISICAL_KMS_SITE_URL",
+  "INFISICAL_KMS_KEY_ID",
+  "INFISICAL_KMS_CLIENT_ID",
+  "INFISICAL_KMS_CLIENT_SECRET",
 ];
 
 // Subset of CONVEX_SYNC_KEYS that MUST have a non-empty local value when syncing
