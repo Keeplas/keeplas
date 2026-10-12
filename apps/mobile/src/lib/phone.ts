@@ -3,6 +3,7 @@ import {
   getCountryCallingCode,
   getExampleNumber,
   parsePhoneNumberFromString,
+  validatePhoneNumberLength,
   type CountryCode,
 } from "libphonenumber-js/mobile";
 import examples from "libphonenumber-js/mobile/examples";
@@ -41,9 +42,22 @@ export function isCountryCode(
   return !!value && (getCountries() as string[]).includes(value);
 }
 
-/** A national mobile example for the placeholder ("416 555 0123"). */
+/**
+ * A mobile example for the placeholder, without the national trunk prefix
+ * ("0991 234 567" → "991 234 567") since it sits next to the dial code.
+ */
 export function examplePlaceholder(country: CountryCode): string {
-  return getExampleNumber(country, examples)?.formatNational() ?? "";
+  const example = getExampleNumber(country, examples);
+  if (!example) return "";
+  return example
+    .formatInternational()
+    .replace(`+${example.countryCallingCode}`, "")
+    .trim();
+}
+
+/** True once `input` has more digits than any number in `country` allows. */
+export function isTooLong(country: CountryCode, input: string): boolean {
+  return validatePhoneNumberLength(input, country) === "TOO_LONG";
 }
 
 /** E.164 for a valid mobile number typed in `country`, else null. */
