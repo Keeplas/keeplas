@@ -1,6 +1,11 @@
 import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
-import { query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import {
+  internalMutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
@@ -86,6 +91,22 @@ export async function activePushTokens(
     )
     .map((d) => d.pushToken!);
 }
+
+/** Drop Expo push tokens the push service reports as unregistered. */
+export const clearPushTokens = internalMutation({
+  args: { tokens: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    for (const pushToken of args.tokens) {
+      const devices = await ctx.db
+        .query("devices")
+        .withIndex("by_push_token", (q) => q.eq("pushToken", pushToken))
+        .collect();
+      for (const device of devices) {
+        await ctx.db.patch(device._id, { pushToken: undefined });
+      }
+    }
+  },
+});
 
 /** Phone: store its Expo push token for security alerts. */
 export const setPushToken = auditedMutation({

@@ -1,11 +1,10 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { api } from "@keeplas/backend/_generated/api";
 
-import { readDeviceId } from "@/crypto/device-vault";
 import { useAuditedMutation } from "./use-audited-mutation";
 
 Notifications.setNotificationHandler({
@@ -17,27 +16,37 @@ Notifications.setNotificationHandler({
   }),
 });
 
-/** Registers this phone and routes security-notification deep links. */
-export function usePushNotifications(userId: string) {
+/**
+ * Routes security-notification taps (also the one that cold-started the
+ * app) and returns the registration of this phone's Expo push token.
+ */
+export function usePushNotifications() {
   const router = useRouter();
   const setToken = useAuditedMutation(api.devices.setPushToken);
+  const response = Notifications.useLastNotificationResponse();
+
   useEffect(() => {
-    if (Platform.OS === "web") return;
-    void (async () => {
+    const url = response?.notification.request.content.data?.url;
+    if (typeof url !== "string" || !url.startsWith("/")) return;
+    // Consumed once: a remount must not replay the same tap.
+    Notifications.clearLastNotificationResponse();
+    router.push(url as never);
+  }, [response, router]);
+
+  return useCallback(
+    async (deviceId: Id<"devices">) => {
+      // Android 13+ only shows the permission prompt once a channel exists.
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "Keeplas",
+          importance: Notifications.AndroidImportance.HIGH,
+        });
+      }
       const permission = await Notifications.requestPermissionsAsync();
       if (!permission.granted) return;
-      const deviceId = await readDeviceId(userId);
-      if (!deviceId) return;
       const pushToken = (await Notifications.getExpoPushTokenAsync()).data;
-      await setToken({ deviceId: deviceId as Id<"devices">, pushToken });
-    })().catch(() => undefined);
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const url = response.notification.request.content.data?.url;
-        if (typeof url === "string" && url.startsWith("/"))
-          router.push(url as never);
-      },
-    );
-    return () => subscription.remove();
-  }, [userId, setToken, router]);
+      await setToken({ deviceId, pushToken });
+    },
+    [setToken],
+  );
 }

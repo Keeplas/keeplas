@@ -9,6 +9,7 @@ import {
   resolveItemRecipients,
 } from "./helpers";
 import { createAuditLog } from "./audit";
+import { activePushTokens } from "./devices";
 import { createNotification } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
 import { releasedFolderItems } from "./folders";
@@ -98,7 +99,7 @@ async function fanOutRelease(
         relatedType: "access_request",
       });
 
-      // Real outbound delivery (email + WhatsApp): the actionable trigger to
+      // Real outbound delivery (push + email + WhatsApp): the actionable trigger to
       // come back and perform recovery, days after they confirmed.
       const contactUser = await ctx.db.get(contact.contactUserId);
       await ctx.scheduler.runAfter(0, internal.dispatch.notifyRelease, {
@@ -107,6 +108,7 @@ async function fanOutRelease(
         contactName: contact.name,
         ownerName,
         language: contactUser?.language,
+        pushTokens: await activePushTokens(ctx, contact.contactUserId),
       });
     }
   }

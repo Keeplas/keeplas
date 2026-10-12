@@ -17,12 +17,10 @@
     "@peculiar/asn1-schema": "^2.10.0",
     "@peculiar/asn1-x509": "^2.10.0",
     "@simplewebauthn/server": "^13.3.3",
-    "convex": "^1.40.0",
-    "web-push": "^3.6.7"
+    "convex": "^1.40.0"
   },
   "devDependencies": {
     "@types/node": "^25",
-    "@types/web-push": "^3.6.4",
     "convex-test": "^0.0.53",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"

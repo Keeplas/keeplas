@@ -12,6 +12,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
+import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
 import { isLifeCheckPaused } from "./lib/pause";
@@ -802,11 +803,8 @@ export const getDispatchContext = internalQuery({
     if (!cycle) return null;
     const user = await ctx.db.get(cycle.userId);
     if (!user) return null;
-    const pushSubscriptions = await ctx.db
-      .query("push_subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", cycle.userId))
-      .collect();
-    return { cycle, user, pushSubscriptions };
+    const pushTokens = await activePushTokens(ctx, cycle.userId);
+    return { cycle, user, pushTokens };
   },
 });
 
@@ -946,7 +944,7 @@ export const enterConfirmationStage = internalMutation({
         relatedType: "life_check_cycle",
       });
 
-      // Real outbound delivery (email + WhatsApp): tell the contact what's
+      // Real outbound delivery (push + email + WhatsApp): tell the contact what's
       // happening and that confirming opens the owner's 72h cancel window.
       const contactUser = await ctx.db.get(contact.contactUserId);
       await ctx.scheduler.runAfter(
@@ -958,6 +956,7 @@ export const enterConfirmationStage = internalMutation({
           contactName: contact.name,
           ownerName,
           language: contactUser?.language,
+          pushTokens: await activePushTokens(ctx, contact.contactUserId),
         },
       );
     }

@@ -43,7 +43,7 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 - **Convex Auth** + **`@auth/core`** — auth foundation
 - **`@simplewebauthn/{browser,server}`** — WebAuthn (Passkey) — phishing-resistant, biometric-local auth
 - **WhatsApp Cloud API** — OTP secondary verification channel
-- **`web-push`** — Web Push (VAPID) for the Life Check push channel
+- **Expo push service** — native push to the phone app (security alerts, Life Check)
 - **[Resend](https://resend.com/)** — transactional email (Life Check, OTP, contact form)
 
 **Cryptography** (gated by CODEOWNERS in `packages/crypto/`)
@@ -138,7 +138,7 @@ All required variables are documented in [`.env.example`](./.env.example). High-
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
 - **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this)
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
-- **Web Push — VAPID (optional)** — `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — Life Check push channel
+- **Native push — Expo (optional)** — `EXPO_ACCESS_TOKEN` — authenticates phone push (security alerts, Life Check) once Enhanced Push Security is on
 - **WhatsApp — Infobip (optional)** — `INFOBIP_*`, `WHATSAPP_*_TEMPLATE_NAME` — Life Check WhatsApp channel and WhatsApp OTP verification
 
 Two env files cover the split:
@@ -201,6 +201,7 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md) — Convex + zero-knowledge technical spec
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap
 - [`PRD/Design/`](./PRD/Design) — wireframes and design tokens
+- [`docs/PUSH_NOTIFICATIONS.md`](./docs/PUSH_NOTIFICATIONS.md) — native push setup (Expo, APNs, FCM) and remaining work
 - [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
 - [`docs/TRUSTED_CONTACTS.md`](./docs/TRUSTED_CONTACTS.md) — trusted contacts, release flow & availability
 - [`CLAUDE.md`](./CLAUDE.md) — engineering conventions for AI assistants & humans

@@ -1,7 +1,7 @@
 "use node";
 
 import { v } from "convex/values";
-import { internalAction } from "./_generated/server";
+import { type ActionCtx, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireEnv } from "./lib/require_env";
@@ -18,7 +18,7 @@ const CHANNEL_TYPE = v.union(
 interface DispatchContext {
   cycle: Doc<"life_check_cycles">;
   user: Doc<"users">;
-  pushSubscriptions: Doc<"push_subscriptions">[];
+  pushTokens: string[];
 }
 
 /**
@@ -55,7 +55,7 @@ export const sendChannel = internalAction({
       try {
         switch (args.channelType) {
           case "push":
-            response = await sendPush(dispatch);
+            response = await sendPush(ctx, dispatch);
             break;
           case "email":
             response = await sendEmail(dispatch);
@@ -77,48 +77,17 @@ export const sendChannel = internalAction({
   },
 });
 
-async function sendPush({
-  user,
-  pushSubscriptions,
-}: DispatchContext): Promise<string> {
-  if (pushSubscriptions.length === 0) return "no_subscriptions";
-
-  const vapidPublic = process.env.VAPID_PUBLIC_KEY;
-  const vapidPrivate = process.env.VAPID_PRIVATE_KEY;
-  if (!vapidPublic || !vapidPrivate) return "vapid_not_configured";
-
-  const { default: webpush } = await import("web-push");
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT ?? "mailto:noreply@keeplas.com",
-    vapidPublic,
-    vapidPrivate,
-  );
-
-  const locale = resolveLocale(user.language);
-  const copy = LIFE_CHECK_PUSH_COPY[locale];
-  const payload = JSON.stringify({
+/** Life Check push to the owner's phones. */
+async function sendPush(
+  ctx: ActionCtx,
+  { user, pushTokens }: DispatchContext,
+): Promise<string> {
+  const copy = LIFE_CHECK_PUSH_COPY[resolveLocale(user.language)];
+  return await sendExpoPush(ctx, pushTokens, {
     title: copy.title,
     body: copy.body(user.name),
-    actionUrl: `${requireEnv("APP_URL")}/life-check`,
+    url: "/life-check",
   });
-
-  let delivered = 0;
-  for (const sub of pushSubscriptions) {
-    try {
-      await webpush.sendNotification(
-        {
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        },
-        payload,
-      );
-      delivered++;
-    } catch {
-      // Subscription likely expired — skip silently.
-    }
-  }
-
-  return `delivered:${delivered}/${pushSubscriptions.length}`;
 }
 
 // How long the one-click confirm link stays valid after it's sent. Comfortably
@@ -1150,26 +1119,34 @@ const TC_RELEASE_COPY = {
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
-/** Email + WhatsApp alert with localized copy; each channel best-effort. */
-async function sendAlert(args: {
-  email?: string;
-  phoneNumber?: string;
-  greetingName: string | undefined;
-  bodyName: string;
-  language?: string;
-  copy: Record<Locale, CtaEmailCopy>;
-  path: string;
-  templateEnv: string | undefined;
-  templateBase: string;
-  pushTokens?: string[];
-}): Promise<string> {
+/**
+ * Push + email + WhatsApp alert with localized copy; each channel
+ * best-effort. `path` is the web page the email links to, `appPath` the
+ * phone route the push opens.
+ */
+async function sendAlert(
+  ctx: ActionCtx,
+  args: {
+    email?: string;
+    phoneNumber?: string;
+    greetingName: string | undefined;
+    bodyName: string;
+    language?: string;
+    copy: Record<Locale, CtaEmailCopy>;
+    path: string;
+    appPath: string;
+    templateEnv: string | undefined;
+    templateBase: string;
+    pushTokens?: string[];
+  },
+): Promise<string> {
   if (isNotificationsPaused()) return "paused";
   const locale = resolveLocale(args.language);
   const push = await safeSend(() =>
-    sendExpoPush(args.pushTokens ?? [], {
+    sendExpoPush(ctx, args.pushTokens ?? [], {
       title: args.copy[locale].subject,
       body: args.copy[locale].body(args.bodyName),
-      path: args.path,
+      url: args.appPath,
     }),
   );
   const email = await safeSend(() =>
@@ -1193,28 +1170,93 @@ async function sendAlert(args: {
   return `push:${push} email:${email} whatsapp:${whatsapp}`;
 }
 
-/** Native push to the user's phones through the Expo push service. */
+const EXPO_PUSH_API = "https://exp.host/--/api/v2/push";
+// Expo publishes delivery receipts once APNs / FCM answered; it recommends
+// checking them about 15 minutes after the send.
+const EXPO_RECEIPT_DELAY_MS = 15 * 60 * 1000;
+
+type ExpoPushStatus =
+  | { status: "ok"; id?: string }
+  | { status: "error"; details?: { error?: string } };
+
+/** The app was uninstalled or the token expired: never send to it again. */
+function isUnregistered(status: ExpoPushStatus | undefined): boolean {
+  return (
+    status?.status === "error" &&
+    status.details?.error === "DeviceNotRegistered"
+  );
+}
+
+async function postExpo(endpoint: string, body: unknown): Promise<unknown> {
+  const accessToken = process.env.EXPO_ACCESS_TOKEN;
+  const res = await fetch(`${EXPO_PUSH_API}/${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`expo ${endpoint} ${res.status}`);
+  return ((await res.json()) as { data: unknown }).data;
+}
+
+/**
+ * Native push to the user's phones through the Expo push service. `url` is
+ * the phone route opened when the notification is tapped. Dead tokens are
+ * dropped now (tickets) or once the receipts are in.
+ */
 async function sendExpoPush(
+  ctx: ActionCtx,
   tokens: string[],
-  message: { title: string; body: string; path: string },
+  message: { title: string; body: string; url: string },
 ): Promise<string> {
   if (tokens.length === 0) return "no_device";
-  const res = await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(
-      tokens.map((to) => ({
-        to,
-        title: message.title,
-        body: message.body,
-        data: { path: message.path },
-        sound: "default",
-      })),
-    ),
+  const tickets = (await postExpo(
+    "send",
+    tokens.map((to) => ({
+      to,
+      title: message.title,
+      body: message.body,
+      data: { url: message.url },
+      sound: "default",
+    })),
+  )) as ExpoPushStatus[];
+  const dead = tokens.filter((_, i) => isUnregistered(tickets[i]));
+  if (dead.length > 0) {
+    await ctx.runMutation(internal.devices.clearPushTokens, { tokens: dead });
+  }
+  const pending = tokens.flatMap((token, i) => {
+    const ticket = tickets[i];
+    return ticket?.status === "ok" && ticket.id
+      ? [{ id: ticket.id, token }]
+      : [];
   });
-  if (!res.ok) throw new Error(`expo push ${res.status}`);
-  return "sent";
+  if (pending.length > 0) {
+    await ctx.scheduler.runAfter(
+      EXPO_RECEIPT_DELAY_MS,
+      internal.dispatch.checkExpoPushReceipts,
+      { tickets: pending },
+    );
+  }
+  return `sent:${pending.length}/${tokens.length}`;
 }
+
+/** Drop the tokens whose delivery receipt says the device is gone. */
+export const checkExpoPushReceipts = internalAction({
+  args: { tickets: v.array(v.object({ id: v.string(), token: v.string() })) },
+  handler: async (ctx, args) => {
+    const receipts = (await postExpo("getReceipts", {
+      ids: args.tickets.map((ticket) => ticket.id),
+    })) as Record<string, ExpoPushStatus>;
+    const dead = args.tickets
+      .filter((ticket) => isUnregistered(receipts[ticket.id]))
+      .map((ticket) => ticket.token);
+    if (dead.length > 0) {
+      await ctx.runMutation(internal.devices.clearPushTokens, { tokens: dead });
+    }
+  },
+});
 
 const alertArgs = {
   email: v.optional(v.string()),
@@ -1254,13 +1296,14 @@ export const notifyNewDevice = internalAction({
     ownerName: v.optional(v.string()),
     deviceLabel: v.string(),
   },
-  handler: (_ctx, args) =>
-    sendAlert({
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
       ...args,
       greetingName: args.ownerName,
       bodyName: args.deviceLabel,
       copy: NEW_DEVICE_COPY,
       path: "/devices",
+      appPath: "/devices",
       templateEnv: process.env.WHATSAPP_NEW_DEVICE_TEMPLATE_NAME,
       templateBase: "keeplas_new_device",
     }),
@@ -1289,14 +1332,15 @@ const RECOVERY_STARTED_COPY = {
 /** Owner-facing alert: a recovery request started (cancel within 72 h). */
 export const notifyRecoveryStarted = internalAction({
   args: { ...alertArgs, ownerName: v.optional(v.string()) },
-  handler: (_ctx, args) =>
-    sendAlert({
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
       ...args,
       greetingName: args.ownerName,
       // The owner is the recipient: the template takes no placeholder.
       bodyName: "",
       copy: RECOVERY_STARTED_COPY,
       path: "/settings/recovery",
+      appPath: "/recovery",
       templateEnv: process.env.WHATSAPP_RECOVERY_STARTED_TEMPLATE_NAME,
       templateBase: "keeplas_recovery_started",
     }),
@@ -1329,13 +1373,14 @@ export const notifyRecoveryContact = internalAction({
     contactName: v.optional(v.string()),
     ownerName: v.string(),
   },
-  handler: (_ctx, args) =>
-    sendAlert({
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
       ...args,
       greetingName: args.contactName,
       bodyName: args.ownerName,
       copy: RECOVERY_CONTACT_COPY,
       path: "/shared-with-me",
+      appPath: "/recovery",
       templateEnv: process.env.WHATSAPP_RECOVERY_CONTACT_TEMPLATE_NAME,
       templateBase: "keeplas_recovery_contact",
     }),
@@ -1344,113 +1389,68 @@ export const notifyRecoveryContact = internalAction({
 /**
  * Stage-2 notice to a trust contact: the owner stopped responding; confirming
  * unavailability opens the owner's 72h cancel window, after which the contact
- * is invited to help unlock the vault. Email + WhatsApp.
+ * is invited to help unlock the vault. Push, email + WhatsApp.
  */
 export const notifyConfirmationRequest = internalAction({
   args: {
-    email: v.optional(v.string()),
-    phoneNumber: v.optional(v.string()),
+    ...alertArgs,
     contactName: v.optional(v.string()),
     ownerName: v.string(),
-    language: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
-    if (isNotificationsPaused()) return "paused";
-    const locale = resolveLocale(args.language);
-    const email = await safeSend(() =>
-      sendCtaEmail({
-        to: args.email,
-        copy: TC_CONFIRM_COPY[locale],
-        greetingName: args.contactName,
-        bodyName: args.ownerName,
-        path: "/shared-with-me",
-      }),
-    );
-    const whatsapp = await safeSend(() =>
-      sendTemplateWhatsApp({
-        to: args.phoneNumber,
-        envName: process.env.WHATSAPP_TC_UNREACHABLE_TEMPLATE_NAME,
-        base: "keeplas_tc_unreachable",
-        placeholder: args.ownerName,
-        locale,
-      }),
-    );
-    return `email:${email} whatsapp:${whatsapp}`;
-  },
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
+      ...args,
+      greetingName: args.contactName,
+      bodyName: args.ownerName,
+      copy: TC_CONFIRM_COPY,
+      path: "/shared-with-me",
+      appPath: "/people",
+      templateEnv: process.env.WHATSAPP_TC_UNREACHABLE_TEMPLATE_NAME,
+      templateBase: "keeplas_tc_unreachable",
+    }),
 });
 
 /**
  * Owner-facing alert when the unreachability quorum is reached: the 72h
  * cancel window is now open. Links to /life-check (cancellation is step-up
- * gated, so a plain authenticated deep link — no one-click token). Email +
- * WhatsApp.
+ * gated, so a plain authenticated deep link — no one-click token). Push,
+ * email + WhatsApp.
  */
 export const notifyGraceCancel = internalAction({
-  args: {
-    email: v.optional(v.string()),
-    phoneNumber: v.optional(v.string()),
-    ownerName: v.optional(v.string()),
-    language: v.optional(v.string()),
-  },
-  handler: async (_ctx, args) => {
-    if (isNotificationsPaused()) return "paused";
-    const locale = resolveLocale(args.language);
-    const email = await safeSend(() =>
-      sendCtaEmail({
-        to: args.email,
-        copy: LC_GRACE_COPY[locale],
-        greetingName: args.ownerName,
-        bodyName: args.ownerName ?? "",
-        path: "/life-check",
-      }),
-    );
-    const whatsapp = await safeSend(() =>
-      sendTemplateWhatsApp({
-        to: args.phoneNumber,
-        envName: process.env.WHATSAPP_LC_GRACE_TEMPLATE_NAME,
-        base: "keeplas_lc_grace",
-        placeholder: args.ownerName ?? "there",
-        locale,
-      }),
-    );
-    return `email:${email} whatsapp:${whatsapp}`;
-  },
+  args: { ...alertArgs, ownerName: v.optional(v.string()) },
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: args.ownerName ?? "there",
+      copy: LC_GRACE_COPY,
+      path: "/life-check",
+      appPath: "/life-check",
+      templateEnv: process.env.WHATSAPP_LC_GRACE_TEMPLATE_NAME,
+      templateBase: "keeplas_lc_grace",
+    }),
 });
 
 /**
  * Release notice to a recipient once the 72h window has elapsed and the vault
  * is open: the actionable trigger to come back and perform recovery, days
- * after they confirmed. Email + WhatsApp.
+ * after they confirmed. Push, email + WhatsApp.
  */
 export const notifyRelease = internalAction({
   args: {
-    email: v.optional(v.string()),
-    phoneNumber: v.optional(v.string()),
+    ...alertArgs,
     contactName: v.optional(v.string()),
     ownerName: v.string(),
-    language: v.optional(v.string()),
   },
-  handler: async (_ctx, args) => {
-    if (isNotificationsPaused()) return "paused";
-    const locale = resolveLocale(args.language);
-    const email = await safeSend(() =>
-      sendCtaEmail({
-        to: args.email,
-        copy: TC_RELEASE_COPY[locale],
-        greetingName: args.contactName,
-        bodyName: args.ownerName,
-        path: "/shared-with-me",
-      }),
-    );
-    const whatsapp = await safeSend(() =>
-      sendTemplateWhatsApp({
-        to: args.phoneNumber,
-        envName: process.env.WHATSAPP_TC_RELEASE_TEMPLATE_NAME,
-        base: "keeplas_tc_release",
-        placeholder: args.ownerName,
-        locale,
-      }),
-    );
-    return `email:${email} whatsapp:${whatsapp}`;
-  },
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
+      ...args,
+      greetingName: args.contactName,
+      bodyName: args.ownerName,
+      copy: TC_RELEASE_COPY,
+      path: "/shared-with-me",
+      appPath: "/people",
+      templateEnv: process.env.WHATSAPP_TC_RELEASE_TEMPLATE_NAME,
+      templateBase: "keeplas_tc_release",
+    }),
 });

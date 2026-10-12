@@ -4,6 +4,7 @@ import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { createNotification, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
+import { activePushTokens } from "./devices";
 
 /**
  * Count the number of DISTINCT humans behind a set of trusted-contact rows.
@@ -161,7 +162,7 @@ export const markUserUnreachable = auditedMutation({
         relatedType: "access_request",
       });
 
-      // Real outbound delivery (email + WhatsApp): the owner's last-chance
+      // Real outbound delivery (push + email + WhatsApp): the owner's last-chance
       // 72h cancel alert. This is the safety net the grace window exists for,
       // so it must actually leave the building (createNotification is a no-op).
       const owner = await ctx.db.get(contact.userId);
@@ -170,6 +171,7 @@ export const markUserUnreachable = auditedMutation({
         phoneNumber: owner?.phoneNumber,
         ownerName: owner?.name,
         language: owner?.language,
+        pushTokens: await activePushTokens(ctx, contact.userId),
       });
     };
 
