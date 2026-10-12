@@ -32,11 +32,13 @@ export default function AppLayout() {
   const pathname = usePathname();
   const shownAlerts = useRef(new Set<string>());
   const publishing = useRef(false);
-  usePushNotifications(viewer._id);
+  const registerPushToken = usePushNotifications();
 
   useEffect(() => {
-    ensureDevice(viewer._id).catch(() => undefined); // Retried next launch.
-  }, [ensureDevice, viewer._id]);
+    ensureDevice(viewer._id)
+      .then(registerPushToken)
+      .catch(() => undefined); // Retried next launch.
+  }, [ensureDevice, registerPushToken, viewer._id]);
 
   useEffect(() => {
     if (viewer.publicKey || !masterKey || publishing.current) return;

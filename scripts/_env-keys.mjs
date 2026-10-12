@@ -57,12 +57,6 @@ export const WEB_OPTIONAL_GROUPS = {
     "SUPPORT_INBOX_EMAIL",
     "SUPPORT_FROM_EMAIL",
   ],
-  "Web Push (VAPID)": [
-    "VAPID_PUBLIC_KEY",
-    "VAPID_PRIVATE_KEY",
-    "VAPID_SUBJECT",
-    "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
-  ],
   "WhatsApp (Infobip)": [
     "INFOBIP_BASE_URL",
     "INFOBIP_API_KEY",
@@ -101,11 +95,7 @@ export const CONVEX_REQUIRED = [
 
 export const CONVEX_OPTIONAL_GROUPS = {
   "Support inbox (Resend)": ["SUPPORT_INBOX_EMAIL", "SUPPORT_FROM_EMAIL"],
-  "Web Push (VAPID)": [
-    "VAPID_PUBLIC_KEY",
-    "VAPID_PRIVATE_KEY",
-    "VAPID_SUBJECT",
-  ],
+  "Native push (Expo)": ["EXPO_ACCESS_TOKEN"],
   "WhatsApp (Infobip)": [
     "INFOBIP_BASE_URL",
     "INFOBIP_API_KEY",
@@ -155,9 +145,7 @@ export const CONVEX_SYNC_KEYS = [
   "RESEND_FROM_EMAIL",
   "SUPPORT_INBOX_EMAIL",
   "SUPPORT_FROM_EMAIL",
-  "VAPID_PUBLIC_KEY",
-  "VAPID_PRIVATE_KEY",
-  "VAPID_SUBJECT",
+  "EXPO_ACCESS_TOKEN",
   "INFOBIP_BASE_URL",
   "INFOBIP_API_KEY",
   "INFOBIP_WHATSAPP_SENDER",

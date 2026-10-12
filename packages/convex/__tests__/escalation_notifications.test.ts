@@ -17,15 +17,41 @@ import type { Id } from "../_generated/dataModel";
  * actions — convex-test leaves scheduled functions pending until finished.
  */
 
-/** Names of pending scheduled functions whose path includes `needle`. */
+/** Args of the pending scheduled functions whose path includes `needle`. */
+async function scheduledArgs(
+  t: TestConvex,
+  needle: string,
+): Promise<Record<string, unknown>[]> {
+  const rows = await t.run((ctx) =>
+    ctx.db.system.query("_scheduled_functions").collect(),
+  );
+  return rows.filter((r) => r.name.includes(needle)).map((r) => r.args[0]);
+}
+
 async function pendingScheduled(
   t: TestConvex,
   needle: string,
 ): Promise<number> {
-  const rows = await t.run((ctx) =>
-    ctx.db.system.query("_scheduled_functions").collect(),
+  return (await scheduledArgs(t, needle)).length;
+}
+
+/** Give `userId` a phone that receives push alerts. */
+async function seedPhone(
+  t: TestConvex,
+  userId: Id<"users">,
+  pushToken: string,
+): Promise<void> {
+  await t.run((ctx) =>
+    ctx.db.insert("devices", {
+      userId,
+      kind: "ios",
+      label: "iPhone",
+      trusted: true,
+      pushToken,
+      lastSeenAt: Date.now(),
+      createdAt: Date.now(),
+    }),
   );
-  return rows.filter((r) => r.name.includes(needle)).length;
 }
 
 /** Seed a Life Check config and return its id. */
@@ -123,9 +149,15 @@ describe("enterConfirmationStage outbound delivery", () => {
     // …and a trust contact with no account yet (no contactUserId).
     await seedContact(t, owner, { n: 5 });
 
+    await seedPhone(t, c1, "ExponentPushToken[c1]");
+
     await t.mutation(internal.life_check.enterConfirmationStage, { cycleId });
 
-    expect(await pendingScheduled(t, "notifyConfirmationRequest")).toBe(2);
+    const sent = await scheduledArgs(t, "notifyConfirmationRequest");
+    expect(sent).toHaveLength(2);
+    expect(sent.map((a) => a.pushTokens)).toEqual(
+      expect.arrayContaining([["ExponentPushToken[c1]"], []]),
+    );
   });
 });
 
@@ -146,13 +178,17 @@ describe("markUserUnreachable quorum outbound delivery", () => {
       contactUserId: contactUser,
     });
 
+    await seedPhone(t, owner, "ExponentPushToken[owner]");
+
     const result = await asUser(t, contactUser).mutation(
       api.access_requests.markUserUnreachable,
       { contactId, _audit: await signedAudit() },
     );
 
     expect(result.quorumReached).toBe(true);
-    expect(await pendingScheduled(t, "notifyGraceCancel")).toBe(1);
+    expect(await scheduledArgs(t, "notifyGraceCancel")).toMatchObject([
+      { pushTokens: ["ExponentPushToken[owner]"] },
+    ]);
     expect(await pendingScheduled(t, "releaseAfterConfirmation")).toBe(1);
   });
 });
@@ -193,11 +229,17 @@ describe("fanOutRelease outbound delivery", () => {
     await seedContact(t, owner, { n: 2, contactUserId: c1 });
     await seedContact(t, owner, { n: 3, contactUserId: c2 });
 
+    await seedPhone(t, c1, "ExponentPushToken[c1]");
+
     await t.mutation(internal.release.triggerRelease, {
       userId: owner,
       reason: "test",
     });
 
-    expect(await pendingScheduled(t, "notifyRelease")).toBe(2);
+    const sent = await scheduledArgs(t, "notifyRelease");
+    expect(sent).toHaveLength(2);
+    expect(sent.map((a) => a.pushTokens)).toEqual(
+      expect.arrayContaining([["ExponentPushToken[c1]"], []]),
+    );
   });
 });

@@ -62,7 +62,6 @@ import type * as pairing from "../pairing.js";
 import type * as passwordReset from "../passwordReset.js";
 import type * as phone_auth from "../phone_auth.js";
 import type * as phone_verification from "../phone_verification.js";
-import type * as push_subscriptions from "../push_subscriptions.js";
 import type * as recipient_groups from "../recipient_groups.js";
 import type * as recovery from "../recovery.js";
 import type * as recovery_node from "../recovery_node.js";
@@ -140,7 +139,6 @@ declare const fullApi: ApiFromModules<{
   passwordReset: typeof passwordReset;
   phone_auth: typeof phone_auth;
   phone_verification: typeof phone_verification;
-  push_subscriptions: typeof push_subscriptions;
   recipient_groups: typeof recipient_groups;
   recovery: typeof recovery;
   recovery_node: typeof recovery_node;

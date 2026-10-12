@@ -92,13 +92,3 @@ export const recipientGroupCount = query({
     return { total: groups.length };
   },
 });
-
-/** Total number of Web Push subscriptions. */
-export const pushSubscriptionCount = query({
-  args: {},
-  handler: async (ctx) => {
-    await requireAdmin(ctx);
-    const subs = await ctx.db.query("push_subscriptions").collect();
-    return { total: subs.length };
-  },
-});
