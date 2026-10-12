@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import {
   examplePlaceholder,
@@ -108,61 +108,66 @@ export function PhoneInput({
       <Modal
         visible={picking}
         animationType="slide"
+        // iOS page sheet: sits below the status bar and closes on swipe down.
+        presentationStyle="pageSheet"
         onRequestClose={() => setPicking(false)}
       >
-        <SafeAreaView
-          style={[styles.sheet, { backgroundColor: colors["bg.app"] }]}
-        >
-          <View style={styles.sheetHeader}>
-            <Text variant="h3">{t("phone.chooseCountry")}</Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t("common.cancel")}
-              onPress={() => setPicking(false)}
-              hitSlop={12}
-            >
-              <Icon name="close" />
-            </Pressable>
-          </View>
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t("phone.searchCountry")}
-            placeholderTextColor={colors["text.subtle"]}
-            style={[
-              type.body,
-              styles.search,
-              {
-                color: colors["text.primary"],
-                backgroundColor: colors["bg.surface"],
-                borderColor: colors["border.default"],
-              },
-            ]}
-          />
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.code}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
+        {/* A modal is its own native root, so insets are measured here. */}
+        <SafeAreaProvider>
+          <SafeAreaView
+            style={[styles.sheet, { backgroundColor: colors["bg.app"] }]}
+          >
+            <View style={styles.sheetHeader}>
+              <Text variant="h3">{t("phone.chooseCountry")}</Text>
               <Pressable
-                onPress={() => {
-                  onCountryChange(item.code);
-                  setPicking(false);
-                  setQuery("");
-                }}
-                style={styles.option}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.cancel")}
+                onPress={() => setPicking(false)}
+                hitSlop={12}
               >
-                <Text style={styles.flagEmoji}>{flagEmoji(item.code)}</Text>
-                <Text variant="body" style={styles.optionName}>
-                  {item.name}
-                </Text>
-                <Text variant="body" color="text.muted">
-                  {item.dialCode}
-                </Text>
+                <Icon name="close" />
               </Pressable>
-            )}
-          />
-        </SafeAreaView>
+            </View>
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t("phone.searchCountry")}
+              placeholderTextColor={colors["text.subtle"]}
+              style={[
+                type.body,
+                styles.search,
+                {
+                  color: colors["text.primary"],
+                  backgroundColor: colors["bg.surface"],
+                  borderColor: colors["border.default"],
+                },
+              ]}
+            />
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item.code}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    onCountryChange(item.code);
+                    setPicking(false);
+                    setQuery("");
+                  }}
+                  style={styles.option}
+                >
+                  <Text style={styles.flagEmoji}>{flagEmoji(item.code)}</Text>
+                  <Text variant="body" style={styles.optionName}>
+                    {item.name}
+                  </Text>
+                  <Text variant="body" color="text.muted">
+                    {item.dialCode}
+                  </Text>
+                </Pressable>
+              )}
+            />
+          </SafeAreaView>
+        </SafeAreaProvider>
       </Modal>
     </View>
   );
