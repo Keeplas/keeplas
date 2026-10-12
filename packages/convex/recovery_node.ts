@@ -1,7 +1,6 @@
 "use node";
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { DecryptCommand, EncryptCommand, KMSClient } from "@aws-sdk/client-kms";
 import { v, ConvexError } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { wrapBytes } from "@keeplas/crypto/kem";
@@ -12,42 +11,77 @@ import { auditContextValidator } from "./audit";
 import { requireEnv } from "./lib/require_env";
 
 /**
- * Gate-key custody. G is encrypted by a KMS bound to the owner's id
- * (encryption context), so the database alone never yields it.
+ * Gate-key custody. G is encrypted by a KMS bound to the owner's id, so the
+ * database alone never yields it.
  *
- * GATE_KEY_KMS=aws    AWS KMS key AWS_KMS_GATE_KEY_ID (production).
- * GATE_KEY_KMS=local  AES-256-GCM under GATE_KEY_LOCAL_KEK (dev and tests).
+ * GATE_KEY_KMS=infisical  Infisical KMS key INFISICAL_KMS_KEY_ID (production).
+ * GATE_KEY_KMS=local      AES-256-GCM under GATE_KEY_LOCAL_KEK (dev and tests).
  */
 type Kms = {
   encrypt(plaintext: Buffer, userId: string): Promise<string>;
   decrypt(ciphertext: string, userId: string): Promise<Buffer>;
 };
 
-const awsKms: Kms = {
+async function infisicalRequest(
+  path: string,
+  body: Record<string, string>,
+  token?: string,
+): Promise<Record<string, unknown>> {
+  const res = await fetch(`${requireEnv("INFISICAL_KMS_SITE_URL")}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Infisical ${path} failed: HTTP ${res.status}`);
+  return (await res.json()) as Record<string, unknown>;
+}
+
+/** Machine-identity (Universal Auth) access token, scoped to the KMS key. */
+async function infisicalToken(): Promise<string> {
+  const out = await infisicalRequest("/api/v1/auth/universal-auth/login", {
+    clientId: requireEnv("INFISICAL_KMS_CLIENT_ID"),
+    clientSecret: requireEnv("INFISICAL_KMS_CLIENT_SECRET"),
+  });
+  return out.accessToken as string;
+}
+
+const infisicalKeyPath = (op: "encrypt" | "decrypt") =>
+  `/api/v1/kms/keys/${requireEnv("INFISICAL_KMS_KEY_ID")}/${op}`;
+
+// Infisical KMS has no encryption context: the owner id is sealed inside the
+// plaintext and checked on decrypt, so a ciphertext can't move between users.
+const ownerPrefix = (userId: string) => Buffer.from(`${userId}\n`);
+
+export const infisicalKms: Kms = {
   async encrypt(plaintext, userId) {
-    const client = new KMSClient({ region: requireEnv("AWS_REGION") });
-    const out = await client.send(
-      new EncryptCommand({
-        KeyId: requireEnv("AWS_KMS_GATE_KEY_ID"),
-        Plaintext: plaintext,
-        EncryptionContext: { purpose: "keeplas-gate-key", userId },
-      }),
+    const bound = Buffer.concat([ownerPrefix(userId), plaintext]);
+    const out = await infisicalRequest(
+      infisicalKeyPath("encrypt"),
+      { plaintext: bound.toString("base64") },
+      await infisicalToken(),
     );
-    return `aws:v1:${Buffer.from(out.CiphertextBlob!).toString("base64")}`;
+    bound.fill(0);
+    return `infisical:v1:${out.ciphertext as string}`;
   },
   async decrypt(ciphertext, userId) {
-    const client = new KMSClient({ region: requireEnv("AWS_REGION") });
-    const out = await client.send(
-      new DecryptCommand({
-        KeyId: requireEnv("AWS_KMS_GATE_KEY_ID"),
-        CiphertextBlob: Buffer.from(
-          ciphertext.slice("aws:v1:".length),
-          "base64",
-        ),
-        EncryptionContext: { purpose: "keeplas-gate-key", userId },
-      }),
+    const out = await infisicalRequest(
+      infisicalKeyPath("decrypt"),
+      { ciphertext: ciphertext.slice("infisical:v1:".length) },
+      await infisicalToken(),
     );
-    return Buffer.from(out.Plaintext!);
+    const bound = Buffer.from(out.plaintext as string, "base64");
+    const prefix = ownerPrefix(userId);
+    try {
+      if (!bound.subarray(0, prefix.length).equals(prefix)) {
+        throw new Error("Gate key is bound to another user");
+      }
+      return Buffer.from(bound.subarray(prefix.length));
+    } finally {
+      bound.fill(0);
+    }
   },
 };
 
@@ -81,13 +115,13 @@ function localKek(): Buffer {
 
 function kms(): Kms {
   const provider = requireEnv("GATE_KEY_KMS");
-  if (provider === "aws") return awsKms;
+  if (provider === "infisical") return infisicalKms;
   if (provider === "local") return localKms;
   throw new Error(`Unknown GATE_KEY_KMS "${provider}"`);
 }
 
 const kmsFor = (ciphertext: string): Kms =>
-  ciphertext.startsWith("aws:") ? awsKms : localKms;
+  ciphertext.startsWith("infisical:") ? infisicalKms : localKms;
 
 /**
  * Owner device: store a new recovery generation. G goes under KMS here and
