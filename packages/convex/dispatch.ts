@@ -1064,7 +1064,7 @@ async function sendCtaEmail(args: {
   return "sent";
 }
 
-/** Send a single-placeholder WhatsApp template (static URL button in template). */
+/** Send a WhatsApp template with at most one placeholder (static URL button). */
 async function sendTemplateWhatsApp(args: {
   to: string | undefined;
   envName: string | undefined;
@@ -1077,7 +1077,7 @@ async function sendTemplateWhatsApp(args: {
     to: args.to,
     templateName: localizedTemplateName(args.envName, args.base, args.locale),
     language: args.locale,
-    placeholders: [args.placeholder],
+    placeholders: args.placeholder ? [args.placeholder] : [],
   });
 }
 
@@ -1293,7 +1293,8 @@ export const notifyRecoveryStarted = internalAction({
     sendAlert({
       ...args,
       greetingName: args.ownerName,
-      bodyName: args.ownerName ?? "",
+      // The owner is the recipient: the template takes no placeholder.
+      bodyName: "",
       copy: RECOVERY_STARTED_COPY,
       path: "/settings/recovery",
       templateEnv: process.env.WHATSAPP_RECOVERY_STARTED_TEMPLATE_NAME,
