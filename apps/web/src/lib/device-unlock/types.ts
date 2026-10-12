@@ -2,7 +2,9 @@ export type DeviceUnlockMethod = "pin" | "biometric" | "hardware-key";
 
 export interface DeviceUnlockEntryBase {
   id: string;
-  userEmail: string;
+  userId: string;
+  /** Pre-v2 storage key, only read by the one-time migration in storage.ts. */
+  userEmail?: string;
   method: DeviceUnlockMethod;
   label: string;
   createdAt: number;
@@ -34,9 +36,24 @@ export interface EnrollPinOptions {
   label?: string;
 }
 
+/**
+ * Creates a PRF-capable WebAuthn credential and returns its raw id. Defaults
+ * to a local-only credential; the QR link flow passes one that also registers
+ * the credential as a server passkey, so a single passkey signs in and unlocks.
+ */
+export type CreatePrfCredential = (prfSalt: Uint8Array) => Promise<Uint8Array>;
+
 export interface EnrollWebAuthnOptions {
   attachment: "platform" | "cross-platform";
   label?: string;
+  createCredential?: CreatePrfCredential;
+}
+
+/** The account an entry belongs to. */
+export interface DeviceUnlockOwner {
+  userId: string;
+  /** Account name shown by the OS passkey manager for local credentials. */
+  accountName: string;
 }
 
 export type EnrollOptions =

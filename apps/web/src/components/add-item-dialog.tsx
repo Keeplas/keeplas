@@ -51,6 +51,7 @@ import { VaultLinkInputList } from "@/components/vault-link-input-list";
 import { serializeLinks, isValidUrl } from "@/lib/link-payload";
 import { useUploadQueue } from "@/lib/upload-queue";
 import { useTranslations } from "@/lib/i18n";
+import { itemMetaJson } from "@/lib/item-meta";
 
 const GROUP_PREFIX = "group:";
 const CONTACT_PREFIX = "contact:";
@@ -441,6 +442,10 @@ export function AddItemDialog({
       setProgress(t("dialog.progressSealing"));
       const textPayload = body.trim();
       const encryptedTitle = await encryptContentWithKey(title.trim(), dek);
+      const encryptedMeta = await encryptContentWithKey(
+        itemMetaJson(category),
+        dek,
+      );
       const encryptedContent = await encryptContentWithKey(textPayload, dek);
       const encryptedLinks =
         cleanUrls.length > 0
@@ -464,7 +469,7 @@ export function AddItemDialog({
       // queue calls addItemFiles for each completed upload.
       const itemId = (await createItem({
         vaultId,
-        category,
+        encryptedMeta,
         encryptedTitle,
         encryptedContent,
         encryptedLinks,

@@ -1,9 +1,9 @@
-import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { Spinner } from "@keeplas/ui";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { useDecryptedAttachmentUrl } from "@/lib/use-decrypted-attachment-url";
+import type { OpenedFile } from "@/lib/use-opened-files";
 
-type AttachmentFile = Doc<"vault_item_files">;
+type AttachmentFile = OpenedFile;
 
 /**
  * Square, decrypt-on-mount image thumbnail for the attachment grid. Shares the

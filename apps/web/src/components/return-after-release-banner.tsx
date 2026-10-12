@@ -1,73 +1,68 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, Icon } from "@keeplas/ui";
+import { Button, toast } from "@keeplas/ui";
+import { IconTile, RowText } from "@/components/v2/surface";
 import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { RotateVaultDialog } from "./rotate-vault-dialog";
+import { getErrorMessage } from "@/lib/utils";
 
 /**
- * Shown to a vault owner who returns AFTER an emergency release fired. Lets
- * them revoke the granted access and rotate the master key so the leaked
- * material can no longer open anything they change going forward.
+ * Shown to an owner who comes back AFTER an emergency release fired: revoke
+ * the access granted to contacts here, then re-key the vault from the phone
+ * app (rotation needs the 24 words, which the web never asks for).
  */
 export function ReturnAfterReleaseBanner() {
-  const t = useTranslations("lifeCheck");
+  const t = useTranslations("lifeCheck.return");
   const requests = useQuery(api.access_requests.getAccessRequests);
   const viewer = useQuery(api.users.viewer);
   const revokeReleasedAccess = useAuditedMutation(
     api.access_requests.revokeReleasedAccess,
   );
-  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const hasApprovedRelease = (requests ?? []).some(
-    (r) => r.status === "approved",
-  );
-  const rotationInProgress = !!viewer?.encryptedAsymmetricSecretKeyPrev;
+  const released = (requests ?? []).some((r) => r.status === "approved");
+  const rekeying =
+    !!viewer?.masterKeyRotationRequired ||
+    !!viewer?.encryptedAsymmetricSecretKeyPrev;
 
-  if (!hasApprovedRelease && !rotationInProgress) return null;
+  if (!released && !rekeying) return null;
+
+  async function revoke() {
+    setBusy(true);
+    try {
+      await revokeReleasedAccess();
+      toast({ title: t("revoked") });
+    } catch (err) {
+      toast({ variant: "error", title: getErrorMessage(err, t("failed")) });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
-    <>
-      <div className="mb-8 rounded-sm bg-error-container text-on-error-container p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <Icon
-            path={ICON_PATHS.shieldCheck}
-            className="w-6 h-6 shrink-0 mt-1"
-          />
-          <div>
-            <p className="text-title-md">
-              {rotationInProgress
-                ? t("return.bannerTitleResume")
-                : t("return.bannerTitleReleased")}
-            </p>
-            <p className="text-body-md mt-1 max-w-xl">
-              {rotationInProgress
-                ? t("return.bannerBodyResume")
-                : t("return.bannerBodyReleased")}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="vault"
-          className="shrink-0"
-          onClick={() => setOpen(true)}
-        >
-          {rotationInProgress ? t("return.resumeCta") : t("return.secureCta")}
-        </Button>
+    <section className="flex flex-wrap items-center gap-[16px] rounded-[16px] bg-bg-danger p-[20px]">
+      <div className="flex min-w-[240px] flex-1 items-center gap-[12px]">
+        <IconTile
+          icon={ICON_PATHS.shieldAlert}
+          className="bg-bg-surface text-action-danger"
+        />
+        <RowText
+          title={released ? t("releasedTitle") : t("onPhone.title")}
+          description={released ? t("releasedBody") : t("onPhone.body")}
+        />
       </div>
-
-      <RotateVaultDialog
-        open={open}
-        onOpenChange={setOpen}
-        description={t("return.dialogDescription")}
-        submitLabel={t("return.submit")}
-        successDescription={t("return.successDescription")}
-        // Cut the granted access first (idempotent), then re-key the vault.
-        beforeRotate={revokeReleasedAccess}
-        dismissable
-      />
-    </>
+      {released ? (
+        <Button
+          variant="danger"
+          size="compact"
+          onClick={() => void revoke()}
+          disabled={busy}
+        >
+          {t("revoke")}
+        </Button>
+      ) : null}
+    </section>
   );
 }

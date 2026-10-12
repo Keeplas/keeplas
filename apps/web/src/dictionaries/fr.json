@@ -1,27 +1,9 @@
 {
   "common": {
     "language": "Langue",
-    "phone": "Téléphone",
-    "email": "E-mail",
-    "phoneNumber": "Numéro de téléphone",
-    "emailAddress": "Adresse e-mail",
-    "password": "Mot de passe",
-    "resendCode": "Renvoyer le code",
     "resendIn": "Renvoyer le code dans {seconds}s",
-    "invalidCode": "Code invalide ou expiré.",
-    "codePlaceholder": "123456",
-    "learnMore": "En savoir plus",
     "back": "Retour",
-    "passwordStrength": {
-      "weak": "Faible",
-      "medium": "Moyen",
-      "strong": "Fort",
-      "length": "Au moins 8 caractères",
-      "uppercase": "Au moins une lettre majuscule (A-Z)",
-      "lowercase": "Au moins une lettre minuscule (a-z)",
-      "number": "Au moins un chiffre (0-9)",
-      "special": "Au moins un caractère spécial (!@#$%^&*)"
-    }
+    "moreActions": "Plus d'actions pour {name}"
   },
   "auth": {
     "hero": {
@@ -32,163 +14,6 @@
       "encryptionStandard": "Norme de chiffrement",
       "architecture": "Architecture",
       "quantumSafe": "Résistant au quantique (FIPS 203)"
-    },
-    "login": {
-      "badge": "Identification requise",
-      "heading": "Bon retour",
-      "description": "Accédez à vos archives chiffrées en vérifiant vos identifiants.",
-      "footerPrompt": "Nouveau curateur ?",
-      "footerLabel": "Créer un accès",
-      "sendCode": "Envoyer le code",
-      "sending": "Envoi…",
-      "unlock": "Déverrouiller le coffre",
-      "unlocking": "Déverrouillage…",
-      "emailCode": "Code e-mail",
-      "whatsappCode": "Code WhatsApp",
-      "lostAccess": "Accès perdu ? 24 mots",
-      "lostPhone": "Téléphone perdu ? 24 mots",
-      "resetWords": "Réinitialiser avec les 24 mots",
-      "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
-      "sendFailed": "Impossible d'envoyer le code. Réessayez.",
-      "resendFailed": "Impossible de renvoyer le code. Réessayez dans un instant.",
-      "invalidCredentials": "E-mail ou mot de passe invalide.",
-      "noEmailAccount": "Aucun compte trouvé pour cet e-mail. Inscrivez-vous pour en créer un.",
-      "emailOtpHint": "Ce compte se connecte avec un code e-mail, sans mot de passe.",
-      "protectedLink": "Comment vos données sont-elles protégées ?",
-      "passkey": "Connexion biométrique",
-      "passkeyFailed": "Impossible de vous authentifier avec votre clé d'accès."
-    },
-    "signup": {
-      "badge": "Chiffrement à connaissance nulle",
-      "heading": "Créez votre sanctuaire",
-      "description": "Renseignez vos informations pour commencer votre héritage numérique.",
-      "footerPrompt": "Vous avez déjà un coffre ?",
-      "footerLabel": "Accéder au coffre",
-      "fullName": "Nom complet",
-      "phoneOptional": "Téléphone (facultatif)",
-      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
-      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
-      "phoneInvalid": "Veuillez saisir un numéro de téléphone valide.",
-      "startFailed": "Impossible de démarrer l'inscription. Réessayez.",
-      "createFailed": "Impossible de créer le compte. Réessayez.",
-      "accountExists": "Un compte existe déjà avec cet e-mail. Connectez-vous.",
-      "verifyCode": "Code de vérification",
-      "verifying": "Vérification…",
-      "confirmNumber": "Confirmer le numéro",
-      "confirmEmail": "Confirmer l'e-mail",
-      "initializing": "Initialisation…",
-      "initializeVault": "Initialiser le coffre",
-      "whatsappConfirmation": "Confirmation WhatsApp",
-      "emailConfirmation": "Confirmation e-mail",
-      "confirmNumberHeading": "Confirmez votre numéro",
-      "confirmEmailHeading": "Confirmez votre e-mail",
-      "phoneCodeSent": "Nous avons envoyé un code à 6 chiffres sur votre WhatsApp au {phone}. Saisissez-le ci-dessous pour activer votre coffre.",
-      "emailCodeSent": "Nous avons envoyé un code à 6 chiffres à {email}. Saisissez-le ci-dessous pour activer votre coffre.",
-      "wrongNumber": "Mauvais numéro ?",
-      "wrongEmail": "Mauvais e-mail ?",
-      "startOver": "Recommencer",
-      "resendFailed": "Impossible de renvoyer le code. Réessayez dans un instant.",
-      "lockedEmail": "Verrouillé — c'est l'e-mail utilisé par votre invitant pour vous envoyer l'invitation.",
-      "lockedPhone": "Verrouillé — c'est le numéro utilisé par votre invitant pour vous envoyer l'invitation.",
-      "securityEyebrow": "Avant de vous inscrire · Chiffrement post-quantique",
-      "securityText": "Votre mot de passe sert à vous connecter. Les 24 mots de récupération générés à l'étape suivante chiffrent réellement votre coffre ; nous ne les voyons jamais.",
-      "readHow": "Lire le fonctionnement →",
-      "phoneHelp": "Utilisé pour la vérification WhatsApp et les alertes Life Check. Vous pouvez aussi répondre à un Life Check sur WhatsApp pour confirmer que vous allez bien.",
-      "phoneOnlyHelp": "Nous enverrons votre code de vérification et vos alertes Life Check à ce numéro WhatsApp."
-    },
-    "onboarding": {
-      "steps": {
-        "identity": "Identité",
-        "recoveryPhrase": "Mots de récupération",
-        "verification": "Vérification",
-        "keyGeneration": "Coffre sécurisé",
-        "passkey": "Biométrie"
-      },
-      "legalInfo": {
-        "badge": "Étape 1 · Identité légale",
-        "heading": "Confirmez qui vous êtes",
-        "description": "Votre âge détermine votre capacité juridique, et votre pays définit la juridiction successorale applicable à votre coffre. Les deux sont enregistrés dans le journal d'audit infalsifiable afin qu'un tribunal puisse vérifier ultérieurement qui vous étiez lors de la configuration.",
-        "birthday": "Date de naissance",
-        "birthdayPlaceholder": "Sélectionnez votre date de naissance",
-        "country": "Pays de résidence",
-        "saving": "Enregistrement…",
-        "securing": "Sécurisation de votre session…",
-        "submit": "Confirmer et continuer",
-        "invalidDate": "Veuillez choisir une date valide.",
-        "minAge": "Vous devez avoir au moins 18 ans pour utiliser Keeplas.",
-        "saveFailed": "Impossible d'enregistrer vos informations."
-      },
-      "recoveryPhrase": {
-        "badge": "Fondation cryptographique",
-        "heading": "Mots de récupération principaux",
-        "copyAll": "Tout copier",
-        "copied": "Copié !",
-        "download": "Télécharger",
-        "generatingPdf": "Génération du PDF…",
-        "generating": "Génération de vos mots de récupération",
-        "warningTitle": "Autorité de récupération absolue",
-        "warningBody": "Ces mots sont le seul moyen de récupérer votre coffre. Gardez-les hors ligne et en sécurité. Toute personne ayant accès à ces mots détient l'autorité complète sur votre héritage numérique. Nous recommandons de les écrire sur papier et de les conserver dans un endroit sûr et ignifuge.",
-        "offlineTitle": "Stockage hors ligne",
-        "offlineBody": "Ne stockez jamais ces mots numériquement — pas de captures d'écran, de notes cloud ni de brouillons d'e-mail.",
-        "legacyTitle": "Accès à l'héritage",
-        "legacyBody": "Envisagez de partager l'emplacement de ces mots avec un bénéficiaire de confiance.",
-        "verificationTitle": "Vérification",
-        "verificationBody": "Nous vous demanderons de vérifier ces mots pour confirmer que votre sauvegarde est sécurisée.",
-        "confirmLabel": "J'ai noté mes 24 mots de récupération et les ai rangés dans un endroit sûr. Je comprends que perdre ces mots signifie que je ne pourrai pas récupérer mon coffre.",
-        "continue": "J'ai sauvegardé mes mots — continuer",
-        "pdfTitle": "Keeplas — Mots de récupération principaux",
-        "pdfAccountLabel": "Compte",
-        "pdfWarning": "Ces 24 mots sont le seul moyen de récupérer votre coffre. Conservez ce document hors ligne, dans un endroit sûr et ignifuge. Toute personne possédant ces mots détient l'autorité complète sur votre héritage numérique.",
-        "pdfCopyLine": "Ligne à copier-coller"
-      },
-      "verification": {
-        "back": "Retour aux mots de récupération",
-        "badge": "Confirmation de sauvegarde",
-        "heading": "Vérifiez vos mots de récupération",
-        "description": "Pour vous assurer d'avoir correctement sauvegardé vos mots, saisissez les 3 mots ci-dessous parmi vos mots de récupération. Cela confirme que votre sauvegarde est complète et que vous pourrez récupérer votre coffre si nécessaire.",
-        "whyTitle": "Pourquoi est-ce important ?",
-        "whyBodyBefore": "Ces 24 mots sont la",
-        "whyKeyTerm": "seule clé",
-        "whyBodyAfter": "qui chiffre votre coffre — nous ne les voyons jamais. Votre mot de passe sert uniquement à vous authentifier et peut être réinitialisé avec ces mêmes 24 mots. Mais les mots eux-mêmes ne peuvent pas être réinitialisés : seuls vos contacts de confiance peuvent les récupérer plus tard via des fragments partagés. Conservez-les en lieu sûr dès maintenant.",
-        "wordLabel": "{ordinal} mot",
-        "wordPlaceholder": "Saisissez le {ordinal} mot",
-        "mismatch": "Le {ordinal} mot ne correspond pas. Veuillez vérifier et réessayer.",
-        "verifying": "Vérification…",
-        "verifyContinue": "Vérifier et continuer",
-        "seeAgain": "Je dois revoir mes mots de récupération",
-        "error": "Une erreur est survenue. Veuillez réessayer."
-      },
-      "keyGeneration": {
-        "phases": {
-          "derivingRoot": "Dérivation de votre clé racine à partir de vos 24 mots…",
-          "wrappingMasterKey": "Scellement de votre clé maîtresse…",
-          "storing": "Sécurisation de votre coffre…",
-          "complete": "Coffre sécurisé !",
-          "error": "Une erreur est survenue"
-        },
-        "badge": "Sécurisation du coffre",
-        "headingComplete": "Votre coffre est prêt",
-        "heading": "Configuration de votre protection",
-        "descriptionComplete": "Votre clé maîtresse est scellée par vos 24 mots. Vous pouvez maintenant commencer à ajouter des éléments à votre coffre.",
-        "description": "Vos clés sont dérivées et scellées entièrement sur votre appareil. Nous ne voyons jamais votre phrase.",
-        "redirecting": "Redirection vers votre accueil…",
-        "tryAgain": "Réessayer",
-        "genericError": "La génération des clés a échoué. Veuillez réessayer."
-      },
-      "passkey": {
-        "badge": "Optionnel · Connexion plus rapide",
-        "headingDone": "Clé d'accès prête",
-        "heading": "Connectez-vous avec votre visage",
-        "descriptionDone": "Vous pouvez désormais déverrouiller Keeplas avec la biométrie de votre appareil.",
-        "description": "Utilisez Face ID, Touch ID ou la biométrie de votre appareil lors de votre prochaine connexion. Votre mot de passe reste disponible en secours.",
-        "unsupportedBefore": "Les clés d'accès ne sont pas prises en charge par ce navigateur. Vous pourrez les configurer plus tard depuis",
-        "unsupportedTerm": "Paramètres · Centre de sécurité",
-        "unsupportedAfter": "sur un appareil compatible.",
-        "enable": "Activer la connexion biométrique",
-        "redirecting": "Redirection…",
-        "skip": "Ignorer pour l'instant",
-        "registerFailed": "Impossible d'enregistrer votre clé d'accès."
-      }
     },
     "otp": {
       "heading": "Confirmez votre identité",
@@ -204,9 +29,8 @@
       "verify": "Vérifier",
       "sending": "Envoi…",
       "resend": "Pas reçu ? Renvoyer le code",
-      "useRecovery": "Impossible de recevoir le code ? Utilisez votre phrase de récupération",
-      "recoveryNotConfigured": "La récupération par phrase n'est pas configurée pour ce compte.",
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "recoverInApp": "Vous n'avez plus accès à ce code ? Récupérez votre compte depuis l'application Keeplas sur votre téléphone."
     },
     "totp": {
       "verifyingSession": "Vérification de la session",
@@ -215,58 +39,52 @@
       "subtitle": "Saisissez le code à 6 chiffres de votre application d'authentification pour terminer votre connexion.",
       "codeLabel": "Code à 6 chiffres",
       "verify": "Vérifier",
-      "useRecovery": "Téléphone perdu ? Utilisez votre phrase de récupération",
-      "recoveryNotConfigured": "La récupération par phrase n'est pas configurée pour ce compte.",
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "recoverInApp": "Vous n'avez plus accès à ce code ? Récupérez votre compte depuis l'application Keeplas sur votre téléphone."
     },
-    "recovery": {
-      "notConfigured": "La récupération n'est pas configurée pour ce compte.",
-      "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
-      "invalidPhrase": "Cette phrase de récupération n'est pas valide. Vérifiez les fautes de frappe ou les mots intervertis.",
-      "validPhone": "Saisissez un numéro de téléphone valide pour votre compte.",
-      "phoneFailed": "Échec de la récupération. Vérifiez que votre numéro et vos 24 mots correspondent.",
-      "enterEmail": "Saisissez l'e-mail de votre compte.",
-      "emailFailed": "Échec de la récupération. Vérifiez que votre e-mail et vos 24 mots correspondent.",
-      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères.",
-      "passwordWeak": "Veuillez choisir un mot de passe plus fort respectant toutes les exigences.",
-      "passwordsMismatch": "Les mots de passe ne correspondent pas.",
-      "successTitle": "Mot de passe réinitialisé",
-      "successBody": "Votre mot de passe a été réinitialisé. Vous allez être redirigé vers la connexion. Le contenu de votre coffre reste chiffré par vos 24 mots et demeure protégé.",
-      "heading": "Récupérez l'accès avec vos 24 mots",
-      "subtitle": "Les comptes e-mail réinitialisent leur mot de passe ; les comptes téléphone retrouvent l'accès directement. Dans tous les cas, votre coffre chiffré reste intact — vos 24 mots demeurent la racine cryptographique.",
-      "phraseLabel": "Phrase de récupération (24 mots)",
-      "phrasePlaceholder": "mot1 mot2 mot3…",
-      "phraseHint1": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
-      "phraseHint2": "Les mots ne quittent jamais cet appareil — seul un vérificateur dérivé est envoyé.",
-      "emailOtpHint": "Ce compte se connecte avec un code envoyé par e-mail — vos 24 mots restaurent l'accès directement, sans nouveau mot de passe.",
-      "newPassword": "Nouveau mot de passe",
-      "confirmPassword": "Confirmez le nouveau mot de passe",
-      "recoverAccess": "Récupérer l'accès",
-      "resetPassword": "Réinitialiser le mot de passe",
-      "backToLogin": "Retour à la connexion"
+    "signIn": {
+      "heroTitle": "Votre vie,\nbien gardée",
+      "heroBody": "Un espace privé pour vos documents importants, vos comptes, vos instructions et plus encore. Pour que vous et vos proches soyez prêts, aujourd'hui comme demain.",
+      "title": "Se connecter à Keeplas",
+      "body": "Utilisez votre clé d'accès pour accéder à votre compte en toute sécurité. Aucun mot de passe nécessaire.",
+      "continueWithPasskey": "Continuer avec une clé d'accès",
+      "or": "ou",
+      "linkWithPhone": "Associer avec mon téléphone",
+      "lostAccess": "Accès perdu ?",
+      "newVisitor": "Nouveau sur Keeplas ?",
+      "getTheApp": "Obtenir l'application",
+      "passkeyFailed": "Connexion avec la clé d'accès impossible.",
+      "lostAccessDialog": {
+        "title": "Accès perdu ?",
+        "body": "La récupération du compte se fait dans l'application Keeplas. Ouvrez-la sur votre téléphone, ou installez-la sur un nouveau téléphone, puis choisissez « Accès perdu ? » pour retrouver votre coffre.",
+        "close": "Fermer"
+      }
     },
-    "phraseRecovery": {
-      "verifyingSession": "Vérification de la session",
-      "notConfiguredTitle": "Récupération non configurée",
-      "backToCode": "Retour à la saisie du code",
-      "useHeading": "Utilisez votre phrase de récupération",
-      "allWords": "Veuillez saisir les 24 mots de votre phrase de récupération.",
-      "invalidPhrase": "Cette phrase de récupération n'est pas valide. Vérifiez les fautes de frappe ou les mots intervertis.",
-      "notConfigured": "La récupération n'est pas configurée pour ce compte.",
-      "recoveryFailed": "Échec de la récupération.",
-      "phraseLabel": "Phrase de récupération",
-      "phrasePlaceholder": "mot1 mot2 mot3…",
-      "phraseHint1": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
-      "phraseHint2": "La phrase ne quitte jamais votre appareil — seul un vérificateur dérivé est envoyé.",
-      "otp": {
-        "notConfiguredBody": "Ce compte n'a jamais associé de phrase de récupération. Contactez le support si vous ne pouvez pas recevoir le code de connexion.",
-        "subtitle": "Collez les 24 mots enregistrés lors de votre intégration pour terminer votre connexion sur cet appareil.",
-        "submit": "Déverrouiller cet appareil"
-      },
-      "totp": {
-        "notConfiguredBody": "Ce compte n'a jamais associé la phrase de récupération à son authentificateur. Contactez le support si vous ne pouvez pas accéder à votre application d'authentification.",
-        "subtitle": "Collez les 24 mots enregistrés lors de votre intégration. L'authentification à deux facteurs sera désactivée et vous pourrez la reconfigurer depuis les paramètres.",
-        "submit": "Réinitialiser la 2FA"
+    "connect": {
+      "heroTitle": "Connecter avec\nmon téléphone",
+      "heroBody": "Utilisez votre téléphone avec Keeplas pour associer ce navigateur. C'est rapide, sûr et sans mot de passe.",
+      "usePasskey": "Utiliser plutôt une clé d'accès",
+      "step1": "Ouvrez Keeplas",
+      "step1Detail": "sur votre téléphone",
+      "step2": "Scannez le QR code",
+      "step2Detail": "avec l'application",
+      "step3": "Approuvez",
+      "step3Detail": "ce navigateur avec Face ID",
+      "expiresIn": "Expire dans",
+      "trust": "Faire confiance à ce navigateur",
+      "trustDetail": "Sur un ordinateur partagé, laissez décoché.",
+      "expired": "Ce code a expiré.",
+      "newCode": "Générer un nouveau code",
+      "rejected": "L'association a été refusée sur votre téléphone.",
+      "error": "Un problème est survenu pendant l'association de ce navigateur.",
+      "retry": "Réessayer",
+      "linking": "Association de ce navigateur…",
+      "passkey": {
+        "title": "Créer une clé d'accès pour ce navigateur",
+        "body": "La prochaine fois, connectez-vous et déverrouillez votre coffre avec votre empreinte, votre visage ou le code de l'appareil. Sans téléphone.",
+        "create": "Créer la clé d'accès",
+        "skip": "Plus tard",
+        "failed": "Impossible de créer la clé d'accès."
       }
     }
   },
@@ -275,25 +93,21 @@
       "unlockingVault": "Déverrouillage de votre coffre"
     },
     "nav": {
-      "hub": "Accueil",
-      "vault": "Coffre numérique",
-      "trustedCircle": "Cercle de confiance",
-      "continuityProtocol": "Protocole de continuité",
+      "label": "Navigation principale",
+      "openMenu": "Ouvrir la navigation",
+      "myVault": "Mon coffre",
       "sharedWithMe": "Partagé avec moi",
-      "settings": "Paramètres",
-      "documentation": "Documentation",
-      "goToHub": "Aller à l'accueil",
-      "openSettings": "Ouvrir les paramètres"
-    },
-    "mobileNav": {
-      "hub": "Accueil",
-      "vault": "Coffre",
-      "trust": "Confiance"
+      "people": "Contacts",
+      "lifeCheck": "Life check",
+      "devices": "Appareils",
+      "settings": "Paramètres"
     },
     "account": {
-      "curator": "Curateur",
-      "secureSession": "Session sécurisée",
-      "userAlt": "Utilisateur"
+      "menu": "Menu du compte",
+      "settings": "Paramètres",
+      "darkMode": "Mode sombre",
+      "lightMode": "Mode clair",
+      "signOut": "Se déconnecter"
     },
     "notifications": {
       "title": "Notifications",
@@ -301,28 +115,18 @@
       "close": "Fermer les notifications",
       "empty": "Aucune notification pour le moment"
     },
-    "fab": {
-      "addEntry": "Ajouter une nouvelle entrée"
-    },
     "unlock": {
       "loadingVault": "Chargement du coffre",
       "unlockingVault": "Déverrouillage du coffre",
       "checkingDeviceUnlock": "Vérification du déverrouillage de l'appareil",
       "couldNotUnlock": "Déverrouillage impossible",
       "authCancelled": "Authentification annulée",
-      "enterAll24": "Veuillez saisir les 24 mots",
-      "wrongPhrase": "Phrase de récupération incorrecte — le coffre n'a pas pu être déchiffré",
-      "phraseCouldNotUnlock": "La phrase de récupération n'a pas pu déverrouiller le coffre",
-      "heading": "Déverrouiller le coffre",
-      "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez votre méthode de déverrouillage.",
-      "noDeviceUnlock": "Aucun déverrouillage d'appareil n'est encore configuré sur cet appareil.",
-      "use24Words": "Utiliser les 24 mots de récupération",
+      "heading": "Déverrouiller votre coffre",
+      "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez comment le déverrouiller.",
+      "noDeviceUnlock": "Ce navigateur ne peut pas encore déverrouiller votre coffre seul. Associez-le avec votre téléphone pour continuer.",
       "pinPlaceholder": "Au moins {min} chiffres",
       "unlockButton": "Déverrouiller",
       "back": "Retour",
-      "phraseLabel": "Saisissez vos 24 mots",
-      "phraseHint": "Collez les 24 mots. La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez les coller directement depuis le PDF.",
-      "unlockWithWords": "Déverrouiller avec les mots de récupération",
       "legacyTitle": "Le compte doit être migré",
       "legacyBody": "Votre coffre a été sécurisé avec un ancien format de clé qui n'est plus pris en charge. Pour rétablir l'accès à connaissance nulle, votre compte doit être rechiffré avec vos 24 mots de récupération. Veuillez contacter le support pour migrer ce compte.",
       "unavailableSuffix": "(indisponible sur cet appareil)",
@@ -330,7 +134,11 @@
       "methodBiometric": "Biométrie",
       "methodHardwareKey": "Clé matérielle",
       "contact": "Nous contacter",
-      "logout": "Se déconnecter"
+      "logout": "Se déconnecter",
+      "heroTitle": "Votre vie,\nbien gardée",
+      "heroBody": "Un espace privé pour vos documents importants, vos comptes, vos instructions et plus encore.",
+      "or": "ou",
+      "linkWithPhone": "Associer avec mon téléphone"
     },
     "emailVerify": {
       "invalidEmail": "Saisissez une adresse e-mail valide",
@@ -429,72 +237,26 @@
       "stop": "Arrêter",
       "reRecord": "Réenregistrer",
       "attachToVault": "Joindre au coffre"
+    },
+    "offline": {
+      "title": "Vous êtes hors ligne",
+      "body": "Keeplas se reconnecte tout seul. Vos modifications sont enregistrées dès que la connexion revient.",
+      "ok": "OK"
+    },
+    "permissionOff": {
+      "retry": "Réessayer",
+      "notNow": "Plus tard",
+      "camera": {
+        "title": "L'accès à la caméra est désactivé",
+        "body": "Autorisez la caméra dans les réglages du site de votre navigateur pour enregistrer des vidéos."
+      },
+      "microphone": {
+        "title": "L'accès au micro est désactivé",
+        "body": "Autorisez le micro dans les réglages du navigateur."
+      }
     }
   },
   "hub": {
-    "loading": "Chargement de l'accueil",
-    "title": "Accueil",
-    "subtitle": {
-      "line1": "Votre poste de commande central pour un héritage protégé",
-      "line2": "et une continuité prête à toute épreuve."
-    },
-    "jumpToPriorityActions": "Aller aux actions prioritaires",
-    "actionsRequired": "Actions requises",
-    "score": {
-      "strong": "Protection solide",
-      "partial": "Couverture partielle",
-      "actionRequired": "Action requise"
-    },
-    "centerNode": {
-      "title": "Votre héritage",
-      "subtitle": "Nœud central"
-    },
-    "nodes": {
-      "empty": "Vide",
-      "protected": "Protégé",
-      "assets": {
-        "title": "Actifs",
-        "empty": "Aucun actif enregistré pour le moment."
-      },
-      "contacts": {
-        "title": "Contacts",
-        "empty": "Aucun contact de confiance lié pour le moment.",
-        "guardianLinked": "{count} contact de confiance principal lié",
-        "guardiansLinked": "{count} contacts de confiance principaux liés"
-      },
-      "directives": {
-        "title": "Directives",
-        "empty": "Aucune directive enregistrée pour le moment."
-      },
-      "documents": {
-        "title": "Documents",
-        "empty": "Aucun document conservé pour le moment."
-      }
-    },
-    "priorityActions": "Actions prioritaires",
-    "hints": {
-      "add_item": "Conservez votre premier actif, document ou identifiant dans le coffre. Tout est chiffré de bout en bout — vous seul et les personnes que vous choisissez pourrez jamais le lire.",
-      "invite_contact": "Les contacts de confiance sont les gardiens qui confirment s'il vous arrive quelque chose. Invitez une personne de confiance ; elle accepte avec sa propre clé Keeplas.",
-      "life_check": "Life Check prend régulièrement de vos nouvelles. Si vous cessez de répondre, Keeplas amorce le processus de continuité et prévient vos gardiens.",
-      "release_policy": "Décidez de ce qui se passe si vous cessez de répondre : combien de contacts de confiance doivent confirmer votre indisponibilité et de combien de temps ils disposent. Sans leur confirmation, rien n'est jamais transmis.",
-      "welcome_message": "Un court message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Utilisez-le pour donner du contexte, dire quelques mots ou laisser des instructions avant qu'ils ne consultent les éléments.",
-      "two_factor": "Ajoutez une clé d'accès ou une application d'authentification afin qu'un mot de passe dérobé ne suffise pas à atteindre votre compte.",
-      "verify_whatsapp": "Vérifiez votre numéro WhatsApp pour que les contrôles de Life Check et les alertes de sécurité vous parviennent de façon fiable.",
-      "more_categories": "Répartissez votre héritage entre plusieurs catégories — finances, directives de santé, documents juridiques, identifiants — afin que rien d'essentiel ne soit oublié.",
-      "contacts_ready": "Votre Life Check a besoin de deux contacts de confiance pour confirmer que vous êtes injoignable. Un contact est prêt dès qu'il accepte votre invitation et configure sa clé Keeplas. Il ne détient jamais de clé de votre coffre."
-    },
-    "recentActivity": {
-      "title": "Activité récente",
-      "viewAll": "Tout voir",
-      "empty": "Aucun élément dans votre coffre pour le moment.",
-      "addFirst": "Ajouter votre premier élément"
-    },
-    "reflect": {
-      "title": "Réfléchir et préparer",
-      "subtitle": "Quelques questions honnêtes, de vraies difficultés et des étapes concrètes pour la continuité — au sein de Keeplas et au-delà.",
-      "previous": "Afficher les cartes de réflexion précédentes",
-      "next": "Afficher les cartes de réflexion suivantes"
-    },
     "terminate": {
       "hero": {
         "line1": "Destruction",
@@ -532,6 +294,87 @@
         "typeDelete": "Saisissez DELETE exactement pour confirmer.",
         "failed": "Échec de la suppression du plan."
       }
+    },
+    "greeting": {
+      "morning": "Bonjour, {name}",
+      "afternoon": "Bon après-midi, {name}",
+      "evening": "Bonsoir, {name}"
+    },
+    "subtitle": "Vos informations importantes sont en sécurité et prêtes pour demain.",
+    "setup": {
+      "complete": "Configuration requise terminée",
+      "incomplete": "Terminez la configuration requise",
+      "progress": "{done} sur {total} terminées",
+      "completeBody": "Votre compte est protégé et prêt à l'emploi.",
+      "incompleteBody": "Terminez-la dans l'app Keeplas sur votre téléphone."
+    },
+    "optional": {
+      "title": "Protection facultative",
+      "trustContacts": {
+        "title": "Ajouter des contacts de confiance",
+        "description": "Choisissez jusqu'à 3 personnes qui peuvent vous aider à récupérer votre compte."
+      },
+      "recoveryKit": {
+        "title": "Exporter le kit de récupération",
+        "description": "Gardez votre kit facultatif de 24 mots en lieu sûr. Depuis votre téléphone."
+      }
+    },
+    "tiles": {
+      "inbox": "Boîte chiffrée",
+      "toOrganize": "{count} éléments à classer",
+      "documents": "Documents",
+      "accounts": "Comptes",
+      "one": "1 élément",
+      "other": "{count} éléments",
+      "toOrganizeOne": "1 élément à classer"
+    },
+    "recent": {
+      "title": "Éléments récents",
+      "name": "Nom",
+      "type": "Type",
+      "updated": "Mis à jour",
+      "open": "Ouvrir"
+    },
+    "types": {
+      "document": "Document",
+      "account": "Compte",
+      "instruction": "Instruction",
+      "other": "Autre",
+      "inbox": "Boîte chiffrée"
+    },
+    "empty": {
+      "title": "Votre coffre est vide",
+      "body": "Ajoutez un premier document, compte ou note. Il est chiffré avant de quitter cet appareil.",
+      "action": "Ajouter un élément"
+    },
+    "add": {
+      "button": "Ajouter",
+      "title": "Ajouter à votre coffre",
+      "document": {
+        "title": "Document",
+        "description": "Importez un PDF ou un fichier Word, ou déposez-le"
+      },
+      "photo": {
+        "title": "Photo",
+        "description": "Importez des images depuis cet ordinateur"
+      },
+      "note": {
+        "title": "Note",
+        "description": "Écrivez quelque chose"
+      },
+      "voice": {
+        "title": "Note vocale",
+        "description": "Enregistrez avec votre micro"
+      },
+      "video": {
+        "title": "Vidéo",
+        "description": "Importez ou enregistrez une vidéo"
+      },
+      "scan": {
+        "title": "Scanner avec mon téléphone",
+        "description": "Numérisez des documents papier avec l'appareil photo",
+        "onPhone": "Ouvrez Keeplas sur votre téléphone et touchez Scanner. Le document apparaît ici une fois chiffré."
+      }
     }
   },
   "lifeCheck": {
@@ -545,8 +388,7 @@
       "toggleActiveError": "Impossible de modifier l'état du Life Check"
     },
     "page": {
-      "intro": "Keeplas vous demande régulièrement de confirmer que vous allez bien. Si vous cessez de répondre, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis. Mettez tout en pause depuis",
-      "introLink": "Paramètres → Protocole de continuité"
+      "intro": "Keeplas vous demande régulièrement de confirmer que tout va bien. Si vous ne répondez plus, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis."
     },
     "nextCheckIn": {
       "label": "Prochaine vérification",
@@ -730,17 +572,6 @@
       "returnDatePlaceholder": "Choisissez votre date de retour",
       "enable": "Activer"
     },
-    "controls": {
-      "toggleError": "Échec de la mise à jour du Life Check",
-      "travelError": "Échec de l'activation du mode voyage",
-      "statusTravel": "Mode voyage",
-      "statusActive": "Actif",
-      "statusPaused": "En pause",
-      "notConfigured": "Le Life Check n'est pas encore configuré. Rendez-vous sur",
-      "notConfiguredLink": "Life Check",
-      "notConfiguredSuffix": "pour le configurer.",
-      "pauseDescription": "Mettez entièrement en pause votre Life Check — aucune vérification, aucune transmission. Statut :"
-    },
     "badge": {
       "status": {
         "active": "Actif",
@@ -761,96 +592,43 @@
       }
     },
     "return": {
-      "phraseError": "Saisissez les 24 mots de votre phrase de récupération.",
-      "successTitle": "Coffre sécurisé",
-      "successDescription": "L'accès a été révoqué et votre coffre a été rechiffré avec une nouvelle clé.",
-      "bannerTitleResume": "Terminez la sécurisation de votre coffre",
-      "bannerTitleReleased": "Votre coffre a été transmis",
-      "bannerBodyResume": "Une rotation de clé a été lancée mais non terminée. Reprenez-la pour retirer entièrement les anciennes clés.",
-      "bannerBodyReleased": "Des contacts de confiance ont obtenu un accès. Si vous êtes de retour, révoquez cet accès et rechiffrez votre coffre avec une nouvelle clé. Cela protège tout à partir de maintenant — cela ne peut pas récupérer ce qui a déjà été consulté.",
-      "resumeCta": "Reprendre la rotation de clé",
-      "secureCta": "Je suis de retour — sécuriser mon coffre",
-      "dialogTitle": "Sécuriser mon coffre",
-      "dialogDescription": "Saisissez votre phrase de récupération de 24 mots. Nous révoquerons l'accès transmis et générerons une nouvelle clé maîtresse, en rechiffrant chaque élément. Les éléments qu'un contact a déjà ouverts pendant la transmission ne peuvent pas être repris — cela sécurise tout pour l'avenir.",
-      "phrasePlaceholder": "Collez ou saisissez vos 24 mots…",
-      "cancel": "Annuler",
-      "working": "Sécurisation…",
-      "submit": "Révoquer et changer de clé",
-      "status": {
-        "validating": "Vérification de votre phrase de récupération…",
-        "rotatingKeys": "Génération d'une nouvelle clé maîtresse…",
-        "reencrypting": "Rechiffrement de votre coffre…",
-        "finalizing": "Finalisation…",
-        "done": "Terminé"
-      },
-      "forced": {
-        "dialogDescription": "Votre clé maîtresse a autrefois été divisée entre vos contacts de confiance. Keeplas ne fonctionne plus ainsi : nous retirons donc cette clé. Saisissez votre phrase de récupération de 24 mots : nous générerons une nouvelle clé maîtresse et rechiffrerons chaque élément. Vos contacts et destinataires conservent leur accès.",
-        "submit": "Changer la clé de mon coffre",
-        "successDescription": "Votre coffre utilise désormais une nouvelle clé maîtresse."
+      "releasedTitle": "Votre coffre a été transmis",
+      "releasedBody": "Vos contacts de confiance ont reçu l'accès. Si vous êtes de retour, révoquez-le maintenant, puis renouvelez les clés de votre coffre dans l'app Keeplas sur votre téléphone.",
+      "revoke": "Révoquer l'accès",
+      "revoked": "Accès révoqué. Renouvelez maintenant les clés sur votre téléphone.",
+      "failed": "Impossible de révoquer l'accès. Réessayez.",
+      "onPhone": {
+        "title": "Terminez la sécurisation sur votre téléphone",
+        "body": "Ouvrez l'app Keeplas sur votre téléphone pour renouveler la clé maîtresse de votre coffre. Ce navigateur continue de fonctionner en attendant.",
+        "ok": "OK"
       }
+    },
+    "prompt": {
+      "title": "Tout va bien ?",
+      "body": "Votre réponse régulière nous aide à garantir le respect de vos volontés et la protection de vos proches.",
+      "confirm": "Oui, je vais bien",
+      "footer": "Une absence de réponse ne suffit jamais à transmettre vos documents.",
+      "thanks": "Merci. À la prochaine vérification.",
+      "failed": "Impossible d'enregistrer votre réponse. Réessayez.",
+      "missed": {
+        "title": "Vous nous avez manqué",
+        "body": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
+        "confirm": "Je suis là"
+      }
+    },
+    "pause": {
+      "title": "Life check",
+      "description": "Désactivez-le pour suspendre toutes les vérifications. Rien n'est transmis tant qu'il est désactivé."
+    },
+    "travelOn": {
+      "title": "Le mode voyage est activé",
+      "body": "Les Life checks sont en pause. Vos contacts ne seront pas sollicités pendant votre absence.",
+      "bodyUntil": "Les Life checks sont en pause jusqu'au {date}. Vos contacts ne seront pas sollicités pendant votre absence.",
+      "changeDates": "Modifier les dates",
+      "turnOff": "Désactiver le mode voyage"
     }
   },
   "settings": {
-    "header": {
-      "openNav": "Ouvrir la navigation des paramètres",
-      "close": "Fermer les paramètres",
-      "identity": {
-        "title": "Identité",
-        "description": "Mettez à jour les informations de votre compte et la façon dont les autres vous voient sur la plateforme."
-      },
-      "security": {
-        "title": "Centre de sécurité",
-        "description": "Mots de récupération, contacts de confiance, biométrie et journal d'audit chaîné par hachage."
-      },
-      "preferences": {
-        "title": "Préférences",
-        "description": "Préférences de localisation et d'alertes pour votre système de continuité."
-      },
-      "recoveryKit": {
-        "title": "Kit de récupération",
-        "description": "Exportez le kit imprimable qui reconstruit votre coffre en cas de perte d'accès."
-      },
-      "subscription": {
-        "title": "Abonnement",
-        "description": "Forfaits, facturation et offre à vie pour votre continuité."
-      },
-      "contact": {
-        "title": "Nous contacter",
-        "description": "Questions, retours ou préoccupations de sécurité — notre équipe est là pour vous aider."
-      },
-      "roadmap": {
-        "title": "Feuille de route",
-        "description": "Ce que nous construisons ensuite — guidé par ce qui compte le plus pour protéger votre succession."
-      },
-      "fallback": {
-        "title": "Paramètres",
-        "description": "Configurez votre sanctuaire numérique."
-      }
-    },
-    "sidebar": {
-      "userAlt": "Utilisateur",
-      "defaultName": "Curateur",
-      "secureSession": "Session sécurisée",
-      "closeNav": "Fermer la navigation",
-      "roadmap": "Feuille de route",
-      "documentation": "Documentation",
-      "contact": "Nous contacter",
-      "signOut": "Se déconnecter",
-      "groups": {
-        "account": "Compte",
-        "security": "Sécurité",
-        "plansBilling": "Forfaits et facturation"
-      },
-      "items": {
-        "identity": "Identité",
-        "preferences": "Préférences",
-        "securityCenter": "Centre de sécurité",
-        "recoveryKit": "Kit de récupération",
-        "continuityProtocol": "Protocole de continuité",
-        "usage": "Utilisation",
-        "subscription": "Abonnement"
-      }
-    },
     "preferences": {
       "saveError": "Échec de l'enregistrement des préférences",
       "localization": {
@@ -960,65 +738,6 @@
         "prioritySupport": "Support prioritaire"
       }
     },
-    "usage": {
-      "title": "Ressources et utilisation",
-      "description": "Suivez le stockage chiffré et les éléments consommés par votre coffre. Lorsque vous approchez de la capacité de votre forfait, passez à un forfait supérieur pour continuer à ajouter des éléments sans interruption.",
-      "encryptedStorage": "Stockage chiffré",
-      "ofQuota": "sur {quota}",
-      "remainingPrefix": "{amount} restants sur le forfait",
-      "planNameFree": "Gratuit",
-      "planNameLifetime": "Lifetime",
-      "remainingSuffix": "",
-      "percentUsed": "{percent}% utilisé",
-      "nearLimit": "Vous approchez de votre limite de stockage. Passez à l'offre À vie pour 10 Go de capacité chiffrée et des outils de continuité supplémentaires.",
-      "upgradePlan": "Mettre à niveau le forfait",
-      "cards": {
-        "activeItems": {
-          "label": "Éléments actifs",
-          "hint": "Éléments du coffre non archivés"
-        },
-        "encryptedFiles": {
-          "label": "Fichiers chiffrés",
-          "hint": "Fichiers stockés dans votre coffre"
-        },
-        "categoriesUsed": {
-          "label": "Catégories utilisées",
-          "hint": "Catégories distinctes renseignées"
-        }
-      },
-      "itemsByCategory": "Éléments par catégorie",
-      "filesByType": "Fichiers par type",
-      "total": "{count} au total",
-      "noItems": "Aucun élément pour l'instant. Commencez à constituer votre coffre depuis l'accueil.",
-      "noFiles": "Aucun fichier chiffré joint pour l'instant.",
-      "categories": {
-        "personal_document": "Documents personnels",
-        "financial_asset": "Actifs financiers",
-        "digital_asset": "Actifs numériques",
-        "health_directive": "Directives de santé",
-        "legal_document": "Documents juridiques",
-        "business_continuity": "Continuité d'activité",
-        "conditional_message": "Messages conditionnels",
-        "credential": "Identifiants",
-        "property": "Biens immobiliers",
-        "insurance_policy": "Assurances",
-        "subscription": "Abonnements et services",
-        "contacts": "Contacts",
-        "wishes": "Volontés",
-        "other": "Autre"
-      },
-      "fileKinds": {
-        "document": "Documents",
-        "image": "Images",
-        "audio": "Audio",
-        "video": "Vidéo"
-      },
-      "needCapacity": {
-        "title": "Besoin de plus de capacité ?",
-        "description": "L'offre À vie débloque 10 Go de stockage à connaissance nulle, des messages vidéo de continuité et le moteur de scénarios complet — pour toujours, en un seul paiement."
-      },
-      "comparePlans": "Comparer les forfaits"
-    },
     "identity": {
       "updateError": "Échec de la mise à jour du profil",
       "unknown": "Inconnu",
@@ -1074,16 +793,59 @@
         "notSet": "Non défini",
         "notDeclared": "Non déclaré"
       }
+    },
+    "overview": {
+      "title": "Paramètres",
+      "subtitle": "Gérez votre offre, votre stockage et vos préférences.",
+      "back": "Paramètres",
+      "on": "Activées",
+      "off": "Désactivées",
+      "languages": {
+        "en": "English",
+        "fr": "Français"
+      },
+      "frequency": {
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuel",
+        "quarterly": "Trimestriel",
+        "off": "Désactivé"
+      },
+      "storage": {
+        "title": "Stockage",
+        "of": "sur {quota} utilisés",
+        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement."
+      },
+      "plan": {
+        "label": "Votre offre",
+        "free": {
+          "name": "Gratuite",
+          "summary": "Coffre de 100 Mo · Jusqu'à 3 contacts de confiance · Life check"
+        },
+        "lifetime": {
+          "name": "À vie",
+          "summary": "Coffre de 10 Go · Jusqu'à 3 contacts de confiance · Life check"
+        },
+        "upgrade": "Passer à l'offre À vie · 199 $",
+        "upgradeNote": "Coffre de 10 Go. Paiement unique."
+      },
+      "preferences": {
+        "language": "Langue",
+        "lifeCheck": "Life check",
+        "notifications": "Notifications"
+      },
+      "more": {
+        "recoveryCenter": "Centre de récupération",
+        "account": "Compte",
+        "contact": "Nous contacter",
+        "roadmap": "À venir",
+        "signOut": "Se déconnecter"
+      }
     }
   },
   "settingsSecurity": {
     "countryCombobox": {
       "placeholder": "Rechercher un pays…",
       "empty": "Aucun pays ne correspond à votre recherche."
-    },
-    "continuity": {
-      "title": "Protocole de continuité",
-      "description": "Pause générale et mode voyage pour l'ensemble du protocole de continuité. Le désactiver ici suspend simultanément l'escalade du Life Check et le moteur de scénarios — idéal pour les séjours hors réseau. Utilisez le mode voyage lorsque vous avez une date de retour, afin que tout reprenne automatiquement."
     },
     "residence": {
       "error": "Échec de la mise à jour de la résidence légale",
@@ -1203,92 +965,11 @@
       "skip": "Ignorer",
       "bindButton": "Lier la récupération",
       "skipHint": "Ignorer est sans risque. Sans liaison, perdre votre téléphone signifie que vous devrez contacter le support pour réinitialiser la 2FA."
-    },
-    "center": {
-      "loading": "Chargement du Centre de sécurité"
-    },
-    "socialRecovery": {
-      "title": "Récupération sociale",
-      "statusActive": "Statut : active et sécurisée",
-      "statusAwaiting": "Statut : en attente de gardiens",
-      "guardiansVerified": "{count} gardiens vérifiés sur {total}",
-      "pending": "En attente…",
-      "resendInvites": "Renvoyer les invitations",
-      "inviteGuardian": "Inviter un gardien",
-      "manageRules": "Gérer les règles des gardiens"
-    },
-    "recoveryKitShortcut": {
-      "title": "Kit de récupération",
-      "description": "Générez une feuille de récupération physique et hors ligne contenant des fragments chiffrés des métadonnées de votre coffre.",
-      "cta": "Imprimer le kit physique"
-    },
-    "masterRecovery": {
-      "title": "Récupération maîtresse",
-      "recoveryPhraseLabel": "Phrase de récupération",
-      "recoveryPhraseHashed": "Hachée et vérifiée",
-      "recoveryPhraseNotGenerated": "Pas encore générée",
-      "configureAdditional": "Gérer les contacts de confiance",
-      "description": "Votre clé maîtresse est scellée par vos 24 mots de récupération et ne quitte jamais vos appareils. Elle n'est jamais divisée : vos contacts de confiance confirment s'il vous arrive quelque chose, mais ne détiennent aucune partie de votre clé et ne peuvent pas ouvrir votre coffre.",
-      "guardianLabel": "Contact de confiance n°{index}",
-      "guardianHint": "{name} · confirme si vous êtes injoignable"
-    },
-    "activityLog": {
-      "title": "Journal d'activité",
-      "hashChained": "Chaîné par hachage · {count} entrées",
-      "totalEvents": "Total des événements",
-      "lastActivity": "Dernière activité",
-      "pendingAccess": "Accès en attente",
-      "approvedAccess": "Accès approuvés",
-      "empty": "Aucun événement enregistré pour l'instant.",
-      "actor": "acteur : {actor}"
-    },
-    "lastAccess": {
-      "today": "Aujourd'hui, {time}",
-      "from": "depuis {country}",
-      "verifiedSession": "Appareil vérifié · session à connaissance nulle",
-      "label": "Dernier accès"
-    },
-    "recoveryKit": {
-      "loading": "Chargement du kit de récupération",
-      "title": "Clé de récupération maîtresse",
-      "intro": "Ce document est l'unique moyen de récupérer votre Keeplas Architectural Vault en cas de perte d'accès. Conservez-le dans un lieu physiquement sécurisé et ignifuge. Ne partagez ces identifiants avec personne.",
-      "relock": "Reverrouiller",
-      "printSecureCopy": "Imprimer une copie sécurisée",
-      "generatingPdf": "Génération du PDF…",
-      "downloadPdf": "Télécharger le PDF",
-      "architecturalVault": "The Architectural Vault",
-      "identityTitle": "Vérification d'identité",
-      "identityDescription": "Cette clé est liée cryptographiquement à votre empreinte biométrique et à votre registre de vie vérifié.",
-      "coldStorageTitle": "Stockage à froid",
-      "coldStorageDescription": "Recommandé pour un stockage physique uniquement. Les sauvegardes hors ligne empêchent toute extraction numérique.",
-      "documentId": "Identifiant du document",
-      "account": "Compte",
-      "step01": "Étape 01",
-      "step02": "Étape 02",
-      "qrTitle": "QR code de récupération",
-      "qrDescription": "Scannez ce code à l'aide du portail de récupération Keeplas ou de tout appareil sécurisé compatible Material pour lancer le processus de restauration du coffre.",
-      "checkE2e": "Protocole chiffré de bout en bout",
-      "checkSingleUse": "Jeton de récupération à usage unique",
-      "seedTitle": "Phrase de récupération",
-      "finalWarningTitle": "Avertissement final",
-      "finalWarningDescription": "Perdre ce document signifie la perte définitive de tous les actifs hérités. Keeplas ne conserve aucune copie de votre phrase de récupération.",
-      "userValidationTitle": "Validation de l'utilisateur",
-      "generatedOn": "Généré le {date}.",
-      "qrSealed": "QR scellé jusqu'au déverrouillage",
-      "secureScanPoint": "Point de scan sécurisé",
-      "phraseLengthError": "Votre phrase de récupération doit comporter exactement 12 ou 24 mots.",
-      "unlockReveal": "Déverrouiller et révéler",
-      "unlockDescription": "Saisissez votre phrase de récupération pour afficher le QR code et la grille de mots. Votre phrase est traitée localement et n'est jamais envoyée à Keeplas.",
-      "pasteHint": "Collez les 24 mots (ou 12 si votre phrase en compte 12). La casse, les espaces, les chiffres et la ponctuation sont ignorés — vous pouvez coller directement depuis le PDF.",
-      "revealCta": "Révéler le kit de récupération"
     }
   },
   "sharedWithMe": {
     "list": {
-      "empty": {
-        "title": "Aucun coffre ne vous est encore confié",
-        "description": "Lorsqu'une personne vous ajoute comme contact de confiance et que vous acceptez l'invitation, le coffre qu'elle protège apparaîtra ici."
-      }
+      "title": "Coffres que vous protégez"
     },
     "card": {
       "phase": {
@@ -1391,6 +1072,26 @@
       "open": "Ouvrir",
       "enlarge": "Agrandir",
       "close": "Fermer"
+    },
+    "folders": {
+      "title": "Partagé avec moi",
+      "subtitle": "Les documents partagés avec vous par des personnes qui vous font confiance.",
+      "sharedBy": "Partagé par {name}",
+      "permission": "Autorisation",
+      "view": "Consultation",
+      "name": "Nom",
+      "size": "Taille",
+      "updated": "Mis à jour",
+      "download": "Télécharger",
+      "locked": {
+        "title": "Accès après vérification",
+        "body": "{name}, de {owner}. Après 2 confirmations et un délai de grâce de 72 heures."
+      },
+      "empty": {
+        "title": "Rien n'a encore été partagé avec vous",
+        "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
+      },
+      "downloadFailed": "Impossible de télécharger ce fichier. Réessayez."
     }
   },
   "trustedContacts": {
@@ -1444,8 +1145,9 @@
       "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
     },
     "emptyState": {
-      "title": "Invitez votre premier gardien",
-      "description": "Invitez au moins 2 gardiens de confiance — deux d'entre eux doivent confirmer avant toute transmission. Les bénéficiaires ne sont soumis à aucune limite."
+      "title": "Aucun contact de confiance",
+      "description": "Ajoutez au moins 2 personnes qui peuvent vous aider à revenir ou recevoir votre coffre.",
+      "action": "Ajouter un contact"
     },
     "trustContacts": {
       "heading": "Contacts de confiance",
@@ -1630,10 +1332,21 @@
       "savedTitle": "Pièces jointes enregistrées",
       "savedDescription": "{label} — {count} fichier chiffré et téléversé",
       "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
-      "failedTitle": "Échec de certaines pièces jointes",
-      "failedDescription": "{label} — {completed}/{total} fichiers enregistrés · {failed} en échec ({error})",
-      "retryAltText": "Réessayer l'envoi des pièces jointes en échec",
-      "retry": "Réessayer"
+      "state": {
+        "failed": {
+          "title": "Échec de l'envoi",
+          "body": "« {name} » n'a pas été envoyé. Il reste sur cette page jusqu'à ce que vous réessayiez ou la quittiez.",
+          "retry": "Réessayer",
+          "remove": "Retirer de la file"
+        },
+        "full": {
+          "title": "Vos {quota} sont pleins",
+          "bodyFree": "L'espace gratuit est utilisé. Supprimez des éléments ou passez à l'offre À vie pour 10 Go.",
+          "body": "Votre espace est utilisé. Supprimez des éléments pour en libérer.",
+          "upgrade": "Passer à l'offre À vie",
+          "manage": "Gérer le stockage"
+        }
+      }
     },
     "page": {
       "loading": "Chargement de votre coffre",
@@ -1657,7 +1370,8 @@
       "subscription": "Abonnements et services",
       "contacts": "À contacter",
       "wishes": "Dernières volontés",
-      "other": "Autre"
+      "other": "Autre",
+      "inbox": "Boîte de réception chiffrée"
     },
     "sections": {
       "documents": {
@@ -1989,7 +1703,6 @@
         "items": {
           "hub": "Accueil",
           "security": "Centre de sécurité",
-          "recoveryKit": "Kit de récupération",
           "subscription": "Abonnement"
         }
       },
@@ -2383,8 +2096,7 @@
           "body": "Sans la phrase, il ne peut pas déverrouiller sa clé maîtresse — donc il ne peut pas déchiffrer sa clé privée ML-KEM — donc il ne peut pas déchiffrer sa part. Son emplacement devient un poids mort permanent. En tant que propriétaire du coffre, vous devriez le révoquer, inviter un remplaçant, puis cliquer sur Distribuer maintenant pour émettre de nouvelles parts à tous les contacts de confiance actuels."
         }
       },
-      "trustedLink": "Les contacts de confiance en détail",
-      "recoveryKitLink": "Exporter votre kit de récupération"
+      "trustedLink": "Les contacts de confiance en détail"
     },
     "insights": {
       "eyebrow": "Réfléchir & Préparer",
@@ -2507,54 +2219,27 @@
     "openApp": "Ouvrir Keeplas"
   },
   "invite": {
-    "invalid": {
-      "badge": "Lien d'invitation",
-      "heading": "Invitation invalide",
-      "body": "Ce lien d'invitation est invalide ou a expiré. Demandez au propriétaire du coffre de vous en envoyer un nouveau."
+    "openOnPhone": {
+      "title": "Ouvrez ce lien sur votre téléphone",
+      "body": "Keeplas fonctionne sur mobile. Ouvrez ce lien sur votre téléphone, ou scannez le QR code affiché sur cette page.",
+      "action": "Ouvrir dans l'application Keeplas"
     },
-    "goToKeeplas": "Aller sur Keeplas",
-    "processed": {
-      "badge": "Statut de l'invitation",
-      "heading": "Invitation déjà traitée",
-      "accepted": "Vous avez déjà accepté cette invitation.",
-      "declined": "Vous avez déjà refusé cette invitation."
+    "expired": {
+      "title": "Cette invitation a expiré",
+      "body": "Demandez à {name} de vous envoyer un nouveau lien.",
+      "bodyNoName": "Demandez à la personne qui vous a invité de vous envoyer un nouveau lien.",
+      "action": "OK"
     },
-    "goToHub": "Aller à l'accueil",
-    "confirmed": {
-      "badge": "Confirmé",
-      "heading": "Vous êtes désormais contact de confiance",
-      "bodyPre": "Vous faites désormais partie du cercle de confiance de ",
-      "bodyPost": ". Vous aiderez à confirmer s'il lui arrive quelque chose — vous ne détiendrez aucune partie de sa clé."
+    "accepted": {
+      "title": "Vous avez déjà accepté",
+      "body": "Vous faites partie des Contacts de {name}. Rien d'autre à faire.",
+      "action": "Ouvrir Keeplas"
     },
-    "invite": {
-      "badge": "Invitation de contact de confiance",
-      "heading": "{name} vous a invité",
-      "bodyPre": "Vous avez été désigné comme ",
-      "bodyPost": " dans le coffre Keeplas de {name}."
-    },
-    "roles": {
-      "family": "Membre de la famille",
-      "friend": "Ami(e)",
-      "lawyer": "Avocat(e)",
-      "doctor": "Médecin",
-      "other": "Contact de confiance"
-    },
-    "roleFallback": "contact de confiance",
-    "meaning": {
-      "title": "Ce que cela signifie",
-      "bullet1": "Vous ne détenez aucune clé de son coffre et ne pouvez pas le lire.",
-      "bullet2": "Il pourra vous être demandé de confirmer si cette personne est joignable.",
-      "bullet3": "Vous ne verrez jamais le contenu du coffre, sauf si l'accès vous est explicitement accordé."
-    },
-    "needAccount": "Vous avez besoin d'un compte Keeplas pour accepter cette invitation.",
-    "createAccount": "Créer un compte",
-    "signIn": "Se connecter",
-    "accepting": "Acceptation…",
-    "accept": "Accepter l'invitation",
-    "declining": "Refus…",
-    "decline": "Refuser",
-    "acceptFailed": "Échec de l'acceptation de l'invitation",
-    "declineFailed": "Échec du refus de l'invitation"
+    "declined": {
+      "title": "Invitation refusée",
+      "body": "Nous préviendrons {name} que vous avez refusé. C'est définitif, mais {name} pourra vous inviter à nouveau.",
+      "action": "Terminer"
+    }
   },
   "security": {
     "badge1": "Sécurité & Confidentialité",
@@ -2627,7 +2312,7 @@
     },
     "cta": {
       "prompt": "Prêt à configurer votre coffre ?",
-      "create": "Créer votre coffre",
+      "create": "Obtenir l'application",
       "have": "J'en ai déjà un"
     },
     "faq": [
@@ -2740,6 +2425,133 @@
       "heading": "Il vous manque quelque chose ?",
       "description": "Dites-nous ce qui rendrait Keeplas indispensable pour vous. Nous lisons chaque demande.",
       "cta": "Demander une fonctionnalité"
+    }
+  },
+  "getApp": {
+    "heroTitle": "Votre vie,\nbien gardée",
+    "heroBody": "Un espace privé pour vos documents importants, vos comptes, vos instructions et plus encore.",
+    "title": "Keeplas commence sur votre téléphone",
+    "body": "Créez votre compte dans l'application Keeplas, puis associez cet ordinateur en scannant un QR code.",
+    "scan": "Scannez pour télécharger l'application",
+    "haveApp": "J'ai déjà l'application",
+    "linkWithPhone": "Associer avec mon téléphone",
+    "stores": {
+      "appStoreCaption": "Télécharger dans l'",
+      "playCaption": "Disponible sur"
+    },
+    "scanInApp": {
+      "title": "Ouvrez l'application Keeplas pour scanner ce code",
+      "body": "Ce code associe un ordinateur à un compte Keeplas. Scannez-le depuis l'application Keeplas sur votre téléphone."
+    }
+  },
+  "recoveryCenter": {
+    "title": "Centre de récupération",
+    "subtitle": "La récupération commence sur votre téléphone. Ici, vous pouvez suivre une demande en cours et l'annuler.",
+    "account": {
+      "title": "Votre compte",
+      "identified": "Identifié par numéro de téléphone",
+      "note": "Il nous aide à retrouver votre compte. Votre téléphone seul ne peut pas le déverrouiller."
+    },
+    "options": {
+      "title": "Options de récupération",
+      "onPhone": "Sur votre téléphone",
+      "ready": "Configuré",
+      "anotherDevice": {
+        "title": "Un autre appareil",
+        "description": "Utilisez un appareil sur lequel vous êtes déjà connecté."
+      },
+      "trustContacts": {
+        "title": "Contacts de confiance",
+        "description": "Demandez l'accord de vos contacts de confiance."
+      },
+      "recoveryKit": {
+        "title": "Kit de récupération",
+        "description": "Utilisez votre kit de récupération de 24 mots."
+      }
+    },
+    "request": {
+      "title": "Demande de récupération en cours",
+      "approved": "{count} sur 2 validations",
+      "code": "Code de récupération",
+      "hoursLeft": "{hours} heures restantes",
+      "hourLeft": "1 heure restante",
+      "windowEnded": "Fenêtre de protection terminée",
+      "cancel": "Annuler la demande"
+    },
+    "cancelDialog": {
+      "title": "Annuler cette demande de récupération ?",
+      "body": "Si vous n'en êtes pas à l'origine, annulez-la maintenant. Le nouvel appareil n'aura pas accès et vos contacts sont prévenus que la demande est close.",
+      "done": "Demande de récupération annulée",
+      "failed": "Impossible d'annuler la demande. Réessayez."
+    }
+  },
+  "devices": {
+    "title": "Appareils et sécurité",
+    "subtitle": "Gérez les appareils connectés et les réglages de sécurité.",
+    "connected": "Appareils connectés",
+    "current": "{label} (actuel)",
+    "thisDevice": "Cet appareil",
+    "connectedNow": "Connecté maintenant",
+    "lastActive": "Actif {time}",
+    "revoke": "Révoquer",
+    "failed": "Une erreur est survenue. Réessayez.",
+    "kind": {
+      "ios": "iOS · App Keeplas",
+      "android": "Android · App Keeplas",
+      "web": "Navigateur"
+    },
+    "revokeDialog": {
+      "title": "Révoquer {label} ?",
+      "body": "Il est déconnecté et ne pourra revenir qu'avec une nouvelle validation depuis votre téléphone.",
+      "done": "Appareil révoqué"
+    },
+    "alert": {
+      "title": "Nouvelle connexion",
+      "notMe": "Ce n'était pas moi ?",
+      "itWasMe": "C'était moi",
+      "confirmed": "Merci, la connexion est confirmée"
+    },
+    "notMeDialog": {
+      "title": "Sécuriser votre compte ?",
+      "body": "Nous révoquons {label}, déconnectons vos autres sessions et annulons toute récupération en cours. Terminez ensuite la sécurisation de votre coffre dans l'app Keeplas sur votre téléphone.",
+      "confirm": "Sécuriser mon compte",
+      "done": "Compte sécurisé. Terminez sur votre téléphone."
+    },
+    "pin": {
+      "title": "Code PIN (après la biométrie)",
+      "description": "Demander un PIN après Face ID ou l'empreinte.",
+      "removeTitle": "Désactiver le PIN sur ce navigateur ?",
+      "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
+      "removeConfirm": "Désactiver",
+      "removed": "PIN désactivé"
+    },
+    "activity": {
+      "title": "Activité récente",
+      "seeAll": "Tout voir",
+      "empty": "Aucune activité pour l'instant.",
+      "actions": {
+        "device_registered": "Nouvel appareil associé",
+        "device_confirmed": "Connexion confirmée",
+        "device_revoked": "Appareil révoqué",
+        "device_not_me": "Appareil inconnu bloqué",
+        "pairing_session_approved": "Navigateur associé",
+        "passkey_registered": "Clé d'accès ajoutée",
+        "passkey_removed": "Clé d'accès supprimée",
+        "vault_item_created": "Élément ajouté",
+        "vault_item_updated": "Élément modifié",
+        "vault_item_deleted": "Élément supprimé",
+        "folder_access_granted": "Dossier partagé",
+        "folder_access_revoked": "Accès au dossier retiré",
+        "trusted_contact_invited": "Contact invité",
+        "trusted_contact_accepted": "Contact inscrit",
+        "trusted_contact_revoked": "Contact retiré",
+        "recovery_request_started": "Récupération demandée",
+        "recovery_request_cancelled": "Récupération annulée",
+        "recovery_request_released": "Récupération validée",
+        "life_check_user_confirmed": "Life check confirmé",
+        "cloud_backup_enabled": "Sauvegarde activée",
+        "cloud_backup_disabled": "Sauvegarde désactivée"
+      }
     }
   }
 }

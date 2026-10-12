@@ -20,6 +20,7 @@ import { useTranslations } from "@/lib/i18n";
 import { getCategoryConfig } from "@/lib/vault-categories";
 import { useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { useItemCategories } from "@/lib/use-item-categories";
 import {
   computeVerificationBadge,
   formatRelative,
@@ -89,6 +90,7 @@ function ContactDetailBody({
     contactId: contact._id,
   });
   const titles = useDecryptedTitles(summary?.releasedItems);
+  const categories = useItemCategories(summary?.releasedItems);
 
   async function handleRevoke() {
     if (!confirmRevoke) {
@@ -273,7 +275,9 @@ function ContactDetailBody({
                     className="flex items-center gap-3 p-3 rounded-xs bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors"
                   >
                     <Icon
-                      path={getCategoryConfig(item.category).icon}
+                      path={
+                        getCategoryConfig(categories[item._id] ?? "other").icon
+                      }
                       className="w-4 h-4 text-secondary shrink-0"
                     />
                     <div className="min-w-0 flex-1">
@@ -281,7 +285,7 @@ function ContactDetailBody({
                         {titles[item._id] ?? ""}
                       </p>
                       <p className="text-label-md text-on-surface-variant">
-                        {categoryLabel(item.category)} ·{" "}
+                        {categoryLabel(categories[item._id] ?? "other")} ·{" "}
                         {t(
                           `detail.recipientMode.${RECIPIENT_MODE_KEYS[item.recipientMode]}`,
                         )}

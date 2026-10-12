@@ -21,4 +21,17 @@ describe("Button", () => {
       "bg-error",
     );
   });
+
+  it("applies the v2 primary variant with semantic tokens", () => {
+    render(
+      <Button variant="primary" size="cta">
+        Continue
+      </Button>,
+    );
+    const className = screen.getByRole("button", {
+      name: "Continue",
+    }).className;
+    expect(className).toContain("bg-action-primary");
+    expect(className).toContain("h-[52px]");
+  });
 });

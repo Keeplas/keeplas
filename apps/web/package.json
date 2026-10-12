@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:visual": "playwright test -c visual/playwright.config.ts",
     "clean": "rm -rf .output .nitro .vite dist .turbo node_modules"
   },
   "dependencies": {
@@ -27,8 +28,6 @@
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/react-start": "^1.168.61",
     "convex": "^1.40.0",
-    "html2canvas-pro": "^2.0.4",
-    "jspdf": "^4.2.1",
     "nitro": "3.0.260603-beta",
     "qrcode.react": "^4.2.0",
     "react": "19.2.7",
@@ -37,10 +36,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^25",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.2.0",
@@ -48,6 +49,8 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1",

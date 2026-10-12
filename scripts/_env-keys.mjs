@@ -47,6 +47,10 @@ export const WEB_REQUIRED = [
 ];
 
 export const WEB_OPTIONAL_GROUPS = {
+  "Mobile app stores": [
+    "NEXT_PUBLIC_APP_STORE_URL",
+    "NEXT_PUBLIC_PLAY_STORE_URL",
+  ],
   "Email (Resend)": [
     "RESEND_API_KEY",
     "RESEND_FROM_EMAIL",
@@ -63,6 +67,12 @@ export const WEB_OPTIONAL_GROUPS = {
     "INFOBIP_BASE_URL",
     "INFOBIP_API_KEY",
     "INFOBIP_WHATSAPP_SENDER",
+  ],
+  "App association (/.well-known)": [
+    "APPLE_TEAM_ID",
+    "IOS_BUNDLE_ID",
+    "ANDROID_PACKAGE_NAME",
+    "ANDROID_SHA256_CERT_FINGERPRINTS",
   ],
 };
 
@@ -113,6 +123,22 @@ export const CONVEX_OPTIONAL_GROUPS = {
     "STRIPE_PRICE_LIFETIME",
   ],
   "Kill switches": ["NOTIFICATIONS_PAUSED", "LIFE_CHECK_PAUSED"],
+  "Owner recovery gate key (KMS)": [
+    "GATE_KEY_KMS",
+    "GATE_KEY_LOCAL_KEK",
+    "INFISICAL_KMS_SITE_URL",
+    "INFISICAL_KMS_KEY_ID",
+    "INFISICAL_KMS_CLIENT_ID",
+    "INFISICAL_KMS_CLIENT_SECRET",
+  ],
+  "Mobile sign-up attestation": [
+    "APPLE_TEAM_ID",
+    "IOS_BUNDLE_ID",
+    "APP_ATTEST_ALLOW_DEVELOPMENT",
+    "ANDROID_PACKAGE_NAME",
+    "GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT",
+    "ATTESTATION_SIMULATOR_BYPASS",
+  ],
 };
 
 // Keys pushed by `sync-convex-env.mjs` from local env files to Convex.
@@ -146,6 +172,18 @@ export const CONVEX_SYNC_KEYS = [
   "STRIPE_PRICE_LIFETIME",
   "NOTIFICATIONS_PAUSED",
   "LIFE_CHECK_PAUSED",
+  // APP_ATTEST_ALLOW_DEVELOPMENT / ATTESTATION_SIMULATOR_BYPASS are dev-only
+  // and deliberately never synced: set them by hand on a dev deployment.
+  "APPLE_TEAM_ID",
+  "IOS_BUNDLE_ID",
+  "ANDROID_PACKAGE_NAME",
+  "GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT",
+  "GATE_KEY_KMS",
+  "GATE_KEY_LOCAL_KEK",
+  "INFISICAL_KMS_SITE_URL",
+  "INFISICAL_KMS_KEY_ID",
+  "INFISICAL_KMS_CLIENT_ID",
+  "INFISICAL_KMS_CLIENT_SECRET",
 ];
 
 // Subset of CONVEX_SYNC_KEYS that MUST have a non-empty local value when syncing

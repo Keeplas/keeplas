@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import { Button, Input, Label, Spinner } from "@keeplas/ui";
 import {
   PIN_MIN_LENGTH,
@@ -13,17 +14,17 @@ import { useTranslations } from "@/lib/i18n";
 type Method = "pin" | "biometric" | "hardware-key";
 
 interface EnrollDeviceUnlockDialogProps {
-  userEmail: string;
+  user: Doc<"users">;
   onClose: () => void;
 }
 
 export function EnrollDeviceUnlockDialog({
-  userEmail,
+  user,
   onClose,
 }: EnrollDeviceUnlockDialogProps) {
   const t = useTranslations("settingsSecurity");
   const { masterKey } = useMasterKey();
-  const { enroll } = useDeviceUnlock({ userEmail });
+  const { enroll } = useDeviceUnlock(user);
   const [method, setMethod] = useState<Method | null>(null);
   const [pin, setPin] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");

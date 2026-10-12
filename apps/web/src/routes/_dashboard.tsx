@@ -2,15 +2,19 @@ import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { Loader } from "@keeplas/ui";
-import { Sidebar } from "@/components/sidebar";
-import { FabAddEntry } from "@/components/fab-add-entry";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { AppShell } from "@/components/shell/app-shell";
+import { ShellAccountProvider } from "@/components/shell/shell-account";
 import { UnlockGate } from "@/components/unlock-gate";
 import { ForcedRotationGate } from "@/components/forced-rotation-gate";
+import { LifeCheckPrompt } from "@/components/life-check-prompt";
+import { OfflineNotice } from "@/components/offline-notice";
 import { UploadQueueProvider } from "@/lib/upload-queue";
 import { useTranslations } from "@/lib/i18n";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
 import { purgeLegacyShards } from "@/lib/purge-legacy-shards";
 import { api } from "@keeplas/backend/_generated/api";
+import { getInitials } from "@/lib/user";
 
 export const Route = createFileRoute("/_dashboard")({
   component: DashboardLayout,
@@ -30,10 +34,8 @@ function DashboardLayout() {
   const t = useTranslations("chrome");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const navigate = useNavigate();
-  const onboardingState = useQuery(
-    api.onboarding.getOnboardingState,
-    isAuthenticated ? {} : "skip",
-  );
+  const { signOut } = useAuthActions();
+  const viewer = useQuery(api.users.viewer, isAuthenticated ? {} : "skip");
   const totpGate = useQuery(
     api.totp.getMyTotpGate,
     isAuthenticated ? {} : "skip",
@@ -54,12 +56,6 @@ function DashboardLayout() {
   }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
-    if (onboardingState && onboardingState.onboardingStep !== "complete") {
-      navigate({ to: "/onboarding" });
-    }
-  }, [onboardingState, navigate]);
-
-  useEffect(() => {
     if (totpGate?.required) {
       navigate({ to: "/login/totp" });
     }
@@ -73,20 +69,11 @@ function DashboardLayout() {
     }
   }, [totpGate, loginOtpGate?.required, navigate]);
 
-  if (
-    isLoading ||
-    onboardingState === undefined ||
-    totpGate === undefined ||
-    loginOtpGate === undefined
-  ) {
+  if (isLoading || totpGate === undefined || loginOtpGate === undefined) {
     return <Loader fullscreen label={t("layout.unlockingVault")} />;
   }
 
   if (!isAuthenticated) {
-    return null;
-  }
-
-  if (onboardingState && onboardingState.onboardingStep !== "complete") {
     return null;
   }
 
@@ -103,13 +90,18 @@ function DashboardLayout() {
       <UploadQueueProvider>
         <PendingShareBackfill />
         <ForcedRotationGate />
-        <div className="flex flex-col md:flex-row min-h-screen">
-          <Sidebar />
-          <main className="flex-1 min-w-0 px-6 py-6 pb-24 md:pb-6">
+        <LifeCheckPrompt />
+        <OfflineNotice />
+        <ShellAccountProvider
+          account={{
+            initials: getInitials(viewer?.name, 1),
+            signOut: () => void signOut(),
+          }}
+        >
+          <AppShell>
             <Outlet />
-          </main>
-          <FabAddEntry />
-        </div>
+          </AppShell>
+        </ShellAccountProvider>
       </UploadQueueProvider>
     </UnlockGate>
   );

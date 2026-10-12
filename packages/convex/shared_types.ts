@@ -12,6 +12,7 @@ export type VaultCategory =
   | "subscription"
   | "contacts"
   | "wishes"
-  | "other";
+  | "other"
+  | "inbox";
 
 export type AccessLevel = "private" | "trusted_only";

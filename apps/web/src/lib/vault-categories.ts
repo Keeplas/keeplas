@@ -63,6 +63,11 @@ export const CATEGORIES: CategoryConfig[] = [
     icon: "M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.456-2.456L14.25 6l1.035-.259a3.375 3.375 0 0 0 2.456-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z",
   },
   {
+    key: "inbox",
+    // Heroicons outline "inbox".
+    icon: "M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z",
+  },
+  {
     key: "other",
     icon: "M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
   },
@@ -71,3 +76,33 @@ export const CATEGORIES: CategoryConfig[] = [
 export function getCategoryConfig(key: VaultCategory): CategoryConfig {
   return CATEGORIES.find((c) => c.key === key)!;
 }
+
+/**
+ * v2 groups the detailed categories into Documents, Accounts, Instructions
+ * and Other (design kit), plus the Encrypted inbox: captures from the phone
+ * app waiting to be sorted (category "inbox").
+ */
+export type CategoryGroup =
+  "inbox" | "document" | "account" | "instruction" | "other";
+
+const CATEGORY_GROUP: Partial<Record<string, CategoryGroup>> = {
+  inbox: "inbox",
+  personal_document: "document",
+  legal_document: "document",
+  property: "document",
+  insurance_policy: "document",
+  business_continuity: "document",
+  financial_asset: "account",
+  digital_asset: "account",
+  credential: "account",
+  subscription: "account",
+  health_directive: "instruction",
+  conditional_message: "instruction",
+  wishes: "instruction",
+  contacts: "instruction",
+  other: "other",
+};
+
+/** Group of a (decrypted) category; unknown values count as "other". */
+export const categoryGroup = (category: string | undefined): CategoryGroup =>
+  CATEGORY_GROUP[category ?? "other"] ?? "other";

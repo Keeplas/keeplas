@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@/lib/navigation";
 import { useRouter } from "@/lib/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -72,7 +71,11 @@ export default function LoginOtpPage() {
     setBusy(true);
     setError(null);
     try {
-      await submit({ code: code.trim() });
+      const result = await submit({ code: code.trim() });
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
       router.push("/hub");
     } catch (err) {
       setError(getErrorMessage(err, t("verifyFailed")));
@@ -167,18 +170,9 @@ export default function LoginOtpPage() {
                 ? c("resendIn", { seconds: cooldownRemaining })
                 : t("resend")}
           </button>
-          {gate.recoveryBound ? (
-            <Link
-              href="/login/otp/recovery"
-              className="block text-body-md text-secondary hover:underline"
-            >
-              {t("useRecovery")}
-            </Link>
-          ) : (
-            <p className="text-body-md text-on-surface-variant">
-              {t("recoveryNotConfigured")}
-            </p>
-          )}
+          <p className="text-body-md text-on-surface-variant">
+            {t("recoverInApp")}
+          </p>
           <button
             type="button"
             onClick={() => signOut()}

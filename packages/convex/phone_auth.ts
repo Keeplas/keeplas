@@ -6,25 +6,18 @@ import {
   internalQuery,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
+import { consumeSignupGrant } from "./attestation";
+import { checkOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-const MAX_ATTEMPTS = 5;
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);
@@ -69,6 +62,9 @@ export const requestPhoneAuthOtp = mutation({
       );
     }
 
+    // Mobile-only sign-up: the app must have attested first (M09-9).
+    if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
+
     const now = Date.now();
     const recent = await ctx.db
       .query("phone_auth_codes")
@@ -108,38 +104,27 @@ export const requestPhoneAuthOtp = mutation({
  * Throws on any failure; deletes the code on success.
  */
 export const consumePhoneAuthCode = internalMutation({
-  args: { phoneNumber: v.string(), code: v.string() },
+  args: {
+    phoneNumber: v.string(),
+    code: v.string(),
+    intent: v.union(v.literal("signup"), v.literal("signin")),
+  },
   handler: async (ctx, args) => {
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new Error("Invalid phone number");
-    const trimmed = args.code.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      throw new Error("Code must be 6 digits");
-    }
+    // A sign-in code never creates an account: sign-up needs a code issued
+    // against an attestation grant, so only codes of this flow count.
+    const candidates = (
+      await ctx.db
+        .query("phone_auth_codes")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
+        .collect()
+    ).filter((c) => c.intent === args.intent);
+    const check = await checkOtp(ctx, candidates, args.code);
+    if ("wrong" in check) return { ok: false as const, error: INVALID_CODE };
 
-    const now = Date.now();
-    const candidates = await ctx.db
-      .query("phone_auth_codes")
-      .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
-      .collect();
-    const active = candidates
-      .filter((c) => c.expiresAt > now)
-      .sort((a, b) => b._creationTime - a._creationTime)[0];
-    if (!active) throw new Error("Code expired or not requested");
-
-    if (active.attempts >= MAX_ATTEMPTS) {
-      await ctx.db.delete(active._id);
-      throw new Error("Too many attempts. Request a new code.");
-    }
-
-    const submittedHash = await sha256Hex(trimmed);
-    if (submittedHash !== active.codeHash) {
-      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
-      throw new Error("Invalid code");
-    }
-
-    await ctx.db.delete(active._id);
-    return { ok: true };
+    await ctx.db.delete(check.active._id);
+    return { ok: true as const };
   },
 });
 

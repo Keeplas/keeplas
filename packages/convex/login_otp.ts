@@ -3,21 +3,13 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
+import { checkOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-const MAX_ATTEMPTS = 5;
-
-async function sha256Hex(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 function generateOtp(): string {
   const arr = new Uint32Array(1);
@@ -191,10 +183,6 @@ export const submitLoginOtpForSession = mutation({
   args: { code: v.string() },
   handler: async (ctx, { code }) => {
     const userId = await requireAuth(ctx);
-    const trimmed = code.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      throw new Error("Code must be 6 digits");
-    }
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) throw new Error("No active session.");
 
@@ -203,27 +191,17 @@ export const submitLoginOtpForSession = mutation({
       .query("login_otp_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
-    const active = candidates
-      .filter((c) => c.expiresAt > now)
-      .sort((a, b) => b._creationTime - a._creationTime)[0];
-    if (!active) throw new Error("Code expired or not requested");
-
-    if (active.attempts >= MAX_ATTEMPTS) {
-      await ctx.db.delete(active._id);
-      throw new Error("Too many attempts. Request a new code.");
+    const check = await checkOtp(ctx, candidates, code);
+    if ("wrong" in check) {
+      return { success: false as const, error: INVALID_CODE };
     }
+    const { active } = check;
 
     const user = await ctx.db.get(userId);
     const resolved = user ? resolveChannel(user) : null;
     if (!resolved || resolved.destination !== active.destination) {
       await ctx.db.delete(active._id);
       throw new Error("Account channel changed. Request a new code.");
-    }
-
-    const submittedHash = await sha256Hex(trimmed);
-    if (submittedHash !== active.codeHash) {
-      await ctx.db.patch(active._id, { attempts: active.attempts + 1 });
-      throw new Error("Invalid code");
     }
 
     await ctx.db.delete(active._id);
@@ -245,7 +223,7 @@ export const submitLoginOtpForSession = mutation({
         updatedAt: now,
       });
     }
-    return { success: true };
+    return { success: true as const };
   },
 });
 

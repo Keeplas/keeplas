@@ -16,9 +16,17 @@ import {
 import { clearInMemorySecrets } from "./in-memory-secrets";
 import { useIdleTimer } from "./use-idle-timer";
 
+interface SetMasterKeyOptions {
+  /**
+   * Keep a copy in IndexedDB so the vault survives a refresh (default). False
+   * keeps it in memory only, e.g. a browser linked without "Trust this browser".
+   */
+  persist?: boolean;
+}
+
 interface MasterKeyContextValue {
   masterKey: CryptoKey | null;
-  setMasterKey: (key: CryptoKey) => void;
+  setMasterKey: (key: CryptoKey, options?: SetMasterKeyOptions) => void;
   clearMasterKey: () => void;
   hasMasterKey: boolean;
   /** True while attempting to restore a persisted key on load. */
@@ -45,9 +53,9 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const userId = user?._id ?? null;
 
   const setMasterKey = useCallback(
-    (key: CryptoKey) => {
+    (key: CryptoKey, { persist = true }: SetMasterKeyOptions = {}) => {
       setMasterKeyState(key);
-      if (userId) {
+      if (persist && userId) {
         // Best-effort: a persistence failure must never block unlocking.
         void persistMasterKey(userId, key);
       }
@@ -81,7 +89,7 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
     (isAuthenticated && !!userId && !masterKey && restoredUserId !== userId);
 
   // Restore the persisted MasterKey on load so a refresh (or a browser restart)
-  // does not force the user to re-enter their 24 words. The key is stored only
+  // does not force the user to unlock again. The key is stored only
   // on this device (IndexedDB, never sent to the server) and stays until an
   // explicit sign-out clears it below.
   useEffect(() => {

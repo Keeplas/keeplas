@@ -114,7 +114,11 @@ export function PhoneVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await verifyCode({ code: code.trim() });
+      const result = await verifyCode({ code: code.trim() });
+      if (!result.verified) {
+        setError(result.error);
+        return;
+      }
       onVerified?.();
       onOpenChange(false);
     } catch (err) {

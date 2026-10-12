@@ -25,8 +25,13 @@ export async function seedUser(t: TestConvex): Promise<Id<"users">> {
 }
 
 /** Mint a real storage handle for fixtures, routed through the wrapper. */
-export async function seedStorageRef(t: TestConvex): Promise<StorageRef> {
-  return await t.run((ctx) => storeBlob(ctx.storage, new Blob(["x"])));
+export async function seedStorageRef(
+  t: TestConvex,
+  bytes = 1,
+): Promise<StorageRef> {
+  return await t.run((ctx) =>
+    storeBlob(ctx.storage, new Blob([new Uint8Array(bytes)])),
+  );
 }
 
 /** Act as the given user — `getAuthUserId` reads `subject.split("|")[0]`. */

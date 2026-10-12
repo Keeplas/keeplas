@@ -45,7 +45,7 @@ export function validatePin(pin: string): void {
 }
 
 export async function enrollPin(
-  userEmail: string,
+  userId: string,
   masterKey: CryptoKey,
   pin: string,
   label?: string,
@@ -58,7 +58,7 @@ export async function enrollPin(
     const { iv, wrapped } = await wrapWithKey(raw, wrapKey);
     const entry: DeviceUnlockEntry = {
       id: uuid(),
-      userEmail,
+      userId,
       method: "pin",
       label: label || detectDeviceLabel(),
       createdAt: Date.now(),
@@ -128,7 +128,7 @@ export async function unlockWithPin(
     if (newFail >= PIN_WIPE_THRESHOLD) {
       await deleteEntry(entry.id);
       throw new DeviceUnlockError(
-        "Too many wrong attempts — PIN entry wiped, please re-enroll with your 24 words",
+        "Too many wrong attempts — PIN entry wiped. Link this browser with your phone again.",
         "wiped",
         { cause: err },
       );

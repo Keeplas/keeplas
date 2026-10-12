@@ -1,15 +1,32 @@
 import { getAuthSessionId, getAuthUserId } from "@convex-dev/auth/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
+import { storedFileBytes } from "./lib/storage";
 
 export const TOTP_REQUIRED_ERROR = "TOTP_REQUIRED";
 export const LOGIN_OTP_REQUIRED_ERROR = "LOGIN_OTP_REQUIRED";
 
+type AuthCtx = { auth: QueryCtx["auth"]; db?: QueryCtx["db"] };
+
+/**
+ * The authenticated user, or null. With database access, the JWT's session
+ * must still exist: a session ended by `endSessions` (revoked device, "It
+ * wasn't me", migration) stops working at once instead of at JWT expiry.
+ */
+async function liveUserId(ctx: AuthCtx) {
+  const userId = await getAuthUserId(ctx);
+  if (userId === null || !ctx.db) return userId;
+  const sessionId = await getAuthSessionId(ctx);
+  const id = sessionId && ctx.db.normalizeId("authSessions", sessionId);
+  if (id && (await ctx.db.get(id)) === null) return null;
+  return userId;
+}
+
 /**
  * Require an authenticated user (for mutations). Throws if not authenticated.
  */
-export async function requireAuth(ctx: { auth: QueryCtx["auth"] }) {
-  const userId = await getAuthUserId(ctx);
+export async function requireAuth(ctx: AuthCtx) {
+  const userId = await liveUserId(ctx);
   if (userId === null) throw new Error("Not authenticated");
   return userId;
 }
@@ -17,8 +34,8 @@ export async function requireAuth(ctx: { auth: QueryCtx["auth"] }) {
 /**
  * Get the authenticated user ID if present (for queries). Returns null if not authenticated.
  */
-export async function optionalAuth(ctx: { auth: QueryCtx["auth"] }) {
-  return await getAuthUserId(ctx);
+export async function optionalAuth(ctx: AuthCtx) {
+  return await liveUserId(ctx);
 }
 
 /**
@@ -126,6 +143,27 @@ export async function requireAdmin(ctx: QueryCtx) {
 }
 
 /**
+ * The approved per-recipient release row for a contact (one carrying `item:`
+ * sections), or null. The recovery-quorum request uses the `["all"]` sentinel
+ * and is ignored: it must not count as a release of content.
+ */
+export async function approvedReleaseRequest(
+  ctx: QueryCtx,
+  contactId: Id<"trusted_contacts">,
+) {
+  const approved = await ctx.db
+    .query("access_requests")
+    .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
+    .filter((q) => q.eq(q.field("status"), "approved"))
+    .collect();
+  return (
+    approved.find((r) =>
+      r.sectionsRequested.some((s) => s.startsWith("item:")),
+    ) ?? null
+  );
+}
+
+/**
  * Get the user's vault by userId.
  */
 export async function getUserVault(ctx: QueryCtx, userId: Id<"users">) {
@@ -178,7 +216,7 @@ export async function getActiveStorageBytes(
   userId: Id<"users">,
 ): Promise<number> {
   const files = await getActiveVaultFiles(ctx, userId);
-  return files.reduce((sum, f) => sum + f.size, 0);
+  return files.reduce((sum, f) => sum + storedFileBytes(f), 0);
 }
 
 /**

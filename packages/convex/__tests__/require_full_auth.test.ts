@@ -68,7 +68,7 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
     await expect(
       asUserSession(t, userId, sessionId).mutation(api.vault_items.createItem, {
         vaultId,
-        category: "personal_document",
+        encryptedMeta: JSON.stringify({ ciphertext: "bWV0YQ==", iv: "aXY=" }),
         encryptedTitle: JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
         encryptedContent: JSON.stringify({
           ciphertext: "Y2lwaA==",
@@ -98,7 +98,7 @@ describe("requireFullAuth — login-OTP gate on sensitive ops", () => {
       api.vault_items.createItem,
       {
         vaultId,
-        category: "personal_document",
+        encryptedMeta: JSON.stringify({ ciphertext: "bWV0YQ==", iv: "aXY=" }),
         encryptedTitle: JSON.stringify({ ciphertext: "dGl0bGU=", iv: "aXY=" }),
         encryptedContent: JSON.stringify({
           ciphertext: "Y2lwaA==",

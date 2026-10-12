@@ -130,7 +130,7 @@ export default function InsightsDocPage() {
         <p>{t("insights.words.p2")}</p>
         <p>{t("insights.words.p3")}</p>
         <Link
-          href="/settings/recovery-kit"
+          href="/settings/recovery"
           className="inline-flex items-center gap-2 text-body-md text-secondary hover:underline"
         >
           {t("insights.words.link")}

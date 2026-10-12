@@ -4,7 +4,7 @@ Entry point for the v2 redesign (mobile-first continuity and succession). Read t
 
 - **Started**: 2026-10-11
 - **Owner**: Prince
-- **Status**: in progress. Phases 0 to 3 done.
+- **Status**: in progress. Phases 0 to 5 and 7 done; phase 6 waits on the production backfill; phase 8 flows built, not yet verified end to end on a device.
 
 ## Sources
 
@@ -104,33 +104,42 @@ Each step lists its verification. A phase is done when every check passes.
 
 ### Phase 4: Devices, QR linking and mobile-only sign-up (F6, F8, D2, D5)
 
-- [ ] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3)
-- [ ] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9)
-- [ ] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused
-- [ ] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works
-- [ ] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action
+- [x] Convex: `devices`, `pairing_sessions` (2 min TTL), auth provider `pairing` → verify: tests for create / approve / consume / expire, key-hash mismatch rejected (M09-3) — `pairing.test.ts`
+- [x] Convex: App Attest / Play Integrity on phone-otp `signup`; disable Password sign-up → verify: signup without attestation rejected (M09-9) — `attestation.test.ts`
+- [x] Email → phone migration flow (M09-7, M09-8) → verify: an existing email account can add a phone and passkey, then password sign-in is refused — `account_migration.test.ts`
+- [x] Web: remove sign-up, onboarding and phrase entry; add D-01, W04-1, W04-2; invite links open the app → verify: no route under `_auth/signup` or `_onboarding`; e2e QR link works — routes removed; protocol e2e in `pairing_e2e.test.ts`, W04-2 state machine unit-tested (not yet run against a live deployment). Vault rotation needs the 24 words, so the web now tells the owner to finish it in the phone app (phase 8 builds it)
+- [x] New-device alert + "It wasn't me" (M08-4, M09-1, M09-2): revoke device, end sessions, cancel recovery, rotate keys → verify: tests for each action — `devices.test.ts`, `recovery.test.ts`
 
 ### Phase 5: Owner recovery (F3, D3, D4, D7)
 
-- [ ] `@keeplas/crypto`: recovery secret split 2-of-3, social envelope, 6-digit code → verify: unit tests
-- [ ] Convex: `recovery_requests`, `recovery_approvals`, `recovery_secret_shares`, `social_envelopes`, `gate_keys`; KMS `use node` action; **72 h** window → verify: state-machine tests (pending → approved_1 → approved_2 → released → rotated; cancel; expire; reject)
-- [ ] States M09-4, M09-5, M09-6, M09-10 → verify: each state reachable in tests
-- [ ] Cloud backup (iCloud Keychain / Google Block Store), on by default with an onboarding explanation → verify: toggle off deletes both halves
+- [x] `@keeplas/crypto`: recovery secret split 2-of-3, social envelope, 6-digit code → verify: unit tests — `packages/crypto/__tests__/social.test.ts`
+- [x] Convex: `recovery_requests`, `recovery_approvals`, `recovery_secret_shares`, `social_envelopes`, `gate_keys`; KMS `use node` action; **72 h** window → verify: state-machine tests (pending → approved_1 → approved_2 → released → rotated; cancel; expire; reject) — `recovery.test.ts` (KMS: AWS in production, local KEK in dev)
+- [x] States M09-4, M09-5, M09-6, M09-10 → verify: each state reachable in tests — `recovery.test.ts`
+- [x] Cloud backup (iCloud Keychain / Google Block Store), on by default with an onboarding explanation → verify: toggle off deletes both halves — server half `cloud_backup.test.ts`, crypto `cloud.test.ts`; the app deletes the CBK (phase 8)
 
 ### Phase 6: Metadata (F4)
 
 - [ ] `encryptedMeta` on items and files, client backfill, drop plaintext columns, size buckets → verify: schema has no plaintext category / file name / MIME / size
+  - [x] Widen + migrate: writes carry only `encryptedMeta`; server-measured size buckets for the quota; client backfill (`useBackfillItemMeta`) → `metadata_backfill.test.ts`, `storage_quota.test.ts`
+  - [ ] Narrow: drop the plaintext columns once `vault_items.countPlaintextMetadata` returns `{ items: 0, files: 0 }` on production (needs every owner to unlock once)
 
 ### Phase 7: Web screens
 
 Pixel-perfect rule (phases 7 and 8): build each component once from `figma/specs/` values bound to tokens; never paste generated Figma code.
 
-- [ ] W04-3 dashboard, W04-3b, W04-4, W04-5 (status only), W04-6, W04-7, W05-3 / W05-4 + section 10 states, light + dark → verify: Playwright visual regression per screen at 1440×900, pixel diff against `figma/screens/` under an agreed threshold (diff image on failure)
+- [x] W04-3 dashboard, W04-3b, W04-4, W04-5 (status only), W04-6, W04-7, W05-3 / W05-4 + section 10 states, light + dark → verify: Playwright visual regression per screen at 1440×900, pixel diff against `figma/screens/` under an agreed threshold (diff image on failure) — `pnpm --filter @keeplas/web test:visual` (harness in `apps/web/visual/`, fixtures, no backend): light screens vs Figma ≤ 3 % differing pixels (pixelmatch threshold 0.1; measured 0.7 to 1.6 % for W04/W05, 1.5 to 2.5 % for the 393 px state cards), dark against committed baselines. Routes: `/hub` (W04-3, W04-3b), `/shared-with-me` (W04-4), `/settings/recovery` (W04-5), `/devices` (W04-6), `/settings` (W04-7), life check modal on every dashboard page (W05-3 / W05-4). Section 10 states built for the web: vault empty, no trusted contacts, nothing shared, we missed you, travel mode, offline, upload failed, storage full, camera / microphone off. Not on the web: "You're all caught up" (no alerts list on the web) and "Vault list item states" (offline outbox, mobile). Dark mode is a saved preference (account menu), light by default while the legacy screens are light-only
+  - [ ] Backend for the remaining Figma content: per-file stored bytes for the W04-7 storage breakdown (the bar shows the total until then)
+  - [ ] Run the rebuilt screens against a live deployment (only fixtures were rendered)
 
 ### Phase 8: Mobile app build-out
 
 - [ ] Setup (M01), home / unlock / settings (M08), capture (M07 incl. offline outbox in SQLCipher), people and sharing (M06), shared vault (M03), recovery and life check (M02), edge cases (M09), states (section 10), dark mode → verify: flows in `design-kit/docs/FLOWS.md` run end to end; simulator screenshots at 393×852 pixel-diffed against `figma/screens/` under an agreed threshold
 - [ ] Crypto on Hermes: `react-native-quick-crypto` (AES-GCM), native Argon2id, `@noble/post-quantum` as is; passkeys via `react-native-passkey` → verify: cross-platform test vectors match `packages/crypto`
+  - [x] Flows built: setup (M01), home / unlock / settings / devices (M08), QR approve and new-device alert (M09), capture with the SQLCipher outbox (M07), people, folders and sharing (M06, M03), owner and contact recovery, cloud backup, life check and push (M02), key rotation on the phone → `pnpm --filter @keeplas/mobile test`
+  - [x] Crypto parity in Jest: web ciphertext opens on mobile and back, stream format, owner keys, TOFU pin, shared Argon2id vector → `payload-compat.test.ts`, `crypto.test.ts`
+  - [x] iOS 27 SDK: UIScene lifecycle via `plugins/with-ios-scene.js` (the app crashed at launch without it)
+  - [ ] Run the flows end to end against a live deployment, and the `/self-test` screen on Hermes (iOS + Android devices)
+  - [ ] Simulator screenshots pixel-diffed against `figma/screens/`; dark mode pass
 
 ## Key numbers
 

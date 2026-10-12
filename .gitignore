@@ -38,6 +38,8 @@ yarn-error.log*
 
 # Testing
 coverage/
+apps/web/visual/test-results/
+apps/web/visual/report/
 
 # Convex
 .convex/

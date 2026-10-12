@@ -81,6 +81,10 @@ export default defineSchema({
     // contact's device, so the owner must rotate the MasterKey. Cleared by
     // `rotation.finalizeRotation`.
     masterKeyRotationRequired: v.optional(v.boolean()),
+    // Set when the social-recovery material must be renewed (new generation):
+    // after a MasterKey rotation, or a cancelled request that already
+    // collected contact shares. Cleared by `recovery_node.setup`.
+    socialRecoveryRenewalRequired: v.optional(v.boolean()),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),
@@ -237,11 +241,15 @@ export default defineSchema({
     deviceType: v.optional(
       v.union(v.literal("singleDevice"), v.literal("multiDevice")),
     ),
+    // Device (browser / phone) the passkey was created on; deleted with it
+    // when the device is revoked, so a revoked browser cannot sign in again.
+    keeplasDeviceId: v.optional(v.id("devices")),
     createdAt: v.number(),
     lastUsedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_credential_id", ["credentialId"]),
+    .index("by_credential_id", ["credentialId"])
+    .index("by_keeplas_device", ["keeplasDeviceId"]),
 
   webauthn_challenges: defineTable({
     challenge: v.string(),
@@ -252,6 +260,170 @@ export default defineSchema({
   })
     .index("by_challenge", ["challenge"])
     .index("by_expiry", ["expiresAt"]),
+
+  // ═══════════════════════════════════════════════
+  // OWNER RECOVERY WITH TRUST CONTACTS (v2 workflow 7, F3)
+  // ═══════════════════════════════════════════════
+  //
+  // A random Recovery Secret RS is split 2-of-n between trust contacts; a
+  // random gate key G is held under KMS; the social envelope is
+  // AES-GCM(HKDF(RS ‖ G), MasterKey). One current generation per user; a new
+  // setup replaces the previous rows.
+
+  // One row per user: the current generation's sealed MasterKey.
+  social_envelopes: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    envelope: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // ML-KEM envelope of one Shamir share of RS, sealed to a trust contact.
+  recovery_secret_shares: defineTable({
+    userId: v.id("users"),
+    contactId: v.id("trusted_contacts"),
+    generation: v.number(),
+    wrappedShare: v.string(),
+  })
+    .index("by_user_generation", ["userId", "generation"])
+    .index("by_contact", ["contactId"]),
+
+  // G encrypted by the KMS; only `recovery_node.release` decrypts it.
+  gate_keys: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    kmsCiphertext: v.string(),
+  }).index("by_user_generation", ["userId", "generation"]),
+
+  recovery_requests: defineTable({
+    userId: v.id("users"),
+    generation: v.number(),
+    // ML-KEM-768 public key of the recovering device.
+    newDevicePublicKey: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved_1"),
+      v.literal("approved_2"),
+      v.literal("released"),
+      v.literal("rotated"),
+      v.literal("cancelled"),
+      v.literal("rejected"),
+      v.literal("expired"),
+    ),
+    // createdAt + 72 h (D3): G is never released before.
+    windowEndsAt: v.number(),
+    // createdAt + 7 days: pending / approved_1 expire.
+    expiresAt: v.number(),
+    // G sealed to `newDevicePublicKey`, set at release.
+    wrappedGateKey: v.optional(v.string()),
+    releasedAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  recovery_approvals: defineTable({
+    requestId: v.id("recovery_requests"),
+    contactId: v.id("trusted_contacts"),
+    decision: v.union(v.literal("approve"), v.literal("reject")),
+    rejectReason: v.optional(
+      v.union(v.literal("declined"), v.literal("code_mismatch")),
+    ),
+    // RS share re-sealed to the device key + ML-DSA-65 signature.
+    wrappedShareForDevice: v.optional(v.string()),
+    signature: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_request", ["requestId"]),
+
+  // iCloud Keychain / Google Block Store backup (workflows 10–11, D7):
+  // AES-GCM(CBK, RootKey). CBK lives only in the platform keychain.
+  cloud_backup_envelopes: defineTable({
+    userId: v.id("users"),
+    provider: v.union(v.literal("icloud"), v.literal("google")),
+    envelope: v.string(),
+    createdAt: v.number(),
+    lastRestoredAt: v.optional(v.number()),
+  }).index("by_user", ["userId"]),
+
+  // ═══════════════════════════════════════════════
+  // MOBILE SIGN-UP ATTESTATION (App Attest / Play Integrity, M09-9)
+  // ═══════════════════════════════════════════════
+
+  // One-time challenge the app attests over (5 min).
+  attestation_challenges: defineTable({
+    challenge: v.string(),
+    expiresAt: v.number(),
+  }),
+
+  // Verified attestation for a phone number (10 min, single use). A sign-up
+  // OTP is only issued against one of these.
+  signup_attestations: defineTable({
+    phoneNumber: v.string(),
+    platform: v.union(
+      v.literal("ios"),
+      v.literal("android"),
+      v.literal("simulator"),
+    ),
+    expiresAt: v.number(),
+  }).index("by_phone", ["phoneNumber"]),
+
+  // ═══════════════════════════════════════════════
+  // DEVICES + QR PAIRING (v2 workflow 8)
+  // ═══════════════════════════════════════════════
+
+  // One row per phone / browser linked to the account (W04-6, M08-3).
+  devices: defineTable({
+    userId: v.id("users"),
+    kind: v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+    // Human label derived from the user agent, e.g. "Chrome on Mac".
+    label: v.string(),
+    // ML-KEM-768 public key of the device (for handoffs to it).
+    devicePublicKey: v.optional(v.string()),
+    // True when the user ticked "Trust this browser".
+    trusted: v.boolean(),
+    // Convex Auth session the device registered from; ended on revoke.
+    sessionId: v.optional(v.id("authSessions")),
+    // Expo push token of a phone, for security alerts (mobile only).
+    pushToken: v.optional(v.string()),
+    // Set when the owner answered "It was me" (M08-4). The first device of
+    // an account is acknowledged at registration.
+    acknowledgedAt: v.optional(v.number()),
+    lastSeenAt: v.number(),
+    revokedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  // Short-lived QR handoff from a signed-in phone to a new browser. Convex
+  // only relays ciphertext: the MasterKey envelope is sealed by the phone to
+  // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`
+  // (scheduled at creation), so no envelope outlives the 2-minute window.
+  pairing_sessions: defineTable({
+    // Ephemeral ML-KEM-768 public key of the new browser (base64).
+    browserPublicKey: v.string(),
+    // SHA-256 of the browser-held login secret; the secret is never stored.
+    // Only the browser that created the session can redeem the login.
+    secretHash: v.string(),
+    userAgent: v.string(),
+    // Server-attested country of the browser (from the sealed `_audit`).
+    approxLocation: v.optional(v.string()),
+    status: v.union(
+      v.literal("waiting"),
+      v.literal("approved"),
+      v.literal("consumed"),
+      v.literal("rejected"),
+    ),
+    // Set when the phone approves or rejects.
+    userId: v.optional(v.id("users")),
+    // ML-KEM + AES-GCM envelope of the MasterKey, read once.
+    envelope: v.optional(v.string()),
+    // ML-DSA-65 signature over the envelope by the approving device.
+    approvalSignature: v.optional(v.string()),
+    // Starts the 60 s login-token window.
+    approvedAt: v.optional(v.number()),
+    // Set when the `pairing` auth provider consumes the login token.
+    redeemedAt: v.optional(v.number()),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+  }),
 
   // ═══════════════════════════════════════════════
   // TOTP (RFC 6238 authenticator-app secrets)
@@ -278,6 +450,9 @@ export default defineSchema({
     // Rows without verifiedAt are pending enrollments and may be replaced.
     verifiedAt: v.optional(v.number()),
     lastUsedAt: v.optional(v.number()),
+    // Wrong codes in the current lockout window (reset on success).
+    failedAttempts: v.optional(v.number()),
+    lastFailedAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
 
@@ -356,7 +531,13 @@ export default defineSchema({
     vaultId: v.id("vaults"),
     userId: v.id("users"),
 
-    category: categoryValidator,
+    // Legacy plaintext category (F4). New writes put it in `encryptedMeta`;
+    // the owner's client backfills old rows (vault_items.backfillItemMeta).
+    // Dropped once `vault_items.countPlaintextMetadata` reaches zero.
+    category: v.optional(categoryValidator),
+    // Item metadata (JSON {v:1, category}) under the item DEK, same
+    // {ciphertext, iv} envelope as `encryptedContent`.
+    encryptedMeta: v.optional(v.string()),
 
     // Legacy plaintext title. Kept optional only to read rows not yet migrated
     // to `encryptedTitle`; new writes never set it. Removed once the
@@ -414,6 +595,9 @@ export default defineSchema({
     ),
     releasedAt: v.optional(v.number()),
 
+    // Folder the item lives in (v2 "sharing per folder"); none = loose item.
+    folderId: v.optional(v.id("folders")),
+
     // When true, the item is a "release introduction": a welcome message the
     // owner authors for trusted contacts who unlock the memorial vault after
     // release. Hidden from the owner's regular /vault listings and surfaced
@@ -424,10 +608,36 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_vault", ["vaultId"])
-    .index("by_category", ["vaultId", "category"])
+    .index("by_folder", ["folderId"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
     .index("by_trigger", ["triggerType", "status"]),
+
+  // v2 sharing per folder (M06-4, M06-6, M03-1, M03-2). The folder name is
+  // sealed: under the master key for the owner, to each grantee's ML-KEM key
+  // on the grant. Item DEKs are wrapped to grantees in
+  // vault_item_recipient_keys, like item-level sharing.
+  folders: defineTable({
+    userId: v.id("users"),
+    // JSON {ciphertext, iv} under the owner's master key.
+    encryptedName: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  folder_grants: defineTable({
+    folderId: v.id("folders"),
+    ownerId: v.id("users"),
+    contactId: v.id("trusted_contacts"),
+    // "now": readable at once. "after_verification": readable once the
+    // owner's release is approved (death confirmed + 72 h grace).
+    timing: v.union(v.literal("now"), v.literal("after_verification")),
+    // Folder name sealed to the contact's ML-KEM key.
+    sealedName: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_folder", ["folderId"])
+    .index("by_contact", ["contactId"]),
 
   recipient_groups: defineTable({
     userId: v.id("users"),
@@ -462,19 +672,28 @@ export default defineSchema({
     userId: v.id("users"),
     storageId: v.id("_storage"),
 
-    name: v.string(),
-    mimeType: v.string(),
-    size: v.number(),
+    // Legacy plaintext metadata (F4), read-only until backfilled into
+    // `encryptedMeta`; dropped once `countPlaintextMetadata` reaches zero.
+    name: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
+    size: v.optional(v.number()),
+    kind: v.optional(
+      v.union(
+        v.literal("document"),
+        v.literal("audio"),
+        v.literal("video"),
+        v.literal("image"),
+      ),
+    ),
+    durationSec: v.optional(v.number()),
+    // File metadata (JSON {v:1, name, mimeType, size, kind, durationSec?})
+    // under the item DEK.
+    encryptedMeta: v.optional(v.string()),
+    // Stored blob size rounded up to a bucket (lib/storage.ts sizeBucket):
+    // enough for the quota, without the exact size in the row.
+    sizeBucket: v.optional(v.number()),
     iv: v.string(),
 
-    kind: v.union(
-      v.literal("document"),
-      v.literal("audio"),
-      v.literal("video"),
-      v.literal("image"),
-    ),
-
-    durationSec: v.optional(v.number()),
     order: v.number(),
     createdAt: v.number(),
   })

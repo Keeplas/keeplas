@@ -1,0 +1,37 @@
+import { Tabs } from "expo-router";
+
+import { TabBar } from "@/components/tab-bar";
+import {
+  AddSheetProvider,
+  useOpenAddSheet,
+} from "@/features/capture/add-sheet";
+
+/** M08-5 tab shell: Home, Search, (+) → M07-1 Add sheet, People, Settings. */
+export default function TabsLayout() {
+  return (
+    <AddSheetProvider>
+      <TabsWithAdd />
+    </AddSheetProvider>
+  );
+}
+
+function TabsWithAdd() {
+  const openAdd = useOpenAddSheet();
+  return (
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => (
+        <TabBar
+          state={props.state}
+          navigation={props.navigation}
+          onAdd={openAdd}
+        />
+      )}
+    >
+      <Tabs.Screen name="home" />
+      <Tabs.Screen name="search" />
+      <Tabs.Screen name="people" />
+      <Tabs.Screen name="settings" />
+    </Tabs>
+  );
+}

@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import {
@@ -12,6 +13,7 @@ import { normalizeE164 } from "./lib/phone";
 import { normalizeEmail } from "./lib/email";
 import { normalizeUserLanguage } from "./lib/locale";
 import { assertStrongPassword } from "./lib/password";
+import { refuseNonMobileSignUp } from "./attestation";
 
 // Maps the sign-up provider id to the initial auth method recorded on the
 // user. The passkey + recovery credential providers never create a user, so
@@ -47,6 +49,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       // never on plain sign-in (existing accounts are not re-validated).
       validatePasswordRequirements: assertStrongPassword,
       profile(params) {
+        refuseNonMobileSignUp(params.flow);
         let phoneNumber: string | undefined;
         try {
           phoneNumber = normalizeE164(params.phoneNumber as string | undefined);
@@ -66,7 +69,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       },
     }),
     // Passwordless phone account. Sign-up/sign-in = phone + WhatsApp OTP.
-    // The pre-auth code is issued by `phone_auth.requestPhoneAuthOtp` and
+    // Sign-up codes are only issued after a mobile attestation (M09-9), and a
+    // code is only valid for the flow it was issued for. The pre-auth code is
+    // issued by `phone_auth.requestPhoneAuthOtp` and
     // consumed here. `createAccount`/`retrieveAccount` manage the account +
     // user with NO secret, keying on the E.164 phone. `users.email` stays
     // undefined for these accounts.
@@ -77,10 +82,15 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!phone) throw new Error("A valid phone number is required");
         const code = String(credentials.code ?? "");
 
-        await ctx.runMutation(internal.phone_auth.consumePhoneAuthCode, {
-          phoneNumber: phone,
-          code,
-        });
+        const check = await ctx.runMutation(
+          internal.phone_auth.consumePhoneAuthCode,
+          {
+            phoneNumber: phone,
+            code,
+            intent: credentials.flow === "signUp" ? "signup" : "signin",
+          },
+        );
+        if (!check.ok) throw new ConvexError(check.error);
 
         if (credentials.flow === "signUp") {
           const name = (credentials.name as string | undefined)?.trim();
@@ -107,11 +117,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return { userId: user._id };
       },
     }),
-    // Passwordless email account, sibling of `phone-otp`. Sign-up/sign-in =
-    // email + a one-time emailed code (no password). The pre-auth code is
-    // issued by `email_auth.requestEmailAuthOtp` and consumed here. Used both
-    // for brand-new email-passwordless accounts and, more importantly, as the
-    // login method for a phone account that linked an email from settings.
+    // Passwordless email sign-in, sibling of `phone-otp`: email + a one-time
+    // emailed code (no password), issued by `email_auth.requestEmailAuthOtp`
+    // and consumed here. Sign-in only (sign-up is mobile-only, F8): existing
+    // email accounts and phone accounts that linked an email from settings.
     ConvexCredentials({
       id: "email-otp",
       authorize: async (credentials, ctx) => {
@@ -119,28 +128,12 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!email) throw new Error("A valid email is required");
         const code = String(credentials.code ?? "");
 
-        await ctx.runMutation(internal.email_auth.consumeEmailAuthCode, {
-          email,
-          code,
-        });
-
-        if (credentials.flow === "signUp") {
-          const name = (credentials.name as string | undefined)?.trim();
-          const language = normalizeUserLanguage(
-            credentials.language as string | undefined,
-          );
-          const { user } = await createAccount(ctx, {
-            provider: "email-otp",
-            account: { id: email },
-            profile: {
-              email,
-              emailVerificationTime: Date.now(),
-              language,
-              ...(name ? { name } : {}),
-            },
-          });
-          return { userId: user._id };
-        }
+        refuseNonMobileSignUp(credentials.flow);
+        const check = await ctx.runMutation(
+          internal.email_auth.consumeEmailAuthCode,
+          { email, code },
+        );
+        if (!check.ok) throw new ConvexError(check.error);
 
         const { user } = await retrieveAccount(ctx, {
           provider: "email-otp",
@@ -180,6 +173,22 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           { email, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
+        return { userId };
+      },
+    }),
+    // QR pairing (workflow 8): a browser approved by the owner's phone signs
+    // in with the login secret it generated at `pairing.create`. Never creates
+    // a user; the session belongs to the approving account.
+    ConvexCredentials({
+      id: "pairing",
+      authorize: async (credentials, ctx) => {
+        const userId = await ctx.runMutation(
+          internal.pairing.redeemLoginToken,
+          {
+            sessionId: String(credentials.sessionId ?? ""),
+            secret: String(credentials.secret ?? ""),
+          },
+        );
         return { userId };
       },
     }),
