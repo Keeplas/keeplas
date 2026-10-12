@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   examplePlaceholder,
   flagEmoji,
+  isTooLong,
   listCountries,
   type CountryCode,
 } from "@/lib/phone";
@@ -85,7 +86,9 @@ export function PhoneInput({
       <TextInput
         accessibilityLabel={t("phone.label")}
         value={value}
-        onChangeText={onChangeText}
+        onChangeText={(next) => {
+          if (!isTooLong(country, next)) onChangeText(next);
+        }}
         onSubmitEditing={onSubmit}
         placeholder={examplePlaceholder(country)}
         placeholderTextColor={colors["text.subtle"]}

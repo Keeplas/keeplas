@@ -6,7 +6,13 @@ import {
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
 import { classifyCodeError } from "../errors";
 import { formatBytes } from "../format";
-import { flagEmoji, formatPhone, toE164 } from "../phone";
+import {
+  examplePlaceholder,
+  flagEmoji,
+  formatPhone,
+  isTooLong,
+  toE164,
+} from "../phone";
 import { resolveStage, type StageInputs } from "../session-stage";
 
 const base: StageInputs = {
@@ -80,6 +86,18 @@ describe("formatters", () => {
     expect(toE164("CA", "123")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");
+  });
+
+  it("drops the national trunk prefix from the placeholder", () => {
+    expect(examplePlaceholder("CD")).toBe("991 234 567");
+    expect(examplePlaceholder("FR")).toBe("6 12 34 56 78");
+  });
+
+  it("flags numbers longer than the country allows", () => {
+    expect(isTooLong("CD", "991 234 567")).toBe(false);
+    expect(isTooLong("CD", "0991 234 567")).toBe(false);
+    expect(isTooLong("CD", "991 234 56789")).toBe(true);
+    expect(isTooLong("CD", "")).toBe(false);
   });
 });
 
