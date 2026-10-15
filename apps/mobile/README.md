@@ -43,7 +43,7 @@ The Convex backend sends through the Expo push service (`packages/convex/dispatc
 2. Upload it as an EAS file variable in every environment:
    `npx eas-cli env:set --environment development --environment preview --environment production --visibility secret --type file --name GOOGLE_SERVICES_JSON --value ./google-services.json`
    For local builds, put the file at `apps/mobile/google-services.json` (gitignored). Its content is kept in Infisical as `ANDROID_GOOGLE_SERVICES_JSON` (restore command in the root `.env.example`).
-3. Firebase → Project settings → Service accounts → generate a private key, then `npx eas-cli credentials --platform android` → Google Service Account → "Manage your Google Service Account Key for Push Notifications (FCM V1)" → upload it.
+3. Firebase → Project settings → Service accounts → generate a private key, then `npx eas-cli credentials --platform android` → Google Service Account → "Manage your Google Service Account Key for Push Notifications (FCM V1)" → upload it. Keep the key in Infisical prod under `/keeplas_mobile` (`keeplas_firebase_adminsdk`), never in `/keeplas_app`: that folder syncs to Vercel, and the sync does not delete removed secrets.
 
 **iOS (APNs)**: `npx eas-cli credentials --platform ios` creates the push key once the Apple Developer account is active.
 
