@@ -1220,6 +1220,8 @@ async function sendExpoPush(
       body: message.body,
       data: { url: message.url },
       sound: "default",
+      // Security alerts and Life Check: Android must not hold them in Doze.
+      priority: "high",
     })),
   )) as ExpoPushStatus[];
   const dead = tokens.filter((_, i) => isUnregistered(tickets[i]));
