@@ -9,7 +9,7 @@ import { makeT, seedUser, type TestConvex } from "./test.helpers";
 const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
 const EXPO_RECEIPTS = "https://exp.host/--/api/v2/push/getReceipts";
 
-type ExpoMessage = { to: string; data: { url: string } };
+type ExpoMessage = { to: string; data: { url: string }; priority?: string };
 type Ticket = { status: "ok"; id: string } | ExpoError;
 type ExpoError = { status: "error"; details: { error: string } };
 
@@ -96,6 +96,15 @@ describe("Expo push", () => {
       { url: "/people" },
       { url: "/people" },
     ]);
+  });
+
+  it("sends at high priority so Android delivers alerts in Doze", async () => {
+    const { sent } = mockExpo(() => ({ status: "ok", id: "r1" }));
+    await makeT().action(internal.dispatch.notifyNewDevice, {
+      pushTokens: ["ExponentPushToken[a]"],
+      deviceLabel: "Chrome on macOS",
+    });
+    expect(sent[0]?.priority).toBe("high");
   });
 
   it("authenticates with EXPO_ACCESS_TOKEN when set", async () => {
