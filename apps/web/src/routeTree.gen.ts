@@ -18,6 +18,7 @@ import { Route as DownloadIndexRouteImport } from './routes/download/index'
 import { Route as GetTheAppIndexRouteImport } from './routes/get-the-app/index'
 import { Route as LinkIndexRouteImport } from './routes/link/index'
 import { Route as SecurityIndexRouteImport } from './routes/security/index'
+import { Route as SignupIndexRouteImport } from './routes/signup/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as DashboardDevicesIndexRouteImport } from './routes/_dashboard/devices/index'
 import { Route as DashboardDocsIndexRouteImport } from './routes/_dashboard/docs/index'
@@ -90,6 +91,11 @@ const LinkIndexRoute = LinkIndexRouteImport.update({
 const SecurityIndexRoute = SecurityIndexRouteImport.update({
   id: '/security/',
   path: '/security/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupIndexRoute = SignupIndexRouteImport.update({
+  id: '/signup/',
+  path: '/signup/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/get-the-app/': typeof GetTheAppIndexRoute
   '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
+  '/signup/': typeof SignupIndexRoute
   '/login/': typeof AuthLoginIndexRoute
   '/devices/': typeof DashboardDevicesIndexRoute
   '/docs/': typeof DashboardDocsIndexRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/get-the-app': typeof GetTheAppIndexRoute
   '/link': typeof LinkIndexRoute
   '/security': typeof SecurityIndexRoute
+  '/signup': typeof SignupIndexRoute
   '/login': typeof AuthLoginIndexRoute
   '/devices': typeof DashboardDevicesIndexRoute
   '/docs': typeof DashboardDocsIndexRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/get-the-app/': typeof GetTheAppIndexRoute
   '/link/': typeof LinkIndexRoute
   '/security/': typeof SecurityIndexRoute
+  '/signup/': typeof SignupIndexRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
   '/_dashboard/devices/': typeof DashboardDevicesIndexRoute
   '/_dashboard/docs/': typeof DashboardDocsIndexRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/get-the-app/'
     | '/link/'
     | '/security/'
+    | '/signup/'
     | '/login/'
     | '/devices/'
     | '/docs/'
@@ -427,6 +437,7 @@ export interface FileRouteTypes {
     | '/get-the-app'
     | '/link'
     | '/security'
+    | '/signup'
     | '/login'
     | '/devices'
     | '/docs'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/get-the-app/'
     | '/link/'
     | '/security/'
+    | '/signup/'
     | '/_auth/login/'
     | '/_dashboard/devices/'
     | '/_dashboard/docs/'
@@ -509,6 +521,7 @@ export interface RootRouteChildren {
   GetTheAppIndexRoute: typeof GetTheAppIndexRoute
   LinkIndexRoute: typeof LinkIndexRoute
   SecurityIndexRoute: typeof SecurityIndexRoute
+  SignupIndexRoute: typeof SignupIndexRoute
   InviteTokenIndexRoute: typeof InviteTokenIndexRoute
   LifeCheckConfirmIndexRoute: typeof LifeCheckConfirmIndexRoute
   LoginOtpIndexRoute: typeof LoginOtpIndexRoute
@@ -578,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/security/'
       preLoaderRoute: typeof SecurityIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup/': {
+      id: '/signup/'
+      path: '/signup'
+      fullPath: '/signup/'
+      preLoaderRoute: typeof SignupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/login/': {
@@ -888,6 +908,7 @@ const rootRouteChildren: RootRouteChildren = {
   GetTheAppIndexRoute: GetTheAppIndexRoute,
   LinkIndexRoute: LinkIndexRoute,
   SecurityIndexRoute: SecurityIndexRoute,
+  SignupIndexRoute: SignupIndexRoute,
   InviteTokenIndexRoute: InviteTokenIndexRoute,
   LifeCheckConfirmIndexRoute: LifeCheckConfirmIndexRoute,
   LoginOtpIndexRoute: LoginOtpIndexRoute,
