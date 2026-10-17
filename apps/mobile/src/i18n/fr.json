@@ -73,12 +73,12 @@
   },
   "passkey": {
     "title": "Créer votre passe-clé",
-    "body": "Utilisez Face ID ou votre empreinte pour accéder à votre compte en toute sécurité. Votre passe-clé reste sur cet appareil et ne le quitte jamais.",
+    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé reste sur cet appareil et ne le quitte jamais.",
     "cta": "Créer le passe-clé",
     "failedTitle": "Passe-clé non créé",
     "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut un passe-clé pour garder votre coffre sur ce téléphone.",
-    "biometricsTitle": "Activez Face ID ou une empreinte",
-    "biometricsBody": "Keeplas utilise le verrouillage de votre téléphone pour protéger votre coffre. Activez-le dans les Réglages, puis revenez."
+    "screenLockTitle": "Activez le verrouillage de l'écran",
+    "screenLockBody": "Keeplas utilise le verrouillage de votre téléphone (code, visage ou empreinte) pour protéger votre coffre. Activez-le dans les Réglages, puis revenez."
   },
   "vault": {
     "title": "Créer votre coffre privé",
@@ -120,7 +120,7 @@
     "body": "Pour l'instant, ce téléphone est votre seul accès. Keeplas ne peut pas lire votre coffre, nous ne pouvons donc pas le restaurer pour vous.",
     "waysBack": "Vos moyens de récupération",
     "thisPhone": "Ce téléphone",
-    "biometrics": "Face ID ou empreinte",
+    "screenLock": "Visage, empreinte ou code du téléphone",
     "contacts": "Contacts de confiance",
     "contactsNeeded": "{n} sur 2 requis",
     "kit": "Kit de récupération",
@@ -144,7 +144,7 @@
   },
   "unlock": {
     "title": "Déverrouiller votre coffre",
-    "body": "Face ID ou votre empreinte vous connecte et déverrouille votre coffre.",
+    "body": "Votre visage, votre empreinte ou le code de votre téléphone vous connecte et déverrouille votre coffre.",
     "cta": "Continuer avec le passe-clé",
     "lost": "Accès perdu ?",
     "failed": "Impossible de déverrouiller votre coffre. Réessayez."
@@ -217,7 +217,7 @@
     "title": "Confidentialité et sécurité",
     "subtitle": "Gérez l'accès à votre coffre et la protection de vos informations.",
     "passkey": "Passe-clé",
-    "passkeyBody": "Connexion sécurisée avec Face ID ou empreinte.",
+    "passkeyBody": "Connexion sécurisée avec votre visage, votre empreinte ou le code de votre téléphone.",
     "pin": "Code PIN (facultatif)",
     "pinBody": "Ajoutez un code après la biométrie pour plus de sécurité.",
     "kit": "Kit de récupération",
@@ -295,8 +295,8 @@
     "deviceOn": "{browser} sur {os}",
     "unknownLocation": "Lieu inconnu",
     "today": "Aujourd'hui à {time}",
-    "faceTitle": "Utilisez Face ID pour approuver",
-    "faceBody": "Cela confirme que c'est bien vous.",
+    "confirmTitle": "Confirmez que c'est vous pour approuver",
+    "confirmBody": "Utilisez votre visage, votre empreinte ou le code de votre téléphone.",
     "warning": "N'approuvez que s'il s'agit de votre ordinateur.",
     "approve": "Approuver",
     "cancel": "Annuler"
@@ -361,7 +361,7 @@
     "verifyStep": "Vérifiez-le sur WhatsApp",
     "verifyStepBody": "Nous envoyons un code à 6 chiffres",
     "passkeyStep": "Créez un passe-clé",
-    "passkeyStepBody": "Face ID ou votre empreinte remplace votre mot de passe",
+    "passkeyStepBody": "Votre visage, votre empreinte ou le code de votre téléphone remplace votre mot de passe",
     "appStep": "Installez l'app Keeplas",
     "appStepBody": "Votre coffre passe sur ce téléphone",
     "offStep": "Désactivez la connexion par mot de passe",

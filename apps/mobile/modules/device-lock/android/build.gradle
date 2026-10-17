@@ -1,0 +1,22 @@
+// Gradle build for the local KeeplasDeviceLock Expo module: device-only
+// secrets behind the screen lock (strong biometric or PIN / pattern / password).
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.keeplas'
+version = '0.1.0'
+
+android {
+  namespace "com.keeplas.devicelock"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  // Same version expo-secure-store ships, so Gradle resolves a single copy.
+  implementation "androidx.biometric:biometric:1.1.0"
+}

@@ -78,12 +78,12 @@
   },
   "passkey": {
     "title": "Create your passkey",
-    "body": "Use Face ID or fingerprint to securely access your account. Your passkey stays on this device and never leaves it.",
+    "body": "Use your face, fingerprint or phone PIN to securely access your account. Your passkey stays on this device and never leaves it.",
     "cta": "Create passkey",
     "failedTitle": "Passkey not created",
     "failedBody": "The prompt closed before you finished. You need a passkey to keep your vault on this phone.",
-    "biometricsTitle": "Turn on Face ID or a fingerprint",
-    "biometricsBody": "Keeplas uses your phone's screen lock to protect your vault. Set one up in Settings, then come back.",
+    "screenLockTitle": "Set up a screen lock",
+    "screenLockBody": "Keeplas uses your phone's screen lock (PIN, face or fingerprint) to protect your vault. Set one up in Settings, then come back.",
     "devSkip": "Skip (development build)"
   },
   "vault": {
@@ -126,7 +126,7 @@
     "body": "Right now this phone is your only way in. Keeplas can't read your vault, so we can't restore it for you.",
     "waysBack": "Your ways back in",
     "thisPhone": "This phone",
-    "biometrics": "Face ID or fingerprint",
+    "screenLock": "Face, fingerprint or phone PIN",
     "contacts": "Trusted contacts",
     "contactsNeeded": "{n} of 2 needed",
     "kit": "Recovery kit",
@@ -150,7 +150,7 @@
   },
   "unlock": {
     "title": "Unlock your vault",
-    "body": "Face ID or fingerprint signs you in and unlocks your vault.",
+    "body": "Your face, fingerprint or phone PIN signs you in and unlocks your vault.",
     "cta": "Continue with passkey",
     "lost": "Lost access?",
     "failed": "We couldn't unlock your vault. Try again."
@@ -227,7 +227,7 @@
     "title": "Privacy and security",
     "subtitle": "Manage how you access your vault and protect your information.",
     "passkey": "Passkey",
-    "passkeyBody": "Secure sign-in with Face ID or fingerprint.",
+    "passkeyBody": "Secure sign-in with your face, fingerprint or phone PIN.",
     "pin": "PIN code (optional)",
     "pinBody": "Add a PIN after biometrics for extra security.",
     "kit": "Recovery kit",
@@ -305,8 +305,8 @@
     "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
-    "faceTitle": "Use Face ID to approve",
-    "faceBody": "This confirms it's really you.",
+    "confirmTitle": "Confirm it's you to approve",
+    "confirmBody": "Use your face, fingerprint or phone PIN.",
     "warning": "Approve only if this is your computer.",
     "approve": "Approve",
     "cancel": "Cancel"
@@ -371,7 +371,7 @@
     "verifyStep": "Verify it on WhatsApp",
     "verifyStepBody": "We send a 6-digit code",
     "passkeyStep": "Create a passkey",
-    "passkeyStepBody": "Face ID or fingerprint replaces your password",
+    "passkeyStepBody": "Your face, fingerprint or phone PIN replaces your password",
     "appStep": "Install the Keeplas app",
     "appStepBody": "Your vault moves to this phone",
     "offStep": "Turn off password sign-in",

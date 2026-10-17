@@ -122,10 +122,10 @@ export default function LinkApprove() {
       <View style={styles.face}>
         <BiometricRing kind="fingerprint" size={104} />
         <Text variant="h3" align="center">
-          {t("linkBrowser.faceTitle")}
+          {t("linkBrowser.confirmTitle")}
         </Text>
         <Text variant="body-sm" color="text.muted" align="center">
-          {t("linkBrowser.faceBody")}
+          {t("linkBrowser.confirmBody")}
         </Text>
       </View>
       <Callout
