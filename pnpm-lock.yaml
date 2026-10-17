@@ -175,6 +175,9 @@ importers:
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.17
+      babel-preset-expo:
+        specifier: ~57.0.15
+        version: 57.0.15(@babel/core@7.29.7)(@babel/runtime@7.29.10)(expo@57.0.29)(react-refresh@0.14.2)
       eslint:
         specifier: ^10.12.0
         version: 10.12.0(jiti@2.7.0)
