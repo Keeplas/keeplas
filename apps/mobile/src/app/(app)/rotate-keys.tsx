@@ -68,6 +68,9 @@ export default function RotateKeys() {
           newMaster,
         ),
       });
+      // A contact's key only needs one ML-DSA verification per rotation, not
+      // one per item it is shared with.
+      const verifiedKeys = new Map<string, Promise<string>>();
       for (const [index, item] of items.entries()) {
         const dek = await itemKey(item);
         const recipients = await convex.query(api.rotation.getItemRecipients, {
@@ -75,17 +78,21 @@ export default function RotateKeys() {
         });
         const recipientKeys = await Promise.all(
           recipients.map(async (recipient) => {
-            const publicKey = await requireVerifiedKey(
-              contactKeyMaterial({ _id: recipient.contactId, ...recipient }),
-              (contactId, fingerprint) =>
-                pin({
-                  contactId: contactId as typeof recipient.contactId,
-                  fingerprint,
-                }),
-            );
+            let verified = verifiedKeys.get(recipient.contactId);
+            if (!verified) {
+              verified = requireVerifiedKey(
+                contactKeyMaterial({ _id: recipient.contactId, ...recipient }),
+                (contactId, fingerprint) =>
+                  pin({
+                    contactId: contactId as typeof recipient.contactId,
+                    fingerprint,
+                  }),
+              );
+              verifiedKeys.set(recipient.contactId, verified);
+            }
             return {
               contactId: recipient.contactId,
-              wrappedDek: await wrapDek(dek, publicKey),
+              wrappedDek: await wrapDek(dek, await verified),
             };
           }),
         );

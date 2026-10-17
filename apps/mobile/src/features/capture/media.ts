@@ -5,6 +5,7 @@
  * files; they are sealed into the outbox, then deleted.
  */
 import * as DocumentPicker from "expo-document-picker";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
 import { File } from "expo-file-system";
@@ -81,16 +82,37 @@ export async function chooseFiles(): Promise<CaptureFile[]> {
   });
 }
 
+// Scanned pages are downscaled before being embedded in the PDF: a full-res
+// camera frame as a base64 data URI is several MB of JS string per page,
+// enough to OOM a 2 GB phone on a multi-page scan. ~1600 px keeps A4 text
+// readable.
+const PDF_PAGE_MAX_PX = 1600;
+const PDF_PAGE_JPEG_QUALITY = 0.7;
+
+async function pageDataUri(uri: string): Promise<string> {
+  const context = ImageManipulator.manipulate(uri);
+  context.resize({ width: PDF_PAGE_MAX_PX });
+  const image = await context.renderAsync();
+  const result = await image.saveAsync({
+    format: SaveFormat.JPEG,
+    compress: PDF_PAGE_JPEG_QUALITY,
+  });
+  const file = new File(result.uri);
+  const dataUri = `data:image/jpeg;base64,${await file.base64()}`;
+  if (file.uri !== uri) file.delete();
+  return dataUri;
+}
+
 /** Scanned page photos → one A4 PDF, a page per photo (M07-8 "3 pages · PDF"). */
 export async function pagesToPdf(
   pages: string[],
   name: string,
 ): Promise<CaptureFile> {
-  const images = await Promise.all(
-    pages.map(
-      async (uri) => `data:image/jpeg;base64,${await new File(uri).base64()}`,
-    ),
-  );
+  // Sequential on purpose: one downscaled page on the heap at a time.
+  const images: string[] = [];
+  for (const uri of pages) {
+    images.push(await pageDataUri(uri));
+  }
   const html = `<html><head><style>
     @page { margin: 0; }
     body { margin: 0; }

@@ -1,6 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   ML_KEM_PARAMS,
+  type MlKemImplementation,
+  getMlKemImplementation,
+  nobleMlKemImplementation,
+  setMlKemImplementation,
   generateRecipientKeyPair,
   serializePublicKey,
   parsePublicKey,
@@ -199,5 +203,64 @@ describe("ML-KEM-768 (post-quantum)", () => {
         unwrapBytes(envelope, secretKey, wrongAad),
       ).rejects.toThrow();
     });
+  });
+});
+
+describe("ML-KEM engine injection", () => {
+  afterEach(() => {
+    setMlKemImplementation(nobleMlKemImplementation);
+  });
+
+  it("routes wrapBytes / unwrapBytes through the injected engine", async () => {
+    const calls: string[] = [];
+    const recording: MlKemImplementation = {
+      encapsulate: (publicKey) => {
+        calls.push("encapsulate");
+        return nobleMlKemImplementation.encapsulate(publicKey);
+      },
+      decapsulate: (cipherText, secretKey) => {
+        calls.push("decapsulate");
+        return nobleMlKemImplementation.decapsulate(cipherText, secretKey);
+      },
+    };
+    setMlKemImplementation(recording);
+    expect(getMlKemImplementation()).toBe(recording);
+
+    const { publicKey, secretKey } = generateRecipientKeyPair();
+    const payload = new Uint8Array([9, 8, 7]);
+    const envelope = await wrapBytes(payload, serializePublicKey(publicKey));
+    expect(await unwrapBytes(envelope, secretKey)).toEqual(payload);
+    expect(calls).toEqual(["encapsulate", "decapsulate"]);
+  });
+
+  it("routes wrapDek / unwrapDek through the injected engine", async () => {
+    const calls: string[] = [];
+    const recording: MlKemImplementation = {
+      encapsulate: (publicKey) => {
+        calls.push("encapsulate");
+        return nobleMlKemImplementation.encapsulate(publicKey);
+      },
+      decapsulate: (cipherText, secretKey) => {
+        calls.push("decapsulate");
+        return nobleMlKemImplementation.decapsulate(cipherText, secretKey);
+      },
+    };
+    setMlKemImplementation(recording);
+
+    const { publicKey, secretKey } = generateRecipientKeyPair();
+    const dek = await generateTestDek();
+    const envelope = await wrapDek(dek, serializePublicKey(publicKey));
+    const restored = await unwrapDek(envelope, secretKey);
+    expect(await exportRaw(restored)).toEqual(await exportRaw(dek));
+    expect(calls).toEqual(["encapsulate", "decapsulate"]);
+  });
+
+  it("interoperates with envelopes produced under the default engine", async () => {
+    const { publicKey, secretKey } = generateRecipientKeyPair();
+    const payload = new Uint8Array([1, 2, 3, 4]);
+    const envelope = await wrapBytes(payload, serializePublicKey(publicKey));
+    // "Injected" engine (noble reference) must open a default-engine envelope.
+    setMlKemImplementation({ ...nobleMlKemImplementation });
+    expect(await unwrapBytes(envelope, secretKey)).toEqual(payload);
   });
 });

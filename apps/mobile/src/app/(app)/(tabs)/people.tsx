@@ -16,7 +16,7 @@ import { useVaultData } from "@/features/vault/vault-data";
 export default function People() {
   const router = useRouter();
   const { t } = useI18n();
-  const contacts = useQuery(api.trusted_contacts.getContacts);
+  const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const shared = useQuery(api.folders.sharedWithMe);
   const { folders } = useVaultData();
 

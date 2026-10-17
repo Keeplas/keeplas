@@ -1,6 +1,6 @@
 import { query } from "./_generated/server";
 import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
-import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./trusted_contacts";
+import { acceptedContacts, hasReadyTrustQuorum } from "./trusted_contacts";
 
 /**
  * Get all hub data in one query: continuity score, recent items, contact
@@ -22,24 +22,9 @@ export const getHubData = query({
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, 7);
 
-    // Confirmed contacts
-    const contacts = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
-      .collect();
-
-    // Trust contacts ready? A trust contact is ready once it has accepted and
-    // published its public key. The axis is "done" only with at least
-    // MIN_TRUST_CONTACTS_FOR_RECOVERY ready contacts — the unreachability
-    // quorum needs two votes, so a lone guardian must not light the Hub green.
-    const readyTrustContacts = contacts.filter(
-      (c) =>
-        (c.contactType ?? "trust") === "trust" &&
-        typeof c.contactPublicKey === "string",
-    );
-    const contactsReady =
-      readyTrustContacts.length >= MIN_TRUST_CONTACTS_FOR_RECOVERY;
+    // Confirmed contacts; the ready axis needs the full recovery quorum.
+    const contacts = await acceptedContacts(ctx, userId);
+    const contactsReady = hasReadyTrustQuorum(contacts);
 
     // Life Check configured?
     const lifeCheckConfig = await ctx.db

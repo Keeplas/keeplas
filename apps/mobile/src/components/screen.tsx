@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -67,7 +67,15 @@ export function Screen({
   );
 }
 
-function Decor({ kind, night }: { kind: ScreenDecor; night: boolean }) {
+// The decor SVGs are big component trees (clipPaths, dozens of paths); memo
+// keeps them out of every Screen re-render.
+const Decor = memo(function Decor({
+  kind,
+  night,
+}: {
+  kind: ScreenDecor;
+  night: boolean;
+}) {
   if (kind === "landscape") {
     const Art = night ? LandscapeNight : Landscape;
     return (
@@ -82,7 +90,7 @@ function Decor({ kind, night }: { kind: ScreenDecor; night: boolean }) {
       <Branch width={130} height={130} opacity={0.9} style={styles.flipped} />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1 },

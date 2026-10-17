@@ -23,7 +23,7 @@ export default function ShareFolder() {
   const router = useRouter();
   const { t } = useI18n();
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const rawItems = useQuery(api.vault_items.getItems);
+  const rawItems = useQuery(api.vault_items.getItemSummaries);
   const { folders, itemKey } = useVaultData();
   const folder = folders?.find((row) => row.id === id);
   const [selected, setSelected] = useState<Id<"trusted_contacts"> | null>(null);

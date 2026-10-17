@@ -12,6 +12,19 @@ config.resolver = {
   ...config.resolver,
   assetExts: config.resolver.assetExts.filter((ext) => ext !== "svg"),
   sourceExts: [...config.resolver.sourceExts, "svg"],
+  // hash-wasm is the web-only Argon2id engine (Hermes has no WebAssembly) and
+  // the app swaps in the native one at startup (src/crypto/install.ts). Its
+  // entry bundles every algorithm's WASM (~280 KB), so drop it from native
+  // bundles entirely.
+  resolveRequest: (context, moduleName, platform) => {
+    if (
+      moduleName === "hash-wasm" &&
+      (platform === "ios" || platform === "android")
+    ) {
+      return { type: "empty" };
+    }
+    return context.resolveRequest(context, moduleName, platform);
+  },
 };
 
 module.exports = config;

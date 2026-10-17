@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -7,6 +7,7 @@ import {
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
+  type AudioRecorder,
 } from "expo-audio";
 
 import { Button } from "@/components/button";
@@ -27,15 +28,16 @@ const RECORDING = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
 /**
  * M07-3 Voice note: records as soon as the microphone is allowed, shows
  * the time and a live level waveform, then hands the m4a to compose.
+ *
+ * Only `LiveSection` subscribes to the recorder state (several updates per
+ * second); the screen frame, rings and callout render once.
  */
 export default function VoiceNote() {
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
   const recorder = useAudioRecorder(RECORDING);
-  const state = useAudioRecorderState(recorder, 120);
   const [denied, setDenied] = useState(false);
-  const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
   const started = useRef(false);
 
   useEffect(() => {
@@ -55,6 +57,56 @@ export default function VoiceNote() {
       recorder.record();
     })();
   }, [recorder]);
+
+  return (
+    <Screen
+      header={<NavBar title={t("capture.voiceTitle")} onBack={router.back} />}
+      contentStyle={styles.content}
+    >
+      <View style={styles.mic}>
+        <View
+          style={[
+            styles.ring,
+            styles.r200,
+            { backgroundColor: colors["accent.soft"] },
+          ]}
+        />
+        <View
+          style={[
+            styles.ring,
+            styles.r150,
+            { backgroundColor: colors["progress.fill"], opacity: 0.18 },
+          ]}
+        />
+        <View
+          style={[
+            styles.ring,
+            styles.r100,
+            { backgroundColor: colors["accent.text"] },
+          ]}
+        />
+        <Icon name="mic" size={44} color="text.inverse" />
+      </View>
+      <LiveSection recorder={recorder} />
+      <PermissionSheet
+        problem={denied ? "microphone" : null}
+        onDismiss={router.back}
+      />
+    </Screen>
+  );
+}
+
+/** The part that re-renders with the recorder: time, waveform, controls. */
+const LiveSection = memo(function LiveSection({
+  recorder,
+}: {
+  recorder: AudioRecorder;
+}) {
+  const router = useRouter();
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const state = useAudioRecorderState(recorder, 120);
+  const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
 
   // dBFS (-60..0) → bar height ratio, newest bar on the right.
   const metering = state.metering;
@@ -92,34 +144,7 @@ export default function VoiceNote() {
   }
 
   return (
-    <Screen
-      header={<NavBar title={t("capture.voiceTitle")} onBack={router.back} />}
-      contentStyle={styles.content}
-    >
-      <View style={styles.mic}>
-        <View
-          style={[
-            styles.ring,
-            styles.r200,
-            { backgroundColor: colors["accent.soft"] },
-          ]}
-        />
-        <View
-          style={[
-            styles.ring,
-            styles.r150,
-            { backgroundColor: colors["progress.fill"], opacity: 0.18 },
-          ]}
-        />
-        <View
-          style={[
-            styles.ring,
-            styles.r100,
-            { backgroundColor: colors["accent.text"] },
-          ]}
-        />
-        <Icon name="mic" size={44} color="text.inverse" />
-      </View>
+    <>
       <Text variant="display" align="center" style={styles.tabular}>
         {formatDuration(state.durationMillis / 1000)}
       </Text>
@@ -166,13 +191,9 @@ export default function VoiceNote() {
           style={styles.flex}
         />
       </View>
-      <PermissionSheet
-        problem={denied ? "microphone" : null}
-        onDismiss={router.back}
-      />
-    </Screen>
+    </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   content: { alignItems: "stretch" },

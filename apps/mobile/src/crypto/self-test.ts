@@ -1,13 +1,17 @@
 import { argon2idRaw } from "@keeplas/crypto/kdf";
-import { uint8ToHex } from "@keeplas/crypto/encoding";
+import { base64ToUint8, uint8ToHex } from "@keeplas/crypto/encoding";
 import {
   generateRecipientKeyPair,
+  getMlKemImplementation,
+  nobleMlKemImplementation,
   serializePublicKey,
   unwrapBytes,
   wrapBytes,
 } from "@keeplas/crypto/kem";
 import {
   generateIdentityKeyPair,
+  getMlDsaImplementation,
+  nobleMlDsaImplementation,
   signBytes,
   verifyBytes,
 } from "@keeplas/crypto/sig";
@@ -66,6 +70,46 @@ const CHECKS: { name: string; run: () => Promise<void> }[] = [
       ) {
         throw new Error("signature");
       }
+    },
+  },
+  {
+    // Byte-for-byte compat between the installed ML-KEM engine (native
+    // OpenSSL on device, noble on Node) and the noble reference: shared
+    // secrets must match in both directions.
+    name: "ML-KEM-768 engine ⇄ noble cross-compat",
+    run: async () => {
+      const engine = getMlKemImplementation();
+      const noble = nobleMlKemImplementation;
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      const a = await engine.encapsulate(publicKey);
+      const aSs = await noble.decapsulate(a.cipherText, secretKey);
+      if (uint8ToHex(aSs) !== uint8ToHex(a.sharedSecret))
+        throw new Error("engine encapsulate → noble decapsulate");
+      const b = await noble.encapsulate(publicKey);
+      const bSs = await engine.decapsulate(b.cipherText, secretKey);
+      if (uint8ToHex(bSs) !== uint8ToHex(b.sharedSecret))
+        throw new Error("noble encapsulate → engine decapsulate");
+    },
+  },
+  {
+    // Same cross-check for ML-DSA-65: each side must verify the other's
+    // signature over the same message and keypair.
+    name: "ML-DSA-65 engine ⇄ noble cross-compat",
+    run: async () => {
+      const engine = getMlDsaImplementation();
+      const noble = nobleMlDsaImplementation;
+      const identity = generateIdentityKeyPair();
+      const publicKey = base64ToUint8(identity.publicKey);
+      const secretKey = base64ToUint8(identity.secretKey);
+      const message = new TextEncoder().encode("keeplas cross vector");
+      const engineSig = await engine.sign(message, secretKey);
+      if (!(await noble.verify(engineSig, message, publicKey)))
+        throw new Error("engine sign → noble verify");
+      const nobleSig = await noble.sign(message, secretKey);
+      if (!(await engine.verify(nobleSig, message, publicKey)))
+        throw new Error("noble sign → engine verify");
+      if (await engine.verify(nobleSig, message.slice(0, -1), publicKey))
+        throw new Error("engine verified a tampered message");
     },
   },
   {
