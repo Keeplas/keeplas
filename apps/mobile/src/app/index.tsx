@@ -1,19 +1,9 @@
 import { ActivityIndicator, View } from "react-native";
-import { Redirect, type Href } from "expo-router";
+import { Redirect } from "expo-router";
 
-import type { Stage } from "@/lib/session-stage";
+import { STAGE_HOME } from "@/lib/session-stage";
 import { useSession } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
-
-const STAGE_HOME: Record<Exclude<Stage, "loading">, Href> = {
-  signedOut: "/welcome",
-  loginOtp: "/login-otp",
-  setup: "/passkey",
-  needsKit: "/recovery-kit",
-  locked: "/unlock",
-  migration: "/move-to-phone",
-  ready: "/home",
-};
 
 /** Redirect hub: sends the user to the first screen of the current stage. */
 export default function Index() {

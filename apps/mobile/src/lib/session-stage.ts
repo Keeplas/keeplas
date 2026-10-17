@@ -1,3 +1,5 @@
+import type { Href } from "expo-router";
+
 /**
  * Where the app must be, from what is known about the session. The root
  * layout guards each route group with exactly one stage.
@@ -19,6 +21,17 @@ export type Stage =
   | "locked"
   | "migration"
   | "ready";
+
+/** First screen of each stage: app/index.tsx and the header logo go there. */
+export const STAGE_HOME: Record<Exclude<Stage, "loading">, Href> = {
+  signedOut: "/welcome",
+  loginOtp: "/login-otp",
+  setup: "/passkey",
+  needsKit: "/recovery-kit",
+  locked: "/unlock",
+  migration: "/move-to-phone",
+  ready: "/home",
+};
 
 export interface StageInputs {
   authLoading: boolean;
