@@ -9,8 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { decryptText } from "@/crypto/envelope";
 import { INBOX, parseItemMeta, type VaultCategory } from "@/crypto/item-meta";
@@ -23,6 +24,7 @@ import { useOutbox } from "@/features/outbox/outbox-provider";
 import type { OutboxEntry } from "@/features/outbox/outbox";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
+import { loadItemSummaries, saveItemSummaries } from "./summary-cache";
 
 export interface VaultItemSummary {
   id: Id<"vault_items">;
@@ -63,7 +65,9 @@ interface VaultDataValue {
 
 const VaultDataContext = createContext<VaultDataValue | null>(null);
 
-type ItemDoc = Doc<"vault_items">;
+type ItemDoc = FunctionReturnType<
+  typeof api.vault_items.getItemSummaries
+>[number];
 
 /**
  * Decrypted view of the vault for the unlocked app (M08-5 tiles and
@@ -75,12 +79,24 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const viewer = useViewer();
   const { masterKey } = useVault();
   const { entries } = useOutbox();
-  const rawItems = useQuery(api.vault_items.getItems);
+  const rawItems = useQuery(api.vault_items.getItemSummaries);
   const rawFolders = useQuery(api.folders.list);
   const cache = useRef(new Map<string, Promise<VaultItemSummary>>());
+  // ML-KEM decapsulation is the expensive step of opening an item; keep the
+  // unwrapped DEKs for the unlocked session (same exposure as the cached
+  // titles and the ML-KEM secret key itself). Cleared on lock.
+  const dekCache = useRef(new Map<string, Promise<CryptoKey>>());
+  const pendingCache = useRef(new Map<string, Promise<string | null>>());
   const [items, setItems] = useState<VaultItemSummary[]>();
   const [folders, setFolders] = useState<FolderSummary[]>();
   const [pending, setPending] = useState<PendingSummary[]>([]);
+
+  useEffect(() => {
+    if (masterKey) return;
+    cache.current.clear();
+    dekCache.current.clear();
+    pendingCache.current.clear();
+  }, [masterKey]);
 
   const ownerKeys = useCallback(() => {
     if (!masterKey) return Promise.reject(new Error("Vault is locked"));
@@ -90,9 +106,16 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const itemKey = useCallback(
     async (item: { ownerWrappedDek?: string }) => {
       if (!masterKey) throw new Error("Vault is locked");
-      return item.ownerWrappedDek
-        ? unwrapOwnerDek(item.ownerWrappedDek, await ownerKeys())
-        : masterKey;
+      const wrapped = item.ownerWrappedDek;
+      if (!wrapped) return masterKey;
+      let dek = dekCache.current.get(wrapped);
+      if (!dek) {
+        dek = ownerKeys().then((keys) => unwrapOwnerDek(wrapped, keys));
+        dekCache.current.set(wrapped, dek);
+        // Do not cache failures (e.g. a rotation racing the unwrap).
+        dek.catch(() => dekCache.current.delete(wrapped));
+      }
+      return dek;
     },
     [masterKey, ownerKeys],
   );
@@ -121,26 +144,67 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     [itemKey],
   );
 
+  // Seed from the on-device summary cache: the vault shows instantly (and
+  // offline), and unchanged items skip their ML-KEM decapsulation below.
   useEffect(() => {
-    if (!rawItems) return;
+    if (!masterKey) return;
     let alive = true;
-    Promise.all(
-      rawItems.map((item) => {
-        const key = `${item._id}:${item.updatedAt}`;
-        let summary = cache.current.get(key);
-        if (!summary) {
-          summary = summarize(item);
-          cache.current.set(key, summary);
+    loadItemSummaries(viewer._id).then((cached) => {
+      if (!alive || cached.length === 0) return;
+      for (const summary of cached) {
+        const key = `${summary.id}:${summary.updatedAt}`;
+        if (!cache.current.has(key)) {
+          cache.current.set(key, Promise.resolve(summary));
         }
-        return summary;
-      }),
-    ).then((out) => {
-      if (alive) setItems(out.sort((a, b) => b.updatedAt - a.updatedAt));
+      }
+      setItems((current) => current ?? cached);
     });
     return () => {
       alive = false;
     };
-  }, [rawItems, summarize]);
+  }, [viewer._id, masterKey]);
+
+  // Open items newest-first in small batches, yielding a macrotask between
+  // batches that did real decryption work. Each ML-KEM decapsulation blocks
+  // the JS thread, so opening the whole vault at once froze the UI for
+  // seconds on low-end phones; batching keeps it responsive and shows the
+  // most recent titles immediately.
+  useEffect(() => {
+    if (!rawItems) return;
+    let alive = true;
+    const sorted = [...rawItems].sort((a, b) => b.updatedAt - a.updatedAt);
+    const BATCH = 8;
+    void (async () => {
+      const out: VaultItemSummary[] = [];
+      for (let i = 0; i < sorted.length; i += BATCH) {
+        let cached = true;
+        const summaries = await Promise.all(
+          sorted.slice(i, i + BATCH).map((item) => {
+            const key = `${item._id}:${item.updatedAt}`;
+            let summary = cache.current.get(key);
+            if (!summary) {
+              cached = false;
+              summary = summarize(item);
+              cache.current.set(key, summary);
+            }
+            return summary;
+          }),
+        );
+        if (!alive) return;
+        out.push(...summaries);
+        if (!cached) {
+          setItems(out.slice());
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          if (!alive) return;
+        }
+      }
+      setItems(out);
+      void saveItemSummaries(viewer._id, out).catch(() => undefined);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [rawItems, summarize, viewer._id]);
 
   useEffect(() => {
     if (!rawFolders || !masterKey) return;
@@ -160,15 +224,21 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     };
   }, [rawFolders, masterKey]);
 
+  // Outbox entries reload after every upload step; cache their decrypted
+  // titles so a flush does not redo one ML-KEM unwrap per entry each time.
   useEffect(() => {
     let alive = true;
     Promise.all(
-      entries.map(async (entry) => ({
-        entry,
-        title: await itemKey(entry.item)
-          .then((key) => decryptText(entry.item.encryptedTitle, key))
-          .catch(() => null),
-      })),
+      entries.map(async (entry) => {
+        let title = pendingCache.current.get(entry.id);
+        if (!title) {
+          title = itemKey(entry.item)
+            .then((key) => decryptText(entry.item.encryptedTitle, key))
+            .catch(() => null);
+          pendingCache.current.set(entry.id, title);
+        }
+        return { entry, title: await title };
+      }),
     ).then((out) => {
       if (alive)
         setPending(out.sort((a, b) => b.entry.createdAt - a.entry.createdAt));

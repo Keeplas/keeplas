@@ -446,8 +446,6 @@ export const getSharedFolder = query({
             _id: item._id,
             encryptedTitle: item.encryptedTitle,
             encryptedMeta: item.encryptedMeta,
-            encryptedContent: item.encryptedContent,
-            encryptedLinks: item.encryptedLinks,
             wrappedDek: key?.wrappedDek ?? null,
             updatedAt: item.updatedAt,
             files: files

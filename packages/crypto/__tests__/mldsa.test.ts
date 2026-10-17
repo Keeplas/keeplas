@@ -1,9 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   ML_DSA_PARAMS,
+  type MlDsaImplementation,
   generateIdentityKeyPair,
+  getMlDsaImplementation,
+  nobleMlDsaImplementation,
+  setMlDsaImplementation,
   signBytes,
+  signBytesAsync,
   verifyBytes,
+  verifyBytesAsync,
   identityKeyFingerprint,
 } from "../src/sig";
 import { base64ToUint8 } from "../src/encoding";
@@ -101,5 +107,61 @@ describe("ML-DSA-65 (post-quantum signatures)", () => {
     it("throws on a wrong-length public key", async () => {
       await expect(identityKeyFingerprint(btoa("short"))).rejects.toThrow();
     });
+  });
+});
+
+describe("ML-DSA engine injection", () => {
+  afterEach(() => {
+    setMlDsaImplementation(nobleMlDsaImplementation);
+  });
+
+  it("default async variants pass the sync vectors and interoperate", async () => {
+    const { publicKey, secretKey } = generateIdentityKeyPair();
+    const asyncSig = await signBytesAsync(secretKey, message);
+    // Async-signed verifies sync and async; sync-signed verifies async.
+    expect(verifyBytes(publicKey, message, asyncSig)).toBe(true);
+    expect(await verifyBytesAsync(publicKey, message, asyncSig)).toBe(true);
+    const syncSig = signBytes(secretKey, message);
+    expect(await verifyBytesAsync(publicKey, message, syncSig)).toBe(true);
+  });
+
+  it("returns false from verifyBytesAsync on malformed input", async () => {
+    const { publicKey, secretKey } = generateIdentityKeyPair();
+    const sig = await signBytesAsync(secretKey, message);
+    expect(await verifyBytesAsync("not-base64!!!", message, sig)).toBe(false);
+    expect(await verifyBytesAsync(publicKey, message, btoa("short"))).toBe(
+      false,
+    );
+  });
+
+  it("routes signBytesAsync / verifyBytesAsync through the injected engine", async () => {
+    const calls: string[] = [];
+    const recording: MlDsaImplementation = {
+      sign: (msg, secretKey) => {
+        calls.push("sign");
+        return nobleMlDsaImplementation.sign(msg, secretKey);
+      },
+      verify: (signature, msg, publicKey) => {
+        calls.push("verify");
+        return nobleMlDsaImplementation.verify(signature, msg, publicKey);
+      },
+    };
+    setMlDsaImplementation(recording);
+    expect(getMlDsaImplementation()).toBe(recording);
+
+    const { publicKey, secretKey } = generateIdentityKeyPair();
+    const sig = await signBytesAsync(secretKey, message);
+    expect(await verifyBytesAsync(publicKey, message, sig)).toBe(true);
+    expect(calls).toEqual(["sign", "verify"]);
+  });
+
+  it("keeps the sync API on the noble default even when an engine is injected", () => {
+    setMlDsaImplementation({
+      sign: () => Promise.reject(new Error("engine must not be used")),
+      verify: () => Promise.reject(new Error("engine must not be used")),
+    });
+    const { publicKey, secretKey } = generateIdentityKeyPair();
+    const sig = signBytes(secretKey, message);
+    expect(verifyBytes(publicKey, message, sig)).toBe(true);
   });
 });

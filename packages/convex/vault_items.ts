@@ -64,6 +64,31 @@ export const getItems = query({
 });
 
 /**
+ * Active vault items projected to what list screens need (sealed title +
+ * metadata and the key to open them). `encryptedContent` can be a long note:
+ * returning full documents made the list subscription ship every body on
+ * every change. Use `getItem` for the detail screen.
+ */
+export const getItemSummaries = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const items = await getActiveItems(ctx, userId);
+    return items.map((item) => ({
+      _id: item._id,
+      folderId: item.folderId,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      title: item.title,
+      category: item.category,
+      encryptedTitle: item.encryptedTitle,
+      encryptedMeta: item.encryptedMeta,
+      ownerWrappedDek: item.ownerWrappedDek,
+    }));
+  },
+});
+
+/**
  * List the owner's release-introduction items (welcome messages shown to
  * trusted contacts on the memorial page). Excluded from the regular vault
  * listing — surfaced only through this dedicated query for the /life-check

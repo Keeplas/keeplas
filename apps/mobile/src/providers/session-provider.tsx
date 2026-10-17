@@ -9,17 +9,23 @@ import {
 } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Doc } from "@keeplas/backend/_generated/dataModel";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import { clearItemSummaries } from "@/features/vault/summary-cache";
 import { auditContext } from "@/lib/use-audited-mutation";
 import { resolveStage, type Stage } from "@/lib/session-stage";
 import { useVault } from "./vault-provider";
 
+/** The signed-in user as `users.viewer` projects it (no analytics fields). */
+export type Viewer = NonNullable<FunctionReturnType<typeof api.users.viewer>>;
+
 interface SessionValue {
   stage: Stage;
-  viewer: Doc<"users"> | null | undefined;
+  /** Onboarding, or showing a renewed recovery kit: (setup) must finish. */
+  settingUp: boolean;
+  viewer: Viewer | null | undefined;
   /** Re-read whether this phone holds a wrapped vault key. */
   refreshDeviceVault: () => void;
   deferMigration: () => void;
@@ -31,7 +37,7 @@ const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signOut: convexSignOut } = useAuthActions();
-  const { masterKey, lock } = useVault();
+  const { masterKey, lock, setupPhrase } = useVault();
   const skip = isAuthenticated ? {} : "skip";
   const viewer = useQuery(api.users.viewer, skip);
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
@@ -59,7 +65,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [userId, vaultCheck]);
 
   const signOut = useCallback(async () => {
-    if (userId) await forgetDeviceVault(userId);
+    if (userId) {
+      await forgetDeviceVault(userId);
+      await clearItemSummaries(userId).catch(() => undefined);
+    }
     lock();
     auditContext.clear();
     setMigrationDeferred(false);
@@ -84,12 +93,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value = useMemo<SessionValue>(
     () => ({
       stage,
+      settingUp: stage === "setup" || setupPhrase !== null,
       viewer,
       refreshDeviceVault: () => setVaultCheck((n) => n + 1),
       deferMigration: () => setMigrationDeferred(true),
       signOut,
     }),
-    [stage, viewer, signOut],
+    [stage, setupPhrase, viewer, signOut],
   );
 
   return (
@@ -104,7 +114,7 @@ export function useSession(): SessionValue {
 }
 
 /** The signed-in user; only for screens behind an authenticated stage. */
-export function useViewer(): Doc<"users"> {
+export function useViewer(): Viewer {
   const { viewer } = useSession();
   if (!viewer) throw new Error("No signed-in user");
   return viewer;

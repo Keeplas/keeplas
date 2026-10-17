@@ -19,7 +19,10 @@ function TabsWithAdd() {
   const openAdd = useOpenAddSheet();
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
+      // freezeOnBlur stops re-renders and keeps Convex subscriptions of
+      // hidden tabs from doing work (e.g. Settings' usage stats recomputing
+      // on every vault change while Home is shown).
+      screenOptions={{ headerShown: false, freezeOnBlur: true }}
       tabBar={(props) => (
         <TabBar
           state={props.state}

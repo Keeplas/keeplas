@@ -73,6 +73,17 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
   const [created, setCreated] = useState<Record<string, string>>({});
   const flushing = useRef(false);
   const again = useRef(false);
+  const lastPct = useRef<Record<string, number>>({});
+
+  // Native upload events fire many times per second; a context update per
+  // event re-renders every useOutbox consumer. Only publish whole-percent
+  // changes.
+  const reportProgress = useCallback((id: string, p: Progress) => {
+    const pct = p.total > 0 ? Math.floor((100 * p.sent) / p.total) : 0;
+    if (lastPct.current[id] === pct) return;
+    lastPct.current[id] = pct;
+    setProgress((all) => ({ ...all, [id]: p }));
+  }, []);
 
   const reload = useCallback(async () => {
     setEntries(userId ? await sqliteStore.list(userId) : []);
@@ -110,7 +121,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
         for (const entry of pendingEntries(await sqliteStore.list(userId))) {
           try {
             const itemId = await uploadEntry(entry, sqliteStore, deps, (p) =>
-              setProgress((all) => ({ ...all, [entry.id]: p })),
+              reportProgress(entry.id, p),
             );
             setCreated((all) => ({ ...all, [entry.id]: itemId }));
           } catch {
@@ -123,7 +134,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       flushing.current = false;
       await reload();
     }
-  }, [userId, online, deps, reload]);
+  }, [userId, online, deps, reload, reportProgress]);
 
   const retry = useCallback(() => {
     if (!userId) return;

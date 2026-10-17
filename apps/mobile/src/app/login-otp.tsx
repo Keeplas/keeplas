@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
+import { Button } from "@/components/button";
 import { CodeVerification } from "@/features/code-verification";
 import { useI18n } from "@/providers/i18n-provider";
+import { useSession } from "@/providers/session-provider";
 
 /**
  * Login-OTP step for password accounts (the web's /login/otp): the session
@@ -11,6 +13,7 @@ import { useI18n } from "@/providers/i18n-provider";
  */
 export default function LoginOtp() {
   const { t } = useI18n();
+  const { signOut } = useSession();
   const gate = useQuery(api.login_otp.getMyLoginOtpGate);
   const requestCode = useMutation(api.login_otp.requestLoginOtp);
   const submitCode = useMutation(api.login_otp.submitLoginOtpForSession);
@@ -33,6 +36,13 @@ export default function LoginOtp() {
       onResend={async () => {
         await requestCode();
       }}
+      footer={
+        <Button
+          variant="text"
+          label={t("settings.signOut")}
+          onPress={signOut}
+        />
+      }
     />
   );
 }

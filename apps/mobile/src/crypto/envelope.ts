@@ -14,7 +14,11 @@
  */
 import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
 
-export const STREAM_THRESHOLD_BYTES = 8 * 1024 * 1024;
+// Above this size, encrypt/decrypt chunk by chunk from disk. Kept low: the
+// single-shot path holds plaintext + ciphertext (and copies) on the JS heap
+// at once, a multiple of the file size — too much for 2 GB phones. Readers
+// dispatch on the stored IV sentinel, so changing it stays compatible.
+export const STREAM_THRESHOLD_BYTES = 2 * 1024 * 1024;
 export const STREAM_IV_SENTINEL = "__stream__";
 const CHUNK_SIZE = 1 << 20;
 const IV_LENGTH = 12;

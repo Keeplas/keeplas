@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -61,6 +62,8 @@ export default function ContactRecovery() {
         serializeSecretKey(pair.secretKey),
       );
       await start({ newDevicePublicKey: publicKey });
+    } catch {
+      Alert.alert(t("common.genericError"));
     } finally {
       setBusy(false);
     }
@@ -105,13 +108,19 @@ export default function ContactRecovery() {
       await SecureStore.deleteItemAsync(secretKey(viewer._id));
       refreshDeviceVault();
       router.replace("/(setup)/kit");
+    } catch {
+      Alert.alert(t("common.genericError"));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Screen header={<AppHeader />}>
+    <Screen
+      header={
+        <AppHeader onBack={router.canGoBack() ? router.back : undefined} />
+      }
+    >
       <Text variant="h1">{t("socialRecovery.title")}</Text>
       <Text color="text.muted">{t("socialRecovery.body")}</Text>
       {!request ||
@@ -148,7 +157,9 @@ export default function ContactRecovery() {
           <Button
             variant="text"
             label={t("common.cancel")}
-            onPress={() => void cancel({})}
+            onPress={() =>
+              cancel({}).catch(() => Alert.alert(t("common.genericError")))
+            }
           />
         </>
       )}

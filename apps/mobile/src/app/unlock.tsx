@@ -7,7 +7,7 @@ import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { BiometricRing } from "@/features/biometric-ring";
 import { useI18n } from "@/providers/i18n-provider";
-import { useViewer } from "@/providers/session-provider";
+import { useSession, useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
 
 /**
@@ -17,6 +17,7 @@ import { useVault } from "@/providers/vault-provider";
 export default function Unlock() {
   const { t } = useI18n();
   const viewer = useViewer();
+  const { signOut } = useSession();
   const { unlock } = useVault();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -60,6 +61,7 @@ export default function Unlock() {
         label={t("unlock.lost")}
         onPress={() => Alert.alert(t("unlock.lost"), t("common.comingSoon"))}
       />
+      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

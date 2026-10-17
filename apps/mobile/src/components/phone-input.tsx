@@ -48,13 +48,14 @@ export function PhoneInput({
   const [query, setQuery] = useState("");
   const countries = useMemo(() => listCountries(language), [language]);
   const selected = countries.find((c) => c.code === country);
-  const filtered = query
-    ? countries.filter(
-        (c) =>
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.dialCode.includes(query),
-      )
-    : countries;
+  const filtered = useMemo(() => {
+    if (!query) return countries;
+    const needle = query.toLowerCase();
+    return countries.filter(
+      (c) =>
+        c.name.toLowerCase().includes(needle) || c.dialCode.includes(query),
+    );
+  }, [countries, query]);
 
   return (
     <View
