@@ -1,3 +1,5 @@
+import { useCallback, useMemo } from "react";
+import { FlatList, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { Button } from "@/components/button";
@@ -5,7 +7,11 @@ import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { useVaultData } from "@/features/vault/vault-data";
+import { VaultItemRow } from "@/features/vault/item-row";
+import {
+  useVaultData,
+  type VaultItemSummary,
+} from "@/features/vault/vault-data";
 import { useI18n } from "@/providers/i18n-provider";
 
 export default function FolderDetails() {
@@ -14,7 +20,18 @@ export default function FolderDetails() {
   const { t } = useI18n();
   const { folders, items } = useVaultData();
   const folder = folders?.find((row) => row.id === id);
-  const folderItems = items?.filter((item) => item.folderId === id) ?? [];
+  const folderItems = useMemo(
+    () => items?.filter((item) => item.folderId === id) ?? [],
+    [items, id],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: VaultItemSummary }) => (
+      <VaultItemRow id={item.id} title={item.title ?? t("item.decrypting")} />
+    ),
+    [t],
+  );
+
   return (
     <Screen
       header={
@@ -23,35 +40,44 @@ export default function FolderDetails() {
           onBack={router.back}
         />
       }
+      scroll={false}
     >
-      <Text variant="h1">{folder?.name ?? t("folders.title")}</Text>
-      <Text color="text.muted">
-        {t("folders.items", { n: folderItems.length })}
-      </Text>
-      <Button
-        label={t("folders.share")}
-        onPress={() =>
-          router.push({ pathname: "/folder/[id]/share", params: { id } })
+      <FlatList
+        data={folderItems}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ gap: 16, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        windowSize={5}
+        ListHeaderComponent={
+          <>
+            <Text variant="h1">{folder?.name ?? t("folders.title")}</Text>
+            <Text color="text.muted">
+              {t("folders.items", { n: folderItems.length })}
+            </Text>
+            <Button
+              label={t("folders.share")}
+              onPress={() =>
+                router.push({ pathname: "/folder/[id]/share", params: { id } })
+              }
+            />
+          </>
+        }
+        ListHeaderComponentStyle={{ gap: 16 }}
+        ListFooterComponent={
+          <View style={{ gap: 16 }}>
+            {(folder?.grants ?? []).map((grant) => (
+              <ListRow
+                key={grant.grantId}
+                icon="user-circle"
+                title={grant.contactName}
+                description={t(`folders.timing.${grant.timing}`)}
+              />
+            ))}
+          </View>
         }
       />
-      {folderItems.map((item) => (
-        <ListRow
-          key={item.id}
-          icon="document"
-          title={item.title ?? t("item.decrypting")}
-          onPress={() =>
-            router.push({ pathname: "/item/[id]", params: { id: item.id } })
-          }
-        />
-      ))}
-      {(folder?.grants ?? []).map((grant) => (
-        <ListRow
-          key={grant.grantId}
-          icon="user-circle"
-          title={grant.contactName}
-          description={t(`folders.timing.${grant.timing}`)}
-        />
-      ))}
     </Screen>
   );
 }

@@ -40,13 +40,20 @@ export default function ItemDetails() {
     let alive = true;
     void (async () => {
       const key = await itemKey(raw);
-      const [title, note, meta] = await Promise.all([
-        decryptText(raw.encryptedTitle ?? "", key),
+      // Legacy rows may miss encryptedTitle/encryptedMeta; fall back to the
+      // plaintext columns instead of failing the whole decryption.
+      const [title, note, category] = await Promise.all([
+        raw.encryptedTitle
+          ? decryptText(raw.encryptedTitle, key)
+          : (raw.title ?? ""),
         decryptText(raw.encryptedContent, key),
-        decryptText(raw.encryptedMeta ?? "", key),
+        raw.encryptedMeta
+          ? decryptText(raw.encryptedMeta, key).then(
+              (meta) => parseItemMeta(meta).category,
+            )
+          : (raw.category ?? "other"),
       ]);
-      if (alive)
-        setOpened({ title, note, category: parseItemMeta(meta).category });
+      if (alive) setOpened({ title, note, category });
     })().catch(() => undefined);
     return () => {
       alive = false;

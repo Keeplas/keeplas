@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -10,6 +9,7 @@ import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { VaultItemRow } from "@/features/vault/item-row";
 import {
   categoryCounts,
   isInbox,
@@ -26,16 +26,13 @@ import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius, withAlpha } from "@/theme";
 
-/**
- * M08-5 Home. Counts come from `hub.getHubData`; the item list (decrypted
- * titles) arrives with capture in the next part.
- */
+/** M08-5 Home. Counts are computed on the device from the decrypted vault. */
 export default function Home() {
-  const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
   const viewer = useViewer();
-  const hub = useQuery(api.hub.getHubData);
+  const contactsReady =
+    useQuery(api.trusted_contacts.getContactsReady) ?? false;
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
@@ -47,10 +44,14 @@ export default function Home() {
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   // Categories are encrypted (F4): counted on the device once the vault list
   // decrypts item metadata (capture part).
-  const groups = groupCategoryCounts(categoryCounts(items ?? []));
-  const inboxCount = (items ?? []).filter(isInbox).length + pending.length;
-  const contactsReady =
-    hub?.priorityActions.find((a) => a.key === "contacts_ready")?.done ?? false;
+  const groups = useMemo(
+    () => groupCategoryCounts(categoryCounts(items ?? [])),
+    [items],
+  );
+  const inboxCount = useMemo(
+    () => (items ?? []).filter(isInbox).length + pending.length,
+    [items, pending],
+  );
   // Ways back in: this phone, 2 ready trust contacts, the recovery kit.
   const ready = 1 + (contactsReady ? 1 : 0) + (kitExported ? 1 : 0);
   const soon = () => Alert.alert(t("home.yourVault"), t("common.comingSoon"));
@@ -136,14 +137,11 @@ export default function Home() {
         />
       ))}
       {(items ?? []).slice(0, 5).map((item) => (
-        <ListRow
+        <VaultItemRow
           key={item.id}
-          icon="document"
+          id={item.id}
           title={item.title ?? t("item.decrypting")}
           description={t(`capture.category.${item.category}`)}
-          onPress={() =>
-            router.push({ pathname: "/item/[id]", params: { id: item.id } })
-          }
         />
       ))}
       {items?.length === 0 && pending.length === 0 ? (

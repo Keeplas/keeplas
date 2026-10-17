@@ -4,19 +4,21 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/button";
 import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { BiometricRing } from "@/features/biometric-ring";
 import { PasskeyButton } from "@/features/passkey-step";
 import { useI18n } from "@/providers/i18n-provider";
-import { useViewer } from "@/providers/session-provider";
+import { useSession, useViewer } from "@/providers/session-provider";
 
 /** M01-3 Create your passkey. Skipped when the account already has one. */
 export default function PasskeyScreen() {
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
+  const { signOut } = useSession();
   const passkeys = useQuery(api.webauthn.listMyCredentials);
 
   if (passkeys && passkeys.length > 0) return <Redirect href="/vault" />;
@@ -36,6 +38,7 @@ export default function PasskeyScreen() {
         label={t("passkey.cta")}
         onDone={() => router.replace("/vault")}
       />
+      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

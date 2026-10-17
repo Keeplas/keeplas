@@ -1,5 +1,6 @@
+import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -22,8 +23,17 @@ export default function Settings() {
   const { appearance, setAppearance } = useTheme();
   const { signOut } = useSession();
   const changeLanguage = useChangeLanguage();
-  const usage = useQuery(api.vaults.getUsageStats);
-  const lifeCheck = useQuery(api.life_check.getConfig);
+  // getUsageStats re-reads every item and file server-side on each vault
+  // change; only subscribe while this tab is actually visible.
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const usage = useQuery(api.vaults.getUsageStats, focused ? {} : "skip");
+  const lifeCheck = useQuery(api.life_check.getConfig, focused ? {} : "skip");
 
   const lifetime = usage?.plan === "lifetime";
   const appearanceLabel = {

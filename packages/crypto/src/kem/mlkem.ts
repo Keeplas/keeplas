@@ -28,6 +28,59 @@ export interface DekEnvelope {
   ct: string;
 }
 
+/**
+ * Pluggable ML-KEM-768 engine. Everything crosses this boundary in the raw
+ * FIPS 203 byte formats used by @noble/post-quantum (and stored/sent by the
+ * app): 1184-byte encapsulation key, 2400-byte *expanded* decapsulation key,
+ * 1088-byte ciphertext, 32-byte shared secret. The algorithm and parameters
+ * are fixed — an engine only swaps *where* the ML-KEM-768 math runs, never
+ * what it computes. Async so native engines can run off the JS thread.
+ */
+export interface MlKemImplementation {
+  encapsulate(
+    publicKey: Uint8Array,
+  ): Promise<{ cipherText: Uint8Array; sharedSecret: Uint8Array }>;
+  decapsulate(
+    cipherText: Uint8Array,
+    secretKey: Uint8Array,
+  ): Promise<Uint8Array>;
+}
+
+/**
+ * Default engine: @noble/post-quantum (pure JS). Used on the web and in
+ * tests, and kept exported as the reference implementation so runtime
+ * self-tests can cross-check an injected engine against it byte for byte.
+ */
+export const nobleMlKemImplementation: MlKemImplementation = {
+  async encapsulate(publicKey) {
+    const { cipherText, sharedSecret } = ml_kem768.encapsulate(publicKey);
+    return {
+      cipherText: new Uint8Array(cipherText),
+      sharedSecret: new Uint8Array(sharedSecret),
+    };
+  },
+  async decapsulate(cipherText, secretKey) {
+    return new Uint8Array(ml_kem768.decapsulate(cipherText, secretKey));
+  },
+};
+
+let mlKemImplementation: MlKemImplementation = nobleMlKemImplementation;
+
+/**
+ * Replace the ML-KEM-768 engine. The default (noble) is pure synchronous JS,
+ * which freezes the Hermes (React Native) JS thread: the mobile app registers
+ * a native OpenSSL engine at startup. Any engine must interoperate byte for
+ * byte with the noble default (see the cross-checks in the mobile self-test).
+ */
+export function setMlKemImplementation(impl: MlKemImplementation) {
+  mlKemImplementation = impl;
+}
+
+/** Current engine; exposed for runtime cross-checks against the default. */
+export function getMlKemImplementation(): MlKemImplementation {
+  return mlKemImplementation;
+}
+
 export function generateRecipientKeyPair(): RecipientKeyPair {
   const { publicKey, secretKey } = ml_kem768.keygen();
   return {
@@ -111,10 +164,8 @@ export async function wrapDek(
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
   const { cipherText, sharedSecret } =
-    ml_kem768.encapsulate(recipientPublicKey);
-  const wrapKey = await importAesKeyFromSharedSecret(
-    new Uint8Array(sharedSecret),
-  );
+    await mlKemImplementation.encapsulate(recipientPublicKey);
+  const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
   const rawDek = new Uint8Array(await crypto.subtle.exportKey("raw", dek));
   try {
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -128,7 +179,7 @@ export async function wrapDek(
     const envelope: DekEnvelope = {
       v: 1,
       alg: "ml-kem-768+aes-256-gcm",
-      kem: uint8ToBase64(new Uint8Array(cipherText)),
+      kem: uint8ToBase64(cipherText),
       iv: uint8ToBase64(iv),
       ct: uint8ToBase64(new Uint8Array(ciphertext)),
     };
@@ -145,10 +196,8 @@ export async function wrapBytes(
 ): Promise<string> {
   const recipientPublicKey = parsePublicKey(recipientPublicKeyB64);
   const { cipherText, sharedSecret } =
-    ml_kem768.encapsulate(recipientPublicKey);
-  const wrapKey = await importAesKeyFromSharedSecret(
-    new Uint8Array(sharedSecret),
-  );
+    await mlKemImplementation.encapsulate(recipientPublicKey);
+  const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const buf = new Uint8Array(raw.byteLength);
   buf.set(raw);
@@ -160,7 +209,7 @@ export async function wrapBytes(
   const envelope: DekEnvelope = {
     v: 1,
     alg: "ml-kem-768+aes-256-gcm",
-    kem: uint8ToBase64(new Uint8Array(cipherText)),
+    kem: uint8ToBase64(cipherText),
     iv: uint8ToBase64(iv),
     ct: uint8ToBase64(new Uint8Array(ciphertext)),
   };
@@ -209,8 +258,10 @@ export async function unwrapDek(
       `KEM ciphertext must be exactly ${ML_KEM_CIPHERTEXT_BYTES} bytes`,
     );
   }
-  const sharedSecretRet = ml_kem768.decapsulate(cipherText, secretKey);
-  const sharedSecret = new Uint8Array(sharedSecretRet);
+  const sharedSecret = await mlKemImplementation.decapsulate(
+    cipherText,
+    secretKey,
+  );
   try {
     const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
     const iv = base64ToUint8(envelope.iv);
@@ -249,8 +300,10 @@ export async function unwrapBytes(
   }
   const envelope = parseEnvelope(envelopeStr);
   const cipherText = base64ToUint8(envelope.kem);
-  const sharedSecretRet = ml_kem768.decapsulate(cipherText, secretKey);
-  const sharedSecret = new Uint8Array(sharedSecretRet);
+  const sharedSecret = await mlKemImplementation.decapsulate(
+    cipherText,
+    secretKey,
+  );
   try {
     const wrapKey = await importAesKeyFromSharedSecret(sharedSecret);
     const iv = base64ToUint8(envelope.iv);

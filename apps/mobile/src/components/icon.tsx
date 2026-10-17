@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Svg, { Path } from "react-native-svg";
 
 import { useTheme } from "@/providers/theme-provider";
@@ -15,7 +16,7 @@ export interface IconProps {
 }
 
 /** Design-kit icon (24 px grid, stroked) drawn in a theme colour. */
-export function Icon({
+export const Icon = memo(function Icon({
   name,
   size = 24,
   color = "text.primary",
@@ -34,4 +35,4 @@ export function Icon({
       />
     </Svg>
   );
-}
+});

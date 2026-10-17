@@ -5,11 +5,13 @@ import {
   internalQuery,
   query,
   type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   createNotification,
+  optionalAuth,
   requireAuth,
   requireFullAuth,
   resolveItemRecipients,
@@ -49,6 +51,69 @@ export const getContacts = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
       .collect();
+  },
+});
+
+/**
+ * Contacts projected for list screens: no ML-KEM public key or ML-DSA
+ * signature (several KB of base64 per contact). Flows that wrap a DEK to a
+ * contact keep using `getContacts` for the full key material.
+ */
+export const getContactSummaries = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const contacts = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+      .collect();
+    return contacts.map((contact) => ({
+      _id: contact._id,
+      name: contact.name,
+      email: contact.email,
+      phoneNumber: contact.phoneNumber,
+      invitationStatus: contact.invitationStatus,
+      contactType: contact.contactType ?? "trust",
+    }));
+  },
+});
+
+/** Accepted contacts of a user. Shared by the hub and `getContactsReady`. */
+export async function acceptedContacts(ctx: QueryCtx, userId: Id<"users">) {
+  return await ctx.db
+    .query("trusted_contacts")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .filter((q) => q.eq(q.field("invitationStatus"), "accepted"))
+    .collect();
+}
+
+/**
+ * A trust contact is ready once it has accepted and published its public key.
+ * The quorum needs ≥ MIN_TRUST_CONTACTS_FOR_RECOVERY ready contacts — a lone
+ * guardian must not light the readiness signal green.
+ */
+export function hasReadyTrustQuorum(
+  contacts: Doc<"trusted_contacts">[],
+): boolean {
+  const ready = contacts.filter(
+    (c) =>
+      (c.contactType ?? "trust") === "trust" &&
+      typeof c.contactPublicKey === "string",
+  );
+  return ready.length >= MIN_TRUST_CONTACTS_FOR_RECOVERY;
+}
+
+/**
+ * Whether the recovery quorum is ready. Lightweight signal for the mobile
+ * Home, which needs only this bit of the hub data.
+ */
+export const getContactsReady = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await optionalAuth(ctx);
+    if (userId === null) return false;
+    return hasReadyTrustQuorum(await acceptedContacts(ctx, userId));
   },
 });
 

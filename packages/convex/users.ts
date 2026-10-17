@@ -26,7 +26,13 @@ export const viewer = query({
     const userId = await optionalAuth(ctx);
     if (userId === null) return null;
 
-    return await ctx.db.get(userId);
+    const user = await ctx.db.get(userId);
+    if (!user) return null;
+    // lastSeenAt is a write-only analytics heartbeat. Omitting it keeps this
+    // subscription stable (Convex only pushes when the result changes), so a
+    // heartbeat no longer re-sends the multi-KB key bundle to every client.
+    const { lastSeenAt: _lastSeenAt, ...viewerDoc } = user;
+    return viewerDoc;
   },
 });
 

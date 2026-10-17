@@ -9,6 +9,10 @@ export {
   wrapBytes,
   unwrapDek,
   unwrapBytes,
+  setMlKemImplementation,
+  getMlKemImplementation,
+  nobleMlKemImplementation,
+  type MlKemImplementation,
   type RecipientKeyPair,
   type DekEnvelope,
 } from "./mlkem";

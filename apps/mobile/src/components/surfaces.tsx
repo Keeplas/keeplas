@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
 
 import { useTheme } from "@/providers/theme-provider";
@@ -98,7 +98,13 @@ export function IconBadge({
 }
 
 /** Figma `Status Chip`: pill, caption 12/16. */
-export function StatusChip({ label, tone }: { label: string; tone: Tone }) {
+export const StatusChip = memo(function StatusChip({
+  label,
+  tone,
+}: {
+  label: string;
+  tone: Tone;
+}) {
   const { colors } = useTheme();
   const { bg, fg } = TONES[tone];
   return (
@@ -108,10 +114,10 @@ export function StatusChip({ label, tone }: { label: string; tone: Tone }) {
       </Text>
     </View>
   );
-}
+});
 
 /** Circular 44 pt tile with an icon (List Row leading slot). */
-export function IconTile({
+export const IconTile = memo(function IconTile({
   icon,
   size = 44,
   iconSize = 24,
@@ -143,7 +149,7 @@ export function IconTile({
       <Icon name={icon} size={iconSize} color={color} tint={tint} />
     </View>
   );
-}
+});
 
 export interface ListRowProps {
   title: string;
@@ -158,7 +164,7 @@ export interface ListRowProps {
  * Figma `List Row`: 68 pt card row, 44 pt icon tile, title (Label) +
  * description (Body S), chevron. `trailing` replaces the chevron.
  */
-export function ListRow({
+export const ListRow = memo(function ListRow({
   title,
   description,
   icon,
@@ -195,7 +201,7 @@ export function ListRow({
         ) : null)}
     </Pressable>
   );
-}
+});
 
 /** Row inside a Card: leading icon, title + description, optional trailing. */
 export function InfoRow({

@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import MarkInverse from "../../assets/logo/mark-inverse.svg";
 import Mark from "../../assets/logo/mark.svg";
+import { STAGE_HOME } from "@/lib/session-stage";
 import { useI18n } from "@/providers/i18n-provider";
+import { useSession } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { layout, welcomeSky } from "@/theme";
 import { Icon } from "./icon";
@@ -13,6 +16,8 @@ import { Text } from "./text";
 /**
  * Figma `App Header` (52 pt): optional back chevron, logo mark + "Keeplas"
  * (H3), language dropdown on the right unless `right` replaces it.
+ * The logo leads to the current stage's first screen, except mid-setup
+ * where leaving would skip the recovery kit.
  * `inverse` is the white variant over the M08-1 night sky.
  */
 export function AppHeader({
@@ -25,7 +30,10 @@ export function AppHeader({
   inverse?: boolean;
 }) {
   const { scheme } = useTheme();
+  const router = useRouter();
   const { t } = useI18n();
+  const { stage, settingUp } = useSession();
+  const home = stage === "loading" || settingUp ? null : STAGE_HOME[stage];
   const LogoMark = inverse || scheme === "dark" ? MarkInverse : Mark;
   return (
     <View style={styles.header}>
@@ -41,7 +49,13 @@ export function AppHeader({
             <Icon name="chevron-left" />
           </Pressable>
         ) : null}
-        <View style={styles.brand}>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={t("common.appName")}
+          disabled={!home}
+          onPress={() => home && router.dismissTo(home)}
+          style={styles.brand}
+        >
           <LogoMark width={30} height={30} />
           <Text
             variant="h3"
@@ -49,7 +63,7 @@ export function AppHeader({
           >
             {t("common.appName")}
           </Text>
-        </View>
+        </Pressable>
       </View>
       {right ?? <LanguageDropdown inverse={inverse} />}
     </View>
