@@ -142,7 +142,8 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
     const method = request.method.toUpperCase();
 
     // ── /.well-known app association files (Universal / App Links). ──
-    if (method === "GET") {
+    // HEAD too, so `curl -I` and link validators don't get the SPA's 404.
+    if (method === "GET" || method === "HEAD") {
       const wellKnown = wellKnownResponse(pathname, process.env);
       if (wellKnown) return wellKnown;
     }
