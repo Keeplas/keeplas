@@ -19,3 +19,6 @@ expo-env.d.ts
 
 # Firebase config for FCM (EAS builds use the GOOGLE_SERVICES_JSON file variable)
 google-services.json
+
+# Gradle output of local Expo modules
+/modules/*/android/build

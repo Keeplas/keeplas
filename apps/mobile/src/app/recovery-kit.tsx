@@ -15,7 +15,7 @@ import { useVault } from "@/providers/vault-provider";
 /**
  * This phone holds no vault key for an account that has a vault (signed in
  * on a new phone, or an email account moving to the app): the 24 words open
- * the key bundle, then the key goes behind this phone's biometrics.
+ * the key bundle, then the key goes behind this phone's screen lock.
  */
 export default function RecoveryKitEntry() {
   const router = useRouter();

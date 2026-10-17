@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["KeeplasDeviceLockModule"]
+  },
+  "android": {
+    "modules": ["com.keeplas.devicelock.KeeplasDeviceLockModule"]
+  }
+}

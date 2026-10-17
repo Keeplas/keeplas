@@ -1,24 +1,20 @@
 import * as SecureStore from "expo-secure-store";
 import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
 
+import * as DeviceLock from "../../modules/device-lock";
 import { fresh, importAesKey, randomBytes } from "./envelope";
 
 /**
  * Per-device unlock (M08-6). The MasterKey (and the RootKey, when known) is
  * kept AES-GCM-wrapped by a random 32-byte device wrap key (DWK). The DWK
- * lives in the Keychain /
- * Keystore behind `requireAuthentication` (Face ID / fingerprint, this
- * device only), so reading it is the biometric unlock. Nothing here leaves
- * the phone; signing out deletes both entries.
+ * lives in the Keychain / Keystore behind the phone's screen lock (Face ID /
+ * fingerprint or the PIN / passcode, this device only), so reading it is the
+ * unlock. Nothing here leaves the phone; signing out deletes both entries.
  */
 const dwkKey = (userId: string) => `keeplas.dwk.${userId}`;
 const wrappedKey = (userId: string) => `keeplas.mk.${userId}`;
 const deviceIdKey = (userId: string) => `keeplas.device.${userId}`;
 
-const BIOMETRIC: SecureStore.SecureStoreOptions = {
-  requireAuthentication: true,
-  keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
-};
 const LOCAL: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
@@ -48,11 +44,6 @@ async function open(sealed: Sealed, key: CryptoKey): Promise<Uint8Array> {
   );
 }
 
-/** True when the phone has a screen lock with biometrics this app can use. */
-export function canUseBiometrics(): boolean {
-  return SecureStore.canUseBiometricAuthentication();
-}
-
 /**
  * Wrap and store the MasterKey (and the RootKey when this phone knows it:
  * cloud backup and key rotation need it) for this user on this device.
@@ -66,10 +57,7 @@ export async function saveDeviceVault(
   const key = await importAesKey(dwk);
   const wrapped: Sealed & { rk?: Sealed } = await seal(keys.masterKey, key);
   if (keys.rootKey) wrapped.rk = await seal(keys.rootKey, key);
-  await SecureStore.setItemAsync(dwkKey(userId), uint8ToBase64(dwk), {
-    ...BIOMETRIC,
-    authenticationPrompt: prompt,
-  });
+  await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
   dwk.fill(0);
   await SecureStore.setItemAsync(
     wrappedKey(userId),
@@ -82,17 +70,14 @@ export async function hasDeviceVault(userId: string): Promise<boolean> {
   return (await SecureStore.getItemAsync(wrappedKey(userId), LOCAL)) !== null;
 }
 
-/** Biometric prompt → DWK → the stored keys. */
+/** Screen-lock prompt → DWK → the stored keys. */
 async function openDeviceVault(
   userId: string,
   prompt: string,
 ): Promise<{ masterKey: Uint8Array; rootKey: Uint8Array | null }> {
   const wrapped = await SecureStore.getItemAsync(wrappedKey(userId), LOCAL);
   if (!wrapped) throw new Error("No vault key on this device");
-  const dwkB64 = await SecureStore.getItemAsync(dwkKey(userId), {
-    ...BIOMETRIC,
-    authenticationPrompt: prompt,
-  });
+  const dwkB64 = await DeviceLock.getItem(dwkKey(userId), prompt);
   if (!dwkB64) throw new Error("Device key unavailable");
   const dwk = base64ToUint8(dwkB64);
   try {
@@ -108,8 +93,8 @@ async function openDeviceVault(
 }
 
 /**
- * Biometric prompt → raw MasterKey. Throws when the user cancels or the
- * biometric set changed (the Keychain item is then invalidated).
+ * Screen-lock prompt → raw MasterKey. Throws when the user cancels or the
+ * screen lock was removed (the Keychain / Keystore item is then invalidated).
  */
 export async function unlockDeviceVault(
   userId: string,
@@ -121,7 +106,7 @@ export async function unlockDeviceVault(
 }
 
 /**
- * Biometric prompt → raw RootKey, or null when this phone never learned it
+ * Screen-lock prompt → raw RootKey, or null when this phone never learned it
  * (vault opened by contacts or another device without a new kit).
  */
 export async function readDeviceRootKey(
@@ -134,7 +119,7 @@ export async function readDeviceRootKey(
 }
 
 export async function forgetDeviceVault(userId: string): Promise<void> {
-  await SecureStore.deleteItemAsync(dwkKey(userId), BIOMETRIC);
+  await DeviceLock.deleteItem(dwkKey(userId));
   await SecureStore.deleteItemAsync(wrappedKey(userId), LOCAL);
   await SecureStore.deleteItemAsync(deviceIdKey(userId), LOCAL);
 }

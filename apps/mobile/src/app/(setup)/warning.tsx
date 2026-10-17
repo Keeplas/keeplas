@@ -33,7 +33,7 @@ export default function OneWayWarning() {
         <InfoRow
           leading={<Icon name="phone" size={22} color="status.active" />}
           title={t("oneWay.thisPhone")}
-          description={t("oneWay.biometrics")}
+          description={t("oneWay.screenLock")}
           trailing={<StatusChip tone="success" label={t("oneWay.active")} />}
         />
         <InfoRow

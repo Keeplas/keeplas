@@ -36,7 +36,7 @@ export function useApprovePairing() {
       if (!masterKey || !viewer.encryptedIdentitySecretKey) {
         throw new Error("Identity key unavailable");
       }
-      await confirmPresence(viewer._id, t("linkBrowser.faceTitle"));
+      await confirmPresence(viewer._id, t("linkBrowser.confirmTitle"));
       const receivedHash = await pairingKeyHash(browserPublicKey);
       if (receivedHash !== qr.keyHash)
         throw new PairingKeyMismatch(receivedHash);
