@@ -168,7 +168,7 @@ export interface KitMaterial {
   recoveryPhraseHash: string;
   /** `onboarding.storeKeyBundle.encryptedKeyBundle`. */
   encryptedKeyBundle: string;
-  /** Raw RootKey, kept behind this phone's biometrics. */
+  /** Raw RootKey, kept behind this phone's screen lock. */
   rawRootKey: Uint8Array;
 }
 

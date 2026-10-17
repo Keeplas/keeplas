@@ -1,0 +1,10 @@
+{
+  "name": "keeplas-device-lock",
+  "version": "0.1.0",
+  "description": "Device-bound secrets behind the phone's screen lock (biometrics or PIN / passcode) for the Keeplas device vault",
+  "private": true,
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Keeplas",
+  "homepage": "https://keeplas.com"
+}

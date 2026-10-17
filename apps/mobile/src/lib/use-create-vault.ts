@@ -11,7 +11,7 @@ import { useAuditedMutation } from "./use-audited-mutation";
 
 /**
  * M01-4 "Create my vault": generate the key material on the phone, keep the
- * MasterKey behind biometrics on this device, then store exactly what the
+ * MasterKey behind the screen lock on this device, then store exactly what the
  * web onboarding stores. A retry reuses the same material, so every server
  * call is idempotent (`setPublicKey` accepts the same key twice).
  */
