@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
@@ -43,7 +43,8 @@ export function useConnectWithPhone({
 
   const audit = useRequestContext();
   const viewer = useQuery(api.users.viewer);
-  const { signIn } = useAuthActions();
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const { signIn, signOut } = useAuthActions();
   const { masterKey, setMasterKey } = useMasterKey();
   const createSession = useMutation(api.pairing.create);
   const readEnvelope = useAuditedMutation(api.pairing.readEnvelope);
@@ -69,9 +70,10 @@ export function useConnectWithPhone({
 
   // 1. New keys + pairing session (initial load and "Generate a new code").
   useEffect(() => {
-    if (state.phase !== "creating" || !audit) return;
+    if (state.phase !== "creating" || !audit || authLoading) return;
     runOnce(`creating:${attempt.current}`, async () => {
       try {
+        if (isAuthenticated) await signOut();
         wipeSecrets();
         const keys = await generateBrowserPairingKeys();
         secrets.current = {
@@ -94,7 +96,16 @@ export function useConnectWithPhone({
         dispatch({ type: "failed" });
       }
     });
-  }, [state.phase, audit, runOnce, wipeSecrets, createSession]);
+  }, [
+    state.phase,
+    audit,
+    authLoading,
+    isAuthenticated,
+    runOnce,
+    signOut,
+    wipeSecrets,
+    createSession,
+  ]);
 
   // 2. Follow the phone (reactive query, no polling).
   useEffect(() => {
