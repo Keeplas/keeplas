@@ -152,6 +152,7 @@ export const ICON_PATHS = {
     d: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM5.6 5.6l12.8 12.8",
     strokeWidth: 1.75,
   },
+  rotate: { d: "M20 12a8 8 0 1 1-2.34-5.66M20 4v4.5h-4.5", strokeWidth: 1.75 },
   search: {
     d: "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20.5 20.5 16 16",
     strokeWidth: 1.75,

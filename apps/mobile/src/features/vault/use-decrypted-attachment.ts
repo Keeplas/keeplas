@@ -18,59 +18,113 @@ export type AttachmentState =
   | { status: "ready"; uri: string }
   | { status: "error"; problem: FileProblem; reference: string };
 
-export function useDecryptedAttachment(
-  fileId: Id<"vault_item_files"> | undefined,
-  iv: string | undefined,
-  name: string,
+export interface AttachmentSource {
+  id: Id<"vault_item_files">;
+  iv: string;
+  name: string;
+}
+
+const PARALLEL = 2;
+const LOADING: AttachmentState = { status: "loading" };
+
+export function useDecryptedAttachments(
+  files: readonly AttachmentSource[],
   key: CryptoKey | undefined,
 ) {
   const convex = useConvex();
   const network = useNetworkState();
   const online = useRef(network.isInternetReachable);
-  const [attempt, setAttempt] = useState(0);
-  const request = `${fileId}:${attempt}`;
-  const [result, setResult] = useState<{
-    request: string;
-    state: AttachmentState;
-  }>();
+  const opened = useRef(new Map<string, File>());
+  const [attempts, setAttempts] = useState<Record<string, number>>({});
+  const [results, setResults] = useState<Record<string, AttachmentState>>({});
 
   useEffect(() => {
     online.current = network.isInternetReachable;
   }, [network.isInternetReachable]);
 
   useEffect(() => {
-    if (!fileId || !iv || !key) return;
+    const all = opened.current;
+    return () => {
+      for (const file of all.values()) if (file.exists) file.delete();
+      all.clear();
+    };
+  }, []);
+
+  const requests = files.map((file) => ({
+    ...file,
+    token: `${file.id}:${attempts[file.id] ?? 0}`,
+  }));
+  const wanted = requests.map((request) => request.token).join(",");
+  const pending = useRef(requests);
+  const done = useRef(results);
+  useEffect(() => {
+    pending.current = requests;
+    done.current = results;
+  });
+
+  useEffect(() => {
+    if (!key || !wanted) return;
     let alive = true;
-    let plain: File | null = null;
-    const done = (state: AttachmentState) => setResult({ request, state });
-    void (async () => {
+
+    async function open(request: AttachmentSource & { token: string }) {
+      let state: AttachmentState;
       try {
         const url = await convex.query(api.vault_items.getItemFileUrl, {
-          fileId,
+          fileId: request.id,
         });
         if (!url) throw new FileProblemError("missing");
-        plain = await downloadDecrypted(url, iv, key, name);
-        if (alive) done({ status: "ready", uri: plain.uri });
-        else plain.delete();
+        const plain = await downloadDecrypted(
+          url,
+          request.iv,
+          key!,
+          request.name,
+        );
+        if (!alive) {
+          plain.delete();
+          return;
+        }
+        const previous = opened.current.get(request.id);
+        if (previous?.exists) previous.delete();
+        opened.current.set(request.id, plain);
+        state = { status: "ready", uri: plain.uri };
       } catch (error) {
         const reference = errorReference();
         if (__DEV__) console.warn(`[attachment ${reference}]`, error);
-        if (alive)
-          done({
-            status: "error",
-            problem: classifyFileError(error, online.current ?? undefined),
-            reference,
-          });
+        state = {
+          status: "error",
+          problem: classifyFileError(error, online.current ?? undefined),
+          reference,
+        };
+      }
+      if (alive)
+        setResults((current) => ({ ...current, [request.token]: state }));
+    }
+
+    const queue = pending.current.filter(
+      (request) => !(request.token in done.current),
+    );
+    void (async () => {
+      for (let i = 0; i < queue.length && alive; i += PARALLEL) {
+        await Promise.all(queue.slice(i, i + PARALLEL).map(open));
       }
     })();
+
     return () => {
       alive = false;
-      if (plain?.exists) plain.delete();
     };
-  }, [convex, fileId, iv, name, key, request]);
+  }, [convex, key, wanted]);
 
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  const state: AttachmentState =
-    result?.request === request ? result.state : { status: "loading" };
-  return { state, retry };
+  const retry = useCallback(
+    (id: string) =>
+      setAttempts((current) => ({ ...current, [id]: (current[id] ?? 0) + 1 })),
+    [],
+  );
+
+  const stateOf = useCallback(
+    (id: string): AttachmentState =>
+      results[`${id}:${attempts[id] ?? 0}`] ?? LOADING,
+    [results, attempts],
+  );
+
+  return { stateOf, retry };
 }

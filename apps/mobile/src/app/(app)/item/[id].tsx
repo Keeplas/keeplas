@@ -1,20 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { wrapDek } from "@keeplas/crypto/kem";
 
 import { Button } from "@/components/button";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { DetailRows } from "@/components/rows";
 import { Screen } from "@/components/screen";
-import { StateMessage } from "@/components/state-message";
-import { Callout, ListRow } from "@/components/surfaces";
+import { BottomSheet } from "@/components/sheet";
+import { StateMessage, StateSheet } from "@/components/state-message";
+import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { decryptText } from "@/crypto/envelope";
 import {
   legacyFileMeta,
@@ -22,17 +25,31 @@ import {
   parseItemMeta,
   type FileMeta,
 } from "@/crypto/item-meta";
-import { AttachmentPreview } from "@/features/vault/attachment-preview";
-import { useDecryptedAttachment } from "@/features/vault/use-decrypted-attachment";
+import {
+  AttachmentPreview,
+  PhotoGallery,
+  type PreviewFile,
+} from "@/features/vault/attachment-preview";
+import { useDecryptedAttachments } from "@/features/vault/use-decrypted-attachment";
 import { useVaultData } from "@/features/vault/vault-data";
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
-import { wrapDek } from "@keeplas/crypto/kem";
 import { errorReference } from "@/lib/file-errors";
-import { formatBytes, formatDuration } from "@/lib/format";
+import { formatBytes, formatDate, formatDuration } from "@/lib/format";
 import { contactSupport } from "@/lib/support";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
+import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
+import { radius } from "@/theme";
+
+type Attachment = FileMeta & { id: Id<"vault_item_files">; iv: string };
+
+interface Opened {
+  key: CryptoKey;
+  title: string;
+  note: string;
+  category: string;
+  files: Attachment[];
+}
 
 const KIND_ICON = {
   document: "document",
@@ -41,19 +58,11 @@ const KIND_ICON = {
   video: "video",
 } as const;
 
-interface Opened {
-  key: CryptoKey;
-  title: string;
-  note: string;
-  category: string;
-  files: (FileMeta & { id: Id<"vault_item_files">; iv: string })[];
-}
-
 export default function ItemDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { lock } = useVault();
   const raw = useQuery(api.vault_items.getItem, { itemId });
   const files = useQuery(api.vault_items.getItemFiles, { itemId });
@@ -69,6 +78,10 @@ export default function ItemDetails() {
   }>();
   const failure = failed?.attempt === attempt ? failed.reference : undefined;
   const [selected, setSelected] = useState(0);
+  const [pages, setPages] = useState(0);
+  const [sheet, setSheet] = useState<"folder" | "details" | "noFolder" | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!raw || !files) return;
@@ -108,32 +121,65 @@ export default function ItemDetails() {
     };
   }, [raw, files, itemKey, attempt]);
 
-  const file = opened?.files[selected];
-  const { state, retry } = useDecryptedAttachment(
-    file?.id,
-    file?.iv,
-    file?.name ?? "",
-    opened?.key,
+  const attachments = useMemo(() => opened?.files ?? [], [opened]);
+  const { stateOf, retry } = useDecryptedAttachments(attachments, opened?.key);
+  const file = attachments[selected];
+  const photos = useMemo(
+    () => attachments.filter((attachment) => attachment.kind === "image"),
+    [attachments],
   );
+  const others = attachments.filter(
+    (attachment) => attachment.kind !== "image",
+  );
+  const folder = folders?.find((candidate) => candidate.id === raw?.folderId);
 
-  const share = useCallback(async () => {
-    if (state.status !== "ready" || !file) return;
+  const access = useMemo(() => {
+    const names = new Set<string>();
+    for (const contactId of raw?.sharedWithContacts ?? []) {
+      const contact = contacts?.find(
+        (candidate) => candidate._id === contactId,
+      );
+      if (contact?.name) names.add(contact.name);
+    }
+    for (const grant of folder?.grants ?? []) names.add(grant.contactName);
+    const list = [...names];
+    if (list.length === 0) return t("item.onlyYou");
+    return list.length === 1
+      ? list[0]
+      : t("item.sharedMany", { name: list[0], n: list.length - 1 });
+  }, [raw?.sharedWithContacts, contacts, folder, t]);
+
+  const download = useCallback(async () => {
+    const state = file ? stateOf(file.id) : undefined;
+    if (!file || state?.status !== "ready") return;
     if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert(t("item.share"), t("common.genericError"));
+      Alert.alert(t("item.download"), t("common.genericError"));
       return;
     }
     await Sharing.shareAsync(state.uri, {
       mimeType: file.mimeType,
       dialogTitle: file.name,
     });
-  }, [state, file, t]);
+  }, [file, stateOf, t]);
+
+  function share() {
+    if (folder) {
+      router.push({
+        pathname: "/folder/[id]/share",
+        params: { id: folder.id },
+      });
+    } else {
+      setSheet("noFolder");
+    }
+  }
 
   async function move(folderId: Id<"folders"> | null) {
     if (!raw) return;
-    const folder = folders?.find((candidate) => candidate.id === folderId);
+    setSheet(null);
+    const target = folders?.find((candidate) => candidate.id === folderId);
     const dek = await itemKey(raw);
     const recipientKeys = await Promise.all(
-      (folder?.grants ?? []).map(async (grant) => {
+      (target?.grants ?? []).map(async (grant) => {
         const contact = contacts?.find(
           (candidate) => candidate._id === grant.contactId,
         );
@@ -152,7 +198,9 @@ export default function ItemDetails() {
         };
       }),
     );
-    await moveItem({ itemId, folderId, recipientKeys });
+    await moveItem({ itemId, folderId, recipientKeys }).catch(() =>
+      Alert.alert(t("item.folder"), t("common.genericError")),
+    );
   }
 
   const header = (
@@ -205,52 +253,96 @@ export default function ItemDetails() {
 
   if (!opened) {
     return (
-      <Screen header={header}>
-        <Text variant="h1">{t("item.decrypting")}</Text>
+      <Screen header={header} center>
+        <Text variant="body" color="text.muted">
+          {t("item.decrypting")}
+        </Text>
       </Screen>
     );
   }
 
-  const folderName = folders?.find((f) => f.id === raw?.folderId)?.name;
-  const summary = file
-    ? [
-        file.name.split(".").pop()?.toUpperCase() ?? "",
-        formatBytes(file.size),
-        file.durationSec ? formatDuration(file.durationSec) : "",
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : t("item.note");
+  const handlers = {
+    onRetry: retry,
+    onLock: lock,
+    onShare: () => void download(),
+  };
+  const preview = (attachment: Attachment): PreviewFile => ({
+    id: attachment.id,
+    meta: attachment,
+    state: stateOf(attachment.id),
+  });
+  const summary = [
+    file ? summaryOf(file, pages, t) : t("item.note"),
+    file ? formatBytes(file.size) : "",
+    access,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <Screen header={header}>
-      <View style={styles.summary}>
+    <Screen header={header} gap={16}>
+      <View style={styles.meta}>
         <Icon name="lock" size={14} color="status.active" />
-        <Text variant="body-sm" color="text.muted">
+        <Text variant="body-sm" color="text.muted" numberOfLines={1}>
           {summary}
         </Text>
       </View>
-      {file ? (
-        <>
-          <AttachmentPreview
-            meta={file}
-            state={state}
-            onRetry={retry}
-            onLock={lock}
-            onOpen={() => void share()}
-          />
-          {state.status === "ready" ? (
-            <Button
-              variant="secondary"
-              label={t("item.share")}
-              onPress={() => void share()}
-            />
-          ) : null}
-        </>
+
+      {file?.kind === "image" ? (
+        <PhotoGallery
+          photos={photos.map(preview)}
+          selected={Math.max(0, photos.indexOf(file))}
+          onSelect={(index) => setSelected(attachments.indexOf(photos[index]))}
+          {...handlers}
+        />
+      ) : file ? (
+        <AttachmentPreview
+          file={preview(file)}
+          onPages={setPages}
+          {...handlers}
+        />
       ) : null}
-      {opened.note ? <Text>{opened.note}</Text> : null}
-      {opened.files.length > 1
-        ? opened.files.map((attachment, index) => (
+
+      {opened.note ? (
+        <Text variant="body" selectable>
+          {opened.note}
+        </Text>
+      ) : null}
+
+      {file ? (
+        <View style={styles.actions}>
+          <ActionTile
+            icon="user-plus"
+            label={t("item.share")}
+            onPress={share}
+          />
+          <ActionTile
+            icon="download"
+            label={t("item.download")}
+            onPress={() => void download()}
+            disabled={stateOf(file.id).status !== "ready"}
+          />
+          <ActionTile
+            icon="info"
+            label={t("item.details")}
+            onPress={() => setSheet("details")}
+          />
+        </View>
+      ) : null}
+
+      {photos.length > 0 && others.length > 0
+        ? others.map((attachment) => (
+            <ListRow
+              key={attachment.id}
+              icon={KIND_ICON[attachment.kind]}
+              title={attachment.name}
+              description={formatBytes(attachment.size)}
+              onPress={() => setSelected(attachments.indexOf(attachment))}
+            />
+          ))
+        : null}
+      {photos.length === 0 && others.length > 1
+        ? others.map((attachment, index) => (
             <ListRow
               key={attachment.id}
               icon={KIND_ICON[attachment.kind]}
@@ -265,44 +357,194 @@ export default function ItemDetails() {
             />
           ))
         : null}
+
       <DetailRows
         rows={[
           {
-            icon: "folder",
+            icon: "document",
             label: t("item.category"),
             value: t(`capture.category.${opened.category}`),
           },
           {
             icon: "folder",
             label: t("item.folder"),
-            value: folderName ?? t("item.noFolder"),
+            value: folder?.name ?? t("item.noFolder"),
+            onPress: () => setSheet("folder"),
+          },
+          {
+            icon: "lock",
+            label: t("item.access"),
+            value: access,
+            onPress: share,
           },
         ]}
       />
-      <Callout icon="lock" text={t("item.encrypted")} />
-      <Text variant="label">{t("folders.move")}</Text>
-      <ListRow
-        icon="mail"
-        title={t("folders.noFolder")}
-        onPress={() => void move(null)}
-      />
-      {(folders ?? []).map((folder) => (
+
+      <BottomSheet
+        visible={sheet === "folder"}
+        onDismiss={() => setSheet(null)}
+        title={t("folders.move")}
+      >
         <ListRow
-          key={folder.id}
-          icon="folder"
-          title={folder.name ?? t("folders.title")}
-          onPress={() => void move(folder.id)}
+          icon="mail"
+          title={t("folders.noFolder")}
+          trailing={
+            !folder ? (
+              <Icon name="check" size={18} color="status.active" />
+            ) : undefined
+          }
+          onPress={() => void move(null)}
         />
-      ))}
+        {(folders ?? []).map((candidate) => (
+          <ListRow
+            key={candidate.id}
+            icon="folder"
+            title={candidate.name ?? t("folders.title")}
+            trailing={
+              candidate.id === folder?.id ? (
+                <Icon name="check" size={18} color="status.active" />
+              ) : undefined
+            }
+            onPress={() => void move(candidate.id)}
+          />
+        ))}
+      </BottomSheet>
+
+      <BottomSheet
+        visible={sheet === "details"}
+        onDismiss={() => setSheet(null)}
+        title={t("item.details")}
+      >
+        <DetailRows
+          rows={[
+            ...(file
+              ? [
+                  {
+                    icon: "document" as const,
+                    label: t("item.fileName"),
+                    value: file.name,
+                  },
+                  {
+                    icon: KIND_ICON[file.kind],
+                    label: t("item.fileType"),
+                    value: file.mimeType,
+                  },
+                  {
+                    icon: "download" as const,
+                    label: t("item.fileSize"),
+                    value: formatBytes(file.size),
+                  },
+                ]
+              : []),
+            {
+              icon: "clock",
+              label: t("item.added"),
+              value: formatDate(raw?.createdAt ?? 0, language),
+            },
+            {
+              icon: "edit",
+              label: t("item.updated"),
+              value: formatDate(raw?.updatedAt ?? 0, language),
+            },
+          ]}
+        />
+      </BottomSheet>
+
+      <StateSheet
+        visible={sheet === "noFolder"}
+        onDismiss={() => setSheet(null)}
+        icon="folder"
+        tone="info"
+        title={t("item.shareNeedsFolderTitle")}
+        body={t("item.shareNeedsFolderBody")}
+        primary={{
+          label: t("item.chooseFolder"),
+          onPress: () => setSheet("folder"),
+        }}
+        secondary={{ label: t("common.notNow"), onPress: () => setSheet(null) }}
+      />
     </Screen>
   );
 }
 
+function summaryOf(
+  file: Attachment,
+  pages: number,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  const extension = file.name.split(".").pop()?.toUpperCase() ?? "";
+  switch (file.kind) {
+    case "image":
+      return `${t("vaultList.photo")} · ${extension}`;
+    case "audio":
+      return [
+        t("vaultList.voiceNote"),
+        file.durationSec ? formatDuration(file.durationSec) : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    case "video":
+      return [
+        t("vaultList.video"),
+        extension,
+        file.durationSec ? formatDuration(file.durationSec) : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    default:
+      return pages > 0
+        ? `${extension} · ${pages === 1 ? t("item.onePage") : t("item.pages", { n: pages })}`
+        : extension;
+  }
+}
+
+function ActionTile({
+  icon,
+  label,
+  onPress,
+  disabled = false,
+}: {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.tile,
+        {
+          backgroundColor: pressed ? colors["bg.subtle"] : colors["bg.surface"],
+          borderColor: colors["border.default"],
+          opacity: disabled ? 0.5 : 1,
+        },
+      ]}
+    >
+      <Icon name={icon} size={22} color="text.primary" />
+      <Text variant="body-sm-strong">{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  summary: {
+  meta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
+  },
+  actions: { flexDirection: "row", gap: 10 },
+  tile: {
+    flex: 1,
+    alignItems: "center",
     gap: 6,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderRadius: radius.md,
   },
 });
