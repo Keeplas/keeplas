@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/icon";
+import type { FileKind } from "@/crypto/item-meta";
 import type { colors } from "@/theme";
 
 /**
@@ -65,6 +66,19 @@ export function groupOf(category: string): VaultGroupKey | null {
       (g.categories as readonly string[]).includes(category),
     )?.key ?? "other"
   );
+}
+
+export type ContentKind = "documents" | "notes" | "photos" | "voice" | "videos";
+
+const KIND_OF_FILE: Record<FileKind, ContentKind> = {
+  document: "documents",
+  image: "photos",
+  audio: "voice",
+  video: "videos",
+};
+
+export function contentKind(files: readonly { kind: FileKind }[]): ContentKind {
+  return files.length === 1 ? KIND_OF_FILE[files[0].kind] : "notes";
 }
 
 export type VaultListKey = VaultGroupKey | "inbox" | "all";

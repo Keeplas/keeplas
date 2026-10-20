@@ -14,12 +14,19 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { decryptText } from "@/crypto/envelope";
-import { INBOX, parseItemMeta, type VaultCategory } from "@/crypto/item-meta";
+import {
+  INBOX,
+  legacyFileMeta,
+  parseFileMeta,
+  parseItemMeta,
+  type VaultCategory,
+} from "@/crypto/item-meta";
 import {
   loadOwnerKeys,
   unwrapOwnerDek,
   type OwnerKeys,
 } from "@/crypto/owner-keys";
+import { contentKind, type ContentKind } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import type { OutboxEntry } from "@/features/outbox/outbox";
 import { useViewer } from "@/providers/session-provider";
@@ -31,6 +38,9 @@ export interface VaultItemSummary {
   /** null when the item cannot be decrypted on this phone. */
   title: string | null;
   category: VaultCategory;
+  kind: ContentKind;
+  attachments: number;
+  durationSec?: number;
   folderId?: Id<"folders">;
   createdAt: number;
   updatedAt: number;
@@ -136,9 +146,29 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
         const category = item.encryptedMeta
           ? parseItemMeta(await decryptText(item.encryptedMeta, key)).category
           : (item.category ?? "other");
-        return { ...base, title, category };
+        const files = await Promise.all(
+          item.files.map(async (file) =>
+            file.encryptedMeta
+              ? parseFileMeta(await decryptText(file.encryptedMeta, key))
+              : legacyFileMeta(file),
+          ),
+        );
+        return {
+          ...base,
+          title,
+          category,
+          kind: contentKind(files),
+          attachments: files.length,
+          durationSec: files.length === 1 ? files[0].durationSec : undefined,
+        };
       } catch {
-        return { ...base, title: null, category: item.category ?? "other" };
+        return {
+          ...base,
+          title: null,
+          category: item.category ?? "other",
+          kind: "notes",
+          attachments: item.files.length,
+        };
       }
     },
     [itemKey],
