@@ -62,7 +62,9 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.flex, ...content]}>{children}</View>
+        <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
+          {children}
+        </View>
       )}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </SafeAreaView>
@@ -104,6 +106,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   center: { alignItems: "center" },
+  listOwnsBottom: { paddingBottom: 0 },
   footer: { paddingHorizontal: layout.gutter, paddingBottom: 12, gap: 12 },
   landscape: { position: "absolute", left: 0, right: 0, bottom: 0 },
   branches: {
