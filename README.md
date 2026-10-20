@@ -22,11 +22,27 @@ Keeplas helps users protect what matters: financial assets, medical directives, 
 
 License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
+## Project status
+
+Keeplas is moving to **mobile-first** (v2, in progress since October 2026):
+
+1. **Mobile app (`apps/mobile`, Expo)**: the primary app. Accounts are created here only, with a phone number verified by a WhatsApp code.
+2. **Web app (`apps/web`)**: the companion. There is no web sign-up. You link a computer by scanning a QR code with the phone, then sign in with a passkey.
+
+Phase-by-phase progress and decisions: [`PRD/v2-mobile-first/README.md`](./PRD/v2-mobile-first/README.md).
+
 ---
 
 ## Stacks
 
-**Frontend**
+**Mobile**
+
+- **Expo SDK 57 + React Native 0.86**: iOS and Android app, file-based routing with **Expo Router**
+- **`expo-dev-client`**: custom dev build (native modules for passkeys, biometrics and secure storage), so Expo Go is not supported
+- **EAS Build / Submit**: cloud builds and store releases (see [`apps/mobile/README.md`](./apps/mobile/README.md))
+- **Jest**: unit tests
+
+**Web**
 
 - **TanStack Start (Vite) + React 19** — type-safe file-based routing, runs as an SPA with a server runtime for request middleware + API routes
 - **Tailwind CSS v4** + **shadcn/ui** + **Radix UI** primitives — design system (Tooltip and DatePicker still on `@base-ui/react`, migrated when touched)
@@ -63,7 +79,8 @@ License: **AGPL-3.0-only** + Contributor License Agreement. Self-hostable.
 
 ```
 apps/
-  web/                  TanStack Start (Vite) app (PWA-ready)
+  mobile/               Expo (React Native) app: iOS + Android, primary app
+  web/                  TanStack Start (Vite) app (PWA-ready), linked from the phone
 packages/
   convex/               Convex schema, queries, mutations, actions  (@keeplas/backend)
   crypto/               Zero-knowledge crypto: AES, KDF, KEM, Shamir, recovery  (RESTRICTED)
@@ -80,6 +97,8 @@ scripts/                Maintenance scripts (env check, Convex env sync, env lin
 - Node.js **>= 20**
 - pnpm **>= 10** (`corepack enable` recommended)
 - A Convex deployment (cloud or self-hosted) — see [Convex docs](https://docs.convex.dev)
+- Mobile, iOS: macOS with **Xcode** (includes the iOS Simulator) and CocoaPods
+- Mobile, Android: **Android Studio** (Android SDK + an emulator), JDK 17, and `ANDROID_HOME` set (usually `~/Library/Android/sdk` on macOS)
 
 ## Quick start (native)
 
@@ -110,9 +129,65 @@ pnpm check:convex          # must be green before continuing
 pnpm dev
 ```
 
-After step 6, open <http://localhost:3000>, sign in, and you're running. From then on `pnpm dev` is your only daily command.
+`pnpm dev` starts two things: the Convex watcher (`npx convex dev`) and the web app on <http://localhost:3000>. It does **not** start the mobile app.
+
+Sign-up only exists in the mobile app, so a first run continues there: start the app (next section), create an account on the phone, then open <http://localhost:3000> and scan the QR code with the app to link the computer.
 
 > Whenever you edit anything under `packages/convex/`, `pnpm dev` already runs `convex dev` in parallel to regenerate types. Pre-push, `pnpm check:convex` validates the deployment env one last time.
+
+## Run the mobile app
+
+Keep `pnpm dev` running in one terminal (the app talks to the same Convex deployment and calls the web app's `/api/context`), and use a second terminal for the app.
+
+The app reads `EXPO_PUBLIC_CONVEX_URL` and `EXPO_PUBLIC_APP_URL` from the root `.env.local` (symlinked by `pnpm link:env`, which `pnpm bootstrap` already ran). Set `EXPO_PUBLIC_CONVEX_URL` to the same value as `NEXT_PUBLIC_CONVEX_URL`.
+
+### iOS Simulator (macOS)
+
+```bash
+open -a Simulator                                     # open the simulator
+xcrun simctl list devices available                   # list installed iPhones
+pnpm --filter @keeplas/mobile ios                     # build, install and launch the app
+pnpm --filter @keeplas/mobile ios -- --device "iPhone 16"   # pick a specific simulator
+```
+
+### Android emulator
+
+Create an emulator once in Android Studio (Device Manager → Create device), then:
+
+```bash
+$ANDROID_HOME/emulator/emulator -list-avds            # list your emulators
+$ANDROID_HOME/emulator/emulator -avd <name> &         # boot one
+adb reverse tcp:3000 tcp:3000                         # let the emulator reach the web app on localhost:3000
+pnpm --filter @keeplas/mobile android                 # build, install and launch the app
+```
+
+Run `adb reverse` again each time the emulator restarts. Without it, `http://localhost:3000` inside the emulator points at the emulator itself, not your computer.
+
+### Daily loop
+
+The first `ios` / `android` run compiles the native app (a few minutes) and installs a dev build on the simulator. After that you only need the JS bundler:
+
+```bash
+pnpm --filter @keeplas/mobile start                   # then press i (iOS) or a (Android)
+```
+
+Rebuild with `ios` / `android` only after adding or upgrading a native dependency, or after changing `app.json` / `app.config.ts`.
+
+### Physical device
+
+Plug the phone in and run `pnpm --filter @keeplas/mobile ios -- --device` (or `android` with USB debugging on). Set `EXPO_PUBLIC_APP_URL` to your computer's LAN address or a tunnel URL (e.g. `http://192.168.1.20:3000`) instead of `localhost`, then restart the bundler.
+
+EAS builds, push notifications and store release: see [`apps/mobile/README.md`](./apps/mobile/README.md).
+
+## Daily commands
+
+| What                 | Command                                    |
+| -------------------- | ------------------------------------------ |
+| Backend + web app    | `pnpm dev`                                 |
+| Mobile, iOS          | `pnpm --filter @keeplas/mobile ios`        |
+| Mobile, Android      | `pnpm --filter @keeplas/mobile android`    |
+| Mobile, bundler only | `pnpm --filter @keeplas/mobile start`      |
+| Checks before a PR   | `pnpm lint && pnpm typecheck && pnpm test` |
 
 For the full bootstrap including the auth-key chicken-and-egg dance, see [`CONTRIBUTING.md`](./CONTRIBUTING.md#first-time-setup). For the system overview, see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
@@ -124,6 +199,8 @@ A containerized dev environment is provided as an alternative to a local Node in
 cp .env.example .env.local                      # then fill KEEPLAS_CTX_SECRET
 docker compose up                               # installs + starts dev server on :3000
 ```
+
+Docker covers the web app and Convex only. The mobile app needs Xcode or Android Studio on the host (see [Run the mobile app](#run-the-mobile-app)).
 
 Full Docker workflow (provisioning Convex inside the container, running ad-hoc commands via `compose exec`, common gotchas, when to use Docker vs native): see [`docs/DOCKER.md`](./docs/DOCKER.md).
 
@@ -140,6 +217,7 @@ All required variables are documented in [`.env.example`](./.env.example). High-
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Native push — Expo (optional)** — `EXPO_ACCESS_TOKEN` — authenticates phone push (security alerts, Life Check) once Enhanced Push Security is on
 - **WhatsApp — Infobip (optional)** — `INFOBIP_*`, `WHATSAPP_*_TEMPLATE_NAME` — Life Check WhatsApp channel and WhatsApp OTP verification
+- **Mobile app** — `EXPO_PUBLIC_CONVEX_URL`, `EXPO_PUBLIC_APP_URL`, `EXPO_PUBLIC_GCP_PROJECT_NUMBER` (Android only), `GOOGLE_SERVICES_JSON` (Android push). Expo inlines `EXPO_PUBLIC_*` into the app bundle, so they are public values, never secrets
 
 Two env files cover the split:
 
@@ -167,20 +245,20 @@ Both tiers run the same zero-knowledge encryption — only the surface area chan
 
 ## Scripts
 
-| Command                | Description                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `pnpm bootstrap`       | One-command bootstrap (`.env.local`, install, link envs, provision Convex, prints next steps)                 |
-| `pnpm dev`             | Run all dev servers via Turborepo. Convex env check runs in the background — never blocks boot                |
-| `pnpm build`           | Production build for every workspace                                                                          |
-| `pnpm lint`            | ESLint across the monorepo                                                                                    |
-| `pnpm typecheck`       | TypeScript `--noEmit` across all packages                                                                     |
-| `pnpm test`            | Run test suites (Vitest in `packages/crypto/`)                                                                |
-| `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                                          |
-| `pnpm clean`           | Remove build artifacts (`dist`, `.output`, `.turbo`)                                                          |
-| `pnpm check:env`       | Validate `.env.local` is complete (runs as predev/prebuild — fast, local-only)                                |
-| `pnpm check:convex`    | Validate that the Convex deployment has every required server-side var (manual, pre-push — `~30s round-trip`) |
-| `pnpm sync:convex-env` | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment                                 |
-| `pnpm link:env`        | Symlink `.env` files across workspaces                                                                        |
+| Command                | Description                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm bootstrap`       | One-command bootstrap (`.env.local`, install, link envs, provision Convex, prints next steps)                     |
+| `pnpm dev`             | Start `convex dev` + the web app. Convex env check runs in the background — never blocks boot (mobile: see above) |
+| `pnpm build`           | Production build for every workspace                                                                              |
+| `pnpm lint`            | ESLint across the monorepo                                                                                        |
+| `pnpm typecheck`       | TypeScript `--noEmit` across all packages                                                                         |
+| `pnpm test`            | Run every test suite (Vitest for web, Convex, crypto, UI; Jest for mobile)                                        |
+| `pnpm format`          | Prettier write on `**/*.{ts,tsx,js,jsx,json,css,md}`                                                              |
+| `pnpm clean`           | Remove build artifacts (`dist`, `.output`, `.turbo`)                                                              |
+| `pnpm check:env`       | Validate `.env.local` is complete (runs as predev/prebuild — fast, local-only)                                    |
+| `pnpm check:convex`    | Validate that the Convex deployment has every required server-side var (manual, pre-push — `~30s round-trip`)     |
+| `pnpm sync:convex-env` | Push secrets from `.env.local` + `.env.convex.local` to the Convex deployment                                     |
+| `pnpm link:env`        | Symlink `.env` files across workspaces                                                                            |
 
 ## Security model
 
@@ -200,7 +278,9 @@ Report vulnerabilities to **security@keeplas.com** — see [SECURITY.md](./SECUR
 - [`PRD/keeplas-architecture-recap-v5.md`](./PRD/keeplas-architecture-recap-v5.md) — full architecture, security & product decisions
 - [`PRD/keeplas-convex-zk-technical-v2.md`](./PRD/keeplas-convex-zk-technical-v2.md) — Convex + zero-knowledge technical spec
 - [`PRD/IMPLEMENTATION_PLAN.md`](./PRD/IMPLEMENTATION_PLAN.md) — implementation roadmap
-- [`PRD/Design/`](./PRD/Design) — wireframes and design tokens
+- [`PRD/v2-mobile-first/README.md`](./PRD/v2-mobile-first/README.md) — v2 mobile-first redesign: decisions, phases, current status
+- [`PRD/v2-mobile-first/figma/`](./PRD/v2-mobile-first/figma) — Figma snapshot, screen specs and design tokens (replaces `PRD/Design/`)
+- [`apps/mobile/README.md`](./apps/mobile/README.md) — mobile app: EAS builds, push credentials, Play Store
 - [`docs/PUSH_NOTIFICATIONS.md`](./docs/PUSH_NOTIFICATIONS.md) — native push setup (Expo, APNs, FCM) and remaining work
 - [`docs/INFOBIP_INBOUND.md`](./docs/INFOBIP_INBOUND.md) — Infobip inbound WhatsApp webhook setup (Life Check liveness)
 - [`docs/TRUSTED_CONTACTS.md`](./docs/TRUSTED_CONTACTS.md) — trusted contacts, release flow & availability
