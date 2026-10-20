@@ -458,7 +458,12 @@
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",
     "noCameraVideoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une vidéo dans votre bibliothèque.",
-    "noCameraPhotoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une photo dans votre bibliothèque."
+    "noCameraPhotoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une photo dans votre bibliothèque.",
+    "iconLabel": "Icône",
+    "iconAuto": "Automatique",
+    "iconAutoBody": "Choisie selon ce que vous ajoutez",
+    "iconSearch": "Rechercher une icône",
+    "iconNone": "Aucune icône ne correspond à cette recherche."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",

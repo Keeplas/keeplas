@@ -14,6 +14,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { secureDb } from "@/lib/secure-db";
 import type { VaultCategory } from "@/crypto/item-meta";
+import { isIconName, type IconName } from "@/components/icon";
 import type { ContentKind } from "@/features/home/vault-groups";
 import type { VaultItemSummary } from "./vault-data";
 
@@ -23,9 +24,9 @@ export async function loadItemSummaries(
   const { rows } = await (
     await secureDb()
   ).execute(
-    `SELECT id, title, category, kind, attachments, duration_sec, folder_id,
-       created_at, updated_at
-     FROM item_summaries_v2 WHERE user_id = ? ORDER BY updated_at DESC`,
+    `SELECT id, title, category, kind, icon, attachments, duration_sec,
+       folder_id, created_at, updated_at
+     FROM item_summaries_v3 WHERE user_id = ? ORDER BY updated_at DESC`,
     [userId],
   );
   return rows.map((row) => ({
@@ -33,6 +34,10 @@ export async function loadItemSummaries(
     title: String(row.title),
     category: String(row.category) as VaultCategory,
     kind: String(row.kind) as ContentKind,
+    icon:
+      row.icon && isIconName(String(row.icon))
+        ? (String(row.icon) as IconName)
+        : undefined,
     attachments: Number(row.attachments),
     durationSec:
       row.duration_sec === null ? undefined : Number(row.duration_sec),
@@ -51,22 +56,23 @@ export async function saveItemSummaries(
 ): Promise<void> {
   const db = await secureDb();
   await db.transaction(async (tx) => {
-    await tx.execute("DELETE FROM item_summaries_v2 WHERE user_id = ?", [
+    await tx.execute("DELETE FROM item_summaries_v3 WHERE user_id = ?", [
       userId,
     ]);
     for (const item of items) {
       if (item.title === null) continue;
       await tx.execute(
-        `INSERT INTO item_summaries_v2
-           (id, user_id, title, category, kind, attachments, duration_sec,
-            folder_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO item_summaries_v3
+           (id, user_id, title, category, kind, icon, attachments,
+            duration_sec, folder_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           userId,
           item.title,
           item.category,
           item.kind,
+          item.icon ?? null,
           item.attachments,
           item.durationSec ?? null,
           item.folderId ?? null,
@@ -81,5 +87,5 @@ export async function saveItemSummaries(
 export async function clearItemSummaries(userId: string): Promise<void> {
   await (
     await secureDb()
-  ).execute("DELETE FROM item_summaries_v2 WHERE user_id = ?", [userId]);
+  ).execute("DELETE FROM item_summaries_v3 WHERE user_id = ?", [userId]);
 }

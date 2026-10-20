@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { IconName } from "@/components/icon";
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
@@ -19,15 +18,14 @@ import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import {
-  bucketOf,
   inVaultList,
   isVaultListKey,
   listCounts,
   presetCategory,
   VAULT_LISTS,
-  type ContentKind,
   type VaultListKey,
 } from "@/features/home/vault-groups";
+import { itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
 import {
   useVaultData,
@@ -36,9 +34,7 @@ import {
 import { formatDuration, relativeDay } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
-import { colors as palette, radius, type } from "@/theme";
-
-type Style = ContentKind | "accounts" | "instructions";
+import { radius, type } from "@/theme";
 
 const TITLE_KEY: Record<VaultListKey, string> = {
   all: "vaultList.all",
@@ -51,21 +47,6 @@ const TITLE_KEY: Record<VaultListKey, string> = {
   videos: "vaultList.videos",
   other: "home.other",
   inbox: "home.inbox",
-};
-
-const VISUAL: Record<Style, { icon: IconName; color: string }> = {
-  documents: { icon: "document", color: palette.category.document },
-  accounts: { icon: "user-circle", color: palette.category.account },
-  instructions: { icon: "document", color: palette.category.instruction },
-  notes: { icon: "note", color: palette.category.note },
-  photos: { icon: "photo", color: palette.category.other },
-  voice: { icon: "mic", color: palette.category.note },
-  videos: { icon: "video", color: palette.category.other },
-};
-
-const styleOf = (item: VaultItemSummary): Style => {
-  const bucket = bucketOf(item);
-  return bucket === "inbox" ? item.kind : bucket;
 };
 
 export default function VaultList() {
@@ -131,7 +112,7 @@ export default function VaultList() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: VaultItemSummary; index: number }) => {
-      const visual = VISUAL[styleOf(item)];
+      const visual = itemVisual(item);
       return (
         <VaultListRow
           id={item.id}

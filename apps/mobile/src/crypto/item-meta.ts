@@ -13,6 +13,7 @@ export type FileKind = "document" | "audio" | "video" | "image";
 export interface ItemMeta {
   v: 1;
   category: VaultCategory;
+  icon?: string;
 }
 
 export interface FileMeta {
@@ -27,8 +28,12 @@ export interface FileMeta {
 /** Captures waiting to be sorted (the encrypted inbox). */
 export const INBOX: VaultCategory = "inbox";
 
-export const itemMetaJson = (category: VaultCategory): string =>
-  JSON.stringify({ v: 1, category } satisfies ItemMeta);
+export const itemMetaJson = (category: VaultCategory, icon?: string): string =>
+  JSON.stringify({
+    v: 1,
+    category,
+    ...(icon ? { icon } : {}),
+  } satisfies ItemMeta);
 
 export const fileMetaJson = (meta: Omit<FileMeta, "v"> | FileMeta): string =>
   JSON.stringify({ ...meta, v: 1 } satisfies FileMeta);

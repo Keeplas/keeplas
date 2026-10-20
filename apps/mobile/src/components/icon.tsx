@@ -7,6 +7,9 @@ import { ICON_PATHS, type IconName } from "./icon-paths.generated";
 
 export type { IconName };
 
+export const isIconName = (name: string): name is IconName =>
+  name in ICON_PATHS;
+
 export interface IconProps {
   name: IconName;
   size?: number;

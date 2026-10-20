@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { VaultItemRow } from "@/features/vault/item-row";
+import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
 import {
   greetingKey,
@@ -149,6 +150,7 @@ export default function Home() {
               id={item.id}
               title={item.title ?? t("item.decrypting")}
               description={updated(item.updatedAt)}
+              icon={itemVisual(item).icon}
             />
           ))}
         </>
