@@ -124,7 +124,7 @@ const LiveSection = memo(function LiveSection({
     await setAudioModeAsync({ allowsRecording: false });
     if (!recorder.uri) return;
     const durationSec = Math.round(state.durationMillis / 1000);
-    draftStore.start("voice", {
+    draftStore.update({
       files: [
         {
           uri: recorder.uri,

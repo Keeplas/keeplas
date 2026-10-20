@@ -11,14 +11,10 @@ import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { VaultItemRow } from "@/features/vault/item-row";
-import {
-  categoryCounts,
-  isInbox,
-  useVaultData,
-} from "@/features/vault/vault-data";
+import { useVaultData } from "@/features/vault/vault-data";
 import {
   greetingKey,
-  groupCategoryCounts,
+  listCounts,
   VAULT_GROUPS,
   type VaultListKey,
 } from "@/features/home/vault-groups";
@@ -47,16 +43,8 @@ export default function Home() {
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
-  // Categories are encrypted (F4): counted on the device once the vault list
-  // decrypts item metadata (capture part).
-  const groups = useMemo(
-    () => groupCategoryCounts(categoryCounts(items ?? [])),
-    [items],
-  );
-  const inboxCount = useMemo(
-    () => (items ?? []).filter(isInbox).length + pending.length,
-    [items, pending],
-  );
+  const counts = useMemo(() => listCounts(items ?? []), [items]);
+  const inboxCount = counts.inbox + pending.length;
   // Ways back in: this phone, 2 ready trust contacts, the recovery kit.
   const ready = 1 + (contactsReady ? 1 : 0) + (kitExported ? 1 : 0);
   const openList = (group: VaultListKey) =>
@@ -117,7 +105,7 @@ export default function Home() {
             <View style={styles.tileText}>
               <Text variant="label">{t(`home.${group.key}`)}</Text>
               <Text variant="body-sm" color="text.muted">
-                {itemCount(groups[group.key])}
+                {itemCount(counts[group.key])}
               </Text>
             </View>
           </Pressable>

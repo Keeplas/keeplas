@@ -560,6 +560,31 @@
     "emptyTitle": "Votre coffre est vide",
     "groupEmptyTitle": "Rien ici pour l’instant",
     "emptyBody": "Ajoutez votre premier document, compte ou note. Il est chiffré avant de quitter votre téléphone.",
-    "addItem": "Ajouter un élément"
+    "addItem": "Ajouter un élément",
+    "chipAll": "Tout",
+    "notes": "Notes",
+    "photos": "Photos",
+    "voice": "Notes vocales",
+    "videos": "Vidéos",
+    "search": "Rechercher dans votre coffre",
+    "lastUpdated": "Dernière modification",
+    "note": "Note",
+    "photo": "Photo",
+    "video": "Vidéo",
+    "voiceNote": "Note vocale",
+    "attachment": "1 pièce jointe",
+    "attachments": "{n} pièces jointes",
+    "noResults": "Aucun élément ne correspond à votre recherche.",
+    "time": {
+      "today": "Aujourd’hui",
+      "yesterday": "Hier",
+      "daysAgo": "Il y a {n} jours",
+      "weekAgo": "Il y a 1 semaine",
+      "weeksAgo": "Il y a {n} semaines",
+      "monthAgo": "Il y a 1 mois",
+      "monthsAgo": "Il y a {n} mois",
+      "yearAgo": "Il y a 1 an",
+      "yearsAgo": "Il y a {n} ans"
+    }
   }
 }

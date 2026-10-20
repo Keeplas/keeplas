@@ -577,6 +577,31 @@
     "emptyTitle": "Your vault is empty",
     "groupEmptyTitle": "Nothing here yet",
     "emptyBody": "Add your first document, account or note. It’s encrypted before it leaves your phone.",
-    "addItem": "Add an item"
+    "addItem": "Add an item",
+    "chipAll": "All",
+    "notes": "Notes",
+    "photos": "Photos",
+    "voice": "Voice notes",
+    "videos": "Videos",
+    "search": "Search your vault",
+    "lastUpdated": "Last updated",
+    "note": "Note",
+    "photo": "Photo",
+    "video": "Video",
+    "voiceNote": "Voice note",
+    "attachment": "1 attachment",
+    "attachments": "{n} attachments",
+    "noResults": "No items match your search.",
+    "time": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{n} days ago",
+      "weekAgo": "1 week ago",
+      "weeksAgo": "{n} weeks ago",
+      "monthAgo": "1 month ago",
+      "monthsAgo": "{n} months ago",
+      "yearAgo": "1 year ago",
+      "yearsAgo": "{n} years ago"
+    }
   }
 }

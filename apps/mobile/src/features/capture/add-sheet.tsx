@@ -16,6 +16,7 @@ import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
+import type { VaultCategory } from "@/crypto/item-meta";
 import { draftStore, type CaptureKind } from "./draft-store";
 import {
   chooseFromLibrary,
@@ -42,9 +43,11 @@ const ITEMS: { kind: CaptureKind; icon: IconName; key: string }[] = [
  */
 function AddSheet({
   visible,
+  category,
   onDismiss,
 }: {
   visible: boolean;
+  category?: VaultCategory;
   onDismiss: () => void;
 }) {
   const router = useRouter();
@@ -58,7 +61,7 @@ function AddSheet({
     try {
       const files = await get();
       if (files.length === 0) return;
-      draftStore.start(kind, { files });
+      draftStore.start(kind, { files, category });
       router.push("/capture/compose");
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
@@ -76,14 +79,15 @@ function AddSheet({
   function start(kind: CaptureKind) {
     switch (kind) {
       case "scan":
-        draftStore.start("scan");
+        draftStore.start("scan", { category });
         router.push("/capture/scan");
         return;
       case "voice":
+        draftStore.start("voice", { category });
         router.push("/capture/voice");
         return;
       case "note":
-        draftStore.start("note");
+        draftStore.start("note", { category });
         router.push("/capture/compose");
         return;
       case "video":
@@ -134,16 +138,26 @@ function AddSheet({
   );
 }
 
-const AddSheetContext = createContext<() => void>(() => undefined);
+const AddSheetContext = createContext<(category?: VaultCategory) => void>(
+  () => undefined,
+);
 
 /** Holds the Add sheet for the tabs; `useOpenAddSheet` opens it anywhere. */
 export function AddSheetProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
-  const show = useCallback(() => setVisible(true), []);
+  const [category, setCategory] = useState<VaultCategory>();
+  const show = useCallback((preset?: VaultCategory) => {
+    setCategory(preset);
+    setVisible(true);
+  }, []);
   return (
     <AddSheetContext.Provider value={show}>
       {children}
-      <AddSheet visible={visible} onDismiss={() => setVisible(false)} />
+      <AddSheet
+        visible={visible}
+        category={category}
+        onDismiss={() => setVisible(false)}
+      />
     </AddSheetContext.Provider>
   );
 }
