@@ -22,6 +22,11 @@ import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { takePendingLink } from "@/features/link/pending-link";
 import { evaluatePairingQr } from "@/features/link/qr-flow";
+import {
+  PairingKeyMismatch,
+  PresenceDeclined,
+  useApprovePairing,
+} from "@/features/link/use-approve-pairing";
 import { env } from "@/lib/env";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -44,7 +49,10 @@ export default function Scan() {
   const [manual, setManual] = useState(false);
   const [pasted, setPasted] = useState("");
   const [checking, setChecking] = useState(false);
-  const [problem, setProblem] = useState<"invalid" | "expired" | null>(null);
+  const [problem, setProblem] = useState<
+    "invalid" | "expired" | "failed" | null
+  >(null);
+  const approvePairing = useApprovePairing();
   const busy = useRef(false);
 
   const handle = useCallback(
@@ -77,16 +85,37 @@ export default function Scan() {
           });
           return;
         }
+        try {
+          await approvePairing(qr, outcome.session.browserPublicKey);
+        } catch (error) {
+          if (error instanceof PairingKeyMismatch) {
+            await reject({
+              sessionId: qr.sessionId as Id<"pairing_sessions">,
+              reason: "key_mismatch",
+            }).catch(() => undefined);
+            router.replace({
+              pathname: "/link-blocked",
+              params: { expected: qr.keyHash, received: error.receivedHash },
+            });
+          } else if (!(error instanceof PresenceDeclined)) {
+            setProblem("failed");
+          }
+          return;
+        }
         router.replace({
-          pathname: "/link-approve",
-          params: { s: qr.sessionId, h: qr.keyHash, o: qr.origin },
+          pathname: "/link-connected",
+          params: {
+            ua: outcome.session.userAgent,
+            country: outcome.session.approxLocation,
+            at: String(Date.now()),
+          },
         });
       } finally {
         busy.current = false;
         setChecking(false);
       }
     },
-    [convex, reject, router],
+    [convex, reject, router, approvePairing],
   );
 
   useEffect(() => {
@@ -189,14 +218,10 @@ export default function Scan() {
       <StateSheet
         visible={problem !== null}
         onDismiss={() => setProblem(null)}
-        icon={problem === "expired" ? "clock" : "qr"}
-        tone={problem === "expired" ? "warning" : "danger"}
-        title={t(
-          problem === "expired" ? "scan.expiredTitle" : "scan.invalidTitle",
-        )}
-        body={t(
-          problem === "expired" ? "scan.expiredBody" : "scan.invalidBody",
-        )}
+        icon={problem === "invalid" ? "qr" : "clock"}
+        tone={problem === "invalid" ? "danger" : "warning"}
+        title={t(`scan.${problem ?? "invalid"}Title`)}
+        body={t(`scan.${problem ?? "invalid"}Body`)}
         primary={{
           label: t("scan.scanAgain"),
           onPress: () => setProblem(null),

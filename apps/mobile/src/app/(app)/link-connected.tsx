@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -7,21 +8,20 @@ import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { usePairingLabels } from "@/features/link/use-pairing-labels";
 import { useI18n } from "@/providers/i18n-provider";
 
-/** M03-6 Browser connected. */
+/** M03-6 Browser logged in. */
 export default function LinkConnected() {
   const router = useRouter();
   const { t } = useI18n();
   const {
-    device = "",
-    location = "",
-    time = "",
-  } = useLocalSearchParams<{
-    device: string;
-    location: string;
-    time: string;
-  }>();
+    ua = "",
+    country = "",
+    at = "",
+  } = useLocalSearchParams<{ ua: string; country: string; at: string }>();
+  const [seenAt] = useState(() => Number(at) || Date.now());
+  const { device, location, time } = usePairingLabels(ua, country, seenAt);
 
   return (
     <Screen header={<AppHeader onBack={() => router.replace("/home")} />}>
