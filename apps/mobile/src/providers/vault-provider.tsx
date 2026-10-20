@@ -14,6 +14,7 @@ import { importMasterKey } from "@/crypto/vault-keys";
 import { unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
 import { IDLE_LOCK_MS, shouldLockOnResume } from "@/lib/auto-lock";
+import { clearDecryptedCache } from "@/lib/files";
 
 interface VaultValue {
   /** Live MasterKey while unlocked; null when locked. */
@@ -47,6 +48,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setMasterKey(null);
     setSetupPhrase(null);
     forgetOwnerKeys();
+    clearDecryptedCache();
   }, []);
 
   const adopt = useCallback(async (raw: Uint8Array) => {

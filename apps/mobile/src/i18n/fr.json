@@ -469,7 +469,44 @@
     "decrypting": "Ouverture…",
     "category": "Catégorie",
     "attachments": "Pièces jointes",
-    "encrypted": "Ces informations sont déchiffrées uniquement sur ce téléphone."
+    "encrypted": "Ces informations sont déchiffrées uniquement sur ce téléphone.",
+    "folder": "Dossier",
+    "noFolder": "Aucun dossier",
+    "share": "Partager",
+    "opening": "Déchiffrement sur ce téléphone…",
+    "open": "Ouvrir",
+    "play": "Lire",
+    "pause": "Pause",
+    "note": "Note",
+    "reference": "Référence : {ref}",
+    "contactSupport": "Contacter le support",
+    "missingTitle": "Cet élément n'est pas disponible",
+    "missingBody": "Il a peut-être été supprimé sur un autre appareil, ou il appartient à un autre compte. Revenez à votre coffre pour voir ce qu'il contient.",
+    "lockedTitle": "Cet élément ne peut pas être déverrouillé sur ce téléphone",
+    "lockedBody": "Sa clé ne correspond pas à la clé du coffre de ce téléphone, Keeplas ne peut donc pas le déchiffrer ici. Touchez Verrouiller le coffre, déverrouillez avec Face ID ou votre empreinte, puis rouvrez cet élément. Si le problème persiste, contactez le support avec la référence ci-dessous.",
+    "fileErrors": {
+      "offline": {
+        "title": "Vous êtes hors ligne",
+        "body": "Ce fichier est stocké chiffré en ligne. Connectez-vous au Wi-Fi ou aux données mobiles, puis réessayez."
+      },
+      "missing": {
+        "title": "Ce fichier n'est pas disponible",
+        "body": "Il a peut-être été supprimé, ou son envoi ne s'est jamais terminé sur l'appareil qui l'a ajouté. Ouvrez l'élément sur cet appareil pour l'envoyer à nouveau."
+      },
+      "decrypt": {
+        "title": "Ce fichier ne peut pas être déchiffré sur ce téléphone",
+        "body": "Le fichier ne correspond pas à la clé de ce coffre, ou il a été endommagé pendant l'envoi. Touchez Verrouiller le coffre, déverrouillez-le, puis réessayez. Si le problème persiste, contactez le support avec la référence ci-dessous."
+      },
+      "space": {
+        "title": "Pas assez d'espace sur ce téléphone",
+        "body": "Keeplas a besoin de place pour ouvrir une copie déchiffrée temporaire. Libérez de l'espace, puis réessayez."
+      },
+      "unknown": {
+        "title": "Ce fichier n'a pas pu être ouvert",
+        "body": "Un problème inattendu est survenu. Réessayez. Si cela se reproduit, contactez le support avec la référence ci-dessous."
+      }
+    },
+    "lockVault": "Verrouiller le coffre"
   },
   "people": {
     "title": "Contacts",
