@@ -454,7 +454,11 @@
       "failedBody": "La copie chiffrée reste en sécurité sur ce téléphone. Réessayez quand vous voulez.",
       "doneTitle": "Élément sécurisé",
       "doneBody": "L'élément chiffré est maintenant dans votre coffre."
-    }
+    },
+    "recordVideo": "Filmer une vidéo",
+    "noCameraTitle": "Aucun appareil photo sur cet appareil",
+    "noCameraVideoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une vidéo dans votre bibliothèque.",
+    "noCameraPhotoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une photo dans votre bibliothèque."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",
