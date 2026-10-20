@@ -1,12 +1,13 @@
 import { memo, type ReactNode } from "react";
 import { ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
-import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import Branch from "../../assets/illustrations/branch.svg";
 import LandscapeNight from "../../assets/illustrations/landscape-night.svg";
 import Landscape from "../../assets/illustrations/landscape.svg";
 import { useTheme } from "@/providers/theme-provider";
+import { useTabBarVisible } from "./tab-bar";
 import { layout } from "@/theme";
 
 export type ScreenDecor = "branches" | "landscape";
@@ -25,7 +26,6 @@ export function Screen({
   center = false,
   scroll = true,
   contentStyle,
-  edges = ["top", "bottom"],
 }: {
   header?: ReactNode;
   children: ReactNode;
@@ -36,9 +36,9 @@ export function Screen({
   center?: boolean;
   scroll?: boolean;
   contentStyle?: ViewStyle;
-  edges?: Edge[];
 }) {
   const { colors, scheme } = useTheme();
+  const tabBar = useTabBarVisible();
   const content: ViewStyle[] = [
     styles.content,
     { gap },
@@ -47,7 +47,7 @@ export function Screen({
   ];
   return (
     <SafeAreaView
-      edges={edges}
+      edges={tabBar ? ["top"] : ["top", "bottom"]}
       style={[styles.root, { backgroundColor: colors["bg.app"] }]}
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />

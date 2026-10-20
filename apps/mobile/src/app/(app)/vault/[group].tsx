@@ -16,7 +16,6 @@ import { Chip } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { StateMessage } from "@/components/state-message";
 import { ListRow } from "@/components/surfaces";
-import { Fab } from "@/components/tab-bar";
 import { Text } from "@/components/text";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import {
@@ -257,12 +256,6 @@ export default function VaultList() {
             )
           }
         />
-        <View style={styles.fab}>
-          <Fab
-            label={t("vaultList.addItem")}
-            onPress={() => openAdd(presetCategory(list))}
-          />
-        </View>
       </View>
     </Screen>
   );
@@ -270,7 +263,7 @@ export default function VaultList() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  listContent: { flexGrow: 1, paddingBottom: 96 },
+  listContent: { flexGrow: 1, paddingBottom: 24 },
   header: { gap: 14, paddingBottom: 14 },
   search: {
     flexDirection: "row",
@@ -290,5 +283,4 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   empty: { flex: 1, justifyContent: "center" },
-  fab: { position: "absolute", right: 0, bottom: 16 },
 });
