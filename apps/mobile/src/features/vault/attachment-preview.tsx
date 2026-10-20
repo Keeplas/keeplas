@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
@@ -11,7 +13,10 @@ import {
   useAudioPlayer,
   useAudioPlayerStatus,
 } from "expo-audio";
+import { File } from "expo-file-system";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useVideoPlayer, VideoView } from "expo-video";
+import Pdf from "react-native-pdf";
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -22,97 +27,401 @@ import { formatDuration } from "@/lib/format";
 import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
-import { radius } from "@/theme";
+import { radius, withAlpha } from "@/theme";
+import { documentKind } from "./document-kind";
 import type { AttachmentState } from "./use-decrypted-attachment";
 
-export function AttachmentPreview({
-  meta,
-  state,
-  onRetry,
-  onLock,
-  onOpen,
-}: {
+export interface PreviewFile {
+  id: string;
   meta: FileMeta;
   state: AttachmentState;
-  onRetry: () => void;
+}
+
+interface Handlers {
+  onRetry: (id: string) => void;
   onLock: () => void;
-  onOpen: () => void;
+  onShare: () => void;
+}
+
+export function AttachmentPreview({
+  file,
+  onPages,
+  ...handlers
+}: Handlers & {
+  file: PreviewFile;
+  onPages: (pages: number) => void;
 }) {
+  const { colors } = useTheme();
+  const card = [styles.card, { backgroundColor: colors["bg.subtle"] }];
+  const { meta, state } = file;
+
+  if (state.status !== "ready") {
+    return (
+      <View style={[card, styles.center]}>
+        <PreviewStatus file={file} {...handlers} />
+      </View>
+    );
+  }
+  switch (meta.kind) {
+    case "video":
+      return <VideoPreview uri={state.uri} />;
+    case "audio":
+      return <AudioPreview uri={state.uri} durationSec={meta.durationSec} />;
+    case "image":
+      return null;
+    default:
+      return (
+        <View style={card}>
+          <DocumentPreview
+            uri={state.uri}
+            meta={meta}
+            onPages={onPages}
+            onShare={handlers.onShare}
+          />
+        </View>
+      );
+  }
+}
+
+function PreviewStatus({
+  file,
+  onRetry,
+  onLock,
+  dark = false,
+}: Handlers & { file: PreviewFile; dark?: boolean }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const frame = [styles.frame, { backgroundColor: colors["bg.subtle"] }];
+  const { state } = file;
 
   if (state.status === "loading") {
     return (
-      <View style={[frame, styles.center]}>
-        <ActivityIndicator color={colors["text.muted"]} />
-        <Text variant="body-sm" color="text.muted">
+      <View style={styles.status}>
+        <ActivityIndicator
+          color={dark ? colors["text.inverse"] : colors["text.muted"]}
+        />
+        <Text variant="body-sm" color={dark ? "text.inverse" : "text.muted"}>
           {t("item.opening")}
         </Text>
       </View>
     );
   }
-
-  if (state.status === "error") {
-    const { problem, reference } = state;
-    const needsSupport = problem === "decrypt" || problem === "unknown";
-    return (
-      <View style={styles.error}>
-        <StateMessage
-          icon={problem === "offline" ? "globe" : "alert-triangle"}
-          tone={problem === "offline" ? "info" : "warning"}
-          title={t(`item.fileErrors.${problem}.title`)}
-          body={t(`item.fileErrors.${problem}.body`)}
-          primary={{ label: t("common.tryAgain"), onPress: onRetry }}
-          secondary={
-            problem === "decrypt"
-              ? { label: t("item.lockVault"), onPress: onLock }
-              : undefined
-          }
-        />
-        {needsSupport ? (
-          <>
-            <Button
-              variant="text"
-              label={t("item.contactSupport")}
-              onPress={() => void contactSupport(reference)}
-            />
-            <Text variant="caption" color="text.subtle" align="center">
-              {t("item.reference", { ref: reference })}
-            </Text>
-          </>
-        ) : null}
-      </View>
-    );
-  }
-
-  switch (meta.kind) {
-    case "image":
-      return (
-        <View style={frame}>
-          <Image
-            source={{ uri: state.uri }}
-            style={styles.image}
-            resizeMode="contain"
-            accessibilityLabel={meta.name}
+  if (state.status !== "error") return null;
+  const { problem, reference } = state;
+  const needsSupport = problem === "decrypt" || problem === "unknown";
+  return (
+    <View
+      style={[
+        styles.status,
+        dark && [styles.errorOnDark, { backgroundColor: colors["bg.surface"] }],
+      ]}
+    >
+      <StateMessage
+        icon={problem === "offline" ? "globe" : "alert-triangle"}
+        tone={problem === "offline" ? "info" : "warning"}
+        title={t(`item.fileErrors.${problem}.title`)}
+        body={t(`item.fileErrors.${problem}.body`)}
+        primary={{
+          label: t("common.tryAgain"),
+          onPress: () => onRetry(file.id),
+        }}
+        secondary={
+          problem === "decrypt"
+            ? { label: t("item.lockVault"), onPress: onLock }
+            : undefined
+        }
+      />
+      {needsSupport ? (
+        <>
+          <Button
+            variant="text"
+            label={t("item.contactSupport")}
+            onPress={() => void contactSupport(reference)}
           />
-        </View>
+          <Text variant="caption" color="text.subtle" align="center">
+            {t("item.reference", { ref: reference })}
+          </Text>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+export function PhotoGallery({
+  photos,
+  selected,
+  onSelect,
+  ...handlers
+}: Handlers & {
+  photos: PreviewFile[];
+  selected: number;
+  onSelect: (index: number) => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [turns, setTurns] = useState<Record<string, number>>({});
+  const photo = photos[selected];
+  const turn = turns[photo.id] ?? 0;
+
+  return (
+    <View style={[styles.gallery, { backgroundColor: colors["bg.header"] }]}>
+      <View style={styles.photo}>
+        {photo.state.status === "ready" ? (
+          <Image
+            source={{ uri: photo.state.uri }}
+            resizeMode="contain"
+            accessibilityLabel={photo.meta.name}
+            style={[
+              styles.photoImage,
+              { transform: [{ rotate: `${turn * 90}deg` }] },
+            ]}
+          />
+        ) : (
+          <PreviewStatus file={photo} dark {...handlers} />
+        )}
+      </View>
+      <View style={styles.photoBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.flex}
+          contentContainerStyle={styles.thumbs}
+        >
+          {photos.map((item, index) => (
+            <Pressable
+              key={item.id}
+              accessibilityRole="button"
+              accessibilityLabel={item.meta.name}
+              accessibilityState={{ selected: index === selected }}
+              onPress={() => onSelect(index)}
+              style={[
+                styles.thumb,
+                { backgroundColor: withAlpha(colors["text.inverse"], 0.12) },
+                index === selected && {
+                  borderWidth: 2,
+                  borderColor: colors["text.inverse"],
+                },
+              ]}
+            >
+              {item.state.status === "ready" ? (
+                <Image
+                  source={{ uri: item.state.uri }}
+                  style={styles.thumbImage}
+                />
+              ) : null}
+            </Pressable>
+          ))}
+        </ScrollView>
+        <Text variant="caption" color="text.inverse">
+          {t("item.page", { current: selected + 1, total: photos.length })}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("item.rotate")}
+          hitSlop={10}
+          onPress={() =>
+            setTurns((current) => ({ ...current, [photo.id]: (turn + 1) % 4 }))
+          }
+        >
+          <Icon name="rotate" size={18} color="text.inverse" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function DocumentPreview({
+  uri,
+  meta,
+  onPages,
+  onShare,
+}: {
+  uri: string;
+  meta: FileMeta;
+  onPages: (pages: number) => void;
+  onShare: () => void;
+}) {
+  const { t } = useI18n();
+  switch (documentKind(meta.name, meta.mimeType)) {
+    case "pdf":
+      return (
+        <PdfPreview
+          uri={uri}
+          name={meta.name}
+          onPages={onPages}
+          onShare={onShare}
+        />
       );
-    case "video":
-      return <VideoPreview uri={state.uri} />;
-    case "audio":
-      return <AudioPreview uri={state.uri} durationSec={meta.durationSec} />;
+    case "text":
+      return <TextPreview uri={uri} />;
     default:
       return (
-        <View style={[frame, styles.center]}>
+        <View style={[styles.page, styles.center]}>
           <Icon name="document" size={40} color="text.muted" />
           <Text variant="label" align="center" numberOfLines={2}>
             {meta.name}
           </Text>
-          <Button label={t("item.open")} onPress={onOpen} />
+          <Text variant="body-sm" color="text.muted" align="center">
+            {t("item.noPreview", {
+              type: meta.name.split(".").pop()?.toUpperCase() ?? "",
+            })}
+          </Text>
         </View>
       );
   }
+}
+
+function PdfPreview({
+  uri,
+  name,
+  onPages,
+  onShare,
+}: {
+  uri: string;
+  name: string;
+  onPages: (pages: number) => void;
+  onShare: () => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [page, setPage] = useState({ current: 1, total: 0 });
+  const [failed, setFailed] = useState(false);
+  const [reading, setReading] = useState(false);
+
+  if (failed) {
+    return (
+      <View style={[styles.page, styles.center]}>
+        <StateMessage
+          icon="alert-triangle"
+          tone="warning"
+          title={t("item.pdfErrorTitle")}
+          body={t("item.pdfErrorBody")}
+          primary={{ label: t("item.download"), onPress: onShare }}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <Pdf
+        source={{ uri, cache: false }}
+        horizontal
+        enablePaging
+        fitPolicy={2}
+        trustAllCerts={false}
+        style={[styles.page, { backgroundColor: colors["bg.subtle"] }]}
+        onLoadComplete={(total) => {
+          setPage({ current: 1, total });
+          onPages(total);
+        }}
+        onPageChanged={(current, total) => setPage({ current, total })}
+        onPageSingleTap={() => setReading(true)}
+        onError={() => setFailed(true)}
+      />
+      {page.total > 0 ? <Pager page={page} /> : null}
+      <Modal
+        visible={reading}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setReading(false)}
+      >
+        <SafeAreaView
+          style={[styles.reader, { backgroundColor: colors["bg.app"] }]}
+        >
+          <View style={styles.readerHeader}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("common.done")}
+              hitSlop={12}
+              onPress={() => setReading(false)}
+            >
+              <Icon name="close" size={24} color="text.primary" />
+            </Pressable>
+            <Text variant="label" numberOfLines={1} style={styles.flex}>
+              {name}
+            </Text>
+            <Text variant="caption" color="text.muted">
+              {t("item.page", { current: page.current, total: page.total })}
+            </Text>
+          </View>
+          <Pdf
+            source={{ uri, cache: false }}
+            page={page.current}
+            spacing={12}
+            maxScale={4}
+            enableDoubleTapZoom
+            trustAllCerts={false}
+            style={[styles.flex, { backgroundColor: colors["bg.subtle"] }]}
+            onPageChanged={(current, total) => setPage({ current, total })}
+            onError={() => setFailed(true)}
+          />
+        </SafeAreaView>
+      </Modal>
+    </>
+  );
+}
+
+function Pager({ page }: { page: { current: number; total: number } }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const dots = Math.min(page.total, 5);
+  const active = Math.min(page.current, dots) - 1;
+  return (
+    <View style={styles.pager}>
+      {Array.from({ length: dots }, (_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.dot,
+            index === active
+              ? { width: 18, backgroundColor: colors["action.primary"] }
+              : { backgroundColor: colors["border.strong"] },
+          ]}
+        />
+      ))}
+      <Text variant="caption" color="text.muted" style={styles.pagerLabel}>
+        {t("item.page", { current: page.current, total: page.total })}
+      </Text>
+    </View>
+  );
+}
+
+function TextPreview({ uri }: { uri: string }) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const [text, setText] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    new File(uri)
+      .text()
+      .then((content) => alive && setText(content))
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [uri]);
+
+  return (
+    <ScrollView
+      nestedScrollEnabled
+      style={[styles.page, { backgroundColor: colors["bg.surface"] }]}
+      contentContainerStyle={styles.textContent}
+    >
+      {failed ? (
+        <Text variant="body-sm" color="text.muted">
+          {t("item.textError")}
+        </Text>
+      ) : text === null ? (
+        <ActivityIndicator color={colors["text.muted"]} />
+      ) : (
+        <Text variant="body-sm" selectable>
+          {text}
+        </Text>
+      )}
+    </ScrollView>
+  );
 }
 
 function VideoPreview({ uri }: { uri: string }) {
@@ -167,7 +476,7 @@ function AudioPreview({
           color="text.inverse"
         />
       </Pressable>
-      <View style={styles.flex}>
+      <View style={styles.audioText}>
         <View
           style={[styles.track, { backgroundColor: colors["progress.track"] }]}
         >
@@ -190,21 +499,55 @@ function AudioPreview({
 }
 
 const styles = StyleSheet.create({
-  frame: {
+  flex: { flex: 1 },
+  card: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderRadius: radius.lg,
+    minHeight: 360,
+  },
+  center: { justifyContent: "center" },
+  page: { alignSelf: "stretch", height: 296, borderRadius: 6 },
+  status: { alignItems: "center", gap: 10, alignSelf: "stretch" },
+  errorOnDark: { margin: 14, padding: 16, borderRadius: radius.md },
+  pager: { flexDirection: "row", alignItems: "center", gap: 6, height: 16 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  pagerLabel: { marginLeft: 6 },
+  gallery: {
+    alignSelf: "stretch",
+    gap: 12,
+    paddingBottom: 14,
     borderRadius: radius.lg,
     overflow: "hidden",
-    minHeight: 220,
   },
-  center: {
+  photo: { height: 265, justifyContent: "center" },
+  photoImage: { width: "100%", height: "100%" },
+  photoBar: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    padding: 20,
+    gap: 8,
+    paddingHorizontal: 14,
+    height: 34,
   },
-  image: { width: "100%", height: 320 },
-  video: { width: "100%", height: 240, borderRadius: radius.lg },
-  error: { gap: 8 },
+  thumbs: { gap: 6 },
+  thumb: { width: 44, height: 34, borderRadius: 5, overflow: "hidden" },
+  thumbImage: { width: "100%", height: "100%" },
+  textContent: { padding: 16 },
+  reader: { flex: 1 },
+  readerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  video: { alignSelf: "stretch", height: 240, borderRadius: radius.lg },
   audio: {
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
@@ -218,7 +561,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  flex: { flex: 1, gap: 8 },
+  audioText: { flex: 1, gap: 8 },
   track: { height: 6, borderRadius: 3, overflow: "hidden" },
   fill: { height: 6 },
 });

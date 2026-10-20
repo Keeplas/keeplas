@@ -13,8 +13,8 @@ export interface DetailRow {
 }
 
 /**
- * Figma details card (M07-5, M07-7): one card, rows of 20 pt icon, muted
- * label (120 pt), value, chevron; hairline separators.
+ * Figma `App/Detail row` card (M07-5, M10-2, M10-4): 18 pt icon, muted
+ * 14 pt label, 14 pt semibold value, 16 pt chevron; 1 pt separators.
  */
 export function DetailRows({ rows }: { rows: DetailRow[] }) {
   const { colors } = useTheme();
@@ -37,21 +37,26 @@ export function DetailRows({ rows }: { rows: DetailRow[] }) {
           style={({ pressed }) => [
             styles.row,
             index > 0 && {
-              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopWidth: 1,
               borderTopColor: colors["border.default"],
             },
             pressed && { backgroundColor: colors["bg.subtle"] },
           ]}
         >
-          <Icon name={row.icon} size={20} color="text.muted" />
-          <Text color="text.muted" style={styles.label}>
+          <Icon name={row.icon} size={18} color="text.muted" />
+          <Text color="text.muted" style={[styles.rowText, styles.label]}>
             {row.label}
           </Text>
-          <Text style={styles.value} numberOfLines={2}>
+          <Text
+            variant="label"
+            align="right"
+            style={[styles.rowText, styles.value]}
+            numberOfLines={2}
+          >
             {row.value}
           </Text>
           {row.onPress ? (
-            <Icon name="chevron-right" size={18} color="text.muted" />
+            <Icon name="chevron-right" size={16} color="text.muted" />
           ) : null}
         </Pressable>
       ))}
@@ -135,17 +140,21 @@ export function SectionHeader({
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
+  card: {
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingHorizontal: 14,
+    overflow: "hidden",
+  },
   row: {
-    minHeight: 47,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    gap: 12,
+    paddingVertical: 14,
   },
-  label: { width: 120 },
-  value: { flex: 1 },
+  rowText: { fontSize: 14, lineHeight: 20 },
+  label: { flex: 1 },
+  value: { flexShrink: 1, maxWidth: "55%" },
   chip: {
     height: 34,
     flexDirection: "row",
