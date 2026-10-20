@@ -43,18 +43,23 @@ export function Checkbox({
   checked,
   onChange,
   label,
+  description,
+  disabled = false,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
+  description?: string;
+  disabled?: boolean;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      accessibilityState={{ checked, disabled }}
+      disabled={disabled}
       onPress={() => onChange(!checked)}
-      style={styles.option}
+      style={[styles.option, disabled && styles.disabled]}
     >
       <View
         style={[
@@ -71,9 +76,18 @@ export function Checkbox({
       >
         {checked ? <Icon name="check" size={16} color="text.inverse" /> : null}
       </View>
-      <Text variant="body-sm" color="text.muted" style={styles.flex}>
-        {label}
-      </Text>
+      {description ? (
+        <View style={styles.flex}>
+          <Text variant="label">{label}</Text>
+          <Text variant="body-sm" color="text.muted">
+            {description}
+          </Text>
+        </View>
+      ) : (
+        <Text variant="body-sm" color="text.muted" style={styles.flex}>
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -162,6 +176,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   option: { flexDirection: "row", alignItems: "center", gap: 12 },
+  disabled: { opacity: 0.5 },
   checkbox: {
     width: 22,
     height: 22,
