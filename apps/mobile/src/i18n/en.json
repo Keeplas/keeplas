@@ -189,13 +189,15 @@
     "inbox": "Encrypted inbox",
     "inboxBody": "Items to sort will show up here",
     "recent": "Recent items",
-    "recentEmpty": "Your vault is ready for its first item.",
     "outbox": {
       "waiting": "Waiting to upload",
       "uploading": "Uploading encrypted copy",
       "failed": "Upload failed — tap to retry",
       "quota": "Storage full"
-    }
+    },
+    "updated": "Updated {when}",
+    "toOrganize": "{count} items to organize",
+    "toOrganizeOne": "1 item to organize"
   },
   "settings": {
     "title": "Settings",

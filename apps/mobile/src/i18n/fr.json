@@ -181,13 +181,16 @@
     "inbox": "Boîte chiffrée",
     "inboxBody": "Les éléments à trier apparaîtront ici",
     "recent": "Éléments récents",
-    "recentEmpty": "Votre coffre est prêt pour son premier élément.",
     "outbox": {
       "waiting": "En attente d'envoi",
       "uploading": "Envoi de la copie chiffrée",
       "failed": "Échec de l'envoi",
       "quota": "Stockage plein"
-    }
+    },
+    "updated": "Mis à jour {when}",
+    "toOrganize": "{count} éléments à classer",
+    "toOrganizeOne": "1 élément à classer",
+    "greetingNamed": "{greeting}, {name}"
   },
   "settings": {
     "title": "Réglages",
@@ -206,7 +209,8 @@
     "appearanceSystem": "Système",
     "appearanceLight": "Clair",
     "appearanceDark": "Sombre",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "lifeCheck": "Life check"
   },
   "frequency": {
     "weekly": "Hebdomadaire",
