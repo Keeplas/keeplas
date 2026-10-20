@@ -142,7 +142,8 @@ export const requestLoginOtp = mutation({
       throw new Error("Too many verification attempts. Try again later.");
     }
     for (const stale of recent) {
-      if (stale.expiresAt > now) await ctx.db.delete(stale._id);
+      if (stale.expiresAt > now)
+        await ctx.db.patch(stale._id, { expiresAt: now });
     }
 
     const code = generateOtp();
