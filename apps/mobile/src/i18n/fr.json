@@ -554,5 +554,12 @@
     "decline": "Refuser",
     "signIn": "Se connecter pour répondre",
     "cta": "Aller sur Keeplas"
+  },
+  "vaultList": {
+    "all": "Tous les éléments",
+    "emptyTitle": "Votre coffre est vide",
+    "groupEmptyTitle": "Rien ici pour l’instant",
+    "emptyBody": "Ajoutez votre premier document, compte ou note. Il est chiffré avant de quitter votre téléphone.",
+    "addItem": "Ajouter un élément"
   }
 }

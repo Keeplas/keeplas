@@ -2,6 +2,8 @@ import {
   greetingKey,
   groupCategoryCounts,
   groupOf,
+  inVaultList,
+  isVaultListKey,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
 import { classifyCodeError } from "../errors";
@@ -128,6 +130,24 @@ describe("home groups", () => {
     expect(groupOf("subscription")).toBe("accounts");
     expect(groupOf("mystery")).toBe("other");
     expect(groupOf("inbox")).toBeNull();
+  });
+
+  it("filters a vault list by tile, inbox or all", () => {
+    expect(inVaultList("legal_document", "documents")).toBe(true);
+    expect(inVaultList("legal_document", "accounts")).toBe(false);
+    expect(inVaultList("mystery", "other")).toBe(true);
+    expect(inVaultList("inbox", "inbox")).toBe(true);
+    expect(inVaultList("inbox", "other")).toBe(false);
+    expect(inVaultList("credential", "inbox")).toBe(false);
+    expect(inVaultList("inbox", "all")).toBe(true);
+    expect(inVaultList("wishes", "all")).toBe(true);
+  });
+
+  it("accepts only known vault list keys from a route", () => {
+    expect(isVaultListKey("documents")).toBe(true);
+    expect(isVaultListKey("inbox")).toBe(true);
+    expect(isVaultListKey("all")).toBe(true);
+    expect(isVaultListKey("passwords")).toBe(false);
   });
 
   it("greets by time of day", () => {

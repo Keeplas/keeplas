@@ -571,5 +571,12 @@
     "run": "Run checks",
     "pass": "Pass",
     "fail": "Fail"
+  },
+  "vaultList": {
+    "all": "All items",
+    "emptyTitle": "Your vault is empty",
+    "groupEmptyTitle": "Nothing here yet",
+    "emptyBody": "Add your first document, account or note. It’s encrypted before it leaves your phone.",
+    "addItem": "Add an item"
   }
 }
