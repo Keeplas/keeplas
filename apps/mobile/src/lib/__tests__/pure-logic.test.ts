@@ -5,6 +5,7 @@ import {
   groupOf,
   inVaultList,
   isVaultListKey,
+  presetCategory,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
 import { classifyCodeError } from "../errors";
@@ -160,6 +161,15 @@ describe("home groups", () => {
     expect(contentKind([{ kind: "image" }, { kind: "document" }])).toBe(
       "notes",
     );
+  });
+
+  it("presets the capture category from the list it was opened in", () => {
+    expect(presetCategory("documents")).toBe("personal_document");
+    expect(presetCategory("accounts")).toBe("credential");
+    expect(presetCategory("instructions")).toBe("wishes");
+    expect(presetCategory("other")).toBe("other");
+    expect(presetCategory("inbox")).toBe("inbox");
+    expect(presetCategory("all")).toBeUndefined();
   });
 
   it("greets by time of day", () => {

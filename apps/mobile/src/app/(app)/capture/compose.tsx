@@ -13,16 +13,11 @@ import { Text } from "@/components/text";
 import { type VaultCategory } from "@/crypto/item-meta";
 import { draftStore, useDraft } from "@/features/capture/draft-store";
 import { pagesToPdf } from "@/features/capture/media";
+import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { useI18n } from "@/providers/i18n-provider";
 
-const CATEGORIES: VaultCategory[] = [
-  "inbox",
-  "personal_document",
-  "credential",
-  "wishes",
-  "other",
-];
+const CATEGORIES: VaultCategory[] = Object.values(GROUP_CATEGORY);
 
 /** M07-7 / M07-8: review a capture, add text and seal it for the outbox. */
 export default function ComposeCapture() {

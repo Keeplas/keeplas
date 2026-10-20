@@ -1,5 +1,5 @@
 import type { IconName } from "@/components/icon";
-import type { FileKind } from "@/crypto/item-meta";
+import type { FileKind, VaultCategory } from "@/crypto/item-meta";
 import type { colors } from "@/theme";
 
 /**
@@ -89,6 +89,18 @@ export function isVaultListKey(value: string): value is VaultListKey {
     value === "all" ||
     VAULT_GROUPS.some((g) => g.key === value)
   );
+}
+
+export const GROUP_CATEGORY = {
+  inbox: "inbox",
+  documents: "personal_document",
+  accounts: "credential",
+  instructions: "wishes",
+  other: "other",
+} as const satisfies Record<VaultGroupKey | "inbox", VaultCategory>;
+
+export function presetCategory(list: VaultListKey): VaultCategory | undefined {
+  return list === "all" ? undefined : GROUP_CATEGORY[list];
 }
 
 export function inVaultList(category: string, list: VaultListKey): boolean {

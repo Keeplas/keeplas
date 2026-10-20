@@ -11,6 +11,7 @@ import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import {
   inVaultList,
   isVaultListKey,
+  presetCategory,
   type VaultListKey,
 } from "@/features/home/vault-groups";
 import { VaultItemRow } from "@/features/vault/item-row";
@@ -99,7 +100,10 @@ export default function VaultList() {
                     : "vaultList.emptyTitle",
                 )}
                 body={t("vaultList.emptyBody")}
-                primary={{ label: t("vaultList.addItem"), onPress: openAdd }}
+                primary={{
+                  label: t("vaultList.addItem"),
+                  onPress: () => openAdd(presetCategory(list)),
+                }}
               />
             </View>
           ) : null

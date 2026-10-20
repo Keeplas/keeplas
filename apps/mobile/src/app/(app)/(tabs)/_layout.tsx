@@ -16,7 +16,7 @@ export default function TabsLayout() {
         <TabBar
           state={props.state}
           navigation={props.navigation}
-          onAdd={openAdd}
+          onAdd={() => openAdd()}
         />
       )}
     >
