@@ -104,9 +104,35 @@ export default function Home() {
             />
             <View style={styles.tileText}>
               <Text variant="label">{t(`home.${group.key}`)}</Text>
-              <Text variant="body-sm" color="text.muted">
-                {itemCount(counts[group.key])}
-              </Text>
+              <View
+                style={styles.count}
+                accessible
+                accessibilityLabel={itemCount(counts[group.key])}
+              >
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: withAlpha(
+                        palette.category[group.color],
+                        0.12,
+                      ),
+                    },
+                  ]}
+                >
+                  <Text
+                    variant="caption"
+                    style={{ color: palette.category[group.color] }}
+                  >
+                    {counts[group.key]}
+                  </Text>
+                </View>
+                <Text variant="body-sm" color="text.muted">
+                  {counts[group.key] === 1
+                    ? t("home.itemWord")
+                    : t("home.itemsWord")}
+                </Text>
+              </View>
             </View>
           </Pressable>
         ))}
@@ -184,7 +210,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.md,
   },
-  tileText: { flex: 1, gap: 2 },
+  tileText: { flex: 1, gap: 4 },
+  count: { flexDirection: "row", alignItems: "center", gap: 6 },
+  badge: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
