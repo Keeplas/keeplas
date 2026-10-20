@@ -6,6 +6,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { StateSheet } from "@/components/state-message";
 import { AddSheetProvider } from "@/features/capture/add-sheet";
+import { TabShell } from "@/features/navigation/tab-shell";
 import { hasPendingLink } from "@/features/link/pending-link";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -65,7 +66,9 @@ export default function AppLayout() {
   return (
     <VaultDataProvider>
       <AddSheetProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <TabShell>
+          <Stack screenOptions={{ headerShown: false }} />
+        </TabShell>
       </AddSheetProvider>
       <StateSheet
         visible={!!activeLifeCheck && pathname !== "/life-check"}

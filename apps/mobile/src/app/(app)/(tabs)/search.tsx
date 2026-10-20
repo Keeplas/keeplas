@@ -38,7 +38,7 @@ export default function Search() {
   );
 
   return (
-    <Screen edges={["top"]} header={<AppHeader />} scroll={false}>
+    <Screen header={<AppHeader />} scroll={false}>
       <Text variant="h1">{t("nav.search")}</Text>
       <TextField
         label={t("search.label")}

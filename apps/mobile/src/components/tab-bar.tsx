@@ -1,22 +1,27 @@
+import { createContext, useContext } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { TAB_NAMES, type TabName } from "@/features/navigation/tab-routes";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { Icon, type IconName } from "./icon";
 import { Text } from "./text";
 
-const TABS: Record<string, { icon: IconName; label: string }> = {
+const TABS: Record<TabName, { icon: IconName; label: string }> = {
   home: { icon: "home", label: "nav.home" },
   search: { icon: "search", label: "nav.search" },
   people: { icon: "people", label: "nav.people" },
   settings: { icon: "settings", label: "nav.settings" },
 };
 
-/** The subset of React Navigation's tab bar props this bar needs. */
+export const TabBarVisibleContext = createContext(false);
+
+export const useTabBarVisible = () => useContext(TabBarVisibleContext);
+
 export interface TabBarProps {
-  state: { index: number; routes: { key: string; name: string }[] };
-  navigation: { navigate: (name: string) => void };
+  active: TabName;
+  onSelect: (tab: TabName) => void;
   onAdd: () => void;
 }
 
@@ -24,22 +29,21 @@ export interface TabBarProps {
  * Figma `Tab Bar`: Home, Search, FAB (+), People, Settings on a surface with
  * a top border. Active item gets the `bg/info` pill.
  */
-export function TabBar({ state, navigation, onAdd }: TabBarProps) {
+export function TabBar({ active, onSelect, onAdd }: TabBarProps) {
   const { colors } = useTheme();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
-  const items = state.routes.filter((route) => route.name in TABS);
-  const half = Math.ceil(items.length / 2);
+  const half = Math.ceil(TAB_NAMES.length / 2);
 
-  const renderItem = (route: { key: string; name: string }) => {
-    const focused = state.routes[state.index]?.key === route.key;
-    const tab = TABS[route.name];
+  const renderItem = (name: TabName) => {
+    const focused = name === active;
+    const tab = TABS[name];
     return (
       <Pressable
-        key={route.key}
+        key={name}
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
-        onPress={() => navigation.navigate(route.name)}
+        onPress={() => onSelect(name)}
         style={[styles.item, focused && { backgroundColor: colors["bg.info"] }]}
       >
         <Icon
@@ -65,9 +69,9 @@ export function TabBar({ state, navigation, onAdd }: TabBarProps) {
         },
       ]}
     >
-      {items.slice(0, half).map(renderItem)}
+      {TAB_NAMES.slice(0, half).map(renderItem)}
       <Fab onPress={onAdd} label={t("nav.add")} />
-      {items.slice(half).map(renderItem)}
+      {TAB_NAMES.slice(half).map(renderItem)}
     </View>
   );
 }

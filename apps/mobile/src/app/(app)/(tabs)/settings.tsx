@@ -43,7 +43,7 @@ export default function Settings() {
   };
 
   return (
-    <Screen edges={["top"]} header={<AppHeader />} gap={12}>
+    <Screen header={<AppHeader />} gap={12}>
       <Text variant="h1">{t("settings.title")}</Text>
       <Text variant="body-lg" color="text.muted">
         {t("settings.subtitle")}

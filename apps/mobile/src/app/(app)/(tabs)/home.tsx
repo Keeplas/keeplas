@@ -63,11 +63,7 @@ export default function Home() {
   };
 
   return (
-    <Screen
-      edges={["top"]}
-      header={<AppHeader right={<LanguageDropdown />} />}
-      gap={12}
-    >
+    <Screen header={<AppHeader right={<LanguageDropdown />} />} gap={12}>
       <Text variant="h1">
         {firstName
           ? t("home.greetingNamed", { greeting, name: firstName })
