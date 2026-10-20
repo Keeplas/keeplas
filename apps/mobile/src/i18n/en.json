@@ -479,7 +479,44 @@
     "decrypting": "Opening item…",
     "category": "Category",
     "attachments": "Attachments",
-    "encrypted": "This information is decrypted only on this phone."
+    "encrypted": "This information is decrypted only on this phone.",
+    "folder": "Folder",
+    "noFolder": "No folder",
+    "share": "Share",
+    "opening": "Decrypting on this phone…",
+    "open": "Open",
+    "play": "Play",
+    "pause": "Pause",
+    "note": "Note",
+    "reference": "Reference: {ref}",
+    "contactSupport": "Contact support",
+    "missingTitle": "This item isn't available",
+    "missingBody": "It may have been deleted on another device, or it belongs to another account. Go back to your vault to see what's there now.",
+    "lockedTitle": "This item can't be unlocked on this phone",
+    "lockedBody": "Its key doesn't match the vault key on this phone, so Keeplas can't decrypt it here. Tap Lock vault, unlock with Face ID or your fingerprint, then open this item again. If it still fails, contact support with the reference below.",
+    "fileErrors": {
+      "offline": {
+        "title": "You're offline",
+        "body": "This file is stored encrypted online. Connect to Wi-Fi or mobile data, then try again."
+      },
+      "missing": {
+        "title": "This file isn't available",
+        "body": "It may have been deleted, or its upload never finished on the device that added it. Open the item on that device to upload it again."
+      },
+      "decrypt": {
+        "title": "This file can't be decrypted on this phone",
+        "body": "The file doesn't match this vault's key, or it was damaged during upload. Tap Lock vault, unlock again, then retry. If it still fails, contact support with the reference below."
+      },
+      "space": {
+        "title": "Not enough space on this phone",
+        "body": "Keeplas needs room to open a temporary decrypted copy. Free up some storage, then try again."
+      },
+      "unknown": {
+        "title": "This file couldn't be opened",
+        "body": "Something unexpected went wrong. Try again. If it keeps happening, contact support with the reference below."
+      }
+    },
+    "lockVault": "Lock vault"
   },
   "people": {
     "title": "People",

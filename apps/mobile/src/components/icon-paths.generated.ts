@@ -139,6 +139,10 @@ export const ICON_PATHS = {
     d: "M6 6h.01M12 6h.01M18 6h.01M6 12h.01M12 12h.01M18 12h.01M6 18h.01M12 18h.01M18 18h.01",
     strokeWidth: 2.6,
   },
+  play: {
+    d: "M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z",
+    strokeWidth: 1.75,
+  },
   plus: { d: "M12 5v14M5 12h14", strokeWidth: 1.75 },
   qr: {
     d: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2",
