@@ -67,6 +67,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     api.vault_items.generateUploadUrl,
   );
   const createItem = useAuditedMutation(api.vault_items.createItem);
+  const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [progress, setProgress] = useState<Record<string, Progress>>({});
@@ -108,9 +109,18 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
             storageId: f.storageId as Id<"_storage">,
           })),
         })) as string,
+      addItemFiles: async (itemId, files) => {
+        await addItemFiles({
+          itemId: itemId as Id<"vault_items">,
+          files: files.map((f) => ({
+            ...f,
+            storageId: f.storageId as Id<"_storage">,
+          })),
+        });
+      },
       deleteLocalFile: deleteFile,
     }),
-    [getOrCreateVault, generateUploadUrl, createItem],
+    [getOrCreateVault, generateUploadUrl, createItem, addItemFiles],
   );
 
   const flush = useCallback(async () => {

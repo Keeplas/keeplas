@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 
 import { Icon, type IconName } from "@/components/icon";
 import { Text } from "@/components/text";
+import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { withAlpha } from "@/theme";
 
@@ -13,6 +14,8 @@ export const VaultListRow = memo(function VaultListRow({
   subtitle,
   icon,
   color,
+  access,
+  onMore,
   first,
   last,
 }: {
@@ -21,11 +24,14 @@ export const VaultListRow = memo(function VaultListRow({
   subtitle: string;
   icon: IconName;
   color: string;
+  access: IconName;
+  onMore: (id: string) => void;
   first: boolean;
   last: boolean;
 }) {
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useI18n();
   return (
     <Pressable
       accessibilityRole="button"
@@ -54,6 +60,15 @@ export const VaultListRow = memo(function VaultListRow({
           {subtitle}
         </Text>
       </View>
+      <Icon name={access} size={16} color="text.muted" />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("itemActions.more", { title })}
+        hitSlop={10}
+        onPress={() => onMore(id)}
+      >
+        <Icon name="more" size={20} color="text.muted" />
+      </Pressable>
     </Pressable>
   );
 });

@@ -100,3 +100,43 @@ describe("createItem into a folder", () => {
     ).rejects.toThrow("not yours");
   });
 });
+
+describe("updateItem recipients", () => {
+  it("shares an item with the owner's contact", async () => {
+    const t = makeT();
+    const owner = await seedOwner(t);
+    const contactId = await seedTrustContact(t, owner.userId, { n: 1 });
+    const itemId = await create(t, owner.userId, owner.vaultId, {});
+
+    await asUser(t, owner.userId).mutation(api.vault_items.updateItem, {
+      itemId,
+      sharedWithContacts: [contactId],
+      recipientKeys: [{ contactId, wrappedDek: "for-marie" }],
+      _audit: await signedAudit(),
+    });
+
+    const keys = await t.run((ctx) =>
+      ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_item", (q) => q.eq("itemId", itemId))
+        .collect(),
+    );
+    expect(keys.map((k) => k.contactId)).toEqual([contactId]);
+  });
+
+  it("refuses a contact that is not the owner's", async () => {
+    const t = makeT();
+    const owner = await seedOwner(t);
+    const other = await seedOwner(t);
+    const stranger = await seedTrustContact(t, other.userId, { n: 2 });
+    const itemId = await create(t, owner.userId, owner.vaultId, {});
+
+    await expect(
+      asUser(t, owner.userId).mutation(api.vault_items.updateItem, {
+        itemId,
+        recipientKeys: [{ contactId: stranger, wrappedDek: "x" }],
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("not yours");
+  });
+});

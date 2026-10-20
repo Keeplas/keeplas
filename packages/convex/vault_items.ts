@@ -14,6 +14,7 @@ import {
   getActiveItems,
   getActiveStorageBytes,
   requireItemOwnership,
+  requireOwnRecipients,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
@@ -95,6 +96,7 @@ export const getItemSummaries = query({
       encryptedTitle: item.encryptedTitle,
       encryptedMeta: item.encryptedMeta,
       ownerWrappedDek: item.ownerWrappedDek,
+      sharedWithContacts: item.sharedWithContacts ?? [],
       files: (filesByItem.get(item._id) ?? []).map((file) => ({
         encryptedMeta: file.encryptedMeta,
         kind: file.kind,
@@ -364,34 +366,14 @@ export const createItem = auditedMutation({
       ? "trusted_only"
       : args.accessLevel;
 
-    const keyContacts = (args.recipientKeys ?? []).map((rk) => rk.contactId);
-    if (
-      sharedWithContacts.length > 0 ||
-      sharedWithGroups.length > 0 ||
-      pendingRecipients.length > 0 ||
-      keyContacts.length > 0
-    ) {
-      const own = await ctx.db
-        .query("trusted_contacts")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
-      const ownContactIds = new Set(own.map((c) => c._id));
-      for (const cid of [
+    await requireOwnRecipients(ctx, userId, {
+      contacts: [
         ...sharedWithContacts,
         ...pendingRecipients,
-        ...keyContacts,
-      ]) {
-        if (!ownContactIds.has(cid)) {
-          throw new Error("One or more contacts are not yours");
-        }
-      }
-      for (const gid of sharedWithGroups) {
-        const g = await ctx.db.get(gid);
-        if (!g || g.userId !== userId) {
-          throw new Error("One or more groups are not yours");
-        }
-      }
-    }
+        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+      ],
+      groups: sharedWithGroups,
+    });
 
     if (args.folderId) {
       const folder = await ctx.db.get(args.folderId);
@@ -484,6 +466,14 @@ export const updateItem = auditedMutation({
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
+    await requireOwnRecipients(ctx, userId, {
+      contacts: [
+        ...(args.sharedWithContacts ?? []),
+        ...(args.pendingRecipients ?? []),
+        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+      ],
+      groups: args.sharedWithGroups ?? [],
+    });
 
     const { itemId, recipientKeys, ...updates } = args;
     const now = Date.now();

@@ -1,35 +1,26 @@
-import { Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { useState } from "react";
+import { useRouter, type Href } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/button";
 import type { IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
+import { BottomSheet } from "@/components/sheet";
 import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 
-/** M08-3 Privacy and security. Devices is live; the rest comes in part 2. */
+/** M08-3 Privacy and security. */
 export default function Privacy() {
   const router = useRouter();
   const { t } = useI18n();
-  const soon = (title: string) => () =>
-    Alert.alert(title, t("common.comingSoon"));
-  const rows: { key: string; icon: IconName; onPress?: () => void }[] = [
-    { key: "passkey", icon: "fingerprint" },
+  const [pinInfo, setPinInfo] = useState(false);
+  const rows: { key: string; icon: IconName; href?: Href }[] = [
+    { key: "passkey", icon: "fingerprint", href: "/passkeys" },
     { key: "pin", icon: "pin" },
-    { key: "kit", icon: "lifebuoy" },
-    {
-      key: "recovery",
-      icon: "shield-check",
-      onPress: () => router.push("/recovery"),
-    },
-    {
-      key: "rotation",
-      icon: "sync",
-      onPress: () => router.push("/rotate-keys"),
-    },
-    { key: "devices", icon: "laptop", onPress: () => router.push("/devices") },
-    { key: "activity", icon: "activity" },
+    { key: "kit", icon: "lifebuoy", href: "/recovery" },
+    { key: "devices", icon: "laptop", href: "/devices" },
+    { key: "activity", icon: "activity", href: "/activity" },
   ];
 
   return (
@@ -44,9 +35,19 @@ export default function Privacy() {
           icon={row.icon}
           title={t(`privacy.${row.key}`)}
           description={t(`privacy.${row.key}Body`)}
-          onPress={row.onPress ?? soon(t(`privacy.${row.key}`))}
+          onPress={() => (row.href ? router.push(row.href) : setPinInfo(true))}
         />
       ))}
+      <BottomSheet
+        visible={pinInfo}
+        onDismiss={() => setPinInfo(false)}
+        title={t("privacy.pinSheetTitle")}
+      >
+        <Text variant="body" color="text.muted">
+          {t("privacy.pinSheetBody")}
+        </Text>
+        <Button label={t("common.ok")} onPress={() => setPinInfo(false)} />
+      </BottomSheet>
     </Screen>
   );
 }

@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
@@ -25,7 +26,8 @@ import {
   VAULT_LISTS,
   type VaultListKey,
 } from "@/features/home/vault-groups";
-import { itemVisual, styleOf } from "@/features/vault/item-visual";
+import { ItemActionsSheet } from "@/features/vault/item-actions-sheet";
+import { accessIcon, itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
 import { VaultSwitch } from "@/features/vault/vault-switch";
 import {
@@ -56,7 +58,8 @@ export default function VaultList() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const openAdd = useOpenAddSheet();
-  const { items, pending } = useVaultData();
+  const { items, pending, folders } = useVaultData();
+  const [actionsFor, setActionsFor] = useState<Id<"vault_items"> | null>(null);
   const [list, setList] = useState<VaultListKey>(
     isVaultListKey(group) ? group : "all",
   );
@@ -111,6 +114,11 @@ export default function VaultList() {
     [t],
   );
 
+  const openActions = useCallback(
+    (id: string) => setActionsFor(id as Id<"vault_items">),
+    [],
+  );
+
   const renderItem = useCallback(
     ({ item, index }: { item: VaultItemSummary; index: number }) => {
       const visual = itemVisual(item);
@@ -121,12 +129,14 @@ export default function VaultList() {
           subtitle={subtitle(item)}
           icon={visual.icon}
           color={visual.color}
+          access={accessIcon(item, folders)}
+          onMore={openActions}
           first={index === 0}
           last={index === listItems.length - 1}
         />
       );
     },
-    [t, subtitle, listItems.length],
+    [t, subtitle, listItems.length, folders, openActions],
   );
 
   return (
@@ -239,6 +249,10 @@ export default function VaultList() {
           }
         />
       </View>
+      <ItemActionsSheet
+        itemId={actionsFor}
+        onDismiss={() => setActionsFor(null)}
+      />
     </Screen>
   );
 }

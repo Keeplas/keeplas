@@ -25,8 +25,8 @@ export async function loadItemSummaries(
     await secureDb()
   ).execute(
     `SELECT id, title, category, kind, icon, attachments, duration_sec,
-       folder_id, created_at, updated_at
-     FROM item_summaries_v3 WHERE user_id = ? ORDER BY updated_at DESC`,
+       folder_id, shared_with, created_at, updated_at
+     FROM item_summaries_v4 WHERE user_id = ? ORDER BY updated_at DESC`,
     [userId],
   );
   return rows.map((row) => ({
@@ -44,6 +44,7 @@ export async function loadItemSummaries(
     folderId: row.folder_id
       ? (String(row.folder_id) as Id<"folders">)
       : undefined,
+    sharedWith: JSON.parse(String(row.shared_with)) as Id<"trusted_contacts">[],
     createdAt: Number(row.created_at),
     updatedAt: Number(row.updated_at),
   }));
@@ -56,16 +57,16 @@ export async function saveItemSummaries(
 ): Promise<void> {
   const db = await secureDb();
   await db.transaction(async (tx) => {
-    await tx.execute("DELETE FROM item_summaries_v3 WHERE user_id = ?", [
+    await tx.execute("DELETE FROM item_summaries_v4 WHERE user_id = ?", [
       userId,
     ]);
     for (const item of items) {
       if (item.title === null) continue;
       await tx.execute(
-        `INSERT INTO item_summaries_v3
+        `INSERT INTO item_summaries_v4
            (id, user_id, title, category, kind, icon, attachments,
-            duration_sec, folder_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            duration_sec, folder_id, shared_with, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           userId,
@@ -76,6 +77,7 @@ export async function saveItemSummaries(
           item.attachments,
           item.durationSec ?? null,
           item.folderId ?? null,
+          JSON.stringify(item.sharedWith),
           item.createdAt,
           item.updatedAt,
         ],
@@ -87,5 +89,5 @@ export async function saveItemSummaries(
 export async function clearItemSummaries(userId: string): Promise<void> {
   await (
     await secureDb()
-  ).execute("DELETE FROM item_summaries_v3 WHERE user_id = ?", [userId]);
+  ).execute("DELETE FROM item_summaries_v4 WHERE user_id = ?", [userId]);
 }

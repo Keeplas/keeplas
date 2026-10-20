@@ -1,13 +1,21 @@
-import { Alert } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { createSocialRecovery } from "@keeplas/crypto/social";
 
 import { Button } from "@/components/button";
+import { ProgressBar } from "@/components/controls";
+import { Icon } from "@/components/icon";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
-import { Callout, ListRow, StatusChip } from "@/components/surfaces";
+import {
+  Callout,
+  Card,
+  InfoRow,
+  ListRow,
+  StatusChip,
+} from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { useAuditedAction } from "@/lib/use-audited-action";
@@ -86,22 +94,48 @@ export default function RecoveryCenter() {
         }
         tone={health?.trustContacts.configured ? "success" : "warning"}
       />
-      <Button
-        label={
-          health?.trustContacts.configured
-            ? t("recoveryCenter.renew")
-            : t("recoveryCenter.configure")
-        }
-        onPress={() => void configure()}
-        disabled={(targets?.contacts.length ?? 0) < 2}
-      />
-      {(targets?.contacts.length ?? 0) < 2 ? (
-        <Callout
-          tone="warning"
-          icon="alert-triangle"
-          text={t("recoveryCenter.needTwo")}
+      {targets && targets.contacts.length < 2 ? (
+        <>
+          <Card>
+            <View style={styles.between}>
+              <Text variant="label">{t("recoveryCenter.trustContacts")}</Text>
+              <Text variant="label" color="status.pending">
+                {t("recoveryCenter.ofTwo", { n: targets.contacts.length })}
+              </Text>
+            </View>
+            <ProgressBar value={targets.contacts.length / 2} />
+            {targets.contacts.map((contact) => (
+              <InfoRow
+                key={contact.contactId}
+                leading={<Icon name="user-circle" size={22} />}
+                title={contact.name}
+                description={t("recoveryCenter.active")}
+              />
+            ))}
+          </Card>
+          <Callout
+            tone="warning"
+            icon="alert-triangle"
+            text={t("recoveryCenter.needTwo", {
+              n: targets.contacts.length,
+            })}
+          />
+          <Button
+            label={t("recoveryCenter.addContact")}
+            onPress={() => router.push("/people/add")}
+          />
+        </>
+      ) : (
+        <Button
+          label={
+            health?.trustContacts.configured
+              ? t("recoveryCenter.renew")
+              : t("recoveryCenter.configure")
+          }
+          onPress={() => void configure()}
+          disabled={!targets}
         />
-      ) : null}
+      )}
       <Text variant="label">{t("recoveryCenter.requests")}</Text>
       {(requests ?? []).map((request) => (
         <ListRow
@@ -117,6 +151,16 @@ export default function RecoveryCenter() {
           }
         />
       ))}
+      <ListRow
+        icon="sync"
+        title={t("privacy.rotation")}
+        description={t("privacy.rotationBody")}
+        onPress={() => router.push("/rotate-keys")}
+      />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  between: { flexDirection: "row", justifyContent: "space-between" },
+});

@@ -41,6 +41,7 @@ async function seedUsage(
   userId: Id<"users">,
   vaultId: Id<"vaults">,
   bytes: number,
+  kind?: "document" | "audio" | "video" | "image",
 ) {
   const storageId = await seedStorageRef(t);
   await t.run(async (ctx) => {
@@ -64,6 +65,7 @@ async function seedUsage(
       iv: "aXY=",
       encryptedMeta: META,
       sizeBucket: bytes,
+      kind,
       order: 0,
       createdAt: now,
     });
@@ -157,6 +159,26 @@ describe("storage quota enforcement", () => {
         _audit: await signedAudit(),
       }),
     ).rejects.toThrow("STORAGE_QUOTA_EXCEEDED");
+  });
+});
+
+describe("usage stats", () => {
+  it("splits stored bytes by file kind, legacy files counting as documents", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    await seedUsage(t, userId, vaultId, 3 * MB, "image");
+    await seedUsage(t, userId, vaultId, 2 * MB, "audio");
+    await seedUsage(t, userId, vaultId, 1 * MB);
+
+    const usage = await asUser(t, userId).query(api.vaults.getUsageStats, {});
+    expect(usage.storageBytes).toBe(6 * MB);
+    expect(usage.bytesByKind).toEqual({
+      document: 1 * MB,
+      image: 3 * MB,
+      audio: 2 * MB,
+      video: 0,
+    });
   });
 });
 

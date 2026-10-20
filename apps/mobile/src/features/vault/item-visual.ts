@@ -1,7 +1,7 @@
 import type { IconName } from "@/components/icon";
 import { bucketOf, type ContentKind } from "@/features/home/vault-groups";
 import { colors as palette } from "@/theme";
-import type { VaultItemSummary } from "./vault-data";
+import type { FolderSummary, VaultItemSummary } from "./vault-data";
 
 export type ItemStyle = ContentKind | "accounts" | "instructions";
 
@@ -26,4 +26,14 @@ export function itemVisual(item: VaultItemSummary): {
 } {
   const visual = VISUAL[styleOf(item)];
   return { icon: item.icon ?? visual.icon, color: visual.color };
+}
+
+export function accessIcon(
+  item: VaultItemSummary,
+  folders: FolderSummary[] | undefined,
+): IconName {
+  const people = new Set<string>(item.sharedWith);
+  const folder = folders?.find((candidate) => candidate.id === item.folderId);
+  for (const grant of folder?.grants ?? []) people.add(grant.contactId);
+  return people.size === 0 ? "lock" : people.size === 1 ? "user" : "people";
 }

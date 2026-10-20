@@ -29,12 +29,14 @@ export default function PhoneScreen() {
   const requestCode = useRequestPhoneCode();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [switchTo, setSwitchTo] = useState<PhoneIntent | null>(null);
 
   async function submit() {
     const phoneNumber = phone.validate();
     if (!phoneNumber) return setError(t("phone.invalid"));
     setBusy(true);
     setError(null);
+    setSwitchTo(null);
     try {
       await requestCode(phoneNumber, intent);
       router.push({
@@ -49,6 +51,13 @@ export default function PhoneScreen() {
         });
       } else {
         const text = errorText(err);
+        setSwitchTo(
+          text.includes("already exists")
+            ? "signin"
+            : text.includes("No account")
+              ? "signup"
+              : null,
+        );
         setError(
           text.includes("already exists")
             ? t("phone.accountExists")
@@ -87,6 +96,21 @@ export default function PhoneScreen() {
         <Text variant="body-sm" color="status.revoked">
           {error}
         </Text>
+      ) : null}
+      {switchTo ? (
+        <Button
+          variant="text"
+          label={t(
+            switchTo === "signup"
+              ? "phone.createAccount"
+              : "phone.signInInstead",
+          )}
+          onPress={() => {
+            setError(null);
+            setSwitchTo(null);
+            router.setParams({ intent: switchTo });
+          }}
+        />
       ) : null}
       <Button label={t("phone.cta")} chevron loading={busy} onPress={submit} />
       <Callout icon="shield-check" text={t("phone.reassure")} />

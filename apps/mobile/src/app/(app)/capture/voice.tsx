@@ -137,6 +137,7 @@ const LiveSection = memo(function LiveSection({
     const durationSec = Math.round(state.durationMillis / 1000);
     draftStore.update({
       files: [
+        ...draftStore.get().files,
         {
           uri: recorder.uri,
           name: `${t("capture.voiceTitle")}.m4a`,

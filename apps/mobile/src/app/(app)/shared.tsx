@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { unwrapBytes } from "@keeplas/crypto/kem";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -11,6 +13,7 @@ import { Screen } from "@/components/screen";
 import { StateMessage } from "@/components/state-message";
 import { IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { useVaultData } from "@/features/vault/vault-data";
 import { VaultSwitch } from "@/features/vault/vault-switch";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -22,6 +25,40 @@ export default function SharedWithMe() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const shared = useQuery(api.folders.sharedWithMe);
+  const { ownerKeys } = useVaultData();
+  const [names, setNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!shared?.length) return;
+    let alive = true;
+    void ownerKeys()
+      .then((keys) =>
+        Promise.all(
+          shared.map(async (grant) => {
+            try {
+              const name = new TextDecoder().decode(
+                await unwrapBytes(grant.sealedName, keys.secretKey),
+              );
+              return [grant.grantId, name] as const;
+            } catch {
+              return null;
+            }
+          }),
+        ),
+      )
+      .then((opened) => {
+        if (!alive) return;
+        const next: Record<string, string> = {};
+        for (const entry of opened) {
+          if (entry?.[1]) next[entry[0]] = entry[1];
+        }
+        setNames(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [shared, ownerKeys]);
 
   const open = (grantId: string) =>
     router.push({ pathname: "/shared-folder/[id]", params: { id: grantId } });
@@ -43,7 +80,8 @@ export default function SharedWithMe() {
       ) : null}
       {(shared ?? []).map((folder) => {
         const owner = folder.ownerName || t("shared.someone");
-        const title = t("shared.folderFrom", { name: owner });
+        const title =
+          names[folder.grantId] ?? t("shared.folderFrom", { name: owner });
         return folder.available ? (
           <View
             key={folder.grantId}

@@ -9,6 +9,7 @@ import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { NamePrompt } from "@/features/home/name-prompt";
 import { VaultItemRow } from "@/features/vault/item-row";
 import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
@@ -74,6 +75,7 @@ export default function Home() {
       <Text variant="body-lg" color="text.muted">
         {t("home.subtitle")}
       </Text>
+      {firstName ? null : <NamePrompt />}
       <ListRow
         icon="shield-check"
         title={t("home.recoveryHealth")}
