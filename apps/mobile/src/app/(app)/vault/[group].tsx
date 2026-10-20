@@ -187,10 +187,9 @@ export default function VaultList() {
                   <Chip
                     key={key}
                     label={
-                      key === "all"
-                        ? t("vaultList.chipAll")
-                        : `${t(TITLE_KEY[key])} ${counts[key]}`
+                      key === "all" ? t("vaultList.chipAll") : t(TITLE_KEY[key])
                     }
+                    count={key === "all" ? undefined : counts[key]}
                     selected={key === list}
                     onPress={() => setList(key)}
                   />
