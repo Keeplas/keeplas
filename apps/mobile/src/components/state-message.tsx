@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { Button } from "./button";
+import { Button, type ButtonVariant } from "./button";
 import { BottomSheet } from "./sheet";
 import type { IconName } from "./icon";
 import { IconBadge, type Tone } from "./surfaces";
@@ -9,6 +9,7 @@ import { Text } from "./text";
 export interface StateAction {
   label: string;
   onPress: () => void;
+  variant?: ButtonVariant;
 }
 
 export interface StateMessageProps {
@@ -47,6 +48,7 @@ export function StateMessage({
       <View style={styles.spacer8} />
       {primary ? (
         <Button
+          variant={primary.variant}
           label={primary.label}
           onPress={primary.onPress}
           style={styles.full}
@@ -54,7 +56,7 @@ export function StateMessage({
       ) : null}
       {secondary ? (
         <Button
-          variant="text"
+          variant={secondary.variant ?? "text"}
           label={secondary.label}
           onPress={secondary.onPress}
           style={styles.full}
