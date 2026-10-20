@@ -53,7 +53,7 @@ export const requestVerification = mutation({
 
     for (const stale of recent) {
       if (stale.expiresAt > now) {
-        await ctx.db.delete(stale._id);
+        await ctx.db.patch(stale._id, { expiresAt: now });
       }
     }
 
