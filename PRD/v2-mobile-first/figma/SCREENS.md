@@ -1,6 +1,6 @@
 # Figma screen index
 
-File: [Keeplas · App Design (pixel-perfect)](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/) · last modified 2026-10-11T11:47:31Z · exported 2026-10-11.
+File: [Keeplas · App Design (pixel-perfect)](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/) · last modified 2026-10-20T14:22:14Z · exported 2026-10-20.
 
 Each row links to the Figma node and to the PNG export in `screens/`. Full on-screen copy per screen is in [`copy.md`](copy.md).
 
@@ -40,16 +40,15 @@ Each row links to the Figma node and to the PNG export in `screens/`. Full on-sc
 | M02-5 · Life check (EN)            | 393×852  | [10:1133](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=10-1133) | [png](screens/M02-5_Life_check_EN_.png)             |
 | M02-6 · Life check (FR)            | 393×852  | [10:1260](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=10-1260) | [png](screens/M02-6_Life_check_FR_.png)             |
 
-### 03 · Shared vault and QR (6)
+### 03 · Shared vault and QR (5)
 
-| Screen                     | Size    | Figma                                                                           | PNG                                         |
-| -------------------------- | ------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
-| M03-1 · Shared with me     | 393×852 | [11:1245](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1245) | [png](screens/M03-1_Shared_with_me.png)     |
-| M03-2 · Shared folder      | 393×960 | [11:1329](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1329) | [png](screens/M03-2_Shared_folder.png)      |
-| M03-3 · Not available yet  | 393×900 | [11:1435](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1435) | [png](screens/M03-3_Not_available_yet.png)  |
-| M03-4 · Scan QR code       | 393×852 | [11:1548](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1548) | [png](screens/M03-4_Scan_QR_code.png)       |
-| M03-5 · Link this browser? | 393×852 | [11:1620](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1620) | [png](screens/M03-5_Link_this_browser_.png) |
-| M03-6 · Browser connected  | 393×852 | [11:1683](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1683) | [png](screens/M03-6_Browser_connected.png)  |
+| Screen                    | Size    | Figma                                                                           | PNG                                        |
+| ------------------------- | ------- | ------------------------------------------------------------------------------- | ------------------------------------------ |
+| M03-1 · Shared with me    | 393×852 | [11:1245](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1245) | [png](screens/M03-1_Shared_with_me.png)    |
+| M03-2 · Shared folder     | 393×960 | [11:1329](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1329) | [png](screens/M03-2_Shared_folder.png)     |
+| M03-3 · Not available yet | 393×900 | [11:1435](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1435) | [png](screens/M03-3_Not_available_yet.png) |
+| M03-4 · Scan QR code      | 393×852 | [11:1548](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1548) | [png](screens/M03-4_Scan_QR_code.png)      |
+| M03-6 · Browser logged in | 393×852 | [11:1683](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=11-1683) | [png](screens/M03-6_Browser_logged_in.png) |
 
 ### 06 · People and sharing (6)
 
@@ -62,37 +61,37 @@ Each row links to the Figma node and to the PNG export in `screens/`. Full on-sc
 | M06-5 · Invitation acceptance | 393×1020 | [12:2038](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=12-2038) | [png](screens/M06-5_Invitation_acceptance.png) |
 | M06-6 · Access management     | 393×960  | [12:2174](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=12-2174) | [png](screens/M06-6_Access_management.png)     |
 
-### 07 · Capture and devices (9)
+### 07 · Capture and sessions (9)
 
-| Screen                                         | Size     | Figma                                                                           | PNG                                                          |
-| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| M07-1 · Add to Keeplas (bottom sheet)          | 393×852  | [13:2009](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2009) | [png](screens/M07-1_Add_to_Keeplas_bottom_sheet_.png)        |
-| M07-2 · Scan document (on-device encryption)   | 393×852  | [13:2133](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2133) | [png](screens/M07-2_Scan_document_on-device_encryption_.png) |
-| M07-3 · Voice note recording (on-device)       | 393×852  | [13:2194](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2194) | [png](screens/M07-3_Voice_note_recording_on-device_.png)     |
-| M07-4 · Securing item (sequential states)      | 393×852  | [13:2275](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2275) | [png](screens/M07-4_Securing_item_sequential_states_.png)    |
-| M07-5 · Item details (organize & access)       | 393×1000 | [13:2336](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2336) | [png](screens/M07-5_Item_details_organize_access_.png)       |
-| M07-6 · Sync & devices (link browser + backup) | 393×980  | [13:2438](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2438) | [png](screens/M07-6_Sync_devices_link_browser_backup_.png)   |
-| M07-7 · New note with attachments              | 393×1014 | [37:7749](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7749) | [png](screens/M07-7_New_note_with_attachments.png)           |
-| M07-8 · Review capture (add note & attach)     | 393×852  | [37:7884](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7884) | [png](screens/M07-8_Review_capture_add_note_attach_.png)     |
-| M07-9 · Create a note (typing)                 | 393×852  | [37:7987](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7987) | [png](screens/M07-9_Create_a_note_typing_.png)               |
+| Screen                                           | Size     | Figma                                                                           | PNG                                                          |
+| ------------------------------------------------ | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| M07-1 · Add to Keeplas (bottom sheet)            | 393×852  | [13:2009](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2009) | [png](screens/M07-1_Add_to_Keeplas_bottom_sheet_.png)        |
+| M07-2 · Scan document (on-device encryption)     | 393×852  | [13:2133](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2133) | [png](screens/M07-2_Scan_document_on-device_encryption_.png) |
+| M07-3 · Voice note recording (on-device)         | 393×852  | [13:2194](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2194) | [png](screens/M07-3_Voice_note_recording_on-device_.png)     |
+| M07-4 · Securing item (sequential states)        | 393×852  | [13:2275](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2275) | [png](screens/M07-4_Securing_item_sequential_states_.png)    |
+| M07-5 · Item details (organize & access)         | 393×1000 | [13:2336](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2336) | [png](screens/M07-5_Item_details_organize_access_.png)       |
+| M07-6 · Sync & sessions (browser login + backup) | 393×980  | [13:2438](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=13-2438) | [png](screens/M07-6_Sync_sessions_browser_login_backup_.png) |
+| M07-7 · New note with attachments                | 393×1014 | [37:7749](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7749) | [png](screens/M07-7_New_note_with_attachments.png)           |
+| M07-8 · Review capture (add note & attach)       | 393×852  | [37:7884](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7884) | [png](screens/M07-8_Review_capture_add_note_attach_.png)     |
+| M07-9 · Create a note (typing)                   | 393×852  | [37:7987](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=37-7987) | [png](screens/M07-9_Create_a_note_typing_.png)               |
 
-### 04 · Web app (sign-in, linking, dashboard) (5)
+### 04 · Web app (sign-in, QR login, dashboard) (5)
 
 | Screen                                                    | Size     | Figma                                                                           | PNG                                                                      |
 | --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | W04-1 · Sign in to Keeplas                                | 1440×900 | [14:2207](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=14-2207) | [png](screens/W04-1_Sign_in_to_Keeplas.png)                              |
-| W04-2 · Connect with my phone (QR)                        | 1440×900 | [14:2279](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=14-2279) | [png](screens/W04-2_Connect_with_my_phone_QR_.png)                       |
+| W04-2 · Log in with my phone (QR)                         | 1440×900 | [14:2279](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=14-2279) | [png](screens/W04-2_Log_in_with_my_phone_QR_.png)                        |
 | D-01 · Get the app (desktop visitor, mobile-only sign-up) | 1440×900 | [14:2547](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=14-2547) | [png](screens/D-01_Get_the_app_desktop_visitor_mobile-only_sign-up_.png) |
 | W04-3 · Dashboard                                         | 1440×900 | [14:2828](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=14-2828) | [png](screens/W04-3_Dashboard.png)                                       |
 | W04-3b · Dashboard · Add item menu                        | 1440×900 | [32:6870](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=32-6870) | [png](screens/W04-3b_Dashboard_Add_item_menu.png)                        |
 
-### 04/05 · Web app (shared, recovery, devices, life check) (6)
+### 04/05 · Web app (shared, recovery, sessions, life check) (6)
 
 | Screen                                | Size     | Figma                                                                             | PNG                                                   |
 | ------------------------------------- | -------- | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | W04-4 · Shared with me                | 1440×900 | [15:2447](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-2447)   | [png](screens/W04-4_Shared_with_me.png)               |
 | W04-5 · Recovery center (status only) | 1440×900 | [15:2588](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-2588)   | [png](screens/W04-5_Recovery_center_status_only_.png) |
-| W04-6 · Devices and security          | 1440×900 | [15:2724](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-2724)   | [png](screens/W04-6_Devices_and_security.png)         |
+| W04-6 · Sessions and security         | 1440×900 | [15:2724](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-2724)   | [png](screens/W04-6_Sessions_and_security.png)        |
 | W05-3 · Life check modal (EN)         | 1440×900 | [15:2878](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-2878)   | [png](screens/W05-3_Life_check_modal_EN_.png)         |
 | W05-4 · Life check modal (FR)         | 1440×900 | [15:3025](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=15-3025)   | [png](screens/W05-4_Life_check_modal_FR_.png)         |
 | W04-7 · Settings                      | 1440×900 | [61:18037](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=61-18037) | [png](screens/W04-7_Settings.png)                     |
@@ -148,6 +147,31 @@ Each row links to the Figma node and to the PNG export in `screens/`. Full on-sc
 | M08-3 · Privacy and security · Dark | 393×852 | [75:20043](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=75-20043) | [png](screens/M08-3_Privacy_and_security_Dark.png) |
 | M08-4 · New device detected · Dark  | 393×852 | [75:20056](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=75-20056) | [png](screens/M08-4_New_device_detected_Dark.png)  |
 | M08-7 · Settings · Dark             | 393×960 | [75:20080](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=75-20080) | [png](screens/M08-7_Settings_Dark.png)             |
+
+### 12 · Web app · Vault items (view & add) (9)
+
+| Screen                                       | Size     | Figma                                                                               | PNG                                                          |
+| -------------------------------------------- | -------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| W06-1 · My vault · Documents (list)          | 1440×900 | [118:7447](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7447)   | [png](screens/W06-1_My_vault_Documents_list_.png)            |
+| W06-2 · Document viewer (preview + details)  | 1440×900 | [118:7538](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7538)   | [png](screens/W06-2_Document_viewer_preview_details_.png)    |
+| W06-3 · Add a document (upload modal)        | 1440×900 | [118:7629](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7629)   | [png](screens/W06-3_Add_a_document_upload_modal_.png)        |
+| W06-4 · Securing your item (upload progress) | 1440×900 | [118:7720](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7720)   | [png](screens/W06-4_Securing_your_item_upload_progress_.png) |
+| W06-5 · New note with attachments            | 1440×900 | [118:7811](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7811)   | [png](screens/W06-5_New_note_with_attachments.png)           |
+| W06-6 · Record a voice note                  | 1440×900 | [118:7902](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7902)   | [png](screens/W06-6_Record_a_voice_note.png)                 |
+| W06-7 · Scan with my phone (QR handoff)      | 1440×900 | [118:7993](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=118-7993)   | [png](screens/W06-7_Scan_with_my_phone_QR_handoff_.png)      |
+| W06-8 · Photo preview                        | 1440×900 | [128:9626](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=128-9626)   | [png](screens/W06-8_Photo_preview.png)                       |
+| W06-9 · Video preview                        | 1440×900 | [128:11249](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=128-11249) | [png](screens/W06-9_Video_preview.png)                       |
+
+### 13 · Mobile · Vault items (view & add) (6)
+
+| Screen                              | Size    | Figma                                                                               | PNG                                                 |
+| ----------------------------------- | ------- | ----------------------------------------------------------------------------------- | --------------------------------------------------- |
+| M10-1 · Documents (list)            | 393×940 | [126:9459](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=126-9459)   | [png](screens/M10-1_Documents_list_.png)            |
+| M10-2 · Document viewer             | 393×940 | [126:9512](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=126-9512)   | [png](screens/M10-2_Document_viewer.png)            |
+| M10-3 · Add a document (from files) | 393×940 | [126:9565](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=126-9565)   | [png](screens/M10-3_Add_a_document_from_files_.png) |
+| M07-3b · Reset recording? (confirm) | 393×852 | [126:9618](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=126-9618)   | [png](screens/M07-3b_Reset_recording_confirm_.png)  |
+| M10-4 · Photo preview               | 393×940 | [128:12018](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=128-12018) | [png](screens/M10-4_Photo_preview.png)              |
+| M10-5 · Video preview               | 393×940 | [128:12994](https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/?node-id=128-12994) | [png](screens/M10-5_Video_preview.png)              |
 
 ## Landing page (built in keeplas-website)
 
