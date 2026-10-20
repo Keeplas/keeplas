@@ -3,7 +3,7 @@
 A frozen copy of the Figma file, so the v2 context survives without Figma access.
 
 - **File**: https://www.figma.com/design/pzH8HSOAC5KQzFtK0j8ApE/
-- **Snapshot**: 2026-10-11, file last modified 2026-10-11T11:47:31Z
+- **Snapshot**: 2026-10-20, file last modified 2026-10-20T14:22:14Z (`source/` .fig and `svg/` still from 2026-10-11)
 - **Source file**: [`source/keeplas-app-design.fig`](source/keeplas-app-design.fig), the full .fig export (2026-10-11). Opens in Figma (drag and drop) and works offline.
 - **Re-export**: Figma REST API (`GET /v1/files/:key/nodes`, `GET /v1/images/:key`) with a personal access token. Keep the token out of the repo. SVGs can also be regenerated offline from the .fig with [`tools/fig-to-svg.mjs`](tools/fig-to-svg.mjs).
 
@@ -16,7 +16,7 @@ If this snapshot and Figma disagree, Figma wins for visuals and [`../README.md`]
 | [`SCREENS.md`](SCREENS.md)   | Every page, section and screen, with node id, size, Figma link and PNG link                                                                                                                                                                                       |
 | [`copy.md`](copy.md)         | All text layers of every screen (EN copy source until i18n keys exist)                                                                                                                                                                                            |
 | [`tokens.json`](tokens.json) | Values from the Foundations page: light + dark (Noir) primitives and semantic tokens, type scale, spacing, radius                                                                                                                                                 |
-| `screens/`                   | PNG export (scale 1) of the 88 screens, 7 landing frames and Foundations                                                                                                                                                                                          |
+| `screens/`                   | PNG export (scale 1) of the 102 screens, 7 landing frames and Foundations                                                                                                                                                                                         |
 | `specs/`                     | One JSON per screen: node tree with auto-layout (direction, gap, padding, alignment, sizing), box (x/y/w/h relative to the screen), fills, strokes, effects, radius, text style, component instances and bound variables. **Build from these, not from the PNGs** |
 | `svg/`                       | **Code-ready SVGs extracted from the .fig**: 18 illustrations + 2 logos (see below)                                                                                                                                                                               |
 | `source/`                    | The original `.fig` file                                                                                                                                                                                                                                          |
