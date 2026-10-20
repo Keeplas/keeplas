@@ -19,6 +19,7 @@ export interface Draft {
   note: string;
   category?: VaultCategory;
   icon?: IconName;
+  folderId?: string;
   /** Scanned page images, bound into one PDF when saved. */
   pages: string[];
   files: CaptureFile[];

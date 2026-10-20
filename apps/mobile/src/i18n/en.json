@@ -473,7 +473,12 @@
     "iconAuto": "Automatic",
     "iconAutoBody": "Chosen from what you add",
     "iconSearch": "Search icons",
-    "iconNone": "No icon matches this search."
+    "iconNone": "No icon matches this search.",
+    "folderLabel": "Folder",
+    "noFolder": "No folder",
+    "folderShared": "{name} · shared with {people}",
+    "folderKeyTitle": "Couldn't share with this folder",
+    "folderKeyBody": "Keeplas couldn't verify {name}'s encryption key, so the item wasn't saved. Check your connection and try again, or choose No folder and move it later."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",

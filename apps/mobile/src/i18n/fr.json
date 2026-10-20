@@ -465,7 +465,12 @@
     "iconAuto": "Automatique",
     "iconAutoBody": "Choisie selon ce que vous ajoutez",
     "iconSearch": "Rechercher une icône",
-    "iconNone": "Aucune icône ne correspond à cette recherche."
+    "iconNone": "Aucune icône ne correspond à cette recherche.",
+    "folderLabel": "Dossier",
+    "noFolder": "Aucun dossier",
+    "folderShared": "{name} · partagé avec {people}",
+    "folderKeyTitle": "Partage avec ce dossier impossible",
+    "folderKeyBody": "Keeplas n'a pas pu vérifier la clé de chiffrement de {name}, l'élément n'a donc pas été enregistré. Vérifiez votre connexion et réessayez, ou choisissez Aucun dossier et déplacez-le plus tard."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",

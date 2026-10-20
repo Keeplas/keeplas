@@ -28,6 +28,8 @@ export interface SealedItem {
   encryptedMeta: string;
   encryptedContent: string;
   ownerWrappedDek: string;
+  folderId?: string;
+  recipientKeys?: { contactId: string; wrappedDek: string }[];
 }
 
 export interface OutboxEntry {

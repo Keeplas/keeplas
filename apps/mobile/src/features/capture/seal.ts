@@ -43,6 +43,10 @@ export interface CaptureDraft {
   files: CaptureFile[];
   category?: VaultCategory;
   icon?: string;
+  folder?: {
+    id: string;
+    recipients: { contactId: string; publicKey: string }[];
+  };
 }
 
 export interface SealIO {
@@ -69,6 +73,17 @@ export async function sealCapture(
       dek,
     ),
     encryptedContent: await encryptText(draft.note.trim(), dek),
+    ...(draft.folder
+      ? {
+          folderId: draft.folder.id,
+          recipientKeys: await Promise.all(
+            draft.folder.recipients.map(async (recipient) => ({
+              contactId: recipient.contactId,
+              wrappedDek: await wrapDek(dek, recipient.publicKey),
+            })),
+          ),
+        }
+      : {}),
   };
   const files: OutboxFile[] = [];
   for (const [index, file] of draft.files.entries()) {
