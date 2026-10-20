@@ -24,7 +24,7 @@ const DEV_TEST_CODE = "000000";
 function isDevTestPhone(phone: string): boolean {
   return (process.env.DEV_TEST_PHONES ?? "")
     .split(",")
-    .some((entry) => entry.trim() === phone);
+    .some((entry: string) => entry.trim() === phone);
 }
 
 function generateOtp(): string {
