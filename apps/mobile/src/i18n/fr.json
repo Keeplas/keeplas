@@ -609,7 +609,7 @@
     "new": "Nouveau dossier",
     "newBody": "Les noms des dossiers sont chiffrés comme leur contenu.",
     "name": "Nom du dossier",
-    "create": "Créer le dossier",
+    "create": "Créer l'accès privé",
     "items": "{n} éléments",
     "share": "Partager le dossier",
     "shareTitle": "Partager {name}",
@@ -622,7 +622,27 @@
     "timing": {
       "now": "Disponible maintenant",
       "after_verification": "Après vérification"
-    }
+    },
+    "shareScreenTitle": "Partager du contenu",
+    "shareScreenBody": "Donnez à certaines personnes l'accès à un dossier.",
+    "people": "Contacts",
+    "hasAccess": "A déjà accès",
+    "waiting": "En attente de l'acceptation de son invitation",
+    "addPerson": "Ajouter une autre personne",
+    "scope": "Portée de l'accès",
+    "scopeFolder": "Ce dossier uniquement",
+    "scopeHint": "Ils ne verront que les éléments de ce dossier.",
+    "timingTitle": "Moment de l'accès",
+    "timingNowTitle": "Maintenant",
+    "timingNowBody": "Donne l'accès dès qu'ils acceptent.",
+    "timingLaterTitle": "Après vérification et délai d'attente",
+    "timingLaterBody": "Deux contacts de confiance doivent confirmer, puis un délai de grâce de 72 heures s'applique.",
+    "noneAccepted": "Personne ne peut encore recevoir ce dossier. Les personnes apparaissent ici dès qu'elles acceptent votre invitation.",
+    "noneSelected": "Choisissez au moins une personne.",
+    "nobody": "Invitez d'abord quelqu'un. Dès qu'il accepte, vous pourrez partager ce dossier avec lui.",
+    "nameMissing": "Le nom de ce dossier n'a pas pu être lu sur ce téléphone. Verrouillez puis déverrouillez votre coffre, puis réessayez.",
+    "shareFailed": "L'accès pour {name} n'a pas pu être créé. Vérifiez votre connexion et réessayez.",
+    "itemsCount": "{n} éléments"
   },
   "search": {
     "label": "Rechercher dans le coffre",
@@ -705,6 +725,8 @@
     "filesBy": "{n} fichiers · Partagé par {name}",
     "sharedBy": "Partagé par {name}",
     "accessNow": "Accéder maintenant",
-    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance."
+    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance.",
+    "oneFolder": "1 dossier partagé avec vous",
+    "folders": "{n} dossiers partagés avec vous"
   }
 }

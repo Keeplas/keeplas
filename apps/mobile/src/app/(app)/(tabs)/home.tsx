@@ -34,6 +34,7 @@ export default function Home() {
   const viewer = useViewer();
   const contactsReady =
     useQuery(api.trusted_contacts.getContactsReady) ?? false;
+  const shared = useQuery(api.folders.sharedWithMe);
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
@@ -122,6 +123,18 @@ export default function Home() {
         }
         onPress={() => openList("inbox")}
       />
+      {shared && shared.length > 0 ? (
+        <ListRow
+          icon="people"
+          title={t("shared.title")}
+          description={
+            shared.length === 1
+              ? t("shared.oneFolder")
+              : t("shared.folders", { n: shared.length })
+          }
+          onPress={() => router.push("/shared")}
+        />
+      ) : null}
       {showRecent ? (
         <>
           <View style={styles.sectionHeader}>

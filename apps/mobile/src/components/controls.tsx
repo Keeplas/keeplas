@@ -97,10 +97,12 @@ export function Radio({
   selected,
   onPress,
   label,
+  description,
 }: {
   selected: boolean;
   onPress: () => void;
   label: string;
+  description?: string;
 }) {
   const { colors } = useTheme();
   return (
@@ -127,9 +129,18 @@ export function Radio({
           />
         ) : null}
       </View>
-      <Text variant="body" style={styles.flex}>
-        {label}
-      </Text>
+      {description ? (
+        <View style={styles.flex}>
+          <Text variant="label">{label}</Text>
+          <Text variant="body-sm" color="text.muted">
+            {description}
+          </Text>
+        </View>
+      ) : (
+        <Text variant="body" style={styles.flex}>
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }

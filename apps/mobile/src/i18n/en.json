@@ -617,7 +617,7 @@
     "new": "New folder",
     "newBody": "Folder names are encrypted like the items inside them.",
     "name": "Folder name",
-    "create": "Create folder",
+    "create": "Create private access",
     "items": "{n} items",
     "share": "Share folder",
     "shareTitle": "Share {name}",
@@ -630,7 +630,27 @@
     "timing": {
       "now": "Available now",
       "after_verification": "After verification"
-    }
+    },
+    "shareScreenTitle": "Share content",
+    "shareScreenBody": "Give specific people access to a folder.",
+    "people": "People",
+    "hasAccess": "Already has access",
+    "waiting": "Waiting for them to accept your invitation",
+    "addPerson": "Add another person",
+    "scope": "Access scope",
+    "scopeFolder": "This folder only",
+    "scopeHint": "They will only see the items in this folder.",
+    "timingTitle": "Access timing",
+    "timingNowTitle": "Now",
+    "timingNowBody": "Give access as soon as they accept.",
+    "timingLaterTitle": "After verification & waiting period",
+    "timingLaterBody": "Two trust contacts must confirm, followed by a 72-hour grace period.",
+    "noneAccepted": "Nobody can receive this folder yet. People appear here once they accept your invitation.",
+    "noneSelected": "Choose at least one person.",
+    "nobody": "Invite someone first. Once they accept, you can share this folder with them.",
+    "nameMissing": "This folder's name couldn't be read on this phone. Lock and unlock your vault, then try again.",
+    "shareFailed": "Access for {name} couldn't be created. Check your connection and try again.",
+    "itemsCount": "{n} items"
   },
   "search": {
     "label": "Search your vault",
@@ -720,6 +740,8 @@
     "filesBy": "{n} files · Shared by {name}",
     "sharedBy": "Shared by {name}",
     "accessNow": "Access now",
-    "later": "Access after verification. Requires two trust-contact confirmations."
+    "later": "Access after verification. Requires two trust-contact confirmations.",
+    "oneFolder": "1 folder shared with you",
+    "folders": "{n} folders shared with you"
   }
 }
