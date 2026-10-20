@@ -21,7 +21,7 @@ export default function People() {
   const { folders } = useVaultData();
 
   return (
-    <Screen header={<AppHeader />}>
+    <Screen edges={["top"]} header={<AppHeader />}>
       <View style={styles.heading}>
         <View style={styles.flex}>
           <Text variant="h1">{t("people.title")}</Text>

@@ -66,6 +66,7 @@ export default function Home() {
 
   return (
     <Screen
+      edges={["top"]}
       header={
         <AppHeader
           right={
