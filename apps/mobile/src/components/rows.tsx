@@ -68,11 +68,13 @@ export function DetailRows({ rows }: { rows: DetailRow[] }) {
 export function Chip({
   icon,
   label,
+  count,
   onPress,
   selected = false,
 }: {
   icon?: IconName;
   label: string;
+  count?: number;
   onPress: () => void;
   selected?: boolean;
 }) {
@@ -109,6 +111,25 @@ export function Chip({
       >
         {label}
       </Text>
+      {count !== undefined ? (
+        <View
+          style={[
+            styles.count,
+            {
+              backgroundColor: selected
+                ? colors["bg.surface"]
+                : colors["action.primary"],
+            },
+          ]}
+        >
+          <Text
+            variant="caption"
+            color={selected ? "text.primary" : "text.inverse"}
+          >
+            {count}
+          </Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -163,6 +184,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 18,
+  },
+  count: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   section: {
     flexDirection: "row",
