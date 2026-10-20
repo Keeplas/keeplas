@@ -7,6 +7,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import { VaultItemRow } from "@/features/vault/item-row";
 import {
   useVaultData,
@@ -19,6 +20,7 @@ export default function FolderDetails() {
   const router = useRouter();
   const { t } = useI18n();
   const { folders, items } = useVaultData();
+  const openAdd = useOpenAddSheet();
   const folder = folders?.find((row) => row.id === id);
   const folderItems = useMemo(
     () => items?.filter((item) => item.folderId === id) ?? [],
@@ -57,6 +59,11 @@ export default function FolderDetails() {
               {t("folders.items", { n: folderItems.length })}
             </Text>
             <Button
+              label={t("vaultList.addItem")}
+              onPress={() => openAdd({ folderId: id })}
+            />
+            <Button
+              variant="secondary"
               label={t("folders.share")}
               onPress={() =>
                 router.push({ pathname: "/folder/[id]/share", params: { id } })

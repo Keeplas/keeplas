@@ -169,6 +169,66 @@ describe("capture sealing + outbox upload", () => {
     expect(Buffer.from(out.bytes()).equals(Buffer.from(photo))).toBe(true);
   });
 
+  it("files a capture in a folder with a key for each person on it", async () => {
+    const owner = generateRecipientKeyPair();
+    const marie = generateRecipientKeyPair();
+    const paul = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e2",
+      {
+        title: "Family plan",
+        note: "",
+        files: [],
+        folder: {
+          id: "folder1",
+          recipients: [
+            {
+              contactId: "marie",
+              publicKey: serializePublicKey(marie.publicKey),
+            },
+            {
+              contactId: "paul",
+              publicKey: serializePublicKey(paul.publicKey),
+            },
+          ],
+        },
+      },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    const entry: OutboxEntry = {
+      id: "e2",
+      userId: "u1",
+      createdAt: 1,
+      status: "waiting",
+      attempts: 0,
+      ...sealed,
+    };
+    const server = fakeServer();
+    await uploadEntry(entry, memoryStore(), server.deps);
+
+    const [args] = server.created;
+    expect(args.folderId).toBe("folder1");
+    expect(args.recipientKeys?.map((key) => key.contactId)).toEqual([
+      "marie",
+      "paul",
+    ]);
+    for (const [index, person] of [marie, paul].entries()) {
+      const dek = await unwrapDek(
+        args.recipientKeys![index].wrappedDek,
+        person.secretKey,
+      );
+      expect(await decryptText(args.encryptedTitle, dek)).toBe("Family plan");
+    }
+  });
+
+  it("adds no folder or extra keys when none is chosen", async () => {
+    const owner = generateRecipientKeyPair();
+    const { entry } = await sealedEntry(owner);
+    expect(entry.item.folderId).toBeUndefined();
+    expect(entry.item.recipientKeys).toBeUndefined();
+  });
+
   it("resumes after a failure without re-uploading finished files", async () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);

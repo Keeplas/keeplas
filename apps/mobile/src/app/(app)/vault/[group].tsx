@@ -232,7 +232,7 @@ export default function VaultList() {
                   body={t("vaultList.emptyBody")}
                   primary={{
                     label: t("vaultList.addItem"),
-                    onPress: () => openAdd(presetCategory(list)),
+                    onPress: () => openAdd({ category: presetCategory(list) }),
                   }}
                 />
               </View>

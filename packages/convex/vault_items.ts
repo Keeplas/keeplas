@@ -332,6 +332,7 @@ export const createItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
+    folderId: v.optional(v.id("folders")),
     // Contacts the owner meant to share with but couldn't wrap yet (their key
     // isn't published). Stored so the owner's client can re-wrap later.
     pendingRecipients: v.optional(v.array(v.id("trusted_contacts"))),
@@ -363,17 +364,23 @@ export const createItem = auditedMutation({
       ? "trusted_only"
       : args.accessLevel;
 
+    const keyContacts = (args.recipientKeys ?? []).map((rk) => rk.contactId);
     if (
       sharedWithContacts.length > 0 ||
       sharedWithGroups.length > 0 ||
-      pendingRecipients.length > 0
+      pendingRecipients.length > 0 ||
+      keyContacts.length > 0
     ) {
       const own = await ctx.db
         .query("trusted_contacts")
         .withIndex("by_user", (q) => q.eq("userId", userId))
         .collect();
       const ownContactIds = new Set(own.map((c) => c._id));
-      for (const cid of [...sharedWithContacts, ...pendingRecipients]) {
+      for (const cid of [
+        ...sharedWithContacts,
+        ...pendingRecipients,
+        ...keyContacts,
+      ]) {
         if (!ownContactIds.has(cid)) {
           throw new Error("One or more contacts are not yours");
         }
@@ -386,11 +393,19 @@ export const createItem = auditedMutation({
       }
     }
 
+    if (args.folderId) {
+      const folder = await ctx.db.get(args.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new ConvexError("Folder not found");
+      }
+    }
+
     const now = Date.now();
 
     const itemId = await ctx.db.insert("vault_items", {
       vaultId: args.vaultId,
       userId,
+      folderId: args.folderId,
       encryptedMeta: args.encryptedMeta,
       encryptedTitle: args.encryptedTitle,
       encryptedContent: args.encryptedContent,

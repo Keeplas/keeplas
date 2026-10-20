@@ -44,11 +44,11 @@ const ITEMS: { kind: CaptureKind; icon: IconName; key: string }[] = [
  */
 function AddSheet({
   visible,
-  category,
+  preset,
   onDismiss,
 }: {
   visible: boolean;
-  category?: VaultCategory;
+  preset: AddPreset;
   onDismiss: () => void;
 }) {
   const router = useRouter();
@@ -69,7 +69,7 @@ function AddSheet({
     try {
       const files = await get();
       if (files.length === 0) return;
-      draftStore.start(kind, { files, category });
+      draftStore.start(kind, { files, ...preset });
       router.push("/capture/compose");
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
@@ -89,15 +89,15 @@ function AddSheet({
   function start(kind: CaptureKind) {
     switch (kind) {
       case "scan":
-        draftStore.start("scan", { category });
+        draftStore.start("scan", preset);
         router.push("/capture/scan");
         return;
       case "voice":
-        draftStore.start("voice", { category });
+        draftStore.start("voice", preset);
         router.push("/capture/voice");
         return;
       case "note":
-        draftStore.start("note", { category });
+        draftStore.start("note", preset);
         router.push("/capture/compose");
         return;
       case "video":
@@ -183,16 +183,21 @@ function AddSheet({
   );
 }
 
-const AddSheetContext = createContext<(category?: VaultCategory) => void>(
+export interface AddPreset {
+  category?: VaultCategory;
+  folderId?: string;
+}
+
+const AddSheetContext = createContext<(preset?: AddPreset) => void>(
   () => undefined,
 );
 
 /** Holds the Add sheet for the tabs; `useOpenAddSheet` opens it anywhere. */
 export function AddSheetProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
-  const [category, setCategory] = useState<VaultCategory>();
-  const show = useCallback((preset?: VaultCategory) => {
-    setCategory(preset);
+  const [preset, setPreset] = useState<AddPreset>({});
+  const show = useCallback((next?: AddPreset) => {
+    setPreset(next ?? {});
     setVisible(true);
   }, []);
   return (
@@ -200,7 +205,7 @@ export function AddSheetProvider({ children }: { children: ReactNode }) {
       {children}
       <AddSheet
         visible={visible}
-        category={category}
+        preset={preset}
         onDismiss={() => setVisible(false)}
       />
     </AddSheetContext.Provider>
