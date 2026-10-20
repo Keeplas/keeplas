@@ -284,3 +284,10 @@ export const welcomeSky = {
   glassBorder: "rgba(255, 255, 255, 0.6)",
   dropdownBorder: "rgba(255, 255, 255, 0.5)",
 } as const;
+
+export function singleLine<T extends { lineHeight?: number }>(
+  style: T,
+): Omit<T, "lineHeight"> {
+  const { lineHeight: _lineHeight, ...rest } = style;
+  return rest;
+}

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import {
   internalAction,
   internalMutation,
@@ -261,19 +261,19 @@ export const inviteContact = auditedMutation({
         (c) => (c.contactType ?? "trust") === "trust",
       ).length;
       if (trustCount >= MAX_TRUST_CONTACTS) {
-        throw new Error("Maximum of 3 trusted contacts reached");
+        throw new ConvexError("Maximum of 3 trusted contacts reached");
       }
     }
 
     // Dedup on whichever identifier(s) the invite carries.
     if (email && existing.some((c) => c.email?.toLowerCase() === email)) {
-      throw new Error("A contact with this email already exists");
+      throw new ConvexError("A contact with this email already exists");
     }
     if (
       phoneNumber &&
       existing.some((c) => normalizeE164(c.phoneNumber) === phoneNumber)
     ) {
-      throw new Error("A contact with this phone number already exists");
+      throw new ConvexError("A contact with this phone number already exists");
     }
 
     // C1: dedup by the distinct HUMAN, not just by channel. If this invitee
@@ -290,7 +290,7 @@ export const inviteContact = auditedMutation({
       inviteeUserId &&
       existing.some((c) => c.contactUserId === inviteeUserId)
     ) {
-      throw new Error("This person is already one of your contacts");
+      throw new ConvexError("This person is already one of your contacts");
     }
 
     const tokenBytes = new Uint8Array(32);
