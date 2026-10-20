@@ -679,5 +679,18 @@
       "yearAgo": "Il y a 1 an",
       "yearsAgo": "Il y a {n} ans"
     }
+  },
+  "shared": {
+    "title": "Partagé avec moi",
+    "body": "Dossiers partagés avec vous par vos contacts de confiance.",
+    "myVault": "Mon coffre",
+    "emptyTitle": "Rien n'a encore été partagé avec vous",
+    "emptyBody": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici.",
+    "someone": "Quelqu'un",
+    "folderFrom": "Dossier de {name}",
+    "filesBy": "{n} fichiers · Partagé par {name}",
+    "sharedBy": "Partagé par {name}",
+    "accessNow": "Accéder maintenant",
+    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance."
   }
 }
