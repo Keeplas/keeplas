@@ -296,27 +296,23 @@
     "expiredBody": "Codes work for 2 minutes. Refresh the page on your computer to get a new one.",
     "scanAgain": "Scan again",
     "cameraOffTitle": "Camera access is off",
-    "cameraOffBody": "Allow the camera to scan QR codes and capture documents."
+    "cameraOffBody": "Allow the camera to scan QR codes and capture documents.",
+    "failedTitle": "This browser couldn't be logged in",
+    "failedBody": "Check your connection, then scan the code again. If it keeps failing, refresh the page on your computer to get a new code."
   },
   "linkBrowser": {
-    "title": "Link this browser?",
-    "body": "A device is requesting access to your Keeplas account.",
     "unknownBrowser": "Unknown browser",
     "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
-    "confirmTitle": "Confirm it's you to approve",
-    "confirmBody": "Use your face, fingerprint or phone PIN.",
-    "warning": "Approve only if this is your computer.",
-    "approve": "Approve",
-    "cancel": "Cancel"
+    "confirmTitle": "Confirm it's you to log this browser in"
   },
   "connected": {
-    "title": "Browser connected",
-    "body": "Keeplas is now linked to this browser.",
-    "notified": "Your other devices have been notified. A notification was sent to all your connected devices.",
-    "manage": "Manage device access",
-    "manageBody": "View and revoke connected devices."
+    "title": "You're logged in",
+    "body": "Keeplas is now open in this browser. Log out anytime from your phone.",
+    "notified": "A notification was sent to your other devices.",
+    "manage": "Manage active sessions",
+    "manageBody": "See and end your browser sessions."
   },
   "blocked": {
     "title": "We stopped this link",

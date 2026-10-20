@@ -286,27 +286,23 @@
     "expiredBody": "Les codes sont valables 2 minutes. Actualisez la page sur votre ordinateur pour en obtenir un nouveau.",
     "scanAgain": "Scanner à nouveau",
     "cameraOffTitle": "L'accès à la caméra est désactivé",
-    "cameraOffBody": "Autorisez la caméra pour scanner des QR codes et capturer des documents."
+    "cameraOffBody": "Autorisez la caméra pour scanner des QR codes et capturer des documents.",
+    "failedTitle": "Ce navigateur n'a pas pu être connecté",
+    "failedBody": "Vérifiez votre connexion, puis scannez à nouveau le code. Si le problème persiste, actualisez la page sur votre ordinateur pour obtenir un nouveau code."
   },
   "linkBrowser": {
-    "title": "Associer ce navigateur ?",
-    "body": "Un appareil demande l'accès à votre compte Keeplas.",
     "unknownBrowser": "Navigateur inconnu",
     "deviceOn": "{browser} sur {os}",
     "unknownLocation": "Lieu inconnu",
     "today": "Aujourd'hui à {time}",
-    "confirmTitle": "Confirmez que c'est vous pour approuver",
-    "confirmBody": "Utilisez votre visage, votre empreinte ou le code de votre téléphone.",
-    "warning": "N'approuvez que s'il s'agit de votre ordinateur.",
-    "approve": "Approuver",
-    "cancel": "Annuler"
+    "confirmTitle": "Confirmez que c'est vous pour connecter ce navigateur"
   },
   "connected": {
-    "title": "Navigateur connecté",
-    "body": "Keeplas est maintenant associé à ce navigateur.",
-    "notified": "Vos autres appareils ont été prévenus. Une notification a été envoyée à tous vos appareils connectés.",
-    "manage": "Gérer l'accès des appareils",
-    "manageBody": "Voir et révoquer les appareils connectés."
+    "title": "Vous êtes connecté",
+    "body": "Keeplas est maintenant ouvert dans ce navigateur. Déconnectez-vous à tout moment depuis votre téléphone.",
+    "notified": "Une notification a été envoyée à vos autres appareils.",
+    "manage": "Gérer les sessions actives",
+    "manageBody": "Voir et fermer vos sessions de navigateur."
   },
   "blocked": {
     "title": "Nous avons bloqué cette association",
