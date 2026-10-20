@@ -1,11 +1,14 @@
 # Vercel attributes deploys to the commit author; a non-team author email
 # gets the deployment blocked. Fail fast before any other work.
 email="$(git config user.email)"
-if [ "$email" != "princenocode@gmail.com" ]; then
-  echo "✖ Commit author email '$email' is not the Vercel-recognized address (princenocode@gmail.com)."
-  echo "  Run: git config user.email princenocode@gmail.com"
-  exit 1
-fi
+case "$email" in
+  princenocode@gmail.com | mitahighislain@gmail.com) ;;
+  *)
+    echo "✖ Commit author email '$email' is not a Vercel team address."
+    echo "  Use princenocode@gmail.com or mitahighislain@gmail.com in git config user.email."
+    exit 1
+    ;;
+esac
 
 pnpm exec lint-staged
 pnpm check:zk
