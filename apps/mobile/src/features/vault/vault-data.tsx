@@ -25,6 +25,7 @@ import {
   unwrapOwnerDek,
   type OwnerKeys,
 } from "@/crypto/owner-keys";
+import { isIconName, type IconName } from "@/components/icon";
 import { contentKind, type ContentKind } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import type { OutboxEntry } from "@/features/outbox/outbox";
@@ -38,6 +39,7 @@ export interface VaultItemSummary {
   title: string | null;
   category: VaultCategory;
   kind: ContentKind;
+  icon?: IconName;
   attachments: number;
   durationSec?: number;
   folderId?: Id<"folders">;
@@ -142,9 +144,12 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
         const title = item.encryptedTitle
           ? await decryptText(item.encryptedTitle, key)
           : (item.title ?? "");
-        const category = item.encryptedMeta
-          ? parseItemMeta(await decryptText(item.encryptedMeta, key)).category
-          : (item.category ?? "other");
+        const meta = item.encryptedMeta
+          ? parseItemMeta(await decryptText(item.encryptedMeta, key))
+          : undefined;
+        const category = meta?.category ?? item.category ?? "other";
+        const icon =
+          meta?.icon && isIconName(meta.icon) ? meta.icon : undefined;
         const files = await Promise.all(
           item.files.map(async (file) =>
             file.encryptedMeta
@@ -156,6 +161,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
           ...base,
           title,
           category,
+          icon,
           kind: contentKind(files),
           attachments: files.length,
           durationSec: files.length === 1 ? files[0].durationSec : undefined,

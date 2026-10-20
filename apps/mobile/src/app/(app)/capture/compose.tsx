@@ -12,6 +12,7 @@ import { TextField } from "@/components/text-field";
 import { Text } from "@/components/text";
 import { type VaultCategory } from "@/crypto/item-meta";
 import { draftStore, useDraft } from "@/features/capture/draft-store";
+import { IconPicker } from "@/features/capture/icon-picker";
 import { pagesToPdf } from "@/features/capture/media";
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
@@ -19,11 +20,19 @@ import { useI18n } from "@/providers/i18n-provider";
 
 const CATEGORIES: VaultCategory[] = Object.values(GROUP_CATEGORY);
 
+const KIND_ICON = {
+  document: "document",
+  image: "photo",
+  audio: "mic",
+  video: "video",
+} as const;
+
 /** M07-7 / M07-8: review a capture, add text and seal it for the outbox. */
 export default function ComposeCapture() {
   const router = useRouter();
   const { t } = useI18n();
   const draft = useDraft();
+  const [picking, setPicking] = useState(false);
   const { capture } = useOutbox();
   const [busy, setBusy] = useState(false);
 
@@ -45,6 +54,7 @@ export default function ComposeCapture() {
         title: draft.title.trim() || t("capture.untitled"),
         note: draft.note,
         category: draft.category,
+        icon: draft.icon,
         files,
       });
       draftStore.reset();
@@ -98,6 +108,18 @@ export default function ComposeCapture() {
           />
         ))}
       </View>
+      <ListRow
+        icon={draft.icon ?? "flash"}
+        title={t("capture.iconLabel")}
+        description={draft.icon ? undefined : t("capture.iconAuto")}
+        onPress={() => setPicking(true)}
+      />
+      <IconPicker
+        visible={picking}
+        value={draft.icon}
+        onChange={(icon) => draftStore.update({ icon })}
+        onDismiss={() => setPicking(false)}
+      />
       {draft.pages.map((uri, index) => (
         <ListRow
           key={uri}
@@ -119,7 +141,7 @@ export default function ComposeCapture() {
       {draft.files.map((file) => (
         <ListRow
           key={file.uri}
-          icon="document"
+          icon={KIND_ICON[file.kind]}
           title={file.name}
           description={file.mimeType}
           trailing={

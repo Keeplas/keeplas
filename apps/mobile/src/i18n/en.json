@@ -466,7 +466,12 @@
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",
     "noCameraVideoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a video from your library instead.",
-    "noCameraPhotoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a photo from your library instead."
+    "noCameraPhotoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a photo from your library instead.",
+    "iconLabel": "Icon",
+    "iconAuto": "Automatic",
+    "iconAutoBody": "Chosen from what you add",
+    "iconSearch": "Search icons",
+    "iconNone": "No icon matches this search."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",

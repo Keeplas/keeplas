@@ -42,6 +42,7 @@ export interface CaptureDraft {
   note: string;
   files: CaptureFile[];
   category?: VaultCategory;
+  icon?: string;
 }
 
 export interface SealIO {
@@ -64,7 +65,7 @@ export async function sealCapture(
     ownerWrappedDek: await wrapDek(dek, ownerPublicKey),
     encryptedTitle: await encryptText(draft.title.trim(), dek),
     encryptedMeta: await encryptText(
-      itemMetaJson(draft.category ?? INBOX),
+      itemMetaJson(draft.category ?? INBOX, draft.icon),
       dek,
     ),
     encryptedContent: await encryptText(draft.note.trim(), dek),
