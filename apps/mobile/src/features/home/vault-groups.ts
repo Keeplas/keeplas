@@ -67,6 +67,22 @@ export function groupOf(category: string): VaultGroupKey | null {
   );
 }
 
+export type VaultListKey = VaultGroupKey | "inbox" | "all";
+
+export function isVaultListKey(value: string): value is VaultListKey {
+  return (
+    value === "inbox" ||
+    value === "all" ||
+    VAULT_GROUPS.some((g) => g.key === value)
+  );
+}
+
+export function inVaultList(category: string, list: VaultListKey): boolean {
+  if (list === "all") return true;
+  if (list === "inbox") return category === "inbox";
+  return groupOf(category) === list;
+}
+
 /** Sum per-category counts into the four Home groups. */
 export function groupCategoryCounts(
   counts: Record<string, number>,

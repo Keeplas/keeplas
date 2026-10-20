@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -19,6 +20,7 @@ import {
   greetingKey,
   groupCategoryCounts,
   VAULT_GROUPS,
+  type VaultListKey,
 } from "@/features/home/vault-groups";
 import { readPreference } from "@/lib/preferences";
 import { useI18n } from "@/providers/i18n-provider";
@@ -30,15 +32,18 @@ import { colors as palette, radius, withAlpha } from "@/theme";
 export default function Home() {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const router = useRouter();
   const viewer = useViewer();
   const contactsReady =
     useQuery(api.trusted_contacts.getContactsReady) ?? false;
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
-  useEffect(() => {
-    readPreference("kitExported").then((v) => setKitExported(v === "true"));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      readPreference("kitExported").then((v) => setKitExported(v === "true"));
+    }, []),
+  );
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
@@ -54,7 +59,8 @@ export default function Home() {
   );
   // Ways back in: this phone, 2 ready trust contacts, the recovery kit.
   const ready = 1 + (contactsReady ? 1 : 0) + (kitExported ? 1 : 0);
-  const soon = () => Alert.alert(t("home.yourVault"), t("common.comingSoon"));
+  const openList = (group: VaultListKey) =>
+    router.push({ pathname: "/vault/[group]", params: { group } });
   const itemCount = (count: number) =>
     count === 1 ? t("home.item") : t("home.items", { count });
 
@@ -84,14 +90,15 @@ export default function Home() {
         icon="shield-check"
         title={t("home.recoveryHealth")}
         description={t("home.healthReady", { n: ready })}
-        onPress={soon}
+        onPress={() => router.push("/recovery")}
       />
       <Text variant="label">{t("home.yourVault")}</Text>
       <View style={styles.tiles}>
         {VAULT_GROUPS.map((group) => (
           <Pressable
             key={group.key}
-            onPress={soon}
+            accessibilityRole="button"
+            onPress={() => openList(group.key)}
             style={[
               styles.tile,
               {
@@ -120,13 +127,19 @@ export default function Home() {
         icon="mail"
         title={t("home.inbox")}
         description={inboxCount ? itemCount(inboxCount) : t("home.inboxBody")}
-        onPress={soon}
+        onPress={() => openList("inbox")}
       />
       <View style={styles.sectionHeader}>
         <Text variant="label">{t("home.recent")}</Text>
-        <Text variant="body-sm" color="text.link">
-          {t("common.seeAll")}
-        </Text>
+        <Pressable
+          accessibilityRole="link"
+          hitSlop={12}
+          onPress={() => openList("all")}
+        >
+          <Text variant="body-sm" color="text.link">
+            {t("common.seeAll")}
+          </Text>
+        </Pressable>
       </View>
       {pending.slice(0, 3).map(({ entry, title }) => (
         <ListRow
