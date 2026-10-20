@@ -74,6 +74,17 @@ export const getItemSummaries = query({
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
     const items = await getActiveItems(ctx, userId);
+    const files = await ctx.db
+      .query("vault_item_files")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const filesByItem = new Map<Id<"vault_items">, typeof files>();
+    for (const file of files.sort((a, b) => a.order - b.order)) {
+      filesByItem.set(file.itemId, [
+        ...(filesByItem.get(file.itemId) ?? []),
+        file,
+      ]);
+    }
     return items.map((item) => ({
       _id: item._id,
       folderId: item.folderId,
@@ -84,6 +95,11 @@ export const getItemSummaries = query({
       encryptedTitle: item.encryptedTitle,
       encryptedMeta: item.encryptedMeta,
       ownerWrappedDek: item.ownerWrappedDek,
+      files: (filesByItem.get(item._id) ?? []).map((file) => ({
+        encryptedMeta: file.encryptedMeta,
+        kind: file.kind,
+        durationSec: file.durationSec,
+      })),
     }));
   },
 });

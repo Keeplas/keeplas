@@ -1,4 +1,5 @@
 import {
+  contentKind,
   greetingKey,
   groupCategoryCounts,
   groupOf,
@@ -148,6 +149,17 @@ describe("home groups", () => {
     expect(isVaultListKey("inbox")).toBe(true);
     expect(isVaultListKey("all")).toBe(true);
     expect(isVaultListKey("passwords")).toBe(false);
+  });
+
+  it("types an item by its attachments", () => {
+    expect(contentKind([])).toBe("notes");
+    expect(contentKind([{ kind: "document" }])).toBe("documents");
+    expect(contentKind([{ kind: "image" }])).toBe("photos");
+    expect(contentKind([{ kind: "audio" }])).toBe("voice");
+    expect(contentKind([{ kind: "video" }])).toBe("videos");
+    expect(contentKind([{ kind: "image" }, { kind: "document" }])).toBe(
+      "notes",
+    );
   });
 
   it("greets by time of day", () => {
