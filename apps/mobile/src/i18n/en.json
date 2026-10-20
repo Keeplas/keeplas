@@ -462,7 +462,11 @@
       "failedBody": "Your encrypted copy is still safe on this phone. Try again when you're ready.",
       "doneTitle": "Item secured",
       "doneBody": "The encrypted item is now in your vault."
-    }
+    },
+    "recordVideo": "Record a video",
+    "noCameraTitle": "No camera on this device",
+    "noCameraVideoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a video from your library instead.",
+    "noCameraPhotoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a photo from your library instead."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",

@@ -71,7 +71,7 @@
         "expo-camera",
         {
           "cameraPermission": "Keeplas uses the camera to scan documents and the QR code that links a computer to your account.",
-          "microphonePermission": "Keeplas uses the microphone to record the sound of videos you add to your vault.",
+          "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first.",
           "recordAudioAndroid": true
         }
       ],
@@ -80,13 +80,13 @@
         {
           "photosPermission": "Keeplas lets you add photos and videos from your library to your vault. They are encrypted on this phone first.",
           "cameraPermission": "Keeplas uses the camera to take photos and videos for your vault.",
-          "microphonePermission": "Keeplas uses the microphone to record the sound of videos you add to your vault."
+          "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first."
         }
       ],
       [
         "expo-audio",
         {
-          "microphonePermission": "Keeplas uses the microphone to record voice notes. They are encrypted on this phone first."
+          "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first."
         }
       ],
       "expo-video",
