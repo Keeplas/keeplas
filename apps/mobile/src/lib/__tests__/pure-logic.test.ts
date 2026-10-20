@@ -8,6 +8,7 @@ import {
   isVaultListKey,
   listCounts,
   presetCategory,
+  recentItems,
   type ContentKind,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
@@ -204,6 +205,22 @@ describe("home groups", () => {
     expect(presetCategory("inbox")).toBe("inbox");
     expect(presetCategory("all")).toBeUndefined();
     expect(presetCategory("photos")).toBeUndefined();
+  });
+
+  it("keeps only items updated in the last 30 days, newest first, at most 3", () => {
+    const now = Date.UTC(2026, 9, 20);
+    const day = 86_400_000;
+    const at = (id: string, daysAgo: number) => ({
+      id,
+      updatedAt: now - daysAgo * day,
+    });
+    expect(
+      recentItems(
+        [at("old", 31), at("b", 2), at("a", 0), at("c", 5), at("d", 9)],
+        now,
+      ).map((item) => item.id),
+    ).toEqual(["a", "b", "c"]);
+    expect(recentItems([at("old", 40)], now)).toEqual([]);
   });
 
   it("greets by time of day", () => {

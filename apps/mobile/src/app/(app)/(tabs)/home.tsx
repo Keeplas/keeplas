@@ -5,7 +5,6 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
-import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
@@ -15,9 +14,11 @@ import { useVaultData } from "@/features/vault/vault-data";
 import {
   greetingKey,
   listCounts,
+  recentItems,
   VAULT_GROUPS,
   type VaultListKey,
 } from "@/features/home/vault-groups";
+import { relativeDay } from "@/lib/format";
 import { readPreference } from "@/lib/preferences";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -51,20 +52,20 @@ export default function Home() {
     router.push({ pathname: "/vault/[group]", params: { group } });
   const itemCount = (count: number) =>
     count === 1 ? t("home.item") : t("home.items", { count });
+  const recent = useMemo(() => recentItems(items ?? []), [items]);
+  const recentPending = pending.slice(0, 3);
+  const showRecent = recent.length + recentPending.length > 0;
+  const updated = (at: number) => {
+    const when = relativeDay(at);
+    return t("home.updated", {
+      when: t(`vaultList.time.${when.key}`, { n: when.n }).toLocaleLowerCase(),
+    });
+  };
 
   return (
     <Screen
       edges={["top"]}
-      header={
-        <AppHeader
-          right={
-            <View style={styles.headerRight}>
-              <Icon name="bell" size={22} />
-              <LanguageDropdown />
-            </View>
-          }
-        />
-      }
+      header={<AppHeader right={<LanguageDropdown />} />}
       gap={12}
     >
       <Text variant="h1">
@@ -115,48 +116,52 @@ export default function Home() {
       <ListRow
         icon="mail"
         title={t("home.inbox")}
-        description={inboxCount ? itemCount(inboxCount) : t("home.inboxBody")}
+        description={
+          inboxCount === 0
+            ? t("home.inboxBody")
+            : inboxCount === 1
+              ? t("home.toOrganizeOne")
+              : t("home.toOrganize", { count: inboxCount })
+        }
         onPress={() => openList("inbox")}
       />
-      <View style={styles.sectionHeader}>
-        <Text variant="label">{t("home.recent")}</Text>
-        <Pressable
-          accessibilityRole="link"
-          hitSlop={12}
-          onPress={() => openList("all")}
-        >
-          <Text variant="body-sm" color="text.link">
-            {t("common.seeAll")}
-          </Text>
-        </Pressable>
-      </View>
-      {pending.slice(0, 3).map(({ entry, title }) => (
-        <ListRow
-          key={entry.id}
-          icon="cloud-upload"
-          title={title ?? t("capture.untitled")}
-          description={t(`home.outbox.${entry.status}`)}
-        />
-      ))}
-      {(items ?? []).slice(0, 5).map((item) => (
-        <VaultItemRow
-          key={item.id}
-          id={item.id}
-          title={item.title ?? t("item.decrypting")}
-          description={t(`capture.category.${item.category}`)}
-        />
-      ))}
-      {items?.length === 0 && pending.length === 0 ? (
-        <Text variant="body-sm" color="text.muted">
-          {t("home.recentEmpty")}
-        </Text>
+      {showRecent ? (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text variant="label">{t("home.recent")}</Text>
+            <Pressable
+              accessibilityRole="link"
+              hitSlop={12}
+              onPress={() => openList("all")}
+            >
+              <Text variant="body-sm" color="text.link">
+                {t("common.seeAll")}
+              </Text>
+            </Pressable>
+          </View>
+          {recentPending.map(({ entry, title }) => (
+            <ListRow
+              key={entry.id}
+              icon="cloud-upload"
+              title={title ?? t("capture.untitled")}
+              description={t(`home.outbox.${entry.status}`)}
+            />
+          ))}
+          {recent.map((item) => (
+            <VaultItemRow
+              key={item.id}
+              id={item.id}
+              title={item.title ?? t("item.decrypting")}
+              description={updated(item.updatedAt)}
+            />
+          ))}
+        </>
       ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 14 },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   tile: {
     width: "48.5%",

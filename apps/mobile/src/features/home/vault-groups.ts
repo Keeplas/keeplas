@@ -146,6 +146,20 @@ export function listCounts(
   return counts;
 }
 
+const RECENT_DAYS = 30;
+const RECENT_MAX = 3;
+
+export function recentItems<T extends { updatedAt: number }>(
+  items: readonly T[],
+  now: number = Date.now(),
+): T[] {
+  const since = now - RECENT_DAYS * 86_400_000;
+  return items
+    .filter((item) => item.updatedAt >= since)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, RECENT_MAX);
+}
+
 /** "Good morning / afternoon / evening" key for a local hour. */
 export function greetingKey(hour: number): string {
   if (hour < 12) return "home.greetingMorning";
