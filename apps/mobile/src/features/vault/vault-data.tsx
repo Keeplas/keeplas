@@ -15,7 +15,6 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { decryptText } from "@/crypto/envelope";
 import {
-  INBOX,
   legacyFileMeta,
   parseFileMeta,
   parseItemMeta,
@@ -296,17 +295,3 @@ export function useVaultData(): VaultDataValue {
   }
   return value;
 }
-
-/** Per-category counts (inbox apart) for the Home tiles. */
-export function categoryCounts(
-  items: VaultItemSummary[],
-): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const item of items) {
-    counts[item.category] = (counts[item.category] ?? 0) + 1;
-  }
-  return counts;
-}
-
-export const isInbox = (item: { category: VaultCategory }) =>
-  item.category === INBOX;

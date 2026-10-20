@@ -1,15 +1,18 @@
+import type { VaultCategory } from "@/crypto/item-meta";
 import {
+  bucketOf,
   contentKind,
   greetingKey,
-  groupCategoryCounts,
   groupOf,
   inVaultList,
   isVaultListKey,
+  listCounts,
   presetCategory,
+  type ContentKind,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
 import { classifyCodeError } from "../errors";
-import { formatBytes } from "../format";
+import { formatBytes, relativeDay } from "../format";
 import {
   examplePlaceholder,
   flagEmoji,
@@ -105,26 +108,36 @@ describe("formatters", () => {
   });
 });
 
+describe("relative day", () => {
+  const now = new Date(2026, 9, 20, 18, 0).getTime();
+  const at = (days: number) => now - days * 86_400_000;
+
+  it("names recent days, then weeks, months and years", () => {
+    expect(relativeDay(now - 3_600_000, now)).toEqual({ key: "today", n: 0 });
+    expect(relativeDay(at(1), now)).toEqual({ key: "yesterday", n: 1 });
+    expect(relativeDay(at(2), now)).toEqual({ key: "daysAgo", n: 2 });
+    expect(relativeDay(at(7), now)).toEqual({ key: "weekAgo", n: 1 });
+    expect(relativeDay(at(15), now)).toEqual({ key: "weeksAgo", n: 2 });
+    expect(relativeDay(at(31), now)).toEqual({ key: "monthAgo", n: 1 });
+    expect(relativeDay(at(200), now)).toEqual({ key: "monthsAgo", n: 6 });
+    expect(relativeDay(at(400), now)).toEqual({ key: "yearAgo", n: 1 });
+    expect(relativeDay(at(800), now)).toEqual({ key: "yearsAgo", n: 2 });
+  });
+});
+
 describe("home groups", () => {
-  it("sums categories into the four tiles, unknown ones into Other", () => {
-    expect(
-      groupCategoryCounts({
-        legal_document: 2,
-        credential: 3,
-        wishes: 1,
-        other: 1,
-        mystery: 4,
-      }),
-    ).toEqual({ documents: 2, accounts: 3, instructions: 1, other: 5 });
+  const item = (category: string, kind: ContentKind = "notes") => ({
+    category: category as VaultCategory,
+    kind,
   });
 
-  it("leaves the encrypted inbox out of the tiles", () => {
-    expect(groupCategoryCounts({ inbox: 3, property: 1 })).toEqual({
-      documents: 1,
-      accounts: 0,
-      instructions: 0,
-      other: 0,
-    });
+  it("puts each item in one list: inbox, accounts, instructions or its type", () => {
+    expect(bucketOf(item("inbox", "photos"))).toBe("inbox");
+    expect(bucketOf(item("credential", "documents"))).toBe("accounts");
+    expect(bucketOf(item("wishes", "voice"))).toBe("instructions");
+    expect(bucketOf(item("legal_document", "documents"))).toBe("documents");
+    expect(bucketOf(item("property", "photos"))).toBe("photos");
+    expect(bucketOf(item("mystery", "notes"))).toBe("notes");
   });
 
   it("maps a category to its tile", () => {
@@ -134,21 +147,41 @@ describe("home groups", () => {
     expect(groupOf("inbox")).toBeNull();
   });
 
-  it("filters a vault list by tile, inbox or all", () => {
-    expect(inVaultList("legal_document", "documents")).toBe(true);
-    expect(inVaultList("legal_document", "accounts")).toBe(false);
-    expect(inVaultList("mystery", "other")).toBe(true);
-    expect(inVaultList("inbox", "inbox")).toBe(true);
-    expect(inVaultList("inbox", "other")).toBe(false);
-    expect(inVaultList("credential", "inbox")).toBe(false);
-    expect(inVaultList("inbox", "all")).toBe(true);
-    expect(inVaultList("wishes", "all")).toBe(true);
+  it("filters a vault list, with Other as a category filter", () => {
+    expect(inVaultList(item("legal_document", "documents"), "documents")).toBe(
+      true,
+    );
+    expect(inVaultList(item("credential", "documents"), "documents")).toBe(
+      false,
+    );
+    expect(inVaultList(item("contacts", "photos"), "other")).toBe(true);
+    expect(inVaultList(item("contacts", "photos"), "photos")).toBe(true);
+    expect(inVaultList(item("inbox", "voice"), "voice")).toBe(false);
+    expect(inVaultList(item("inbox", "voice"), "all")).toBe(true);
+  });
+
+  it("counts every list for the chips and the Home tiles", () => {
+    const counts = listCounts([
+      item("legal_document", "documents"),
+      item("credential"),
+      item("contacts", "photos"),
+      item("inbox", "voice"),
+    ]);
+    expect(counts).toMatchObject({
+      all: 4,
+      documents: 1,
+      accounts: 1,
+      photos: 1,
+      other: 1,
+      inbox: 1,
+      voice: 0,
+      notes: 0,
+    });
   });
 
   it("accepts only known vault list keys from a route", () => {
-    expect(isVaultListKey("documents")).toBe(true);
-    expect(isVaultListKey("inbox")).toBe(true);
-    expect(isVaultListKey("all")).toBe(true);
+    for (const key of ["documents", "notes", "voice", "other", "inbox", "all"])
+      expect(isVaultListKey(key)).toBe(true);
     expect(isVaultListKey("passwords")).toBe(false);
   });
 
@@ -170,6 +203,7 @@ describe("home groups", () => {
     expect(presetCategory("other")).toBe("other");
     expect(presetCategory("inbox")).toBe("inbox");
     expect(presetCategory("all")).toBeUndefined();
+    expect(presetCategory("photos")).toBeUndefined();
   });
 
   it("greets by time of day", () => {

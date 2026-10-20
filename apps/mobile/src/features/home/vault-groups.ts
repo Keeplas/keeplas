@@ -81,14 +81,23 @@ export function contentKind(files: readonly { kind: FileKind }[]): ContentKind {
   return files.length === 1 ? KIND_OF_FILE[files[0].kind] : "notes";
 }
 
-export type VaultListKey = VaultGroupKey | "inbox" | "all";
+export const VAULT_LISTS = [
+  "all",
+  "documents",
+  "accounts",
+  "instructions",
+  "notes",
+  "photos",
+  "voice",
+  "videos",
+  "other",
+  "inbox",
+] as const;
+
+export type VaultListKey = (typeof VAULT_LISTS)[number];
 
 export function isVaultListKey(value: string): value is VaultListKey {
-  return (
-    value === "inbox" ||
-    value === "all" ||
-    VAULT_GROUPS.some((g) => g.key === value)
-  );
+  return (VAULT_LISTS as readonly string[]).includes(value);
 }
 
 export const GROUP_CATEGORY = {
@@ -100,30 +109,41 @@ export const GROUP_CATEGORY = {
 } as const satisfies Record<VaultGroupKey | "inbox", VaultCategory>;
 
 export function presetCategory(list: VaultListKey): VaultCategory | undefined {
-  return list === "all" ? undefined : GROUP_CATEGORY[list];
+  return list in GROUP_CATEGORY
+    ? GROUP_CATEGORY[list as keyof typeof GROUP_CATEGORY]
+    : undefined;
 }
 
-export function inVaultList(category: string, list: VaultListKey): boolean {
+interface Listed {
+  category: string;
+  kind: ContentKind;
+}
+
+export function bucketOf(item: Listed): Exclude<VaultListKey, "all" | "other"> {
+  if (item.category === "inbox") return "inbox";
+  const group = groupOf(item.category);
+  if (group === "accounts" || group === "instructions") return group;
+  return item.kind;
+}
+
+export function inVaultList(item: Listed, list: VaultListKey): boolean {
   if (list === "all") return true;
-  if (list === "inbox") return category === "inbox";
-  return groupOf(category) === list;
+  if (list === "other") return groupOf(item.category) === "other";
+  return bucketOf(item) === list;
 }
 
-/** Sum per-category counts into the four Home groups. */
-export function groupCategoryCounts(
-  counts: Record<string, number>,
-): Record<VaultGroupKey, number> {
-  const totals: Record<VaultGroupKey, number> = {
-    documents: 0,
-    accounts: 0,
-    instructions: 0,
-    other: 0,
-  };
-  for (const [category, count] of Object.entries(counts)) {
-    const group = groupOf(category);
-    if (group) totals[group] += count;
+export function listCounts(
+  items: readonly Listed[],
+): Record<VaultListKey, number> {
+  const counts = Object.fromEntries(
+    VAULT_LISTS.map((key) => [key, 0]),
+  ) as Record<VaultListKey, number>;
+  for (const item of items) {
+    counts.all += 1;
+    counts[bucketOf(item)] += 1;
+    if (groupOf(item.category) === "other") counts.other += 1;
   }
-  return totals;
+  return counts;
 }
 
 /** "Good morning / afternoon / evening" key for a local hour. */
