@@ -6,7 +6,7 @@ import { BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
-import { radius, type } from "@/theme";
+import { radius, singleLine, type } from "@/theme";
 import { searchIcons } from "./icon-catalog";
 
 export function IconPicker({
@@ -62,7 +62,11 @@ export function IconPicker({
           placeholderTextColor={colors["text.subtle"]}
           accessibilityLabel={t("capture.iconSearch")}
           autoCorrect={false}
-          style={[type.body, styles.input, { color: colors["text.primary"] }]}
+          style={[
+            singleLine(type.body),
+            styles.input,
+            { color: colors["text.primary"] },
+          ]}
         />
       </View>
       <Pressable

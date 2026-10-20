@@ -1,7 +1,7 @@
 import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
 
 import { useTheme } from "@/providers/theme-provider";
-import { radius, type } from "@/theme";
+import { radius, singleLine, type } from "@/theme";
 import { Text } from "./text";
 
 /** Labelled input in the Phone Input frame (52 pt, radius 14, Body L). */
@@ -21,7 +21,7 @@ export function TextField({
         multiline={multiline}
         {...input}
         style={[
-          type["body-lg"],
+          multiline ? type["body-lg"] : singleLine(type["body-lg"]),
           styles.input,
           multiline && styles.multiline,
           {

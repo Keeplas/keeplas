@@ -558,8 +558,8 @@
     "addTitle": "Add trusted person",
     "addBody": "Invite up to 3 people. Any 2 can help you recover access and confirm a death.",
     "name": "Name",
-    "email": "Email (optional)",
-    "phone": "Phone (optional)",
+    "email": "Email",
+    "phone": "Phone number",
     "sendInvite": "Send invitation",
     "status": {
       "pending": "Invited",
@@ -591,7 +591,11 @@
     "beneficiariesScreenBody": "They receive only the content you assign them, through the folders you share.",
     "noBeneficiaries": "No beneficiaries yet. Share a folder to choose what someone receives.",
     "sharedFolders": "Folders you share",
-    "onlyYou": "Only you"
+    "onlyYou": "Only you",
+    "emailInvalid": "Enter a valid email address, like name@example.com.",
+    "maxReached": "You already have 3 trust contacts. Replace one to invite someone new.",
+    "alreadyInvited": "This person is already one of your contacts.",
+    "inviteFailed": "The invitation couldn't be sent. Check your connection and try again."
   },
   "folders": {
     "title": "Folder",

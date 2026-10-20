@@ -34,7 +34,7 @@ import {
 import { formatDuration, relativeDay } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
-import { radius, type } from "@/theme";
+import { radius, singleLine, type } from "@/theme";
 
 const TITLE_KEY: Record<VaultListKey, string> = {
   all: "vaultList.all",
@@ -170,7 +170,7 @@ export default function VaultList() {
                   accessibilityLabel={t("vaultList.search")}
                   returnKeyType="search"
                   style={[
-                    type.body,
+                    singleLine(type.body),
                     styles.input,
                     { color: colors["text.primary"] },
                   ]}

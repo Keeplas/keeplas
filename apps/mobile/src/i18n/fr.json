@@ -550,8 +550,8 @@
     "addTitle": "Ajouter un contact",
     "addBody": "Invitez jusqu'à 3 personnes. Deux peuvent vous aider à récupérer l'accès et confirmer un décès.",
     "name": "Nom",
-    "email": "E-mail (facultatif)",
-    "phone": "Téléphone (facultatif)",
+    "email": "E-mail",
+    "phone": "Numéro de téléphone",
     "sendInvite": "Envoyer l'invitation",
     "status": {
       "pending": "Invité",
@@ -583,7 +583,11 @@
     "beneficiariesScreenBody": "Ils reçoivent uniquement les contenus que vous leur attribuez, via les dossiers que vous partagez.",
     "noBeneficiaries": "Aucun bénéficiaire pour l'instant. Partagez un dossier pour choisir ce qu'une personne reçoit.",
     "sharedFolders": "Dossiers que vous partagez",
-    "onlyYou": "Vous seul"
+    "onlyYou": "Vous seul",
+    "emailInvalid": "Saisissez une adresse e-mail valide, par exemple nom@exemple.com.",
+    "maxReached": "Vous avez déjà 3 contacts de confiance. Remplacez-en un pour inviter quelqu'un d'autre.",
+    "alreadyInvited": "Cette personne fait déjà partie de vos contacts.",
+    "inviteFailed": "L'invitation n'a pas pu être envoyée. Vérifiez votre connexion et réessayez."
   },
   "folders": {
     "title": "Dossier",
