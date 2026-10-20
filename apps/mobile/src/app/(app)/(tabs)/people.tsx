@@ -1,15 +1,12 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useQuery } from "convex/react";
-import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
-import { SectionHeader } from "@/components/rows";
 import { Screen } from "@/components/screen";
-import { IconTile, ListRow, StatusChip } from "@/components/surfaces";
+import { IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -19,7 +16,6 @@ import { radius, type SemanticToken } from "@/theme";
 export default function People() {
   const router = useRouter();
   const { t } = useI18n();
-  const shared = useQuery(api.folders.sharedWithMe);
 
   return (
     <Screen header={<AppHeader right={<LanguageDropdown />} />} gap={14}>
@@ -45,40 +41,6 @@ export default function People() {
         action={t("people.manageBeneficiaries")}
         onPress={() => router.push("/people/beneficiaries")}
       />
-      {shared && shared.length > 0 ? (
-        <>
-          <SectionHeader title={t("people.sharedWithMe")} />
-          {shared.map((folder) => (
-            <ListRow
-              key={folder.grantId}
-              icon="folder"
-              title={folder.ownerName || t("people.sharedFolder")}
-              description={
-                folder.available
-                  ? t("people.items", { n: folder.itemCount })
-                  : t("people.notAvailable")
-              }
-              trailing={
-                <StatusChip
-                  label={
-                    folder.available ? t("people.available") : t("people.later")
-                  }
-                  tone={folder.available ? "success" : "neutral"}
-                />
-              }
-              onPress={
-                folder.available
-                  ? () =>
-                      router.push({
-                        pathname: "/shared-folder/[id]",
-                        params: { id: folder.grantId },
-                      })
-                  : undefined
-              }
-            />
-          ))}
-        </>
-      ) : null}
     </Screen>
   );
 }

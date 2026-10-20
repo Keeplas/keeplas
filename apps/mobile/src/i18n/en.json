@@ -694,5 +694,18 @@
       "yearAgo": "1 year ago",
       "yearsAgo": "{n} years ago"
     }
+  },
+  "shared": {
+    "title": "Shared with me",
+    "body": "Folders shared with you by trusted people.",
+    "myVault": "My vault",
+    "emptyTitle": "Nothing shared with you yet",
+    "emptyBody": "When someone makes you a trusted contact, their shared items appear here.",
+    "someone": "Someone",
+    "folderFrom": "Folder from {name}",
+    "filesBy": "{n} files · Shared by {name}",
+    "sharedBy": "Shared by {name}",
+    "accessNow": "Access now",
+    "later": "Access after verification. Requires two trust-contact confirmations."
   }
 }

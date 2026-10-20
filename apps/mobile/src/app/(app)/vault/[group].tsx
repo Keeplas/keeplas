@@ -27,6 +27,7 @@ import {
 } from "@/features/home/vault-groups";
 import { itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
+import { VaultSwitch } from "@/features/vault/vault-switch";
 import {
   useVaultData,
   type VaultItemSummary,
@@ -152,6 +153,7 @@ export default function VaultList() {
           ListHeaderComponentStyle={styles.header}
           ListHeaderComponent={
             <>
+              {list === "all" ? <VaultSwitch active="mine" /> : null}
               <View
                 style={[
                   styles.search,
