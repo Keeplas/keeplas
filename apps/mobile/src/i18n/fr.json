@@ -190,7 +190,9 @@
     "updated": "Mis à jour {when}",
     "toOrganize": "{count} éléments à classer",
     "toOrganizeOne": "1 élément à classer",
-    "greetingNamed": "{greeting}, {name}"
+    "greetingNamed": "{greeting}, {name}",
+    "itemWord": "élément",
+    "itemsWord": "éléments"
   },
   "settings": {
     "title": "Réglages",

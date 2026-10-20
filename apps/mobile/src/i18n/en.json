@@ -197,7 +197,9 @@
     },
     "updated": "Updated {when}",
     "toOrganize": "{count} items to organize",
-    "toOrganizeOne": "1 item to organize"
+    "toOrganizeOne": "1 item to organize",
+    "itemWord": "item",
+    "itemsWord": "items"
   },
   "settings": {
     "title": "Settings",
