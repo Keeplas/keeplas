@@ -14,6 +14,7 @@
     "clean": "rm -rf .expo dist .turbo node_modules"
   },
   "dependencies": {
+    "@10play/tentap-editor": "1.0.1",
     "@convex-dev/auth": "^0.0.93",
     "@expo/app-integrity": "^57.0.2",
     "@keeplas/backend": "workspace:^",
@@ -55,7 +56,8 @@
     "react-native-quick-crypto": "^1.1.8",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-svg": "15.15.4"
+    "react-native-svg": "15.15.4",
+    "react-native-webview": "13.16.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

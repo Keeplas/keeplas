@@ -48,6 +48,8 @@ import {
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
+import { NoteView } from "@/features/notes/note-view";
+import { isEmptyNote } from "@/lib/rich-text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -534,7 +536,7 @@ export default function ItemDetails() {
             {t("item.addedOn", { date: formatDate(created, language) })}
           </Text>
         </View>
-        {opened.note ? (
+        {!isEmptyNote(opened.note) ? (
           <View
             style={[
               styles.noteCard,
@@ -544,9 +546,7 @@ export default function ItemDetails() {
               },
             ]}
           >
-            <Text variant="body" selectable>
-              {opened.note}
-            </Text>
+            <NoteView note={opened.note} />
           </View>
         ) : null}
         <DetailRows
@@ -646,11 +646,7 @@ export default function ItemDetails() {
         />
       ) : null}
 
-      {opened.note ? (
-        <Text variant="body" selectable>
-          {opened.note}
-        </Text>
-      ) : null}
+      {!isEmptyNote(opened.note) ? <NoteView note={opened.note} /> : null}
 
       {file ? (
         <View style={styles.actions}>

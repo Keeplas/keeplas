@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -42,6 +42,7 @@ import { useOutbox } from "@/features/outbox/outbox-provider";
 import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatDuration } from "@/lib/format";
+import { NoteEditor } from "@/features/notes/note-editor";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -87,6 +88,10 @@ export default function ComposeCapture() {
   const [denied, setDenied] = useState<PermissionProblem | null>(null);
   const [busy, setBusy] = useState(false);
   const isNote = draft.kind === "note";
+  const updateNote = useCallback(
+    (note: string) => draftStore.update({ note }),
+    [],
+  );
   const folder = folders?.find((row) => row.id === draft.folderId);
   const target = items?.find((item) => item.id === targetId);
   const hasFiles = draft.files.length + draft.pages.length > 0;
@@ -658,7 +663,15 @@ export default function ComposeCapture() {
       ) : null}
 
       {!existing ? (
-        <View style={styles.titleRow}>
+        <View
+          style={[
+            styles.titleRow,
+            {
+              backgroundColor: colors["bg.surface"],
+              borderColor: colors["border.default"],
+            },
+          ]}
+        >
           <TextInput
             value={draft.title}
             onChangeText={(title) => draftStore.update({ title })}
@@ -672,7 +685,7 @@ export default function ComposeCapture() {
             placeholderTextColor={colors["text.subtle"]}
             accessibilityLabel={t("capture.titleLabel")}
             style={[
-              singleLine(type.h2),
+              singleLine(type.h3),
               styles.titleInput,
               { color: colors["text.primary"] },
             ]}
@@ -695,22 +708,10 @@ export default function ComposeCapture() {
 
       {isNote ? (
         <>
-          <TextInput
-            value={draft.note}
-            onChangeText={(note) => draftStore.update({ note })}
+          <NoteEditor
+            initialHtml={draft.note}
             placeholder={t("capture.noteBodyPlaceholder")}
-            placeholderTextColor={colors["text.subtle"]}
-            accessibilityLabel={t("capture.noteLabel")}
-            multiline
-            style={[
-              type.body,
-              styles.noteBody,
-              {
-                color: colors["text.primary"],
-                backgroundColor: colors["bg.surface"],
-                borderColor: colors["border.default"],
-              },
-            ]}
+            onChange={updateNote}
           />
           <View style={styles.sectionRow}>
             <Text variant="label">
@@ -862,15 +863,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
   },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  titleInput: { flex: 1, paddingVertical: 0 },
-  noteBody: {
-    minHeight: 160,
-    padding: 14,
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    height: 52,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderRadius: radius.md,
-    textAlignVertical: "top",
   },
+  titleInput: { flex: 1, paddingVertical: 0 },
   reviewNote: {
     minHeight: 84,
     padding: 14,

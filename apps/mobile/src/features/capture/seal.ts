@@ -28,6 +28,7 @@ import {
   type VaultCategory,
 } from "@/crypto/item-meta";
 import type { OutboxFile, SealedItem } from "@/features/outbox/outbox";
+import { noteToHtml } from "@/lib/rich-text";
 
 export interface CaptureFile {
   uri: string;
@@ -74,7 +75,7 @@ export async function sealCapture(
       itemMetaJson(draft.category ?? INBOX, draft.icon),
       dek,
     ),
-    encryptedContent: await encryptText(draft.note.trim(), dek),
+    encryptedContent: await encryptText(noteToHtml(draft.note), dek),
     ...(draft.folder && !draft.attachTo
       ? {
           folderId: draft.folder.id,

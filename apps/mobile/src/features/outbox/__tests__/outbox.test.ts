@@ -147,7 +147,7 @@ describe("capture sealing + outbox upload", () => {
     const dek = await unwrapDek(args.ownerWrappedDek, owner.secretKey);
     expect(await decryptText(args.encryptedTitle, dek)).toBe("Spare keys");
     expect(await decryptText(args.encryptedContent, dek)).toBe(
-      "Blue box in the garage",
+      "<p>Blue box in the garage</p>",
     );
     expect(parseItemMeta(await decryptText(args.encryptedMeta, dek))).toEqual({
       v: 1,
