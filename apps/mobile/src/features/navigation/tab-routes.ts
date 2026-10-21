@@ -11,6 +11,7 @@ const FULL_SCREEN = [
   "/link-blocked",
   "/recovery-approval",
   "/rotate-keys",
+  "/vault-restored",
 ];
 
 export function showsTabBar(pathname: string): boolean {

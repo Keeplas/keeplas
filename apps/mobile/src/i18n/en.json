@@ -300,6 +300,20 @@
     "active": "Active",
     "addContact": "Add a trusted contact"
   },
+  "vaultRestored": {
+    "title": "Vault restored",
+    "body": "Your vault is accessible again on this phone. Your old 24 words no longer work: keep the new kit you just saved.",
+    "cardTitle": "Your access has been restored",
+    "checks": {
+      "opened": "Vault opened on this phone",
+      "kit": "New recovery kit saved",
+      "encrypted": "Your data stays encrypted"
+    },
+    "renew": "Set up contact recovery again",
+    "renewBody": "Your trusted contacts need a fresh setup before they can help you again.",
+    "devices": "Check my devices",
+    "open": "Open my vault"
+  },
   "approval": {
     "title": "{name} needs help recovering access",
     "body": "{name} has requested to recover their vault. Call or video call {name} and compare the code below to confirm their identity.",

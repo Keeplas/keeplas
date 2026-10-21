@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -18,12 +18,18 @@ import { useVault } from "@/providers/vault-provider";
 export default function KitScreen() {
   const router = useRouter();
   const { t } = useI18n();
-  const { setupPhrase } = useVault();
+  const { setupPhrase, setSetupPhrase } = useVault();
   const finish = useFinishSetup();
+  const { restored } = useLocalSearchParams<{ restored?: string }>();
 
   async function saved() {
     await writePreference("kitExported", "true");
-    finish();
+    if (restored) {
+      setSetupPhrase(null);
+      router.replace("/vault-restored");
+    } else {
+      finish();
+    }
   }
 
   return (

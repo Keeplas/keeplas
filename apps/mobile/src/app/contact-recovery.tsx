@@ -119,7 +119,7 @@ export default function ContactRecovery() {
       masterKey.fill(0);
       await SecureStore.deleteItemAsync(secretKey(viewer._id));
       refreshDeviceVault();
-      router.replace("/(setup)/kit");
+      router.replace({ pathname: "/(setup)/kit", params: { restored: "1" } });
     } catch {
       Alert.alert(t("common.genericError"));
     } finally {
