@@ -337,7 +337,7 @@ export default function ItemDetails() {
 
   const summary = [
     file ? summaryOf(file, pages, t) : t("item.note"),
-    file ? formatBytes(file.size) : "",
+    file ? formatBytes(file.size, language) : "",
     access,
   ]
     .filter(Boolean)
@@ -397,7 +397,7 @@ export default function ItemDetails() {
                   {
                     icon: "download" as const,
                     label: t("item.fileSize"),
-                    value: formatBytes(file.size),
+                    value: formatBytes(file.size, language),
                   },
                 ]
               : []),
@@ -667,7 +667,7 @@ export default function ItemDetails() {
               key={attachment.id}
               icon={KIND_ICON[attachment.kind]}
               title={attachment.name}
-              description={formatBytes(attachment.size)}
+              description={formatBytes(attachment.size, language)}
               onPress={() => setSelected(attachments.indexOf(attachment))}
             />
           ))
@@ -678,7 +678,7 @@ export default function ItemDetails() {
               key={attachment.id}
               icon={KIND_ICON[attachment.kind]}
               title={attachment.name}
-              description={formatBytes(attachment.size)}
+              description={formatBytes(attachment.size, language)}
               trailing={
                 index === selected ? (
                   <Icon name="check" size={18} color="status.active" />

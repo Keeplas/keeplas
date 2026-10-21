@@ -34,7 +34,7 @@ const CONTENTS: { key: string; icon: IconName }[] = [
 
 export default function ExportData() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const exportVault = useExportVault();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const stop = useRef(false);
@@ -144,7 +144,7 @@ export default function ExportData() {
           tone="success"
           icon="check-circle"
           text={t("export.ready", {
-            size: formatBytes(phase.archive.size ?? 0),
+            size: formatBytes(phase.archive.size ?? 0, language),
           })}
         />
       ) : null}

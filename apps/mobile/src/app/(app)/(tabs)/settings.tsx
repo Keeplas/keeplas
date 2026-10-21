@@ -62,8 +62,8 @@ export default function Settings() {
           <View style={styles.between}>
             <Text variant="label">
               {t("settings.storageUsed", {
-                used: formatBytes(usage.storageBytes),
-                total: formatBytes(usage.quotaBytes),
+                used: formatBytes(usage.storageBytes, language),
+                total: formatBytes(usage.quotaBytes, language),
               })}
             </Text>
             <Text variant="body" color="text.muted">
@@ -98,7 +98,7 @@ export default function Settings() {
                   <Text variant="body">{t(`settings.kind.${kind}`)}</Text>
                 </View>
                 <Text variant="body" color="text.muted">
-                  {formatBytes(usage.bytesByKind[kind])}
+                  {formatBytes(usage.bytesByKind[kind], language)}
                 </Text>
               </View>
             ),
@@ -114,6 +114,7 @@ export default function Settings() {
               plan: t(lifetime ? "settings.planLifetime" : "settings.planFree"),
               left: formatBytes(
                 Math.max(0, usage.quotaBytes - usage.storageBytes),
+                language,
               ),
             })}
           </Text>

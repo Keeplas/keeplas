@@ -4,7 +4,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { unwrapBytes } from "@keeplas/crypto/kem";
 import { toast } from "@keeplas/ui";
-import { useTranslations } from "@/lib/i18n";
+import { useLocale, useTranslations } from "@/lib/i18n";
 import { formatBytes } from "@/lib/format";
 import { parseFileMeta, type FileMeta } from "@/lib/item-meta";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
@@ -20,11 +20,11 @@ interface OpenedItem {
 }
 
 /** "PDF · 1.2 MB": extension (or MIME subtype) and the sealed exact size. */
-function fileDetail(meta: FileMeta): string {
+function fileDetail(meta: FileMeta, locale: string): string {
   const extension = meta.name.includes(".")
     ? meta.name.split(".").pop()!
     : (meta.mimeType.split("/").pop() ?? "");
-  return `${extension.toUpperCase()} · ${formatBytes(meta.size)}`;
+  return `${extension.toUpperCase()} · ${formatBytes(meta.size, locale)}`;
 }
 
 /**
@@ -35,6 +35,7 @@ function fileDetail(meta: FileMeta): string {
  */
 export function useSharedFolders() {
   const t = useTranslations("sharedWithMe.folders");
+  const locale = useLocale();
   const convex = useConvex();
   const grants = useQuery(api.folders.sharedWithMe);
   const { ensureOwnerKeypair, unwrapOwnerDek, isReady } = useRecipientCrypto();
@@ -107,7 +108,7 @@ export function useSharedFolders() {
                 title: item.encryptedTitle
                   ? await decryptContentWithKey(item.encryptedTitle, dek)
                   : (meta?.name ?? ""),
-                detail: meta ? fileDetail(meta) : "",
+                detail: meta ? fileDetail(meta, locale) : "",
                 updatedAt: item.updatedAt,
               },
               attachment:
@@ -125,7 +126,7 @@ export function useSharedFolders() {
     return () => {
       cancelled = true;
     };
-  }, [contents, isReady, unwrapOwnerDek, decryptContentWithKey]);
+  }, [contents, isReady, unwrapOwnerDek, decryptContentWithKey, locale]);
 
   const download = useCallback(
     async (grantId: string, itemId: string) => {

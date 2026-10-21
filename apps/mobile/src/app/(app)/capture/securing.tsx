@@ -21,7 +21,7 @@ type StepState = "done" | "active" | "waiting" | "error";
 export default function SecuringCapture() {
   const { entryId } = useLocalSearchParams<{ entryId: string }>();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { colors } = useTheme();
   const { entries, progress, online, created, retry } = useOutbox();
   const { pending } = useVaultData();
@@ -100,7 +100,7 @@ export default function SecuringCapture() {
           </Text>
           {seen?.bytes ? (
             <Text variant="body-sm" color="text.muted">
-              {formatBytes(seen.bytes)}
+              {formatBytes(seen.bytes, language)}
             </Text>
           ) : null}
         </View>

@@ -3,7 +3,7 @@ import { Button, Icon, InfoCallout, Progress } from "@keeplas/ui";
 import { Panel } from "@/components/v2/surface";
 import { formatBytes } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
-import { useTranslations } from "@/lib/i18n";
+import { useLocale, useTranslations } from "@/lib/i18n";
 import {
   ExportCancelled,
   useExportVault,
@@ -20,6 +20,7 @@ const CONTENTS = ["items", "files", "notes", "contacts"] as const;
 
 export default function ExportPage() {
   const t = useTranslations("settings.export");
+  const locale = useLocale();
   const exportVault = useExportVault();
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const stop = useRef(false);
@@ -98,7 +99,7 @@ export default function ExportPage() {
 
       {phase.kind === "ready" ? (
         <InfoCallout icon={ICON_PATHS.checkCircle} tone="success">
-          {t("ready", { size: formatBytes(phase.size) })}
+          {t("ready", { size: formatBytes(phase.size, locale) })}
         </InfoCallout>
       ) : null}
       {phase.kind === "ready" && phase.skipped > 0 ? (
