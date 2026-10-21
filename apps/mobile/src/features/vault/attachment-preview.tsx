@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,7 @@ import { File } from "expo-file-system";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVideoPlayer, VideoView } from "expo-video";
 import Pdf from "react-native-pdf";
+import { WebView } from "react-native-webview";
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -28,7 +30,8 @@ import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, withAlpha } from "@/theme";
-import { documentKind } from "./document-kind";
+import { convertibleOffice, documentKind } from "./document-kind";
+import { officePage, sheetToHtml, wordToHtml } from "./office-html";
 import type { AttachmentState } from "./use-decrypted-attachment";
 
 export interface PreviewFile {
@@ -255,6 +258,8 @@ function DocumentPreview({
       );
     case "text":
       return <TextPreview uri={uri} />;
+    case "office":
+      return <OfficePreview uri={uri} meta={meta} onShare={onShare} />;
     default:
       return (
         <View style={[styles.page, styles.center]}>
@@ -270,6 +275,91 @@ function DocumentPreview({
         </View>
       );
   }
+}
+
+function OfficePreview({
+  uri,
+  meta,
+  onShare,
+}: {
+  uri: string;
+  meta: FileMeta;
+  onShare: () => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const native = Platform.OS === "ios";
+  const convert = native ? null : convertibleOffice(meta.name);
+  const [html, setHtml] = useState<string | null>(null);
+  const [failed, setFailed] = useState(!native && convert === null);
+
+  useEffect(() => {
+    if (native || !convert) return;
+    let alive = true;
+    void (async () => {
+      try {
+        const bytes = await new File(uri).bytes();
+        const body =
+          convert === "word"
+            ? await wordToHtml(bytes)
+            : await sheetToHtml(bytes);
+        if (alive) {
+          setHtml(
+            officePage(body, {
+              text: colors["text.primary"],
+              border: colors["border.default"],
+            }),
+          );
+        }
+      } catch {
+        if (alive) setFailed(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [uri, native, convert, colors]);
+
+  if (failed) {
+    return (
+      <View style={[styles.page, styles.center]}>
+        <StateMessage
+          icon="document"
+          tone="info"
+          title={meta.name}
+          body={t("item.noPreview", {
+            type: meta.name.split(".").pop()?.toUpperCase() ?? "",
+          })}
+          primary={{ label: t("item.download"), onPress: onShare }}
+        />
+      </View>
+    );
+  }
+
+  if (!native && !html) {
+    return (
+      <View style={[styles.office, styles.center]}>
+        <Text variant="body-sm" color="text.muted" align="center">
+          {t("item.opening")}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <WebView
+      source={native ? { uri } : { html: html ?? "" }}
+      originWhitelist={native ? ["file://*"] : ["about:blank"]}
+      allowingReadAccessToURL={native ? uri : undefined}
+      allowFileAccess={native}
+      javaScriptEnabled={false}
+      onShouldStartLoadWithRequest={(request) =>
+        native ? request.url === uri : request.url === "about:blank"
+      }
+      onError={() => setFailed(true)}
+      style={[styles.office, { backgroundColor: colors["bg.surface"] }]}
+    />
+  );
 }
 
 function PdfPreview({
@@ -517,6 +607,7 @@ const styles = StyleSheet.create({
   },
   center: { justifyContent: "center" },
   page: { alignSelf: "stretch", height: 296, borderRadius: 6 },
+  office: { alignSelf: "stretch", height: 460, borderRadius: 6 },
   status: { alignItems: "center", gap: 10, alignSelf: "stretch" },
   errorOnDark: { margin: 14, padding: 16, borderRadius: radius.md },
   pager: { flexDirection: "row", alignItems: "center", gap: 6, height: 16 },

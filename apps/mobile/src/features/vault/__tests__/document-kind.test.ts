@@ -1,4 +1,4 @@
-import { documentKind } from "../document-kind";
+import { convertibleOffice, documentKind } from "../document-kind";
 
 describe("document kind", () => {
   it("opens PDFs by type or extension", () => {
@@ -12,10 +12,18 @@ describe("document kind", () => {
     expect(documentKind("README.MD", "")).toBe("text");
   });
 
-  it("leaves other formats to the fallback", () => {
+  it("opens Word, Excel and other office files in the office viewer", () => {
     expect(documentKind("will.docx", "application/vnd.openxmlformats")).toBe(
-      "other",
+      "office",
     );
+    expect(documentKind("budget.XLSX", "")).toBe("office");
+    expect(documentKind("deck.pptx", "")).toBe("office");
+    expect(convertibleOffice("will.docx")).toBe("word");
+    expect(convertibleOffice("budget.xls")).toBe("sheet");
+    expect(convertibleOffice("deck.pptx")).toBeNull();
+  });
+
+  it("leaves other formats to the fallback", () => {
     expect(documentKind("archive", "application/zip")).toBe("other");
   });
 });
