@@ -142,6 +142,8 @@ export const fonts = {
   ui: "Inter-Regular",
   uiMedium: "Inter-Medium",
   uiSemibold: "Inter-SemiBold",
+  uiItalic: "Inter-Italic",
+  uiSemiboldItalic: "Inter-SemiBoldItalic",
 } as const;
 
 /**
