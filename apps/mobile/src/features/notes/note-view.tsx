@@ -6,26 +6,38 @@ import { parseNote, type Mark, type Run } from "@keeplas/export/rich-text";
 import { useTheme } from "@/providers/theme-provider";
 import { fonts } from "@/theme";
 
-const MARK_STYLE: Record<Mark, TextStyle> = {
-  bold: { fontFamily: fonts.uiSemibold },
-  italic: { fontStyle: "italic" },
+const MARK_STYLE: Record<Exclude<Mark, "bold" | "italic">, TextStyle> = {
   underline: { textDecorationLine: "underline" },
   strike: { textDecorationLine: "line-through" },
   code: { fontFamily: "Menlo" },
 };
 
-function markStyle(marks: Mark[]): TextStyle[] {
-  const style = marks.map((mark) => MARK_STYLE[mark]);
+function markStyle(marks: Mark[], serif: boolean): TextStyle[] {
+  const bold = marks.includes("bold");
+  const italic = marks.includes("italic");
+  const style: TextStyle[] = [];
+  if (serif) {
+    if (italic) style.push({ fontStyle: "italic" });
+  } else if (bold && italic) {
+    style.push({ fontFamily: fonts.uiSemiboldItalic });
+  } else if (italic) {
+    style.push({ fontFamily: fonts.uiItalic });
+  } else if (bold) {
+    style.push({ fontFamily: fonts.uiSemibold });
+  }
+  for (const mark of marks) {
+    if (mark !== "bold" && mark !== "italic") style.push(MARK_STYLE[mark]);
+  }
   if (marks.includes("underline") && marks.includes("strike")) {
     style.push({ textDecorationLine: "underline line-through" });
   }
   return style;
 }
 
-function Runs({ runs }: { runs: Run[] }) {
+function Runs({ runs, serif = false }: { runs: Run[]; serif?: boolean }) {
   return runs.map((run, index) =>
     run.marks.length ? (
-      <RNText key={index} style={markStyle(run.marks)}>
+      <RNText key={index} style={markStyle(run.marks, serif)}>
         {run.text}
       </RNText>
     ) : (
@@ -45,7 +57,7 @@ export const NoteView = memo(function NoteView({ note }: { note: string }) {
           case "heading":
             return (
               <Text key={index} variant={block.level <= 2 ? "h2" : "h3"}>
-                <Runs runs={block.runs} />
+                <Runs runs={block.runs} serif />
               </Text>
             );
           case "quote":
