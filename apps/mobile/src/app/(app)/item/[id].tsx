@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
@@ -17,6 +17,7 @@ import { StateMessage } from "@/components/state-message";
 import { Checkbox } from "@/components/controls";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { TextField } from "@/components/text-field";
 import { decryptText, encryptText } from "@/crypto/envelope";
 import {
   legacyFileMeta,
@@ -48,11 +49,13 @@ import {
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
+import { NoteView } from "@/features/notes/note-view";
+import { isEmptyNote } from "@/lib/rich-text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
-import { radius, singleLine, type, withAlpha } from "@/theme";
+import { radius, withAlpha } from "@/theme";
 
 type Attachment = FileMeta & { id: Id<"vault_item_files">; iv: string };
 
@@ -468,22 +471,13 @@ export default function ItemDetails() {
       onDismiss={() => setSheet(null)}
       title={t("item.renameTitle")}
     >
-      <TextInput
+      <TextField
+        label={t("item.titleRow")}
         value={draftTitle}
         onChangeText={setDraftTitle}
         autoFocus
-        accessibilityLabel={t("item.renameTitle")}
         returnKeyType="done"
         onSubmitEditing={() => void rename()}
-        style={[
-          singleLine(type["body-lg"]),
-          styles.renameInput,
-          {
-            color: colors["text.primary"],
-            backgroundColor: colors["bg.surface"],
-            borderColor: colors["border.strong"],
-          },
-        ]}
       />
       <Button label={t("capture.save")} onPress={() => void rename()} />
     </BottomSheet>
@@ -534,7 +528,7 @@ export default function ItemDetails() {
             {t("item.addedOn", { date: formatDate(created, language) })}
           </Text>
         </View>
-        {opened.note ? (
+        {!isEmptyNote(opened.note) ? (
           <View
             style={[
               styles.noteCard,
@@ -544,9 +538,7 @@ export default function ItemDetails() {
               },
             ]}
           >
-            <Text variant="body" selectable>
-              {opened.note}
-            </Text>
+            <NoteView note={opened.note} />
           </View>
         ) : null}
         <DetailRows
@@ -646,11 +638,7 @@ export default function ItemDetails() {
         />
       ) : null}
 
-      {opened.note ? (
-        <Text variant="body" selectable>
-          {opened.note}
-        </Text>
-      ) : null}
+      {!isEmptyNote(opened.note) ? <NoteView note={opened.note} /> : null}
 
       {file ? (
         <View style={styles.actions}>
@@ -806,12 +794,6 @@ const styles = StyleSheet.create({
   activityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   activityDot: { width: 8, height: 8, borderRadius: 4 },
   flexText: { flex: 1, gap: 2 },
-  renameInput: {
-    height: 52,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderRadius: radius.md,
-  },
   tile: {
     flex: 1,
     alignItems: "center",

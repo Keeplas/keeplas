@@ -289,5 +289,5 @@ export function singleLine<T extends { lineHeight?: number }>(
   style: T,
 ): Omit<T, "lineHeight"> & { paddingBottom?: number } {
   const { lineHeight: _lineHeight, ...rest } = style;
-  return Platform.OS === "ios" ? { ...rest, paddingBottom: 7 } : rest;
+  return Platform.OS === "ios" ? { ...rest, paddingBottom: 3.5 } : rest;
 }

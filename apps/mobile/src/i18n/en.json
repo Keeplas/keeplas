@@ -533,7 +533,7 @@
     "resetKeep": "Keep this recording",
     "newNoteTitle": "New note",
     "reviewScanTitle": "Review scan",
-    "noteTitlePlaceholder": "Title",
+    "noteTitlePlaceholder": "Give your note a title",
     "noteBodyPlaceholder": "Write something…",
     "pagesMeta": "{n} pages · PDF",
     "onePageMeta": "1 page · PDF",
@@ -959,5 +959,17 @@
     "deleteFailed": "Keeplas could not delete this item. Check your connection and try again.",
     "moveFailed": "Keeplas could not move \"{title}\". Check your connection, or check that everyone in the folder has a verified security code.",
     "more": "More actions for {title}"
+  },
+  "noteEditor": {
+    "heading": "Heading",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strike": "Strikethrough",
+    "bulletList": "Bulleted list",
+    "numberedList": "Numbered list",
+    "quote": "Quote",
+    "undo": "Undo",
+    "redo": "Redo"
   }
 }

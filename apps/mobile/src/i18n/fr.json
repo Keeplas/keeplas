@@ -525,7 +525,7 @@
     "resetKeep": "Garder cet enregistrement",
     "newNoteTitle": "Nouvelle note",
     "reviewScanTitle": "Revue du scan",
-    "noteTitlePlaceholder": "Titre",
+    "noteTitlePlaceholder": "Donnez un titre à votre note",
     "noteBodyPlaceholder": "Écrivez quelque chose…",
     "pagesMeta": "{n} pages · PDF",
     "onePageMeta": "1 page · PDF",
@@ -944,5 +944,17 @@
     "deleteFailed": "Keeplas n'a pas pu supprimer cet élément. Vérifiez votre connexion et réessayez.",
     "moveFailed": "Keeplas n'a pas pu déplacer « {title} ». Vérifiez votre connexion, ou que chaque personne du dossier a un code de sécurité vérifié.",
     "more": "Plus d’actions pour {title}"
+  },
+  "noteEditor": {
+    "heading": "Titre de section",
+    "bold": "Gras",
+    "italic": "Italique",
+    "underline": "Souligné",
+    "strike": "Barré",
+    "bulletList": "Liste à puces",
+    "numberedList": "Liste numérotée",
+    "quote": "Citation",
+    "undo": "Annuler",
+    "redo": "Rétablir"
   }
 }
