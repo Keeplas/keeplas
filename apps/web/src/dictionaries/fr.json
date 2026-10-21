@@ -257,44 +257,6 @@
     }
   },
   "hub": {
-    "terminate": {
-      "hero": {
-        "line1": "Destruction",
-        "line2": "irréversible",
-        "description": "Une fois détruite, votre archive chiffrée ne peut être reconstituée. Il n'existe aucune sauvegarde, aucun accès administrateur, aucune voie de récupération. L'accès à connaissance nulle signifie qu'il n'y a aucune récupération côté serveur."
-      },
-      "stats": {
-        "archiveStatus": "Statut de l'archive",
-        "active": "Active",
-        "empty": "Vide",
-        "encryptionKey": "Clé de chiffrement",
-        "heldByYou": "Détenue par vous seul"
-      },
-      "heading": "Supprimer définitivement votre plan de continuité ?",
-      "description": "Cette action efface le coffre, chaque protocole, contact, message, entrée d'audit ainsi que le dossier utilisateur lui-même.",
-      "warning": {
-        "label": "⚠ Avertissement",
-        "body": "Cette action est irréversible. Nous recommandons d'exporter votre kit de récupération et de mettre Life Check en pause d'abord si vous ne souhaitez qu'un arrêt temporaire."
-      },
-      "cards": {
-        "vaultData": "Données du coffre",
-        "encryptedItems": "{count} éléments chiffrés",
-        "protocols": "Protocoles",
-        "protocolsValue": "Life Check, Scénario, Messages"
-      },
-      "confirmLabel": {
-        "before": "Saisissez",
-        "after": "pour confirmer"
-      },
-      "submitting": "Suppression…",
-      "confirm": "Confirmer la suppression définitive",
-      "keep": "Conserver mon plan",
-      "requestId": "ID de requête : {id}",
-      "errors": {
-        "typeDelete": "Saisissez DELETE exactement pour confirmer.",
-        "failed": "Échec de la suppression du plan."
-      }
-    },
     "greeting": {
       "morning": "Bonjour, {name}",
       "afternoon": "Bon après-midi, {name}",
@@ -839,7 +801,8 @@
         "contact": "Nous contacter",
         "roadmap": "À venir",
         "signOut": "Se déconnecter",
-        "export": "Exporter mes données"
+        "export": "Exporter mes données",
+        "deleteAccount": "Supprimer mon compte"
       }
     },
     "export": {
@@ -869,6 +832,29 @@
       "retry": "Réessayer",
       "again": "Exporter à nouveau",
       "skipped": "{n} élément(s) n’ont pas pu être ouverts et ne sont pas dans l’archive."
+    },
+    "deleteAccount": {
+      "title": "Supprimer mon compte",
+      "body": "Votre compte et tout le contenu de votre coffre seront définitivement effacés de Keeplas, 7 jours après votre confirmation.",
+      "losesTitle": "Ce que vous perdez",
+      "loses": {
+        "items": "Tous les éléments, notes et fichiers de votre coffre",
+        "shares": "Ce que vous partagez avec vos contacts de confiance, et ce qu’ils peuvent ouvrir",
+        "succession": "Votre plan de succession, le Life check et la récupération par contacts",
+        "plan": "Votre offre. Un achat Lifetime n’est pas remboursé"
+      },
+      "exportFirst": "Exporter mes données d’abord",
+      "exportHint": "pour garder une copie de tout avant l’effacement.",
+      "graceNote": "Vous avez 7 jours pour changer d’avis : annulez la suppression depuis cet écran. Ensuite, rien ne peut être récupéré, pas même par Keeplas.",
+      "confirmWord": "SUPPRIMER",
+      "typeLabel": "Saisissez {word} pour confirmer",
+      "typeWord": "Saisissez {word} exactement pour confirmer.",
+      "submit": "Supprimer mon compte",
+      "keep": "Garder mon compte",
+      "scheduledTitle": "Votre compte va être supprimé",
+      "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
+      "cancel": "Annuler la suppression",
+      "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
     }
   },
   "settingsSecurity": {

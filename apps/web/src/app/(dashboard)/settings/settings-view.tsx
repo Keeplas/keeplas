@@ -198,6 +198,7 @@ export function SettingsView({
             <NavRow href="/settings/account" label={t("more.account")} />
             <NavRow href="/settings/contact" label={t("more.contact")} />
             <NavRow href="/settings/roadmap" label={t("more.roadmap")} />
+            <NavRow href="/terminate" label={t("more.deleteAccount")} />
             <button
               type="button"
               onClick={onSignOut}

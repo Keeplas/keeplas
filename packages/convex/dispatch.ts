@@ -1311,6 +1311,41 @@ export const notifyNewDevice = internalAction({
     }),
 });
 
+const DELETION_SCHEDULED_COPY = {
+  en: {
+    subject: "Keeplas — your account will be deleted",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: (date?: string) =>
+      `You asked to delete your Keeplas account. Everything in it will be erased for good on ${date ?? "the scheduled date"}. Changed your mind, or it wasn't you? Open Keeplas before then and cancel the deletion.`,
+    button: "Review the deletion",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — votre compte va être supprimé",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: (date?: string) =>
+      `Vous avez demandé la suppression de votre compte Keeplas. Tout son contenu sera définitivement effacé le ${date ?? "jour prévu"}. Vous avez changé d'avis, ou ce n'était pas vous ? Ouvrez Keeplas avant cette date et annulez la suppression.`,
+    button: "Voir la suppression",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+export const notifyDeletionScheduled = internalAction({
+  args: { ...alertArgs, ownerName: v.optional(v.string()), date: v.string() },
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: args.date,
+      copy: DELETION_SCHEDULED_COPY,
+      path: "/terminate",
+      appPath: "/delete-account",
+      templateEnv: process.env.WHATSAPP_ACCOUNT_DELETION_TEMPLATE_NAME,
+      templateBase: "keeplas_account_deletion",
+    }),
+});
+
 const RECOVERY_STARTED_COPY = {
   en: {
     subject: "Keeplas — someone asked to recover your account",
