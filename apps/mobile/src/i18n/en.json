@@ -673,7 +673,12 @@
     "addTrustedPerson": "Add a trusted person",
     "shareFailedTitle": "Sharing not saved",
     "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
-    "downloading": "Downloading… {pct}%"
+    "downloading": "Downloading… {pct}%",
+    "edit": "Edit",
+    "history": "Edit history",
+    "historyCount": "{n} earlier versions",
+    "historyEmpty": "No changes yet",
+    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
   },
   "people": {
     "title": "Trusted people",
@@ -1107,5 +1112,38 @@
     "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
     "retry": "Generate a new code",
     "note": "Only a phone already signed in to your account can approve this code."
+  },
+  "itemEdit": {
+    "title": "Edit",
+    "removeFile": "Remove {name}",
+    "cameraChip": "Camera",
+    "historyNote": "The current version is kept in the history, with its files. Nothing is lost.",
+    "failedTitle": "Changes not saved",
+    "failedBody": "Keeplas could not save your changes. Check your connection and try again."
+  },
+  "itemHistory": {
+    "title": "History",
+    "body": "Every edit keeps the previous version, encrypted on your devices. You can read it or restore it.",
+    "current": "Current version",
+    "since": "Since {date}",
+    "versionRange": "From {from} to {to}",
+    "created": "Item created",
+    "versionOf": "Version of {date}",
+    "noNote": "No note in this version.",
+    "restore": "Restore this version",
+    "restoreTitle": "Restore this version?",
+    "restoreBody": "The item goes back to its content of {date}. The current version is kept in the history."
+  },
+  "archives": {
+    "title": "Archives",
+    "rowBody": "Items taken out of the vault, kept with their history",
+    "body": "An archived item is no longer in your vault and is not passed on to anyone. It stays whole, with its files and history. Only deleting your account erases it.",
+    "space": "Archives and history use {size} of your storage.",
+    "archivedOn": "Archived on {date}",
+    "restore": "Restore",
+    "restoreBody": "Put it back in the vault, with its sharing",
+    "restoreFailed": "Keeplas could not restore this item. Check your connection and try again.",
+    "emptyTitle": "No archives",
+    "emptyBody": "Items you archive will show up here, with their history."
   }
 }

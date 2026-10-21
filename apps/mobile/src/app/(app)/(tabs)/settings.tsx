@@ -174,6 +174,12 @@ export default function Settings() {
         onPress={() => changeLanguage(language === "en" ? "fr" : "en")}
       />
       <ListRow
+        icon="inbox"
+        title={t("archives.title")}
+        description={t("archives.rowBody")}
+        onPress={() => router.push("/archives")}
+      />
+      <ListRow
         icon="download"
         title={t("export.title")}
         description={t("export.rowBody")}
