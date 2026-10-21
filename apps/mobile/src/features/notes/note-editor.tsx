@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
   BlockquoteBridge,
@@ -39,38 +39,41 @@ export function NoteEditor({
 }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const css = `
-    * { font-family: -apple-system, Roboto, sans-serif; }
-    body { background: transparent; color: ${colors["text.primary"]}; }
-    .ProseMirror { min-height: 170px; padding: 12px 14px; font-size: 17px; line-height: 25px; outline: none; }
-    .ProseMirror p { margin: 0 0 8px; }
-    .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-family: Georgia, serif; font-weight: 600; margin: 4px 0 8px; }
-    .ProseMirror h2 { font-size: 22px; line-height: 28px; }
-    .ProseMirror blockquote { border-left: 3px solid ${colors["border.strong"]}; margin: 0 0 8px; padding-left: 12px; color: ${colors["text.muted"]}; }
-    .ProseMirror ul, .ProseMirror ol { padding-left: 22px; margin: 0 0 8px; }
-    .ProseMirror a { color: ${colors["text.link"]}; }
-    .ProseMirror p.is-editor-empty:first-child::before { color: ${colors["text.subtle"]}; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
-  `;
-  const editor = useEditorBridge({
-    initialContent: initialHtml,
-    bridgeExtensions: [
-      CoreBridge.configureCSS(css),
-      PlaceholderBridge.configureExtension({ placeholder }),
-      BoldBridge,
-      ItalicBridge,
-      UnderlineBridge,
-      StrikeBridge,
-      CodeBridge,
-      HeadingBridge,
-      BulletListBridge,
-      OrderedListBridge,
-      ListItemBridge,
-      BlockquoteBridge,
-      HardBreakBridge,
-      HistoryBridge,
-      LinkBridge.configureExtension({ openOnClick: false }),
-    ],
+  const [setup] = useState(() => {
+    const css = `
+      * { font-family: -apple-system, Roboto, sans-serif; }
+      body { background: transparent; color: ${colors["text.primary"]}; }
+      .ProseMirror { min-height: 170px; padding: 12px 14px; font-size: 17px; line-height: 25px; outline: none; }
+      .ProseMirror p { margin: 0 0 8px; }
+      .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-family: Georgia, serif; font-weight: 600; margin: 4px 0 8px; }
+      .ProseMirror h2 { font-size: 22px; line-height: 28px; }
+      .ProseMirror blockquote { border-left: 3px solid ${colors["border.strong"]}; margin: 0 0 8px; padding-left: 12px; color: ${colors["text.muted"]}; }
+      .ProseMirror ul, .ProseMirror ol { padding-left: 22px; margin: 0 0 8px; }
+      .ProseMirror a { color: ${colors["text.link"]}; }
+      .ProseMirror p.is-editor-empty:first-child::before { color: ${colors["text.subtle"]}; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
+    `;
+    return {
+      initialContent: initialHtml,
+      bridgeExtensions: [
+        CoreBridge.configureCSS(css),
+        PlaceholderBridge.configureExtension({ placeholder }),
+        BoldBridge,
+        ItalicBridge,
+        UnderlineBridge,
+        StrikeBridge,
+        CodeBridge,
+        HeadingBridge,
+        BulletListBridge,
+        OrderedListBridge,
+        ListItemBridge,
+        BlockquoteBridge,
+        HardBreakBridge,
+        HistoryBridge,
+        LinkBridge.configureExtension({ openOnClick: false }),
+      ],
+    };
   });
+  const editor = useEditorBridge(setup);
   const state = useBridgeState(editor);
   const content = useEditorContent(editor, { type: "html" });
   const report = useRef(onChange);
