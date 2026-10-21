@@ -665,7 +665,12 @@
     "addTrustedPerson": "Ajouter un contact de confiance",
     "shareFailedTitle": "Partage non enregistré",
     "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez.",
-    "downloading": "Téléchargement… {pct} %"
+    "downloading": "Téléchargement… {pct} %",
+    "edit": "Modifier",
+    "history": "Historique des modifications",
+    "historyCount": "{n} versions précédentes",
+    "historyEmpty": "Aucune modification pour l'instant",
+    "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne."
   },
   "people": {
     "title": "Contacts",
@@ -1092,5 +1097,38 @@
     "failed": "Ce téléphone n’a pas pu être associé. Vérifiez votre connexion, puis générez un nouveau code.",
     "retry": "Générer un nouveau code",
     "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code."
+  },
+  "itemEdit": {
+    "title": "Modifier",
+    "removeFile": "Retirer {name}",
+    "cameraChip": "Appareil photo",
+    "historyNote": "La version actuelle est conservée dans l'historique, avec ses fichiers. Rien n'est perdu.",
+    "failedTitle": "Modification non enregistrée",
+    "failedBody": "Keeplas n'a pas pu enregistrer vos changements. Vérifiez votre connexion et réessayez."
+  },
+  "itemHistory": {
+    "title": "Historique",
+    "body": "Chaque modification garde la version précédente, chiffrée sur vos appareils. Vous pouvez la consulter ou la restaurer.",
+    "current": "Version actuelle",
+    "since": "Depuis le {date}",
+    "versionRange": "Du {from} au {to}",
+    "created": "Création de l'élément",
+    "versionOf": "Version du {date}",
+    "noNote": "Pas de note dans cette version.",
+    "restore": "Restaurer cette version",
+    "restoreTitle": "Restaurer cette version ?",
+    "restoreBody": "L'élément reprend son contenu du {date}. La version actuelle est gardée dans l'historique."
+  },
+  "archives": {
+    "title": "Archives",
+    "rowBody": "Éléments retirés du coffre, conservés avec leur historique",
+    "body": "Un élément archivé n'est plus dans votre coffre et n'est transmis à personne. Il reste entier, avec ses fichiers et son historique. Seule la suppression du compte l'efface.",
+    "space": "Les archives et l'historique occupent {size} de votre stockage.",
+    "archivedOn": "Archivé le {date}",
+    "restore": "Restaurer",
+    "restoreBody": "Le remettre dans le coffre, avec ses partages",
+    "restoreFailed": "Keeplas n'a pas pu restaurer cet élément. Vérifiez votre connexion et réessayez.",
+    "emptyTitle": "Aucune archive",
+    "emptyBody": "Les éléments que vous archivez apparaîtront ici, avec leur historique."
   }
 }
