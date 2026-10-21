@@ -128,12 +128,14 @@ type Step = (
 async function dropContactLinks(
   ctx: MutationCtx,
   contactId: Id<"trusted_contacts">,
-) {
+): Promise<number> {
+  let deleted = 0;
   for (const key of await ctx.db
     .query("vault_item_recipient_keys")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
     .collect()) {
     await ctx.db.delete(key._id);
+    deleted += 1;
   }
   for (const share of await ctx.db
     .query("recovery_secret_shares")
@@ -141,19 +143,23 @@ async function dropContactLinks(
     .collect()) {
     await ctx.db.patch(share.userId, { socialRecoveryRenewalRequired: true });
     await ctx.db.delete(share._id);
+    deleted += 1;
   }
   for (const grant of await ctx.db
     .query("folder_grants")
     .withIndex("by_contact", (q) => q.eq("contactId", contactId))
     .collect()) {
     await ctx.db.delete(grant._id);
+    deleted += 1;
   }
   for (const request of await ctx.db
     .query("access_requests")
     .withIndex("by_requester", (q) => q.eq("requestedBy", contactId))
     .collect()) {
     await ctx.db.delete(request._id);
+    deleted += 1;
   }
+  return deleted;
 }
 
 const SIMPLE_TABLES = [
@@ -182,40 +188,47 @@ const STEPS: Step[] = [
       .query("authSessions")
       .withIndex("userId", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const session of sessions) {
       for (const token of await ctx.db
         .query("authRefreshTokens")
         .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
         .collect()) {
         await ctx.db.delete(token._id);
+        deleted += 1;
       }
       await ctx.db.delete(session._id);
+      deleted += 1;
     }
-    return sessions.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const accounts = await ctx.db
       .query("authAccounts")
       .withIndex("userIdAndProvider", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const account of accounts) {
       for (const code of await ctx.db
         .query("authVerificationCodes")
         .withIndex("accountId", (q) => q.eq("accountId", account._id))
         .collect()) {
         await ctx.db.delete(code._id);
+        deleted += 1;
       }
       await ctx.db.delete(account._id);
+      deleted += 1;
     }
-    return accounts.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const asContact = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_contact_user", (q) => q.eq("contactUserId", userId))
       .take(limit);
+    let deleted = 0;
     for (const contact of asContact) {
-      await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact._id);
       await ctx.db.patch(contact._id, {
         invitationStatus: "revoked",
         contactUserId: undefined,
@@ -224,20 +237,23 @@ const STEPS: Step[] = [
         contactPublicKeySignature: undefined,
         updatedAt: Date.now(),
       });
+      deleted += 1;
     }
-    return asContact.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const items = await ctx.db
       .query("vault_items")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const item of items) {
       for (const key of await ctx.db
         .query("vault_item_recipient_keys")
         .withIndex("by_item", (q) => q.eq("itemId", item._id))
         .collect()) {
         await ctx.db.delete(key._id);
+        deleted += 1;
       }
       for (const file of await ctx.db
         .query("vault_item_files")
@@ -245,10 +261,12 @@ const STEPS: Step[] = [
         .collect()) {
         await deleteBlob(ctx, file.storageId);
         await ctx.db.delete(file._id);
+        deleted += 1;
       }
       await ctx.db.delete(item._id);
+      deleted += 1;
     }
-    return items.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const files = await ctx.db
@@ -266,43 +284,51 @@ const STEPS: Step[] = [
       .query("folders")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const folder of folders) {
       for (const grant of await ctx.db
         .query("folder_grants")
         .withIndex("by_folder", (q) => q.eq("folderId", folder._id))
         .collect()) {
         await ctx.db.delete(grant._id);
+        deleted += 1;
       }
       await ctx.db.delete(folder._id);
+      deleted += 1;
     }
-    return folders.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const contact of contacts) {
-      await dropContactLinks(ctx, contact._id);
+      deleted += await dropContactLinks(ctx, contact._id);
       await ctx.db.delete(contact._id);
+      deleted += 1;
     }
-    return contacts.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const requests = await ctx.db
       .query("recovery_requests")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(limit);
+    let deleted = 0;
     for (const request of requests) {
       for (const approval of await ctx.db
         .query("recovery_approvals")
         .withIndex("by_request", (q) => q.eq("requestId", request._id))
         .collect()) {
         await ctx.db.delete(approval._id);
+        deleted += 1;
       }
       await ctx.db.delete(request._id);
+      deleted += 1;
     }
-    return requests.length;
+    return deleted;
   },
   async (ctx, userId, limit) => {
     let deleted = 0;
@@ -337,5 +363,23 @@ const STEPS: Step[] = [
       .take(limit);
     for (const request of requests) await ctx.db.delete(request._id);
     return requests.length;
+  },
+  async (ctx, userId, limit) => {
+    const user = await ctx.db.get(userId);
+    const phoneCodes = user?.phoneNumber
+      ? await ctx.db
+          .query("phone_auth_codes")
+          .withIndex("by_phone", (q) => q.eq("phoneNumber", user.phoneNumber!))
+          .take(limit)
+      : [];
+    for (const code of phoneCodes) await ctx.db.delete(code._id);
+    const emailCodes = user?.email
+      ? await ctx.db
+          .query("email_auth_codes")
+          .withIndex("by_email", (q) => q.eq("email", user.email!))
+          .take(limit - phoneCodes.length)
+      : [];
+    for (const code of emailCodes) await ctx.db.delete(code._id);
+    return phoneCodes.length + emailCodes.length;
   },
 ];

@@ -130,6 +130,26 @@ describe("account deletion", () => {
   it("erases everything after the grace period and keeps legal records", async () => {
     const t = makeT();
     const owner = await seedVaultOwner(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(owner.userId, {
+        phoneNumber: "+33600000009",
+        email: "owner@example.com",
+      });
+      await ctx.db.insert("phone_auth_codes", {
+        phoneNumber: "+33600000009",
+        codeHash: "hash",
+        expiresAt: 0,
+        attempts: 0,
+        intent: "signin",
+      });
+      await ctx.db.insert("email_auth_codes", {
+        email: "owner@example.com",
+        codeHash: "hash",
+        expiresAt: 0,
+        attempts: 0,
+        intent: "signin",
+      });
+    });
     const other = await seedUser(t);
     const otherContact = await seedTrustContact(t, other, { n: 2 });
     await t.run(async (ctx) => {
@@ -183,6 +203,14 @@ describe("account deletion", () => {
         .withIndex("by_contact", (q) => q.eq("contactId", otherContact))
         .collect(),
       otherUser: await ctx.db.get(other),
+      phoneCodes: await ctx.db
+        .query("phone_auth_codes")
+        .withIndex("by_phone", (q) => q.eq("phoneNumber", "+33600000009"))
+        .collect(),
+      emailCodes: await ctx.db
+        .query("email_auth_codes")
+        .withIndex("by_email", (q) => q.eq("email", "owner@example.com"))
+        .collect(),
     }));
 
     expect(left.user).toBeNull();
@@ -202,5 +230,7 @@ describe("account deletion", () => {
     expect(left.otherContact?.contactUserId).toBeUndefined();
     expect(left.otherShares).toEqual([]);
     expect(left.otherUser?.socialRecoveryRenewalRequired).toBe(true);
+    expect(left.phoneCodes).toEqual([]);
+    expect(left.emailCodes).toEqual([]);
   });
 });
