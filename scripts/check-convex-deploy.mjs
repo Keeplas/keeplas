@@ -101,10 +101,14 @@ const DEV_ONLY_FLAGS = [
   "ATTESTATION_SIMULATOR_BYPASS",
   "APP_ATTEST_ALLOW_DEVELOPMENT",
 ];
-const envList = spawnSync("npx", ["--no-install", "convex", "env", "list"], {
-  cwd: process.cwd(),
-  encoding: "utf8",
-});
+const envList = spawnSync(
+  "npx",
+  ["--no-install", "convex", "env", "list", "--prod"],
+  {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  },
+);
 if (envList.status !== 0) {
   fail(
     "could not read the target deployment's environment to check for " +
