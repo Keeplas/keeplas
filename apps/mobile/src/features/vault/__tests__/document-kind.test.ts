@@ -1,4 +1,9 @@
-import { convertibleOffice, documentKind } from "../document-kind";
+import {
+  OFFICE_PREVIEW_MAX_BYTES,
+  convertibleOffice,
+  documentKind,
+  previewableOffice,
+} from "../document-kind";
 
 describe("document kind", () => {
   it("opens PDFs by type or extension", () => {
@@ -21,6 +26,15 @@ describe("document kind", () => {
     expect(convertibleOffice("will.docx")).toBe("word");
     expect(convertibleOffice("budget.xls")).toBe("sheet");
     expect(convertibleOffice("deck.pptx")).toBeNull();
+  });
+
+  it("only converts Office files small enough to read on the phone", () => {
+    expect(previewableOffice("will.docx", OFFICE_PREVIEW_MAX_BYTES)).toBe(
+      "word",
+    );
+    expect(
+      previewableOffice("budget.xlsx", OFFICE_PREVIEW_MAX_BYTES + 1),
+    ).toBeNull();
   });
 
   it("leaves other formats to the fallback", () => {
