@@ -17,16 +17,20 @@ export function OtpInput({
   onComplete,
   invalid = false,
   label,
+  secure = false,
+  autoFocus = true,
 }: {
   value: string;
   onChange: (value: string) => void;
   onComplete?: (code: string) => void;
   invalid?: boolean;
   label: string;
+  secure?: boolean;
+  autoFocus?: boolean;
 }) {
   const { colors } = useTheme();
   const input = useRef<TextInput>(null);
-  const [focused, setFocused] = useState(true);
+  const [focused, setFocused] = useState(autoFocus);
   const active = Math.min(value.length, OTP_LENGTH - 1);
 
   function handleChange(text: string) {
@@ -67,7 +71,9 @@ export function OtpInput({
                 },
               ]}
             >
-              <Text style={type.digit}>{value[index] ?? ""}</Text>
+              <Text style={type.digit}>
+                {value[index] ? (secure ? "•" : value[index]) : ""}
+              </Text>
             </View>
           </View>
         );
@@ -79,10 +85,11 @@ export function OtpInput({
         onChangeText={handleChange}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        autoFocus
+        autoFocus={autoFocus}
         keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="sms-otp"
+        textContentType={secure ? "none" : "oneTimeCode"}
+        autoComplete={secure ? "off" : "sms-otp"}
+        secureTextEntry={secure}
         maxLength={OTP_LENGTH}
         caretHidden
         style={styles.hidden}

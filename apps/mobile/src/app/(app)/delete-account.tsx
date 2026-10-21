@@ -16,10 +16,12 @@ import { formatDate } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
+import { useWithPin } from "@/features/pin/use-pin-gate";
 
 const LOSSES = ["items", "shares", "succession", "plan"] as const;
 
 export default function DeleteAccount() {
+  const withPin = useWithPin();
   const router = useRouter();
   const { t, language } = useI18n();
   const viewer = useViewer();
@@ -47,9 +49,8 @@ export default function DeleteAccount() {
 
   async function confirmDeletion() {
     try {
-      const key = await unlockDeviceVault(
-        viewer._id,
-        t("deleteAccount.verify"),
+      const key = await withPin((pin) =>
+        unlockDeviceVault(viewer._id, t("deleteAccount.verify"), pin),
       );
       key.fill(0);
     } catch {

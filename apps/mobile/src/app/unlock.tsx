@@ -1,40 +1,69 @@
-import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { Icon } from "@/components/icon";
+import { OtpInput, OTP_LENGTH } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
+import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
+import { pinErrorText } from "@/features/pin/use-pin-gate";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
+import { useTheme } from "@/providers/theme-provider";
+import { radius } from "@/theme";
 import { useVault } from "@/providers/vault-provider";
 
 /**
  * M08-6 Unlock your vault: Face ID / fingerprint releases the device key
- * that unwraps the MasterKey. The optional Keeplas code is not offered yet.
+ * that unwraps the MasterKey, plus the Keeplas code when this phone has one.
  */
 export default function Unlock() {
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
-  const { signOut } = useSession();
+  const { signOut, refreshDeviceVault } = useSession();
   const { unlock } = useVault();
+  const { colors } = useTheme();
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [needsPin, setNeedsPin] = useState(false);
+  const [pin, setPin] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    void hasDevicePin(viewer._id).then((has) => {
+      if (alive) setNeedsPin(has);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [viewer._id]);
 
   const attempt = useCallback(async () => {
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     try {
-      await unlock(viewer._id, t("unlock.title"));
-    } catch {
-      setFailed(true);
+      await unlock(viewer._id, t("unlock.title"), needsPin ? pin : undefined);
+    } catch (error) {
+      setPin("");
+      if (error instanceof DevicePinError && error.code === "wiped") {
+        Alert.alert(t("pin.wipedTitle"), t("pin.wipedBody"));
+        refreshDeviceVault();
+      } else {
+        setFailed(
+          error instanceof DevicePinError
+            ? pinErrorText(error, t)
+            : t("unlock.failed"),
+        );
+      }
     } finally {
       setBusy(false);
     }
-  }, [unlock, viewer._id, t]);
+  }, [unlock, viewer._id, t, needsPin, pin, refreshDeviceVault]);
 
   return (
     <Screen header={<AppHeader />}>
@@ -51,11 +80,41 @@ export default function Unlock() {
         label={t("unlock.cta")}
         chevron
         loading={busy}
+        disabled={needsPin && pin.length < OTP_LENGTH}
         onPress={attempt}
       />
+      {needsPin ? (
+        <View
+          style={[
+            styles.code,
+            {
+              backgroundColor: colors["bg.warm"],
+              borderColor: colors["border.default"],
+            },
+          ]}
+        >
+          <View style={styles.codeHeader}>
+            <Icon name="shield-check" size={20} color="accent" />
+            <View style={styles.flex}>
+              <Text variant="label">{t("pin.unlockTitle")}</Text>
+              <Text variant="body-sm" color="text.muted">
+                {t("pin.unlockBody")}
+              </Text>
+            </View>
+          </View>
+          <OtpInput
+            value={pin}
+            onChange={setPin}
+            invalid={failed !== null}
+            label={t("pin.label")}
+            secure
+            autoFocus={false}
+          />
+        </View>
+      ) : null}
       {failed ? (
         <Text variant="body-sm" color="status.revoked" align="center">
-          {t("unlock.failed")}
+          {failed}
         </Text>
       ) : null}
       <Button
@@ -70,4 +129,7 @@ export default function Unlock() {
 
 const styles = StyleSheet.create({
   art: { alignItems: "center", paddingVertical: 8 },
+  code: { gap: 12, padding: 14, borderWidth: 1, borderRadius: radius.md },
+  codeHeader: { flexDirection: "row", gap: 10 },
+  flex: { flex: 1, gap: 2 },
 });

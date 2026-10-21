@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConvex } from "convex/react";
 import { useNetworkState } from "expo-network";
-import type { File } from "expo-file-system";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
@@ -11,10 +10,14 @@ import {
   FileProblemError,
   type FileProblem,
 } from "@/lib/file-errors";
-import { downloadDecrypted } from "@/lib/files";
+import {
+  cachedDecrypted,
+  downloadDecrypted,
+  rememberDecrypted,
+} from "@/lib/files";
 
 export type AttachmentState =
-  | { status: "loading" }
+  | { status: "loading"; progress?: number }
   | { status: "ready"; uri: string }
   | { status: "error"; problem: FileProblem; reference: string };
 
@@ -34,21 +37,12 @@ export function useDecryptedAttachments(
   const convex = useConvex();
   const network = useNetworkState();
   const online = useRef(network.isInternetReachable);
-  const opened = useRef(new Map<string, File>());
   const [attempts, setAttempts] = useState<Record<string, number>>({});
   const [results, setResults] = useState<Record<string, AttachmentState>>({});
 
   useEffect(() => {
     online.current = network.isInternetReachable;
   }, [network.isInternetReachable]);
-
-  useEffect(() => {
-    const all = opened.current;
-    return () => {
-      for (const file of all.values()) if (file.exists) file.delete();
-      all.clear();
-    };
-  }, []);
 
   const requests = files.map((file) => ({
     ...file,
@@ -69,24 +63,33 @@ export function useDecryptedAttachments(
     async function open(request: AttachmentSource & { token: string }) {
       let state: AttachmentState;
       try {
-        const url = await convex.query(api.vault_items.getItemFileUrl, {
-          fileId: request.id,
-        });
-        if (!url) throw new FileProblemError("missing");
-        const plain = await downloadDecrypted(
-          url,
-          request.iv,
-          key!,
-          request.name,
-        );
-        if (!alive) {
-          plain.delete();
-          return;
+        const cached = cachedDecrypted(request.id);
+        if (cached) {
+          state = { status: "ready", uri: cached.uri };
+        } else {
+          const url = await convex.query(api.vault_items.getItemFileUrl, {
+            fileId: request.id,
+          });
+          if (!url) throw new FileProblemError("missing");
+          let shown = -1;
+          const plain = await downloadDecrypted(
+            url,
+            request.iv,
+            key!,
+            request.name,
+            (ratio) => {
+              const pct = Math.floor(ratio * 100);
+              if (!alive || pct === shown) return;
+              shown = pct;
+              setResults((current) => ({
+                ...current,
+                [request.token]: { status: "loading", progress: ratio },
+              }));
+            },
+          );
+          rememberDecrypted(request.id, plain);
+          state = { status: "ready", uri: plain.uri };
         }
-        const previous = opened.current.get(request.id);
-        if (previous?.exists) previous.delete();
-        opened.current.set(request.id, plain);
-        state = { status: "ready", uri: plain.uri };
       } catch (error) {
         const reference = errorReference();
         if (__DEV__) console.warn(`[attachment ${reference}]`, error);
