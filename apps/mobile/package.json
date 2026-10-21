@@ -23,6 +23,7 @@
     "@op-engineering/op-sqlite": "^18.2.5",
     "convex": "^1.40.0",
     "expo": "~57.0.29",
+    "expo-asset": "~57.0.20",
     "expo-audio": "~57.0.5",
     "expo-camera": "~57.0.6",
     "expo-constants": "~57.0.22",
