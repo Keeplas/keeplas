@@ -14,12 +14,10 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { pairingKeyHash } from "@keeplas/crypto/pairing";
 
 import { AppHeader } from "@/components/app-header";
-import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { StateMessage, StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
 import { takePendingLink } from "@/features/link/pending-link";
 import { evaluatePairingQr } from "@/features/link/qr-flow";
 import {
@@ -34,7 +32,7 @@ import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 
 /**
- * M03-4 Scan the QR code. Each scan (or pasted / universal link) goes
+ * M03-4 Scan the QR code. Each scan (or universal link) goes
  * through `evaluatePairingQr`: invalid QR, expired session, key mismatch
  * (M09-3, reported to Convex) or M03-5 to approve.
  */
@@ -46,8 +44,6 @@ export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
   const reject = useAuditedMutation(api.pairing.reject);
   const [torch, setTorch] = useState(false);
-  const [manual, setManual] = useState(false);
-  const [pasted, setPasted] = useState("");
   const [checking, setChecking] = useState(false);
   const [problem, setProblem] = useState<
     "invalid" | "expired" | "failed" | null
@@ -192,29 +188,6 @@ export default function Scan() {
           <Icon name="check-circle" size={18} color="accent" />
         </View>
       ) : null}
-      {manual ? (
-        <>
-          <TextField
-            label={t("scan.manualLabel")}
-            value={pasted}
-            onChangeText={setPasted}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Button
-            label={t("scan.manualCta")}
-            disabled={!pasted.trim()}
-            loading={checking}
-            onPress={() => handle(pasted)}
-          />
-        </>
-      ) : (
-        <Button
-          variant="text"
-          label={t("scan.manual")}
-          onPress={() => setManual(true)}
-        />
-      )}
       <StateSheet
         visible={problem !== null}
         onDismiss={() => setProblem(null)}
