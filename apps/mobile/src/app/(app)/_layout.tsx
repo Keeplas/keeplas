@@ -8,6 +8,7 @@ import { AddSheetProvider } from "@/features/capture/add-sheet";
 import { TabShell } from "@/features/navigation/tab-shell";
 import { hasPendingLink } from "@/features/link/pending-link";
 import { LifeCheckPrompt } from "@/features/life-check/life-check-prompt";
+import { PinGateProvider } from "@/features/pin/use-pin-gate";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
@@ -62,17 +63,19 @@ export default function AppLayout() {
   }, [router]);
 
   return (
-    <VaultDataProvider>
-      <AddSheetProvider>
-        <TabShell>
-          <Stack screenOptions={{ headerShown: false }} />
-        </TabShell>
-      </AddSheetProvider>
-      {activeLifeCheck && pathname !== "/life-check" ? (
-        <LifeCheckPrompt
-          missed={activeLifeCheck.status === "awaiting_confirmation"}
-        />
-      ) : null}
-    </VaultDataProvider>
+    <PinGateProvider>
+      <VaultDataProvider>
+        <AddSheetProvider>
+          <TabShell>
+            <Stack screenOptions={{ headerShown: false }} />
+          </TabShell>
+        </AddSheetProvider>
+        {activeLifeCheck && pathname !== "/life-check" ? (
+          <LifeCheckPrompt
+            missed={activeLifeCheck.status === "awaiting_confirmation"}
+          />
+        ) : null}
+      </VaultDataProvider>
+    </PinGateProvider>
   );
 }

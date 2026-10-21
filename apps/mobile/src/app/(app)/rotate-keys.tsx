@@ -20,9 +20,11 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
+import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 
 /** On-phone key rotation. Existing item DEKs stay stable; every wrap changes. */
 export default function RotateKeys() {
+  const withPin = useWithPin();
   const router = useRouter();
   const convex = useConvex();
   const { t } = useI18n();
@@ -41,11 +43,17 @@ export default function RotateKeys() {
     setBusy(true);
     let rawNew: Uint8Array | null = null;
     let rootKey: Uint8Array | null = null;
+    let devicePin: string | undefined;
     try {
       const items = await convex.query(api.rotation.getRotatableItems);
       if (items.some((item) => !item.ownerWrappedDek))
         throw new Error(t("rotation.legacy"));
-      rootKey = await readDeviceRootKey(viewer._id, t("rotation.auth"));
+      const pinned = await withPin(async (code) => ({
+        pin: code,
+        rootKey: await readDeviceRootKey(viewer._id, t("rotation.auth"), code),
+      }));
+      rootKey = pinned.rootKey;
+      devicePin = pinned.pin;
       if (!rootKey) throw new Error(t("rotation.noRoot"));
       const oldKeys = await ownerKeys();
       const newMaster = await generateMasterKey();
@@ -110,10 +118,12 @@ export default function RotateKeys() {
         viewer._id,
         { masterKey: rawNew, rootKey },
         t("unlock.title"),
+        devicePin,
       );
       await adopt(rawNew.slice());
       router.back();
     } catch (error) {
+      if (isPinAbort(error)) return;
       Alert.alert(
         t("rotation.failed"),
         error instanceof Error ? error.message : undefined,
