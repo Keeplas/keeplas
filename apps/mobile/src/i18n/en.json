@@ -582,7 +582,11 @@
     "fromFiles": "From Files · {type}",
     "chooseAnother": "Choose another file",
     "whoCanSee": "Who can see it",
-    "neverSees": "Encrypted on your phone before it is uploaded. Keeplas never sees the file."
+    "neverSees": "Encrypted on your phone before it is uploaded. Keeplas never sees the file.",
+    "modeAuto": "Auto",
+    "modeManual": "Manual",
+    "autoUnavailableTitle": "Automatic scan unavailable",
+    "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
