@@ -130,6 +130,7 @@ describe("account deletion", () => {
   it("erases everything after the grace period and keeps legal records", async () => {
     const t = makeT();
     const owner = await seedVaultOwner(t);
+    const versionBlob = await seedStorageRef(t, 32);
     await t.run(async (ctx) => {
       await ctx.db.patch(owner.userId, {
         phoneNumber: "+33600000009",
@@ -141,6 +142,14 @@ describe("account deletion", () => {
         expiresAt: 0,
         attempts: 0,
         intent: "signin",
+      });
+      await ctx.db.insert("vault_item_versions", {
+        itemId: owner.itemId,
+        userId: owner.userId,
+        encryptedContent: SEALED,
+        files: [{ storageId: versionBlob, iv: "aXY=", order: 0 }],
+        savedAt: 0,
+        replacedAt: 0,
       });
       await ctx.db.insert("email_auth_codes", {
         email: "owner@example.com",
@@ -203,6 +212,11 @@ describe("account deletion", () => {
         .withIndex("by_contact", (q) => q.eq("contactId", otherContact))
         .collect(),
       otherUser: await ctx.db.get(other),
+      versions: await ctx.db
+        .query("vault_item_versions")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
+      versionBlob: await getBlobDownloadUrl(ctx, versionBlob),
       phoneCodes: await ctx.db
         .query("phone_auth_codes")
         .withIndex("by_phone", (q) => q.eq("phoneNumber", "+33600000009"))
@@ -230,6 +244,8 @@ describe("account deletion", () => {
     expect(left.otherContact?.contactUserId).toBeUndefined();
     expect(left.otherShares).toEqual([]);
     expect(left.otherUser?.socialRecoveryRenewalRequired).toBe(true);
+    expect(left.versions).toEqual([]);
+    expect(left.versionBlob).toBeNull();
     expect(left.phoneCodes).toEqual([]);
     expect(left.emailCodes).toEqual([]);
   });

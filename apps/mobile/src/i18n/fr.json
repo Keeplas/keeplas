@@ -961,10 +961,10 @@
   },
   "itemActions": {
     "open": "Ouvrir",
-    "delete": "Supprimer",
-    "deleteTitle": "Supprimer « {title} » ?",
-    "deleteBody": "Il est retiré de votre coffre et de chez toutes les personnes avec qui vous l’avez partagé. Cette action est définitive.",
-    "deleteFailed": "Keeplas n'a pas pu supprimer cet élément. Vérifiez votre connexion et réessayez.",
+    "archive": "Archiver",
+    "archiveTitle": "Archiver « {title} » ?",
+    "archiveBody": "Il quitte votre coffre et n'est plus transmis à personne. Il reste entier dans Réglages → Archives, avec son historique, et vous pouvez le restaurer à tout moment.",
+    "archiveFailed": "Keeplas n'a pas pu archiver cet élément. Vérifiez votre connexion et réessayez.",
     "moveFailed": "Keeplas n'a pas pu déplacer « {title} ». Vérifiez votre connexion, ou que chaque personne du dossier a un code de sécurité vérifié.",
     "more": "Plus d’actions pour {title}"
   },

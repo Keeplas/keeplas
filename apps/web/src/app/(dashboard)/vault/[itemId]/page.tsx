@@ -65,7 +65,7 @@ export default function VaultItemPage() {
   const item = useQuery(api.vault_items.getItem, { itemId });
   const rawItemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
   const {
     decryptContent,
@@ -106,9 +106,8 @@ export default function VaultItemPage() {
   );
   const itemFiles = useOpenedFiles(rawItemFiles, itemDek);
   const [editing, setEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
-  const [deleting, setDeleting] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   // Edit form state
   const [editTitle, setEditTitle] = useState("");
@@ -547,27 +546,14 @@ export default function VaultItemPage() {
     }
   }
 
-  const DELETE_CONFIRM_TOKEN = "DELETE";
-  const canConfirmDelete = deleteConfirmInput.trim() === DELETE_CONFIRM_TOKEN;
-
-  function openDeleteDialog() {
-    setDeleteConfirmInput("");
-    setShowDeleteConfirm(true);
-  }
-
-  function handleDeleteDialogChange(open: boolean) {
-    setShowDeleteConfirm(open);
-    if (!open) setDeleteConfirmInput("");
-  }
-
-  async function handleDelete() {
-    if (!canConfirmDelete || deleting) return;
-    setDeleting(true);
+  async function handleArchive() {
+    if (archiving) return;
+    setArchiving(true);
     try {
-      await deleteItem({ itemId });
+      await archiveItem({ itemId });
       router.push("/vault");
     } finally {
-      setDeleting(false);
+      setArchiving(false);
     }
   }
 
@@ -807,9 +793,9 @@ export default function VaultItemPage() {
                 </svg>
               </button>
               <button
-                onClick={openDeleteDialog}
+                onClick={() => setShowArchiveConfirm(true)}
                 className="p-2 hover:bg-error-container rounded-xs transition-colors cursor-pointer"
-                title={t("detail.deletePermanently")}
+                title={t("detail.archive")}
               >
                 <svg
                   className="w-5 h-5 text-error"
@@ -925,50 +911,30 @@ export default function VaultItemPage() {
             })}
           </p>
 
-          {/* Delete Confirmation — irreversible */}
           <Dialog
-            open={showDeleteConfirm}
-            onOpenChange={handleDeleteDialogChange}
+            open={showArchiveConfirm}
+            onOpenChange={setShowArchiveConfirm}
           >
             <DialogContent className="max-w-sm p-8 text-left">
-              <DialogTitle className="mb-2 text-error">
-                {t("delete.title")}
-              </DialogTitle>
-              <DialogDescription className="mb-4">
-                {t("delete.description")}
+              <DialogTitle className="mb-2">{t("archive.title")}</DialogTitle>
+              <DialogDescription className="mb-6">
+                {t("archive.description")}
               </DialogDescription>
-              <div className="space-y-2 mb-6">
-                <Label htmlFor="delete-confirm-input">
-                  {t("delete.confirmPrefix")}{" "}
-                  <span className="font-mono font-bold text-error">
-                    {DELETE_CONFIRM_TOKEN}
-                  </span>{" "}
-                  {t("delete.confirmSuffix")}
-                </Label>
-                <Input
-                  id="delete-confirm-input"
-                  type="text"
-                  autoComplete="off"
-                  value={deleteConfirmInput}
-                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
-                  placeholder={DELETE_CONFIRM_TOKEN}
-                />
-              </div>
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => handleDeleteDialogChange(false)}
+                  onClick={() => setShowArchiveConfirm(false)}
                   className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xs font-label font-bold text-sm cursor-pointer"
                 >
-                  {t("delete.cancel")}
+                  {t("archive.cancel")}
                 </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
-                  disabled={!canConfirmDelete || deleting}
-                  className="flex-1 py-3 bg-error text-on-error rounded-xs font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleArchive}
+                  disabled={archiving}
+                  className="flex-1 py-3 bg-primary text-on-primary rounded-xs font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {deleting ? t("delete.deleting") : t("delete.deleteForever")}
+                  {archiving ? t("archive.archiving") : t("archive.confirm")}
                 </button>
               </div>
             </DialogContent>

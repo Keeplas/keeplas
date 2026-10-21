@@ -600,6 +600,15 @@ export default defineSchema({
       }),
     ),
     releasedAt: v.optional(v.number()),
+    archivedAt: v.optional(v.number()),
+    archivedFromStatus: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("draft"),
+        v.literal("sealed"),
+        v.literal("released"),
+      ),
+    ),
 
     // Folder the item lives in (v2 "sharing per folder"); none = loose item.
     folderId: v.optional(v.id("folders")),
@@ -617,7 +626,30 @@ export default defineSchema({
     .index("by_folder", ["folderId"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"])
     .index("by_trigger", ["triggerType", "status"]),
+
+  vault_item_versions: defineTable({
+    itemId: v.id("vault_items"),
+    userId: v.id("users"),
+    encryptedTitle: v.optional(v.string()),
+    encryptedContent: v.string(),
+    encryptedMeta: v.optional(v.string()),
+    encryptedLinks: v.optional(v.string()),
+    files: v.array(
+      v.object({
+        storageId: v.id("_storage"),
+        iv: v.string(),
+        encryptedMeta: v.optional(v.string()),
+        sizeBucket: v.optional(v.number()),
+        order: v.number(),
+      }),
+    ),
+    savedAt: v.number(),
+    replacedAt: v.number(),
+  })
+    .index("by_item", ["itemId"])
+    .index("by_user", ["userId"]),
 
   // v2 sharing per folder (M06-4, M06-6, M03-1, M03-2). The folder name is
   // sealed: under the master key for the owner, to each grantee's ML-KEM key

@@ -40,7 +40,7 @@ export function ReleaseIntroductionEditor() {
   const titles = useDecryptedTitles(intros);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
-  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -88,7 +88,7 @@ export function ReleaseIntroductionEditor() {
     });
     if (!ok) return;
     try {
-      await deleteItem({ itemId: id });
+      await archiveItem({ itemId: id });
     } catch (err) {
       toast({
         variant: "error",

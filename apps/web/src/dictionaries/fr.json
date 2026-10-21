@@ -490,11 +490,11 @@
       "kindText": "Texte",
       "targetingPrefix": "· Pour {targeting}",
       "openAria": "Ouvrir {title}",
-      "deleteAria": "Supprimer {title}",
-      "deleteTitle": "Supprimer « {title} » ?",
-      "deleteDescription": "Les contacts ne verront plus ce message d'accueil.",
-      "deleteConfirm": "Supprimer",
-      "deleteError": "Échec de la suppression du message d'accueil"
+      "deleteAria": "Archiver {title}",
+      "deleteTitle": "Archiver « {title} » ?",
+      "deleteDescription": "Les contacts ne verront plus ce message d'accueil. Il reste dans vos archives.",
+      "deleteConfirm": "Archiver",
+      "deleteError": "Échec de l'archivage du message d'accueil"
     },
     "overview": {
       "title": "Qui reçoit quoi",
@@ -1515,7 +1515,7 @@
       "notFound": "Élément introuvable",
       "backToVault": "Retour au coffre",
       "edit": "Modifier",
-      "deletePermanently": "Supprimer définitivement",
+      "archive": "Archiver",
       "summaryPrivate": "Privé",
       "summaryReleasedTo": "Transmis à {names}",
       "summaryReleasedAll": "Transmis à tous les contacts de confiance",
@@ -1549,14 +1549,12 @@
       "undo": "Annuler",
       "remove": "Supprimer"
     },
-    "delete": {
-      "title": "Supprimer définitivement cet élément ?",
-      "description": "Cette action effacera l'élément, chaque pièce jointe sécurisée et toutes les clés chiffrées des bénéficiaires. Elle est irréversible — il n'y a ni archive, ni corbeille, ni récupération possible, même avec votre phrase de récupération.",
-      "confirmPrefix": "Saisissez",
-      "confirmSuffix": "pour confirmer",
+    "archive": {
+      "title": "Archiver cet élément ?",
+      "description": "Il quitte votre coffre et n'est plus transmis à personne. Il reste entier dans vos archives, avec son historique, et vous pouvez le restaurer à tout moment.",
       "cancel": "Annuler",
-      "deleting": "Suppression…",
-      "deleteForever": "Supprimer définitivement"
+      "archiving": "Archivage…",
+      "confirm": "Archiver"
     },
     "dialog": {
       "breadcrumbVault": "Coffre",

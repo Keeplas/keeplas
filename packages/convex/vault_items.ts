@@ -4,15 +4,16 @@ import {
   mutation,
   query,
   MutationCtx,
+  QueryCtx,
 } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { accessLevelValidator } from "./validators";
 import {
   requireFullAuth,
   getUserVault,
   getActiveItems,
-  getActiveStorageBytes,
+  getStorageUsage,
   requireItemOwnership,
   requireOwnRecipients,
   resolveItemRecipients,
@@ -22,7 +23,6 @@ import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
   generateBlobUploadUrl,
   getBlobDownloadUrl,
-  deleteBlob,
   getBlobSize,
   sizeBucket,
   storageRefValidator,
@@ -70,39 +70,111 @@ export const getItems = query({
  * returning full documents made the list subscription ship every body on
  * every change. Use `getItem` for the detail screen.
  */
+async function summarize(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  items: Doc<"vault_items">[],
+) {
+  const files = await ctx.db
+    .query("vault_item_files")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+  const filesByItem = new Map<Id<"vault_items">, typeof files>();
+  for (const file of files.sort((a, b) => a.order - b.order)) {
+    filesByItem.set(file.itemId, [
+      ...(filesByItem.get(file.itemId) ?? []),
+      file,
+    ]);
+  }
+  return items.map((item) => ({
+    _id: item._id,
+    folderId: item.folderId,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    archivedAt: item.archivedAt,
+    title: item.title,
+    category: item.category,
+    encryptedTitle: item.encryptedTitle,
+    encryptedMeta: item.encryptedMeta,
+    ownerWrappedDek: item.ownerWrappedDek,
+    sharedWithContacts: item.sharedWithContacts ?? [],
+    files: (filesByItem.get(item._id) ?? []).map((file) => ({
+      encryptedMeta: file.encryptedMeta,
+      kind: file.kind,
+      durationSec: file.durationSec,
+    })),
+  }));
+}
+
 export const getItemSummaries = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
-    const items = await getActiveItems(ctx, userId);
-    const files = await ctx.db
-      .query("vault_item_files")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+    return await summarize(ctx, userId, await getActiveItems(ctx, userId));
+  },
+});
+
+export const getArchivedItems = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const items = await ctx.db
+      .query("vault_items")
+      .withIndex("by_user_status", (q) =>
+        q.eq("userId", userId).eq("status", "archived"),
+      )
       .collect();
-    const filesByItem = new Map<Id<"vault_items">, typeof files>();
-    for (const file of files.sort((a, b) => a.order - b.order)) {
-      filesByItem.set(file.itemId, [
-        ...(filesByItem.get(file.itemId) ?? []),
-        file,
-      ]);
-    }
-    return items.map((item) => ({
-      _id: item._id,
-      folderId: item.folderId,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      title: item.title,
-      category: item.category,
-      encryptedTitle: item.encryptedTitle,
-      encryptedMeta: item.encryptedMeta,
-      ownerWrappedDek: item.ownerWrappedDek,
-      sharedWithContacts: item.sharedWithContacts ?? [],
-      files: (filesByItem.get(item._id) ?? []).map((file) => ({
+    const summaries = await summarize(
+      ctx,
+      userId,
+      items.filter((item) => !item.isReleaseIntroduction),
+    );
+    return summaries.sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0));
+  },
+});
+
+export const getItemVersions = query({
+  args: { itemId: v.id("vault_items") },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const item = await ctx.db.get(args.itemId);
+    if (!item || item.userId !== userId) return [];
+    const versions = await ctx.db
+      .query("vault_item_versions")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .order("desc")
+      .take(200);
+    return versions.map((version) => ({
+      _id: version._id,
+      encryptedTitle: version.encryptedTitle,
+      encryptedContent: version.encryptedContent,
+      encryptedMeta: version.encryptedMeta,
+      encryptedLinks: version.encryptedLinks,
+      savedAt: version.savedAt,
+      replacedAt: version.replacedAt,
+      files: version.files.map((file) => ({
+        storageId: file.storageId,
+        iv: file.iv,
         encryptedMeta: file.encryptedMeta,
-        kind: file.kind,
-        durationSec: file.durationSec,
+        order: file.order,
       })),
     }));
+  },
+});
+
+export const getVersionFileUrl = query({
+  args: {
+    versionId: v.id("vault_item_versions"),
+    storageId: storageRefValidator,
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const version = await ctx.db.get(args.versionId);
+    if (!version || version.userId !== userId) return null;
+    if (!version.files.some((file) => file.storageId === args.storageId)) {
+      return null;
+    }
+    return await getBlobDownloadUrl(ctx, args.storageId);
   },
 });
 
@@ -266,8 +338,8 @@ async function assertWithinStorageQuota(
   const incoming = files.reduce((sum, f) => sum + f.sizeBucket, 0);
   const user = await ctx.db.get(userId);
   const plan = getUserPlan(user ?? { plan: undefined });
-  const current = await getActiveStorageBytes(ctx, userId);
-  if (current + incoming > PLAN_QUOTA_BYTES[plan]) {
+  const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
+  if (activeBytes + archiveBytes + incoming > PLAN_QUOTA_BYTES[plan]) {
     throw new ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" });
   }
 }
@@ -431,6 +503,46 @@ export const createItem = auditedMutation({
   },
 });
 
+const CONTENT_FIELDS = [
+  "encryptedTitle",
+  "encryptedContent",
+  "encryptedLinks",
+  "encryptedMeta",
+] as const;
+
+async function saveVersion(
+  ctx: MutationCtx,
+  item: Doc<"vault_items">,
+  now: number,
+) {
+  const files = await ctx.db
+    .query("vault_item_files")
+    .withIndex("by_item", (q) => q.eq("itemId", item._id))
+    .collect();
+  await ctx.db.insert("vault_item_versions", {
+    itemId: item._id,
+    userId: item.userId,
+    encryptedTitle: item.encryptedTitle,
+    encryptedContent: item.encryptedContent,
+    encryptedMeta: item.encryptedMeta,
+    encryptedLinks: item.encryptedLinks,
+    files: files.map((file) => ({
+      storageId: file.storageId,
+      iv: file.iv,
+      encryptedMeta: file.encryptedMeta,
+      sizeBucket: file.sizeBucket ?? file.size,
+      order: file.order,
+    })),
+    savedAt: item.updatedAt,
+    replacedAt: now,
+  });
+  return files;
+}
+
+function requireNotArchived(item: Doc<"vault_items">) {
+  if (item.status === "archived") throw new ConvexError("Item is archived");
+}
+
 /**
  * Update an existing vault item (re-encrypted content). When recipient
  * configuration changes, pass recipientKeys to re-wrap the DEK for the
@@ -462,10 +574,11 @@ export const updateItem = auditedMutation({
     // Re-keying a ZK item replaces its owner wrap; mirror createItem.
     ownerWrappedDek: v.optional(v.string()),
     isReleaseIntroduction: v.optional(v.boolean()),
+    removeFileIds: v.optional(v.array(v.id("vault_item_files"))),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
     await requireOwnRecipients(ctx, userId, {
       contacts: [
         ...(args.sharedWithContacts ?? []),
@@ -475,8 +588,21 @@ export const updateItem = auditedMutation({
       groups: args.sharedWithGroups ?? [],
     });
 
-    const { itemId, recipientKeys, ...updates } = args;
+    const { itemId, recipientKeys, removeFileIds = [], ...updates } = args;
     const now = Date.now();
+    const editsContent =
+      removeFileIds.length > 0 ||
+      CONTENT_FIELDS.some((field) => args[field] !== undefined);
+    if (editsContent) {
+      requireNotArchived(item);
+      const files = await saveVersion(ctx, item, now);
+      for (const fileId of removeFileIds) {
+        if (!files.some((file) => file._id === fileId)) {
+          throw new Error("File not found");
+        }
+        await ctx.db.delete(fileId);
+      }
+    }
     const patch: Record<string, unknown> = { updatedAt: now };
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
@@ -806,8 +932,9 @@ export const addItemFiles = auditedMutation({
 });
 
 /**
- * Detach a single attachment from a vault item: deletes the storage blob
- * and the row. Ownership is verified on both the item and the file.
+ * Detach a single attachment from a vault item. The item's previous state,
+ * this file included, is kept as a version, so the blob stays in storage.
+ * Ownership is verified on both the item and the file.
  */
 export const removeItemFile = auditedMutation({
   action: "vault_item.file_removed",
@@ -819,16 +946,18 @@ export const removeItemFile = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
+    requireNotArchived(item);
 
     const file = await ctx.db.get(args.fileId);
     if (!file || file.itemId !== args.itemId || file.userId !== userId) {
       throw new Error("File not found");
     }
 
-    await deleteBlob(ctx, file.storageId);
+    const now = Date.now();
+    await saveVersion(ctx, item, now);
     await ctx.db.delete(args.fileId);
-    await ctx.db.patch(args.itemId, { updatedAt: Date.now() });
+    await ctx.db.patch(args.itemId, { updatedAt: now });
   },
 });
 
@@ -848,42 +977,21 @@ export const resolveRecipientsForItem = query({
   },
 });
 
-/**
- * Permanently delete a vault item. Removes the document, all per-recipient
- * wrapped DEK rows, every attached file row, and the underlying ciphertext
- * blobs from Convex storage. There is no recovery path — callers must show
- * an explicit confirmation in the UI before invoking this.
- */
-export const deleteItem = auditedMutation({
-  action: "vault_item.deleted",
+export const archiveItem = auditedMutation({
+  action: "vault_item.archived",
   resourceType: "vault_item",
   getResourceId: (args) => args.itemId,
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const item = await requireItemOwnership(ctx, args.itemId, userId);
-
+    if (item.status === "archived") return;
     const now = Date.now();
-
-    const recipientKeys = await ctx.db
-      .query("vault_item_recipient_keys")
-      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
-      .collect();
-    await Promise.all(recipientKeys.map((row) => ctx.db.delete(row._id)));
-
-    const files = await ctx.db
-      .query("vault_item_files")
-      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
-      .collect();
-    await Promise.all(
-      files.map(async (file) => {
-        await deleteBlob(ctx, file.storageId);
-        await ctx.db.delete(file._id);
-      }),
-    );
-
-    await ctx.db.delete(args.itemId);
-
+    await ctx.db.patch(args.itemId, {
+      status: "archived",
+      archivedFromStatus: item.status,
+      archivedAt: now,
+    });
     const vault = await ctx.db.get(item.vaultId);
     if (vault) {
       await ctx.db.patch(item.vaultId, {
@@ -891,6 +999,79 @@ export const deleteItem = auditedMutation({
         updatedAt: now,
       });
     }
+  },
+});
+
+export const unarchiveItem = auditedMutation({
+  action: "vault_item.unarchived",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  args: { itemId: v.id("vault_items") },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
+    if (item.status !== "archived") return;
+    const now = Date.now();
+    await ctx.db.patch(args.itemId, {
+      status: item.archivedFromStatus ?? "active",
+      archivedFromStatus: undefined,
+      archivedAt: undefined,
+    });
+    const vault = await ctx.db.get(item.vaultId);
+    if (vault) {
+      await ctx.db.patch(item.vaultId, {
+        encryptedItemsCount: vault.encryptedItemsCount + 1,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+export const restoreItemVersion = auditedMutation({
+  action: "vault_item.version_restored",
+  resourceType: "vault_item",
+  getResourceId: (args) => args.itemId,
+  getMetadata: (args) => ({ versionId: args.versionId }),
+  args: {
+    itemId: v.id("vault_items"),
+    versionId: v.id("vault_item_versions"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const item = await requireItemOwnership(ctx, args.itemId, userId);
+    requireNotArchived(item);
+    const version = await ctx.db.get(args.versionId);
+    if (!version || version.itemId !== args.itemId) {
+      throw new Error("Version not found");
+    }
+
+    const now = Date.now();
+    const current = await saveVersion(ctx, item, now);
+    const kept = new Set(version.files.map((file) => file.storageId));
+    for (const file of current) {
+      if (!kept.has(file.storageId)) await ctx.db.delete(file._id);
+    }
+    const present = new Set(current.map((file) => file.storageId));
+    for (const file of version.files) {
+      if (present.has(file.storageId)) continue;
+      await ctx.db.insert("vault_item_files", {
+        itemId: args.itemId,
+        userId,
+        storageId: file.storageId,
+        iv: file.iv,
+        encryptedMeta: file.encryptedMeta,
+        sizeBucket: file.sizeBucket,
+        order: file.order,
+        createdAt: now,
+      });
+    }
+    await ctx.db.patch(args.itemId, {
+      encryptedTitle: version.encryptedTitle,
+      encryptedContent: version.encryptedContent,
+      encryptedMeta: version.encryptedMeta,
+      encryptedLinks: version.encryptedLinks,
+      updatedAt: now,
+    });
   },
 });
 
