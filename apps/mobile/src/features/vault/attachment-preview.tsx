@@ -30,7 +30,7 @@ import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, withAlpha } from "@/theme";
-import { convertibleOffice, documentKind } from "./document-kind";
+import { documentKind, previewableOffice } from "./document-kind";
 import { officePage, sheetToHtml, wordToHtml } from "./office-html";
 import type { AttachmentState } from "./use-decrypted-attachment";
 
@@ -289,7 +289,9 @@ function OfficePreview({
   const { t } = useI18n();
   const { colors } = useTheme();
   const native = Platform.OS === "ios";
-  const convert = native ? null : convertibleOffice(meta.name);
+  const convert = native
+    ? null
+    : previewableOffice(meta.name, new File(uri).size);
   const [html, setHtml] = useState<string | null>(null);
   const [failed, setFailed] = useState(!native && convert === null);
 
