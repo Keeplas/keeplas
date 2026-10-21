@@ -685,7 +685,7 @@ export default function ComposeCapture() {
             placeholderTextColor={colors["text.subtle"]}
             accessibilityLabel={t("capture.titleLabel")}
             style={[
-              singleLine(type.h3),
+              singleLine(type["body-lg"]),
               styles.titleInput,
               { color: colors["text.primary"] },
             ]}

@@ -22,6 +22,7 @@ import {
   useEditorContent,
 } from "@10play/tentap-editor";
 
+import { Icon } from "@/components/icon";
 import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -41,7 +42,7 @@ export function NoteEditor({
   const css = `
     * { font-family: -apple-system, Roboto, sans-serif; }
     body { background: transparent; color: ${colors["text.primary"]}; }
-    .ProseMirror { min-height: 140px; padding: 14px; font-size: 15px; line-height: 22px; outline: none; }
+    .ProseMirror { min-height: 170px; padding: 12px 14px; font-size: 17px; line-height: 25px; outline: none; }
     .ProseMirror p { margin: 0 0 8px; }
     .ProseMirror h1, .ProseMirror h2, .ProseMirror h3 { font-family: Georgia, serif; font-weight: 600; margin: 4px 0 8px; }
     .ProseMirror h2 { font-size: 22px; line-height: 28px; }
@@ -52,7 +53,6 @@ export function NoteEditor({
   `;
   const editor = useEditorBridge({
     initialContent: initialHtml,
-    dynamicHeight: true,
     bridgeExtensions: [
       CoreBridge.configureCSS(css),
       PlaceholderBridge.configureExtension({ placeholder }),
@@ -150,14 +150,18 @@ export function NoteEditor({
     {
       key: "undo",
       label: t("noteEditor.undo"),
-      glyph: <Text variant="label">↶</Text>,
+      glyph: (
+        <View style={styles.mirror}>
+          <Icon name="rotate" size={18} />
+        </View>
+      ),
       disabled: !state.canUndo,
       onPress: editor.undo,
     },
     {
       key: "redo",
       label: t("noteEditor.redo"),
-      glyph: <Text variant="label">↷</Text>,
+      glyph: <Icon name="rotate" size={18} />,
       disabled: !state.canRedo,
       onPress: editor.redo,
     },
@@ -204,7 +208,9 @@ export function NoteEditor({
           </Pressable>
         ))}
       </ScrollView>
-      <RichText editor={editor} style={styles.web} />
+      <View style={styles.web}>
+        <RichText editor={editor} scrollEnabled />
+      </View>
     </View>
   );
 }
@@ -222,8 +228,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   disabled: { opacity: 0.35 },
+  mirror: { transform: [{ scaleX: -1 }] },
   italic: { fontStyle: "italic", fontSize: 17 },
   underline: { textDecorationLine: "underline", fontSize: 17 },
   strike: { textDecorationLine: "line-through", fontSize: 17 },
-  web: { backgroundColor: "transparent", minHeight: 140 },
+  web: { height: 200 },
 });

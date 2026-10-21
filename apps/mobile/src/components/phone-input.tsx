@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   flagEmoji: { fontSize: 20, lineHeight: 24 },
   divider: { width: 1, height: "100%", marginLeft: -14 },
-  input: { flex: 1, height: "100%", paddingVertical: 0 },
+  input: { flex: 1, paddingTop: 0 },
   sheet: { flex: 1, paddingHorizontal: 20, gap: 12 },
   sheetHeader: {
     flexDirection: "row",
