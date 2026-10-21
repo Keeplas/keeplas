@@ -5,9 +5,13 @@ import * as SecureStore from "expo-secure-store";
 
 import * as DeviceLock from "../../../modules/device-lock";
 import {
+  DevicePinError,
   forgetDeviceVault,
+  hasDevicePin,
+  hasDeviceVault,
   readDeviceRootKey,
   saveDeviceVault,
+  setDevicePin,
   unlockDeviceVault,
 } from "../device-vault";
 
@@ -82,5 +86,125 @@ describe("device vault", () => {
     await expect(unlockDeviceVault("u3", "Unlock")).rejects.toThrow(
       "No vault key on this device",
     );
+  });
+});
+
+async function pinError(attempt: Promise<unknown>): Promise<DevicePinError> {
+  try {
+    await attempt;
+  } catch (error) {
+    if (error instanceof DevicePinError) return error;
+    throw error;
+  }
+  throw new Error("expected a DevicePinError");
+}
+
+describe("device vault PIN", () => {
+  beforeEach(() => {
+    jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("needs both the screen lock and the PIN once a PIN is set", async () => {
+    await saveDeviceVault(
+      "p1",
+      { masterKey: masterKey(), rootKey: rootKey() },
+      "Unlock",
+    );
+    expect(await hasDevicePin("p1")).toBe(false);
+    await setDevicePin("p1", "Unlock", undefined, "123456");
+
+    expect(await hasDevicePin("p1")).toBe(true);
+    expect((await pinError(unlockDeviceVault("p1", "Unlock"))).code).toBe(
+      "required",
+    );
+    expect(await unlockDeviceVault("p1", "Unlock", "123456")).toEqual(
+      masterKey(),
+    );
+    expect(await readDeviceRootKey("p1", "Back up", "123456")).toEqual(
+      rootKey(),
+    );
+  });
+
+  it("counts wrong PINs, locks after 5 and wipes this phone's key after 10", async () => {
+    await saveDeviceVault(
+      "p2",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    const first = await pinError(unlockDeviceVault("p2", "Unlock", "000000"));
+    expect(first.code).toBe("wrong");
+    expect(first.detail.remaining).toBe(4);
+
+    for (let i = 0; i < 3; i++) {
+      await pinError(unlockDeviceVault("p2", "Unlock", "000000"));
+    }
+    const locked = await pinError(unlockDeviceVault("p2", "Unlock", "000000"));
+    expect(locked.code).toBe("locked");
+    expect(
+      (await pinError(unlockDeviceVault("p2", "Unlock", "123456"))).code,
+    ).toBe("locked");
+
+    for (let i = 0; i < 5; i++) {
+      jest.advanceTimersByTime(60_001);
+      await pinError(unlockDeviceVault("p2", "Unlock", "000000"));
+    }
+    expect(await hasDeviceVault("p2")).toBe(false);
+  });
+
+  it("counts every wrong PIN when several are tried at once", async () => {
+    await saveDeviceVault(
+      "p5",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    const errors = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        pinError(unlockDeviceVault("p5", "Unlock", "000000")),
+      ),
+    );
+    expect(errors.map((e) => e.code)).toEqual([
+      "wrong",
+      "wrong",
+      "wrong",
+      "wrong",
+      "locked",
+    ]);
+  });
+
+  it("resets the count after a right PIN", async () => {
+    await saveDeviceVault(
+      "p3",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    await pinError(unlockDeviceVault("p3", "Unlock", "000000"));
+    await unlockDeviceVault("p3", "Unlock", "123456");
+    expect(
+      (await pinError(unlockDeviceVault("p3", "Unlock", "000000"))).detail
+        .remaining,
+    ).toBe(4);
+  });
+
+  it("changes and removes the PIN", async () => {
+    await saveDeviceVault(
+      "p4",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    await setDevicePin("p4", "Unlock", "123456", "654321");
+    expect(await unlockDeviceVault("p4", "Unlock", "654321")).toEqual(
+      masterKey(),
+    );
+    await setDevicePin("p4", "Unlock", "654321", undefined);
+    expect(await hasDevicePin("p4")).toBe(false);
+    expect(await unlockDeviceVault("p4", "Unlock")).toEqual(masterKey());
   });
 });

@@ -31,6 +31,7 @@ interface SealedContext {
   country: string;
   ts: number;
   sig: string;
+  city?: string;
 }
 
 function extractIp(request: Request): string {
@@ -50,6 +51,24 @@ function extractCountry(request: Request): string {
     request.headers.get("cf-ipcountry");
   if (country && /^[A-Z]{2}$/.test(country)) return country;
   return FALLBACK_COUNTRY;
+}
+
+function extractCity(request: Request): string | undefined {
+  const raw =
+    request.headers.get("x-vercel-ip-city") ?? request.headers.get("cf-ipcity");
+  if (!raw) return undefined;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return undefined;
+  }
+  const clean = Array.from(decoded)
+    .filter((char) => char >= " " && char !== "\u007f" && char !== "|")
+    .join("")
+    .trim()
+    .slice(0, 80);
+  return clean || undefined;
 }
 
 function readCookie(request: Request, name: string): string | undefined {
@@ -251,9 +270,14 @@ async function sealContext(
 ): Promise<SealedContext> {
   const ip = extractIp(request);
   const country = extractCountry(request);
+  const city = extractCity(request);
   const ts = Date.now();
-  const sig = await sign(`${ip}|${country}|${ts}`, secret);
-  return { ip, country, ts, sig };
+  if (!city) {
+    const sig = await sign(`${ip}|${country}|${ts}`, secret);
+    return { ip, country, ts, sig };
+  }
+  const sig = await sign(`${ip}|${country}|${ts}|${city}`, secret);
+  return { ip, country, ts, sig, city };
 }
 
 export const startInstance = createStart(() => ({

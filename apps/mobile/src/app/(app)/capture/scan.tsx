@@ -18,10 +18,10 @@ import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius, type } from "@/theme";
 
 /**
- * M07-2 Scan document. The camera UI is dark in both themes. Each shot
- * adds a page; pages are bound into one PDF on save (M07-8). The gallery
- * button adds photos or files instead. Edge detection ("Auto") is not
- * available on-device yet, so capture is manual.
+ * M07-2 Scan document. "Auto" opens the system document scanner (VisionKit /
+ * ML Kit: edges, perspective, several pages); "Manual" is the dark camera
+ * below, where each shot adds a page. Pages are bound into one PDF on save
+ * (M07-8). The gallery button adds photos or files instead.
  */
 export default function ScanDocument() {
   const router = useRouter();
@@ -31,6 +31,8 @@ export default function ScanDocument() {
   const [permission, requestPermission] = useCameraPermissions();
   const [torch, setTorch] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const launched = useRef(false);
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
@@ -39,6 +41,40 @@ export default function ScanDocument() {
   }, [permission, requestPermission]);
 
   const review = () => router.replace("/capture/compose");
+
+  async function scanAuto() {
+    setMode("auto");
+    try {
+      const scanner = await import("react-native-document-scanner-plugin");
+      const result = await scanner.default.scanDocument({
+        croppedImageQuality: 85,
+        responseType: scanner.ResponseType.ImageFilePath,
+      });
+      const scanned = result.scannedImages ?? [];
+      if (
+        result.status === scanner.ScanDocumentResponseStatus.Success &&
+        scanned.length > 0
+      ) {
+        draftStore.addPages(
+          scanned.map((uri) => (uri.startsWith("/") ? `file://${uri}` : uri)),
+        );
+        review();
+        return;
+      }
+    } catch {
+      Alert.alert(
+        t("capture.autoUnavailableTitle"),
+        t("capture.autoUnavailableBody"),
+      );
+    }
+    setMode("manual");
+  }
+
+  useEffect(() => {
+    if (!permission?.granted || launched.current) return;
+    launched.current = true;
+    void scanAuto();
+  });
 
   async function shoot() {
     if (!camera.current || busy) return;
@@ -114,8 +150,30 @@ export default function ScanDocument() {
           />
         </Pressable>
       </View>
+      <View style={styles.modes}>
+        {(["auto", "manual"] as const).map((option) => (
+          <Pressable
+            key={option}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: mode === option }}
+            onPress={() =>
+              option === "auto" ? void scanAuto() : setMode("manual")
+            }
+            style={[styles.mode, mode === option && styles.modeActive]}
+          >
+            <Text
+              style={[
+                type.caption,
+                mode === option ? styles.navy : styles.white,
+              ]}
+            >
+              {t(option === "auto" ? "capture.modeAuto" : "capture.modeManual")}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       <View style={styles.camera}>
-        {permission?.granted ? (
+        {permission?.granted && mode === "manual" ? (
           <CameraView
             ref={camera}
             style={StyleSheet.absoluteFill}
@@ -123,6 +181,11 @@ export default function ScanDocument() {
             enableTorch={torch}
           />
         ) : null}
+        <View pointerEvents="none" style={styles.frame}>
+          {(["tl", "tr", "bl", "br"] as const).map((corner) => (
+            <View key={corner} style={[styles.corner, styles[corner]]} />
+          ))}
+        </View>
         <View style={styles.banner}>
           <Icon name="lock" tint={palette.white} />
           <View style={styles.bannerText}>
@@ -148,7 +211,7 @@ export default function ScanDocument() {
           accessibilityRole="button"
           accessibilityLabel={t("capture.shutter")}
           onPress={shoot}
-          disabled={!permission?.granted || busy}
+          disabled={!permission?.granted || busy || mode !== "manual"}
           style={styles.shutter}
         >
           <View style={styles.shutterDot} />
@@ -187,13 +250,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  modes: {
+    flexDirection: "row",
+    alignSelf: "center",
+    gap: 4,
+    padding: 4,
+    marginTop: 8,
+    borderRadius: radius.pill,
+    backgroundColor: palette.navy["800"],
+  },
+  mode: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  modeActive: { backgroundColor: palette.white },
   camera: {
-    height: 560,
+    height: 520,
     marginTop: 8,
     backgroundColor: palette.navy["700"],
     justifyContent: "flex-end",
     overflow: "hidden",
   },
+  frame: {
+    position: "absolute",
+    top: 36,
+    left: 36,
+    right: 36,
+    bottom: 140,
+    borderWidth: 1.5,
+    borderColor: palette.sky["500"],
+    borderRadius: 4,
+  },
+  corner: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: palette.sky["500"],
+    backgroundColor: palette.white,
+  },
+  tl: { top: -7, left: -7 },
+  tr: { top: -7, right: -7 },
+  bl: { bottom: -7, left: -7 },
+  br: { bottom: -7, right: -7 },
   banner: {
     margin: 20,
     marginBottom: 38,

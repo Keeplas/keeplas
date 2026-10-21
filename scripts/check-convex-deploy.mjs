@@ -59,7 +59,9 @@ const moduleCount = new Set(
 const indexCount = (out.match(/"indexDescriptor":/g) || []).length;
 
 // crons.js present AND its cronSpecs is a non-null array.
-const cronsBlock = out.match(/"crons\.js":\s*{[\s\S]*?"cronSpecs":\s*(\[|null)/);
+const cronsBlock = out.match(
+  /"crons\.js":\s*{[\s\S]*?"cronSpecs":\s*(\[|null)/,
+);
 const cronCount =
   cronsBlock && cronsBlock[1] === "["
     ? (out.match(/"cronSchedule":/g) || []).length
@@ -92,6 +94,35 @@ if (deletedBanner || deletedIndexCount > MAX_DELETED_INDEXES)
   fail(
     "this push DELETES table indexes. Refusing automatically — re-run " +
       "interactively and confirm only if the schema change is intentional.",
+  );
+
+const DEV_ONLY_FLAGS = [
+  "DEV_TEST_PHONES",
+  "ATTESTATION_SIMULATOR_BYPASS",
+  "APP_ATTEST_ALLOW_DEVELOPMENT",
+];
+const envList = spawnSync(
+  "npx",
+  ["--no-install", "convex", "env", "list", "--prod"],
+  {
+    cwd: process.cwd(),
+    encoding: "utf8",
+  },
+);
+if (envList.status !== 0) {
+  fail(
+    "could not read the target deployment's environment to check for " +
+      "dev-only flags (`convex env list` failed).",
+  );
+}
+const setFlags = DEV_ONLY_FLAGS.filter((flag) =>
+  new RegExp(`^${flag}=\\S`, "m").test(envList.stdout || ""),
+);
+if (setFlags.length > 0)
+  fail(
+    `dev-only flag(s) set on the target deployment: ${setFlags.join(", ")}. ` +
+      "They let test numbers sign in with 000000 or skip app attestation. " +
+      "Remove them with `npx convex env remove <NAME>` before deploying.",
   );
 
 console.log("✔ Convex deploy preflight passed — safe to deploy.\n");

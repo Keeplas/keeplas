@@ -7,6 +7,7 @@ import Branch from "../../assets/illustrations/branch.svg";
 import LandscapeNight from "../../assets/illustrations/landscape-night.svg";
 import Landscape from "../../assets/illustrations/landscape.svg";
 import { useTheme } from "@/providers/theme-provider";
+import { useTabBarVisible } from "./tab-bar";
 import { layout } from "@/theme";
 
 export type ScreenDecor = "branches" | "landscape";
@@ -37,6 +38,7 @@ export function Screen({
   contentStyle?: ViewStyle;
 }) {
   const { colors, scheme } = useTheme();
+  const tabBar = useTabBarVisible();
   const content: ViewStyle[] = [
     styles.content,
     { gap },
@@ -45,7 +47,7 @@ export function Screen({
   ];
   return (
     <SafeAreaView
-      edges={["top", "bottom"]}
+      edges={tabBar ? ["top"] : ["top", "bottom"]}
       style={[styles.root, { backgroundColor: colors["bg.app"] }]}
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
@@ -60,7 +62,9 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.flex, ...content]}>{children}</View>
+        <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
+          {children}
+        </View>
       )}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </SafeAreaView>
@@ -102,6 +106,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   center: { alignItems: "center" },
+  listOwnsBottom: { paddingBottom: 0 },
   footer: { paddingHorizontal: layout.gutter, paddingBottom: 12, gap: 12 },
   landscape: { position: "absolute", left: 0, right: 0, bottom: 0 },
   branches: {

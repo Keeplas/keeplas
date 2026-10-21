@@ -46,6 +46,11 @@ describe("formatBytes", () => {
   ])("formats %d as %s", (bytes, text) => {
     expect(formatBytes(bytes)).toBe(text);
   });
+
+  it("uses French units and a decimal comma in French", () => {
+    expect(formatBytes(1_258_291, "fr")).toBe("1,2 Mo");
+    expect(formatBytes(0, "fr")).toBe("0 o");
+  });
 });
 
 describe("formatDate", () => {

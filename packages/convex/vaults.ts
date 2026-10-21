@@ -63,8 +63,14 @@ export const getUsageStats = query({
     const items = await getActiveItems(ctx, userId);
     const files = await getActiveVaultFiles(ctx, userId);
 
+    const bytesByKind = { document: 0, image: 0, audio: 0, video: 0 };
+    for (const file of files) {
+      bytesByKind[file.kind ?? "document"] += storedFileBytes(file);
+    }
+
     return {
       storageBytes: files.reduce((sum, f) => sum + storedFileBytes(f), 0),
+      bytesByKind,
       fileCount: files.length,
       activeItemsCount: items.length,
       plan,

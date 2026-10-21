@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/icon";
+import type { FileKind, VaultCategory } from "@/crypto/item-meta";
 import type { colors } from "@/theme";
 
 /**
@@ -67,21 +68,96 @@ export function groupOf(category: string): VaultGroupKey | null {
   );
 }
 
-/** Sum per-category counts into the four Home groups. */
-export function groupCategoryCounts(
-  counts: Record<string, number>,
-): Record<VaultGroupKey, number> {
-  const totals: Record<VaultGroupKey, number> = {
-    documents: 0,
-    accounts: 0,
-    instructions: 0,
-    other: 0,
-  };
-  for (const [category, count] of Object.entries(counts)) {
-    const group = groupOf(category);
-    if (group) totals[group] += count;
+export type ContentKind = "documents" | "notes" | "photos" | "voice" | "videos";
+
+const KIND_OF_FILE: Record<FileKind, ContentKind> = {
+  document: "documents",
+  image: "photos",
+  audio: "voice",
+  video: "videos",
+};
+
+export function contentKind(files: readonly { kind: FileKind }[]): ContentKind {
+  return files.length === 1 ? KIND_OF_FILE[files[0].kind] : "notes";
+}
+
+export const VAULT_LISTS = [
+  "all",
+  "documents",
+  "accounts",
+  "instructions",
+  "notes",
+  "photos",
+  "voice",
+  "videos",
+  "other",
+  "inbox",
+] as const;
+
+export type VaultListKey = (typeof VAULT_LISTS)[number];
+
+export function isVaultListKey(value: string): value is VaultListKey {
+  return (VAULT_LISTS as readonly string[]).includes(value);
+}
+
+export const GROUP_CATEGORY = {
+  inbox: "inbox",
+  documents: "personal_document",
+  accounts: "credential",
+  instructions: "wishes",
+  other: "other",
+} as const satisfies Record<VaultGroupKey | "inbox", VaultCategory>;
+
+export function presetCategory(list: VaultListKey): VaultCategory | undefined {
+  return list in GROUP_CATEGORY
+    ? GROUP_CATEGORY[list as keyof typeof GROUP_CATEGORY]
+    : undefined;
+}
+
+interface Listed {
+  category: string;
+  kind: ContentKind;
+}
+
+export function bucketOf(item: Listed): Exclude<VaultListKey, "all" | "other"> {
+  if (item.category === "inbox") return "inbox";
+  const group = groupOf(item.category);
+  if (group === "accounts" || group === "instructions") return group;
+  return item.kind;
+}
+
+export function inVaultList(item: Listed, list: VaultListKey): boolean {
+  if (list === "all") return true;
+  if (list === "other") return groupOf(item.category) === "other";
+  return bucketOf(item) === list;
+}
+
+export function listCounts(
+  items: readonly Listed[],
+): Record<VaultListKey, number> {
+  const counts = Object.fromEntries(
+    VAULT_LISTS.map((key) => [key, 0]),
+  ) as Record<VaultListKey, number>;
+  for (const item of items) {
+    counts.all += 1;
+    counts[bucketOf(item)] += 1;
+    if (groupOf(item.category) === "other") counts.other += 1;
   }
-  return totals;
+  return counts;
+}
+
+const RECENT_DAYS = 30;
+const RECENT_MAX = 3;
+
+export function recentItems<T extends { updatedAt: number }>(
+  items: readonly T[],
+  now: number = Date.now(),
+): T[] {
+  const since = now - RECENT_DAYS * 86_400_000;
+  return items
+    .filter((item) => item.updatedAt >= since)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, RECENT_MAX);
 }
 
 /** "Good morning / afternoon / evening" key for a local hour. */

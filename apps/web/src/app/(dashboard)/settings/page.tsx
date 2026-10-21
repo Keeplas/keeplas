@@ -11,6 +11,13 @@ import {
 } from "./sections/constants";
 import { SettingsView } from "./settings-view";
 
+const KINDS = [
+  { kind: "document", colorClassName: "bg-category-document" },
+  { kind: "image", colorClassName: "bg-category-account" },
+  { kind: "audio", colorClassName: "bg-category-instruction" },
+  { kind: "video", colorClassName: "bg-category-note" },
+] as const;
+
 export default function SettingsPage() {
   const t = useTranslations("settings.overview");
   const locale = useLocale();
@@ -28,9 +35,13 @@ export default function SettingsPage() {
     <SettingsView
       usedBytes={stats.storageBytes}
       quotaBytes={stats.quotaBytes}
-      // Per-kind sizes need server-side byte counts per file (not exposed
-      // yet); the bar shows the total until then.
-      breakdown={[]}
+      breakdown={KINDS.filter(({ kind }) => stats.bytesByKind[kind] > 0).map(
+        ({ kind, colorClassName }) => ({
+          label: t(`storage.kinds.${kind}`),
+          bytes: stats.bytesByKind[kind],
+          colorClassName,
+        }),
+      )}
       plan={stats.plan}
       language={t(`languages.${locale}`)}
       lifeCheck={

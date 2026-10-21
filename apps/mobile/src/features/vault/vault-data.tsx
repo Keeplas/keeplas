@@ -14,12 +14,19 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { decryptText } from "@/crypto/envelope";
-import { INBOX, parseItemMeta, type VaultCategory } from "@/crypto/item-meta";
+import {
+  legacyFileMeta,
+  parseFileMeta,
+  parseItemMeta,
+  type VaultCategory,
+} from "@/crypto/item-meta";
 import {
   loadOwnerKeys,
   unwrapOwnerDek,
   type OwnerKeys,
 } from "@/crypto/owner-keys";
+import { isIconName, type IconName } from "@/components/icon";
+import { contentKind, type ContentKind } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import type { OutboxEntry } from "@/features/outbox/outbox";
 import { useViewer } from "@/providers/session-provider";
@@ -31,7 +38,12 @@ export interface VaultItemSummary {
   /** null when the item cannot be decrypted on this phone. */
   title: string | null;
   category: VaultCategory;
+  kind: ContentKind;
+  icon?: IconName;
+  attachments: number;
+  durationSec?: number;
   folderId?: Id<"folders">;
+  sharedWith: Id<"trusted_contacts">[];
   createdAt: number;
   updatedAt: number;
 }
@@ -125,6 +137,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
       const base = {
         id: item._id,
         folderId: item.folderId,
+        sharedWith: item.sharedWithContacts,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
       };
@@ -133,12 +146,36 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
         const title = item.encryptedTitle
           ? await decryptText(item.encryptedTitle, key)
           : (item.title ?? "");
-        const category = item.encryptedMeta
-          ? parseItemMeta(await decryptText(item.encryptedMeta, key)).category
-          : (item.category ?? "other");
-        return { ...base, title, category };
+        const meta = item.encryptedMeta
+          ? parseItemMeta(await decryptText(item.encryptedMeta, key))
+          : undefined;
+        const category = meta?.category ?? item.category ?? "other";
+        const icon =
+          meta?.icon && isIconName(meta.icon) ? meta.icon : undefined;
+        const files = await Promise.all(
+          item.files.map(async (file) =>
+            file.encryptedMeta
+              ? parseFileMeta(await decryptText(file.encryptedMeta, key))
+              : legacyFileMeta(file),
+          ),
+        );
+        return {
+          ...base,
+          title,
+          category,
+          icon,
+          kind: contentKind(files),
+          attachments: files.length,
+          durationSec: files.length === 1 ? files[0].durationSec : undefined,
+        };
       } catch {
-        return { ...base, title: null, category: item.category ?? "other" };
+        return {
+          ...base,
+          title: null,
+          category: item.category ?? "other",
+          kind: "notes",
+          attachments: item.files.length,
+        };
       }
     },
     [itemKey],
@@ -266,17 +303,3 @@ export function useVaultData(): VaultDataValue {
   }
   return value;
 }
-
-/** Per-category counts (inbox apart) for the Home tiles. */
-export function categoryCounts(
-  items: VaultItemSummary[],
-): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const item of items) {
-    counts[item.category] = (counts[item.category] ?? 0) + 1;
-  }
-  return counts;
-}
-
-export const isInbox = (item: { category: VaultCategory }) =>
-  item.category === INBOX;

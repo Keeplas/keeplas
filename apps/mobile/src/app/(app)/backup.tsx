@@ -15,11 +15,13 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import * as CloudKey from "../../../modules/cloud-key";
+import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 
 const storageKey = (userId: string) => `keeplas.cbk.${userId}`;
 
 /** D7 / M07-6: Keeplas envelope + synced platform CBK, on or off together. */
 export default function CloudBackup() {
+  const withPin = useWithPin();
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
@@ -31,7 +33,9 @@ export default function CloudBackup() {
   async function enable() {
     setBusy(true);
     try {
-      const rootKey = await readDeviceRootKey(viewer._id, t("backup.auth"));
+      const rootKey = await withPin((pin) =>
+        readDeviceRootKey(viewer._id, t("backup.auth"), pin),
+      );
       if (!rootKey) throw new Error(t("backup.noRootKey"));
       try {
         const sealed = await sealCloudBackup({ rootKey, userId: viewer._id });
@@ -41,6 +45,7 @@ export default function CloudBackup() {
         rootKey.fill(0);
       }
     } catch (error) {
+      if (isPinAbort(error)) return;
       Alert.alert(
         t("common.genericError"),
         error instanceof Error ? error.message : undefined,

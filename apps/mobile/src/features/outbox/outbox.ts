@@ -28,6 +28,8 @@ export interface SealedItem {
   encryptedMeta: string;
   encryptedContent: string;
   ownerWrappedDek: string;
+  folderId?: string;
+  recipientKeys?: { contactId: string; wrappedDek: string }[];
 }
 
 export interface OutboxEntry {
@@ -36,6 +38,7 @@ export interface OutboxEntry {
   createdAt: number;
   item: SealedItem;
   files: OutboxFile[];
+  attachTo?: string;
   status: OutboxStatus;
   attempts: number;
   error?: string;
@@ -65,6 +68,10 @@ export interface OutboxDeps {
     onProgress: (sent: number) => void,
   ) => Promise<string>;
   createItem: (args: CreateItemArgs) => Promise<string>;
+  addItemFiles: (
+    itemId: string,
+    files: CreateItemArgs["files"],
+  ) => Promise<void>;
   deleteLocalFile: (path: string) => void;
 }
 
@@ -113,18 +120,25 @@ export async function uploadEntry(
       current = { ...current, files };
       await store.put(current);
     }
-    const itemId = await deps.createItem({
-      vaultId: await deps.vaultId(),
-      ...current.item,
-      accessLevel: "private",
-      encryptionType: "zero_knowledge",
-      recipientMode: "default",
-      files: current.files.map((f) => ({
-        storageId: f.storageId!,
-        iv: f.iv,
-        encryptedMeta: f.encryptedMeta,
-      })),
-    });
+    const uploaded = current.files.map((f) => ({
+      storageId: f.storageId!,
+      iv: f.iv,
+      encryptedMeta: f.encryptedMeta,
+    }));
+    let itemId: string;
+    if (current.attachTo) {
+      await deps.addItemFiles(current.attachTo, uploaded);
+      itemId = current.attachTo;
+    } else {
+      itemId = await deps.createItem({
+        vaultId: await deps.vaultId(),
+        ...current.item,
+        accessLevel: "private",
+        encryptionType: "zero_knowledge",
+        recipientMode: "default",
+        files: uploaded,
+      });
+    }
     for (const file of current.files) deps.deleteLocalFile(file.path);
     await store.remove(current.id);
     onProgress({ sent: total, total });

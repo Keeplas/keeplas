@@ -1,161 +1,147 @@
 import { useState } from "react";
-import { useRouter } from "@/lib/navigation";
 import { useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { Button, ErrorAlert, Icon, Input, Label } from "@keeplas/ui";
+import {
+  Button,
+  ErrorAlert,
+  Icon,
+  InfoCallout,
+  Input,
+  Label,
+} from "@keeplas/ui";
+import { Panel } from "@/components/v2/surface";
 import { ICON_PATHS } from "@/lib/icons";
-import { useTranslations } from "@/lib/i18n";
+import { useLocale, useTranslations } from "@/lib/i18n";
+import { Link, useRouter } from "@/lib/navigation";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 
-export default function TerminatePage() {
-  const t = useTranslations("hub");
+const LOSSES = ["items", "shares", "succession", "plan"] as const;
+
+export default function DeleteAccountPage() {
+  const t = useTranslations("settings.deleteAccount");
+  const locale = useLocale();
   const router = useRouter();
-  const deleteAccount = useAuditedMutation(api.users.deleteAccount);
-  const { signOut } = useAuthActions();
-  const vault = useQuery(api.vaults.getVault);
-  const items = useQuery(api.vault_items.getItems);
-
-  const [confirmation, setConfirmation] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const status = useQuery(api.account_deletion.getStatus);
+  const requestDeletion = useAuditedMutation(api.account_deletion.request);
+  const cancelDeletion = useAuditedMutation(api.account_deletion.cancel);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [requestId] = useState(() => `term-${Date.now().toString(36)}`);
+  const word = t("confirmWord");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (confirmation !== "DELETE") {
-      setError(t("terminate.errors.typeDelete"));
-      return;
-    }
-    setSubmitting(true);
+  async function run(action: () => Promise<unknown>) {
+    setBusy(true);
     setError("");
     try {
-      await deleteAccount({ confirmation });
-      await signOut();
-      router.push("/login");
+      await action();
+      setTyped("");
     } catch (err) {
-      setError(getErrorMessage(err, t("terminate.errors.failed")));
-      setSubmitting(false);
+      setError(getErrorMessage(err, t("failed")));
+    } finally {
+      setBusy(false);
     }
   }
 
-  const itemCount = items?.length ?? 0;
+  if (status === undefined) return null;
+
+  if (status) {
+    const date = new Date(status.scheduledAt).toLocaleDateString(locale, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    return (
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px]">
+        <h1 className="text-h1 text-text-primary">{t("scheduledTitle")}</h1>
+        <p className="text-body-lg text-text-muted">
+          {t("scheduledBody", { date })}
+        </p>
+        <ErrorAlert message={error} />
+        <div className="flex flex-col gap-[12px] sm:flex-row">
+          <Button
+            variant="primary"
+            disabled={busy}
+            onClick={() => void run(() => cancelDeletion({}))}
+          >
+            {t("cancel")}
+          </Button>
+          <Link
+            href="/settings/export"
+            className="self-center text-label text-text-link"
+          >
+            {t("exportFirst")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-screen-2xl mx-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 rounded-sm overflow-hidden shadow-2xl">
-        <aside className="vault-gradient text-on-primary p-10 flex flex-col justify-between min-h-[500px]">
-          <div>
-            <span className="inline-flex items-center justify-center w-14 h-14 rounded-sm bg-on-primary/10 backdrop-blur">
-              <Icon path={ICON_PATHS.warning} className="w-7 h-7" />
+    <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px]">
+      <h1 className="text-h1 text-text-primary">{t("title")}</h1>
+      <p className="text-body-lg text-text-muted">{t("body")}</p>
+
+      <Panel className="flex flex-col gap-[14px] p-[20px]">
+        <span className="text-label text-text-primary">{t("losesTitle")}</span>
+        {LOSSES.map((key) => (
+          <div key={key} className="flex gap-[10px]">
+            <Icon
+              path={ICON_PATHS.alertCircle}
+              className="mt-[2px] size-[18px] shrink-0 text-action-danger"
+            />
+            <span className="text-body text-text-body">
+              {t(`loses.${key}`)}
             </span>
-            <h1 className="text-headline-lg mt-6">
-              {t("terminate.hero.line1")}
-              <br />
-              {t("terminate.hero.line2")}
-            </h1>
-            <p className="mt-4 text-body-lg opacity-90 max-w-sm">
-              {t("terminate.hero.description")}
-            </p>
           </div>
+        ))}
+      </Panel>
 
-          <dl className="space-y-3 text-label-md opacity-80">
-            <div className="flex justify-between">
-              <dt>{t("terminate.stats.archiveStatus")}</dt>
-              <dd>
-                {vault
-                  ? t("terminate.stats.active")
-                  : t("terminate.stats.empty")}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>{t("terminate.stats.encryptionKey")}</dt>
-              <dd>{t("terminate.stats.heldByYou")}</dd>
-            </div>
-          </dl>
-        </aside>
+      <InfoCallout icon={ICON_PATHS.download} tone="info">
+        <Link href="/settings/export" className="text-text-link underline">
+          {t("exportFirst")}
+        </Link>{" "}
+        {t("exportHint")}
+      </InfoCallout>
 
-        <section className="bg-surface p-10 space-y-6">
-          <div>
-            <h2 className="text-headline-md text-primary">
-              {t("terminate.heading")}
-            </h2>
-            <p className="text-body-md text-on-surface-variant mt-2">
-              {t("terminate.description")}
-            </p>
-          </div>
+      <InfoCallout icon={ICON_PATHS.alertTriangle} tone="warning">
+        {t("graceNote")}
+      </InfoCallout>
 
-          <div className="bg-error/10 border border-error/20 rounded-sm p-4 text-body-md text-error">
-            <p className="text-label-md mb-1">{t("terminate.warning.label")}</p>
-            {t("terminate.warning.body")}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-surface-container-low rounded-sm p-4">
-              <p className="text-label-md text-on-surface-variant">
-                {t("terminate.cards.vaultData")}
-              </p>
-              <p className="text-headline-sm text-on-surface mt-1">
-                {t("terminate.cards.encryptedItems", { count: itemCount })}
-              </p>
-            </div>
-            <div className="bg-surface-container-low rounded-sm p-4">
-              <p className="text-label-md text-on-surface-variant">
-                {t("terminate.cards.protocols")}
-              </p>
-              <p className="text-headline-sm text-on-surface mt-1">
-                {t("terminate.cards.protocolsValue")}
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <ErrorAlert message={error} />
-            <div className="space-y-2">
-              <Label>
-                {t("terminate.confirmLabel.before")}{" "}
-                <span className="font-mono text-error">DELETE</span>{" "}
-                {t("terminate.confirmLabel.after")}
-              </Label>
-              <Input
-                value={confirmation}
-                onChange={(e) => setConfirmation(e.target.value)}
-                placeholder="DELETE"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                type="submit"
-                variant="destructive"
-                size="md"
-                disabled={submitting}
-                className="flex-1"
-              >
-                {submitting
-                  ? t("terminate.submitting")
-                  : t("terminate.confirm")}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="md"
-                onClick={() => router.push("/settings")}
-                className="flex-1"
-              >
-                {t("terminate.keep")}
-              </Button>
-            </div>
-          </form>
-
-          <p className="text-label-md text-outline-variant font-mono">
-            {t("terminate.requestId", { id: requestId || "—" })}
-          </p>
-        </section>
-      </div>
+      <form
+        className="flex flex-col gap-[12px]"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (typed.trim().toUpperCase() !== word) {
+            setError(t("typeWord", { word }));
+            return;
+          }
+          void run(() => requestDeletion({ confirmation: "DELETE" }));
+        }}
+      >
+        <ErrorAlert message={error} />
+        <Label htmlFor="confirm-delete">{t("typeLabel", { word })}</Label>
+        <Input
+          id="confirm-delete"
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+          placeholder={word}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <div className="flex flex-col gap-[12px] sm:flex-row">
+          <Button type="submit" variant="danger" disabled={busy}>
+            {t("submit")}
+          </Button>
+          <Button
+            type="button"
+            variant="outlined"
+            onClick={() => router.push("/settings")}
+          >
+            {t("keep")}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 import {
   decryptFile,
   decryptText,
+  generateDek,
   memorySink,
   memorySource,
 } from "@/crypto/envelope";
@@ -51,6 +52,7 @@ function memoryDisk(inputs: Record<string, Uint8Array>) {
 function fakeServer(failUploadAt?: number) {
   const uploads: string[] = [];
   const created: CreateItemArgs[] = [];
+  const attached: { itemId: string; files: CreateItemArgs["files"] }[] = [];
   const deleted: string[] = [];
   let calls = 0;
   const deps: OutboxDeps = {
@@ -67,9 +69,12 @@ function fakeServer(failUploadAt?: number) {
       created.push(args);
       return "item1";
     },
+    addItemFiles: async (itemId, files) => {
+      attached.push({ itemId, files });
+    },
     deleteLocalFile: (path) => deleted.push(path),
   };
-  return { deps, uploads, created, deleted };
+  return { deps, uploads, created, attached, deleted };
 }
 
 async function sealedEntry(owner: ReturnType<typeof generateRecipientKeyPair>) {
@@ -142,7 +147,7 @@ describe("capture sealing + outbox upload", () => {
     const dek = await unwrapDek(args.ownerWrappedDek, owner.secretKey);
     expect(await decryptText(args.encryptedTitle, dek)).toBe("Spare keys");
     expect(await decryptText(args.encryptedContent, dek)).toBe(
-      "Blue box in the garage",
+      "<p>Blue box in the garage</p>",
     );
     expect(parseItemMeta(await decryptText(args.encryptedMeta, dek))).toEqual({
       v: 1,
@@ -167,6 +172,123 @@ describe("capture sealing + outbox upload", () => {
       out,
     );
     expect(Buffer.from(out.bytes()).equals(Buffer.from(photo))).toBe(true);
+  });
+
+  it("files a capture in a folder with a key for each person on it", async () => {
+    const owner = generateRecipientKeyPair();
+    const marie = generateRecipientKeyPair();
+    const paul = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e2",
+      {
+        title: "Family plan",
+        note: "",
+        files: [],
+        folder: {
+          id: "folder1",
+          recipients: [
+            {
+              contactId: "marie",
+              publicKey: serializePublicKey(marie.publicKey),
+            },
+            {
+              contactId: "paul",
+              publicKey: serializePublicKey(paul.publicKey),
+            },
+          ],
+        },
+      },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    const entry: OutboxEntry = {
+      id: "e2",
+      userId: "u1",
+      createdAt: 1,
+      status: "waiting",
+      attempts: 0,
+      ...sealed,
+    };
+    const server = fakeServer();
+    await uploadEntry(entry, memoryStore(), server.deps);
+
+    const [args] = server.created;
+    expect(args.folderId).toBe("folder1");
+    expect(args.recipientKeys?.map((key) => key.contactId)).toEqual([
+      "marie",
+      "paul",
+    ]);
+    for (const [index, person] of [marie, paul].entries()) {
+      const dek = await unwrapDek(
+        args.recipientKeys![index].wrappedDek,
+        person.secretKey,
+      );
+      expect(await decryptText(args.encryptedTitle, dek)).toBe("Family plan");
+    }
+  });
+
+  it("adds files to an existing item with that item's key", async () => {
+    const owner = generateRecipientKeyPair();
+    const existingDek = await generateDek();
+    const scan = crypto.getRandomValues(new Uint8Array(800));
+    const disk = memoryDisk({ "file:///scan.pdf": scan });
+    const sealed = await sealCapture(
+      "e3",
+      {
+        title: "Insurance",
+        note: "",
+        files: [
+          {
+            uri: "file:///scan.pdf",
+            name: "scan.pdf",
+            mimeType: "application/pdf",
+            kind: "document",
+          },
+        ],
+        attachTo: {
+          itemId: "existing1",
+          dek: existingDek,
+          ownerWrappedDek: "existing-owner-dek",
+        },
+      },
+      serializePublicKey(owner.publicKey),
+      disk.io,
+    );
+    const entry: OutboxEntry = {
+      id: "e3",
+      userId: "u1",
+      createdAt: 1,
+      status: "waiting",
+      attempts: 0,
+      ...sealed,
+    };
+    expect(entry.attachTo).toBe("existing1");
+    expect(entry.item.ownerWrappedDek).toBe("existing-owner-dek");
+
+    const server = fakeServer();
+    expect(await uploadEntry(entry, memoryStore(), server.deps)).toBe(
+      "existing1",
+    );
+    expect(server.created).toEqual([]);
+    expect(server.attached).toHaveLength(1);
+    expect(server.attached[0].itemId).toBe("existing1");
+
+    const [file] = entry.files;
+    const sink = memorySink();
+    await decryptFile(
+      memorySource(disk.written.get(file.path)!),
+      file.iv,
+      existingDek,
+      sink,
+    );
+    expect(sink.bytes()).toEqual(scan);
+  });
+
+  it("adds no folder or extra keys when none is chosen", async () => {
+    const owner = generateRecipientKeyPair();
+    const { entry } = await sealedEntry(owner);
+    expect(entry.item.folderId).toBeUndefined();
+    expect(entry.item.recipientKeys).toBeUndefined();
   });
 
   it("resumes after a failure without re-uploading finished files", async () => {

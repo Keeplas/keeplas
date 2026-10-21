@@ -3,7 +3,7 @@ import { ShellPage } from "@/components/shell/shell-page";
 import { Panel } from "@/components/v2/surface";
 import { formatBytes } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
-import { useTranslations } from "@/lib/i18n";
+import { useLocale, useTranslations } from "@/lib/i18n";
 import { Link } from "@/lib/navigation";
 
 export interface StorageShare {
@@ -69,6 +69,7 @@ export function SettingsView({
   onSignOut,
 }: SettingsViewProps) {
   const t = useTranslations("settings.overview");
+  const locale = useLocale();
   const percent = (bytes: number) =>
     `${Math.min(100, (bytes / quotaBytes) * 100)}%`;
 
@@ -81,10 +82,10 @@ export function SettingsView({
           </h2>
           <p className="flex items-baseline gap-[8px]">
             <span className="font-serif text-[30px] leading-[41px] font-semibold text-text-primary">
-              {formatBytes(usedBytes)}
+              {formatBytes(usedBytes, locale)}
             </span>
             <span className="text-[17px] leading-[21px] text-text-muted">
-              {t("storage.of", { quota: formatBytes(quotaBytes) })}
+              {t("storage.of", { quota: formatBytes(quotaBytes, locale) })}
             </span>
           </p>
           <div
@@ -127,7 +128,7 @@ export function SettingsView({
                     {share.label}
                   </span>
                   <span className="text-[17px] leading-[21px] font-semibold text-text-primary">
-                    {formatBytes(share.bytes)}
+                    {formatBytes(share.bytes, locale)}
                   </span>
                 </li>
               ))}
@@ -194,9 +195,12 @@ export function SettingsView({
               href="/settings/recovery"
               label={t("more.recoveryCenter")}
             />
+            <NavRow href="/settings/export" label={t("more.export")} />
+            <NavRow href="/settings/import" label={t("more.import")} />
             <NavRow href="/settings/account" label={t("more.account")} />
             <NavRow href="/settings/contact" label={t("more.contact")} />
             <NavRow href="/settings/roadmap" label={t("more.roadmap")} />
+            <NavRow href="/terminate" label={t("more.deleteAccount")} />
             <button
               type="button"
               onClick={onSignOut}

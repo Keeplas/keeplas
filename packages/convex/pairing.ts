@@ -1,6 +1,11 @@
 import { v, ConvexError } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+} from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import {
   auditContextValidator,
@@ -221,36 +226,50 @@ export const redeemLoginToken = internalMutation({
  * Browser, once signed in: read the envelope exactly once. The row is wiped
  * of ciphertext and marked consumed in the same transaction.
  */
+async function consumeEnvelope(
+  ctx: MutationCtx,
+  args: { sessionId: Id<"pairing_sessions">; secret: string },
+  requireRedeemed: boolean,
+) {
+  const userId = await requireAuth(ctx);
+  const session = await ctx.db.get(args.sessionId);
+  if (
+    !session ||
+    !isLive(session, Date.now()) ||
+    session.status !== "approved" ||
+    (requireRedeemed && session.redeemedAt === undefined) ||
+    session.userId !== userId ||
+    !session.envelope ||
+    !session.approvalSignature
+  ) {
+    throw new ConvexError(INVALID_PAIRING);
+  }
+  await requireSecret(session, args.secret);
+  await ctx.db.patch(args.sessionId, {
+    status: "consumed",
+    envelope: undefined,
+    approvalSignature: undefined,
+  });
+  return {
+    envelope: session.envelope,
+    approvalSignature: session.approvalSignature,
+  };
+}
+
 export const readEnvelope = auditedMutation({
   action: "pairing.session.consumed",
   resourceType: "pairing_session",
   args: { sessionId: v.id("pairing_sessions"), secret: v.string() },
   getResourceId: (args) => args.sessionId,
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-    const session = await ctx.db.get(args.sessionId);
-    if (
-      !session ||
-      !isLive(session, Date.now()) ||
-      session.status !== "approved" ||
-      session.redeemedAt === undefined ||
-      session.userId !== userId ||
-      !session.envelope ||
-      !session.approvalSignature
-    ) {
-      throw new ConvexError(INVALID_PAIRING);
-    }
-    await requireSecret(session, args.secret);
-    await ctx.db.patch(args.sessionId, {
-      status: "consumed",
-      envelope: undefined,
-      approvalSignature: undefined,
-    });
-    return {
-      envelope: session.envelope,
-      approvalSignature: session.approvalSignature,
-    };
-  },
+  handler: (ctx, args) => consumeEnvelope(ctx, args, true),
+});
+
+export const claimEnvelope = auditedMutation({
+  action: "pairing.session.consumed",
+  resourceType: "pairing_session",
+  args: { sessionId: v.id("pairing_sessions"), secret: v.string() },
+  getResourceId: (args) => args.sessionId,
+  handler: (ctx, args) => consumeEnvelope(ctx, args, false),
 });
 
 /** Scheduled at creation for `expiresAt`: drop the row, whatever its state. */

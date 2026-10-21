@@ -61,21 +61,21 @@
       }
     },
     "connect": {
-      "heroTitle": "Connect with\nmy phone",
-      "heroBody": "Use your phone with Keeplas to link this browser. It's fast, secure and password-free.",
+      "heroTitle": "Log in with\nmy phone",
+      "heroBody": "Scan the QR code with the Keeplas app to log in. It's fast, secure and password-free.",
       "usePasskey": "Use a passkey instead",
       "step1": "Open Keeplas",
       "step1Detail": "on your phone",
       "step2": "Scan the QR code",
       "step2Detail": "with the app",
-      "step3": "Approve",
-      "step3Detail": "this browser with Face ID",
+      "step3": "You are in",
+      "step3Detail": "this browser opens your vault",
       "expiresIn": "Expires in",
-      "trust": "Trust this browser",
+      "trust": "Keep me logged in",
       "trustDetail": "On a shared computer, leave this off.",
       "expired": "This code has expired.",
       "newCode": "Generate a new code",
-      "rejected": "The link was declined on your phone.",
+      "rejected": "Your phone blocked this login because the code didn't match this browser. Refresh the page to get a new code.",
       "error": "Something went wrong while linking this browser.",
       "retry": "Try again",
       "linking": "Linking this browser…",
@@ -257,44 +257,6 @@
     }
   },
   "hub": {
-    "terminate": {
-      "hero": {
-        "line1": "Irreversible",
-        "line2": "Destruction",
-        "description": "Once destroyed, your encrypted archive cannot be reconstructed. There is no backup, no admin override, no recovery path. Zero-knowledge means zero recovery."
-      },
-      "stats": {
-        "archiveStatus": "Archive status",
-        "active": "Active",
-        "empty": "Empty",
-        "encryptionKey": "Encryption key",
-        "heldByYou": "Held only by you"
-      },
-      "heading": "Terminate Your Continuity Plan?",
-      "description": "This wipes the vault, every protocol, contact, message, audit entry and the user record itself.",
-      "warning": {
-        "label": "⚠ Warning",
-        "body": "This action cannot be undone. We recommend exporting your Recovery Kit and pausing Life Check first if you only need a temporary stop."
-      },
-      "cards": {
-        "vaultData": "Vault data",
-        "encryptedItems": "{count} encrypted items",
-        "protocols": "Protocols",
-        "protocolsValue": "Life Check, Scenario, Messages"
-      },
-      "confirmLabel": {
-        "before": "Type",
-        "after": "to confirm"
-      },
-      "submitting": "Terminating...",
-      "confirm": "Confirm Permanent Deletion",
-      "keep": "Keep My Plan",
-      "requestId": "Request ID: {id}",
-      "errors": {
-        "typeDelete": "Type DELETE exactly to confirm.",
-        "failed": "Failed to terminate plan."
-      }
-    },
     "greeting": {
       "morning": "Good morning, {name}",
       "afternoon": "Good afternoon, {name}",
@@ -813,7 +775,13 @@
       "storage": {
         "title": "Storage",
         "of": "of {quota} used",
-        "note": "Sizes are measured after on-device encryption. Deleted items free up space right away."
+        "note": "Sizes are measured after on-device encryption. Deleted items free up space right away.",
+        "kinds": {
+          "document": "Documents",
+          "image": "Photos & scans",
+          "audio": "Voice notes",
+          "video": "Videos"
+        }
       },
       "plan": {
         "label": "Your plan",
@@ -838,8 +806,77 @@
         "account": "Account",
         "contact": "Contact us",
         "roadmap": "What's coming",
-        "signOut": "Sign out"
+        "signOut": "Sign out",
+        "export": "Export my data",
+        "deleteAccount": "Delete my account",
+        "import": "Import an archive"
       }
+    },
+    "export": {
+      "title": "Export my data",
+      "body": "Keeplas decrypts your vault in this browser and downloads everything in one ZIP archive you can keep or move to another app.",
+      "start": "Export my data",
+      "preparing": "Opening your vault…",
+      "progress": "Preparing files: {done} of {total}",
+      "keepOpen": "Keep Keeplas open until it finishes.",
+      "ready": "Your archive is ready ({size}) and has been downloaded. Keep it somewhere safe.",
+      "failed": "The export stopped before the end. Check your connection and try again. Nothing was sent anywhere.",
+      "warning": "The archive is not encrypted. Anyone who gets the file can read it: keep it somewhere safe and delete it when you no longer need it.",
+      "file": "file",
+      "contents": {
+        "items": "Items list",
+        "itemsBody": "items.json and items.csv (Excel, Numbers, Sheets)",
+        "files": "Files",
+        "filesBody": "Documents, photos, voice notes and videos, as added",
+        "notes": "Notes",
+        "notesBody": "Each note as a page you can open in a browser",
+        "contacts": "Trusted contacts",
+        "contactsBody": "Names and contact details only"
+      },
+      "untitled": "Untitled",
+      "noFolder": "No folder",
+      "cancel": "Cancel",
+      "retry": "Try again",
+      "again": "Export again",
+      "skipped": "{n} item(s) could not be opened and are not in the archive."
+    },
+    "deleteAccount": {
+      "title": "Delete my account",
+      "body": "Your account and everything in your vault will be erased from Keeplas for good, 7 days after you confirm.",
+      "losesTitle": "What you lose",
+      "loses": {
+        "items": "Every item, note and file in your vault",
+        "shares": "What you share with your trusted contacts, and what they can open",
+        "succession": "Your succession plan, Life check and contact recovery",
+        "plan": "Your plan. A Lifetime purchase is not refunded"
+      },
+      "exportFirst": "Export my data first",
+      "exportHint": "to keep a copy of everything before it is erased.",
+      "graceNote": "You have 7 days to change your mind: cancel the deletion from this screen. After that, nothing can be recovered, not even by Keeplas.",
+      "confirmWord": "DELETE",
+      "typeLabel": "Type {word} to confirm",
+      "typeWord": "Type {word} exactly to confirm.",
+      "submit": "Delete my account",
+      "keep": "Keep my account",
+      "scheduledTitle": "Your account will be deleted",
+      "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
+      "cancel": "Cancel the deletion",
+      "failed": "Keeplas could not save your request. Check your connection and try again."
+    },
+    "importArchive": {
+      "title": "Import an archive",
+      "body": "Choose a ZIP made with \"Export my data\". Keeplas reads it in this browser, encrypts every item again and adds it to your vault.",
+      "notes": "Imported items are added to what you already have: importing the same archive twice creates duplicates. Sharing with contacts is not restored, and each item gets today’s date.",
+      "choose": "Choose an archive",
+      "reading": "Reading the archive…",
+      "progress": "Adding items: {done} of {total}",
+      "done": "{n} item(s) added. Their files upload in the background.",
+      "skippedFiles": "{n} file(s) could not be read from the archive and were left out.",
+      "notKeeplas": "This file is not a Keeplas export. Choose the ZIP made with \"Export my data\", without unzipping and zipping it again.",
+      "failed": "The import stopped before the end. Items already added stay in your vault. Check your storage and try again.",
+      "folderSuffix": "{name} (import)",
+      "untitled": "Untitled",
+      "keepOpen": "Keep this tab open until it finishes."
     }
   },
   "settingsSecurity": {

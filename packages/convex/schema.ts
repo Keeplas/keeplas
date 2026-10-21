@@ -85,6 +85,8 @@ export default defineSchema({
     // after a MasterKey rotation, or a cancelled request that already
     // collected contact shares. Cleared by `recovery_node.setup`.
     socialRecoveryRenewalRequired: v.optional(v.boolean()),
+    deletionScheduledAt: v.optional(v.number()),
+    deletionJobId: v.optional(v.id("_scheduled_functions")),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),
@@ -376,6 +378,8 @@ export default defineSchema({
     kind: v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     // Human label derived from the user agent, e.g. "Chrome on Mac".
     label: v.string(),
+    country: v.optional(v.string()),
+    city: v.optional(v.string()),
     // ML-KEM-768 public key of the device (for handoffs to it).
     devicePublicKey: v.optional(v.string()),
     // True when the user ticked "Trust this browser".

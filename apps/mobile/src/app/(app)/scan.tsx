@@ -14,14 +14,17 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { pairingKeyHash } from "@keeplas/crypto/pairing";
 
 import { AppHeader } from "@/components/app-header";
-import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { StateMessage, StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
 import { takePendingLink } from "@/features/link/pending-link";
 import { evaluatePairingQr } from "@/features/link/qr-flow";
+import {
+  PairingKeyMismatch,
+  PresenceDeclined,
+  useApprovePairing,
+} from "@/features/link/use-approve-pairing";
 import { env } from "@/lib/env";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -29,7 +32,7 @@ import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 
 /**
- * M03-4 Scan the QR code. Each scan (or pasted / universal link) goes
+ * M03-4 Scan the QR code. Each scan (or universal link) goes
  * through `evaluatePairingQr`: invalid QR, expired session, key mismatch
  * (M09-3, reported to Convex) or M03-5 to approve.
  */
@@ -41,10 +44,11 @@ export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
   const reject = useAuditedMutation(api.pairing.reject);
   const [torch, setTorch] = useState(false);
-  const [manual, setManual] = useState(false);
-  const [pasted, setPasted] = useState("");
   const [checking, setChecking] = useState(false);
-  const [problem, setProblem] = useState<"invalid" | "expired" | null>(null);
+  const [problem, setProblem] = useState<
+    "invalid" | "expired" | "failed" | null
+  >(null);
+  const approvePairing = useApprovePairing();
   const busy = useRef(false);
 
   const handle = useCallback(
@@ -77,16 +81,37 @@ export default function Scan() {
           });
           return;
         }
+        try {
+          await approvePairing(qr, outcome.session.browserPublicKey);
+        } catch (error) {
+          if (error instanceof PairingKeyMismatch) {
+            await reject({
+              sessionId: qr.sessionId as Id<"pairing_sessions">,
+              reason: "key_mismatch",
+            }).catch(() => undefined);
+            router.replace({
+              pathname: "/link-blocked",
+              params: { expected: qr.keyHash, received: error.receivedHash },
+            });
+          } else if (!(error instanceof PresenceDeclined)) {
+            setProblem("failed");
+          }
+          return;
+        }
         router.replace({
-          pathname: "/link-approve",
-          params: { s: qr.sessionId, h: qr.keyHash, o: qr.origin },
+          pathname: "/link-connected",
+          params: {
+            ua: outcome.session.userAgent,
+            country: outcome.session.approxLocation,
+            at: String(Date.now()),
+          },
         });
       } finally {
         busy.current = false;
         setChecking(false);
       }
     },
-    [convex, reject, router],
+    [convex, reject, router, approvePairing],
   );
 
   useEffect(() => {
@@ -163,40 +188,13 @@ export default function Scan() {
           <Icon name="check-circle" size={18} color="accent" />
         </View>
       ) : null}
-      {manual ? (
-        <>
-          <TextField
-            label={t("scan.manualLabel")}
-            value={pasted}
-            onChangeText={setPasted}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Button
-            label={t("scan.manualCta")}
-            disabled={!pasted.trim()}
-            loading={checking}
-            onPress={() => handle(pasted)}
-          />
-        </>
-      ) : (
-        <Button
-          variant="text"
-          label={t("scan.manual")}
-          onPress={() => setManual(true)}
-        />
-      )}
       <StateSheet
         visible={problem !== null}
         onDismiss={() => setProblem(null)}
-        icon={problem === "expired" ? "clock" : "qr"}
-        tone={problem === "expired" ? "warning" : "danger"}
-        title={t(
-          problem === "expired" ? "scan.expiredTitle" : "scan.invalidTitle",
-        )}
-        body={t(
-          problem === "expired" ? "scan.expiredBody" : "scan.invalidBody",
-        )}
+        icon={problem === "invalid" ? "qr" : "clock"}
+        tone={problem === "invalid" ? "danger" : "warning"}
+        title={t(`scan.${problem ?? "invalid"}Title`)}
+        body={t(`scan.${problem ?? "invalid"}Body`)}
         primary={{
           label: t("scan.scanAgain"),
           onPress: () => setProblem(null),

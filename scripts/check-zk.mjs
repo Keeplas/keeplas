@@ -24,10 +24,18 @@ const STORAGE_WRAPPER_REL = join("packages", "convex", "lib", "storage.ts");
 // keeps documentation comments and tooling out of the regex window.
 const SCANNED_PREFIXES = [
 	join("apps", "web", "src"),
+	join("apps", "mobile", "src"),
 	join("packages", "convex"),
 	join("packages", "crypto"),
 	join("packages", "ui"),
 ];
+
+function isClientPath(relPath) {
+	return (
+		relPath.startsWith(join("apps", "web")) ||
+		relPath.startsWith(join("apps", "mobile"))
+	);
+}
 
 function isInScannedTree(relPath) {
 	return SCANNED_PREFIXES.some((prefix) => relPath.startsWith(prefix));
@@ -92,15 +100,15 @@ const RULES = [
 		// separate recovery secret and must not reopen this path.
 		pattern: /from\s+["']@keeplas\/crypto\/shamir["']/,
 		message:
-			"apps/web must not import @keeplas/crypto/shamir — the MasterKey is never split (v2 F1/F2).",
-		allow: (relPath) => !relPath.startsWith(join("apps", "web")),
+			"Clients must not import @keeplas/crypto/shamir — the MasterKey is never split (v2 F1/F2).",
+		allow: (relPath) => !isClientPath(relPath),
 	},
 	{
 		// v2 F5: a missed Life Check never releases — the client must not offer it.
 		pattern: /release_anyway/,
 		message:
 			'"release_anyway" is retired (v2 F5) — a missed Life Check never releases.',
-		allow: (relPath) => !relPath.startsWith(join("apps", "web")),
+		allow: (relPath) => !isClientPath(relPath),
 	},
 	{
 		// The recovery-phrase verifier must be compared in constant time (M1).

@@ -4,6 +4,7 @@
  * and scanned pages bound into one PDF (expo-print). Results are app-cache
  * files; they are sealed into the outbox, then deleted.
  */
+import * as Device from "expo-device";
 import * as DocumentPicker from "expo-document-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
@@ -36,10 +37,17 @@ function toCaptureFile(asset: ImagePicker.ImagePickerAsset): CaptureFile {
   };
 }
 
+export class CameraUnavailable extends Error {
+  constructor() {
+    super("CAMERA_UNAVAILABLE");
+  }
+}
+
 /** Photo or video from the camera; null when the user cancels. */
 export async function shoot(
   media: "images" | "videos",
 ): Promise<CaptureFile | null> {
+  if (!Device.isDevice) throw new CameraUnavailable();
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) throw new PermissionDenied("camera");
   const result = await ImagePicker.launchCameraAsync({

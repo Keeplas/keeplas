@@ -14,6 +14,7 @@ import {
   getActiveItems,
   getActiveStorageBytes,
   requireItemOwnership,
+  requireOwnRecipients,
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
@@ -74,6 +75,17 @@ export const getItemSummaries = query({
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
     const items = await getActiveItems(ctx, userId);
+    const files = await ctx.db
+      .query("vault_item_files")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const filesByItem = new Map<Id<"vault_items">, typeof files>();
+    for (const file of files.sort((a, b) => a.order - b.order)) {
+      filesByItem.set(file.itemId, [
+        ...(filesByItem.get(file.itemId) ?? []),
+        file,
+      ]);
+    }
     return items.map((item) => ({
       _id: item._id,
       folderId: item.folderId,
@@ -84,6 +96,12 @@ export const getItemSummaries = query({
       encryptedTitle: item.encryptedTitle,
       encryptedMeta: item.encryptedMeta,
       ownerWrappedDek: item.ownerWrappedDek,
+      sharedWithContacts: item.sharedWithContacts ?? [],
+      files: (filesByItem.get(item._id) ?? []).map((file) => ({
+        encryptedMeta: file.encryptedMeta,
+        kind: file.kind,
+        durationSec: file.durationSec,
+      })),
     }));
   },
 });
@@ -316,6 +334,7 @@ export const createItem = auditedMutation({
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),
     recipientKeys: v.optional(v.array(recipientKeyValidator)),
+    folderId: v.optional(v.id("folders")),
     // Contacts the owner meant to share with but couldn't wrap yet (their key
     // isn't published). Stored so the owner's client can re-wrap later.
     pendingRecipients: v.optional(v.array(v.id("trusted_contacts"))),
@@ -347,26 +366,19 @@ export const createItem = auditedMutation({
       ? "trusted_only"
       : args.accessLevel;
 
-    if (
-      sharedWithContacts.length > 0 ||
-      sharedWithGroups.length > 0 ||
-      pendingRecipients.length > 0
-    ) {
-      const own = await ctx.db
-        .query("trusted_contacts")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .collect();
-      const ownContactIds = new Set(own.map((c) => c._id));
-      for (const cid of [...sharedWithContacts, ...pendingRecipients]) {
-        if (!ownContactIds.has(cid)) {
-          throw new Error("One or more contacts are not yours");
-        }
-      }
-      for (const gid of sharedWithGroups) {
-        const g = await ctx.db.get(gid);
-        if (!g || g.userId !== userId) {
-          throw new Error("One or more groups are not yours");
-        }
+    await requireOwnRecipients(ctx, userId, {
+      contacts: [
+        ...sharedWithContacts,
+        ...pendingRecipients,
+        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+      ],
+      groups: sharedWithGroups,
+    });
+
+    if (args.folderId) {
+      const folder = await ctx.db.get(args.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new ConvexError("Folder not found");
       }
     }
 
@@ -375,6 +387,7 @@ export const createItem = auditedMutation({
     const itemId = await ctx.db.insert("vault_items", {
       vaultId: args.vaultId,
       userId,
+      folderId: args.folderId,
       encryptedMeta: args.encryptedMeta,
       encryptedTitle: args.encryptedTitle,
       encryptedContent: args.encryptedContent,
@@ -453,6 +466,14 @@ export const updateItem = auditedMutation({
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await requireItemOwnership(ctx, args.itemId, userId);
+    await requireOwnRecipients(ctx, userId, {
+      contacts: [
+        ...(args.sharedWithContacts ?? []),
+        ...(args.pendingRecipients ?? []),
+        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+      ],
+      groups: args.sharedWithGroups ?? [],
+    });
 
     const { itemId, recipientKeys, ...updates } = args;
     const now = Date.now();

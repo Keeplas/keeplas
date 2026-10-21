@@ -12,3 +12,14 @@ declare module "*.jpg" {
   const source: ImageSourcePropType;
   export default source;
 }
+
+declare module "*.woff2" {
+  const asset: number;
+  export default asset;
+}
+
+declare module "mammoth/mammoth.browser" {
+  export function convertToHtml(input: {
+    arrayBuffer: ArrayBuffer;
+  }): Promise<{ value: string }>;
+}

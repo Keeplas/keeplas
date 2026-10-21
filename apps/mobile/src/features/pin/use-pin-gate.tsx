@@ -1,0 +1,152 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Alert, StyleSheet, View } from "react-native";
+
+import { OtpInput } from "@/components/otp-input";
+import { BottomSheet } from "@/components/sheet";
+import { Text } from "@/components/text";
+import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
+import { useI18n } from "@/providers/i18n-provider";
+import { useSession, useViewer } from "@/providers/session-provider";
+
+export class PinCancelled extends Error {}
+
+export const isPinAbort = (error: unknown) =>
+  error instanceof PinCancelled ||
+  (error instanceof DevicePinError && error.code === "wiped");
+
+export function pinErrorText(
+  error: DevicePinError,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  if (error.code === "locked") {
+    const seconds = Math.max(
+      1,
+      Math.ceil(((error.detail.lockedUntil ?? Date.now()) - Date.now()) / 1000),
+    );
+    return t("pin.locked", { seconds });
+  }
+  if (error.code === "wrong") {
+    return t("pin.wrong", { n: error.detail.remaining ?? 0 });
+  }
+  return t("pin.required");
+}
+
+interface Pending {
+  run: (pin: string) => Promise<unknown>;
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
+}
+
+type WithPin = <T>(run: (pin?: string) => Promise<T>) => Promise<T>;
+
+const PinGateContext = createContext<WithPin | null>(null);
+
+export function useWithPin(): WithPin {
+  const withPin = useContext(PinGateContext);
+  if (!withPin) throw new Error("useWithPin outside PinGateProvider");
+  return withPin;
+}
+
+export function PinGateProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
+  const viewer = useViewer();
+  const { refreshDeviceVault } = useSession();
+  const [open, setOpen] = useState(false);
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const pending = useRef<Pending | null>(null);
+
+  const withPin = useCallback(
+    async <T,>(run: (pin?: string) => Promise<T>): Promise<T> => {
+      if (!(await hasDevicePin(viewer._id))) return run(undefined);
+      return new Promise<T>((resolve, reject) => {
+        pending.current = {
+          run,
+          resolve: resolve as (value: unknown) => void,
+          reject,
+        };
+        setPin("");
+        setError(null);
+        setOpen(true);
+      });
+    },
+    [viewer._id],
+  );
+
+  async function submit(code: string) {
+    const current = pending.current;
+    if (!current || busy) return;
+    setBusy(true);
+    try {
+      const result = await current.run(code);
+      pending.current = null;
+      setOpen(false);
+      current.resolve(result);
+    } catch (caught) {
+      setPin("");
+      if (caught instanceof DevicePinError && caught.code === "wiped") {
+        pending.current = null;
+        setOpen(false);
+        current.reject(caught);
+        Alert.alert(t("pin.wipedTitle"), t("pin.wipedBody"));
+        refreshDeviceVault();
+      } else if (caught instanceof DevicePinError) {
+        setError(pinErrorText(caught, t));
+      } else {
+        pending.current = null;
+        setOpen(false);
+        current.reject(caught);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function cancel() {
+    pending.current?.reject(new PinCancelled());
+    pending.current = null;
+    setOpen(false);
+  }
+
+  const sheet = (
+    <BottomSheet visible={open} onDismiss={cancel} title={t("pin.sheetTitle")}>
+      <View style={styles.body}>
+        <Text variant="body" color="text.muted">
+          {t("pin.sheetBody")}
+        </Text>
+        <OtpInput
+          value={pin}
+          onChange={setPin}
+          onComplete={(code) => void submit(code)}
+          invalid={error !== null}
+          label={t("pin.label")}
+          secure
+        />
+        {error ? (
+          <Text variant="body-sm" color="status.revoked">
+            {error}
+          </Text>
+        ) : null}
+      </View>
+    </BottomSheet>
+  );
+
+  return (
+    <PinGateContext.Provider value={withPin}>
+      {children}
+      {sheet}
+    </PinGateContext.Provider>
+  );
+}
+
+const styles = StyleSheet.create({
+  body: { gap: 14 },
+});

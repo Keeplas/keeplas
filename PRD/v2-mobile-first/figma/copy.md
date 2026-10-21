@@ -32,6 +32,12 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - EN
 - Verify your number
 - We sent a code to your WhatsApp number +1 416 555 0123.
+-
+-
+-
+-
+-
+-
 - Confirm number
 - Didn't get the code?
 - Resend code
@@ -154,7 +160,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Recovery kit
 - Prepare a way back in if you lose access.
 - Devices
-- Manage the devices connected to your account.
+- Manage this device and your browser sessions.
 - Account activity
 - Review sign-ins and recent activity.
 
@@ -424,42 +430,26 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Keeplas
 - EN
 - Scan the QR code
-- Open Keeplas on your computer, then scan its QR code.
+- Open Keeplas in your computer's browser, then scan the QR code to log in.
 - Camera allowed
-- Can't scan? Pair manually instead
+- Can't scan? Enter the code instead
 - Home
 - Search
 - People
 - Settings
 
-## M03-5 · Link this browser?
+## M03-6 · Browser logged in
 
 - 9:41
 - Keeplas
 - EN
-- Link this browser?
-- A device is requesting access to your Keeplas account.
-- Chrome on macOS
-- Paris, France
-- Today at 9:41 AM
-- Use Face ID to approve
-- This confirms it's really you.
-- Approve only if this is your computer.
-- Approve
-- Cancel
-
-## M03-6 · Browser connected
-
-- 9:41
-- Keeplas
-- EN
-- Browser connected
-- Keeplas is now linked to this browser.
+- You're logged in
+- Keeplas is now open in this browser. Log out anytime from your phone.
 - Chrome on macOS
 - Paris, France · Today at 9:41
-- Your other devices have been notified. A notification was sent to all your connected devices.
-- Manage device access
-- View and revoke connected devices.
+- A notification was sent to your other devices.
+- Manage active sessions
+- See and end your browser sessions.
 - Done
 
 ## M06-1 · Trusted people
@@ -693,6 +683,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Recording…
 - Encrypted on your device. Your voice note is encrypted before it leaves your device.
 - Pause
+- Reset
 - Save
 
 ## M07-4 · Securing item (sequential states)
@@ -742,21 +733,21 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Apr 12, 2026, 9:43 AM
 - Keeplas
 
-## M07-6 · Sync & devices (link browser + backup)
+## M07-6 · Sync & sessions (browser login + backup)
 
 - 9:41
 - Keeplas
 - EN
-- Sync & devices
+- Sync & sessions
 - Your information stays with you
 - Only encrypted data and protected keys sync across your devices.
 - iPhone 15 Pro
 - This device · Last synced 9:41 AM
 - Current
 - Chrome on Mac
-- Last synced 2 hours ago
-- Link browser with phone
-- Scan the QR shown on your computer to link this device.
+- Logged in · Active 2 hours ago
+- Log in to a browser
+- Scan the QR code shown on your computer to log in there.
 - Encrypted device backup (optional)
 - Convenience backup: your encrypted vault stays with Keeplas.
 - Back up to iCloud
@@ -876,16 +867,16 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Use your passkey to safely access your account. No password needed.
 - Continue with passkey
 - or
-- Link with my phone
+- Log in with my phone
 - Lost access?
 - New to Keeplas?
 - Get the app
 
-## W04-2 · Connect with my phone (QR)
+## W04-2 · Log in with my phone (QR)
 
 - Keeplas
-- Connect with my phone
-- Use your phone with Keeplas to link this browser. It's fast, secure and password-free.
+- Log in with my phone
+- Scan the QR code with the Keeplas app to log in. It's fast, secure and password-free.
 - Use a passkey instead
 - EN
 - 1
@@ -895,11 +886,11 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Scan the QR code
 - with the app
 - 3
-- Approve
-- this browser with Face ID
+- You are in
+- this browser opens your vault
 - Expires in
 - 01:42
-- Trust this browser
+- Keep me logged in
 - On a shared computer, leave this off.
 
 ## D-01 · Get the app (desktop visitor, mobile-only sign-up)
@@ -909,14 +900,14 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - A private place for your important documents, accounts, instructions and more.
 - EN
 - Keeplas starts on your phone
-- Create your account in the Keeplas app, then link this computer by scanning a QR code.
+- Create your account in the Keeplas app, then log in on this computer by scanning a QR code.
 - Scan to download the app
 - Download on the
 - App Store
 - Get it on
 - Google Play
 - I already have the app
-- Link with my phone
+- Log in with my phone
 
 ## W04-3 · Dashboard
 
@@ -925,7 +916,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Good morning, Alex
 - Your important information is safe and ready for tomorrow.
@@ -967,7 +958,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Good morning, Alex
 - Your important information is safe and ready for tomorrow.
@@ -1022,7 +1013,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Shared with me
 - Documents shared with you by people who trust you.
@@ -1055,7 +1046,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Recovery center
 - Recovery starts on your phone. Here you can follow a request in progress and cancel it.
@@ -1082,29 +1073,29 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - 36 hours remaining
 - Cancel request
 
-## W04-6 · Devices and security
+## W04-6 · Sessions and security
 
 - Keeplas
 - My vault
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
-- Devices and security
-- Manage connected devices and security settings.
+- Sessions and security
+- See where you're logged in and manage your security settings.
 - EN
 - A
-- Connected devices
+- Active sessions
 - iPhone (current)
 - iOS 17 · Keeplas app · Connected now
 - This device
 - Chrome on Mac
-- macOS · Browser · Last active 2 hours ago
-- Revoke
+- macOS · Chrome · Last active 2 hours ago
+- Log out
 - iPad
 - iPadOS · Keeplas app · Last active 3 days ago
-- Revoke
+- Log out
 - New sign-in
 - Chrome on Mac · 2 hours ago
 - It wasn't me?
@@ -1118,7 +1109,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Item viewed
 - Will
 - 3 days ago
-- Device revoked
+- Session ended
 - Old phone
 - 1 week ago
 
@@ -1129,7 +1120,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Good to see you again.
 - Your legacy is safe and under your control.
@@ -1151,7 +1142,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Partagé avec moi
 - Personnes
 - Vérification de vie
-- Appareils
+- Sessions
 - Paramètres
 - Ravi de vous revoir.
 - Votre héritage est en sécurité et sous votre contrôle.
@@ -1173,7 +1164,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Shared with me
 - People
 - Life check
-- Devices
+- Sessions
 - Settings
 - Settings
 - Manage your plan, storage and preferences.
@@ -1245,8 +1236,8 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - 9:41
 - Keeplas
 - EN
-- We stopped this link
-- The key in this QR code doesn’t match your account. Nothing was shared and no browser was linked.
+- We stopped this login
+- The key in this QR code doesn't match your account. Nothing was shared and no browser was logged in.
 - SECURITY FINGERPRINT
 - Expected (this phone)
 - A3F9 · 21C7 · 88E0 · 4B12
@@ -1614,7 +1605,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Recovery kit
 - Prepare a way back in if you lose access.
 - Devices
-- Manage the devices connected to your account.
+- Manage this device and your browser sessions.
 - Account activity
 - Review sign-ins and recent activity.
 
@@ -1665,6 +1656,666 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Search
 - People
 - Settings
+
+## W06-1 · My vault · Documents (list)
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- My vault
+- Documents
+- Documents
+- 12 items. Everything here is encrypted before it leaves your device.
+- EN
+- A
+- Search your vault
+- Sort: Last updated
+- Upload files
+- Add item
+- All items
+- Documents 12
+- Accounts 8
+- Instructions 3
+- Notes 5
+- Photos 6
+- Voice notes 2
+- Videos 1
+- Name
+- Category
+- Folder
+- Shared with
+- Updated
+- Home insurance policy.pdf
+- PDF · 3 pages · 2.4 MB
+- Insurance
+- Family
+- Only you
+- Today
+- Will and estate plan.pdf
+- PDF · 12 pages · 4.1 MB
+- Legal
+- Family
+- 2 people
+- 2 days ago
+- Instructions for my family
+- Note · 3 attachments
+- Instructions
+- Family
+- 3 people
+- 4 days ago
+- House account
+- Account · Maple Bank
+- Accounts
+- Home
+- Only you
+- 4 days ago
+- Healthcare instructions
+- Document · DOCX · 220 KB
+- Instructions
+- Health
+- Sarah
+- 1 week ago
+- Spare keys location.jpg
+- Photo · 1.1 MB
+- Photos
+- Home
+- Sarah
+- 2 weeks ago
+- Message for Sarah
+- Voice note · 0:28
+- Voice notes
+- Family
+- Only you
+- 3 weeks ago
+- Property deed.pdf
+- PDF · 5 pages · 1.8 MB
+- Property
+- Home
+- 2 people
+- 1 month ago
+- Drop files anywhere on this page to add them. They are encrypted in your browser first.
+
+## W06-2 · Document viewer (preview + details)
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- My vault
+- Documents
+- Home insurance policy.pdf
+- Home insurance policy
+- PDF · 3 pages · 2.4 MB · Added Apr 12, 2026
+- Download
+- Share
+- EN
+- A
+- Page 1 of 3
+- −
+- 100%
+- -
+- MAPLE MUTUAL
+- Policy no. HP-2041-8831
+- Home Insurance Policy
+- Policy holder: Alex Morgan · Coverage period: Mar 1, 2026 to Feb 28, 2027
+- Coverage
+- Limit
+- Dwelling
+- $420,000
+- Personal property
+- $85,000
+- Liability
+- $300,000
+- Deductible
+- $1,000
+- Agent: Laura Chen · 555-0142
+- Details
+- Edit
+- Category
+- Insurance
+- Folder
+- Family
+- Access
+- Only you
+- Add people
+- Share with trusted people, now or later
+- End-to-end encrypted. Only you and the people you choose can open this file.
+- Activity
+- See all
+- Opened on Chrome on Mac
+- Today, 10:12 AM
+- You
+- Protected and ready
+- Apr 12, 2026, 9:43 AM
+- Keeplas
+- Secure copy uploaded
+- Apr 12, 2026, 9:42 AM
+- Keeplas
+- Encrypted on device
+- Apr 12, 2026, 9:41 AM
+- You
+
+## W06-3 · Add a document (upload modal)
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- Good morning, Alex
+- Your important information is safe and ready for tomorrow.
+- EN
+- A
+- Required setup complete
+- 3 of 3 complete
+- Your account is protected and ready to use.
+- Optional protection
+- Add trust contacts
+- Choose up to 3 people who can help you recover your account.
+- Export recovery kit
+- Keep your optional 24-word recovery kit safe. Done from your phone.
+- Encrypted inbox
+- 3 items to organize
+- Documents
+- 12 items
+- Accounts
+- 8 items
+- Recent items
+- Add item
+- Name
+- Type
+- Last updated
+- Will and estate plan
+- Document
+- 2 days ago
+- House account
+- Account
+- 4 days ago
+- Healthcare instructions
+- Document
+- 1 week ago
+- Add a document
+- Files are encrypted in this browser before they are uploaded.
+- Drop your file here, or
+- browse
+- PDF, Word or images · up to 100 MB each
+- Home insurance policy.pdf
+- PDF · 3 pages · 2.4 MB · Ready to encrypt
+- Title
+- Home insurance policy
+- Category
+- Insurance
+- Folder
+- Family
+- Who can see it
+- Only you
+- Encrypted on this computer with your vault key. Keeplas never sees the file.
+- You can add more files after this one.
+- Cancel
+- Upload and secure
+
+## W06-4 · Securing your item (upload progress)
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- Good morning, Alex
+- Your important information is safe and ready for tomorrow.
+- EN
+- A
+- Required setup complete
+- 3 of 3 complete
+- Your account is protected and ready to use.
+- Optional protection
+- Add trust contacts
+- Choose up to 3 people who can help you recover your account.
+- Export recovery kit
+- Keep your optional 24-word recovery kit safe. Done from your phone.
+- Encrypted inbox
+- 3 items to organize
+- Documents
+- 12 items
+- Accounts
+- 8 items
+- Recent items
+- Add item
+- Name
+- Type
+- Last updated
+- Will and estate plan
+- Document
+- 2 days ago
+- House account
+- Account
+- 4 days ago
+- Healthcare instructions
+- Document
+- 1 week ago
+- Securing your item
+- Keep this tab open until the upload is finished.
+- Home insurance policy.pdf
+- PDF · 3 pages · 2.4 MB
+- Encrypted in this browser
+- AES-256 encryption finished on this computer
+- Uploading encrypted copy
+- Sending a secure copy to your Keeplas storage… 64%
+- Protected
+- Waiting for verification…
+- Only an encrypted copy leaves this computer. Your trusted people get access only through the rules you set.
+- Cancel upload
+- Continue in background
+
+## W06-5 · New note with attachments
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- My vault
+- New note
+- New note
+- Write instructions, attach files and choose who can see them.
+- Cancel
+- Save note
+- EN
+- A
+- Instructions for my family
+- B
+- I
+- H1
+- H2
+- • List
+- ☐ Checklist
+- Draft encrypted · 10:24 AM
+- If something happens to me, our home insurance is with Maple Mutual. The policy is attached below. Call Sarah first: she has the spare keys and knows where the safe box is.
+- Call Sarah (555-0198)
+- Contact Laura Chen at Maple Mutual to open a claim
+- Pay the house account from Maple Bank until things are settled
+- Attachments · 3
+- Add
+- Home insurance policy.pdf
+- Scanned · 3 pages · 2.4 MB
+- Spare keys location.jpg
+- Photo · 1.1 MB
+- Voice note
+- 0:28 · Recorded in this browser
+- Scan with phone
+- Photo
+- Voice note
+- File
+- Video
+- Organize
+- Category
+- Instructions
+- Folder
+- Family
+- Who can see it
+- Sarah, Daniel and 1 more
+- When they can open it
+- After a missed life check
+- S
+- D
+- M
+- 3 trusted people
+- Your note and attachments are encrypted in this browser before they leave it.
+
+## W06-6 · Record a voice note
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- Good morning, Alex
+- Your important information is safe and ready for tomorrow.
+- EN
+- A
+- Required setup complete
+- 3 of 3 complete
+- Your account is protected and ready to use.
+- Optional protection
+- Add trust contacts
+- Choose up to 3 people who can help you recover your account.
+- Export recovery kit
+- Keep your optional 24-word recovery kit safe. Done from your phone.
+- Encrypted inbox
+- 3 items to organize
+- Documents
+- 12 items
+- Accounts
+- 8 items
+- Recent items
+- Add item
+- Name
+- Type
+- Last updated
+- Will and estate plan
+- Document
+- 2 days ago
+- House account
+- Account
+- 4 days ago
+- Healthcare instructions
+- Document
+- 1 week ago
+- Record a voice note
+- Leave a message in your own voice for the people you trust.
+- 00:28
+- Recording… max 10 minutes
+- Title
+- Message for Sarah
+- Folder
+- Family
+- Who can see it
+- Only you
+- Recorded and encrypted in this browser. The audio is never stored unencrypted.
+- Discard
+- Reset
+- Pause
+- Save voice note
+
+## W06-7 · Scan with my phone (QR handoff)
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- Good morning, Alex
+- Your important information is safe and ready for tomorrow.
+- EN
+- A
+- Required setup complete
+- 3 of 3 complete
+- Your account is protected and ready to use.
+- Optional protection
+- Add trust contacts
+- Choose up to 3 people who can help you recover your account.
+- Export recovery kit
+- Keep your optional 24-word recovery kit safe. Done from your phone.
+- Encrypted inbox
+- 3 items to organize
+- Documents
+- 12 items
+- Accounts
+- 8 items
+- Recent items
+- Add item
+- Name
+- Type
+- Last updated
+- Will and estate plan
+- Document
+- 2 days ago
+- House account
+- Account
+- 4 days ago
+- Healthcare instructions
+- Document
+- 1 week ago
+- Scan with your phone
+- Use your phone camera to capture paper documents. They appear here once they are secured.
+- 1
+- Open Keeplas on your phone
+- Use the same account as this browser
+- 2
+- Tap Add, then Scan document
+- Or tap the QR icon at the top of Home
+- 3
+- Point your camera at this code
+- Your phone links to this session only
+- Waiting for your phone… new code in 1:45
+- Pages are encrypted on your phone. This browser only receives the encrypted copy.
+- Upload a file instead
+- Cancel
+
+## W06-8 · Photo preview
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- My vault
+- Photos
+- Spare keys location.jpg
+- Spare keys location
+- Photo · JPG · 1.1 MB · 4032 × 3024 · Added Mar 30, 2026
+- Download
+- Share
+- EN
+- A
+- Photo 2 of 6
+- −
+- 100%
+- -
+- Details
+- Edit
+- Category
+- Photos
+- Folder
+- Family
+- Access
+- Sarah
+- Add people
+- Share with trusted people, now or later
+- End-to-end encrypted. Only you and the people you choose can open this file.
+- Activity
+- See all
+- Opened on Chrome on Mac
+- Today, 10:12 AM
+- You
+- Protected and ready
+- Apr 12, 2026, 9:43 AM
+- Keeplas
+- Secure copy uploaded
+- Apr 12, 2026, 9:42 AM
+- Keeplas
+- Encrypted on device
+- Apr 12, 2026, 9:41 AM
+- You
+
+## W06-9 · Video preview
+
+- Keeplas
+- My vault
+- Shared with me
+- People
+- Life check
+- Sessions
+- Settings
+- My vault
+- Videos
+- Message for the kids.mp4
+- Message for the kids
+- Video · MP4 · 48 MB · 2:15 · Added Feb 14, 2026
+- Download
+- Share
+- EN
+- A
+- Video · 2:15
+- 0:42 / 2:15
+- “Hi you two. If you are watching this, I want you to know where everything is and how proud I am of you…”
+- Streams from an encrypted copy. Nothing is saved unencrypted on this computer.
+- Details
+- Edit
+- Category
+- Videos
+- Folder
+- Family
+- Access
+- Sarah
+- Add people
+- Share with trusted people, now or later
+- End-to-end encrypted. Only you and the people you choose can open this file.
+- Activity
+- See all
+- Opened on Chrome on Mac
+- Today, 10:12 AM
+- You
+- Protected and ready
+- Apr 12, 2026, 9:43 AM
+- Keeplas
+- Secure copy uploaded
+- Apr 12, 2026, 9:42 AM
+- Keeplas
+- Encrypted on device
+- Apr 12, 2026, 9:41 AM
+- You
+
+## M10-1 · Documents (list)
+
+- 9:41
+- Keeplas
+- EN
+- Documents
+- Search your vault
+- All
+- Documents 12
+- Accounts 8
+- Notes 5
+- Photos 6
+- 12 items
+- Last updated
+- Home insurance policy.pdf
+- Insurance · Today
+- Will and estate plan.pdf
+- Legal · 2 days ago
+- Instructions for my family
+- Note · 3 attachments
+- House account
+- Accounts · 4 days ago
+- Healthcare instructions
+- Instructions · 1 week ago
+- Spare keys location.jpg
+- Photo · 2 weeks ago
+- Message for Sarah
+- Voice note · 0:28
+
+## M10-2 · Document viewer
+
+- 9:41
+- Keeplas
+- EN
+- Home insurance policy
+- PDF · 3 pages · 2.4 MB · Only you
+- MAPLE MUTUAL
+- HP-2041-8831
+- Home Insurance Policy
+- Coverage
+- Limit
+- Dwelling
+- $420,000
+- Personal property
+- $85,000
+- Liability
+- $300,000
+- 1 of 3
+- Share
+- Download
+- Details
+- Category
+- Insurance
+- Folder
+- Family
+- Access
+- Only you
+
+## M10-3 · Add a document (from files)
+
+- 9:41
+- Keeplas
+- EN
+- Add a document
+- Home insurance policy.pdf
+- From Files · PDF · 2.4 MB
+- Choose another file
+- Title
+- Home insurance policy
+- Category
+- Insurance
+- Folder
+- Family
+- Who can see it
+- Only you
+- Encrypted on your phone before it is uploaded. Keeplas never sees the file.
+- Save and secure
+- Cancel
+
+## M07-3b · Reset recording? (confirm)
+
+- 9:41
+- Keeplas
+- EN
+- Voice note
+- 00:28
+- Recording…
+- Encrypted on your device. Your voice note is encrypted before it leaves your device.
+- Pause
+- Reset
+- Save
+- Start this recording over?
+- Your 0:28 recording will be deleted from this phone and you can record again. This cannot be undone.
+- Delete and record again
+- Keep this recording
+
+## M10-4 · Photo preview
+
+- 9:41
+- Keeplas
+- EN
+- Spare keys location
+- Photo · JPG · 1.1 MB · Shared with Sarah
+- 2 of 6
+- Share
+- Download
+- Details
+- Category
+- Photos
+- Folder
+- Family
+- Access
+- Sarah
+
+## M10-5 · Video preview
+
+- 9:41
+- Keeplas
+- EN
+- Message for the kids
+- Video · MP4 · 48 MB · 2:15 · Shared with Sarah
+- 0:42 / 2:15
+- Share
+- Download
+- Details
+- Category
+- Videos
+- Folder
+- Family
+- Access
+- Sarah
 
 ## L-01 · Home
 
@@ -1745,6 +2396,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Get started
 - Get set up in minutes
 - Ready in three simple steps
+-
 - 1
 - Verify your phone
 - A quick verification helps keep your account secure.
@@ -1803,6 +2455,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - View the code on GitHub
 - Frequently asked questions
 - A few quick answers
+-
 - What is Keeplas?
 - Keeplas is a private vault for your important documents, accounts, memories and instructions, with the people you trust ready to help.
 - How does my data stay private?
@@ -1870,6 +2523,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - PDF · 1.1 MB
 - Capture your way
 - Save what matters, in the way that works for you.
+-
 - Life isn't just documents. Keeplas makes it easy to capture all kinds of information, from important files to personal stories, in one secure place.
 - Files
 - Keep important documents like deeds, policies and letters together.
@@ -1959,6 +2613,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - 8 items
 - Frequently asked questions
 - Quick answers.
+-
 - What types of files can I store?
 - You can store documents, photos, notes, voice recordings, mobile videos and desktop screen recordings. Keeplas supports common file types and makes it easy to view them all in one place.
 - Can I share individual items?
@@ -2185,6 +2840,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Recovery kit
 - FAQs
 - Frequently asked questions
+-
 - View all FAQs
 - Who can be a trusted contact?
 - —
@@ -2295,6 +2951,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Learn about succession
 - FAQ
 - Common questions about legacy.
+-
 - What types of content can I assign?
 - —
 - When will my beneficiaries receive their information?
@@ -2458,6 +3115,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Explore recovery and legacy
 - See how it works
 - Short films, one step at a time
+-
 - Watch all films
 - 0:32
 - Capture it in the moment
@@ -2470,6 +3128,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - Decide what to pass on, to whom, and when.
 - Get set up in minutes
 - Ready in three simple steps
+-
 - 1
 - Verify your phone
 - A quick verification helps keep your account secure.
@@ -2520,6 +3179,7 @@ Raw text layers per screen, in layer order. Source of truth for EN copy until i1
 - View the code on GitHub
 - Frequently asked questions
 - A few quick answers
+-
 - What is Keeplas?
 - Keeplas is a private vault for your important documents, accounts, memories and instructions, with the people you trust ready to help.
 - How does my data stay private?

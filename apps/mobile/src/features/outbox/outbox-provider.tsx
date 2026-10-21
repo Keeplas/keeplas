@@ -12,6 +12,7 @@ import { useNetworkState } from "expo-network";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { uint8ToHex } from "@keeplas/crypto/encoding";
 
 import { randomBytes } from "@/crypto/envelope";
@@ -67,6 +68,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     api.vault_items.generateUploadUrl,
   );
   const createItem = useAuditedMutation(api.vault_items.createItem);
+  const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [progress, setProgress] = useState<Record<string, Progress>>({});
@@ -97,15 +99,29 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       createItem: async ({ vaultId, files, ...item }) =>
         (await createItem({
           ...item,
+          folderId: item.folderId as Id<"folders"> | undefined,
+          recipientKeys: item.recipientKeys?.map((key) => ({
+            contactId: key.contactId as Id<"trusted_contacts">,
+            wrappedDek: key.wrappedDek,
+          })),
           vaultId: vaultId as Id<"vaults">,
           files: files.map((f) => ({
             ...f,
-            storageId: f.storageId as Id<"_storage">,
+            storageId: f.storageId as StorageRef,
           })),
         })) as string,
+      addItemFiles: async (itemId, files) => {
+        await addItemFiles({
+          itemId: itemId as Id<"vault_items">,
+          files: files.map((f) => ({
+            ...f,
+            storageId: f.storageId as StorageRef,
+          })),
+        });
+      },
       deleteLocalFile: deleteFile,
     }),
-    [getOrCreateVault, generateUploadUrl, createItem],
+    [getOrCreateVault, generateUploadUrl, createItem, addItemFiles],
   );
 
   const flush = useCallback(async () => {

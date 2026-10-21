@@ -16,8 +16,10 @@ import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
+import type { VaultCategory } from "@/crypto/item-meta";
 import { draftStore, type CaptureKind } from "./draft-store";
 import {
+  CameraUnavailable,
   chooseFromLibrary,
   PermissionDenied,
   shoot,
@@ -42,14 +44,23 @@ const ITEMS: { kind: CaptureKind; icon: IconName; key: string }[] = [
  */
 function AddSheet({
   visible,
+  preset,
   onDismiss,
 }: {
   visible: boolean;
+  preset: AddPreset;
   onDismiss: () => void;
 }) {
   const router = useRouter();
   const { t } = useI18n();
   const [denied, setDenied] = useState<PermissionProblem | null>(null);
+  const [noCamera, setNoCamera] = useState<"photo" | "video" | null>(null);
+
+  function fromLibrary(kind: "photo" | "video") {
+    return withMedia(kind, () =>
+      chooseFromLibrary([kind === "video" ? "videos" : "images"]),
+    );
+  }
 
   async function withMedia(
     kind: CaptureKind,
@@ -58,10 +69,12 @@ function AddSheet({
     try {
       const files = await get();
       if (files.length === 0) return;
-      draftStore.start(kind, { files });
+      draftStore.start(kind, { files, ...preset });
       router.push("/capture/compose");
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
+      else if (error instanceof CameraUnavailable)
+        setNoCamera(kind === "video" ? "video" : "photo");
       else Alert.alert(t("common.genericError"));
     }
   }
@@ -76,21 +89,33 @@ function AddSheet({
   function start(kind: CaptureKind) {
     switch (kind) {
       case "scan":
-        draftStore.start("scan");
+        draftStore.start("scan", preset);
         router.push("/capture/scan");
         return;
       case "voice":
+        draftStore.start("voice", preset);
         router.push("/capture/voice");
         return;
       case "note":
-        draftStore.start("note");
+        draftStore.start("note", preset);
         router.push("/capture/compose");
         return;
       case "video":
-        void withMedia("video", async () => {
-          const file = await shoot("videos");
-          return file ? [file] : [];
-        });
+        Alert.alert(t("capture.video"), undefined, [
+          {
+            text: t("capture.recordVideo"),
+            onPress: () =>
+              void withMedia("video", async () => {
+                const file = await shoot("videos");
+                return file ? [file] : [];
+              }),
+          },
+          {
+            text: t("capture.chooseLibrary"),
+            onPress: () => void fromLibrary("video"),
+          },
+          { text: t("common.cancel"), style: "cancel" },
+        ]);
         return;
       case "photo":
         Alert.alert(t("capture.photo"), undefined, [
@@ -104,7 +129,7 @@ function AddSheet({
           },
           {
             text: t("capture.chooseLibrary"),
-            onPress: () => void withMedia("photo", () => chooseFromLibrary()),
+            onPress: () => void fromLibrary("photo"),
           },
           { text: t("common.cancel"), style: "cancel" },
         ]);
@@ -130,20 +155,59 @@ function AddSheet({
         ))}
       </BottomSheet>
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
+      <StateSheet
+        visible={noCamera !== null}
+        onDismiss={() => setNoCamera(null)}
+        icon="camera"
+        tone="neutral"
+        title={t("capture.noCameraTitle")}
+        body={t(
+          noCamera === "video"
+            ? "capture.noCameraVideoBody"
+            : "capture.noCameraPhotoBody",
+        )}
+        primary={{
+          label: t("capture.chooseLibrary"),
+          onPress: () => {
+            const kind = noCamera;
+            setNoCamera(null);
+            if (kind) setTimeout(() => void fromLibrary(kind), SHEET_CLOSE_MS);
+          },
+        }}
+        secondary={{
+          label: t("common.notNow"),
+          onPress: () => setNoCamera(null),
+        }}
+      />
     </>
   );
 }
 
-const AddSheetContext = createContext<() => void>(() => undefined);
+export interface AddPreset {
+  category?: VaultCategory;
+  folderId?: string;
+}
+
+const AddSheetContext = createContext<(preset?: AddPreset) => void>(
+  () => undefined,
+);
 
 /** Holds the Add sheet for the tabs; `useOpenAddSheet` opens it anywhere. */
 export function AddSheetProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
-  const show = useCallback(() => setVisible(true), []);
+  const [preset, setPreset] = useState<AddPreset>({});
+  const show = useCallback((next?: AddPreset) => {
+    setPreset(next ?? {});
+    setVisible(true);
+  }, []);
   return (
     <AddSheetContext.Provider value={show}>
       {children}
-      <AddSheet visible={visible} onDismiss={() => setVisible(false)} />
+      <AddSheet
+        visible={visible}
+        preset={preset}
+        onDismiss={() => setVisible(false)}
+      />
     </AddSheetContext.Provider>
   );
 }

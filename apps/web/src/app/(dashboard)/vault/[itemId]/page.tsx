@@ -95,6 +95,7 @@ export default function VaultItemPage() {
   const [decryptedTitle, setDecryptedTitle] = useState<string>("");
   const [decryptedCategory, setDecryptedCategory] =
     useState<VaultCategory>("other");
+  const [decryptedIcon, setDecryptedIcon] = useState<string>();
   const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
   const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
   const [decrypting, setDecrypting] = useState(false);
@@ -174,7 +175,7 @@ export default function VaultItemPage() {
         const decryptOne = (payload: string) =>
           dek ? decryptContentWithKey(payload, dek) : decryptContent(payload);
 
-        const [title, content, links, category] = await Promise.all([
+        const [title, content, links, meta] = await Promise.all([
           item.encryptedTitle
             ? decryptOne(item.encryptedTitle).catch(() => item.title ?? "")
             : Promise.resolve(item.title ?? ""),
@@ -186,12 +187,13 @@ export default function VaultItemPage() {
             : Promise.resolve([] as string[]),
           item.encryptedMeta
             ? decryptOne(item.encryptedMeta)
-                .then((json) => parseItemMeta(json).category)
-                .catch(() => item.category ?? "other")
-            : Promise.resolve(item.category ?? "other"),
+                .then((json) => parseItemMeta(json))
+                .catch(() => ({ category: item.category ?? "other" }))
+            : Promise.resolve({ category: item.category ?? "other" }),
         ]);
         setDecryptedTitle(title);
-        setDecryptedCategory(category);
+        setDecryptedCategory(meta.category);
+        setDecryptedIcon("icon" in meta ? meta.icon : undefined);
         setDecryptedContent(content);
         setDecryptedLinks(links);
       } catch {
@@ -458,7 +460,7 @@ export default function VaultItemPage() {
         nextEncryptionType = "aes_256_gcm";
       }
 
-      const metaJson = itemMetaJson(editCategory);
+      const metaJson = itemMetaJson(editCategory, decryptedIcon);
       const encryptedMeta = attachmentDek
         ? await encryptContentWithKey(metaJson, attachmentDek)
         : await encryptContent(metaJson);

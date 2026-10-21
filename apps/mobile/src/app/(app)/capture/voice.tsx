@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import { File } from "expo-file-system";
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
@@ -12,8 +13,10 @@ import {
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
+import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
+import { StateSheet } from "@/components/state-message";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { PermissionSheet } from "@/features/capture/add-sheet";
@@ -60,7 +63,13 @@ export default function VoiceNote() {
 
   return (
     <Screen
-      header={<NavBar title={t("capture.voiceTitle")} onBack={router.back} />}
+      header={
+        <NavBar
+          title={t("capture.voiceTitle")}
+          onBack={router.back}
+          right={<LanguageDropdown />}
+        />
+      }
       contentStyle={styles.content}
     >
       <View style={styles.mic}>
@@ -107,6 +116,8 @@ const LiveSection = memo(function LiveSection({
   const { colors } = useTheme();
   const state = useAudioRecorderState(recorder, 120);
   const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resumeAfter, setResumeAfter] = useState(false);
 
   // dBFS (-60..0) → bar height ratio, newest bar on the right.
   const metering = state.metering;
@@ -124,8 +135,9 @@ const LiveSection = memo(function LiveSection({
     await setAudioModeAsync({ allowsRecording: false });
     if (!recorder.uri) return;
     const durationSec = Math.round(state.durationMillis / 1000);
-    draftStore.start("voice", {
+    draftStore.update({
       files: [
+        ...draftStore.get().files,
         {
           uri: recorder.uri,
           name: `${t("capture.voiceTitle")}.m4a`,
@@ -143,10 +155,34 @@ const LiveSection = memo(function LiveSection({
     else recorder.record();
   }
 
+  function askReset() {
+    setResumeAfter(state.isRecording);
+    if (state.isRecording) recorder.pause();
+    setConfirmReset(true);
+  }
+
+  async function reset() {
+    setConfirmReset(false);
+    const previous = recorder.uri;
+    await recorder.stop();
+    if (previous) {
+      const file = new File(previous);
+      if (file.exists) file.delete();
+    }
+    setLevels(Array(BARS).fill(0.08));
+    await recorder.prepareToRecordAsync();
+    recorder.record();
+  }
+
+  function keep() {
+    setConfirmReset(false);
+    if (resumeAfter) recorder.record();
+  }
+
   return (
     <>
-      <Text variant="display" align="center" style={styles.tabular}>
-        {formatDuration(state.durationMillis / 1000)}
+      <Text variant="display" align="center">
+        {formatDuration(state.durationMillis / 1000).padStart(5, "0")}
       </Text>
       <Text color="text.muted" align="center">
         {state.isRecording ? t("capture.recording") : t("capture.paused")}
@@ -184,6 +220,22 @@ const LiveSection = memo(function LiveSection({
             {state.isRecording ? t("capture.pause") : t("capture.resume")}
           </Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={askReset}
+          disabled={state.durationMillis < 500}
+          style={styles.pause}
+        >
+          <View
+            style={[
+              styles.pauseButton,
+              { backgroundColor: colors["accent.soft"] },
+            ]}
+          >
+            <Icon name="rotate" />
+          </View>
+          <Text variant="caption">{t("capture.reset")}</Text>
+        </Pressable>
         <Button
           label={t("capture.save")}
           onPress={save}
@@ -191,6 +243,26 @@ const LiveSection = memo(function LiveSection({
           style={styles.flex}
         />
       </View>
+      <StateSheet
+        visible={confirmReset}
+        onDismiss={keep}
+        icon="rotate"
+        tone="info"
+        title={t("capture.resetTitle")}
+        body={t("capture.resetBody", {
+          time: formatDuration(state.durationMillis / 1000),
+        })}
+        primary={{
+          label: t("capture.resetConfirm"),
+          onPress: () => void reset(),
+          variant: "danger",
+        }}
+        secondary={{
+          label: t("capture.resetKeep"),
+          onPress: keep,
+          variant: "secondary",
+        }}
+      />
     </>
   );
 });
@@ -207,7 +279,6 @@ const styles = StyleSheet.create({
   r200: { width: 200, height: 200, borderRadius: 100 },
   r150: { width: 150, height: 150, borderRadius: 75 },
   r100: { width: 100, height: 100, borderRadius: 50 },
-  tabular: { fontVariant: ["tabular-nums"] },
   wave: {
     height: 60,
     flexDirection: "row",

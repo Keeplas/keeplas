@@ -6,6 +6,7 @@
  */
 import { useSyncExternalStore } from "react";
 
+import type { IconName } from "@/components/icon";
 import type { VaultCategory } from "@/crypto/item-meta";
 import type { CaptureFile } from "./seal";
 
@@ -17,6 +18,8 @@ export interface Draft {
   title: string;
   note: string;
   category?: VaultCategory;
+  icon?: IconName;
+  folderId?: string;
   /** Scanned page images, bound into one PDF when saved. */
   pages: string[];
   files: CaptureFile[];

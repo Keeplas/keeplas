@@ -325,3 +325,29 @@ export async function resolveItemRecipients(
     })
     .map((c) => c._id);
 }
+
+export async function requireOwnRecipients(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  {
+    contacts,
+    groups,
+  }: { contacts: Id<"trusted_contacts">[]; groups: Id<"recipient_groups">[] },
+): Promise<void> {
+  if (contacts.length > 0) {
+    const own = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    const ownContactIds = new Set(own.map((c) => c._id));
+    if (contacts.some((cid) => !ownContactIds.has(cid))) {
+      throw new Error("One or more contacts are not yours");
+    }
+  }
+  for (const gid of groups) {
+    const g = await ctx.db.get(gid);
+    if (!g || g.userId !== userId) {
+      throw new Error("One or more groups are not yours");
+    }
+  }
+}

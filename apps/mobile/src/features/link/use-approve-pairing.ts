@@ -13,6 +13,13 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
+import { useWithPin } from "@/features/pin/use-pin-gate";
+
+export class PresenceDeclined extends Error {
+  constructor() {
+    super("PRESENCE_DECLINED");
+  }
+}
 
 export class PairingKeyMismatch extends Error {
   constructor(readonly receivedHash: string) {
@@ -21,7 +28,7 @@ export class PairingKeyMismatch extends Error {
 }
 
 /**
- * M03-5 Approve: biometric step-up, re-check the browser key against the
+ * M03-4 scan → M03-6: biometric step-up, re-check the browser key against the
  * QR, seal the MasterKey to it, sign with the identity key, then
  * `pairing.approve`. The raw MasterKey is wiped right after sealing.
  */
@@ -29,6 +36,7 @@ export function useApprovePairing() {
   const { t } = useI18n();
   const viewer = useViewer();
   const { confirmPresence, masterKey, exportRawMasterKey } = useVault();
+  const withPin = useWithPin();
   const approve = useAuditedMutation(api.pairing.approve);
 
   return useCallback(
@@ -36,7 +44,11 @@ export function useApprovePairing() {
       if (!masterKey || !viewer.encryptedIdentitySecretKey) {
         throw new Error("Identity key unavailable");
       }
-      await confirmPresence(viewer._id, t("linkBrowser.confirmTitle"));
+      await withPin((pin) =>
+        confirmPresence(viewer._id, t("linkBrowser.confirmTitle"), pin),
+      ).catch(() => {
+        throw new PresenceDeclined();
+      });
       const receivedHash = await pairingKeyHash(browserPublicKey);
       if (receivedHash !== qr.keyHash)
         throw new PairingKeyMismatch(receivedHash);
@@ -75,6 +87,14 @@ export function useApprovePairing() {
         throw error;
       }
     },
-    [t, viewer, masterKey, confirmPresence, exportRawMasterKey, approve],
+    [
+      t,
+      viewer,
+      masterKey,
+      confirmPresence,
+      exportRawMasterKey,
+      approve,
+      withPin,
+    ],
   );
 }

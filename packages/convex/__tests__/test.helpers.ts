@@ -134,7 +134,7 @@ export async function clearTotp(
 }
 
 /** Build a fresh, HMAC-signed audit envelope accepted by `verifyAuditContext`. */
-export async function signedAudit() {
+export async function signedAudit(city?: string) {
   const ip = "127.0.0.1";
   const country = "FR";
   const ts = Date.now();
@@ -149,10 +149,16 @@ export async function signedAudit() {
   const sigBuf = await crypto.subtle.sign(
     "HMAC",
     key,
-    enc.encode(`${ip}|${country}|${ts}`),
+    enc.encode(
+      city === undefined
+        ? `${ip}|${country}|${ts}`
+        : `${ip}|${country}|${ts}|${city}`,
+    ),
   );
   const sig = Buffer.from(new Uint8Array(sigBuf)).toString("base64");
-  return { ip, country, ts, sig };
+  return city === undefined
+    ? { ip, country, ts, sig }
+    : { ip, country, ts, sig, city };
 }
 
 /** Seed an accepted trust contact; `n` only keeps names / tokens unique. */

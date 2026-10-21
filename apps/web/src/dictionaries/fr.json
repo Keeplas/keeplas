@@ -61,21 +61,21 @@
       }
     },
     "connect": {
-      "heroTitle": "Connecter avec\nmon téléphone",
-      "heroBody": "Utilisez votre téléphone avec Keeplas pour associer ce navigateur. C'est rapide, sûr et sans mot de passe.",
+      "heroTitle": "Me connecter avec\nmon téléphone",
+      "heroBody": "Scannez le QR code avec l'application Keeplas pour vous connecter. C'est rapide, sûr et sans mot de passe.",
       "usePasskey": "Utiliser plutôt une clé d'accès",
       "step1": "Ouvrez Keeplas",
       "step1Detail": "sur votre téléphone",
       "step2": "Scannez le QR code",
       "step2Detail": "avec l'application",
-      "step3": "Approuvez",
-      "step3Detail": "ce navigateur avec Face ID",
+      "step3": "C'est fait",
+      "step3Detail": "ce navigateur ouvre votre coffre",
       "expiresIn": "Expire dans",
-      "trust": "Faire confiance à ce navigateur",
+      "trust": "Rester connecté",
       "trustDetail": "Sur un ordinateur partagé, laissez décoché.",
       "expired": "Ce code a expiré.",
       "newCode": "Générer un nouveau code",
-      "rejected": "L'association a été refusée sur votre téléphone.",
+      "rejected": "Votre téléphone a bloqué cette connexion car le code ne correspondait pas à ce navigateur. Actualisez la page pour obtenir un nouveau code.",
       "error": "Un problème est survenu pendant l'association de ce navigateur.",
       "retry": "Réessayer",
       "linking": "Association de ce navigateur…",
@@ -257,44 +257,6 @@
     }
   },
   "hub": {
-    "terminate": {
-      "hero": {
-        "line1": "Destruction",
-        "line2": "irréversible",
-        "description": "Une fois détruite, votre archive chiffrée ne peut être reconstituée. Il n'existe aucune sauvegarde, aucun accès administrateur, aucune voie de récupération. L'accès à connaissance nulle signifie qu'il n'y a aucune récupération côté serveur."
-      },
-      "stats": {
-        "archiveStatus": "Statut de l'archive",
-        "active": "Active",
-        "empty": "Vide",
-        "encryptionKey": "Clé de chiffrement",
-        "heldByYou": "Détenue par vous seul"
-      },
-      "heading": "Supprimer définitivement votre plan de continuité ?",
-      "description": "Cette action efface le coffre, chaque protocole, contact, message, entrée d'audit ainsi que le dossier utilisateur lui-même.",
-      "warning": {
-        "label": "⚠ Avertissement",
-        "body": "Cette action est irréversible. Nous recommandons d'exporter votre kit de récupération et de mettre Life Check en pause d'abord si vous ne souhaitez qu'un arrêt temporaire."
-      },
-      "cards": {
-        "vaultData": "Données du coffre",
-        "encryptedItems": "{count} éléments chiffrés",
-        "protocols": "Protocoles",
-        "protocolsValue": "Life Check, Scénario, Messages"
-      },
-      "confirmLabel": {
-        "before": "Saisissez",
-        "after": "pour confirmer"
-      },
-      "submitting": "Suppression…",
-      "confirm": "Confirmer la suppression définitive",
-      "keep": "Conserver mon plan",
-      "requestId": "ID de requête : {id}",
-      "errors": {
-        "typeDelete": "Saisissez DELETE exactement pour confirmer.",
-        "failed": "Échec de la suppression du plan."
-      }
-    },
     "greeting": {
       "morning": "Bonjour, {name}",
       "afternoon": "Bon après-midi, {name}",
@@ -813,7 +775,13 @@
       "storage": {
         "title": "Stockage",
         "of": "sur {quota} utilisés",
-        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement."
+        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement.",
+        "kinds": {
+          "document": "Documents",
+          "image": "Photos et scans",
+          "audio": "Notes vocales",
+          "video": "Vidéos"
+        }
       },
       "plan": {
         "label": "Votre offre",
@@ -838,8 +806,77 @@
         "account": "Compte",
         "contact": "Nous contacter",
         "roadmap": "À venir",
-        "signOut": "Se déconnecter"
+        "signOut": "Se déconnecter",
+        "export": "Exporter mes données",
+        "deleteAccount": "Supprimer mon compte",
+        "import": "Importer une archive"
       }
+    },
+    "export": {
+      "title": "Exporter mes données",
+      "body": "Keeplas déchiffre votre coffre dans ce navigateur et télécharge tout dans une archive ZIP que vous pouvez garder ou importer dans une autre app.",
+      "start": "Exporter mes données",
+      "preparing": "Ouverture de votre coffre…",
+      "progress": "Préparation des fichiers : {done} sur {total}",
+      "keepOpen": "Gardez Keeplas ouvert jusqu’à la fin.",
+      "ready": "Votre archive est prête ({size}) et a été téléchargée. Gardez-la en lieu sûr.",
+      "failed": "L’export s’est arrêté avant la fin. Vérifiez votre connexion et réessayez. Rien n’a été envoyé nulle part.",
+      "warning": "L’archive n’est pas chiffrée. Toute personne qui obtient le fichier peut le lire : gardez-le en lieu sûr et supprimez-le quand vous n’en avez plus besoin.",
+      "file": "fichier",
+      "contents": {
+        "items": "Liste des éléments",
+        "itemsBody": "items.json et items.csv (Excel, Numbers, Sheets)",
+        "files": "Fichiers",
+        "filesBody": "Documents, photos, notes vocales et vidéos, tels qu’ajoutés",
+        "notes": "Notes",
+        "notesBody": "Chaque note sous forme de page lisible dans un navigateur",
+        "contacts": "Contacts de confiance",
+        "contactsBody": "Noms et coordonnées seulement"
+      },
+      "untitled": "Sans titre",
+      "noFolder": "Sans dossier",
+      "cancel": "Annuler",
+      "retry": "Réessayer",
+      "again": "Exporter à nouveau",
+      "skipped": "{n} élément(s) n’ont pas pu être ouverts et ne sont pas dans l’archive."
+    },
+    "deleteAccount": {
+      "title": "Supprimer mon compte",
+      "body": "Votre compte et tout le contenu de votre coffre seront définitivement effacés de Keeplas, 7 jours après votre confirmation.",
+      "losesTitle": "Ce que vous perdez",
+      "loses": {
+        "items": "Tous les éléments, notes et fichiers de votre coffre",
+        "shares": "Ce que vous partagez avec vos contacts de confiance, et ce qu’ils peuvent ouvrir",
+        "succession": "Votre plan de succession, le Life check et la récupération par contacts",
+        "plan": "Votre offre. Un achat Lifetime n’est pas remboursé"
+      },
+      "exportFirst": "Exporter mes données d’abord",
+      "exportHint": "pour garder une copie de tout avant l’effacement.",
+      "graceNote": "Vous avez 7 jours pour changer d’avis : annulez la suppression depuis cet écran. Ensuite, rien ne peut être récupéré, pas même par Keeplas.",
+      "confirmWord": "SUPPRIMER",
+      "typeLabel": "Saisissez {word} pour confirmer",
+      "typeWord": "Saisissez {word} exactement pour confirmer.",
+      "submit": "Supprimer mon compte",
+      "keep": "Garder mon compte",
+      "scheduledTitle": "Votre compte va être supprimé",
+      "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
+      "cancel": "Annuler la suppression",
+      "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
+    },
+    "importArchive": {
+      "title": "Importer une archive",
+      "body": "Choisissez un ZIP créé avec « Exporter mes données ». Keeplas le lit dans ce navigateur, chiffre à nouveau chaque élément et l’ajoute à votre coffre.",
+      "notes": "Les éléments importés s’ajoutent à ceux que vous avez déjà : importer deux fois la même archive crée des doublons. Les partages avec vos contacts ne sont pas restaurés, et chaque élément prend la date du jour.",
+      "choose": "Choisir une archive",
+      "reading": "Lecture de l’archive…",
+      "progress": "Ajout des éléments : {done} sur {total}",
+      "done": "{n} élément(s) ajouté(s). Leurs fichiers s’envoient en arrière-plan.",
+      "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
+      "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
+      "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
+      "folderSuffix": "{name} (import)",
+      "untitled": "Sans titre",
+      "keepOpen": "Gardez cet onglet ouvert jusqu’à la fin."
     }
   },
   "settingsSecurity": {

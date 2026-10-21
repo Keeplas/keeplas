@@ -16,6 +16,7 @@ export const auditContextValidator = v.object({
   country: v.string(),
   ts: v.number(),
   sig: v.string(),
+  city: v.optional(v.string()),
 });
 
 export type AuditContext = ObjectType<typeof auditContextValidator.fields>;
@@ -42,7 +43,11 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   );
 
   const sigBytes = base64ToBytes(payload.sig);
-  const data = enc.encode(`${payload.ip}|${payload.country}|${payload.ts}`);
+  const data = enc.encode(
+    payload.city === undefined
+      ? `${payload.ip}|${payload.country}|${payload.ts}`
+      : `${payload.ip}|${payload.country}|${payload.ts}|${payload.city}`,
+  );
   const valid = await crypto.subtle.verify(
     "HMAC",
     key,
@@ -159,7 +164,11 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
   action: string;
   resourceType: string;
   args: Args;
-  handler: (ctx: MutationCtx, args: ObjectType<Args>) => Promise<Output>;
+  handler: (
+    ctx: MutationCtx,
+    args: ObjectType<Args>,
+    audit: { country: string; city?: string },
+  ) => Promise<Output>;
   /**
    * Optional resolver for the resource ID to record on the audit entry.
    * Defaults to the acting user's ID, which is the right answer for
@@ -217,7 +226,10 @@ export function auditedMutation<Args extends PropertyValidators, Output>(opts: {
         ? await opts.resolveActor(ctx, restArgs)
         : await defaultActor(ctx);
 
-      const result = await opts.handler(ctx, restArgs);
+      const result = await opts.handler(ctx, restArgs, {
+        country: _audit.country,
+        city: _audit.city,
+      });
       if (opts.skipAudit?.(result)) return result;
 
       const resourceId =

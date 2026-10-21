@@ -1,7 +1,14 @@
-import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import { useRef } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInputProps,
+} from "react-native";
 
 import { useTheme } from "@/providers/theme-provider";
-import { radius, type } from "@/theme";
+import { radius, singleLine, type } from "@/theme";
 import { Text } from "./text";
 
 /** Labelled input in the Phone Input frame (52 pt, radius 14, Body L). */
@@ -12,37 +19,48 @@ export function TextField({
   ...input
 }: TextInputProps & { label: string }) {
   const { colors } = useTheme();
+  const ref = useRef<TextInput>(null);
+  const frame = {
+    backgroundColor: colors["bg.surface"],
+    borderColor: colors["border.default"],
+  };
+  const field = (
+    <TextInput
+      ref={ref}
+      accessibilityLabel={label}
+      placeholderTextColor={colors["text.subtle"]}
+      multiline={multiline}
+      {...input}
+      style={[
+        multiline ? type["body-lg"] : singleLine(type["body-lg"]),
+        multiline ? [styles.box, styles.multiline, frame] : styles.line,
+        { color: colors["text.primary"] },
+        style,
+      ]}
+    />
+  );
   return (
     <View style={styles.wrap}>
       <Text variant="label">{label}</Text>
-      <TextInput
-        accessibilityLabel={label}
-        placeholderTextColor={colors["text.subtle"]}
-        multiline={multiline}
-        {...input}
-        style={[
-          type["body-lg"],
-          styles.input,
-          multiline && styles.multiline,
-          {
-            color: colors["text.primary"],
-            backgroundColor: colors["bg.surface"],
-            borderColor: colors["border.default"],
-          },
-          style,
-        ]}
-      />
+      {multiline ? (
+        field
+      ) : (
+        <Pressable
+          accessible={false}
+          onPress={() => ref.current?.focus()}
+          style={[styles.box, styles.frame, frame]}
+        >
+          {field}
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  input: {
-    height: 52,
-    borderWidth: 1,
-    borderRadius: radius.md,
-    paddingHorizontal: 14,
-  },
+  box: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 14 },
+  frame: { height: 52, justifyContent: "center" },
+  line: { paddingTop: 0 },
   multiline: { height: 140, paddingTop: 14, textAlignVertical: "top" },
 });

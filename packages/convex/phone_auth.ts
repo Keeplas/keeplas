@@ -19,6 +19,14 @@ const RATE_LIMIT_MAX = 3;
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
+const DEV_TEST_CODE = "000000";
+
+function isDevTestPhone(phone: string): boolean {
+  return (process.env.DEV_TEST_PHONES ?? "")
+    .split(",")
+    .some((entry: string) => entry.trim() === phone);
+}
+
 function generateOtp(): string {
   const arr = new Uint32Array(1);
   crypto.getRandomValues(arr);
@@ -75,10 +83,12 @@ export const requestPhoneAuthOtp = mutation({
       throw new Error("Too many verification attempts. Try again later.");
     }
     for (const stale of recent) {
-      if (stale.expiresAt > now) await ctx.db.delete(stale._id);
+      if (stale.expiresAt > now)
+        await ctx.db.patch(stale._id, { expiresAt: now });
     }
 
-    const code = generateOtp();
+    const testPhone = isDevTestPhone(phone);
+    const code = testPhone ? DEV_TEST_CODE : generateOtp();
     const codeHash = await sha256Hex(code);
     await ctx.db.insert("phone_auth_codes", {
       phoneNumber: phone,
@@ -88,11 +98,13 @@ export const requestPhoneAuthOtp = mutation({
       intent: args.intent,
     });
 
-    await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
-      phoneNumber: phone,
-      code,
-      language: args.language,
-    });
+    if (!testPhone) {
+      await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
+        phoneNumber: phone,
+        code,
+        language: args.language,
+      });
+    }
 
     return { sent: true };
   },
