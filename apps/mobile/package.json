@@ -48,6 +48,7 @@
     "expo-video": "~57.0.5",
     "i18n-iso-countries": "^7.14.0",
     "libphonenumber-js": "^1.13.6",
+    "mammoth": "1.13.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-blob-util": "^0.25.1",
@@ -61,7 +62,8 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
-    "react-native-webview": "13.16.1"
+    "react-native-webview": "13.16.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
