@@ -28,7 +28,7 @@ import {
   type VaultCategory,
 } from "@/crypto/item-meta";
 import type { OutboxFile, SealedItem } from "@/features/outbox/outbox";
-import { noteToHtml } from "@/lib/rich-text";
+import { noteToHtml } from "@keeplas/export/rich-text";
 
 export interface CaptureFile {
   uri: string;

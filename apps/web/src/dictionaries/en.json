@@ -838,8 +838,37 @@
         "account": "Account",
         "contact": "Contact us",
         "roadmap": "What's coming",
-        "signOut": "Sign out"
+        "signOut": "Sign out",
+        "export": "Export my data"
       }
+    },
+    "export": {
+      "title": "Export my data",
+      "body": "Keeplas decrypts your vault in this browser and downloads everything in one ZIP archive you can keep or move to another app.",
+      "start": "Export my data",
+      "preparing": "Opening your vault…",
+      "progress": "Preparing files: {done} of {total}",
+      "keepOpen": "Keep Keeplas open until it finishes.",
+      "ready": "Your archive is ready ({size}) and has been downloaded. Keep it somewhere safe.",
+      "failed": "The export stopped before the end. Check your connection and try again. Nothing was sent anywhere.",
+      "warning": "The archive is not encrypted. Anyone who gets the file can read it: keep it somewhere safe and delete it when you no longer need it.",
+      "file": "file",
+      "contents": {
+        "items": "Items list",
+        "itemsBody": "items.json and items.csv (Excel, Numbers, Sheets)",
+        "files": "Files",
+        "filesBody": "Documents, photos, voice notes and videos, as added",
+        "notes": "Notes",
+        "notesBody": "Each note as a page you can open in a browser",
+        "contacts": "Trusted contacts",
+        "contactsBody": "Names and contact details only"
+      },
+      "untitled": "Untitled",
+      "noFolder": "No folder",
+      "cancel": "Cancel",
+      "retry": "Try again",
+      "again": "Export again",
+      "skipped": "{n} item(s) could not be opened and are not in the archive."
     }
   },
   "settingsSecurity": {

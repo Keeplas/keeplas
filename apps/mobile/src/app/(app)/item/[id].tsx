@@ -50,7 +50,7 @@ import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
-import { isEmptyNote } from "@/lib/rich-text";
+import { isEmptyNote } from "@keeplas/export/rich-text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";

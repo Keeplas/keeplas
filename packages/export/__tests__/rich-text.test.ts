@@ -1,9 +1,10 @@
+import { describe, expect, it } from "vitest";
 import {
   isEmptyNote,
   noteToHtml,
   noteToPlainText,
   parseNote,
-} from "../rich-text";
+} from "../src/rich-text";
 
 describe("noteToHtml", () => {
   it("wraps plain text lines in escaped paragraphs", () => {

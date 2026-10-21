@@ -172,6 +172,12 @@ export default function Settings() {
         description={t(`languageNames.${language}`)}
         onPress={() => changeLanguage(language === "en" ? "fr" : "en")}
       />
+      <ListRow
+        icon="download"
+        title={t("export.title")}
+        description={t("export.rowBody")}
+        onPress={() => router.push("/export")}
+      />
       <Text variant="label">{t("settings.appearance")}</Text>
       <Card>
         {APPEARANCES.map((mode) => (

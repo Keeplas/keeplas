@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import { Text as RNText, StyleSheet, View, type TextStyle } from "react-native";
 
 import { Text } from "@/components/text";
-import { parseNote, type Mark, type Run } from "@/lib/rich-text";
+import { parseNote, type Mark, type Run } from "@keeplas/export/rich-text";
 import { useTheme } from "@/providers/theme-provider";
 import { fonts } from "@/theme";
 
