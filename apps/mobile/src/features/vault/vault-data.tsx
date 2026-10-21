@@ -43,6 +43,7 @@ export interface VaultItemSummary {
   attachments: number;
   durationSec?: number;
   folderId?: Id<"folders">;
+  sharedWith: Id<"trusted_contacts">[];
   createdAt: number;
   updatedAt: number;
 }
@@ -136,6 +137,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
       const base = {
         id: item._id,
         folderId: item.folderId,
+        sharedWith: item.sharedWithContacts,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
       };

@@ -41,8 +41,9 @@ export function secureDb(): Promise<DB> {
     );
     await handle.execute("DROP TABLE IF EXISTS item_summaries");
     await handle.execute("DROP TABLE IF EXISTS item_summaries_v2");
+    await handle.execute("DROP TABLE IF EXISTS item_summaries_v3");
     await handle.execute(
-      `CREATE TABLE IF NOT EXISTS item_summaries_v3 (
+      `CREATE TABLE IF NOT EXISTS item_summaries_v4 (
         id TEXT PRIMARY KEY NOT NULL,
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
@@ -52,6 +53,7 @@ export function secureDb(): Promise<DB> {
         attachments INTEGER NOT NULL,
         duration_sec REAL,
         folder_id TEXT,
+        shared_with TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
       )`,

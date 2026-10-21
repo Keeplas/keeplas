@@ -425,14 +425,17 @@ function TextPreview({ uri }: { uri: string }) {
 }
 
 function VideoPreview({ uri }: { uri: string }) {
+  const { colors } = useTheme();
   const player = useVideoPlayer(uri);
   return (
-    <VideoView
-      player={player}
-      nativeControls
-      contentFit="contain"
-      style={styles.video}
-    />
+    <View style={[styles.gallery, { backgroundColor: colors["bg.header"] }]}>
+      <VideoView
+        player={player}
+        nativeControls
+        contentFit="contain"
+        style={styles.video}
+      />
+    </View>
   );
 }
 
@@ -545,7 +548,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
   },
-  video: { alignSelf: "stretch", height: 240, borderRadius: radius.lg },
+  video: { alignSelf: "stretch", height: 265 },
   audio: {
     alignSelf: "stretch",
     flexDirection: "row",

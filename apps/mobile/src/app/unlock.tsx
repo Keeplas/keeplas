@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -15,6 +16,7 @@ import { useVault } from "@/providers/vault-provider";
  * that unwraps the MasterKey. The optional Keeplas code is not offered yet.
  */
 export default function Unlock() {
+  const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
   const { signOut } = useSession();
@@ -59,7 +61,7 @@ export default function Unlock() {
       <Button
         variant="text"
         label={t("unlock.lost")}
-        onPress={() => Alert.alert(t("unlock.lost"), t("common.comingSoon"))}
+        onPress={() => router.push("/lost-access")}
       />
       <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>

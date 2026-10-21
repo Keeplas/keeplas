@@ -1,26 +1,86 @@
-import { Alert } from "react-native";
+import { useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
+import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/button";
 import { NavBar } from "@/components/nav-bar";
 import { Radio } from "@/components/controls";
+import type { IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
+import { useTheme } from "@/providers/theme-provider";
 
 const FREQUENCIES = ["weekly", "monthly", "quarterly"] as const;
+
+const PLAN: { key: string; icon: IconName }[] = [
+  { key: "reminders", icon: "bell" },
+  { key: "contacts", icon: "people" },
+  { key: "grace", icon: "clock" },
+  { key: "assigned", icon: "document" },
+];
 
 /** M02-5 / M02-6 configuration, proactive check-in and travel mode. */
 export default function LifeCheck() {
   const router = useRouter();
   const { t } = useI18n();
+  const { colors } = useTheme();
   const config = useQuery(api.life_check.getConfig);
   const save = useAuditedMutation(api.life_check.saveConfig);
   const validate = useAuditedMutation(api.life_check.validateCycle);
   const travel = useAuditedMutation(api.life_check.toggleTravelMode);
+  const [started, setStarted] = useState(false);
+  const failed = () => Alert.alert(t("common.genericError"));
+
+  if (config === null && !started) {
+    return (
+      <Screen
+        header={<AppHeader onBack={router.back} />}
+        gap={12}
+        footer={
+          <Button
+            label={t("succession.cta")}
+            chevron
+            onPress={() => setStarted(true)}
+          />
+        }
+      >
+        <View style={styles.dots}>
+          {[0, 1, 2, 3].map((dot) => (
+            <View
+              key={dot}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    dot === 0
+                      ? colors["action.primary"]
+                      : colors["border.strong"],
+                },
+              ]}
+            />
+          ))}
+        </View>
+        <Text variant="h1">{t("succession.title")}</Text>
+        <Text variant="body-lg" color="text.muted">
+          {t("succession.body")}
+        </Text>
+        {PLAN.map((row) => (
+          <ListRow
+            key={row.key}
+            icon={row.icon}
+            title={t(`succession.${row.key}`)}
+            description={t(`succession.${row.key}Body`)}
+          />
+        ))}
+      </Screen>
+    );
+  }
 
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
     try {
@@ -33,7 +93,7 @@ export default function LifeCheck() {
         ],
       });
     } catch {
-      Alert.alert(t("common.genericError"));
+      failed();
     }
   }
 
@@ -57,7 +117,7 @@ export default function LifeCheck() {
         icon="check-circle"
         title={t("lifeCheck.imOkay")}
         description={t("lifeCheck.imOkayBody")}
-        onPress={() => void validate({ method: "tap" })}
+        onPress={() => void validate({ method: "tap" }).catch(failed)}
       />
       {config ? (
         <ListRow
@@ -71,7 +131,9 @@ export default function LifeCheck() {
           trailing={
             <StatusChip
               label={
-                config.travelModeEnabled ? t("common.done") : t("common.notNow")
+                config.travelModeEnabled
+                  ? t("lifeCheck.travelChipOn")
+                  : t("lifeCheck.travelChipOff")
               }
               tone={config.travelModeEnabled ? "success" : "neutral"}
             />
@@ -82,7 +144,7 @@ export default function LifeCheck() {
               until: !config.travelModeEnabled
                 ? Date.now() + 30 * 86_400_000
                 : undefined,
-            })
+            }).catch(failed)
           }
         />
       ) : null}
@@ -90,3 +152,8 @@ export default function LifeCheck() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  dots: { flexDirection: "row", gap: 6 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+});

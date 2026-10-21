@@ -73,9 +73,10 @@ function Routes() {
       <Stack.Protected guard={settingUp}>
         <Stack.Screen name="(setup)" />
       </Stack.Protected>
-      <Stack.Protected guard={stage === "needsKit"}>
+      <Stack.Protected guard={stage === "needsKit" || stage === "locked"}>
         <Stack.Screen name="recovery-kit" />
         <Stack.Screen name="contact-recovery" />
+        <Stack.Screen name="lost-access" />
       </Stack.Protected>
       <Stack.Protected guard={stage === "locked"}>
         <Stack.Screen name="unlock" />

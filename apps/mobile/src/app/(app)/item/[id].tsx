@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { wrapDek } from "@keeplas/crypto/kem";
 
 import { Button } from "@/components/button";
 import { Icon, type IconName } from "@/components/icon";
@@ -14,16 +13,19 @@ import { NavBar } from "@/components/nav-bar";
 import { DetailRows } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
-import { StateMessage, StateSheet } from "@/components/state-message";
-import { ListRow } from "@/components/surfaces";
+import { StateMessage } from "@/components/state-message";
+import { Checkbox } from "@/components/controls";
+import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
-import { decryptText } from "@/crypto/envelope";
+import { decryptText, encryptText } from "@/crypto/envelope";
 import {
   legacyFileMeta,
   parseFileMeta,
+  itemMetaJson,
   parseItemMeta,
+  type ItemMeta,
   type FileMeta,
+  type VaultCategory,
 } from "@/crypto/item-meta";
 import {
   AttachmentPreview,
@@ -31,15 +33,26 @@ import {
   type PreviewFile,
 } from "@/features/vault/attachment-preview";
 import { useDecryptedAttachments } from "@/features/vault/use-decrypted-attachment";
+import {
+  useMoveToFolder,
+  useWrapForContacts,
+} from "@/features/vault/use-move-to-folder";
 import { useVaultData } from "@/features/vault/vault-data";
 import { errorReference } from "@/lib/file-errors";
-import { formatBytes, formatDate, formatDuration } from "@/lib/format";
+import {
+  formatBytes,
+  formatDate,
+  formatDuration,
+  formatTime,
+} from "@/lib/format";
+import { GROUP_CATEGORY } from "@/features/home/vault-groups";
+import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
-import { radius } from "@/theme";
+import { radius, singleLine, type, withAlpha } from "@/theme";
 
 type Attachment = FileMeta & { id: Id<"vault_item_files">; iv: string };
 
@@ -47,7 +60,8 @@ interface Opened {
   key: CryptoKey;
   title: string;
   note: string;
-  category: string;
+  category: VaultCategory;
+  icon?: string;
   files: Attachment[];
 }
 
@@ -67,9 +81,8 @@ export default function ItemDetails() {
   const raw = useQuery(api.vault_items.getItem, { itemId });
   const files = useQuery(api.vault_items.getItemFiles, { itemId });
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const { itemKey, folders } = useVaultData();
-  const moveItem = useAuditedMutation(api.folders.moveItem);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const { itemKey, folders, items } = useVaultData();
+  const { colors } = useTheme();
   const [opened, setOpened] = useState<Opened>();
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState<{
@@ -79,9 +92,15 @@ export default function ItemDetails() {
   const failure = failed?.attempt === attempt ? failed.reference : undefined;
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
-  const [sheet, setSheet] = useState<"folder" | "details" | "noFolder" | null>(
-    null,
-  );
+  const [sheet, setSheet] = useState<
+    "folder" | "details" | "people" | "rename" | "category" | null
+  >(null);
+  const [people, setPeople] = useState<Set<Id<"trusted_contacts">>>(new Set());
+  const [sharing, setSharing] = useState(false);
+  const wrapFor = useWrapForContacts();
+  const [draftTitle, setDraftTitle] = useState("");
+  const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const moveToFolder = useMoveToFolder();
 
   useEffect(() => {
     if (!raw || !files) return;
@@ -89,16 +108,14 @@ export default function ItemDetails() {
     void (async () => {
       try {
         const key = await itemKey(raw);
-        const [title, note, category, metas] = await Promise.all([
+        const [title, note, meta, metas] = await Promise.all([
           raw.encryptedTitle
             ? decryptText(raw.encryptedTitle, key)
             : (raw.title ?? ""),
           decryptText(raw.encryptedContent, key),
           raw.encryptedMeta
-            ? decryptText(raw.encryptedMeta, key).then(
-                (meta) => parseItemMeta(meta).category,
-              )
-            : (raw.category ?? "other"),
+            ? decryptText(raw.encryptedMeta, key).then(parseItemMeta)
+            : ({ v: 1, category: raw.category ?? "other" } as ItemMeta),
           Promise.all(
             files.map(async (file) => ({
               ...(file.encryptedMeta
@@ -109,7 +126,15 @@ export default function ItemDetails() {
             })),
           ),
         ]);
-        if (alive) setOpened({ key, title, note, category, files: metas });
+        if (alive)
+          setOpened({
+            key,
+            title,
+            note,
+            category: meta.category,
+            icon: meta.icon,
+            files: metas,
+          });
       } catch (error) {
         const reference = errorReference();
         if (__DEV__) console.warn(`[item ${reference}]`, error);
@@ -162,43 +187,57 @@ export default function ItemDetails() {
     });
   }, [file, stateOf, t]);
 
+  const throughFolder = new Set(
+    (folder?.grants ?? []).map((grant) => grant.contactId),
+  );
+  const shareable = (contacts ?? []).filter(
+    (contact) =>
+      contact.invitationStatus === "accepted" &&
+      !throughFolder.has(contact._id),
+  );
+
   function share() {
-    if (folder) {
-      router.push({
-        pathname: "/folder/[id]/share",
-        params: { id: folder.id },
+    setPeople(new Set(raw?.sharedWithContacts ?? []));
+    setSheet("people");
+  }
+
+  function togglePerson(contactId: Id<"trusted_contacts">, checked: boolean) {
+    setPeople((current) => {
+      const next = new Set(current);
+      if (checked) next.add(contactId);
+      else next.delete(contactId);
+      return next;
+    });
+  }
+
+  async function saveSharing() {
+    if (!raw || !opened) return;
+    setSharing(true);
+    try {
+      const direct = [...people];
+      const recipientKeys = await wrapFor(opened.key, [
+        ...direct,
+        ...throughFolder,
+      ]);
+      await updateItem({
+        itemId,
+        sharedWithContacts: direct,
+        recipientMode: direct.length ? "explicit" : "default",
+        accessLevel: direct.length ? "trusted_only" : "private",
+        recipientKeys,
       });
-    } else {
-      setSheet("noFolder");
+      setSheet(null);
+    } catch {
+      Alert.alert(t("item.shareFailedTitle"), t("item.shareFailedBody"));
+    } finally {
+      setSharing(false);
     }
   }
 
   async function move(folderId: Id<"folders"> | null) {
     if (!raw) return;
     setSheet(null);
-    const target = folders?.find((candidate) => candidate.id === folderId);
-    const dek = await itemKey(raw);
-    const recipientKeys = await Promise.all(
-      (target?.grants ?? []).map(async (grant) => {
-        const contact = contacts?.find(
-          (candidate) => candidate._id === grant.contactId,
-        );
-        if (!contact) throw new Error("Contact unavailable");
-        const publicKey = await requireVerifiedKey(
-          contactKeyMaterial(contact),
-          (contactId, fingerprint) =>
-            pin({
-              contactId: contactId as Id<"trusted_contacts">,
-              fingerprint,
-            }),
-        );
-        return {
-          contactId: contact._id,
-          wrappedDek: await wrapDek(dek, publicKey),
-        };
-      }),
-    );
-    await moveItem({ itemId, folderId, recipientKeys }).catch(() =>
+    await moveToFolder(raw, folderId).catch(() =>
       Alert.alert(t("item.folder"), t("common.genericError")),
     );
   }
@@ -271,6 +310,28 @@ export default function ItemDetails() {
     meta: attachment,
     state: stateOf(attachment.id),
   });
+  async function rename() {
+    const title = draftTitle.trim();
+    setSheet(null);
+    if (!opened || !title || title === opened.title) return;
+    await updateItem({
+      itemId,
+      encryptedTitle: await encryptText(title, opened.key),
+    }).catch(() => Alert.alert(t("common.genericError")));
+  }
+
+  async function recategorize(category: VaultCategory) {
+    setSheet(null);
+    if (!opened || category === opened.category) return;
+    await updateItem({
+      itemId,
+      encryptedMeta: await encryptText(
+        itemMetaJson(category, opened.icon),
+        opened.key,
+      ),
+    }).catch(() => Alert.alert(t("common.genericError")));
+  }
+
   const summary = [
     file ? summaryOf(file, pages, t) : t("item.note"),
     file ? formatBytes(file.size) : "",
@@ -278,6 +339,288 @@ export default function ItemDetails() {
   ]
     .filter(Boolean)
     .join(" · ");
+
+  const sheets = (
+    <>
+      <BottomSheet
+        visible={sheet === "folder"}
+        onDismiss={() => setSheet(null)}
+        title={t("folders.move")}
+      >
+        <ListRow
+          icon="mail"
+          title={t("folders.noFolder")}
+          trailing={
+            !folder ? (
+              <Icon name="check" size={18} color="status.active" />
+            ) : undefined
+          }
+          onPress={() => void move(null)}
+        />
+        {(folders ?? []).map((candidate) => (
+          <ListRow
+            key={candidate.id}
+            icon="folder"
+            title={candidate.name ?? t("folders.title")}
+            trailing={
+              candidate.id === folder?.id ? (
+                <Icon name="check" size={18} color="status.active" />
+              ) : undefined
+            }
+            onPress={() => void move(candidate.id)}
+          />
+        ))}
+      </BottomSheet>
+
+      <BottomSheet
+        visible={sheet === "details"}
+        onDismiss={() => setSheet(null)}
+        title={t("item.details")}
+      >
+        <DetailRows
+          rows={[
+            ...(file
+              ? [
+                  {
+                    icon: "document" as const,
+                    label: t("item.fileName"),
+                    value: file.name,
+                  },
+                  {
+                    icon: KIND_ICON[file.kind],
+                    label: t("item.fileType"),
+                    value: file.mimeType,
+                  },
+                  {
+                    icon: "download" as const,
+                    label: t("item.fileSize"),
+                    value: formatBytes(file.size),
+                  },
+                ]
+              : []),
+            {
+              icon: "clock",
+              label: t("item.added"),
+              value: formatDate(raw?.createdAt ?? 0, language),
+            },
+            {
+              icon: "edit",
+              label: t("item.updated"),
+              value: formatDate(raw?.updatedAt ?? 0, language),
+            },
+          ]}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        visible={sheet === "people"}
+        onDismiss={() => setSheet(null)}
+        title={t("item.shareTitle")}
+      >
+        <Text variant="body-sm" color="text.muted">
+          {t("item.shareBody")}
+        </Text>
+        {(folder?.grants ?? []).map((grant) => (
+          <Checkbox
+            key={grant.grantId}
+            checked
+            disabled
+            onChange={() => undefined}
+            label={grant.contactName}
+            description={t("item.throughFolder", {
+              name: folder?.name ?? t("folders.title"),
+            })}
+          />
+        ))}
+        {shareable.map((contact) => (
+          <Checkbox
+            key={contact._id}
+            checked={people.has(contact._id)}
+            onChange={(checked) => togglePerson(contact._id, checked)}
+            label={contact.name}
+          />
+        ))}
+        {shareable.length === 0 && !folder?.grants.length ? (
+          <Text variant="body-sm" color="text.muted">
+            {t("item.shareNobody")}
+          </Text>
+        ) : null}
+        <Button
+          label={t("capture.save")}
+          loading={sharing}
+          disabled={shareable.length === 0}
+          onPress={() => void saveSharing()}
+        />
+        <Button
+          variant="text"
+          label={t("item.addTrustedPerson")}
+          onPress={() => {
+            setSheet(null);
+            router.push("/people/add");
+          }}
+        />
+      </BottomSheet>
+    </>
+  );
+  const renameSheet = (
+    <BottomSheet
+      visible={sheet === "rename"}
+      onDismiss={() => setSheet(null)}
+      title={t("item.renameTitle")}
+    >
+      <TextInput
+        value={draftTitle}
+        onChangeText={setDraftTitle}
+        autoFocus
+        accessibilityLabel={t("item.renameTitle")}
+        returnKeyType="done"
+        onSubmitEditing={() => void rename()}
+        style={[
+          singleLine(type["body-lg"]),
+          styles.renameInput,
+          {
+            color: colors["text.primary"],
+            backgroundColor: colors["bg.surface"],
+            borderColor: colors["border.strong"],
+          },
+        ]}
+      />
+      <Button label={t("capture.save")} onPress={() => void rename()} />
+    </BottomSheet>
+  );
+  const categorySheet = (
+    <BottomSheet
+      visible={sheet === "category"}
+      onDismiss={() => setSheet(null)}
+      title={t("item.category")}
+    >
+      {Object.values(GROUP_CATEGORY).map((category) => (
+        <ListRow
+          key={category}
+          icon="document"
+          title={t(`capture.category.${category}`)}
+          trailing={
+            opened.category === category ? (
+              <Icon name="check" size={18} color="status.active" />
+            ) : undefined
+          }
+          onPress={() => void recategorize(category)}
+        />
+      ))}
+    </BottomSheet>
+  );
+
+  if (!file) {
+    const summaryItem = items?.find((item) => item.id === itemId);
+    const visual = summaryItem
+      ? itemVisual(summaryItem)
+      : { icon: "note" as const, color: colors.accent };
+    const created = raw?.createdAt ?? 0;
+    const when = `${formatDate(created, language)}, ${formatTime(created, language)}`;
+    return (
+      <Screen header={header} gap={16}>
+        <View style={styles.hero}>
+          <IconTile
+            icon={visual.icon}
+            size={72}
+            iconSize={32}
+            background={withAlpha(visual.color, 0.12)}
+            tint={visual.color}
+          />
+          <Text variant="h2" align="center">
+            {opened.title || t("capture.untitled")}
+          </Text>
+          <Text variant="body-sm" color="text.muted" align="center">
+            {t("item.addedOn", { date: formatDate(created, language) })}
+          </Text>
+        </View>
+        {opened.note ? (
+          <View
+            style={[
+              styles.noteCard,
+              {
+                backgroundColor: colors["bg.surface"],
+                borderColor: colors["border.default"],
+              },
+            ]}
+          >
+            <Text variant="body" selectable>
+              {opened.note}
+            </Text>
+          </View>
+        ) : null}
+        <DetailRows
+          rows={[
+            {
+              icon: "edit",
+              label: t("item.titleRow"),
+              value: opened.title || t("capture.untitled"),
+              onPress: () => {
+                setDraftTitle(opened.title);
+                setSheet("rename");
+              },
+            },
+            {
+              icon: "document",
+              label: t("item.category"),
+              value: t(`capture.category.${opened.category}`),
+              onPress: () => setSheet("category"),
+            },
+            {
+              icon: "folder",
+              label: t("item.folder"),
+              value: folder?.name ?? t("item.noFolder"),
+              onPress: () => setSheet("folder"),
+            },
+            {
+              icon: "lock",
+              label: t("item.access"),
+              value: access,
+              onPress: share,
+            },
+          ]}
+        />
+        <ListRow
+          icon="user-plus"
+          title={t("item.addPeople")}
+          description={t("item.addPeopleBody")}
+          onPress={share}
+        />
+        <Text variant="label">{t("item.activity")}</Text>
+        <View style={styles.activity}>
+          {(
+            [
+              ["item.activityAdded", "item.byYou"],
+              ["item.activityEncrypted", "item.byYou"],
+              ["item.activityUploaded", "item.byKeeplas"],
+              ["item.activityProtected", "item.byKeeplas"],
+            ] as const
+          ).map(([label, actor]) => (
+            <View key={label} style={styles.activityRow}>
+              <View
+                style={[
+                  styles.activityDot,
+                  { backgroundColor: colors["action.primary"] },
+                ]}
+              />
+              <View style={styles.flexText}>
+                <Text variant="label">{t(label)}</Text>
+                <Text variant="body-sm" color="text.muted">
+                  {when}
+                </Text>
+              </View>
+              <Text variant="body-sm" color="text.muted">
+                {t(actor)}
+              </Text>
+            </View>
+          ))}
+        </View>
+        {renameSheet}
+        {categorySheet}
+        {sheets}
+      </Screen>
+    );
+  }
 
   return (
     <Screen header={header} gap={16}>
@@ -380,89 +723,7 @@ export default function ItemDetails() {
         ]}
       />
 
-      <BottomSheet
-        visible={sheet === "folder"}
-        onDismiss={() => setSheet(null)}
-        title={t("folders.move")}
-      >
-        <ListRow
-          icon="mail"
-          title={t("folders.noFolder")}
-          trailing={
-            !folder ? (
-              <Icon name="check" size={18} color="status.active" />
-            ) : undefined
-          }
-          onPress={() => void move(null)}
-        />
-        {(folders ?? []).map((candidate) => (
-          <ListRow
-            key={candidate.id}
-            icon="folder"
-            title={candidate.name ?? t("folders.title")}
-            trailing={
-              candidate.id === folder?.id ? (
-                <Icon name="check" size={18} color="status.active" />
-              ) : undefined
-            }
-            onPress={() => void move(candidate.id)}
-          />
-        ))}
-      </BottomSheet>
-
-      <BottomSheet
-        visible={sheet === "details"}
-        onDismiss={() => setSheet(null)}
-        title={t("item.details")}
-      >
-        <DetailRows
-          rows={[
-            ...(file
-              ? [
-                  {
-                    icon: "document" as const,
-                    label: t("item.fileName"),
-                    value: file.name,
-                  },
-                  {
-                    icon: KIND_ICON[file.kind],
-                    label: t("item.fileType"),
-                    value: file.mimeType,
-                  },
-                  {
-                    icon: "download" as const,
-                    label: t("item.fileSize"),
-                    value: formatBytes(file.size),
-                  },
-                ]
-              : []),
-            {
-              icon: "clock",
-              label: t("item.added"),
-              value: formatDate(raw?.createdAt ?? 0, language),
-            },
-            {
-              icon: "edit",
-              label: t("item.updated"),
-              value: formatDate(raw?.updatedAt ?? 0, language),
-            },
-          ]}
-        />
-      </BottomSheet>
-
-      <StateSheet
-        visible={sheet === "noFolder"}
-        onDismiss={() => setSheet(null)}
-        icon="folder"
-        tone="info"
-        title={t("item.shareNeedsFolderTitle")}
-        body={t("item.shareNeedsFolderBody")}
-        primary={{
-          label: t("item.chooseFolder"),
-          onPress: () => setSheet("folder"),
-        }}
-        secondary={{ label: t("common.notNow"), onPress: () => setSheet(null) }}
-      />
+      {sheets}
     </Screen>
   );
 }
@@ -539,6 +800,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actions: { flexDirection: "row", gap: 10 },
+  hero: { alignItems: "center", gap: 8, paddingTop: 4 },
+  noteCard: { padding: 16, borderWidth: 1, borderRadius: radius.md },
+  activity: { gap: 14 },
+  activityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  activityDot: { width: 8, height: 8, borderRadius: 4 },
+  flexText: { flex: 1, gap: 2 },
+  renameInput: {
+    height: 52,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: radius.md,
+  },
   tile: {
     flex: 1,
     alignItems: "center",

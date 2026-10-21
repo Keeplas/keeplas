@@ -45,7 +45,11 @@ export default function RecoveryKitEntry() {
   }
 
   return (
-    <Screen header={<AppHeader />}>
+    <Screen
+      header={
+        <AppHeader onBack={router.canGoBack() ? router.back : undefined} />
+      }
+    >
       <Text variant="h1">{t("recoveryKit.title")}</Text>
       <Text variant="body-lg" color="text.muted">
         {t("recoveryKit.body")}

@@ -123,6 +123,11 @@ export default function ScanDocument() {
             enableTorch={torch}
           />
         ) : null}
+        <View pointerEvents="none" style={styles.frame}>
+          {(["tl", "tr", "bl", "br"] as const).map((corner) => (
+            <View key={corner} style={[styles.corner, styles[corner]]} />
+          ))}
+        </View>
         <View style={styles.banner}>
           <Icon name="lock" tint={palette.white} />
           <View style={styles.bannerText}>
@@ -194,6 +199,29 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     overflow: "hidden",
   },
+  frame: {
+    position: "absolute",
+    top: 36,
+    left: 36,
+    right: 36,
+    bottom: 140,
+    borderWidth: 1.5,
+    borderColor: palette.sky["500"],
+    borderRadius: 4,
+  },
+  corner: {
+    position: "absolute",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: palette.sky["500"],
+    backgroundColor: palette.white,
+  },
+  tl: { top: -7, left: -7 },
+  tr: { top: -7, right: -7 },
+  bl: { bottom: -7, left: -7 },
+  br: { bottom: -7, right: -7 },
   banner: {
     margin: 20,
     marginBottom: 38,

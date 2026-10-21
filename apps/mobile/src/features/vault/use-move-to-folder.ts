@@ -1,0 +1,61 @@
+import { useCallback } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { wrapDek } from "@keeplas/crypto/kem";
+
+import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useVaultData } from "./vault-data";
+
+export function useWrapForContacts() {
+  const contacts = useQuery(api.trusted_contacts.getContacts);
+  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+
+  return useCallback(
+    (dek: CryptoKey, contactIds: Id<"trusted_contacts">[]) =>
+      Promise.all(
+        [...new Set(contactIds)].map(async (contactId) => {
+          const contact = contacts?.find(
+            (candidate) => candidate._id === contactId,
+          );
+          if (!contact) throw new Error("Contact unavailable");
+          const publicKey = await requireVerifiedKey(
+            contactKeyMaterial(contact),
+            (id, fingerprint) =>
+              pin({
+                contactId: id as Id<"trusted_contacts">,
+                fingerprint,
+              }),
+          );
+          return {
+            contactId: contact._id,
+            wrappedDek: await wrapDek(dek, publicKey),
+          };
+        }),
+      ),
+    [contacts, pin],
+  );
+}
+
+export function useMoveToFolder() {
+  const { itemKey, folders } = useVaultData();
+  const wrapFor = useWrapForContacts();
+  const moveItem = useAuditedMutation(api.folders.moveItem);
+
+  return useCallback(
+    async (
+      item: { _id: Id<"vault_items">; ownerWrappedDek?: string },
+      folderId: Id<"folders"> | null,
+    ) => {
+      const target = folders?.find((candidate) => candidate.id === folderId);
+      const dek = await itemKey(item);
+      const recipientKeys = await wrapFor(
+        dek,
+        (target?.grants ?? []).map((grant) => grant.contactId),
+      );
+      await moveItem({ itemId: item._id, folderId, recipientKeys });
+    },
+    [folders, itemKey, wrapFor, moveItem],
+  );
+}

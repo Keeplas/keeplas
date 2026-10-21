@@ -47,6 +47,7 @@ export interface CaptureDraft {
     id: string;
     recipients: { contactId: string; publicKey: string }[];
   };
+  attachTo?: { itemId: string; dek: CryptoKey; ownerWrappedDek: string };
 }
 
 export interface SealIO {
@@ -63,17 +64,18 @@ export async function sealCapture(
   draft: CaptureDraft,
   ownerPublicKey: string,
   io: SealIO,
-): Promise<{ item: SealedItem; files: OutboxFile[] }> {
-  const dek = await generateDek();
+): Promise<{ item: SealedItem; files: OutboxFile[]; attachTo?: string }> {
+  const dek = draft.attachTo?.dek ?? (await generateDek());
   const item: SealedItem = {
-    ownerWrappedDek: await wrapDek(dek, ownerPublicKey),
+    ownerWrappedDek:
+      draft.attachTo?.ownerWrappedDek ?? (await wrapDek(dek, ownerPublicKey)),
     encryptedTitle: await encryptText(draft.title.trim(), dek),
     encryptedMeta: await encryptText(
       itemMetaJson(draft.category ?? INBOX, draft.icon),
       dek,
     ),
     encryptedContent: await encryptText(draft.note.trim(), dek),
-    ...(draft.folder
+    ...(draft.folder && !draft.attachTo
       ? {
           folderId: draft.folder.id,
           recipientKeys: await Promise.all(
@@ -114,5 +116,7 @@ export async function sealCapture(
       ),
     });
   }
-  return { item, files };
+  return draft.attachTo
+    ? { item, files, attachTo: draft.attachTo.itemId }
+    : { item, files };
 }

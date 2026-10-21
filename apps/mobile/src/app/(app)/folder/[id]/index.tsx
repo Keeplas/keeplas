@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { FlatList, View } from "react-native";
+import { FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { Button } from "@/components/button";
@@ -9,6 +9,7 @@ import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import { VaultItemRow } from "@/features/vault/item-row";
+import { itemVisual } from "@/features/vault/item-visual";
 import {
   useVaultData,
   type VaultItemSummary,
@@ -29,7 +30,11 @@ export default function FolderDetails() {
 
   const renderItem = useCallback(
     ({ item }: { item: VaultItemSummary }) => (
-      <VaultItemRow id={item.id} title={item.title ?? t("item.decrypting")} />
+      <VaultItemRow
+        id={item.id}
+        title={item.title ?? t("item.decrypting")}
+        icon={itemVisual(item).icon}
+      />
     ),
     [t],
   );
@@ -64,26 +69,29 @@ export default function FolderDetails() {
             />
             <Button
               variant="secondary"
-              label={t("folders.share")}
+              label={t("folders.addExisting")}
               onPress={() =>
-                router.push({ pathname: "/folder/[id]/share", params: { id } })
+                router.push({
+                  pathname: "/folder/[id]/add-existing",
+                  params: { id },
+                })
+              }
+            />
+            <ListRow
+              icon="people"
+              title={t("folders.accessTitle")}
+              description={
+                folder?.grants.length
+                  ? folder.grants.map((g) => g.contactName).join(", ")
+                  : t("item.onlyYou")
+              }
+              onPress={() =>
+                router.push({ pathname: "/folder/[id]/access", params: { id } })
               }
             />
           </>
         }
         ListHeaderComponentStyle={{ gap: 16 }}
-        ListFooterComponent={
-          <View style={{ gap: 16 }}>
-            {(folder?.grants ?? []).map((grant) => (
-              <ListRow
-                key={grant.grantId}
-                icon="user-circle"
-                title={grant.contactName}
-                description={t(`folders.timing.${grant.timing}`)}
-              />
-            ))}
-          </View>
-        }
       />
     </Screen>
   );

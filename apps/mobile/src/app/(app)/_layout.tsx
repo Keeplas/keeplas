@@ -4,10 +4,10 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { createPublicKeyMaterial } from "@/crypto/vault-keys";
-import { StateSheet } from "@/components/state-message";
 import { AddSheetProvider } from "@/features/capture/add-sheet";
 import { TabShell } from "@/features/navigation/tab-shell";
 import { hasPendingLink } from "@/features/link/pending-link";
+import { LifeCheckPrompt } from "@/features/life-check/life-check-prompt";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
@@ -29,8 +29,6 @@ export default function AppLayout() {
   const setPublicKey = useAuditedMutation(api.users.setPublicKey);
   const alerts = useQuery(api.devices.pendingAlerts);
   const activeLifeCheck = useQuery(api.life_check.getActiveCycle);
-  const validateLifeCheck = useAuditedMutation(api.life_check.validateCycle);
-  const postponeLifeCheck = useAuditedMutation(api.life_check.postponeCycle);
   const pathname = usePathname();
   const shownAlerts = useRef(new Set<string>());
   const publishing = useRef(false);
@@ -70,22 +68,11 @@ export default function AppLayout() {
           <Stack screenOptions={{ headerShown: false }} />
         </TabShell>
       </AddSheetProvider>
-      <StateSheet
-        visible={!!activeLifeCheck && pathname !== "/life-check"}
-        onDismiss={() => undefined}
-        icon="shield-check"
-        tone="info"
-        title="Life check"
-        body="Let us know you're okay. This resets the safety countdown."
-        primary={{
-          label: "I'm okay",
-          onPress: () => void validateLifeCheck({ method: "tap" }),
-        }}
-        secondary={{
-          label: "Remind me in 48 hours",
-          onPress: () => void postponeLifeCheck({ duration: "48h" }),
-        }}
-      />
+      {activeLifeCheck && pathname !== "/life-check" ? (
+        <LifeCheckPrompt
+          missed={activeLifeCheck.status === "awaiting_confirmation"}
+        />
+      ) : null}
     </VaultDataProvider>
   );
 }
