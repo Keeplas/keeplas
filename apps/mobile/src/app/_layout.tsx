@@ -77,6 +77,7 @@ function Routes() {
         <Stack.Screen name="recovery-kit" />
         <Stack.Screen name="contact-recovery" />
         <Stack.Screen name="lost-access" />
+        <Stack.Screen name="link-from-device" />
       </Stack.Protected>
       <Stack.Protected guard={stage === "locked"}>
         <Stack.Screen name="unlock" />

@@ -267,3 +267,57 @@ describe("pairing sessions", () => {
     });
   });
 });
+
+describe("claimEnvelope (a phone already signed in to the account)", () => {
+  let t: TestConvex;
+  let ownerId: Id<"users">;
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    t = makeT();
+    ownerId = await seedUser(t);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function claim(
+    userId: Id<"users">,
+    sessionId: Id<"pairing_sessions">,
+    secret = SECRET,
+  ) {
+    return asUser(t, userId).mutation(api.pairing.claimEnvelope, {
+      sessionId,
+      secret,
+      _audit: await signedAudit(),
+    });
+  }
+
+  it("hands the envelope once to the same account, without a login token", async () => {
+    const sessionId = await createSession(t);
+    await approve(t, ownerId, sessionId);
+    expect(await claim(ownerId, sessionId)).toEqual({
+      envelope: "sealed-master-key",
+      approvalSignature: "ml-dsa-signature",
+    });
+    await expect(claim(ownerId, sessionId)).rejects.toThrow(
+      "Invalid or expired pairing",
+    );
+  });
+
+  it("refuses another account, a wrong secret or a session not approved", async () => {
+    const sessionId = await createSession(t);
+    await expect(claim(ownerId, sessionId)).rejects.toThrow(
+      "Invalid or expired pairing",
+    );
+    await approve(t, ownerId, sessionId);
+    const stranger = await seedUser(t);
+    await expect(claim(stranger, sessionId)).rejects.toThrow(
+      "Invalid or expired pairing",
+    );
+    await expect(claim(ownerId, sessionId, "wrong-secret")).rejects.toThrow(
+      "Invalid or expired pairing",
+    );
+  });
+});

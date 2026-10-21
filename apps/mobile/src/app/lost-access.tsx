@@ -27,6 +27,12 @@ export default function LostAccess() {
         <VaultLaptop width={320} height={220} />
       </View>
       <ListRow
+        icon="phone"
+        title={t("lostAccess.device")}
+        description={t("lostAccess.deviceBody")}
+        onPress={() => router.push("/link-from-device")}
+      />
+      <ListRow
         icon="people"
         title={t("lostAccess.contacts")}
         description={t("lostAccess.contactsBody")}

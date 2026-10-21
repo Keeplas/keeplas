@@ -345,7 +345,7 @@
     "remove": "Remove",
     "removeTitle": "Remove {label}?",
     "removeBody": "It's signed out and can't sign in again without a new link from this phone.",
-    "linkComputer": "Link a computer"
+    "linkComputer": "Link a browser or phone"
   },
   "scan": {
     "title": "Scan the QR code",
@@ -957,7 +957,9 @@
     "contactsBody": "Request approval from your trusted contacts (if configured).",
     "kit": "Use recovery kit",
     "kitBody": "Enter your 24 words if you exported a recovery kit.",
-    "note": "A phone verification code cannot unlock your vault."
+    "note": "A phone verification code cannot unlock your vault.",
+    "device": "Another signed-in device",
+    "deviceBody": "Approve from a phone where you’re already signed in."
   },
   "succession": {
     "title": "Set up your succession plan",
@@ -1086,5 +1088,20 @@
     "openVault": "Open my vault",
     "links": "Links",
     "folderSuffix": "{name} (import)"
+  },
+  "linkDevice": {
+    "title": "Use another signed-in phone",
+    "body": "Your other phone sends your vault key to this one, encrypted end to end. Keeplas never sees it.",
+    "step1": "Open Keeplas on the phone where you’re signed in.",
+    "step2": "Go to Settings → Devices → {menu}.",
+    "step3": "Scan this code, then approve.",
+    "expires": "This code works for 2 minutes.",
+    "preparing": "Preparing a secure code…",
+    "opening": "Opening your vault on this phone…",
+    "expired": "The code expired before it was approved. Generate a new one.",
+    "rejected": "The other phone declined. If it wasn’t you, secure your account from that phone.",
+    "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
+    "retry": "Generate a new code",
+    "note": "Only a phone already signed in to your account can approve this code."
   }
 }

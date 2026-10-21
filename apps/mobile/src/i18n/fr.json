@@ -337,7 +337,7 @@
     "remove": "Retirer",
     "removeTitle": "Retirer {label} ?",
     "removeBody": "Il est déconnecté et ne pourra plus se reconnecter sans une nouvelle association depuis ce téléphone.",
-    "linkComputer": "Associer un ordinateur"
+    "linkComputer": "Associer un navigateur ou un téléphone"
   },
   "scan": {
     "title": "Scanner le QR code",
@@ -942,7 +942,9 @@
     "contactsBody": "Demandez la validation de vos contacts de confiance (si configurés).",
     "kit": "Utiliser le kit de récupération",
     "kitBody": "Saisissez vos 24 mots si vous avez exporté un kit de récupération.",
-    "note": "Un code de vérification par téléphone ne peut pas déverrouiller votre coffre."
+    "note": "Un code de vérification par téléphone ne peut pas déverrouiller votre coffre.",
+    "device": "Un autre appareil connecté",
+    "deviceBody": "Approuvez depuis un téléphone où vous êtes déjà connecté."
   },
   "succession": {
     "title": "Préparez votre plan de succession",
@@ -1071,5 +1073,20 @@
     "openVault": "Ouvrir mon coffre",
     "links": "Liens",
     "folderSuffix": "{name} (import)"
+  },
+  "linkDevice": {
+    "title": "Utiliser un autre téléphone connecté",
+    "body": "Votre autre téléphone envoie la clé de votre coffre à celui-ci, chiffrée de bout en bout. Keeplas ne la voit jamais.",
+    "step1": "Ouvrez Keeplas sur le téléphone où vous êtes connecté.",
+    "step2": "Allez dans Réglages → Appareils → {menu}.",
+    "step3": "Scannez ce code, puis approuvez.",
+    "expires": "Ce code est valable 2 minutes.",
+    "preparing": "Préparation d’un code sécurisé…",
+    "opening": "Ouverture de votre coffre sur ce téléphone…",
+    "expired": "Le code a expiré avant d’être approuvé. Générez-en un nouveau.",
+    "rejected": "L’autre téléphone a refusé. Si ce n’était pas vous, sécurisez votre compte depuis ce téléphone.",
+    "failed": "Ce téléphone n’a pas pu être associé. Vérifiez votre connexion, puis générez un nouveau code.",
+    "retry": "Générer un nouveau code",
+    "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code."
   }
 }
