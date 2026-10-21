@@ -1008,5 +1008,19 @@
     "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
     "cancel": "Annuler la suppression",
     "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
+  },
+  "vaultRestored": {
+    "title": "Coffre restauré",
+    "body": "Votre coffre est de nouveau accessible sur ce téléphone. Vos anciens 24 mots ne fonctionnent plus : gardez le nouveau kit que vous venez d’enregistrer.",
+    "cardTitle": "Votre accès a été rétabli",
+    "checks": {
+      "opened": "Coffre ouvert sur ce téléphone",
+      "kit": "Nouveau kit de récupération enregistré",
+      "encrypted": "Vos données restent chiffrées"
+    },
+    "renew": "Reconfigurer la récupération par contacts",
+    "renewBody": "Vos contacts de confiance ont besoin d’une nouvelle configuration pour pouvoir vous aider à nouveau.",
+    "devices": "Vérifier mes appareils",
+    "open": "Ouvrir mon coffre"
   }
 }
