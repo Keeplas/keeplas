@@ -775,7 +775,13 @@
       "storage": {
         "title": "Storage",
         "of": "of {quota} used",
-        "note": "Sizes are measured after on-device encryption. Deleted items free up space right away."
+        "note": "Sizes are measured after on-device encryption. Deleted items free up space right away.",
+        "kinds": {
+          "document": "Documents",
+          "image": "Photos & scans",
+          "audio": "Voice notes",
+          "video": "Videos"
+        }
       },
       "plan": {
         "label": "Your plan",
