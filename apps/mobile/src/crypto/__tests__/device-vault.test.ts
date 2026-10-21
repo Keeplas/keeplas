@@ -156,6 +156,27 @@ describe("device vault PIN", () => {
     expect(await hasDeviceVault("p2")).toBe(false);
   });
 
+  it("counts every wrong PIN when several are tried at once", async () => {
+    await saveDeviceVault(
+      "p5",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    const errors = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        pinError(unlockDeviceVault("p5", "Unlock", "000000")),
+      ),
+    );
+    expect(errors.map((e) => e.code)).toEqual([
+      "wrong",
+      "wrong",
+      "wrong",
+      "wrong",
+      "locked",
+    ]);
+  });
+
   it("resets the count after a right PIN", async () => {
     await saveDeviceVault(
       "p3",

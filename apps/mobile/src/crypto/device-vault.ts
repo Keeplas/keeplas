@@ -127,6 +127,14 @@ async function writeLayer(userId: string, layer: PinLayer): Promise<void> {
   );
 }
 
+let pinQueue: Promise<unknown> = Promise.resolve();
+
+function oneAtATime<T>(task: () => Promise<T>): Promise<T> {
+  const run = pinQueue.then(task, task);
+  pinQueue = run.catch(() => undefined);
+  return run;
+}
+
 async function openPinLayer(
   userId: string,
   layer: PinLayer,
@@ -173,10 +181,11 @@ async function openDeviceVault(
   prompt: string,
   pin?: string,
 ): Promise<{ masterKey: Uint8Array; rootKey: Uint8Array | null }> {
-  const stored = await readStored(userId);
-  if (!stored) throw new Error("No vault key on this device");
-  const inner =
-    "pin" in stored ? await openPinLayer(userId, stored.pin, pin) : stored;
+  const inner = await oneAtATime(async () => {
+    const stored = await readStored(userId);
+    if (!stored) throw new Error("No vault key on this device");
+    return "pin" in stored ? openPinLayer(userId, stored.pin, pin) : stored;
+  });
   const dwkB64 = await DeviceLock.getItem(dwkKey(userId), prompt);
   if (!dwkB64) throw new Error("Device key unavailable");
   const dwk = base64ToUint8(dwkB64);
