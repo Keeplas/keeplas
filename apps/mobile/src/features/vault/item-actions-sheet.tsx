@@ -41,6 +41,11 @@ export function ItemActionsSheet({
     if (itemId) router.push({ pathname: "/item/[id]", params: { id: itemId } });
   }
 
+  function edit() {
+    close();
+    if (itemId) router.push({ pathname: "/item/edit", params: { id: itemId } });
+  }
+
   async function move(folderId: Id<"folders"> | null) {
     if (!raw) return;
     close();
@@ -103,6 +108,7 @@ export function ItemActionsSheet({
       ) : (
         <>
           <ListRow icon="eye" title={t("itemActions.open")} onPress={open} />
+          <ListRow icon="edit" title={t("item.edit")} onPress={edit} />
           <ListRow
             icon="folder"
             title={t("folders.move")}

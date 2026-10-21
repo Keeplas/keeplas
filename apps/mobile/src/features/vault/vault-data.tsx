@@ -73,6 +73,7 @@ interface VaultDataValue {
   ownerKeys: () => Promise<OwnerKeys>;
   /** The key that opens an item: its DEK, or the MasterKey (legacy rows). */
   itemKey: (item: { ownerWrappedDek?: string }) => Promise<CryptoKey>;
+  summarize: (item: ItemDoc) => Promise<VaultItemSummary>;
 }
 
 const VaultDataContext = createContext<VaultDataValue | null>(null);
@@ -286,8 +287,8 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   }, [entries, itemKey]);
 
   const value = useMemo<VaultDataValue>(
-    () => ({ items, folders, pending, ownerKeys, itemKey }),
-    [items, folders, pending, ownerKeys, itemKey],
+    () => ({ items, folders, pending, ownerKeys, itemKey, summarize }),
+    [items, folders, pending, ownerKeys, itemKey, summarize],
   );
   return (
     <VaultDataContext.Provider value={value}>
