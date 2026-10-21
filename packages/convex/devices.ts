@@ -45,6 +45,7 @@ export const register = auditedMutation({
         /^[A-Z]{2}$/.test(audit.country) && audit.country !== "XX"
           ? audit.country
           : undefined,
+      city: audit.city?.trim().slice(0, 80) || undefined,
       devicePublicKey: args.devicePublicKey,
       trusted: args.trusted,
       sessionId: (await getAuthSessionId(ctx)) ?? undefined,

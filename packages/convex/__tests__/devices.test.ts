@@ -166,4 +166,33 @@ describe("device location", () => {
     const device = await t.run((ctx) => ctx.db.get(deviceId));
     expect(device?.country).toBe("FR");
   });
+
+  it("keeps the city when the audit context signs it", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const { as } = await signIn(t, userId);
+    const deviceId = (await as.mutation(api.devices.register, {
+      kind: "ios",
+      label: "iPhone",
+      trusted: true,
+      _audit: await signedAudit("Montréal"),
+    })) as Id<"devices">;
+    const device = await t.run((ctx) => ctx.db.get(deviceId));
+    expect(device?.city).toBe("Montréal");
+  });
+
+  it("refuses a city that was changed after signing", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const { as } = await signIn(t, userId);
+    const audit = await signedAudit("Montréal");
+    await expect(
+      as.mutation(api.devices.register, {
+        kind: "ios",
+        label: "iPhone",
+        trusted: true,
+        _audit: { ...audit, city: "Paris" },
+      }),
+    ).rejects.toThrow("Invalid audit context signature");
+  });
 });
