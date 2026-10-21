@@ -10,6 +10,7 @@
 
 import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
+import type * as account_deletion from "../account_deletion.js";
 import type * as account_migration from "../account_migration.js";
 import type * as admin_access from "../admin/access.js";
 import type * as admin_activity from "../admin/activity.js";
@@ -87,6 +88,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
+  account_deletion: typeof account_deletion;
   account_migration: typeof account_migration;
   "admin/access": typeof admin_access;
   "admin/activity": typeof admin_activity;

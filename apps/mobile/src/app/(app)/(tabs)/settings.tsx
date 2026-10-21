@@ -196,6 +196,12 @@ export default function Settings() {
           onPress={() => router.push("/self-test")}
         />
       ) : null}
+      <ListRow
+        icon="trash"
+        title={t("deleteAccount.title")}
+        description={t("deleteAccount.rowBody")}
+        onPress={() => router.push("/delete-account")}
+      />
       <Button
         variant="secondary"
         label={t("settings.signOut")}

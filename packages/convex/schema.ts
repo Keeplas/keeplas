@@ -85,6 +85,8 @@ export default defineSchema({
     // after a MasterKey rotation, or a cancelled request that already
     // collected contact shares. Cleared by `recovery_node.setup`.
     socialRecoveryRenewalRequired: v.optional(v.boolean()),
+    deletionScheduledAt: v.optional(v.number()),
+    deletionJobId: v.optional(v.id("_scheduled_functions")),
     // SHA-256 hex of a PBKDF2 verifier derived from the recovery phrase with
     // a TOTP-specific salt. Set when the user opts in to seed-based 2FA reset.
     totpResetVerifierHash: v.optional(v.string()),

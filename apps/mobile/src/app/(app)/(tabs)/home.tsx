@@ -20,7 +20,7 @@ import {
   VAULT_GROUPS,
   type VaultListKey,
 } from "@/features/home/vault-groups";
-import { relativeDay } from "@/lib/format";
+import { formatDate, relativeDay } from "@/lib/format";
 import { readPreference } from "@/lib/preferences";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -29,13 +29,14 @@ import { colors as palette, radius, withAlpha } from "@/theme";
 
 /** M08-5 Home. Counts are computed on the device from the decrypted vault. */
 export default function Home() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { colors } = useTheme();
   const router = useRouter();
   const viewer = useViewer();
   const contactsReady =
     useQuery(api.trusted_contacts.getContactsReady) ?? false;
   const shared = useQuery(api.folders.sharedWithMe);
+  const deletion = useQuery(api.account_deletion.getStatus);
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
@@ -76,6 +77,16 @@ export default function Home() {
         {t("home.subtitle")}
       </Text>
       {firstName ? null : <NamePrompt />}
+      {deletion ? (
+        <ListRow
+          icon="alert-triangle"
+          title={t("home.deletionTitle", {
+            date: formatDate(deletion.scheduledAt, language),
+          })}
+          description={t("home.deletionBody")}
+          onPress={() => router.push("/delete-account")}
+        />
+      ) : null}
       <ListRow
         icon="shield-check"
         title={t("home.recoveryHealth")}

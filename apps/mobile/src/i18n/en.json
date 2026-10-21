@@ -220,7 +220,9 @@
     "addName": "What should we call you?",
     "addNameTitle": "Your first name",
     "firstName": "First name",
-    "addNameFailed": "Keeplas could not save your name. Check your connection and try again."
+    "addNameFailed": "Keeplas could not save your name. Check your connection and try again.",
+    "deletionTitle": "Account deletion on {date}",
+    "deletionBody": "Everything will be erased that day. Tap to cancel."
   },
   "settings": {
     "title": "Settings",
@@ -996,5 +998,30 @@
       "contactsBody": "Names and contact details only"
     },
     "skipped": "{n} item(s) could not be opened on this phone and are not in the archive. Try exporting from the web app to include them."
+  },
+  "deleteAccount": {
+    "title": "Delete my account",
+    "rowBody": "Erase your account and everything in it",
+    "body": "Your account and everything in your vault will be erased from Keeplas for good, 7 days after you confirm.",
+    "losesTitle": "What you lose",
+    "loses": {
+      "items": "Every item, note and file in your vault",
+      "shares": "What you share with your trusted contacts, and what they can open",
+      "succession": "Your succession plan, Life check and contact recovery",
+      "plan": "Your plan. A Lifetime purchase is not refunded"
+    },
+    "exportFirst": "Export my data first",
+    "exportHint": "to keep a copy of everything before it is erased.",
+    "graceNote": "You have 7 days to change your mind: cancel the deletion from this screen. After that, nothing can be recovered, not even by Keeplas.",
+    "confirmWord": "DELETE",
+    "typeLabel": "Type {word} to confirm",
+    "typeWord": "Type {word} exactly to confirm.",
+    "submit": "Delete my account",
+    "keep": "Keep my account",
+    "verify": "Confirm it’s you",
+    "scheduledTitle": "Your account will be deleted",
+    "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
+    "cancel": "Cancel the deletion",
+    "failed": "Keeplas could not save your request. Check your connection and try again."
   }
 }

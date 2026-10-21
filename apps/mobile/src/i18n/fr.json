@@ -213,7 +213,9 @@
     "addName": "Comment doit-on vous appeler ?",
     "addNameTitle": "Votre prénom",
     "firstName": "Prénom",
-    "addNameFailed": "Keeplas n'a pas pu enregistrer votre prénom. Vérifiez votre connexion et réessayez."
+    "addNameFailed": "Keeplas n'a pas pu enregistrer votre prénom. Vérifiez votre connexion et réessayez.",
+    "deletionTitle": "Suppression du compte le {date}",
+    "deletionBody": "Tout sera effacé ce jour-là. Touchez pour annuler."
   },
   "settings": {
     "title": "Réglages",
@@ -981,5 +983,30 @@
       "contactsBody": "Noms et coordonnées seulement"
     },
     "skipped": "{n} élément(s) n’ont pas pu être ouverts sur ce téléphone et ne sont pas dans l’archive. Essayez l’export depuis l’application web pour les inclure."
+  },
+  "deleteAccount": {
+    "title": "Supprimer mon compte",
+    "rowBody": "Effacer votre compte et tout son contenu",
+    "body": "Votre compte et tout le contenu de votre coffre seront définitivement effacés de Keeplas, 7 jours après votre confirmation.",
+    "losesTitle": "Ce que vous perdez",
+    "loses": {
+      "items": "Tous les éléments, notes et fichiers de votre coffre",
+      "shares": "Ce que vous partagez avec vos contacts de confiance, et ce qu’ils peuvent ouvrir",
+      "succession": "Votre plan de succession, le Life check et la récupération par contacts",
+      "plan": "Votre offre. Un achat Lifetime n’est pas remboursé"
+    },
+    "exportFirst": "Exporter mes données d’abord",
+    "exportHint": "pour garder une copie de tout avant l’effacement.",
+    "graceNote": "Vous avez 7 jours pour changer d’avis : annulez la suppression depuis cet écran. Ensuite, rien ne peut être récupéré, pas même par Keeplas.",
+    "confirmWord": "SUPPRIMER",
+    "typeLabel": "Saisissez {word} pour confirmer",
+    "typeWord": "Saisissez {word} exactement pour confirmer.",
+    "submit": "Supprimer mon compte",
+    "keep": "Garder mon compte",
+    "verify": "Confirmez que c’est bien vous",
+    "scheduledTitle": "Votre compte va être supprimé",
+    "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
+    "cancel": "Annuler la suppression",
+    "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
   }
 }

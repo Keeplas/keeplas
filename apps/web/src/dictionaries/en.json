@@ -257,44 +257,6 @@
     }
   },
   "hub": {
-    "terminate": {
-      "hero": {
-        "line1": "Irreversible",
-        "line2": "Destruction",
-        "description": "Once destroyed, your encrypted archive cannot be reconstructed. There is no backup, no admin override, no recovery path. Zero-knowledge means zero recovery."
-      },
-      "stats": {
-        "archiveStatus": "Archive status",
-        "active": "Active",
-        "empty": "Empty",
-        "encryptionKey": "Encryption key",
-        "heldByYou": "Held only by you"
-      },
-      "heading": "Terminate Your Continuity Plan?",
-      "description": "This wipes the vault, every protocol, contact, message, audit entry and the user record itself.",
-      "warning": {
-        "label": "⚠ Warning",
-        "body": "This action cannot be undone. We recommend exporting your Recovery Kit and pausing Life Check first if you only need a temporary stop."
-      },
-      "cards": {
-        "vaultData": "Vault data",
-        "encryptedItems": "{count} encrypted items",
-        "protocols": "Protocols",
-        "protocolsValue": "Life Check, Scenario, Messages"
-      },
-      "confirmLabel": {
-        "before": "Type",
-        "after": "to confirm"
-      },
-      "submitting": "Terminating...",
-      "confirm": "Confirm Permanent Deletion",
-      "keep": "Keep My Plan",
-      "requestId": "Request ID: {id}",
-      "errors": {
-        "typeDelete": "Type DELETE exactly to confirm.",
-        "failed": "Failed to terminate plan."
-      }
-    },
     "greeting": {
       "morning": "Good morning, {name}",
       "afternoon": "Good afternoon, {name}",
@@ -839,7 +801,8 @@
         "contact": "Contact us",
         "roadmap": "What's coming",
         "signOut": "Sign out",
-        "export": "Export my data"
+        "export": "Export my data",
+        "deleteAccount": "Delete my account"
       }
     },
     "export": {
@@ -869,6 +832,29 @@
       "retry": "Try again",
       "again": "Export again",
       "skipped": "{n} item(s) could not be opened and are not in the archive."
+    },
+    "deleteAccount": {
+      "title": "Delete my account",
+      "body": "Your account and everything in your vault will be erased from Keeplas for good, 7 days after you confirm.",
+      "losesTitle": "What you lose",
+      "loses": {
+        "items": "Every item, note and file in your vault",
+        "shares": "What you share with your trusted contacts, and what they can open",
+        "succession": "Your succession plan, Life check and contact recovery",
+        "plan": "Your plan. A Lifetime purchase is not refunded"
+      },
+      "exportFirst": "Export my data first",
+      "exportHint": "to keep a copy of everything before it is erased.",
+      "graceNote": "You have 7 days to change your mind: cancel the deletion from this screen. After that, nothing can be recovered, not even by Keeplas.",
+      "confirmWord": "DELETE",
+      "typeLabel": "Type {word} to confirm",
+      "typeWord": "Type {word} exactly to confirm.",
+      "submit": "Delete my account",
+      "keep": "Keep my account",
+      "scheduledTitle": "Your account will be deleted",
+      "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
+      "cancel": "Cancel the deletion",
+      "failed": "Keeplas could not save your request. Check your connection and try again."
     }
   },
   "settingsSecurity": {
