@@ -654,7 +654,8 @@
     "shareNobody": "No trusted contact has joined Keeplas yet. Invite someone first.",
     "addTrustedPerson": "Add a trusted person",
     "shareFailedTitle": "Sharing not saved",
-    "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again."
+    "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
+    "downloading": "Downloading… {pct}%"
   },
   "people": {
     "title": "Trusted people",

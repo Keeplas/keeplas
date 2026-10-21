@@ -100,7 +100,9 @@ function PreviewStatus({
           color={dark ? colors["text.inverse"] : colors["text.muted"]}
         />
         <Text variant="body-sm" color={dark ? "text.inverse" : "text.muted"}>
-          {t("item.opening")}
+          {state.progress !== undefined && state.progress < 1
+            ? t("item.downloading", { pct: Math.floor(state.progress * 100) })
+            : t("item.opening")}
         </Text>
       </View>
     );
