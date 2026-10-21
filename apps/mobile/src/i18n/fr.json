@@ -574,7 +574,11 @@
     "fromFiles": "Depuis Fichiers · {type}",
     "chooseAnother": "Choisir un autre fichier",
     "whoCanSee": "Qui peut le voir",
-    "neverSees": "Chiffré sur votre téléphone avant l'envoi. Keeplas ne voit jamais le fichier."
+    "neverSees": "Chiffré sur votre téléphone avant l'envoi. Keeplas ne voit jamais le fichier.",
+    "modeAuto": "Auto",
+    "modeManual": "Manuel",
+    "autoUnavailableTitle": "Scan automatique indisponible",
+    "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",
