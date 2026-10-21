@@ -1,7 +1,7 @@
 // Keeplas design tokens. Source: PRD/v2-mobile-first/figma/tokens.json
 // (Foundations page: light + dark "Noir"). Components read semantic tokens
 // through `useTheme()`, never primitives or hex values.
-import type { TextStyle } from "react-native";
+import { Platform, type TextStyle } from "react-native";
 
 export const colors = {
   navy: {
@@ -287,7 +287,7 @@ export const welcomeSky = {
 
 export function singleLine<T extends { lineHeight?: number }>(
   style: T,
-): Omit<T, "lineHeight"> {
+): Omit<T, "lineHeight"> & { paddingBottom?: number } {
   const { lineHeight: _lineHeight, ...rest } = style;
-  return rest;
+  return Platform.OS === "ios" ? { ...rest, paddingBottom: 7 } : rest;
 }
