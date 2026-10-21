@@ -53,6 +53,37 @@ describe("readZipEntries", () => {
     expect(entries[65_535].name).toBe("f65535");
   });
 
+  it("rejects an entry whose size runs past its data", () => {
+    const zip = new ZipBuilder();
+    const archive = concat([
+      zip.file("files/a.pdf", encode("%PDF"), new Date()),
+      zip.finish(),
+    ]);
+    const data = new DataView(archive.buffer);
+    let central = 0;
+    while (data.getUint32(central, true) !== 0x02014b50) central++;
+    data.setUint32(central + 20, 0x7fffffff, true);
+    data.setUint32(central + 24, 0x7fffffff, true);
+    expect(() => readZipEntries(reader(archive), archive.length)).toThrow(
+      "outside the archive",
+    );
+  });
+
+  it("rejects a stored entry whose two sizes disagree", () => {
+    const zip = new ZipBuilder();
+    const archive = concat([
+      zip.file("files/a.pdf", encode("%PDF"), new Date()),
+      zip.finish(),
+    ]);
+    const data = new DataView(archive.buffer);
+    let central = 0;
+    while (data.getUint32(central, true) !== 0x02014b50) central++;
+    data.setUint32(central + 24, 0x7fffffff, true);
+    expect(() => readZipEntries(reader(archive), archive.length)).toThrow(
+      "inconsistent sizes",
+    );
+  });
+
   it("rejects something that is not a ZIP", () => {
     expect(() =>
       readZipEntries(reader(encode("not a zip at all")), 16),

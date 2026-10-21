@@ -96,6 +96,12 @@ export function readZipEntries(read: ReadRange, size: number): ZipEntry[] {
       }
       extraAt += 4 + length;
     }
+    if (method === 0 && entrySize !== compressedSize) {
+      throw new NotAZipError(`${name} has inconsistent sizes`);
+    }
+    if (localOffset + 30 + compressedSize > centralStart) {
+      throw new NotAZipError(`${name} lies outside the archive`);
+    }
     entries.push({
       name,
       method,
