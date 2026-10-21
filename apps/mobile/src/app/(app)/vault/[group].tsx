@@ -1,4 +1,11 @@
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   FlatList,
   ScrollView,
@@ -64,6 +71,27 @@ export default function VaultList() {
     isVaultListKey(group) ? group : "all",
   );
   const [term, setTerm] = useState("");
+  const chipsRef = useRef<ScrollView>(null);
+  const chipsRow = useRef<{
+    viewport: number;
+    content: number;
+    frames: Partial<Record<VaultListKey, { x: number; width: number }>>;
+  }>({ viewport: 0, content: 0, frames: {} });
+  const centerChip = useCallback((key: VaultListKey, animated: boolean) => {
+    const { viewport, content, frames } = chipsRow.current;
+    const frame = frames[key];
+    if (!frame || !viewport) return;
+    const centered = frame.x + frame.width / 2 - viewport / 2;
+    const max = Math.max(0, content - viewport);
+    chipsRef.current?.scrollTo({
+      x: Math.min(max, Math.max(0, centered)),
+      animated,
+    });
+  }, []);
+
+  useEffect(() => {
+    centerChip(list, true);
+  }, [list, centerChip]);
   const needle = useDeferredValue(term.trim().toLocaleLowerCase());
 
   const counts = useMemo(() => listCounts(items ?? []), [items]);
@@ -189,20 +217,38 @@ export default function VaultList() {
                 />
               </View>
               <ScrollView
+                ref={chipsRef}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.chips}
+                onLayout={(event) => {
+                  chipsRow.current.viewport = event.nativeEvent.layout.width;
+                  centerChip(list, false);
+                }}
+                onContentSizeChange={(width) => {
+                  chipsRow.current.content = width;
+                  centerChip(list, false);
+                }}
               >
                 {chips.map((key) => (
-                  <Chip
+                  <View
                     key={key}
-                    label={
-                      key === "all" ? t("vaultList.chipAll") : t(TITLE_KEY[key])
-                    }
-                    count={key === "all" ? undefined : counts[key]}
-                    selected={key === list}
-                    onPress={() => setList(key)}
-                  />
+                    onLayout={(event) => {
+                      chipsRow.current.frames[key] = event.nativeEvent.layout;
+                      if (key === list) centerChip(key, false);
+                    }}
+                  >
+                    <Chip
+                      label={
+                        key === "all"
+                          ? t("vaultList.chipAll")
+                          : t(TITLE_KEY[key])
+                      }
+                      count={key === "all" ? undefined : counts[key]}
+                      selected={key === list}
+                      onPress={() => setList(key)}
+                    />
+                  </View>
                 ))}
               </ScrollView>
               {count ? (
