@@ -4,10 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import DocumentScanner, {
-  ResponseType,
-  ScanDocumentResponseStatus,
-} from "react-native-document-scanner-plugin";
 
 import { Icon } from "@/components/icon";
 import { Text } from "@/components/text";
@@ -49,13 +45,14 @@ export default function ScanDocument() {
   async function scanAuto() {
     setMode("auto");
     try {
-      const result = await DocumentScanner.scanDocument({
+      const scanner = await import("react-native-document-scanner-plugin");
+      const result = await scanner.default.scanDocument({
         croppedImageQuality: 85,
-        responseType: ResponseType.ImageFilePath,
+        responseType: scanner.ResponseType.ImageFilePath,
       });
       const scanned = result.scannedImages ?? [];
       if (
-        result.status === ScanDocumentResponseStatus.Success &&
+        result.status === scanner.ScanDocumentResponseStatus.Success &&
         scanned.length > 0
       ) {
         draftStore.addPages(
