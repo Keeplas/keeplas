@@ -84,9 +84,12 @@ describe("code errors", () => {
 
 describe("formatters", () => {
   it("formats storage in decimal units", () => {
-    expect(formatBytes(62_000_000)).toBe("62 MB");
-    expect(formatBytes(500)).toBe("1 KB");
-    expect(formatBytes(10_000_000_000)).toBe("10 GB");
+    expect(formatBytes(62_000_000)).toBe("62\u00a0MB");
+    expect(formatBytes(500)).toBe("1\u00a0KB");
+    expect(formatBytes(10_000_000_000)).toBe("10\u00a0GB");
+    expect(formatBytes(62_000_000, "fr")).toBe("62\u00a0Mo");
+    expect(formatBytes(1_500_000_000, "fr")).toBe("1,5\u00a0Go");
+    expect(formatBytes(1_500_000_000, "en")).toBe("1.5\u00a0GB");
   });
 
   it("validates and formats phone numbers", () => {

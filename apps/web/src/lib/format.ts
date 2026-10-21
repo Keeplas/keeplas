@@ -53,17 +53,20 @@ export function formatRelative(
 }
 
 const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB"];
+const FRENCH_BYTE_UNITS = ["o", "Ko", "Mo", "Go", "To"];
 
 /** "1.2 MB", "850 KB", "62 MB": one decimal below 10, binary units. */
-export function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number, locale = "en"): string {
+  const french = locale.startsWith("fr");
+  const units = french ? FRENCH_BYTE_UNITS : BYTE_UNITS;
   let value = bytes;
   let unit = 0;
-  while (value >= 1024 && unit < BYTE_UNITS.length - 1) {
+  while (value >= 1024 && unit < units.length - 1) {
     value /= 1024;
     unit += 1;
   }
   const rounded = value < 10 ? Math.round(value * 10) / 10 : Math.round(value);
-  return `${rounded} ${BYTE_UNITS[unit]}`;
+  return `${french ? String(rounded).replace(".", ",") : rounded} ${units[unit]}`;
 }
 
 /** "Jan 12, 2026" (FR "12 janv. 2026"). */

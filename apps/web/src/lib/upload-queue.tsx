@@ -18,7 +18,7 @@ import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { useAuditedMutation } from "./use-audited-mutation";
 import { useVaultCrypto } from "./use-vault-crypto";
 import { fileMetaJson } from "./item-meta";
-import { useTranslations } from "./i18n";
+import { useLocale, useTranslations } from "./i18n";
 import { formatBytes } from "./format";
 import { useRouter } from "./navigation";
 import {
@@ -110,6 +110,7 @@ function uploadWithProgress(
 
 export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const t = useTranslations("vault.upload");
+  const locale = useLocale();
   const convex = useConvex();
   const router = useRouter();
   const [failure, setFailure] = useState<UploadFailure | null>(null);
@@ -152,8 +153,8 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
             label,
             completed,
             total: files.length,
-            done: formatBytes(done),
-            totalBytes: formatBytes(totalBytes),
+            done: formatBytes(done, locale),
+            totalBytes: formatBytes(totalBytes, locale),
           }),
         });
       };
@@ -251,6 +252,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       addItemFiles,
       convex,
       t,
+      locale,
     ],
   );
 
@@ -276,7 +278,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         onOpenChange={(open) => !open && setFailure(null)}
         title={
           failure?.kind === "full"
-            ? t("state.full.title", { quota: formatBytes(failure.quotaBytes) })
+            ? t("state.full.title", {
+                quota: formatBytes(failure.quotaBytes, locale),
+              })
             : t("state.failed.title")
         }
       >
@@ -292,7 +296,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         ) : null}
         {failure?.kind === "full" ? (
           <StorageFullMessage
-            quota={formatBytes(failure.quotaBytes)}
+            quota={formatBytes(failure.quotaBytes, locale)}
             canUpgrade={failure.plan === "free"}
             onUpgrade={() => {
               setFailure(null);
