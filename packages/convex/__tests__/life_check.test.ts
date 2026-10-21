@@ -355,3 +355,21 @@ describe("LIFE_CHECK_PAUSED kill switch freezes the counting", () => {
     expect(config?.paused).toBe(true);
   });
 });
+
+describe("I'm okay", () => {
+  it("resets the countdown and returns the next check date", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedAwaitingConfirmation(t, owner);
+
+    const result = await asUser(t, owner).mutation(
+      api.life_check.validateCycle,
+      { method: "tap", _audit: await signedAudit() },
+    );
+
+    const config = await asUser(t, owner).query(api.life_check.getConfig, {});
+    expect(config?.lastCheckAt).toBeTypeOf("number");
+    expect(result.nextCheckAt).toBe(config?.nextCheckAt);
+    expect(result.nextCheckAt).toBeGreaterThan(Date.now() + DAY_MS);
+  });
+});
