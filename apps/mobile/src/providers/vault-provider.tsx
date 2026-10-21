@@ -20,9 +20,13 @@ interface VaultValue {
   /** Live MasterKey while unlocked; null when locked. */
   masterKey: CryptoKey | null;
   /** Biometric unlock (M08-6). */
-  unlock: (userId: string, prompt: string) => Promise<void>;
+  unlock: (userId: string, prompt: string, pin?: string) => Promise<void>;
   /** Biometric step-up without changing state (M03-5 Approve). */
-  confirmPresence: (userId: string, prompt: string) => Promise<void>;
+  confirmPresence: (
+    userId: string,
+    prompt: string,
+    pin?: string,
+  ) => Promise<void>;
   /** Keep a MasterKey obtained by creation or the recovery kit. */
   adopt: (rawMasterKey: Uint8Array) => Promise<void>;
   lock: () => void;
@@ -57,15 +61,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unlock = useCallback(
-    async (userId: string, prompt: string) => {
-      await adopt(await unlockDeviceVault(userId, prompt));
+    async (userId: string, prompt: string, pin?: string) => {
+      await adopt(await unlockDeviceVault(userId, prompt, pin));
     },
     [adopt],
   );
 
   const confirmPresence = useCallback(
-    async (userId: string, prompt: string) => {
-      (await unlockDeviceVault(userId, prompt)).fill(0);
+    async (userId: string, prompt: string, pin?: string) => {
+      (await unlockDeviceVault(userId, prompt, pin)).fill(0);
     },
     [],
   );

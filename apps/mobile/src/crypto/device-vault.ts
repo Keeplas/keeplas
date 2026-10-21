@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { base64ToUint8, uint8ToBase64 } from "@keeplas/crypto/encoding";
+import { deriveDeviceWrapKey } from "@keeplas/crypto/kdf";
 
 import * as DeviceLock from "../../modules/device-lock";
 import { fresh, importAesKey, randomBytes } from "./envelope";
@@ -22,6 +23,33 @@ const LOCAL: SecureStore.SecureStoreOptions = {
 interface Sealed {
   iv: string;
   ct: string;
+}
+
+type Inner = Sealed & { rk?: Sealed };
+
+interface PinLayer {
+  salt: string;
+  iv: string;
+  ct: string;
+  failCount: number;
+  lockedUntil?: number;
+}
+
+type Stored = Inner | { pin: PinLayer };
+
+export const PIN_LENGTH = 6;
+export const PIN_LOCKOUT_THRESHOLD = 5;
+export const PIN_LOCKOUT_MS = 60_000;
+export const PIN_WIPE_THRESHOLD = 10;
+
+export class DevicePinError extends Error {
+  constructor(
+    public code: "required" | "wrong" | "locked" | "wiped",
+    public detail: { remaining?: number; lockedUntil?: number } = {},
+  ) {
+    super(`Device PIN ${code}`);
+    this.name = "DevicePinError";
+  }
 }
 
 async function seal(raw: Uint8Array, key: CryptoKey): Promise<Sealed> {
@@ -52,16 +80,27 @@ export async function saveDeviceVault(
   userId: string,
   keys: { masterKey: Uint8Array; rootKey: Uint8Array | null },
   prompt: string,
+  pin?: string,
 ): Promise<void> {
   const dwk = randomBytes(32);
   const key = await importAesKey(dwk);
-  const wrapped: Sealed & { rk?: Sealed } = await seal(keys.masterKey, key);
-  if (keys.rootKey) wrapped.rk = await seal(keys.rootKey, key);
+  const inner: Inner = await seal(keys.masterKey, key);
+  if (keys.rootKey) inner.rk = await seal(keys.rootKey, key);
+  let stored: Stored = inner;
+  if (pin) {
+    const salt = randomBytes(16);
+    const pinKey = await deriveDeviceWrapKey(pin, salt);
+    const layer = await seal(
+      new TextEncoder().encode(JSON.stringify(inner)),
+      pinKey,
+    );
+    stored = { pin: { salt: uint8ToBase64(salt), ...layer, failCount: 0 } };
+  }
   await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
   dwk.fill(0);
   await SecureStore.setItemAsync(
     wrappedKey(userId),
-    JSON.stringify(wrapped),
+    JSON.stringify(stored),
     LOCAL,
   );
 }
@@ -70,25 +109,100 @@ export async function hasDeviceVault(userId: string): Promise<boolean> {
   return (await SecureStore.getItemAsync(wrappedKey(userId), LOCAL)) !== null;
 }
 
-/** Screen-lock prompt → DWK → the stored keys. */
+async function readStored(userId: string): Promise<Stored | null> {
+  const stored = await SecureStore.getItemAsync(wrappedKey(userId), LOCAL);
+  return stored ? (JSON.parse(stored) as Stored) : null;
+}
+
+export async function hasDevicePin(userId: string): Promise<boolean> {
+  const stored = await readStored(userId);
+  return Boolean(stored && "pin" in stored);
+}
+
+async function writeLayer(userId: string, layer: PinLayer): Promise<void> {
+  await SecureStore.setItemAsync(
+    wrappedKey(userId),
+    JSON.stringify({ pin: layer }),
+    LOCAL,
+  );
+}
+
+async function openPinLayer(
+  userId: string,
+  layer: PinLayer,
+  pin: string | undefined,
+): Promise<Inner> {
+  if (!pin) throw new DevicePinError("required");
+  if (layer.lockedUntil && layer.lockedUntil > Date.now()) {
+    throw new DevicePinError("locked", { lockedUntil: layer.lockedUntil });
+  }
+  try {
+    const pinKey = await deriveDeviceWrapKey(pin, base64ToUint8(layer.salt));
+    const inner = JSON.parse(
+      new TextDecoder().decode(await open(layer, pinKey)),
+    ) as Inner;
+    if (layer.failCount > 0) {
+      await writeLayer(userId, {
+        ...layer,
+        failCount: 0,
+        lockedUntil: undefined,
+      });
+    }
+    return inner;
+  } catch {
+    const failCount = layer.failCount + 1;
+    if (failCount >= PIN_WIPE_THRESHOLD) {
+      await forgetDeviceVault(userId);
+      throw new DevicePinError("wiped");
+    }
+    const lockedUntil =
+      failCount >= PIN_LOCKOUT_THRESHOLD
+        ? Date.now() + PIN_LOCKOUT_MS
+        : undefined;
+    await writeLayer(userId, { ...layer, failCount, lockedUntil });
+    throw lockedUntil
+      ? new DevicePinError("locked", { lockedUntil })
+      : new DevicePinError("wrong", {
+          remaining: PIN_LOCKOUT_THRESHOLD - failCount,
+        });
+  }
+}
+
 async function openDeviceVault(
   userId: string,
   prompt: string,
+  pin?: string,
 ): Promise<{ masterKey: Uint8Array; rootKey: Uint8Array | null }> {
-  const wrapped = await SecureStore.getItemAsync(wrappedKey(userId), LOCAL);
-  if (!wrapped) throw new Error("No vault key on this device");
+  const stored = await readStored(userId);
+  if (!stored) throw new Error("No vault key on this device");
+  const inner =
+    "pin" in stored ? await openPinLayer(userId, stored.pin, pin) : stored;
   const dwkB64 = await DeviceLock.getItem(dwkKey(userId), prompt);
   if (!dwkB64) throw new Error("Device key unavailable");
   const dwk = base64ToUint8(dwkB64);
   try {
     const key = await importAesKey(dwk);
-    const sealed = JSON.parse(wrapped) as Sealed & { rk?: Sealed };
     return {
-      masterKey: await open(sealed, key),
-      rootKey: sealed.rk ? await open(sealed.rk, key) : null,
+      masterKey: await open(inner, key),
+      rootKey: inner.rk ? await open(inner.rk, key) : null,
     };
   } finally {
     dwk.fill(0);
+  }
+}
+
+export async function setDevicePin(
+  userId: string,
+  prompt: string,
+  currentPin: string | undefined,
+  nextPin: string | undefined,
+): Promise<void> {
+  const keys = await openDeviceVault(userId, prompt, currentPin);
+  try {
+    await saveDeviceVault(userId, keys, prompt, nextPin);
+  } finally {
+    keys.masterKey.fill(0);
+    keys.rootKey?.fill(0);
   }
 }
 
@@ -99,8 +213,9 @@ async function openDeviceVault(
 export async function unlockDeviceVault(
   userId: string,
   prompt: string,
+  pin?: string,
 ): Promise<Uint8Array> {
-  const { masterKey, rootKey } = await openDeviceVault(userId, prompt);
+  const { masterKey, rootKey } = await openDeviceVault(userId, prompt, pin);
   rootKey?.fill(0);
   return masterKey;
 }
@@ -112,8 +227,9 @@ export async function unlockDeviceVault(
 export async function readDeviceRootKey(
   userId: string,
   prompt: string,
+  pin?: string,
 ): Promise<Uint8Array | null> {
-  const { masterKey, rootKey } = await openDeviceVault(userId, prompt);
+  const { masterKey, rootKey } = await openDeviceVault(userId, prompt, pin);
   masterKey.fill(0);
   return rootKey;
 }

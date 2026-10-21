@@ -646,7 +646,8 @@
     "shareNobody": "Aucun contact de confiance n'a encore rejoint Keeplas. Invitez quelqu'un d'abord.",
     "addTrustedPerson": "Ajouter un contact de confiance",
     "shareFailedTitle": "Partage non enregistré",
-    "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez."
+    "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez.",
+    "downloading": "Téléchargement… {pct} %"
   },
   "people": {
     "title": "Contacts",
@@ -1008,6 +1009,34 @@
     "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
     "cancel": "Annuler la suppression",
     "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
+  },
+  "pin": {
+    "label": "Code Keeplas",
+    "sheetTitle": "Saisissez votre code Keeplas",
+    "sheetBody": "Ce téléphone demande votre code à 6 chiffres avant d’ouvrir les clés de votre coffre.",
+    "unlockTitle": "Code Keeplas",
+    "unlockBody": "Saisissez votre code à 6 chiffres, puis confirmez avec votre visage ou votre empreinte.",
+    "required": "Saisissez votre code Keeplas à 6 chiffres.",
+    "wrong": "Code incorrect. Encore {n} essai(s) avant une pause d’une minute.",
+    "locked": "Trop de codes incorrects. Réessayez dans {seconds} s.",
+    "wipedTitle": "La clé de votre coffre a été retirée de ce téléphone",
+    "wipedBody": "Après 10 codes incorrects, Keeplas retire la clé de ce téléphone pour la protéger. Votre coffre est intact : rouvrez-le avec vos 24 mots.",
+    "body": "Ajoutez un code à 6 chiffres après Face ID ou votre empreinte. Les deux sont alors nécessaires pour ouvrir votre coffre sur ce téléphone.",
+    "statusOn": "Un code Keeplas est activé sur ce téléphone.",
+    "statusOff": "Pas de code Keeplas sur ce téléphone : votre verrouillage d’écran suffit à ouvrir le coffre.",
+    "turnOn": "Définir un code Keeplas",
+    "change": "Changer le code",
+    "turnOff": "Désactiver le code",
+    "enterCurrent": "Saisissez votre code actuel",
+    "enterNew": "Choisissez un code à 6 chiffres",
+    "enterConfirm": "Saisissez le même code une seconde fois",
+    "mismatch": "Les deux codes sont différents. Choisissez à nouveau votre code.",
+    "enabled": "Votre code Keeplas est activé.",
+    "changed": "Votre code Keeplas a été changé.",
+    "disabled": "Votre code Keeplas est désactivé.",
+    "failed": "Keeplas n’a pas pu enregistrer votre code. Réessayez.",
+    "forgot": "Code oublié ? Après 10 essais incorrects, Keeplas retire la clé de ce téléphone et vous rouvrez votre coffre avec vos 24 mots.",
+    "auth": "Confirmez le changement de votre code Keeplas"
   },
   "vaultRestored": {
     "title": "Coffre restauré",
