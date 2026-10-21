@@ -28,7 +28,7 @@ export const register = auditedMutation({
     devicePublicKey: v.optional(v.string()),
     trusted: v.boolean(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args, audit) => {
     const userId = await requireAuth(ctx);
     const now = Date.now();
     const isFirst =
@@ -41,6 +41,10 @@ export const register = auditedMutation({
       userId,
       kind: args.kind,
       label,
+      country:
+        /^[A-Z]{2}$/.test(audit.country) && audit.country !== "XX"
+          ? audit.country
+          : undefined,
       devicePublicKey: args.devicePublicKey,
       trusted: args.trusted,
       sessionId: (await getAuthSessionId(ctx)) ?? undefined,

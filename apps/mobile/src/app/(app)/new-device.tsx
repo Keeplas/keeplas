@@ -12,7 +12,7 @@ import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Card, InfoRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { formatDate, formatTime } from "@/lib/format";
+import { countryName, formatDate, formatTime } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -55,7 +55,15 @@ export default function NewDevice() {
         {t("newDevice.body", { device: label })}
       </Text>
       <Card gap={14}>
-        <InfoRow leading={<Icon name="clock" size={22} />} title={when} />
+        {device?.country ? (
+          <InfoRow
+            leading={<Icon name="map-pin" size={22} />}
+            title={countryName(device.country, language)}
+            description={when}
+          />
+        ) : (
+          <InfoRow leading={<Icon name="clock" size={22} />} title={when} />
+        )}
         <InfoRow
           leading={
             <Icon

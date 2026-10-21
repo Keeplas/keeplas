@@ -378,6 +378,7 @@ export default defineSchema({
     kind: v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
     // Human label derived from the user agent, e.g. "Chrome on Mac".
     label: v.string(),
+    country: v.optional(v.string()),
     // ML-KEM-768 public key of the device (for handoffs to it).
     devicePublicKey: v.optional(v.string()),
     // True when the user ticked "Trust this browser".
