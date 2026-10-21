@@ -490,11 +490,11 @@
       "kindText": "Text",
       "targetingPrefix": "· For {targeting}",
       "openAria": "Open {title}",
-      "deleteAria": "Delete {title}",
-      "deleteTitle": "Delete \"{title}\"?",
-      "deleteDescription": "Contacts will no longer see this welcome message.",
-      "deleteConfirm": "Delete",
-      "deleteError": "Failed to delete introduction"
+      "deleteAria": "Archive {title}",
+      "deleteTitle": "Archive \"{title}\"?",
+      "deleteDescription": "Contacts will no longer see this welcome message. It stays in your archives.",
+      "deleteConfirm": "Archive",
+      "deleteError": "Failed to archive introduction"
     },
     "overview": {
       "title": "Who receives what",
@@ -1515,7 +1515,7 @@
       "notFound": "Item not found",
       "backToVault": "Back to Vault",
       "edit": "Edit",
-      "deletePermanently": "Delete permanently",
+      "archive": "Archive",
       "summaryPrivate": "Private",
       "summaryReleasedTo": "Released to {names}",
       "summaryReleasedAll": "Released to all trust contacts",
@@ -1549,14 +1549,12 @@
       "undo": "Undo",
       "remove": "Remove"
     },
-    "delete": {
-      "title": "Delete this item permanently?",
-      "description": "This will erase the item, every secure attachment, and all wrapped recipient keys. The action cannot be undone — there is no archive, no trash, and no recovery, even with your recovery phrase.",
-      "confirmPrefix": "Type",
-      "confirmSuffix": "to confirm",
+    "archive": {
+      "title": "Archive this item?",
+      "description": "It leaves your vault and is no longer passed on to anyone. It stays whole in your archives, with its history, and you can restore it at any time.",
       "cancel": "Cancel",
-      "deleting": "Deleting…",
-      "deleteForever": "Delete forever"
+      "archiving": "Archiving…",
+      "confirm": "Archive"
     },
     "dialog": {
       "breadcrumbVault": "Vault",

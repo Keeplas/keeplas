@@ -5,7 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { optionalAuth, requireFullAuth } from "./helpers";
-import { deleteBlob } from "./lib/storage";
+import { deleteBlob, getBlobSize } from "./lib/storage";
 
 export const DELETION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const BATCH = 200;
@@ -278,6 +278,23 @@ const STEPS: Step[] = [
       await ctx.db.delete(file._id);
     }
     return files.length;
+  },
+  async (ctx, userId, limit) => {
+    const versions = await ctx.db
+      .query("vault_item_versions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(limit);
+    let deleted = 0;
+    for (const version of versions) {
+      for (const file of version.files) {
+        if ((await getBlobSize(ctx, file.storageId)) !== null) {
+          await deleteBlob(ctx, file.storageId);
+        }
+      }
+      await ctx.db.delete(version._id);
+      deleted += 1 + version.files.length;
+    }
+    return deleted;
   },
   async (ctx, userId, limit) => {
     const folders = await ctx.db

@@ -976,10 +976,10 @@
   },
   "itemActions": {
     "open": "Open",
-    "delete": "Delete",
-    "deleteTitle": "Delete \"{title}\"?",
-    "deleteBody": "It is removed from your vault and from everyone you shared it with. This cannot be undone.",
-    "deleteFailed": "Keeplas could not delete this item. Check your connection and try again.",
+    "archive": "Archive",
+    "archiveTitle": "Archive \"{title}\"?",
+    "archiveBody": "It leaves your vault and is no longer passed on to anyone. It stays whole in Settings → Archives, with its history, and you can restore it at any time.",
+    "archiveFailed": "Keeplas could not archive this item. Check your connection and try again.",
     "moveFailed": "Keeplas could not move \"{title}\". Check your connection, or check that everyone in the folder has a verified security code.",
     "more": "More actions for {title}"
   },

@@ -25,7 +25,7 @@ export function ItemActionsSheet({
   const { items, folders } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
   const moveToFolder = useMoveToFolder();
-  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const [moving, setMoving] = useState(false);
   const item = items?.find((candidate) => candidate.id === itemId);
   const raw = rawItems?.find((candidate) => candidate._id === itemId);
@@ -49,20 +49,19 @@ export function ItemActionsSheet({
     );
   }
 
-  function remove() {
+  function archive() {
     if (!itemId) return;
     close();
     Alert.alert(
-      t("itemActions.deleteTitle", { title }),
-      t("itemActions.deleteBody"),
+      t("itemActions.archiveTitle", { title }),
+      t("itemActions.archiveBody"),
       [
         { text: t("common.cancel"), style: "cancel" },
         {
-          text: t("itemActions.delete"),
-          style: "destructive",
+          text: t("itemActions.archive"),
           onPress: () =>
-            void deleteItem({ itemId }).catch(() =>
-              Alert.alert(t("itemActions.deleteFailed")),
+            void archiveItem({ itemId }).catch(() =>
+              Alert.alert(t("itemActions.archiveFailed")),
             ),
         },
       ],
@@ -111,9 +110,9 @@ export function ItemActionsSheet({
           />
           <ListRow icon="people" title={t("item.shareTitle")} onPress={open} />
           <ListRow
-            icon="trash"
-            title={t("itemActions.delete")}
-            onPress={remove}
+            icon="inbox"
+            title={t("itemActions.archive")}
+            onPress={archive}
           />
         </>
       )}

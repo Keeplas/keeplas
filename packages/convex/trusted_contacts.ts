@@ -157,6 +157,7 @@ export const getContactAccessSummary = query({
 
     const releasedItems = [];
     for (const item of items) {
+      if (item.status === "archived") continue;
       const recipients = await resolveItemRecipients(ctx, item, userId);
       if (recipients.includes(args.contactId)) {
         releasedItems.push({
