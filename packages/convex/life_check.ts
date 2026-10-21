@@ -228,7 +228,11 @@ export const validateCycle = auditedMutation({
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     await confirmAlive(ctx, userId, Date.now(), args.method);
-    return { success: true };
+    const config = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    return { success: true, nextCheckAt: config?.nextCheckAt ?? null };
   },
 });
 

@@ -12,6 +12,7 @@ import type { IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { formatDate } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -28,13 +29,14 @@ const PLAN: { key: string; icon: IconName }[] = [
 /** M02-5 / M02-6 configuration, proactive check-in and travel mode. */
 export default function LifeCheck() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { colors } = useTheme();
   const config = useQuery(api.life_check.getConfig);
   const save = useAuditedMutation(api.life_check.saveConfig);
   const validate = useAuditedMutation(api.life_check.validateCycle);
   const travel = useAuditedMutation(api.life_check.toggleTravelMode);
   const [started, setStarted] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const failed = () => Alert.alert(t("common.genericError"));
 
   if (config === null && !started) {
@@ -82,6 +84,26 @@ export default function LifeCheck() {
     );
   }
 
+  async function confirm() {
+    if (confirming) return;
+    setConfirming(true);
+    try {
+      const { nextCheckAt } = await validate({ method: "tap" });
+      Alert.alert(
+        t("lifeCheck.confirmedTitle"),
+        nextCheckAt
+          ? t("lifeCheck.confirmedBody", {
+              date: formatDate(nextCheckAt, language),
+            })
+          : t("lifeCheck.confirmedBodyNoDate"),
+      );
+    } catch {
+      failed();
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
     try {
       await save({
@@ -116,8 +138,14 @@ export default function LifeCheck() {
       <ListRow
         icon="check-circle"
         title={t("lifeCheck.imOkay")}
-        description={t("lifeCheck.imOkayBody")}
-        onPress={() => void validate({ method: "tap" }).catch(failed)}
+        description={
+          config?.lastCheckAt
+            ? t("lifeCheck.lastConfirmed", {
+                date: formatDate(config.lastCheckAt, language),
+              })
+            : t("lifeCheck.imOkayBody")
+        }
+        onPress={() => void confirm()}
       />
       {config ? (
         <ListRow
