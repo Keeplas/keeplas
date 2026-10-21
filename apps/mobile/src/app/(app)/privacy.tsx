@@ -19,8 +19,6 @@ export default function Privacy() {
     { key: "passkey", icon: "fingerprint", href: "/passkeys" },
     { key: "pin", icon: "pin" },
     { key: "kit", icon: "lifebuoy", href: "/recovery" },
-    { key: "devices", icon: "laptop", href: "/devices" },
-    { key: "activity", icon: "activity", href: "/activity" },
   ];
 
   return (
