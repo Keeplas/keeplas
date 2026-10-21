@@ -1008,5 +1008,21 @@
     "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
     "cancel": "Annuler la suppression",
     "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
+  },
+  "importArchive": {
+    "title": "Importer une archive",
+    "rowBody": "Ajouter les éléments d’un export Keeplas",
+    "body": "Choisissez un ZIP créé avec « Exporter mes données ». Keeplas le lit sur ce téléphone, chiffre à nouveau chaque élément et l’ajoute à votre coffre.",
+    "notes": "Les éléments importés s’ajoutent à ceux que vous avez déjà : importer deux fois la même archive crée des doublons. Les partages avec vos contacts ne sont pas restaurés, et chaque élément prend la date du jour.",
+    "choose": "Choisir une archive",
+    "reading": "Lecture de l’archive…",
+    "progress": "Ajout des éléments : {done} sur {total}",
+    "done": "{n} élément(s) ajouté(s). Leurs fichiers s’envoient en arrière-plan ; vous pouvez suivre l’envoi depuis l’accueil.",
+    "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
+    "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
+    "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
+    "openVault": "Ouvrir mon coffre",
+    "links": "Liens",
+    "folderSuffix": "{name} (import)"
   }
 }
