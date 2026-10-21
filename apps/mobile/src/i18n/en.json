@@ -270,9 +270,7 @@
     "activity": "Account activity",
     "activityBody": "Review sign-ins and recent activity.",
     "rotation": "Rotate encryption keys",
-    "rotationBody": "Secure the vault after a suspicious device or recovery.",
-    "pinSheetTitle": "Your phone already guards Keeplas",
-    "pinSheetBody": "On this phone, Keeplas opens with your screen lock: Face ID, fingerprint or your phone's passcode. A separate Keeplas PIN is available on the web app, for computers."
+    "rotationBody": "Secure the vault after a suspicious device or recovery."
   },
   "rotation": {
     "title": "Rotate encryption keys",
@@ -1023,5 +1021,33 @@
     "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
     "cancel": "Cancel the deletion",
     "failed": "Keeplas could not save your request. Check your connection and try again."
+  },
+  "pin": {
+    "label": "Keeplas code",
+    "sheetTitle": "Enter your Keeplas code",
+    "sheetBody": "This phone asks for your 6-digit code before opening your vault keys.",
+    "unlockTitle": "Keeplas code",
+    "unlockBody": "Enter your 6-digit code, then confirm with your face or fingerprint.",
+    "required": "Enter your 6-digit Keeplas code.",
+    "wrong": "Wrong code. {n} more tries before a 1-minute pause.",
+    "locked": "Too many wrong codes. Try again in {seconds} s.",
+    "wipedTitle": "Your vault key was removed from this phone",
+    "wipedBody": "After 10 wrong codes Keeplas removes the key from this phone to protect it. Your vault is safe: open it again with your 24 words.",
+    "body": "Add a 6-digit code after Face ID or your fingerprint. Both are then needed to open your vault on this phone.",
+    "statusOn": "A Keeplas code is set on this phone.",
+    "statusOff": "No Keeplas code on this phone: your screen lock alone opens the vault.",
+    "turnOn": "Set a Keeplas code",
+    "change": "Change the code",
+    "turnOff": "Turn off the code",
+    "enterCurrent": "Enter your current code",
+    "enterNew": "Choose a 6-digit code",
+    "enterConfirm": "Enter the same code again",
+    "mismatch": "The two codes are different. Choose your code again.",
+    "enabled": "Your Keeplas code is on.",
+    "changed": "Your Keeplas code was changed.",
+    "disabled": "Your Keeplas code is off.",
+    "failed": "Keeplas could not save your code. Try again.",
+    "forgot": "Forgot your code? After 10 wrong tries, Keeplas removes the key from this phone and you open your vault again with your 24 words.",
+    "auth": "Confirm your Keeplas code change"
   }
 }
