@@ -43,6 +43,7 @@ import { Route as DashboardDocsVaultIndexRouteImport } from './routes/_dashboard
 import { Route as DashboardSettingsAccountIndexRouteImport } from './routes/_dashboard/settings/account/index'
 import { Route as DashboardSettingsContactIndexRouteImport } from './routes/_dashboard/settings/contact/index'
 import { Route as DashboardSettingsExportIndexRouteImport } from './routes/_dashboard/settings/export/index'
+import { Route as DashboardSettingsImportIndexRouteImport } from './routes/_dashboard/settings/import/index'
 import { Route as DashboardSettingsPreferencesIndexRouteImport } from './routes/_dashboard/settings/preferences/index'
 import { Route as DashboardSettingsRecoveryIndexRouteImport } from './routes/_dashboard/settings/recovery/index'
 import { Route as DashboardSettingsRoadmapIndexRouteImport } from './routes/_dashboard/settings/roadmap/index'
@@ -230,6 +231,12 @@ const DashboardSettingsExportIndexRoute =
     path: '/export/',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
+const DashboardSettingsImportIndexRoute =
+  DashboardSettingsImportIndexRouteImport.update({
+    id: '/import/',
+    path: '/import/',
+    getParentRoute: () => DashboardSettingsRoute,
+  } as any)
 const DashboardSettingsPreferencesIndexRoute =
   DashboardSettingsPreferencesIndexRouteImport.update({
     id: '/preferences/',
@@ -306,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/settings/contact/': typeof DashboardSettingsContactIndexRoute
   '/settings/export/': typeof DashboardSettingsExportIndexRoute
+  '/settings/import/': typeof DashboardSettingsImportIndexRoute
   '/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
   '/settings/recovery/': typeof DashboardSettingsRecoveryIndexRoute
   '/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
@@ -346,6 +354,7 @@ export interface FileRoutesByTo {
   '/settings/account': typeof DashboardSettingsAccountIndexRoute
   '/settings/contact': typeof DashboardSettingsContactIndexRoute
   '/settings/export': typeof DashboardSettingsExportIndexRoute
+  '/settings/import': typeof DashboardSettingsImportIndexRoute
   '/settings/preferences': typeof DashboardSettingsPreferencesIndexRoute
   '/settings/recovery': typeof DashboardSettingsRecoveryIndexRoute
   '/settings/roadmap': typeof DashboardSettingsRoadmapIndexRoute
@@ -390,6 +399,7 @@ export interface FileRoutesById {
   '/_dashboard/settings/account/': typeof DashboardSettingsAccountIndexRoute
   '/_dashboard/settings/contact/': typeof DashboardSettingsContactIndexRoute
   '/_dashboard/settings/export/': typeof DashboardSettingsExportIndexRoute
+  '/_dashboard/settings/import/': typeof DashboardSettingsImportIndexRoute
   '/_dashboard/settings/preferences/': typeof DashboardSettingsPreferencesIndexRoute
   '/_dashboard/settings/recovery/': typeof DashboardSettingsRecoveryIndexRoute
   '/_dashboard/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/settings/account/'
     | '/settings/contact/'
     | '/settings/export/'
+    | '/settings/import/'
     | '/settings/preferences/'
     | '/settings/recovery/'
     | '/settings/roadmap/'
@@ -473,6 +484,7 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/contact'
     | '/settings/export'
+    | '/settings/import'
     | '/settings/preferences'
     | '/settings/recovery'
     | '/settings/roadmap'
@@ -516,6 +528,7 @@ export interface FileRouteTypes {
     | '/_dashboard/settings/account/'
     | '/_dashboard/settings/contact/'
     | '/_dashboard/settings/export/'
+    | '/_dashboard/settings/import/'
     | '/_dashboard/settings/preferences/'
     | '/_dashboard/settings/recovery/'
     | '/_dashboard/settings/roadmap/'
@@ -781,6 +794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsExportIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
+    '/_dashboard/settings/import/': {
+      id: '/_dashboard/settings/import/'
+      path: '/import'
+      fullPath: '/settings/import/'
+      preLoaderRoute: typeof DashboardSettingsImportIndexRouteImport
+      parentRoute: typeof DashboardSettingsRoute
+    }
     '/_dashboard/settings/preferences/': {
       id: '/_dashboard/settings/preferences/'
       path: '/preferences'
@@ -848,6 +868,7 @@ interface DashboardSettingsRouteChildren {
   DashboardSettingsAccountIndexRoute: typeof DashboardSettingsAccountIndexRoute
   DashboardSettingsContactIndexRoute: typeof DashboardSettingsContactIndexRoute
   DashboardSettingsExportIndexRoute: typeof DashboardSettingsExportIndexRoute
+  DashboardSettingsImportIndexRoute: typeof DashboardSettingsImportIndexRoute
   DashboardSettingsPreferencesIndexRoute: typeof DashboardSettingsPreferencesIndexRoute
   DashboardSettingsRecoveryIndexRoute: typeof DashboardSettingsRecoveryIndexRoute
   DashboardSettingsRoadmapIndexRoute: typeof DashboardSettingsRoadmapIndexRoute
@@ -859,6 +880,7 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
   DashboardSettingsAccountIndexRoute: DashboardSettingsAccountIndexRoute,
   DashboardSettingsContactIndexRoute: DashboardSettingsContactIndexRoute,
   DashboardSettingsExportIndexRoute: DashboardSettingsExportIndexRoute,
+  DashboardSettingsImportIndexRoute: DashboardSettingsImportIndexRoute,
   DashboardSettingsPreferencesIndexRoute:
     DashboardSettingsPreferencesIndexRoute,
   DashboardSettingsRecoveryIndexRoute: DashboardSettingsRecoveryIndexRoute,

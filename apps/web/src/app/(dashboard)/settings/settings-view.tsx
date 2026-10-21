@@ -196,6 +196,7 @@ export function SettingsView({
               label={t("more.recoveryCenter")}
             />
             <NavRow href="/settings/export" label={t("more.export")} />
+            <NavRow href="/settings/import" label={t("more.import")} />
             <NavRow href="/settings/account" label={t("more.account")} />
             <NavRow href="/settings/contact" label={t("more.contact")} />
             <NavRow href="/settings/roadmap" label={t("more.roadmap")} />

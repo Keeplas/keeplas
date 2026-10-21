@@ -808,7 +808,8 @@
         "roadmap": "What's coming",
         "signOut": "Sign out",
         "export": "Export my data",
-        "deleteAccount": "Delete my account"
+        "deleteAccount": "Delete my account",
+        "import": "Import an archive"
       }
     },
     "export": {
@@ -861,6 +862,21 @@
       "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
       "cancel": "Cancel the deletion",
       "failed": "Keeplas could not save your request. Check your connection and try again."
+    },
+    "importArchive": {
+      "title": "Import an archive",
+      "body": "Choose a ZIP made with \"Export my data\". Keeplas reads it in this browser, encrypts every item again and adds it to your vault.",
+      "notes": "Imported items are added to what you already have: importing the same archive twice creates duplicates. Sharing with contacts is not restored, and each item gets today’s date.",
+      "choose": "Choose an archive",
+      "reading": "Reading the archive…",
+      "progress": "Adding items: {done} of {total}",
+      "done": "{n} item(s) added. Their files upload in the background.",
+      "skippedFiles": "{n} file(s) could not be read from the archive and were left out.",
+      "notKeeplas": "This file is not a Keeplas export. Choose the ZIP made with \"Export my data\", without unzipping and zipping it again.",
+      "failed": "The import stopped before the end. Items already added stay in your vault. Check your storage and try again.",
+      "folderSuffix": "{name} (import)",
+      "untitled": "Untitled",
+      "keepOpen": "Keep this tab open until it finishes."
     }
   },
   "settingsSecurity": {
