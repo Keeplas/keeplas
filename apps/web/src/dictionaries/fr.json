@@ -775,7 +775,13 @@
       "storage": {
         "title": "Stockage",
         "of": "sur {quota} utilisés",
-        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement."
+        "note": "Les tailles sont mesurées après le chiffrement sur l'appareil. Supprimer un élément libère l'espace immédiatement.",
+        "kinds": {
+          "document": "Documents",
+          "image": "Photos et scans",
+          "audio": "Notes vocales",
+          "video": "Vidéos"
+        }
       },
       "plan": {
         "label": "Votre offre",
