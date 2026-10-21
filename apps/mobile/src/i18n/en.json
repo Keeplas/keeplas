@@ -981,7 +981,7 @@
     "preparing": "Opening your vault…",
     "progress": "Preparing files: {done} of {total}",
     "keepOpen": "Keep Keeplas open until it finishes.",
-    "ready": "Your archive is ready ({size}). Save it to Files or send it where you want. It is removed from Keeplas when you leave this screen.",
+    "ready": "Your archive is ready ({size}). Save it to Files or share it. Your vault stays exactly as it is: only this temporary copy of the archive is cleared from Keeplas when you leave this screen.",
     "failed": "The export stopped before the end. Check your connection and try again. Nothing was sent anywhere.",
     "warning": "The archive is not encrypted. Anyone who gets the file can read it: keep it somewhere safe and delete it when you no longer need it.",
     "file": "file",

@@ -966,7 +966,7 @@
     "preparing": "Ouverture de votre coffre…",
     "progress": "Préparation des fichiers : {done} sur {total}",
     "keepOpen": "Gardez Keeplas ouvert jusqu’à la fin.",
-    "ready": "Votre archive est prête ({size}). Enregistrez-la dans Fichiers ou envoyez-la où vous voulez. Elle est supprimée de Keeplas quand vous quittez cet écran.",
+    "ready": "Votre archive est prête ({size}). Enregistrez-la dans Fichiers ou partagez-la. Votre coffre reste intact : seule cette copie temporaire de l’archive est effacée de Keeplas quand vous quittez cet écran.",
     "failed": "L’export s’est arrêté avant la fin. Vérifiez votre connexion et réessayez. Rien n’a été envoyé nulle part.",
     "warning": "L’archive n’est pas chiffrée. Toute personne qui obtient le fichier peut le lire : gardez-le en lieu sûr et supprimez-le quand vous n’en avez plus besoin.",
     "file": "fichier",
