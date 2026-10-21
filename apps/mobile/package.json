@@ -19,6 +19,7 @@
     "@expo/app-integrity": "^57.0.2",
     "@keeplas/backend": "workspace:^",
     "@keeplas/crypto": "workspace:^",
+    "@keeplas/export": "workspace:^",
     "@op-engineering/op-sqlite": "^18.2.5",
     "convex": "^1.40.0",
     "expo": "~57.0.29",

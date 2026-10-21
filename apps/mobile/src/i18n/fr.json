@@ -956,5 +956,30 @@
     "quote": "Citation",
     "undo": "Annuler",
     "redo": "Rétablir"
+  },
+  "export": {
+    "title": "Exporter mes données",
+    "rowBody": "Télécharger tout le contenu de votre coffre",
+    "body": "Keeplas déchiffre votre coffre sur ce téléphone et rassemble tout dans une archive ZIP que vous pouvez garder ou importer dans une autre app.",
+    "start": "Exporter mes données",
+    "share": "Enregistrer ou partager l’archive",
+    "preparing": "Ouverture de votre coffre…",
+    "progress": "Préparation des fichiers : {done} sur {total}",
+    "keepOpen": "Gardez Keeplas ouvert jusqu’à la fin.",
+    "ready": "Votre archive est prête ({size}). Enregistrez-la dans Fichiers ou partagez-la. Votre coffre reste intact : seule cette copie temporaire de l’archive est effacée de Keeplas quand vous quittez cet écran.",
+    "failed": "L’export s’est arrêté avant la fin. Vérifiez votre connexion et réessayez. Rien n’a été envoyé nulle part.",
+    "warning": "L’archive n’est pas chiffrée. Toute personne qui obtient le fichier peut le lire : gardez-le en lieu sûr et supprimez-le quand vous n’en avez plus besoin.",
+    "file": "fichier",
+    "contents": {
+      "items": "Liste des éléments",
+      "itemsBody": "items.json et items.csv (Excel, Numbers, Sheets)",
+      "files": "Fichiers",
+      "filesBody": "Documents, photos, notes vocales et vidéos, tels qu’ajoutés",
+      "notes": "Notes",
+      "notesBody": "Chaque note sous forme de page lisible dans un navigateur",
+      "contacts": "Contacts de confiance",
+      "contactsBody": "Noms et coordonnées seulement"
+    },
+    "skipped": "{n} élément(s) n’ont pas pu être ouverts sur ce téléphone et ne sont pas dans l’archive. Essayez l’export depuis l’application web pour les inclure."
   }
 }
