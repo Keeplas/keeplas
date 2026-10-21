@@ -10,7 +10,10 @@ config.transformer = {
 };
 config.resolver = {
   ...config.resolver,
-  assetExts: config.resolver.assetExts.filter((ext) => ext !== "svg"),
+  assetExts: [
+    ...config.resolver.assetExts.filter((ext) => ext !== "svg"),
+    "woff2",
+  ],
   sourceExts: [...config.resolver.sourceExts, "svg"],
   // hash-wasm is the web-only Argon2id engine (Hermes has no WebAssembly) and
   // the app swaps in the native one at startup (src/crypto/install.ts). Its

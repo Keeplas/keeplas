@@ -24,6 +24,7 @@ import {
 
 import { Icon } from "@/components/icon";
 import { Text } from "@/components/text";
+import { interFontCss } from "./inter-font";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
@@ -41,7 +42,7 @@ export function NoteEditor({
   const { colors } = useTheme();
   const [setup] = useState(() => {
     const css = `
-      * { font-family: -apple-system, Roboto, sans-serif; }
+      * { font-family: "Inter", -apple-system, Roboto, sans-serif; }
       body { background: transparent; color: ${colors["text.primary"]}; }
       .ProseMirror { min-height: 170px; padding: 12px 14px; font-size: 17px; line-height: 25px; outline: none; }
       .ProseMirror p { margin: 0 0 8px; }
@@ -81,6 +82,13 @@ export function NoteEditor({
   useEffect(() => {
     report.current = onChange;
   }, [onChange]);
+
+  useEffect(() => {
+    if (!state.isReady) return;
+    void interFontCss()
+      .then((css) => editor.injectCSS(css, "inter-font"))
+      .catch(() => undefined);
+  }, [state.isReady, editor]);
 
   useEffect(() => {
     if (content !== undefined) report.current(content);
