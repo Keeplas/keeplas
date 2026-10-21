@@ -152,3 +152,18 @@ describe("devices", () => {
     });
   });
 });
+
+describe("device location", () => {
+  it("keeps the country attested by the audit context", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const { as } = await signIn(t, userId);
+    const deviceId = (await register(
+      as,
+      "web",
+      "Chrome on Mac",
+    )) as Id<"devices">;
+    const device = await t.run((ctx) => ctx.db.get(deviceId));
+    expect(device?.country).toBe("FR");
+  });
+});

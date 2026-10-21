@@ -11,7 +11,7 @@ import { Screen } from "@/components/screen";
 import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceId } from "@/crypto/device-vault";
-import { formatDate } from "@/lib/format";
+import { countryName, formatDate } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -60,9 +60,14 @@ export default function Devices() {
             key={device._id}
             icon={device.kind === "web" ? "laptop" : "phone"}
             title={device.label}
-            description={t("devices.addedOn", {
-              date: formatDate(device.createdAt, language),
-            })}
+            description={[
+              t("devices.addedOn", {
+                date: formatDate(device.createdAt, language),
+              }),
+              device.country ? countryName(device.country, language) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
             trailing={
               current ? (
                 <StatusChip tone="info" label={t("devices.thisDevice")} />
