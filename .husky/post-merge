@@ -1,0 +1,14 @@
+changed="$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null)"
+
+if echo "$changed" | grep -q "^pnpm-lock.yaml$"; then
+  echo "→ Dependencies changed: running pnpm install"
+  pnpm install --frozen-lockfile
+fi
+
+if echo "$changed" | grep -qE "^apps/mobile/metro.config.js$|^pnpm-lock.yaml$"; then
+  echo "→ Restart Metro once: npx expo start --clear (from apps/mobile)"
+fi
+
+if echo "$changed" | grep -qE "^apps/mobile/(app.json|package.json)$|^apps/mobile/plugins/"; then
+  echo "→ Native config changed: rebuild the app (expo prebuild, pod install, then iOS / Android build)"
+fi
