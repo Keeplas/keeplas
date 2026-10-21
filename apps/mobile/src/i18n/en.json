@@ -270,7 +270,9 @@
     "activity": "Account activity",
     "activityBody": "Review sign-ins and recent activity.",
     "rotation": "Rotate encryption keys",
-    "rotationBody": "Secure the vault after a suspicious device or recovery."
+    "rotationBody": "Secure the vault after a suspicious device or recovery.",
+    "pinSheetTitle": "Your phone already guards Keeplas",
+    "pinSheetBody": "On this phone, Keeplas opens with your screen lock: Face ID, fingerprint or your phone's passcode. A separate Keeplas PIN is available on the web app, for computers."
   },
   "rotation": {
     "title": "Rotate encryption keys",
@@ -1050,5 +1052,21 @@
     "failed": "Keeplas could not save your code. Try again.",
     "forgot": "Forgot your code? After 10 wrong tries, Keeplas removes the key from this phone and you open your vault again with your 24 words.",
     "auth": "Confirm your Keeplas code change"
+  },
+  "importArchive": {
+    "title": "Import an archive",
+    "rowBody": "Add the items of a Keeplas export",
+    "body": "Choose a ZIP made with \"Export my data\". Keeplas reads it on this phone, encrypts every item again and adds it to your vault.",
+    "notes": "Imported items are added to what you already have: importing the same archive twice creates duplicates. Sharing with contacts is not restored, and each item gets today’s date.",
+    "choose": "Choose an archive",
+    "reading": "Reading the archive…",
+    "progress": "Adding items: {done} of {total}",
+    "done": "{n} item(s) added. Their files upload in the background; you can follow them on Home.",
+    "skippedFiles": "{n} file(s) could not be read from the archive and were left out.",
+    "notKeeplas": "This file is not a Keeplas export. Choose the ZIP made with \"Export my data\", without unzipping and zipping it again.",
+    "failed": "The import stopped before the end. Items already added stay in your vault. Check your storage and try again.",
+    "openVault": "Open my vault",
+    "links": "Links",
+    "folderSuffix": "{name} (import)"
   }
 }

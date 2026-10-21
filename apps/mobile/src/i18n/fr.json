@@ -262,7 +262,9 @@
     "activity": "Activité du compte",
     "activityBody": "Consultez les connexions et l'activité récente.",
     "rotation": "Renouveler les clés",
-    "rotationBody": "Sécuriser le coffre après un appareil suspect ou une récupération."
+    "rotationBody": "Sécuriser le coffre après un appareil suspect ou une récupération.",
+    "pinSheetTitle": "Votre téléphone protège déjà Keeplas",
+    "pinSheetBody": "Sur ce téléphone, Keeplas s'ouvre avec votre verrouillage d'écran : Face ID, empreinte ou code du téléphone. Un code PIN Keeplas distinct est disponible sur l'application web, pour les ordinateurs."
   },
   "rotation": {
     "title": "Renouveler les clés de chiffrement",
@@ -1035,5 +1037,21 @@
     "failed": "Keeplas n’a pas pu enregistrer votre code. Réessayez.",
     "forgot": "Code oublié ? Après 10 essais incorrects, Keeplas retire la clé de ce téléphone et vous rouvrez votre coffre avec vos 24 mots.",
     "auth": "Confirmez le changement de votre code Keeplas"
+  },
+  "importArchive": {
+    "title": "Importer une archive",
+    "rowBody": "Ajouter les éléments d’un export Keeplas",
+    "body": "Choisissez un ZIP créé avec « Exporter mes données ». Keeplas le lit sur ce téléphone, chiffre à nouveau chaque élément et l’ajoute à votre coffre.",
+    "notes": "Les éléments importés s’ajoutent à ceux que vous avez déjà : importer deux fois la même archive crée des doublons. Les partages avec vos contacts ne sont pas restaurés, et chaque élément prend la date du jour.",
+    "choose": "Choisir une archive",
+    "reading": "Lecture de l’archive…",
+    "progress": "Ajout des éléments : {done} sur {total}",
+    "done": "{n} élément(s) ajouté(s). Leurs fichiers s’envoient en arrière-plan ; vous pouvez suivre l’envoi depuis l’accueil.",
+    "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
+    "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
+    "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
+    "openVault": "Ouvrir mon coffre",
+    "links": "Liens",
+    "folderSuffix": "{name} (import)"
   }
 }

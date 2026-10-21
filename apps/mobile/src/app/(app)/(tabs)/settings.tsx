@@ -178,6 +178,12 @@ export default function Settings() {
         description={t("export.rowBody")}
         onPress={() => router.push("/export")}
       />
+      <ListRow
+        icon="cloud-upload"
+        title={t("importArchive.title")}
+        description={t("importArchive.rowBody")}
+        onPress={() => router.push("/import")}
+      />
       <Text variant="label">{t("settings.appearance")}</Text>
       <Card>
         {APPEARANCES.map((mode) => (
