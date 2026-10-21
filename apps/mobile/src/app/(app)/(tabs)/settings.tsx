@@ -121,6 +121,18 @@ export default function Settings() {
       ) : null}
       <Text variant="label">{t("settings.account")}</Text>
       <ListRow
+        icon="laptop"
+        title={t("privacy.devices")}
+        description={t("privacy.devicesBody")}
+        onPress={() => router.push("/devices")}
+      />
+      <ListRow
+        icon="activity"
+        title={t("privacy.activity")}
+        description={t("privacy.activityBody")}
+        onPress={() => router.push("/activity")}
+      />
+      <ListRow
         icon="shield-check"
         title={t("settings.plan")}
         description={t(
