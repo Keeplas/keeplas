@@ -1,4 +1,4 @@
-import { countryName } from "../format";
+import { countryName, placeName } from "../format";
 
 describe("countryName", () => {
   // Hermes ships without Intl.DisplayNames; names must not depend on it.
@@ -18,5 +18,15 @@ describe("countryName", () => {
 
   it("falls back to the code when unknown", () => {
     expect(countryName("XX", "en")).toBe("XX");
+  });
+});
+
+describe("placeName", () => {
+  it("joins the city and the localized country", () => {
+    expect(placeName({ city: "Montréal", country: "CA" }, "fr")).toBe(
+      "Montréal, Canada",
+    );
+    expect(placeName({ country: "FR" }, "en")).toBe("France");
+    expect(placeName({}, "en")).toBeNull();
   });
 });

@@ -86,3 +86,12 @@ export function formatDuration(seconds: number): string {
 export function countryName(code: string, locale: string): string {
   return countries.getName(code, locale) ?? code;
 }
+
+export function placeName(
+  place: { city?: string; country?: string },
+  locale: string,
+): string | null {
+  const country = place.country ? countryName(place.country, locale) : null;
+  if (place.city && country) return `${place.city}, ${country}`;
+  return place.city ?? country;
+}

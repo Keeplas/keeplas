@@ -9,6 +9,7 @@ export interface AuditContext {
   country: string;
   ts: number;
   sig: string;
+  city?: string;
 }
 
 /** Refetch well before Convex's 24 h limit, and when the network changed. */
