@@ -23,7 +23,12 @@ import {
   type FileMeta,
 } from "@/crypto/item-meta";
 import { useVaultData } from "@/features/vault/vault-data";
-import { createSink, downloadDecrypted, openSource } from "@/lib/files";
+import {
+  cachedDecrypted,
+  createSink,
+  downloadDecrypted,
+  openSource,
+} from "@/lib/files";
 import { useI18n } from "@/providers/i18n-provider";
 
 const CHUNK = 1024 * 1024;
@@ -199,12 +204,15 @@ export function useExportVault() {
               fileId: source.id,
             });
             if (url) {
-              const plain = await downloadDecrypted(
-                url,
-                source.iv,
-                key,
-                source.meta.name,
-              );
+              const cached = cachedDecrypted(source.id);
+              const plain =
+                cached ??
+                (await downloadDecrypted(
+                  url,
+                  source.iv,
+                  key,
+                  source.meta.name,
+                ));
               try {
                 const reader = openSource(plain.uri);
                 try {
@@ -235,7 +243,7 @@ export function useExportVault() {
                   reader.close();
                 }
               } finally {
-                if (plain.exists) plain.delete();
+                if (!cached && plain.exists) plain.delete();
               }
             }
             done += 1;

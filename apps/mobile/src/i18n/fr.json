@@ -644,7 +644,8 @@
     "shareNobody": "Aucun contact de confiance n'a encore rejoint Keeplas. Invitez quelqu'un d'abord.",
     "addTrustedPerson": "Ajouter un contact de confiance",
     "shareFailedTitle": "Partage non enregistré",
-    "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez."
+    "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez.",
+    "downloading": "Téléchargement… {pct} %"
   },
   "people": {
     "title": "Contacts",

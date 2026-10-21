@@ -2,7 +2,7 @@
  * File plumbing over expo-file-system: chunked readers / writers for the
  * file cipher (large videos never sit in memory), the outbox folder of
  * ciphertext, ciphertext upload to Convex storage, and decrypted copies for
- * viewing (cache folder, deleted by the viewer when it closes).
+ * viewing (cache folder, kept until the vault locks).
  */
 import { Directory, File, FileMode, Paths, UploadType } from "expo-file-system";
 
@@ -91,10 +91,16 @@ export async function downloadDecrypted(
   iv: string,
   key: CryptoKey,
   name: string,
+  onProgress?: (ratio: number) => void,
 ): Promise<File> {
   const cache = folder(Paths.cache, "open");
   const cipher = new File(cache, `${Date.now()}.bin`);
-  await File.downloadFileAsync(url, cipher);
+  const task = File.createDownloadTask(url, cipher, {
+    onProgress: ({ bytesWritten, totalBytes }) => {
+      if (totalBytes > 0) onProgress?.(bytesWritten / totalBytes);
+    },
+  });
+  await task.downloadAsync();
   const safeName = name.replace(/[/\\]/g, "_") || "file";
   const plain = new File(cache, `${Date.now()}-${safeName}`);
   const source = openSource(cipher.uri);
@@ -109,8 +115,25 @@ export async function downloadDecrypted(
   return plain;
 }
 
+const opened = new Map<string, File>();
+
+export function cachedDecrypted(fileId: string): File | null {
+  const file = opened.get(fileId);
+  if (file?.exists) return file;
+  opened.delete(fileId);
+  return null;
+}
+
+export function rememberDecrypted(fileId: string, file: File): void {
+  const previous = opened.get(fileId);
+  if (previous && previous.uri !== file.uri && previous.exists)
+    previous.delete();
+  opened.set(fileId, file);
+}
+
 /** Remove every decrypted copy left in the cache (sign-out, lock). */
 export function clearDecryptedCache(): void {
+  opened.clear();
   const cache = new Directory(Paths.cache, "open");
   if (cache.exists) cache.delete();
 }
