@@ -12,6 +12,7 @@ import { useNetworkState } from "expo-network";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { StorageRef } from "@keeplas/backend/lib/storage";
 import { uint8ToHex } from "@keeplas/crypto/encoding";
 
 import { randomBytes } from "@/crypto/envelope";
@@ -106,7 +107,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
           vaultId: vaultId as Id<"vaults">,
           files: files.map((f) => ({
             ...f,
-            storageId: f.storageId as Id<"_storage">,
+            storageId: f.storageId as StorageRef,
           })),
         })) as string,
       addItemFiles: async (itemId, files) => {
@@ -114,7 +115,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
           itemId: itemId as Id<"vault_items">,
           files: files.map((f) => ({
             ...f,
-            storageId: f.storageId as Id<"_storage">,
+            storageId: f.storageId as StorageRef,
           })),
         });
       },
