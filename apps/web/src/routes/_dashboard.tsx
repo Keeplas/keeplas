@@ -10,6 +10,7 @@ import { ForcedRotationGate } from "@/components/forced-rotation-gate";
 import { LifeCheckPrompt } from "@/components/life-check-prompt";
 import { OfflineNotice } from "@/components/offline-notice";
 import { UploadQueueProvider } from "@/lib/upload-queue";
+import { VaultDataProvider } from "@/lib/vault-data";
 import { useTranslations } from "@/lib/i18n";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
 import { purgeLegacyShards } from "@/lib/purge-legacy-shards";
@@ -88,20 +89,22 @@ function DashboardLayout() {
   return (
     <UnlockGate>
       <UploadQueueProvider>
-        <PendingShareBackfill />
-        <ForcedRotationGate />
-        <LifeCheckPrompt />
-        <OfflineNotice />
-        <ShellAccountProvider
-          account={{
-            initials: getInitials(viewer?.name, 1),
-            signOut: () => void signOut(),
-          }}
-        >
-          <AppShell>
-            <Outlet />
-          </AppShell>
-        </ShellAccountProvider>
+        <VaultDataProvider>
+          <PendingShareBackfill />
+          <ForcedRotationGate />
+          <LifeCheckPrompt />
+          <OfflineNotice />
+          <ShellAccountProvider
+            account={{
+              initials: getInitials(viewer?.name, 1),
+              signOut: () => void signOut(),
+            }}
+          >
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </ShellAccountProvider>
+        </VaultDataProvider>
       </UploadQueueProvider>
     </UnlockGate>
   );

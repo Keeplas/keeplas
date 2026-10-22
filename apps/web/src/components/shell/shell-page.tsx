@@ -10,7 +10,7 @@ import {
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
-import { useRouter } from "@/lib/navigation";
+import { Link, useRouter } from "@/lib/navigation";
 import { useTheme } from "@/lib/theme";
 import { useShellAccount } from "./shell-account";
 
@@ -59,27 +59,73 @@ function AccountMenu() {
   );
 }
 
+export interface Crumb {
+  label: string;
+  /** Omitted on the current page (the last crumb). */
+  href?: string;
+}
+
+/** "My vault › Documents › File.pdf" above a screen title (W06 frames). */
+function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="flex min-w-0 items-center gap-[6px] pb-[6px] text-[13px] leading-[18px] font-medium"
+    >
+      {crumbs.map((crumb, index) => (
+        <span key={index} className="flex min-w-0 items-center gap-[6px]">
+          {index > 0 ? (
+            <Icon
+              path={ICON_PATHS.chevronRight}
+              className="size-[14px] shrink-0 text-icon-subtle"
+            />
+          ) : null}
+          {crumb.href ? (
+            <Link
+              href={crumb.href}
+              className="truncate rounded-xs text-text-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+            >
+              {crumb.label}
+            </Link>
+          ) : (
+            <span aria-current="page" className="truncate text-text-primary">
+              {crumb.label}
+            </span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
 /**
- * A signed-in web screen (Figma "Main"): title, subtitle, language and
- * account on the right, then the screen's sections 20 px apart.
+ * A signed-in web screen (Figma "Main"): optional breadcrumb, title,
+ * subtitle, then the screen's actions, language and account on the right,
+ * then the screen's sections 20 px apart.
  */
 export function ShellPage({
   title,
   subtitle,
+  breadcrumb,
+  actions,
   children,
 }: {
   title: string;
   subtitle: ReactNode;
+  breadcrumb?: Crumb[];
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-[20px]">
       <header className="flex items-center gap-[16px]">
         <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <h1 className="text-h1 text-text-primary">{title}</h1>
+          {breadcrumb ? <Breadcrumb crumbs={breadcrumb} /> : null}
+          <h1 className="truncate text-h1 text-text-primary">{title}</h1>
           <p className="text-body-lg text-text-muted">{subtitle}</p>
         </div>
         <div className="flex shrink-0 items-center gap-[12px]">
+          {actions}
           <LanguageSwitcher />
           <AccountMenu />
         </div>

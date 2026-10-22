@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatBytes,
+  formatClock,
   formatCountdown,
   formatDate,
   formatRelative,
@@ -16,6 +17,18 @@ describe("formatCountdown", () => {
     [-5_000, "00:00"],
   ])("formats %d ms as %s", (ms, text) => {
     expect(formatCountdown(ms)).toBe(text);
+  });
+});
+
+describe("formatClock", () => {
+  it.each([
+    [28, "0:28"],
+    [135, "2:15"],
+    [600, "10:00"],
+    [3725.4, "1:02:05"],
+    [0, "0:00"],
+  ])("formats %d s as %s", (seconds, text) => {
+    expect(formatClock(seconds)).toBe(text);
   });
 });
 

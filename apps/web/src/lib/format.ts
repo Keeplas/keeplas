@@ -17,6 +17,17 @@ export function formatCountdown(remainingMs: number): string {
   return `${minutes}:${seconds}`;
 }
 
+/** Media length as a player shows it: "0:28", "2:15", "1:02:05". */
+export function formatClock(totalSeconds: number): string {
+  const total = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, "0");
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}`
+    : `${minutes}:${seconds}`;
+}
+
 // Each unit and how many of it make the next one.
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["second", 60],

@@ -73,6 +73,14 @@ const CASES: Case[] = [
     lang: "fr",
     prepare: blurAutoFocus,
   },
+  {
+    id: "W06-1",
+    figma: "W06-1_My_vault_Documents_list_.png",
+    ...SHELL,
+    // Figma draws the first row hovered.
+    prepare: (page) =>
+      page.getByRole("link", { name: "Home insurance policy.pdf" }).hover(),
+  },
   // Section 10 states that apply to the web (393 px State Message cards).
   {
     id: "state-vault-empty",

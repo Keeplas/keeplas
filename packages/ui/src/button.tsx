@@ -23,6 +23,12 @@ const buttonVariants = cva(
         link: "text-text-link hover:underline underline-offset-4 focus-visible:ring-border-focus",
         danger:
           "border border-action-danger bg-bg-surface text-action-danger hover:bg-bg-danger focus-visible:ring-border-focus",
+        // v2 web "App/Button" secondary: surface, thin strong border.
+        bordered:
+          "border border-border-strong bg-bg-surface text-text-primary hover:bg-bg-subtle focus-visible:ring-border-focus",
+        // v2 web "App/Button" tertiary: label only.
+        plain:
+          "bg-transparent text-text-primary hover:bg-bg-subtle focus-visible:ring-border-focus",
       },
       size: {
         sm: "h-9 px-4 text-sm rounded-xs",
@@ -35,6 +41,10 @@ const buttonVariants = cva(
         // v2 "Small button" (Figma: 36 px, 8/14 padding, 13/18 semibold, radius 10).
         compact:
           "h-[36px] gap-[6px] px-[14px] text-[13px] leading-[18px] font-semibold rounded-sm",
+        // v2 web "App/Button" (Figma: 10/18 padding, 14/20 semibold, radius
+        // 10): 40 px, 42 px with the bordered variant's 1 px border.
+        regular:
+          "gap-[8px] px-[18px] py-[10px] text-[14px] leading-[20px] font-semibold rounded-sm",
       },
     },
     defaultVariants: {

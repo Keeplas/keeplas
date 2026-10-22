@@ -297,13 +297,6 @@
       "updated": "Last updated",
       "open": "Open"
     },
-    "types": {
-      "document": "Document",
-      "account": "Account",
-      "instruction": "Instruction",
-      "other": "Other",
-      "inbox": "Inbox"
-    },
     "empty": {
       "title": "Your vault is empty",
       "body": "Add your first document, account or note. It's encrypted before it leaves this device.",
@@ -2587,6 +2580,65 @@
         "cloud_backup_enabled": "Backup turned on",
         "cloud_backup_disabled": "Backup turned off"
       }
+    }
+  },
+  "vaultList": {
+    "breadcrumb": "My vault",
+    "lists": {
+      "all": "All items",
+      "inbox": "Encrypted inbox",
+      "documents": "Documents",
+      "accounts": "Accounts",
+      "instructions": "Instructions",
+      "notes": "Notes",
+      "photos": "Photos",
+      "voice": "Voice notes",
+      "videos": "Videos",
+      "other": "Other"
+    },
+    "listsLabel": "Show",
+    "subtitle": "{count} items. Everything here is encrypted before it leaves your device.",
+    "subtitleOne": "1 item. Everything here is encrypted before it leaves your device.",
+    "search": "Search your vault",
+    "sort": {
+      "label": "Sort: {sort}",
+      "updated": "Last updated",
+      "name": "Name",
+      "added": "Date added"
+    },
+    "upload": "Upload files",
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "folder": "Folder",
+      "sharedWith": "Shared with",
+      "updated": "Updated",
+      "added": "Added"
+    },
+    "detail": {
+      "document": "Document",
+      "photo": "Photo",
+      "voice": "Voice note",
+      "video": "Video",
+      "note": "Note",
+      "account": "Account",
+      "attachmentOne": "1 attachment",
+      "attachments": "{count} attachments"
+    },
+    "access": {
+      "onlyYou": "Only you",
+      "people": "{count} people"
+    },
+    "noFolder": "No folder",
+    "untitled": "Untitled item",
+    "locked": "Can't be opened in this browser",
+    "loading": "Opening your vault…",
+    "noMatch": "Nothing matches “{search}”.",
+    "emptyList": "Nothing here yet.",
+    "dropHint": "Drop files anywhere on this page to add them. They are encrypted in your browser first.",
+    "actions": {
+      "open": "Open",
+      "archive": "Archive"
     }
   }
 }

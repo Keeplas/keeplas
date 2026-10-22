@@ -97,7 +97,10 @@ async function summarize(
     encryptedTitle: item.encryptedTitle,
     encryptedMeta: item.encryptedMeta,
     ownerWrappedDek: item.ownerWrappedDek,
+    accessLevel: item.accessLevel,
+    recipientMode: item.recipientMode ?? "default",
     sharedWithContacts: item.sharedWithContacts ?? [],
+    sharedWithGroups: item.sharedWithGroups ?? [],
     files: (filesByItem.get(item._id) ?? []).map((file) => ({
       encryptedMeta: file.encryptedMeta,
       kind: file.kind,

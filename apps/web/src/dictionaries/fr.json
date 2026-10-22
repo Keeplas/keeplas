@@ -297,13 +297,6 @@
       "updated": "Mis à jour",
       "open": "Ouvrir"
     },
-    "types": {
-      "document": "Document",
-      "account": "Compte",
-      "instruction": "Instruction",
-      "other": "Autre",
-      "inbox": "Boîte chiffrée"
-    },
     "empty": {
       "title": "Votre coffre est vide",
       "body": "Ajoutez un premier document, compte ou note. Il est chiffré avant de quitter cet appareil.",
@@ -2587,6 +2580,65 @@
         "cloud_backup_enabled": "Sauvegarde activée",
         "cloud_backup_disabled": "Sauvegarde désactivée"
       }
+    }
+  },
+  "vaultList": {
+    "breadcrumb": "Mon coffre",
+    "lists": {
+      "all": "Tous les éléments",
+      "inbox": "Boîte chiffrée",
+      "documents": "Documents",
+      "accounts": "Comptes",
+      "instructions": "Instructions",
+      "notes": "Notes",
+      "photos": "Photos",
+      "voice": "Notes vocales",
+      "videos": "Vidéos",
+      "other": "Autre"
+    },
+    "listsLabel": "Afficher",
+    "subtitle": "{count} éléments. Tout est chiffré avant de quitter votre appareil.",
+    "subtitleOne": "1 élément. Tout est chiffré avant de quitter votre appareil.",
+    "search": "Rechercher dans votre coffre",
+    "sort": {
+      "label": "Tri : {sort}",
+      "updated": "Dernière modification",
+      "name": "Nom",
+      "added": "Date d'ajout"
+    },
+    "upload": "Importer des fichiers",
+    "columns": {
+      "name": "Nom",
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "sharedWith": "Partagé avec",
+      "updated": "Modifié",
+      "added": "Ajouté"
+    },
+    "detail": {
+      "document": "Document",
+      "photo": "Photo",
+      "voice": "Note vocale",
+      "video": "Vidéo",
+      "note": "Note",
+      "account": "Compte",
+      "attachmentOne": "1 pièce jointe",
+      "attachments": "{count} pièces jointes"
+    },
+    "access": {
+      "onlyYou": "Vous seul",
+      "people": "{count} personnes"
+    },
+    "noFolder": "Aucun dossier",
+    "untitled": "Élément sans titre",
+    "locked": "Impossible à ouvrir dans ce navigateur",
+    "loading": "Ouverture de votre coffre…",
+    "noMatch": "Aucun résultat pour « {search} ».",
+    "emptyList": "Rien ici pour l'instant.",
+    "dropHint": "Déposez des fichiers n'importe où sur cette page pour les ajouter. Ils sont d'abord chiffrés dans votre navigateur.",
+    "actions": {
+      "open": "Ouvrir",
+      "archive": "Archiver"
     }
   }
 }
