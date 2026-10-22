@@ -5,7 +5,46 @@ import { ICON_PATHS } from "@/lib/icons";
 // stay in sync. Pure module — no JSX, no React.
 
 export const ACCEPTED_TYPES = "application/pdf,image/png,image/jpeg";
-export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+/** "up to 100 MB each" (W06-3); the plan quota still applies server-side. */
+export const MAX_FILE_BYTES = 100 * 1024 * 1024;
+
+/** What an "Add" entry picks: documents (PDF, Word, images), photos, videos. */
+export type CaptureKind = "document" | "photo" | "video";
+
+const WORD =
+  ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+export const ACCEPT: Record<CaptureKind | "any", string> = {
+  document: `.pdf,application/pdf,${WORD},image/*`,
+  photo: "image/*",
+  video: "video/*",
+  // Upload files and drag and drop (W06-1).
+  any: `.pdf,application/pdf,${WORD},image/*,video/*,audio/*`,
+};
+
+/** Whether `file` matches an `accept` list (extensions, MIME, `type/*`). */
+export function acceptsFile(
+  file: { name: string; type: string },
+  accept: string,
+): boolean {
+  const name = file.name.toLowerCase();
+  return accept.split(",").some((token) => {
+    if (token.startsWith(".")) return name.endsWith(token);
+    if (token.endsWith("/*")) return file.type.startsWith(token.slice(0, -1));
+    return file.type === token;
+  });
+}
+
+/** The dialog a set of files opens: photos or videos alone, else documents. */
+export function captureKindOf(files: { type: string }[]): CaptureKind {
+  if (files.length > 0 && files.every((f) => f.type.startsWith("image/"))) {
+    return "photo";
+  }
+  if (files.length > 0 && files.every((f) => f.type.startsWith("video/"))) {
+    return "video";
+  }
+  return "document";
+}
 
 export type FileKind = "document" | "audio" | "video" | "image";
 

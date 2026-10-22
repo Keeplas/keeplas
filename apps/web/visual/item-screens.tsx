@@ -28,7 +28,11 @@ import familyLake from "../../../PRD/v2-mobile-first/figma/svg/illustrations/web
 import landscape from "../../../PRD/v2-mobile-first/figma/svg/illustrations/landscape.svg";
 import landscapeNight from "../../../PRD/v2-mobile-first/figma/svg/illustrations/landscape-night.svg";
 import videoPoster from "../../../PRD/v2-mobile-first/figma/svg/illustrations/web-video-poster.svg";
-import { noop } from "./fixtures";
+import { HubView } from "@/app/(dashboard)/hub/hub-view";
+import { AddFileDialog } from "@/components/vault/add-file-dialog";
+import { SecuringDialog } from "@/components/vault/securing-dialog";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { hub, noop } from "./fixtures";
 
 // W06-2 / W06-8 / W06-9 as the item page composes them, with the Figma
 // content: the policy pages and photos are user files, so the fixture
@@ -216,4 +220,47 @@ export const videoPreview = () => (
     category="Videos"
     access="Sarah"
   />
+);
+
+// W06-3 / W06-4 open over the dashboard, as Figma draws them.
+const policy = new File(
+  [new Uint8Array(Math.round(2.4 * 1024 * 1024))],
+  "Home insurance policy.pdf",
+  { type: "application/pdf" },
+);
+const FOLDERS = [
+  { id: "family" as Id<"folders">, name: "Family", itemCount: 4, grants: [] },
+];
+
+export const addDocument = () => (
+  <>
+    <HubView {...hub} />
+    <AddFileDialog
+      open
+      onOpenChange={noop}
+      kind="document"
+      initialFiles={[policy]}
+      defaultCategory="insurance_policy"
+      folders={FOLDERS}
+      onSubmit={async () => {}}
+    />
+  </>
+);
+
+export const securingItem = () => (
+  <>
+    <HubView {...hub} />
+    <SecuringDialog
+      open
+      file={{
+        kind: "document",
+        name: "Home insurance policy.pdf",
+        detail: "PDF · 3 pages · 2.4 MB",
+      }}
+      progress={{ phase: "uploading", uploaded: 64, total: 100 }}
+      onCancel={noop}
+      onBackground={noop}
+      onOpenItem={noop}
+    />
+  </>
 );

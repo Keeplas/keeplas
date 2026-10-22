@@ -75,8 +75,11 @@ export interface JobProgress {
 
 interface UploadQueueContextValue {
   enqueueAttachments: (args: EnqueueArgs) => void;
-  /** Starts the job and returns its id for `jobs`, `cancel`, `background`. */
-  enqueueNewItem: (job: NewItemJob) => string;
+  /**
+   * Starts the job and returns its id for `jobs`, `cancel`, `background`.
+   * `inBackground`: nobody watches it, a toast follows it from the start.
+   */
+  enqueueNewItem: (job: NewItemJob, inBackground?: boolean) => string;
   jobs: Record<string, JobProgress>;
   cancel: (jobId: string) => void;
   /** The screen stops watching: progress moves to a toast. */
@@ -249,7 +252,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   // Held in refs so retries re-invoke the latest version of each job runner.
   const runAttachRef = useRef<(args: EnqueueArgs) => Promise<void>>(undefined);
   const runNewItemRef =
-    useRef<(id: string, job: NewItemJob) => Promise<void>>(undefined);
+    useRef<
+      (id: string, job: NewItemJob, inBackground?: boolean) => Promise<void>
+    >(undefined);
 
   const runAttach = useCallback(
     async (args: EnqueueArgs) => {
@@ -328,8 +333,24 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     [seal, upload, addItemFiles, fail, progressText, t],
   );
 
+  const showToast = useCallback(
+    (id: string, label: string, uploaded: number, total: number) => {
+      if (toasts.current.has(id)) return;
+      toasts.current.set(
+        id,
+        toast({
+          variant: "info",
+          title: t("savingItem", { label }),
+          description: progressText(uploaded, total),
+          duration: PERSISTENT_DURATION_MS,
+        }),
+      );
+    },
+    [t, progressText],
+  );
+
   const runNewItem = useCallback(
-    async (id: string, job: NewItemJob) => {
+    async (id: string, job: NewItemJob, inBackground = false) => {
       const controller = new AbortController();
       controllers.current.set(id, controller);
       labels.current.set(id, job.label);
@@ -354,6 +375,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         });
       };
 
+      if (inBackground) showToast(id, job.label, 0, total);
       try {
         report("encrypting");
         const sealed = await Promise.all(
@@ -401,7 +423,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           await fail(error, job.files[0]?.name ?? job.label, () => {
             const retryId = crypto.randomUUID();
-            void runNewItemRef.current?.(retryId, job);
+            void runNewItemRef.current?.(retryId, job, true);
           });
         }
       } finally {
@@ -410,7 +432,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         labels.current.delete(id);
       }
     },
-    [seal, upload, fail, progressText, t],
+    [seal, upload, fail, progressText, showToast, t],
   );
 
   useEffect(() => {
@@ -427,9 +449,9 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   );
 
   const enqueueNewItem = useCallback(
-    (job: NewItemJob) => {
+    (job: NewItemJob, inBackground = false) => {
       const id = crypto.randomUUID();
-      void runNewItem(id, job);
+      void runNewItem(id, job, inBackground);
       return id;
     },
     [runNewItem],
@@ -442,24 +464,15 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   const background = useCallback(
     (jobId: string) => {
       const job = jobs[jobId];
-      if (
-        !job ||
-        !controllers.current.has(jobId) ||
-        toasts.current.has(jobId)
-      ) {
-        return;
-      }
-      toasts.current.set(
+      if (!job || !controllers.current.has(jobId)) return;
+      showToast(
         jobId,
-        toast({
-          variant: "info",
-          title: t("savingItem", { label: labels.current.get(jobId) ?? "" }),
-          description: progressText(job.uploaded, job.total),
-          duration: PERSISTENT_DURATION_MS,
-        }),
+        labels.current.get(jobId) ?? "",
+        job.uploaded,
+        job.total,
       );
     },
-    [jobs, t, progressText],
+    [jobs, showToast],
   );
 
   const value = useMemo(

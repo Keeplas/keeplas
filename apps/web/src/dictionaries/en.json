@@ -2735,6 +2735,63 @@
       "pdfError": "This PDF can't be displayed. It may be damaged or protected with a password. Download it to open it in another app.",
       "noPreview": "Keeplas can't show {type} files yet. Download it to open it in another app.",
       "decryptError": "This file couldn't be decrypted in this browser. Lock your vault, unlock it again, then try again."
+    },
+    "form": {
+      "category": "Category",
+      "folder": "Folder",
+      "whoCanSee": "Who can see it",
+      "lockedFolder": "Locked folder",
+      "onlyYou": "Only you",
+      "two": "{first} and {second}",
+      "many": "{first}, {second} and {count} more"
+    },
+    "addFile": {
+      "description": "Files are encrypted in this browser before they are uploaded.",
+      "document": {
+        "title": "Add a document",
+        "hint": "PDF, Word or images · up to {max} each"
+      },
+      "photo": {
+        "title": "Add a photo",
+        "hint": "JPG, PNG, HEIC… · up to {max} each"
+      },
+      "video": {
+        "title": "Add a video",
+        "hint": "MP4, MOV… · up to {max} each"
+      },
+      "drop": "Drop your file here, or",
+      "browse": "browse",
+      "ready": "Ready to encrypt",
+      "remove": "Remove",
+      "title": "Title",
+      "titlePlaceholder": "Give it a name",
+      "encrypted": "Encrypted on this computer with your vault key. Keeplas never sees the file.",
+      "moreAfter": "You can add more files after this one.",
+      "eachItem": "{count} files, each saved as its own item.",
+      "submit": "Upload and secure",
+      "errors": {
+        "type": "“{name}” can't be added here. Choose a PDF, a Word file, a photo or a video.",
+        "size": "“{name}” is larger than {max}."
+      }
+    },
+    "securing": {
+      "title": "Securing your item",
+      "body": "Keep this tab open until the upload is finished.",
+      "doneBody": "Your item is encrypted and safely stored.",
+      "encrypting": "Encrypting in this browser",
+      "encryptingBody": "Turning your file into a secure format…",
+      "encrypted": "Encrypted in this browser",
+      "encryptedBody": "AES-256 encryption finished on this computer",
+      "uploading": "Uploading encrypted copy",
+      "uploadingBody": "Sending a secure copy to your Keeplas storage… {percent}%",
+      "uploadedBody": "The encrypted copy is in your Keeplas storage.",
+      "protected": "Protected",
+      "protectedWaiting": "Waiting for verification…",
+      "protectedBody": "Your item is encrypted and safely stored.",
+      "note": "Only an encrypted copy leaves this computer. Your trusted people get access only through the rules you set.",
+      "cancel": "Cancel upload",
+      "background": "Continue in background",
+      "open": "Open item"
     }
   }
 }

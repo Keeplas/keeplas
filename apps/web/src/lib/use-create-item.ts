@@ -41,7 +41,7 @@ export function useCreateItem() {
   const { enqueueNewItem } = useUploadQueue();
 
   return useCallback(
-    async (item: NewItem): Promise<string | null> => {
+    async (item: NewItem, inBackground = false): Promise<string | null> => {
       if (!vault) throw new Error("Vault not ready");
       const grantees = (
         folders?.find((folder) => folder.id === item.folderId)?.grants ?? []
@@ -65,29 +65,32 @@ export function useCreateItem() {
           }
         : sharingFields(item.contactIds);
 
-      return enqueueNewItem({
-        label: item.title.trim(),
-        dek: wraps.dek,
-        files: item.files,
-        create: async (files) => {
-          const itemId = await createItem({
-            vaultId: vault._id,
-            encryptedTitle,
-            encryptedMeta,
-            encryptedContent,
-            encryptionType: "zero_knowledge",
-            ownerWrappedDek: wraps.ownerWrappedDek,
-            ...sharing,
-            recipientKeys: wraps.recipientKeys,
-            pendingRecipients: wraps.pendingRecipients,
-            folderId: item.folderId ?? undefined,
-            files,
-            isReleaseIntroduction: item.releaseIntroduction || undefined,
-          });
-          announcePending(wraps);
-          return itemId as Id<"vault_items">;
+      return enqueueNewItem(
+        {
+          label: item.title.trim(),
+          dek: wraps.dek,
+          files: item.files,
+          create: async (files) => {
+            const itemId = await createItem({
+              vaultId: vault._id,
+              encryptedTitle,
+              encryptedMeta,
+              encryptedContent,
+              encryptionType: "zero_knowledge",
+              ownerWrappedDek: wraps.ownerWrappedDek,
+              ...sharing,
+              recipientKeys: wraps.recipientKeys,
+              pendingRecipients: wraps.pendingRecipients,
+              folderId: item.folderId ?? undefined,
+              files,
+              isReleaseIntroduction: item.releaseIntroduction || undefined,
+            });
+            announcePending(wraps);
+            return itemId as Id<"vault_items">;
+          },
         },
-      });
+        inBackground,
+      );
     },
     [
       vault,

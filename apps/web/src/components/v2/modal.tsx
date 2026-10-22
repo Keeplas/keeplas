@@ -22,6 +22,7 @@ export function Modal({
   title,
   description,
   width,
+  className,
   children,
 }: {
   open: boolean;
@@ -30,6 +31,7 @@ export function Modal({
   description?: ReactNode;
   /** Tailwind width class from the frame, e.g. "w-[600px]". */
   width: string;
+  className?: string;
   children: ReactNode;
 }) {
   const t = useTranslations("common");
@@ -41,6 +43,7 @@ export function Modal({
           "flex max-h-[calc(100%-32px)] max-w-[calc(100%-32px)] flex-col gap-[20px] overflow-y-auto rounded-[20px] border border-border-default bg-bg-surface p-[32px] shadow-card",
           "md:left-[calc(50%+124px)]",
           width,
+          className,
         )}
       >
         <div className="flex gap-[16px]">

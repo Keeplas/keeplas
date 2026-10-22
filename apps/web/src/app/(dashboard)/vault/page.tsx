@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   isVaultListKey,
   listCounts,
+  presetCategory,
   type VaultListKey,
 } from "@keeplas/backend/lib/vault_groups";
 import { api } from "@keeplas/backend/_generated/api";
@@ -25,7 +26,7 @@ import { VaultListView, type VaultListRow } from "./vault-list-view";
 
 /** W06-1 My vault. The list comes from `?type=` (dashboard tiles link to it). */
 export default function VaultPage() {
-  const archiveTexts = useTranslations("vault.archive");
+  const archiveTexts = useTranslations("vaultItem.archive");
   const locale = useLocale();
   const router = useRouter();
   const params = useSearchParams();
@@ -33,7 +34,7 @@ export default function VaultPage() {
   const list: VaultListKey = isVaultListKey(requested) ? requested : "all";
   const { items } = useVaultData();
   const labels = useItemLabels();
-  const capture = useVaultCapture();
+  const capture = useVaultCapture(presetCategory(list));
   const confirm = useConfirm();
   const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const [search, setSearch] = useState("");
@@ -63,7 +64,7 @@ export default function VaultPage() {
   async function archive(id: string) {
     const ok = await confirm({
       title: archiveTexts("title"),
-      description: archiveTexts("description"),
+      description: archiveTexts("body"),
       confirmLabel: archiveTexts("confirm"),
       cancelLabel: archiveTexts("cancel"),
     });

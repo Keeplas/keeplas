@@ -2735,6 +2735,63 @@
       "pdfError": "Impossible d'afficher ce PDF. Il est peut-être endommagé ou protégé par un mot de passe. Téléchargez-le pour l'ouvrir dans une autre application.",
       "noPreview": "Keeplas ne peut pas encore afficher les fichiers {type}. Téléchargez-le pour l'ouvrir dans une autre application.",
       "decryptError": "Impossible de déchiffrer ce fichier dans ce navigateur. Verrouillez votre coffre, déverrouillez-le, puis réessayez."
+    },
+    "form": {
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "whoCanSee": "Qui peut le voir",
+      "lockedFolder": "Dossier verrouillé",
+      "onlyYou": "Vous seul",
+      "two": "{first} et {second}",
+      "many": "{first}, {second} et {count} autres"
+    },
+    "addFile": {
+      "description": "Les fichiers sont chiffrés dans ce navigateur avant d'être envoyés.",
+      "document": {
+        "title": "Ajouter un document",
+        "hint": "PDF, Word ou images · jusqu'à {max} chacun"
+      },
+      "photo": {
+        "title": "Ajouter une photo",
+        "hint": "JPG, PNG, HEIC… · jusqu'à {max} chacune"
+      },
+      "video": {
+        "title": "Ajouter une vidéo",
+        "hint": "MP4, MOV… · jusqu'à {max} chacune"
+      },
+      "drop": "Déposez votre fichier ici, ou",
+      "browse": "parcourez",
+      "ready": "Prêt à chiffrer",
+      "remove": "Retirer",
+      "title": "Titre",
+      "titlePlaceholder": "Donnez-lui un nom",
+      "encrypted": "Chiffré sur cet ordinateur avec la clé de votre coffre. Keeplas ne voit jamais le fichier.",
+      "moreAfter": "Vous pourrez ajouter d'autres fichiers ensuite.",
+      "eachItem": "{count} fichiers, chacun enregistré comme un élément.",
+      "submit": "Envoyer et sécuriser",
+      "errors": {
+        "type": "« {name} » ne peut pas être ajouté ici. Choisissez un PDF, un fichier Word, une photo ou une vidéo.",
+        "size": "« {name} » dépasse {max}."
+      }
+    },
+    "securing": {
+      "title": "Sécurisation de votre élément",
+      "body": "Gardez cet onglet ouvert jusqu'à la fin de l'envoi.",
+      "doneBody": "Votre élément est chiffré et stocké en sécurité.",
+      "encrypting": "Chiffrement dans ce navigateur",
+      "encryptingBody": "Votre fichier est converti dans un format sécurisé…",
+      "encrypted": "Chiffré dans ce navigateur",
+      "encryptedBody": "Chiffrement AES-256 terminé sur cet ordinateur",
+      "uploading": "Envoi de la copie chiffrée",
+      "uploadingBody": "Envoi d'une copie sécurisée vers votre espace Keeplas… {percent} %",
+      "uploadedBody": "La copie chiffrée est dans votre espace Keeplas.",
+      "protected": "Protégé",
+      "protectedWaiting": "En attente de vérification…",
+      "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
+      "note": "Seule une copie chiffrée quitte cet ordinateur. Vos personnes de confiance n'y ont accès que selon les règles que vous fixez.",
+      "cancel": "Annuler l'envoi",
+      "background": "Continuer en arrière-plan",
+      "open": "Ouvrir l'élément"
     }
   }
 }

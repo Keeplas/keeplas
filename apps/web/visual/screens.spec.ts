@@ -86,6 +86,18 @@ const CASES: Case[] = [
     figma: "W06-2_Document_viewer_preview_details_.png",
     ...SHELL,
   },
+  {
+    id: "W06-3",
+    figma: "W06-3_Add_a_document_upload_modal_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  {
+    id: "W06-4",
+    figma: "W06-4_Securing_your_item_upload_progress_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
   { id: "W06-8", figma: "W06-8_Photo_preview.png", ...SHELL },
   { id: "W06-9", figma: "W06-9_Video_preview.png", ...SHELL },
   // Section 10 states that apply to the web (393 px State Message cards).
