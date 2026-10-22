@@ -13,8 +13,9 @@ async function loadPdf(data: ArrayBuffer): Promise<PDFDocumentProxy> {
     import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
   ]);
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  // No eval (the CSP refuses it); the decrypted bytes never leave the page.
-  return await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
+  // pdf.js v6 never evals (the CSP refuses it); the decrypted bytes never
+  // leave the page.
+  return await pdfjs.getDocument({ data }).promise;
 }
 
 async function renderPage(
@@ -114,7 +115,7 @@ export function usePdfPages(
     return () => {
       alive = false;
       urls.forEach((url) => URL.revokeObjectURL(url));
-      void opened?.destroy();
+      void opened?.loadingTask.destroy();
     };
   }, [file]);
 
