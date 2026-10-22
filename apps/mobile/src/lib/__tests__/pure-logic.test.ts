@@ -12,7 +12,7 @@ import {
   type ContentKind,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
-import { classifyCodeError } from "../errors";
+import { classifyCodeError, passkeyFailure } from "../errors";
 import { formatBytes, relativeDay } from "../format";
 import {
   examplePlaceholder,
@@ -79,6 +79,35 @@ describe("code errors", () => {
     expect(classifyCodeError(new Error("[Request ID: x] Server Error"))).toBe(
       "wrong",
     );
+  });
+});
+
+describe("passkey errors", () => {
+  it("treats a closed prompt as a cancel, with nothing to report", () => {
+    expect(
+      passkeyFailure({
+        error: "UserCancelled",
+        message: "The user cancelled the request.",
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps the native code and message of a real failure", () => {
+    expect(
+      passkeyFailure({
+        error: "RequestFailed",
+        message:
+          "Application with identifier T.com.keeplas.app is not associated with domain app.keeplas.com",
+      }),
+    ).toBe(
+      "RequestFailed: Application with identifier T.com.keeplas.app is not associated with domain app.keeplas.com",
+    );
+  });
+
+  it("reports server errors as a failure", () => {
+    expect(
+      passkeyFailure(new Error("Passkey registration failed verification")),
+    ).toBe("Passkey registration failed verification");
   });
 });
 

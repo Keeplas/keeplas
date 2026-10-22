@@ -80,6 +80,7 @@
     "cta": "Créer le passe-clé",
     "failedTitle": "Passe-clé non créé",
     "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut un passe-clé pour garder votre coffre sur ce téléphone.",
+    "errorBody": "Votre téléphone n'a pas pu créer le passe-clé. Réessayez, ou touchez « Obtenir de l'aide » pour nous envoyer les détails.",
     "screenLockTitle": "Activez le verrouillage de l'écran",
     "screenLockBody": "Keeplas utilise le verrouillage de votre téléphone (code, visage ou empreinte) pour protéger votre coffre. Activez-le dans les Réglages, puis revenez."
   },

@@ -1,4 +1,5 @@
 import { ConvexError } from "convex/values";
+import type { PasskeyError } from "react-native-passkey";
 
 /** Readable message from a Convex / native error (ConvexError data first). */
 export function errorText(error: unknown): string {
@@ -24,4 +25,25 @@ export function classifyCodeError(error: unknown): CodeFailure {
   if (text.includes("expired") || text.includes("not requested"))
     return "expired";
   return "wrong";
+}
+
+function isPasskeyError(error: unknown): error is PasskeyError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "error" in error &&
+    typeof error.error === "string"
+  );
+}
+
+/**
+ * A failed passkey creation. react-native-passkey rejects with a plain
+ * `{ error, message }` (error = "UserCancelled", "RequestFailed", …), the
+ * server with an Error. `null` when the user closed the prompt; otherwise the
+ * detail support needs to diagnose it (e.g. an unverified associated domain).
+ */
+export function passkeyFailure(error: unknown): string | null {
+  if (!isPasskeyError(error)) return errorText(error);
+  if (error.error === "UserCancelled") return null;
+  return `${error.error}: ${error.message}`;
 }
