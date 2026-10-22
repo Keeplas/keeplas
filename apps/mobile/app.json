@@ -32,6 +32,11 @@
               "scheme": "https",
               "host": "app.keeplas.com",
               "pathPrefix": "/link"
+            },
+            {
+              "scheme": "https",
+              "host": "app.keeplas.com",
+              "pathPrefix": "/capture"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

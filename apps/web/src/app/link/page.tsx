@@ -5,9 +5,9 @@ import { StateMessage } from "@/components/state-message";
 import { StoreBadges } from "@/components/store-badges";
 
 /**
- * Path of the W04-2 QR code (`/link#s=…&h=…`). Only the Keeplas app may act on
- * it: a phone camera that opens it in a browser lands here, and the page never
- * reads the hash.
+ * Path of the W04-2 and W06-7 QR codes (`/link#s=…&h=…`, `/capture#h=…`).
+ * Only the Keeplas app may act on them: a phone camera that opens one in a
+ * browser lands here, and the page never reads the hash.
  */
 export default function LinkPage() {
   const t = useTranslations("getApp");

@@ -186,6 +186,7 @@ export default function ComposeCapture() {
         icon: draft.icon,
         folder: existing ? undefined : await folderRecipients(),
         attachTo: existing ? await attachTarget() : undefined,
+        handoffId: draft.handoffId,
         files,
       });
       draftStore.reset();

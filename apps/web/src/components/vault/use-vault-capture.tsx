@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { toast } from "@keeplas/ui";
 import {
   captureKindOf,
   inferFileKind,
   type CaptureKind,
 } from "@/lib/attachment-capture";
 import { formatBytes, formatClock } from "@/lib/format";
-import { useLocale, useTranslations } from "@/lib/i18n";
+import { useLocale } from "@/lib/i18n";
 import { useRouter } from "@/lib/navigation";
 import { useCreateItem } from "@/lib/use-create-item";
 import { useUploadQueue } from "@/lib/upload-queue";
@@ -17,6 +16,7 @@ import { extensionOf } from "@/lib/vault-list";
 import type { VaultCategory } from "@/lib/vault-categories";
 import { AddFileDialog, titleOf, type AddFileValues } from "./add-file-dialog";
 import type { AddKind } from "./add-item-menu";
+import { ScanDialog } from "./scan-dialog";
 import { SecuringDialog } from "./securing-dialog";
 import { VoiceDialog, type VoiceItemValues } from "./voice-dialog";
 
@@ -36,7 +36,6 @@ interface Securing {
  * the owner is looking at).
  */
 export function useVaultCapture(category: VaultCategory = "personal_document") {
-  const t = useTranslations("hub.add");
   const locale = useLocale();
   const router = useRouter();
   const vault = useQuery(api.vaults.getVault);
@@ -49,6 +48,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
     files: File[];
   } | null>(null);
   const [voice, setVoice] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [securing, setSecuring] = useState<Securing | null>(null);
   const progress = securing ? jobs[securing.jobId] : undefined;
 
@@ -136,8 +136,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
       else setAdding({ kind, files: [] });
     },
     files: (files: File[]) => setAdding({ kind: captureKindOf(files), files }),
-    scan: () =>
-      toast({ title: t("scan.title"), description: t("scan.onPhone") }),
+    scan: () => setScanning(true),
     dialogs: (
       <>
         <AddFileDialog
@@ -168,6 +167,11 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
             }}
           />
         ) : null}
+        <ScanDialog
+          open={scanning}
+          onOpenChange={setScanning}
+          onUpload={() => setAdding({ kind: "document", files: [] })}
+        />
         <VoiceDialog
           open={voice}
           onOpenChange={setVoice}

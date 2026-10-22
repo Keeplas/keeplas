@@ -284,11 +284,36 @@ describe("capture sealing + outbox upload", () => {
     expect(sink.bytes()).toEqual(scan);
   });
 
+  it("tells the server which browser scan this capture answers", async () => {
+    const owner = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e3",
+      { title: "Scan", note: "", files: [], handoffId: "handoff1" },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    const server = fakeServer();
+    await uploadEntry(
+      {
+        id: "e3",
+        userId: "u1",
+        createdAt: 1,
+        status: "waiting",
+        attempts: 0,
+        ...sealed,
+      },
+      memoryStore(),
+      server.deps,
+    );
+    expect(server.created[0].captureHandoffId).toBe("handoff1");
+  });
+
   it("adds no folder or extra keys when none is chosen", async () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);
     expect(entry.item.folderId).toBeUndefined();
     expect(entry.item.recipientKeys).toBeUndefined();
+    expect(entry.item.captureHandoffId).toBeUndefined();
   });
 
   it("resumes after a failure without re-uploading finished files", async () => {

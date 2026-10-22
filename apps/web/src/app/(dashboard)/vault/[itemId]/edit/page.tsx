@@ -9,6 +9,7 @@ import {
   type NoteValues,
   type SavedAttachment,
 } from "@/components/vault/note-editor";
+import { useVaultCapture } from "@/components/vault/use-vault-capture";
 import { useVoiceAttach } from "@/components/vault/use-voice-attach";
 import { useTranslations } from "@/lib/i18n";
 import { itemMetaJson } from "@/lib/item-meta";
@@ -47,6 +48,8 @@ export default function EditItemPage() {
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const { enqueueAttachments } = useUploadQueue();
   const voice = useVoiceAttach();
+  // "Scan with phone": the scan is saved as its own item (W06-7).
+  const capture = useVaultCapture();
   const [saving, setSaving] = useState(false);
 
   const saved = useMemo<SavedAttachment[]>(
@@ -188,10 +191,11 @@ export default function EditItemPage() {
         saving={saving ? t("saving") : null}
         onSave={(values) => void save(values)}
         onCancel={() => router.back()}
-        onScan={() => router.push("/vault?scan=1")}
+        onScan={capture.scan}
         onRecordVoice={voice.record}
       />
       {voice.dialog}
+      {capture.dialogs}
     </>
   );
 }

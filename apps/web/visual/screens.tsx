@@ -26,6 +26,7 @@ import {
   newNote,
   photoPreview,
   recordVoice,
+  scanWithPhone,
   securingItem,
   videoPreview,
 } from "./item-screens";
@@ -88,6 +89,7 @@ export const SCREENS: Record<string, HarnessScreen> = {
   "W06-4": shell("/hub", securingItem),
   "W06-5": shell("/vault", newNote),
   "W06-6": shell("/hub", recordVoice),
+  "W06-7": shell("/hub", scanWithPhone),
   "W06-8": shell("/vault", photoPreview),
   "W06-9": shell("/vault", videoPreview),
   "W05-3": shell("/life-check", lifeCheck),

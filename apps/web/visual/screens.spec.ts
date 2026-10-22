@@ -105,6 +105,12 @@ const CASES: Case[] = [
     ...SHELL,
     prepare: blurAutoFocus,
   },
+  {
+    id: "W06-7",
+    figma: "W06-7_Scan_with_my_phone_QR_handoff_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
   { id: "W06-8", figma: "W06-8_Photo_preview.png", ...SHELL },
   { id: "W06-9", figma: "W06-9_Video_preview.png", ...SHELL },
   // Section 10 states that apply to the web (393 px State Message cards).

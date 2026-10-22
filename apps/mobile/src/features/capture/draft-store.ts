@@ -20,6 +20,8 @@ export interface Draft {
   category?: VaultCategory;
   icon?: IconName;
   folderId?: string;
+  /** W06-7: the browser waiting for this scan (capture_handoffs). */
+  handoffId?: string;
   /** Scanned page images, bound into one PDF when saved. */
   pages: string[];
   files: CaptureFile[];

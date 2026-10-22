@@ -330,8 +330,7 @@
       },
       "scan": {
         "title": "Scanner avec mon téléphone",
-        "description": "Numérisez des documents papier avec l'appareil photo",
-        "onPhone": "Ouvrez Keeplas sur votre téléphone et touchez Scanner. Le document apparaît ici une fois chiffré."
+        "description": "Numérisez des documents papier avec l'appareil photo"
       }
     }
   },
@@ -2861,6 +2860,31 @@
       "resetBody": "Votre enregistrement de {time} sera supprimé de ce navigateur et vous pourrez recommencer. Cette action est définitive.",
       "resetConfirm": "Supprimer et recommencer",
       "resetKeep": "Garder cet enregistrement"
+    },
+    "scan": {
+      "title": "Scanner avec votre téléphone",
+      "description": "Utilisez l'appareil photo de votre téléphone pour numériser des documents papier. Ils apparaissent ici une fois sécurisés.",
+      "steps": {
+        "open": {
+          "title": "Ouvrez Keeplas sur votre téléphone",
+          "body": "Avec le même compte que ce navigateur"
+        },
+        "add": {
+          "title": "Visez ce code avec votre téléphone",
+          "body": "Appareil photo, ou Keeplas › Appareils"
+        },
+        "point": {
+          "title": "Numérisez vos pages",
+          "body": "Votre téléphone se lie uniquement à cette session"
+        }
+      },
+      "waiting": "En attente de votre téléphone… nouveau code dans {time}",
+      "scanning": "Numérisation sur votre téléphone… le document apparaît ici une fois sécurisé.",
+      "encrypted": "Les pages sont chiffrées sur votre téléphone. Ce navigateur ne reçoit que la copie chiffrée.",
+      "upload": "Importer un fichier à la place",
+      "cancel": "Annuler",
+      "saved": "Votre document numérisé est protégé dans votre coffre.",
+      "failed": "Keeplas n'a pas pu créer de code. Vérifiez votre connexion et réessayez."
     }
   }
 }

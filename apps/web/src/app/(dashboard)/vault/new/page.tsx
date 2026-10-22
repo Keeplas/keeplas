@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { NoteEditor, type NoteValues } from "@/components/vault/note-editor";
+import { useVaultCapture } from "@/components/vault/use-vault-capture";
 import { useVoiceAttach } from "@/components/vault/use-voice-attach";
 import { useTranslations } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "@/lib/navigation";
@@ -23,6 +24,8 @@ export default function NewNotePage() {
   const createItem = useCreateItem();
   const { jobs, background } = useUploadQueue();
   const voice = useVoiceAttach();
+  // "Scan with phone": the scan is saved as its own item (W06-7).
+  const capture = useVaultCapture();
   const [jobId, setJobId] = useState<string | null>(null);
   const [sealing, setSealing] = useState(false);
   const progress = jobId ? jobs[jobId] : undefined;
@@ -115,10 +118,11 @@ export default function NewNotePage() {
         saving={saving}
         onSave={(values) => void save(values)}
         onCancel={() => router.back()}
-        onScan={() => router.push("/vault?scan=1")}
+        onScan={capture.scan}
         onRecordVoice={voice.record}
       />
       {voice.dialog}
+      {capture.dialogs}
     </>
   );
 }

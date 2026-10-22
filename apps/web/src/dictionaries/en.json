@@ -330,8 +330,7 @@
       },
       "scan": {
         "title": "Scan with my phone",
-        "description": "Capture paper documents with your camera",
-        "onPhone": "Open Keeplas on your phone and tap Scan. The document appears here once it's encrypted."
+        "description": "Capture paper documents with your camera"
       }
     }
   },
@@ -2861,6 +2860,31 @@
       "resetBody": "Your {time} recording will be deleted from this browser and you can record again. This cannot be undone.",
       "resetConfirm": "Delete and record again",
       "resetKeep": "Keep this recording"
+    },
+    "scan": {
+      "title": "Scan with your phone",
+      "description": "Use your phone camera to capture paper documents. They appear here once they are secured.",
+      "steps": {
+        "open": {
+          "title": "Open Keeplas on your phone",
+          "body": "Use the same account as this browser"
+        },
+        "add": {
+          "title": "Point your camera at this code",
+          "body": "Camera app, or Keeplas › Devices"
+        },
+        "point": {
+          "title": "Scan your pages",
+          "body": "Your phone links to this session only"
+        }
+      },
+      "waiting": "Waiting for your phone… new code in {time}",
+      "scanning": "Scanning on your phone… the document appears here once it's secured.",
+      "encrypted": "Pages are encrypted on your phone. This browser only gets the encrypted copy.",
+      "upload": "Upload a file instead",
+      "cancel": "Cancel",
+      "saved": "Your scan is protected in your vault.",
+      "failed": "Keeplas couldn't make a code. Check your connection and try again."
     }
   }
 }

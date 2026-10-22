@@ -36,6 +36,7 @@ import {
   FolderField,
 } from "@/components/vault/form-fields";
 import { NoteEditor } from "@/components/vault/note-editor";
+import { ScanView } from "@/components/vault/scan-dialog";
 import { VoiceMeter, VoiceRecorderBody } from "@/components/vault/voice-dialog";
 import { Modal } from "@/components/v2/modal";
 import { Input } from "@keeplas/ui";
@@ -365,6 +366,27 @@ export const recordVoice = () => (
         onSave={noop}
         saveLabel="Save voice note"
         busy={false}
+      />
+    </Modal>
+  </>
+);
+
+export const scanWithPhone = () => (
+  <>
+    <HubView {...hub} />
+    <Modal
+      open
+      onOpenChange={noop}
+      title="Scan with your phone"
+      description="Use your phone camera to capture paper documents. They appear here once they are secured."
+      width="w-[640px]"
+    >
+      <ScanView
+        qr="https://app.keeplas.com/capture#h=k57f3qa8w2c9e4r6t1y0u5i8o3p2"
+        status="waiting"
+        remainingMs={105_000}
+        onUpload={noop}
+        onCancel={noop}
       />
     </Modal>
   </>

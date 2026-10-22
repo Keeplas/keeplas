@@ -100,6 +100,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
         (await createItem({
           ...item,
           folderId: item.folderId as Id<"folders"> | undefined,
+          captureHandoffId: item.captureHandoffId as
+            Id<"capture_handoffs"> | undefined,
           recipientKeys: item.recipientKeys?.map((key) => ({
             contactId: key.contactId as Id<"trusted_contacts">,
             wrappedDek: key.wrappedDek,

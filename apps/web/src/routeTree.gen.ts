@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
+import { Route as CaptureIndexRouteImport } from './routes/capture/index'
 import { Route as ConnectIndexRouteImport } from './routes/connect/index'
 import { Route as DownloadIndexRouteImport } from './routes/download/index'
 import { Route as GetTheAppIndexRouteImport } from './routes/get-the-app/index'
@@ -71,6 +72,11 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => DashboardRoute,
+} as any)
+const CaptureIndexRoute = CaptureIndexRouteImport.update({
+  id: '/capture/',
+  path: '/capture/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectIndexRoute = ConnectIndexRouteImport.update({
   id: '/connect/',
@@ -296,6 +302,7 @@ const DashboardSharedWithMeContactIdMemorialItemIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof DashboardSettingsRouteWithChildren
+  '/capture/': typeof CaptureIndexRoute
   '/connect/': typeof ConnectIndexRoute
   '/download/': typeof DownloadIndexRoute
   '/get-the-app/': typeof GetTheAppIndexRoute
@@ -339,6 +346,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/capture': typeof CaptureIndexRoute
   '/connect': typeof ConnectIndexRoute
   '/download': typeof DownloadIndexRoute
   '/get-the-app': typeof GetTheAppIndexRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_dashboard': typeof DashboardRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/capture/': typeof CaptureIndexRoute
   '/connect/': typeof ConnectIndexRoute
   '/download/': typeof DownloadIndexRoute
   '/get-the-app/': typeof GetTheAppIndexRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/capture/'
     | '/connect/'
     | '/download/'
     | '/get-the-app/'
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/capture'
     | '/connect'
     | '/download'
     | '/get-the-app'
@@ -521,6 +532,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_dashboard'
     | '/_dashboard/settings'
+    | '/capture/'
     | '/connect/'
     | '/download/'
     | '/get-the-app/'
@@ -567,6 +579,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   DashboardRoute: typeof DashboardRouteWithChildren
+  CaptureIndexRoute: typeof CaptureIndexRoute
   ConnectIndexRoute: typeof ConnectIndexRoute
   DownloadIndexRoute: typeof DownloadIndexRoute
   GetTheAppIndexRoute: typeof GetTheAppIndexRoute
@@ -608,6 +621,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/capture/': {
+      id: '/capture/'
+      path: '/capture'
+      fullPath: '/capture/'
+      preLoaderRoute: typeof CaptureIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/connect/': {
       id: '/connect/'
@@ -990,6 +1010,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   DashboardRoute: DashboardRouteWithChildren,
+  CaptureIndexRoute: CaptureIndexRoute,
   ConnectIndexRoute: ConnectIndexRoute,
   DownloadIndexRoute: DownloadIndexRoute,
   GetTheAppIndexRoute: GetTheAppIndexRoute,
