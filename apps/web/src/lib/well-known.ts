@@ -1,11 +1,11 @@
 /**
- * App association files served by the web host so that QR links (`/link`),
- * invitations (`/invite/*`) open the Keeplas app, and the app's native
- * passkeys share the web relying party. Values come from env; a file is not
- * served (null) until its env is set.
+ * App association files served by the web host so that QR links (`/link`,
+ * `/capture`) and invitations (`/invite/*`) open the Keeplas app, and the
+ * app's native passkeys share the web relying party. Values come from env;
+ * a file is not served (null) until its env is set.
  */
 
-const APP_PATHS = ["/link", "/link/*", "/invite/*"];
+const APP_PATHS = ["/link", "/link/*", "/capture", "/invite/*"];
 
 type Env = Record<string, string | undefined>;
 

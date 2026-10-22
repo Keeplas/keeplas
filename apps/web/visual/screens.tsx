@@ -19,6 +19,17 @@ import {
   StorageFullMessage,
   UploadFailedMessage,
 } from "@/components/upload-state-messages";
+import { VaultListView } from "@/app/(dashboard)/vault/vault-list-view";
+import {
+  addDocument,
+  documentViewer,
+  newNote,
+  photoPreview,
+  recordVoice,
+  scanWithPhone,
+  securingItem,
+  videoPreview,
+} from "./item-screens";
 import {
   devices,
   hub,
@@ -26,6 +37,7 @@ import {
   recovery,
   settings,
   sharedFolders,
+  vaultList,
 } from "./fixtures";
 
 export interface HarnessScreen {
@@ -71,6 +83,15 @@ export const SCREENS: Record<string, HarnessScreen> = {
   )),
   "W04-6": shell("/devices", () => <DevicesView {...devices} />),
   "W04-7": shell("/settings", () => <SettingsView {...settings} />),
+  "W06-1": shell("/vault", () => <VaultListView {...vaultList} />),
+  "W06-2": shell("/vault", documentViewer),
+  "W06-3": shell("/hub", addDocument),
+  "W06-4": shell("/hub", securingItem),
+  "W06-5": shell("/vault", newNote),
+  "W06-6": shell("/hub", recordVoice),
+  "W06-7": shell("/hub", scanWithPhone),
+  "W06-8": shell("/vault", photoPreview),
+  "W06-9": shell("/vault", videoPreview),
   "W05-3": shell("/life-check", lifeCheck),
   "W05-4": shell("/life-check", lifeCheck),
   "state-vault-empty": state(() => <VaultEmptyMessage onAdd={noop} />),

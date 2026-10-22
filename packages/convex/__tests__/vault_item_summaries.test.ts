@@ -89,4 +89,38 @@ describe("getItemSummaries attachments", () => {
     );
     expect(summaries.flatMap((s) => s.files)).toEqual([]);
   });
+
+  it("returns the sharing settings the vault list shows", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const itemId = await seedItem(t, owner);
+    const groupId = await t.run((ctx) =>
+      ctx.db.insert("recipient_groups", {
+        userId: owner,
+        name: "Family",
+        memberContactIds: [],
+        isDefault: true,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }),
+    );
+    await t.run((ctx) =>
+      ctx.db.patch(itemId, {
+        accessLevel: "trusted_only",
+        recipientMode: "groups",
+        sharedWithGroups: [groupId],
+      }),
+    );
+
+    const [summary] = await asUser(t, owner).query(
+      api.vault_items.getItemSummaries,
+      {},
+    );
+    expect(summary).toMatchObject({
+      accessLevel: "trusted_only",
+      recipientMode: "groups",
+      sharedWithContacts: [],
+      sharedWithGroups: [groupId],
+    });
+  });
 });

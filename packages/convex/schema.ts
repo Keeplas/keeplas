@@ -402,6 +402,22 @@ export default defineSchema({
   // only relays ciphertext: the MasterKey envelope is sealed by the phone to
   // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`
   // (scheduled at creation), so no envelope outlives the 2-minute window.
+  // W06-7 "Scan with my phone": the browser shows a QR, the owner's phone
+  // claims it, scans and seals the pages itself, then createItem completes
+  // the handoff so the browser can open the new item. No content here.
+  capture_handoffs: defineTable({
+    userId: v.id("users"),
+    status: v.union(
+      v.literal("waiting"),
+      v.literal("claimed"),
+      v.literal("completed"),
+    ),
+    // The QR is scannable until then (2 min); the row is purged later.
+    expiresAt: v.number(),
+    itemId: v.optional(v.id("vault_items")),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   pairing_sessions: defineTable({
     // Ephemeral ML-KEM-768 public key of the new browser (base64).
     browserPublicKey: v.string(),

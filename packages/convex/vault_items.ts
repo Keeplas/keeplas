@@ -19,6 +19,7 @@ import {
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
+import { completeHandoff } from "./capture_handoffs";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
   generateBlobUploadUrl,
@@ -97,7 +98,10 @@ async function summarize(
     encryptedTitle: item.encryptedTitle,
     encryptedMeta: item.encryptedMeta,
     ownerWrappedDek: item.ownerWrappedDek,
+    accessLevel: item.accessLevel,
+    recipientMode: item.recipientMode ?? "default",
     sharedWithContacts: item.sharedWithContacts ?? [],
+    sharedWithGroups: item.sharedWithGroups ?? [],
     files: (filesByItem.get(item._id) ?? []).map((file) => ({
       encryptedMeta: file.encryptedMeta,
       kind: file.kind,
@@ -414,6 +418,8 @@ export const createItem = auditedMutation({
     triggerType: v.optional(triggerTypeValidator),
     triggerConfig: v.optional(triggerConfigValidator),
     isReleaseIntroduction: v.optional(v.boolean()),
+    // W06-7: the scan a browser waits for (see capture_handoffs.ts).
+    captureHandoffId: v.optional(v.id("capture_handoffs")),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -498,6 +504,10 @@ export const createItem = auditedMutation({
       encryptedItemsCount: vault.encryptedItemsCount + 1,
       updatedAt: now,
     });
+
+    if (args.captureHandoffId) {
+      await completeHandoff(ctx, userId, args.captureHandoffId, itemId);
+    }
 
     return itemId;
   },

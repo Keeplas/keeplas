@@ -3,7 +3,10 @@
     "language": "Langue",
     "resendIn": "Renvoyer le code dans {seconds}s",
     "back": "Retour",
-    "moreActions": "Plus d'actions pour {name}"
+    "moreActions": "Plus d'actions pour {name}",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
   },
   "auth": {
     "hero": {
@@ -184,60 +187,6 @@
       "verifying": "Vérification…",
       "verify": "Vérifier"
     },
-    "recorder": {
-      "errorPermission": "Autorisation refusée. Activez l'accès {devices} dans les paramètres de votre navigateur.",
-      "errorNotFound": "Aucun {devices} détecté sur cet appareil.",
-      "errorBusy": "{device} est utilisé(e) par une autre application.",
-      "errorGeneric": "Impossible d'accéder aux périphériques de capture.",
-      "errorScreenDenied": "Le partage d'écran a été annulé ou refusé. Cliquez sur Réessayer pour choisir une fenêtre ou un onglet.",
-      "devicesCameraMic": "à la caméra et au microphone",
-      "devicesCameraOrMic": "caméra ou microphone",
-      "deviceMic": "au microphone",
-      "deviceCameraCapitalized": "La caméra",
-      "deviceMicCapitalized": "Le microphone",
-      "notAvailable": "La capture multimédia n'est pas disponible dans ce navigateur.",
-      "deviceNotReady": "Le périphérique de capture n'est pas encore prêt. Veuillez patienter.",
-      "notSupported": "L'enregistrement n'est pas pris en charge dans ce navigateur.",
-      "initFailed": "L'initialisation de MediaRecorder a échoué.",
-      "subPreparing": "Préparation du périphérique de capture…",
-      "subUnavailable": "Capture indisponible. Ajustez les autorisations et réessayez.",
-      "subRecording": "Enregistrement — {elapsed} / max {max}",
-      "subPreview": "Aperçu — {duration}",
-      "subIdle": "Chiffré sur votre appareil. Max {max}.",
-      "titleAudio": "Enregistrement vocal",
-      "titleVideo": "Enregistrement vidéo",
-      "titleScreen": "Enregistrement d'écran",
-      "cancelRecording": "Annuler l'enregistrement",
-      "toggleCamera": "Caméra",
-      "cameraOff": "Caméra désactivée",
-      "cameraDenied": "Caméra indisponible — seul l'écran est enregistré.",
-      "expand": "Agrandir",
-      "collapse": "Réduire",
-      "expandHint": "Agrandir l'enregistreur en plein écran pour plus d'espace.",
-      "collapseHint": "Quitter le plein écran.",
-      "closeHint": "Fermer et abandonner cet enregistrement.",
-      "closeConfirmTitle": "Abandonner cet enregistrement ?",
-      "closeConfirmDescription": "Fermer maintenant met fin à la session et supprime l'enregistrement en cours. Cette action est irréversible.",
-      "closeConfirmConfirm": "Abandonner",
-      "closeConfirmCancel": "Continuer l'enregistrement",
-      "tryAgain": "Réessayer",
-      "turningOnCamera": "Activation de la caméra…",
-      "startingScreenShare": "Démarrage du partage d'écran…",
-      "screenIdleHint": "Cliquez sur Démarrer l'enregistrement pour choisir un écran, une fenêtre ou un onglet à capturer.",
-      "enablingMic": "Activation du microphone…",
-      "statusRecording": "Enregistrement",
-      "statusPaused": "En pause",
-      "pause": "Pause",
-      "resume": "Reprendre",
-      "statusLivePreview": "Aperçu en direct",
-      "statusMicLive": "Micro actif",
-      "timeLeft": "{time} restant",
-      "cancel": "Annuler",
-      "startRecording": "Démarrer l'enregistrement",
-      "stop": "Arrêter",
-      "reRecord": "Réenregistrer",
-      "attachToVault": "Joindre au coffre"
-    },
     "offline": {
       "title": "Vous êtes hors ligne",
       "body": "Keeplas se reconnecte tout seul. Vos modifications sont enregistrées dès que la connexion revient.",
@@ -297,13 +246,6 @@
       "updated": "Mis à jour",
       "open": "Ouvrir"
     },
-    "types": {
-      "document": "Document",
-      "account": "Compte",
-      "instruction": "Instruction",
-      "other": "Autre",
-      "inbox": "Boîte chiffrée"
-    },
     "empty": {
       "title": "Votre coffre est vide",
       "body": "Ajoutez un premier document, compte ou note. Il est chiffré avant de quitter cet appareil.",
@@ -330,12 +272,11 @@
       },
       "video": {
         "title": "Vidéo",
-        "description": "Importez ou enregistrez une vidéo"
+        "description": "Importer une vidéo depuis cet ordinateur"
       },
       "scan": {
         "title": "Scanner avec mon téléphone",
-        "description": "Numérisez des documents papier avec l'appareil photo",
-        "onPhone": "Ouvrez Keeplas sur votre téléphone et touchez Scanner. Le document apparaît ici une fois chiffré."
+        "description": "Numérisez des documents papier avec l'appareil photo"
       }
     }
   },
@@ -1364,8 +1305,8 @@
     "upload": {
       "savingTitle": "Enregistrement de {count} pièce jointe",
       "savingTitlePlural": "Enregistrement de {count} pièces jointes",
-      "encrypting": "{label} — chiffrement…",
-      "progress": "{label} — {completed}/{total} fichiers traités · {done} / {totalBytes}",
+      "encrypting": "{label} : chiffrement dans ce navigateur…",
+      "progress": "{done} sur {totalBytes} envoyés",
       "savedTitle": "Pièces jointes enregistrées",
       "savedDescription": "{label} — {count} fichier chiffré et téléversé",
       "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
@@ -1383,15 +1324,9 @@
           "upgrade": "Passer à l'offre À vie",
           "manage": "Gérer le stockage"
         }
-      }
-    },
-    "page": {
-      "loading": "Chargement de votre coffre",
-      "allSections": "Toutes les sections du coffre",
-      "title": "Coffre numérique",
-      "subtitle": "La documentation essentielle de votre vie, protégée par un chiffrement de bout en bout à connaissance nulle.",
-      "countOne": "Affichage de l'unique élément de cette catégorie.",
-      "countOther": "Affichage des {count} éléments de cette catégorie."
+      },
+      "savingItem": "Sécurisation de {label}",
+      "savedItem": "{label} est protégé dans votre coffre."
     },
     "categories": {
       "personal_document": "Documents personnels",
@@ -1410,80 +1345,6 @@
       "other": "Autre",
       "inbox": "Boîte de réception chiffrée"
     },
-    "sections": {
-      "documents": {
-        "empty": "Aucun document personnel pour l'instant. Ajoutez le premier."
-      },
-      "health": {
-        "empty": "Aucune directive médicale pour l'instant. Ajoutez la première."
-      },
-      "legal": {
-        "empty": "Aucun document juridique pour l'instant. Ajoutez le premier."
-      },
-      "business": {
-        "empty": "Aucun plan de continuité d'activité pour l'instant. Ajoutez le premier."
-      },
-      "financial": {
-        "empty": "Aucun actif financier pour l'instant. Ajoutez le premier."
-      },
-      "credentials": {
-        "empty": "Aucun identifiant pour l'instant. Ajoutez le premier."
-      },
-      "digital": {
-        "empty": "Aucun actif numérique pour l'instant. Ajoutez le premier."
-      },
-      "messages": {
-        "empty": "Aucun message conditionnel pour l'instant."
-      },
-      "property": {
-        "empty": "Aucun bien pour l'instant. Ajoutez le premier."
-      },
-      "insurance": {
-        "empty": "Aucune assurance pour l'instant. Ajoutez la première."
-      },
-      "subscriptions": {
-        "empty": "Aucun abonnement pour l'instant. Ajoutez le premier."
-      },
-      "contacts": {
-        "empty": "Aucun contact pour l'instant. Ajoutez le premier."
-      },
-      "wishes": {
-        "empty": "Aucune volonté pour l'instant. Partagez ce qui compte pour vous."
-      },
-      "other": {
-        "empty": "Rien ici pour l'instant. Ajoutez le premier élément."
-      }
-    },
-    "section": {
-      "viewAll": "Tout voir",
-      "addEntry": "Ajouter une entrée",
-      "viewAllCount": "Voir les {count} éléments"
-    },
-    "card": {
-      "updated": "Mis à jour le {date}"
-    },
-    "transmission": {
-      "private": "Privé",
-      "groups": "{count} groupes",
-      "allContacts": "Tous les contacts de confiance"
-    },
-    "recipients": {
-      "label": "Qui reçoit cet élément au déclenchement ?",
-      "labelIntro": "Choisissez les contacts qui verront ce message de bienvenue",
-      "placeholderPrivate": "Personne — garder privé",
-      "placeholderIntro": "Choisissez au moins un bénéficiaire",
-      "searchPlaceholder": "Rechercher des groupes ou des contacts…",
-      "emptyMessage": "Aucun groupe ni contact pour l'instant.",
-      "helper": "Choisissez un ou plusieurs groupes (vos contacts de confiance forment déjà un groupe), ou des personnes précises. Vide = l'élément reste privé.",
-      "helperIntro": "Diffusez à tous vos contacts de confiance, ciblez un groupe, ou choisissez des personnes précises. Les combinaisons de groupes et d'individus sont autorisées.",
-      "allContacts": "Tous les contacts de confiance",
-      "allContactsHint": "Tous ceux qui ont accepté votre invitation",
-      "broadcastLabel": "Diffusion",
-      "groupsLabel": "Groupes",
-      "individualsLabel": "Contacts individuels",
-      "contactCountOne": "{count} contact",
-      "contactCountOther": "{count} contacts"
-    },
     "links": {
       "empty": "Aucun lien enregistré.",
       "urlLabel": "URL du lien",
@@ -1491,146 +1352,6 @@
       "hide": "Masquer le lien",
       "reveal": "Révéler le lien",
       "openNewTab": "Ouvrir le lien dans un nouvel onglet"
-    },
-    "linkInput": {
-      "label": "Liens enregistrés",
-      "description": "Les URL sont chiffrées avant de quitter votre appareil. Aucune n'est récupérée ni prévisualisée.",
-      "invalid": "Saisissez une URL valide (avec https://).",
-      "remove": "Supprimer le lien",
-      "addAnother": "Ajouter un autre lien"
-    },
-    "attachments": {
-      "loading": "Chargement des pièces jointes sécurisées…",
-      "heading": "Pièces jointes sécurisées · {count}",
-      "encrypted": "Chiffré",
-      "download": "Télécharger",
-      "decrypting": "Déchiffrement…",
-      "decryptError": "Impossible de déchiffrer la pièce jointe.",
-      "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
-      "open": "Ouvrir",
-      "enlarge": "Agrandir",
-      "close": "Fermer"
-    },
-    "detail": {
-      "notFound": "Élément introuvable",
-      "backToVault": "Retour au coffre",
-      "edit": "Modifier",
-      "archive": "Archiver",
-      "summaryPrivate": "Privé",
-      "summaryReleasedTo": "Transmis à {names}",
-      "summaryReleasedAll": "Transmis à tous les contacts de confiance",
-      "decryptedContent": "Contenu déchiffré",
-      "decrypting": "Déchiffrement…",
-      "linkedUrls": "URL liées",
-      "timestamps": "Créé le {created} · Mis à jour le {updated}"
-    },
-    "editor": {
-      "title": "Modifier l'élément",
-      "fieldTitle": "Titre",
-      "fieldCategory": "Catégorie",
-      "fieldContent": "Contenu sécurisé",
-      "contentPlaceholder": "Rédigez le contenu sécurisé de cet élément…",
-      "fieldAttachments": "Pièces jointes sécurisées",
-      "noAttachments": "Aucune pièce jointe pour l'instant.",
-      "addFile": "Ajouter un fichier",
-      "fileHint": "Tout type de fichier jusqu'à 50 Mo, sauf scripts et exécutables. Les fichiers sont chiffrés côté client avant l'envoi.",
-      "cancel": "Annuler",
-      "encrypting": "Chiffrement…",
-      "saveChanges": "Enregistrer les modifications",
-      "errorUnsupportedType": "{name} — les scripts et fichiers exécutables ne sont pas pris en charge.",
-      "errorTooLarge": "{name} — dépasse la limite de 50 Mo.",
-      "errorInvalidUrl": "URL invalide : {url}",
-      "errorNoKey": "Clé de chiffrement indisponible pour les nouvelles pièces jointes.",
-      "errorUpdate": "Échec de la mise à jour.",
-      "progressEncrypting": "Chiffrement du contenu…",
-      "progressRemoving": "Suppression des pièces jointes…",
-      "willBeDeleted": "Sera supprimé",
-      "willBeEncrypted": "Sera chiffré à l'enregistrement",
-      "undo": "Annuler",
-      "remove": "Supprimer"
-    },
-    "archive": {
-      "title": "Archiver cet élément ?",
-      "description": "Il quitte votre coffre et n'est plus transmis à personne. Il reste entier dans vos archives, avec son historique, et vous pouvez le restaurer à tout moment.",
-      "cancel": "Annuler",
-      "archiving": "Archivage…",
-      "confirm": "Archiver"
-    },
-    "dialog": {
-      "breadcrumbVault": "Coffre",
-      "breadcrumbWelcome": "Message de bienvenue",
-      "breadcrumbNewAsset": "Sécuriser un nouvel actif",
-      "titleIntro": "Enregistrer un message de bienvenue",
-      "titleVault": "Ajouter au coffre",
-      "descriptionIntro": "Un message texte, audio ou vidéo affiché en haut du coffre commémoratif lorsqu'un contact de confiance le déverrouille. Chiffré sur votre appareil avant de le quitter.",
-      "descriptionVault": "Déposez un actif essentiel. Les fichiers sont chiffrés sur votre appareil avant de le quitter. AES-256-GCM.",
-      "section01": "Identité de l'actif",
-      "section01Intro": "Identité du message",
-      "section02": "Documentation sécurisée",
-      "section03": "URL liées",
-      "section04": "Logique de transmission",
-      "section04Intro": "Qui voit ce message ?",
-      "fieldTitle": "Titre",
-      "fieldName": "Nom de l'actif",
-      "titlePlaceholder": "ex. Quelques mots de ma part",
-      "namePlaceholder": "ex. Compte de courtage principal",
-      "fieldCategory": "Catégorie",
-      "categoryPlaceholder": "Choisissez une catégorie",
-      "fieldYourMessage": "Votre message",
-      "fieldMessage": "Message",
-      "fieldDescription": "Description de l'actif",
-      "optional": "(facultatif)",
-      "bodyPlaceholderIntro": "Adressez quelques mots à vos contacts de confiance. Ils les verront au-dessus des éléments que vous leur avez laissés…",
-      "bodyPlaceholderLetter": "Rédigez le message qui sera transmis…",
-      "bodyPlaceholderAsset": "Décrivez l'importance et l'emplacement de cet actif…",
-      "releaseOn": "Transmettre le",
-      "releaseDatePlaceholder": "Choisissez une date de transmission",
-      "lifeCheckCalloutPrefix": "Utilise la cadence et l'escalade globales de votre Life Check. Ajustez le seuil d'inactivité une seule fois dans les",
-      "lifeCheckCalloutLink": "paramètres Life Check",
-      "lifeCheckCalloutSuffix": "— ils s'appliquent à chaque lettre dotée de ce déclencheur.",
-      "introCallout": "Transmis avec votre coffre lorsque Life Check confirme que vous êtes injoignable. Affiché aux bénéficiaires en haut de leur vue commémorative.",
-      "recordAudio": "Enregistrer un audio",
-      "recordVideo": "Enregistrer une vidéo",
-      "recordScreen": "Enregistrer l'écran",
-      "orDropFile": "ou déposez un fichier ci-dessous",
-      "dropTitle": "Glissez-déposez des fichiers sécurisés",
-      "dropHint": "Tout type de fichier jusqu'à 50 Mo par fichier, sauf scripts et exécutables. Chiffrés dès leur arrivée.",
-      "browseSystem": "Parcourir le système",
-      "removeFile": "Supprimer {name}",
-      "cancel": "Annuler",
-      "sealing": "Scellement…",
-      "saveWelcome": "Enregistrer le message de bienvenue",
-      "secureToVault": "Sécuriser l'actif dans le coffre",
-      "errorNoKey": "Clé de chiffrement indisponible. Veuillez vous reconnecter.",
-      "errorNameRequired": "Le nom de l'actif est requis.",
-      "errorReleaseDate": "Choisissez une date de transmission pour le déclencheur basé sur le temps.",
-      "errorIntroRecipient": "Choisissez au moins un bénéficiaire — un message de bienvenue sans audience n'est jamais affiché.",
-      "errorSave": "Échec de l'enregistrement de l'élément.",
-      "progressGenKey": "Génération de la clé propre à l'élément…",
-      "progressSealing": "Scellement de l'entrée du coffre…",
-      "deferredShareTitle": "Enregistré — partages en attente",
-      "deferredShareBody": "{names} n'ont pas encore publié leur clé de chiffrement. Ils y auront accès automatiquement dès qu'ils l'auront fait."
-    },
-    "triggers": {
-      "label": "Déclencheur",
-      "placeholder": "Choisissez un déclencheur",
-      "lifeCheck": {
-        "label": "Échec vérifié du Life Check",
-        "hint": "Transmis lorsque vous cessez de répondre aux Life Checks pendant le nombre de jours configuré."
-      },
-      "timeBased": {
-        "label": "Transmission planifiée",
-        "hint": "Transmis à une date précise du calendrier — utile pour les anniversaires, les commémorations ou les lettres de majorité."
-      },
-      "manual": {
-        "label": "Déclencheur manuel",
-        "hint": "Transmis uniquement lorsque vous (ou un curateur) l'approuvez explicitement depuis l'accueil."
-      }
-    },
-    "recorder": {
-      "videoMessage": "Message vidéo",
-      "voiceMessage": "Message vocal",
-      "screenMessage": "Enregistrement d'écran"
     }
   },
   "docs": {
@@ -2587,6 +2308,310 @@
         "cloud_backup_enabled": "Sauvegarde activée",
         "cloud_backup_disabled": "Sauvegarde désactivée"
       }
+    }
+  },
+  "vaultList": {
+    "breadcrumb": "Mon coffre",
+    "lists": {
+      "all": "Tous les éléments",
+      "inbox": "Boîte chiffrée",
+      "documents": "Documents",
+      "accounts": "Comptes",
+      "instructions": "Instructions",
+      "notes": "Notes",
+      "photos": "Photos",
+      "voice": "Notes vocales",
+      "videos": "Vidéos",
+      "other": "Autre"
+    },
+    "listsLabel": "Afficher",
+    "subtitle": "{count} éléments. Tout est chiffré avant de quitter votre appareil.",
+    "subtitleOne": "1 élément. Tout est chiffré avant de quitter votre appareil.",
+    "search": "Rechercher dans votre coffre",
+    "sort": {
+      "label": "Tri : {sort}",
+      "updated": "Dernière modification",
+      "name": "Nom",
+      "added": "Date d'ajout"
+    },
+    "upload": "Importer des fichiers",
+    "columns": {
+      "name": "Nom",
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "sharedWith": "Partagé avec",
+      "updated": "Modifié",
+      "added": "Ajouté"
+    },
+    "detail": {
+      "document": "Document",
+      "photo": "Photo",
+      "voice": "Note vocale",
+      "video": "Vidéo",
+      "note": "Note",
+      "account": "Compte",
+      "attachmentOne": "1 pièce jointe",
+      "attachments": "{count} pièces jointes"
+    },
+    "access": {
+      "onlyYou": "Vous seul",
+      "people": "{count} personnes"
+    },
+    "noFolder": "Aucun dossier",
+    "untitled": "Élément sans titre",
+    "locked": "Impossible à ouvrir dans ce navigateur",
+    "loading": "Ouverture de votre coffre…",
+    "noMatch": "Aucun résultat pour « {search} ».",
+    "emptyList": "Rien ici pour l'instant.",
+    "dropHint": "Déposez des fichiers n'importe où sur cette page pour les ajouter. Ils sont d'abord chiffrés dans votre navigateur.",
+    "actions": {
+      "open": "Ouvrir",
+      "archive": "Archiver"
+    }
+  },
+  "vaultItem": {
+    "download": "Télécharger",
+    "share": "Partager",
+    "added": "Ajouté le {date}",
+    "archived": "Archivé le {date}. Il ne fait plus partie de votre coffre et n'est transmis à personne.",
+    "restore": "Restaurer",
+    "legacy": "Cet élément utilise un ancien format de chiffrement : il ne peut pas encore être partagé ni placé dans un dossier partagé depuis le web.",
+    "backToVault": "Retour à mon coffre",
+    "missing": {
+      "title": "Cet élément n'est pas disponible",
+      "body": "Il a peut-être été supprimé depuis un autre appareil, ou il appartient à un autre compte."
+    },
+    "locked": {
+      "title": "Impossible d'ouvrir cet élément dans ce navigateur",
+      "body": "Sa clé ne correspond pas à la clé de votre coffre ici. Verrouillez votre coffre, déverrouillez-le, puis ouvrez de nouveau cet élément."
+    },
+    "sharing": {
+      "pendingTitle": "Partagé dès que possible",
+      "pendingBody": "{names} n'a pas encore terminé la configuration de Keeplas. L'élément sera chiffré pour cette personne automatiquement dès que ce sera fait."
+    },
+    "details": {
+      "title": "Détails",
+      "edit": "Modifier",
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "access": "Accès",
+      "lockedFolder": "Dossier verrouillé",
+      "addPeople": "Ajouter des personnes",
+      "addPeopleBody": "Partager avec vos contacts de confiance",
+      "encrypted": "Chiffré de bout en bout. Seuls vous et les personnes choisies pouvez ouvrir ce fichier.",
+      "activity": "Activité",
+      "seeAll": "Tout voir",
+      "moveFailed": "Impossible de déplacer cet élément. Les éléments à l'ancien format de chiffrement ne peuvent pas encore aller dans un dossier partagé depuis le web."
+    },
+    "activity": {
+      "you": "Vous",
+      "added": "Ajouté à votre coffre",
+      "attached": "{name} ajouté",
+      "edited": "Modifié"
+    },
+    "access": {
+      "title": "Qui peut le voir",
+      "body": "Choisissez les contacts de confiance qui pourront ouvrir cet élément. Il est chiffré pour chacun d'eux dans ce navigateur.",
+      "nobody": "Aucun contact de confiance n'a encore rejoint Keeplas.",
+      "addContact": "Inviter quelqu'un",
+      "throughFolder": "Via le dossier {name}",
+      "saving": "Enregistrement…"
+    },
+    "history": {
+      "title": "Historique des modifications",
+      "body": "Les versions précédentes de cet élément. En restaurer une conserve aussi la version actuelle ici.",
+      "empty": "Aucune modification pour l'instant.",
+      "untitled": "Sans titre",
+      "replaced": "Remplacée le {date}",
+      "restore": "Restaurer",
+      "cancel": "Annuler",
+      "confirmTitle": "Restaurer cette version ?",
+      "confirmBody": "L'élément revient à cette version. La version actuelle reste dans son historique."
+    },
+    "archive": {
+      "title": "Archiver cet élément ?",
+      "body": "Il quitte votre coffre et n'est plus transmis à personne. Il reste entier dans vos archives, avec son historique, et vous pouvez le restaurer à tout moment.",
+      "confirm": "Archiver",
+      "cancel": "Annuler"
+    },
+    "preview": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "show": "Afficher l'aperçu",
+      "hide": "Masquer l'aperçu",
+      "item": "cet élément",
+      "note": "Note",
+      "emptyNote": "Cette note est vide.",
+      "backToNote": "Retour à la note",
+      "photo": "Photo",
+      "photoOf": "Photo {photo} sur {total}",
+      "pageOf": "Page {page} sur {total}",
+      "rotate": "Faire pivoter",
+      "play": "Lire",
+      "pause": "Pause",
+      "position": "Position",
+      "mute": "Couper le son",
+      "unmute": "Activer le son",
+      "fullScreen": "Plein écran",
+      "streams": "Lu depuis une copie chiffrée. Rien n'est enregistré en clair sur cet ordinateur.",
+      "pdfError": "Impossible d'afficher ce PDF. Il est peut-être endommagé ou protégé par un mot de passe. Téléchargez-le pour l'ouvrir dans une autre application.",
+      "noPreview": "Keeplas ne peut pas encore afficher les fichiers {type}. Téléchargez-le pour l'ouvrir dans une autre application.",
+      "decryptError": "Impossible de déchiffrer ce fichier dans ce navigateur. Verrouillez votre coffre, déverrouillez-le, puis réessayez."
+    },
+    "form": {
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "whoCanSee": "Qui peut le voir",
+      "lockedFolder": "Dossier verrouillé",
+      "onlyYou": "Vous seul",
+      "two": "{first} et {second}",
+      "many": "{first}, {second} et {count} autres"
+    },
+    "addFile": {
+      "description": "Les fichiers sont chiffrés dans ce navigateur avant d'être envoyés.",
+      "document": {
+        "title": "Ajouter un document",
+        "hint": "PDF, Word ou images · jusqu'à {max} chacun"
+      },
+      "photo": {
+        "title": "Ajouter une photo",
+        "hint": "JPG, PNG, HEIC… · jusqu'à {max} chacune"
+      },
+      "video": {
+        "title": "Ajouter une vidéo",
+        "hint": "MP4, MOV… · jusqu'à {max} chacune"
+      },
+      "drop": "Déposez votre fichier ici, ou",
+      "browse": "parcourez",
+      "ready": "Prêt à chiffrer",
+      "remove": "Retirer",
+      "title": "Titre",
+      "titlePlaceholder": "Donnez-lui un nom",
+      "encrypted": "Chiffré sur cet ordinateur avec la clé de votre coffre. Keeplas ne voit jamais le fichier.",
+      "moreAfter": "Vous pourrez ajouter d'autres fichiers ensuite.",
+      "eachItem": "{count} fichiers, chacun enregistré comme un élément.",
+      "submit": "Envoyer et sécuriser",
+      "errors": {
+        "type": "« {name} » ne peut pas être ajouté ici. Choisissez un PDF, un fichier Word, une photo ou une vidéo.",
+        "size": "« {name} » dépasse {max}."
+      }
+    },
+    "securing": {
+      "title": "Sécurisation de votre élément",
+      "body": "Gardez cet onglet ouvert jusqu'à la fin de l'envoi.",
+      "doneBody": "Votre élément est chiffré et stocké en sécurité.",
+      "encrypting": "Chiffrement dans ce navigateur",
+      "encryptingBody": "Votre fichier est converti dans un format sécurisé…",
+      "encrypted": "Chiffré dans ce navigateur",
+      "encryptedBody": "Chiffrement AES-256 terminé sur cet ordinateur",
+      "uploading": "Envoi de la copie chiffrée",
+      "uploadingBody": "Envoi d'une copie sécurisée vers votre espace Keeplas… {percent} %",
+      "uploadedBody": "La copie chiffrée est dans votre espace Keeplas.",
+      "protected": "Protégé",
+      "protectedWaiting": "En attente de vérification…",
+      "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
+      "note": "Seule une copie chiffrée quitte cet ordinateur. Vos personnes de confiance n'y ont accès que selon les règles que vous fixez.",
+      "cancel": "Annuler l'envoi",
+      "background": "Continuer en arrière-plan",
+      "open": "Ouvrir l'élément"
+    },
+    "editor": {
+      "newTitle": "Nouvelle note",
+      "newSubtitle": "Écrivez des instructions, joignez des fichiers et choisissez qui peut les voir.",
+      "editTitle": "Modifier",
+      "editSubtitle": "Modifiez la note, ses fichiers et qui peut les voir.",
+      "editCrumb": "Modifier",
+      "welcomeTitle": "Message de bienvenue",
+      "welcomeSubtitle": "Ce que vos contacts de confiance lisent en premier quand votre coffre leur est transmis.",
+      "lifeCheck": "Life check",
+      "untitled": "Sans titre",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Donnez un titre à votre note",
+      "titleRequired": "Donnez un titre à votre note.",
+      "notePlaceholder": "Écrivez quelque chose…",
+      "tools": {
+        "bold": "Gras",
+        "italic": "Italique",
+        "heading1": "Titre 1",
+        "heading2": "Titre 2",
+        "list": "Liste"
+      },
+      "attachments": "Pièces jointes · {count}",
+      "add": "Ajouter",
+      "remove": "Retirer",
+      "recordedHere": "Enregistré dans ce navigateur",
+      "attach": {
+        "scan": "Scanner avec le téléphone",
+        "photo": "Photo",
+        "voice": "Note vocale",
+        "file": "Fichier",
+        "video": "Vidéo"
+      },
+      "organize": "Organiser",
+      "everyone": "Tous vos contacts de confiance",
+      "whenLabel": "Quand ils peuvent l'ouvrir",
+      "afterLifeCheck": "Après un Life check manqué",
+      "people": "{count} personnes de confiance",
+      "peopleOne": "1 personne de confiance",
+      "encrypted": "Votre note et ses pièces jointes sont chiffrées dans ce navigateur avant de le quitter.",
+      "legacy": "Cet élément utilise un ancien format de chiffrement : il ne peut pas encore être partagé depuis le web.",
+      "cancel": "Annuler",
+      "save": "Enregistrer la note",
+      "saving": "Enregistrement…",
+      "savingPercent": "Enregistrement… {percent} %",
+      "saveFailed": "Vos modifications n'ont pas été enregistrées. Réessayez."
+    },
+    "voice": {
+      "title": "Enregistrer une note vocale",
+      "description": "Laissez un message avec votre voix aux personnes de confiance.",
+      "status": {
+        "recording": "Enregistrement… 10 minutes max",
+        "paused": "En pause",
+        "starting": "Démarrage du micro…"
+      },
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Message pour…",
+      "defaultName": "Note vocale",
+      "encrypted": "Enregistré et chiffré dans ce navigateur. L'audio n'est jamais stocké en clair.",
+      "discard": "Supprimer",
+      "reset": "Recommencer",
+      "pause": "Pause",
+      "resume": "Reprendre",
+      "save": "Enregistrer la note vocale",
+      "attach": "Ajouter à la note",
+      "resetTitle": "Recommencer cet enregistrement ?",
+      "resetBody": "Votre enregistrement de {time} sera supprimé de ce navigateur et vous pourrez recommencer. Cette action est définitive.",
+      "resetConfirm": "Supprimer et recommencer",
+      "resetKeep": "Garder cet enregistrement",
+      "saveFailed": "Votre note vocale n'a pas été enregistrée. L'enregistrement est conservé : réessayez."
+    },
+    "scan": {
+      "title": "Scanner avec votre téléphone",
+      "description": "Utilisez l'appareil photo de votre téléphone pour numériser des documents papier. Ils apparaissent ici une fois sécurisés.",
+      "steps": {
+        "open": {
+          "title": "Ouvrez Keeplas sur votre téléphone",
+          "body": "Avec le même compte que ce navigateur"
+        },
+        "add": {
+          "title": "Visez ce code avec votre téléphone",
+          "body": "Appareil photo, ou Keeplas › Appareils"
+        },
+        "point": {
+          "title": "Numérisez vos pages",
+          "body": "Votre téléphone se lie uniquement à cette session"
+        }
+      },
+      "waiting": "En attente de votre téléphone… nouveau code dans {time}",
+      "scanning": "Numérisation sur votre téléphone… il apparaît ici une fois sécurisé.",
+      "encrypted": "Les pages sont chiffrées sur votre téléphone. Ce navigateur ne reçoit que la copie chiffrée.",
+      "upload": "Importer un fichier à la place",
+      "cancel": "Annuler",
+      "saved": "Votre document numérisé est protégé dans votre coffre.",
+      "failed": "Keeplas n'a pas pu créer de code. Vérifiez votre connexion et réessayez.",
+      "newCode": "Nouveau code"
     }
   }
 }

@@ -1,451 +1,96 @@
-import { Link } from "@/lib/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "@/lib/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMemo, useState } from "react";
+import {
+  isVaultListKey,
+  listCounts,
+  presetCategory,
+  type VaultListKey,
+} from "@keeplas/backend/lib/vault_groups";
 import { api } from "@keeplas/backend/_generated/api";
-import { cn, Icon, Loader } from "@keeplas/ui";
-import { useTranslations } from "@/lib/i18n";
-import { AddItemDialog } from "@/components/add-item-dialog";
-import { ReleaseIntroductionEditor } from "@/app/(dashboard)/life-check/sections/release-introduction-editor";
-import { ICON_PATHS } from "@/lib/icons";
-import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
-import { useCategoryLabel } from "@/lib/use-categories";
-import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
-import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
-import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
-import { useItemCategories } from "@/lib/use-item-categories";
-import type { Doc } from "@keeplas/backend/_generated/dataModel";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { useConfirm } from "@keeplas/ui";
+import { VaultEmptyMessage } from "@/app/(dashboard)/hub/hub-view";
+import { useVaultCapture } from "@/components/vault/use-vault-capture";
+import { formatRelative } from "@/lib/format";
+import { useLocale, useTranslations } from "@/lib/i18n";
+import { useRouter, useSearchParams } from "@/lib/navigation";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useItemLabels } from "@/lib/use-item-labels";
+import { useVaultData } from "@/lib/vault-data";
+import {
+  filterItems,
+  itemStyle,
+  sortItems,
+  type VaultSort,
+} from "@/lib/vault-list";
+import { VaultListView, type VaultListRow } from "./vault-list-view";
 
-interface SectionConfig {
-  key: string;
-  category: VaultCategory;
-  accent: string;
-}
-
-// One section per category — each has its own intent and UI affordances, so
-// they stay top-level rather than collapsing into "Personal Documents". The
-// heading resolves from the category label (useCategoryLabel); the empty-state
-// message resolves via t("sections.<key>.empty") in render. Display order is
-// computed at render (alphabetical by translated label, "other" last).
-const SECTIONS: SectionConfig[] = [
-  {
-    key: "documents",
-    category: "personal_document",
-    accent: "bg-secondary",
-  },
-  {
-    key: "health",
-    category: "health_directive",
-    accent: "bg-error",
-  },
-  {
-    key: "legal",
-    category: "legal_document",
-    accent: "bg-primary",
-  },
-  {
-    key: "business",
-    category: "business_continuity",
-    accent: "bg-tertiary",
-  },
-  {
-    key: "financial",
-    category: "financial_asset",
-    accent: "bg-secondary",
-  },
-  {
-    key: "credentials",
-    category: "credential",
-    accent: "bg-primary",
-  },
-  {
-    key: "digital",
-    category: "digital_asset",
-    accent: "bg-tertiary",
-  },
-  {
-    key: "messages",
-    category: "conditional_message",
-    accent: "bg-error",
-  },
-  {
-    key: "property",
-    category: "property",
-    accent: "bg-secondary",
-  },
-  {
-    key: "insurance",
-    category: "insurance_policy",
-    accent: "bg-primary",
-  },
-  {
-    key: "subscriptions",
-    category: "subscription",
-    accent: "bg-tertiary",
-  },
-  {
-    key: "contacts",
-    category: "contacts",
-    accent: "bg-secondary",
-  },
-  {
-    key: "wishes",
-    category: "wishes",
-    accent: "bg-error",
-  },
-  {
-    key: "other",
-    category: "other",
-    accent: "bg-primary",
-  },
-];
-
-const SECTION_BY_KEY = new Map(SECTIONS.map((s) => [s.key, s]));
-const PREVIEW_LIMIT = 3;
-
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString([], {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
-}
-
+/** W06-1 My vault. The list comes from `?type=` (dashboard tiles link to it). */
 export default function VaultPage() {
-  return (
-    <Suspense fallback={<VaultLoader />}>
-      <VaultPageContent />
-    </Suspense>
-  );
-}
+  const archiveTexts = useTranslations("vaultItem.archive");
+  const locale = useLocale();
+  const router = useRouter();
+  const params = useSearchParams();
+  const requested = params.get("type") ?? "all";
+  const list: VaultListKey = isVaultListKey(requested) ? requested : "all";
+  const { items } = useVaultData();
+  const labels = useItemLabels();
+  const capture = useVaultCapture(presetCategory(list));
+  const confirm = useConfirm();
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<VaultSort>("updated");
 
-function VaultLoader() {
-  const t = useTranslations("vault");
-  return <Loader fullscreen label={t("page.loading")} />;
-}
+  const counts = useMemo(() => listCounts(items ?? []), [items]);
 
-function VaultPageContent() {
-  const t = useTranslations("vault");
-  const categoryLabel = useCategoryLabel();
-  const searchParams = useSearchParams();
-  const rawSection = searchParams.get("section");
-  const activeSection = rawSection
-    ? (SECTION_BY_KEY.get(rawSection) ?? null)
-    : null;
+  const rows = useMemo<VaultListRow[] | undefined>(() => {
+    if (!items) return undefined;
+    return sortItems(filterItems(items, list, search), sort, locale).map(
+      (item) => ({
+        id: item.id,
+        title: labels.title(item),
+        detail: labels.detail(item),
+        style: itemStyle(item),
+        category: labels.category(item),
+        folder: labels.folder(item),
+        access: labels.access(item),
+        updated: formatRelative(
+          sort === "added" ? item.createdAt : item.updatedAt,
+          locale,
+        ),
+      }),
+    );
+  }, [items, list, search, sort, locale, labels]);
 
-  const vault = useQuery(api.vaults.getVault);
-  const items = useQuery(api.vault_items.getItems);
-  const titles = useDecryptedTitles(items);
-  const categories = useItemCategories(items);
-  // Owner-side migration of any legacy plaintext titles and metadata.
-  useBackfillItemTitles(items);
-  useBackfillItemMeta();
-  const recipientGroups = useQuery(api.recipient_groups.listGroups) ?? [];
-  const allContacts = useQuery(api.trusted_contacts.getContacts) ?? [];
-  const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [addDialogCategory, setAddDialogCategory] = useState<
-    VaultCategory | undefined
-  >(undefined);
-
-  function openAddDialog(section?: SectionConfig) {
-    setAddDialogCategory(section?.category);
-    setShowAddDialog(true);
+  async function archive(id: string) {
+    const ok = await confirm({
+      title: archiveTexts("title"),
+      description: archiveTexts("body"),
+      confirmLabel: archiveTexts("confirm"),
+      cancelLabel: archiveTexts("cancel"),
+    });
+    if (ok) await archiveItem({ itemId: id as Id<"vault_items"> });
   }
-
-  useEffect(() => {
-    if (vault === null) {
-      getOrCreateVault();
-    }
-  }, [vault, getOrCreateVault]);
-
-  const itemsByCategory = useMemo(() => {
-    const map = new Map<VaultCategory, Doc<"vault_items">[]>();
-    for (const section of SECTIONS) {
-      map.set(section.category, []);
-    }
-    for (const item of items ?? []) {
-      const category = categories[item._id];
-      if (!category) continue; // still decrypting
-      map.get(category)?.push(item);
-    }
-    return map;
-  }, [items, categories]);
-
-  // Sections follow the active language alphabetically by their category label;
-  // "other" is a catch-all and always sorts last.
-  const sortedSections = useMemo(
-    () =>
-      [...SECTIONS].sort((a, b) =>
-        a.category === "other"
-          ? 1
-          : b.category === "other"
-            ? -1
-            : categoryLabel(a.category).localeCompare(
-                categoryLabel(b.category),
-              ),
-      ),
-    [categoryLabel],
-  );
-
-  if (items === undefined || vault === undefined) {
-    return <Loader fullscreen label={t("page.loading")} />;
-  }
-
-  const sectionsToRender = activeSection ? [activeSection] : sortedSections;
-  const activeCount = activeSection
-    ? (itemsByCategory.get(activeSection.category)?.length ?? 0)
-    : 0;
 
   return (
-    <div className="max-w-screen-2xl mx-auto space-y-10">
-      {/* Header */}
-      <header className="space-y-2">
-        {activeSection && (
-          <Link
-            href="/vault"
-            className="inline-flex items-center gap-2 text-label-md text-on-surface-variant hover:text-primary transition-colors"
-          >
-            <Icon
-              path={ICON_PATHS.chevronRight}
-              className="w-4 h-4 rotate-180"
-            />
-            {t("page.allSections")}
-          </Link>
-        )}
-        <h1 className="text-headline-lg text-primary">
-          {activeSection
-            ? categoryLabel(activeSection.category)
-            : t("page.title")}
-        </h1>
-        <p className="text-body-lg text-on-surface-variant max-w-md">
-          {activeSection
-            ? t(activeCount === 1 ? "page.countOne" : "page.countOther", {
-                count: activeCount,
-              })
-            : t("page.subtitle")}
-        </p>
-      </header>
-
-      {/* Welcome message editor — sits above categories so users see it
-          immediately on the main /vault landing. Hidden when drilling into a
-          single category to keep that view focused on items. */}
-      {!activeSection && <ReleaseIntroductionEditor />}
-
-      {/* Vault Sections */}
-      <div className="space-y-12">
-        {sectionsToRender.map((section) => {
-          const sectionItems = itemsByCategory.get(section.category) ?? [];
-          const visibleItems = activeSection
-            ? sectionItems
-            : sectionItems.slice(0, PREVIEW_LIMIT);
-          return (
-            <VaultSection
-              key={section.key}
-              title={categoryLabel(section.category)}
-              count={sectionItems.length}
-              accent={section.accent}
-              viewAllHref={
-                !activeSection && sectionItems.length > PREVIEW_LIMIT
-                  ? `/vault?section=${section.key}`
-                  : undefined
-              }
-              isEmpty={sectionItems.length === 0}
-              emptyMessage={t(`sections.${section.key}.empty`)}
-              onAdd={() => openAddDialog(section)}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {visibleItems.map((item) => (
-                  <VaultItemCard
-                    key={item._id}
-                    item={item}
-                    category={categories[item._id] ?? "other"}
-                    title={titles[item._id] ?? ""}
-                    groups={recipientGroups}
-                    contacts={allContacts}
-                  />
-                ))}
-              </div>
-            </VaultSection>
-          );
-        })}
-      </div>
-
-      {vault && (
-        <AddItemDialog
-          vaultId={vault._id}
-          open={showAddDialog}
-          onOpenChange={setShowAddDialog}
-          defaultCategory={addDialogCategory}
-        />
-      )}
-    </div>
-  );
-}
-
-function VaultSection({
-  title,
-  count,
-  accent,
-  children,
-  viewAllHref,
-  isEmpty,
-  emptyMessage,
-  onAdd,
-}: {
-  title: string;
-  count?: number;
-  accent: string;
-  children: React.ReactNode;
-  viewAllHref?: string;
-  isEmpty?: boolean;
-  emptyMessage?: string;
-  onAdd?: () => void;
-}) {
-  const t = useTranslations("vault");
-  return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-headline-md flex items-center gap-3 text-primary min-w-0">
-          <span className={cn("w-2 h-8 rounded-sm shrink-0", accent)} />
-          <span className="truncate">{title}</span>
-          {count !== undefined && count > 0 && (
-            <span className="text-on-surface-variant shrink-0">({count})</span>
-          )}
-        </h2>
-        {viewAllHref && (
-          <Link
-            href={viewAllHref}
-            className="shrink-0 text-secondary text-body-md font-bold hover:underline cursor-pointer"
-          >
-            {t("section.viewAll")}
-          </Link>
-        )}
-      </div>
-      {isEmpty ? (
-        <div className="bg-surface-container-low rounded-sm p-10 text-center">
-          <p className="text-body-lg text-on-surface-variant mb-4">
-            {emptyMessage}
-          </p>
-          {onAdd && (
-            <button
-              onClick={onAdd}
-              className="text-secondary text-body-md font-bold hover:underline cursor-pointer"
-            >
-              {t("section.addEntry")}
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-          {children}
-          {viewAllHref && (
-            <Link
-              href={viewAllHref}
-              className="md:hidden flex items-center justify-center gap-2 mt-4 py-3 px-4 rounded-sm bg-surface-container-low hover:bg-surface-container-high text-secondary font-label font-bold text-body-md transition-colors cursor-pointer"
-            >
-              {t("section.viewAllCount", { count: count ?? 0 })}
-              <Icon path={ICON_PATHS.arrowRight} className="w-4 h-4" />
-            </Link>
-          )}
-        </>
-      )}
-    </section>
-  );
-}
-
-// Resolve the "Transmission Logic" summary for the card. Mirrors the
-// dialog's recipient picker: a private item shows "Private", an item
-// shared with the default group of trust contacts collapses to "All trust
-// contacts", and explicit picks are listed by name (or counted when too
-// many to fit on a card).
-function transmissionSummary(
-  item: Doc<"vault_items">,
-  groups: Doc<"recipient_groups">[],
-  contacts: Doc<"trusted_contacts">[],
-  t: (key: string, params?: Record<string, string | number>) => string,
-): { label: string; tone: "private" | "shared" } {
-  if (item.accessLevel === "private") {
-    return { label: t("transmission.private"), tone: "private" };
-  }
-
-  const mode = item.recipientMode ?? "default";
-  if (mode === "explicit") {
-    const names = (item.sharedWithContacts ?? [])
-      .map((id) => contacts.find((c) => c._id === id)?.name)
-      .filter((n): n is string => Boolean(n));
-    if (names.length === 0)
-      return { label: t("transmission.private"), tone: "private" };
-    if (names.length === 1) return { label: names[0], tone: "shared" };
-    if (names.length === 2) return { label: names.join(" & "), tone: "shared" };
-    return { label: `${names[0]} +${names.length - 1}`, tone: "shared" };
-  }
-
-  if (mode === "groups") {
-    const names = (item.sharedWithGroups ?? [])
-      .map((id) => groups.find((g) => g._id === id)?.name)
-      .filter((n): n is string => Boolean(n));
-    if (names.length === 0)
-      return { label: t("transmission.private"), tone: "private" };
-    if (names.length === 1) return { label: names[0], tone: "shared" };
-    return {
-      label: t("transmission.groups", { count: names.length }),
-      tone: "shared",
-    };
-  }
-
-  // mode === "default" with non-private accessLevel: legacy "all trust
-  // contacts" semantics.
-  return { label: t("transmission.allContacts"), tone: "shared" };
-}
-
-// Single card used for every category. Top-right pill shows the
-// transmission target (Private / contact / group / "All trust contacts").
-function VaultItemCard({
-  item,
-  category: categoryKey,
-  title,
-  groups,
-  contacts,
-}: {
-  item: Doc<"vault_items">;
-  category: VaultCategory;
-  title: string;
-  groups: Doc<"recipient_groups">[];
-  contacts: Doc<"trusted_contacts">[];
-}) {
-  const t = useTranslations("vault");
-  const category = getCategoryConfig(categoryKey);
-  const transmission = transmissionSummary(item, groups, contacts, t);
-
-  return (
-    <Link
-      href={`/vault/${item._id}`}
-      className="bg-surface-container hover:bg-surface-container-high p-6 rounded-sm transition-all group cursor-pointer border border-transparent hover:border-outline-variant/20 block"
-    >
-      <div className="flex justify-between items-start gap-3 mb-4">
-        <div className="bg-white p-3 rounded-xs shadow-sm group-hover:bg-secondary group-hover:text-white transition-colors shrink-0">
-          <Icon path={category.icon} className="w-5 h-5" />
-        </div>
-        <span
-          className="text-label-md normal-case tracking-normal text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-sm inline-flex items-center gap-1.5 max-w-[60%]"
-          title={transmission.label}
-        >
-          <Icon
-            path={
-              transmission.tone === "private"
-                ? ICON_PATHS.lock
-                : ICON_PATHS.users
-            }
-            className="w-3 h-3 shrink-0"
-          />
-          <span className="truncate">{transmission.label}</span>
-        </span>
-      </div>
-      <h4 className="text-headline-sm text-primary truncate">{title}</h4>
-      <p className="text-label-md normal-case tracking-normal text-on-surface-variant mt-1">
-        {t("card.updated", { date: formatDate(item.updatedAt) })}
-      </p>
-    </Link>
+    <>
+      <VaultListView
+        list={list}
+        counts={counts}
+        rows={rows}
+        search={search}
+        sort={sort}
+        onList={(next) =>
+          router.replace(next === "all" ? "/vault" : `/vault?type=${next}`)
+        }
+        onSearch={setSearch}
+        onSort={setSort}
+        onArchive={(id) => void archive(id)}
+        onFiles={capture.files}
+        onAdd={capture.add}
+        onScan={capture.scan}
+        empty={<VaultEmptyMessage onAdd={() => capture.add("document")} />}
+      />
+      {capture.dialogs}
+    </>
   );
 }

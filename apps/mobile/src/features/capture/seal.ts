@@ -49,6 +49,8 @@ export interface CaptureDraft {
     recipients: { contactId: string; publicKey: string }[];
   };
   attachTo?: { itemId: string; dek: CryptoKey; ownerWrappedDek: string };
+  /** W06-7: completes the browser's handoff when the item is created. */
+  handoffId?: string;
 }
 
 export interface SealIO {
@@ -86,6 +88,9 @@ export async function sealCapture(
             })),
           ),
         }
+      : {}),
+    ...(draft.handoffId && !draft.attachTo
+      ? { captureHandoffId: draft.handoffId }
       : {}),
   };
   const files: OutboxFile[] = [];

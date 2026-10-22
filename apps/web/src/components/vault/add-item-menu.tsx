@@ -58,16 +58,19 @@ function MenuRow({
 }
 
 /**
- * W04-3b "Add item" menu. Each kind opens the item editor; "Scan with my
- * phone" points to the app, where capture happens.
+ * W04-3b "Add item" menu (dashboard and vault list): each kind opens its
+ * capture screen; "Scan with my phone" hands capture to the phone app.
  */
 export function AddItemMenu({
   onAdd,
   onScan,
+  size = "compact",
   defaultOpen,
 }: {
   onAdd: (kind: AddKind) => void;
   onScan: () => void;
+  /** 36 px on the dashboard (W04-3), 40 px in the vault toolbar (W06-1). */
+  size?: "compact" | "regular";
   /** Visual tests render the menu open (W04-3b). */
   defaultOpen?: boolean;
 }) {
@@ -77,7 +80,7 @@ export function AddItemMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="primary"
-          size="compact"
+          size={size}
           className="data-[state=open]:ring-[3px] data-[state=open]:ring-border-strong"
         >
           <Icon path={ICON_PATHS.plus} className="size-[16px]" />

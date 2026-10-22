@@ -18,6 +18,8 @@ import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { StateMessage, StateSheet } from "@/components/state-message";
 import { Text } from "@/components/text";
+import { draftStore } from "@/features/capture/draft-store";
+import { claimCaptureQr } from "@/features/link/capture-qr";
 import { takePendingLink } from "@/features/link/pending-link";
 import { evaluatePairingQr } from "@/features/link/qr-flow";
 import {
@@ -32,9 +34,10 @@ import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 
 /**
- * M03-4 Scan the QR code. Each scan (or universal link) goes
- * through `evaluatePairingQr`: invalid QR, expired session, key mismatch
- * (M09-3, reported to Convex) or M03-5 to approve.
+ * M03-4 Scan the QR code. A web "Scan with my phone" code (W06-7) opens the
+ * document scanner; any other scan (or universal link) goes through
+ * `evaluatePairingQr`: invalid QR, expired session, key mismatch (M09-3,
+ * reported to Convex) or M03-5 to approve.
  */
 export default function Scan() {
   const router = useRouter();
@@ -43,6 +46,7 @@ export default function Scan() {
   const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const reject = useAuditedMutation(api.pairing.reject);
+  const claimHandoff = useAuditedMutation(api.capture_handoffs.claim);
   const [torch, setTorch] = useState(false);
   const [checking, setChecking] = useState(false);
   const [problem, setProblem] = useState<
@@ -57,6 +61,20 @@ export default function Scan() {
       busy.current = true;
       setChecking(true);
       try {
+        // W06-7: a browser waits for a scan from this phone.
+        const capture = await claimCaptureQr(text, {
+          claim: (handoffId) => claimHandoff({ handoffId }),
+          expectedOrigin: env.appUrl,
+        });
+        if (capture.kind === "invalid" || capture.kind === "expired") {
+          setProblem(capture.kind);
+          return;
+        }
+        if (capture.kind === "ok") {
+          draftStore.start("scan", { handoffId: capture.handoffId });
+          router.replace("/capture/scan");
+          return;
+        }
         const outcome = await evaluatePairingQr(text, {
           getSession: (sessionId) =>
             convex.query(api.pairing.get, {
@@ -111,7 +129,7 @@ export default function Scan() {
         setChecking(false);
       }
     },
-    [convex, reject, router, approvePairing],
+    [convex, reject, claimHandoff, router, approvePairing],
   );
 
   useEffect(() => {

@@ -22,6 +22,7 @@ describe("app association files", () => {
             components: [
               { "/": "/link" },
               { "/": "/link/*" },
+              { "/": "/capture" },
               { "/": "/invite/*" },
             ],
           },

@@ -9,13 +9,13 @@ import { formatRelative } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useLocale, useTranslations } from "@/lib/i18n";
 import { useRouter } from "@/lib/navigation";
-import type { CategoryGroup } from "@/lib/vault-categories";
-import { AddItemMenu, type AddKind } from "./add-item-menu";
+import { AddItemMenu, type AddKind } from "@/components/vault/add-item-menu";
 
 export interface HubRecentItem {
   id: string;
   title: string;
-  group: CategoryGroup;
+  /** Category column label ("Insurance Policies", "Accounts", "Photos"). */
+  type: string;
   updatedAt: number;
 }
 
@@ -130,7 +130,7 @@ export function HubView({
 
       <div className="grid gap-[16px] md:grid-cols-3">
         <ListRow
-          href="/vault?section=inbox"
+          href="/vault?type=inbox"
           icon={ICON_PATHS.mail}
           title={t("tiles.inbox")}
           description={
@@ -140,13 +140,13 @@ export function HubView({
           }
         />
         <ListRow
-          href="/vault?section=documents"
+          href="/vault?type=documents"
           icon={ICON_PATHS.document}
           title={t("tiles.documents")}
           description={itemCount(counts.documents)}
         />
         <ListRow
-          href="/vault?section=credentials"
+          href="/vault?type=accounts"
           icon={ICON_PATHS.userCircle}
           title={t("tiles.accounts")}
           description={itemCount(counts.accounts)}
@@ -166,10 +166,7 @@ export function HubView({
           rows={recentItems.map((item) => ({
             id: item.id,
             name: item.title,
-            details: [
-              t(`types.${item.group}`),
-              formatRelative(item.updatedAt, locale),
-            ],
+            details: [item.type, formatRelative(item.updatedAt, locale)],
             actions: [
               {
                 label: t("recent.open"),
