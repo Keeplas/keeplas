@@ -9,6 +9,7 @@
     "getHelp": "Get help",
     "openSettings": "Open Settings",
     "notNow": "Not now",
+    "close": "Close",
     "ok": "OK",
     "optional": "Optional",
     "seeAll": "See all",
@@ -505,7 +506,6 @@
     "untitled": "Untitled item",
     "untitledScan": "Scanned document",
     "localEncryption": "Title, notes, category and attachments are encrypted on this phone.",
-    "backHome": "Back to home",
     "category": {
       "inbox": "Inbox",
       "personal_document": "Documents",
@@ -526,7 +526,8 @@
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",
-      "manageStorage": "Manage storage"
+      "manageStorage": "Manage storage",
+      "background": "Continue in background"
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",

@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { StyleSheet, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
-import { LanguageDropdown } from "@/components/language";
-import { NavBar } from "@/components/nav-bar";
-import { Screen } from "@/components/screen";
+import { BottomSheet } from "@/components/sheet";
 import { IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useOutbox } from "@/features/outbox/outbox-provider";
@@ -17,10 +22,22 @@ import { useTheme } from "@/providers/theme-provider";
 
 type StepState = "done" | "active" | "waiting" | "error";
 
-/** M07-4 Securing your item: encrypt, upload, protected, in order. */
-export default function SecuringCapture() {
-  const { entryId } = useLocalSearchParams<{ entryId: string }>();
+/**
+ * M07-4 Securing your item: encrypt, upload, protected, in order. A sheet
+ * the user can close at any time; the outbox keeps uploading in the
+ * background. Opens the item once it is protected, if still showing.
+ */
+function SecuringSheet({
+  entryId,
+  visible,
+  onDismiss,
+}: {
+  entryId: string;
+  visible: boolean;
+  onDismiss: () => void;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t, language } = useI18n();
   const { colors } = useTheme();
   const { entries, progress, online, created, retry } = useOutbox();
@@ -38,12 +55,14 @@ export default function SecuringCapture() {
   }
 
   useEffect(() => {
-    if (!itemId) return;
+    if (!visible || !itemId) return;
     const timeout = setTimeout(() => {
-      router.replace({ pathname: "/item/[id]", params: { id: itemId } });
+      onDismiss();
+      if (pathname !== `/item/${itemId}`)
+        router.push({ pathname: "/item/[id]", params: { id: itemId } });
     }, 900);
     return () => clearTimeout(timeout);
-  }, [itemId, router]);
+  }, [visible, itemId, pathname, onDismiss, router]);
 
   const current = progress[entryId];
   const ratio = itemId
@@ -66,68 +85,66 @@ export default function SecuringCapture() {
             });
 
   return (
-    <Screen
-      header={
-        <NavBar
-          title={t("capture.securing.title")}
-          onBack={() => router.replace("/home")}
-          right={<LanguageDropdown />}
+    <BottomSheet
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("capture.securing.title")}
+    >
+      <View style={styles.body}>
+        <View style={styles.file}>
+          <IconTile icon="document" size={48} background={colors["bg.warm"]} />
+          <View style={styles.flex}>
+            <Text variant="label" numberOfLines={1}>
+              {seen?.title ?? t("capture.untitled")}
+            </Text>
+            {seen?.bytes ? (
+              <Text variant="body-sm" color="text.muted">
+                {formatBytes(seen.bytes, language)}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+        <Step
+          state="done"
+          title={t("capture.securing.encrypting")}
+          body={t("capture.securing.encryptingBody")}
+          ratio={1}
         />
-      }
-      gap={20}
-      footer={
-        entry?.status === "quota" ? (
+        <Step
+          state={upload}
+          title={t("capture.securing.uploading")}
+          body={uploadBody}
+          ratio={ratio}
+        />
+        <Step
+          state={itemId ? "done" : "waiting"}
+          title={t("capture.securing.protected")}
+          body={
+            itemId
+              ? t("capture.securing.protectedBody")
+              : t("capture.securing.protectedWaiting")
+          }
+          ratio={itemId ? 1 : 0}
+        />
+        {entry?.status === "quota" ? (
           <Button
             label={t("capture.securing.manageStorage")}
-            onPress={() => router.replace("/settings")}
+            onPress={() => {
+              onDismiss();
+              router.navigate("/settings");
+            }}
           />
         ) : failed ? (
           <Button label={t("common.tryAgain")} onPress={retry} />
-        ) : !online && !itemId ? (
+        ) : !itemId ? (
           <Button
             variant="secondary"
-            label={t("capture.backHome")}
-            onPress={() => router.replace("/home")}
+            label={t("capture.securing.background")}
+            onPress={onDismiss}
           />
-        ) : undefined
-      }
-    >
-      <View style={styles.file}>
-        <IconTile icon="document" size={48} background={colors["bg.warm"]} />
-        <View style={styles.flex}>
-          <Text variant="label" numberOfLines={1}>
-            {seen?.title ?? t("capture.untitled")}
-          </Text>
-          {seen?.bytes ? (
-            <Text variant="body-sm" color="text.muted">
-              {formatBytes(seen.bytes, language)}
-            </Text>
-          ) : null}
-        </View>
+        ) : null}
       </View>
-      <Step
-        state="done"
-        title={t("capture.securing.encrypting")}
-        body={t("capture.securing.encryptingBody")}
-        ratio={1}
-      />
-      <Step
-        state={upload}
-        title={t("capture.securing.uploading")}
-        body={uploadBody}
-        ratio={ratio}
-      />
-      <Step
-        state={itemId ? "done" : "waiting"}
-        title={t("capture.securing.protected")}
-        body={
-          itemId
-            ? t("capture.securing.protectedBody")
-            : t("capture.securing.protectedWaiting")
-        }
-        ratio={itemId ? 1 : 0}
-      />
-    </Screen>
+    </BottomSheet>
   );
 }
 
@@ -202,7 +219,38 @@ function Step({
   );
 }
 
+const SecuringSheetContext = createContext<(entryId: string) => void>(
+  () => undefined,
+);
+
+/** Holds the securing sheet above the stack, so it outlives the capture screens. */
+export function SecuringSheetProvider({ children }: { children: ReactNode }) {
+  const [entryId, setEntryId] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+  const show = useCallback((id: string) => {
+    setEntryId(id);
+    setVisible(true);
+  }, []);
+  const dismiss = useCallback(() => setVisible(false), []);
+  return (
+    <SecuringSheetContext.Provider value={show}>
+      {children}
+      {entryId ? (
+        <SecuringSheet
+          key={entryId}
+          entryId={entryId}
+          visible={visible}
+          onDismiss={dismiss}
+        />
+      ) : null}
+    </SecuringSheetContext.Provider>
+  );
+}
+
+export const useShowSecuring = () => useContext(SecuringSheetContext);
+
 const styles = StyleSheet.create({
+  body: { gap: 20, paddingTop: 6 },
   flex: { flex: 1, gap: 4 },
   file: { flexDirection: "row", alignItems: "center", gap: 14 },
   step: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
