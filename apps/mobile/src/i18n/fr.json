@@ -8,6 +8,7 @@
     "getHelp": "Obtenir de l'aide",
     "openSettings": "Ouvrir les Réglages",
     "notNow": "Pas maintenant",
+    "close": "Fermer",
     "ok": "OK",
     "optional": "Facultatif",
     "seeAll": "Tout voir",
@@ -497,7 +498,6 @@
     "untitled": "Élément sans titre",
     "untitledScan": "Document scanné",
     "localEncryption": "Le titre, les notes, la catégorie et les pièces jointes sont chiffrés sur ce téléphone.",
-    "backHome": "Retour à l'accueil",
     "category": {
       "inbox": "Boîte chiffrée",
       "personal_document": "Documents",
@@ -518,7 +518,8 @@
       "protected": "Protégé",
       "protectedWaiting": "En attente de vérification…",
       "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
-      "manageStorage": "Gérer le stockage"
+      "manageStorage": "Gérer le stockage",
+      "background": "Continuer en arrière-plan"
     },
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",

@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { AddSheetProvider } from "@/features/capture/add-sheet";
+import { SecuringSheetProvider } from "@/features/capture/securing-sheet";
 import { TabShell } from "@/features/navigation/tab-shell";
 import { hasPendingLink } from "@/features/link/pending-link";
 import { LifeCheckPrompt } from "@/features/life-check/life-check-prompt";
@@ -65,11 +66,13 @@ export default function AppLayout() {
   return (
     <PinGateProvider>
       <VaultDataProvider>
-        <AddSheetProvider>
-          <TabShell>
-            <Stack screenOptions={{ headerShown: false }} />
-          </TabShell>
-        </AddSheetProvider>
+        <SecuringSheetProvider>
+          <AddSheetProvider>
+            <TabShell>
+              <Stack screenOptions={{ headerShown: false }} />
+            </TabShell>
+          </AddSheetProvider>
+        </SecuringSheetProvider>
         {activeLifeCheck && pathname !== "/life-check" ? (
           <LifeCheckPrompt
             missed={activeLifeCheck.status === "awaiting_confirmation"}
