@@ -49,7 +49,9 @@ import { Route as DashboardSettingsRecoveryIndexRouteImport } from './routes/_da
 import { Route as DashboardSettingsRoadmapIndexRouteImport } from './routes/_dashboard/settings/roadmap/index'
 import { Route as DashboardSettingsSubscriptionIndexRouteImport } from './routes/_dashboard/settings/subscription/index'
 import { Route as DashboardVaultItemIdIndexRouteImport } from './routes/_dashboard/vault/$itemId/index'
+import { Route as DashboardVaultNewIndexRouteImport } from './routes/_dashboard/vault/new/index'
 import { Route as DashboardSharedWithMeContactIdMemorialIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/index'
+import { Route as DashboardVaultItemIdEditIndexRouteImport } from './routes/_dashboard/vault/$itemId/edit/index'
 import { Route as DashboardSharedWithMeContactIdMemorialItemIdIndexRouteImport } from './routes/_dashboard/shared-with-me/$contactId/memorial/$itemId/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -267,10 +269,21 @@ const DashboardVaultItemIdIndexRoute =
     path: '/vault/$itemId/',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardVaultNewIndexRoute = DashboardVaultNewIndexRouteImport.update({
+  id: '/vault/new/',
+  path: '/vault/new/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSharedWithMeContactIdMemorialIndexRoute =
   DashboardSharedWithMeContactIdMemorialIndexRouteImport.update({
     id: '/shared-with-me/$contactId/memorial/',
     path: '/shared-with-me/$contactId/memorial/',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardVaultItemIdEditIndexRoute =
+  DashboardVaultItemIdEditIndexRouteImport.update({
+    id: '/vault/$itemId/edit/',
+    path: '/vault/$itemId/edit/',
     getParentRoute: () => DashboardRoute,
   } as any)
 const DashboardSharedWithMeContactIdMemorialItemIdIndexRoute =
@@ -319,7 +332,9 @@ export interface FileRoutesByFullPath {
   '/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
+  '/vault/new/': typeof DashboardVaultNewIndexRoute
   '/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
+  '/vault/$itemId/edit/': typeof DashboardVaultItemIdEditIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -360,7 +375,9 @@ export interface FileRoutesByTo {
   '/settings/roadmap': typeof DashboardSettingsRoadmapIndexRoute
   '/settings/subscription': typeof DashboardSettingsSubscriptionIndexRoute
   '/vault/$itemId': typeof DashboardVaultItemIdIndexRoute
+  '/vault/new': typeof DashboardVaultNewIndexRoute
   '/shared-with-me/$contactId/memorial': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
+  '/vault/$itemId/edit': typeof DashboardVaultItemIdEditIndexRoute
   '/shared-with-me/$contactId/memorial/$itemId': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
 export interface FileRoutesById {
@@ -405,7 +422,9 @@ export interface FileRoutesById {
   '/_dashboard/settings/roadmap/': typeof DashboardSettingsRoadmapIndexRoute
   '/_dashboard/settings/subscription/': typeof DashboardSettingsSubscriptionIndexRoute
   '/_dashboard/vault/$itemId/': typeof DashboardVaultItemIdIndexRoute
+  '/_dashboard/vault/new/': typeof DashboardVaultNewIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/': typeof DashboardSharedWithMeContactIdMemorialIndexRoute
+  '/_dashboard/vault/$itemId/edit/': typeof DashboardVaultItemIdEditIndexRoute
   '/_dashboard/shared-with-me/$contactId/memorial/$itemId/': typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -449,7 +468,9 @@ export interface FileRouteTypes {
     | '/settings/roadmap/'
     | '/settings/subscription/'
     | '/vault/$itemId/'
+    | '/vault/new/'
     | '/shared-with-me/$contactId/memorial/'
+    | '/vault/$itemId/edit/'
     | '/shared-with-me/$contactId/memorial/$itemId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -490,7 +511,9 @@ export interface FileRouteTypes {
     | '/settings/roadmap'
     | '/settings/subscription'
     | '/vault/$itemId'
+    | '/vault/new'
     | '/shared-with-me/$contactId/memorial'
+    | '/vault/$itemId/edit'
     | '/shared-with-me/$contactId/memorial/$itemId'
   id:
     | '__root__'
@@ -534,7 +557,9 @@ export interface FileRouteTypes {
     | '/_dashboard/settings/roadmap/'
     | '/_dashboard/settings/subscription/'
     | '/_dashboard/vault/$itemId/'
+    | '/_dashboard/vault/new/'
     | '/_dashboard/shared-with-me/$contactId/memorial/'
+    | '/_dashboard/vault/$itemId/edit/'
     | '/_dashboard/shared-with-me/$contactId/memorial/$itemId/'
   fileRoutesById: FileRoutesById
 }
@@ -836,11 +861,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardVaultItemIdIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/vault/new/': {
+      id: '/_dashboard/vault/new/'
+      path: '/vault/new'
+      fullPath: '/vault/new/'
+      preLoaderRoute: typeof DashboardVaultNewIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/shared-with-me/$contactId/memorial/': {
       id: '/_dashboard/shared-with-me/$contactId/memorial/'
       path: '/shared-with-me/$contactId/memorial'
       fullPath: '/shared-with-me/$contactId/memorial/'
       preLoaderRoute: typeof DashboardSharedWithMeContactIdMemorialIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/vault/$itemId/edit/': {
+      id: '/_dashboard/vault/$itemId/edit/'
+      path: '/vault/$itemId/edit'
+      fullPath: '/vault/$itemId/edit/'
+      preLoaderRoute: typeof DashboardVaultItemIdEditIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/shared-with-me/$contactId/memorial/$itemId/': {
@@ -910,7 +949,9 @@ interface DashboardRouteChildren {
   DashboardDocsTrustedContactsIndexRoute: typeof DashboardDocsTrustedContactsIndexRoute
   DashboardDocsVaultIndexRoute: typeof DashboardDocsVaultIndexRoute
   DashboardVaultItemIdIndexRoute: typeof DashboardVaultItemIdIndexRoute
+  DashboardVaultNewIndexRoute: typeof DashboardVaultNewIndexRoute
   DashboardSharedWithMeContactIdMemorialIndexRoute: typeof DashboardSharedWithMeContactIdMemorialIndexRoute
+  DashboardVaultItemIdEditIndexRoute: typeof DashboardVaultItemIdEditIndexRoute
   DashboardSharedWithMeContactIdMemorialItemIdIndexRoute: typeof DashboardSharedWithMeContactIdMemorialItemIdIndexRoute
 }
 
@@ -933,8 +974,10 @@ const DashboardRouteChildren: DashboardRouteChildren = {
     DashboardDocsTrustedContactsIndexRoute,
   DashboardDocsVaultIndexRoute: DashboardDocsVaultIndexRoute,
   DashboardVaultItemIdIndexRoute: DashboardVaultItemIdIndexRoute,
+  DashboardVaultNewIndexRoute: DashboardVaultNewIndexRoute,
   DashboardSharedWithMeContactIdMemorialIndexRoute:
     DashboardSharedWithMeContactIdMemorialIndexRoute,
+  DashboardVaultItemIdEditIndexRoute: DashboardVaultItemIdEditIndexRoute,
   DashboardSharedWithMeContactIdMemorialItemIdIndexRoute:
     DashboardSharedWithMeContactIdMemorialItemIdIndexRoute,
 }

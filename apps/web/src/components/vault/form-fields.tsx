@@ -151,12 +151,15 @@ export function AccessField({
   value,
   onChange,
   folder,
+  emptyLabel,
   className,
 }: {
   value: ContactId[];
   onChange: (contacts: ContactId[]) => void;
   /** The chosen folder: its grantees can see the item too. */
   folder: FolderSummary | undefined;
+  /** What nobody picked means, when not "Only you" (welcome message). */
+  emptyLabel?: string;
   className?: string;
 }) {
   const t = useTranslations("vaultItem.form");
@@ -184,7 +187,9 @@ export function AccessField({
             className="flex h-[46px] w-full items-center gap-[8px] rounded-sm border border-border-default bg-bg-surface px-[14px] text-left text-[15px] leading-[22px] text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
           >
             <span className="min-w-0 flex-1 truncate">
-              {peopleSummary(names, t)}
+              {names.length === 0 && emptyLabel
+                ? emptyLabel
+                : peopleSummary(names, t)}
             </span>
             <Icon
               path={ICON_PATHS.chevronDown}

@@ -326,7 +326,7 @@
       },
       "video": {
         "title": "Vidéo",
-        "description": "Importez ou enregistrez une vidéo"
+        "description": "Importer une vidéo depuis cet ordinateur"
       },
       "scan": {
         "title": "Scanner avec mon téléphone",
@@ -2792,6 +2792,75 @@
       "cancel": "Annuler l'envoi",
       "background": "Continuer en arrière-plan",
       "open": "Ouvrir l'élément"
+    },
+    "editor": {
+      "newTitle": "Nouvelle note",
+      "newSubtitle": "Écrivez des instructions, joignez des fichiers et choisissez qui peut les voir.",
+      "editTitle": "Modifier",
+      "editSubtitle": "Modifiez la note, ses fichiers et qui peut les voir.",
+      "editCrumb": "Modifier",
+      "welcomeTitle": "Message de bienvenue",
+      "welcomeSubtitle": "Ce que vos contacts de confiance lisent en premier quand votre coffre leur est transmis.",
+      "lifeCheck": "Life check",
+      "untitled": "Sans titre",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Donnez un titre à votre note",
+      "titleRequired": "Donnez un titre à votre note.",
+      "notePlaceholder": "Écrivez quelque chose…",
+      "tools": {
+        "bold": "Gras",
+        "italic": "Italique",
+        "heading1": "Titre 1",
+        "heading2": "Titre 2",
+        "list": "Liste"
+      },
+      "attachments": "Pièces jointes · {count}",
+      "add": "Ajouter",
+      "remove": "Retirer",
+      "recordedHere": "Enregistré dans ce navigateur",
+      "attach": {
+        "scan": "Scanner avec le téléphone",
+        "photo": "Photo",
+        "voice": "Note vocale",
+        "file": "Fichier",
+        "video": "Vidéo"
+      },
+      "organize": "Organiser",
+      "everyone": "Tous vos contacts de confiance",
+      "whenLabel": "Quand ils peuvent l'ouvrir",
+      "afterLifeCheck": "Après un Life check manqué",
+      "people": "{count} personnes de confiance",
+      "peopleOne": "1 personne de confiance",
+      "encrypted": "Votre note et ses pièces jointes sont chiffrées dans ce navigateur avant de le quitter.",
+      "legacy": "Cet élément utilise un ancien format de chiffrement : enregistrez-le une fois, puis partagez-le depuis sa page.",
+      "cancel": "Annuler",
+      "save": "Enregistrer la note",
+      "saving": "Enregistrement…",
+      "savingPercent": "Enregistrement… {percent} %",
+      "saveFailed": "Vos modifications n'ont pas été enregistrées. Réessayez."
+    },
+    "voice": {
+      "title": "Enregistrer une note vocale",
+      "description": "Laissez un message avec votre voix aux personnes de confiance.",
+      "status": {
+        "recording": "Enregistrement… 10 minutes max",
+        "paused": "En pause",
+        "starting": "Démarrage du micro…"
+      },
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Message pour…",
+      "defaultName": "Note vocale",
+      "encrypted": "Enregistré et chiffré dans ce navigateur. L'audio n'est jamais stocké en clair.",
+      "discard": "Supprimer",
+      "reset": "Recommencer",
+      "pause": "Pause",
+      "resume": "Reprendre",
+      "save": "Enregistrer la note vocale",
+      "attach": "Ajouter à la note",
+      "resetTitle": "Recommencer cet enregistrement ?",
+      "resetBody": "Votre enregistrement de {time} sera supprimé de ce navigateur et vous pourrez recommencer. Cette action est définitive.",
+      "resetConfirm": "Supprimer et recommencer",
+      "resetKeep": "Garder cet enregistrement"
     }
   }
 }

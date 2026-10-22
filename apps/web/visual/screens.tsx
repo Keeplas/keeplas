@@ -23,7 +23,9 @@ import { VaultListView } from "@/app/(dashboard)/vault/vault-list-view";
 import {
   addDocument,
   documentViewer,
+  newNote,
   photoPreview,
+  recordVoice,
   securingItem,
   videoPreview,
 } from "./item-screens";
@@ -84,6 +86,8 @@ export const SCREENS: Record<string, HarnessScreen> = {
   "W06-2": shell("/vault", documentViewer),
   "W06-3": shell("/hub", addDocument),
   "W06-4": shell("/hub", securingItem),
+  "W06-5": shell("/vault", newNote),
+  "W06-6": shell("/hub", recordVoice),
   "W06-8": shell("/vault", photoPreview),
   "W06-9": shell("/vault", videoPreview),
   "W05-3": shell("/life-check", lifeCheck),

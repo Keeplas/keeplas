@@ -114,7 +114,11 @@ export {
   TooltipProvider,
 } from "./tooltip";
 export { UserAvatar, type UserAvatarProps } from "./user-avatar";
-export { RichTextEditor, type RichTextEditorProps } from "./rich-text-editor";
+export {
+  RichTextEditor,
+  type RichTextEditorProps,
+  type RichTextToolbarLabels,
+} from "./rich-text-editor";
 export { HelpHint, type HelpHintProps } from "./help-hint";
 export {
   InfoCallout,

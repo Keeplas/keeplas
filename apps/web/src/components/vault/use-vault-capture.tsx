@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { toast } from "@keeplas/ui";
-import { AddItemDialog } from "@/components/add-item-dialog";
 import {
   captureKindOf,
   inferFileKind,
   type CaptureKind,
 } from "@/lib/attachment-capture";
-import { formatBytes } from "@/lib/format";
+import { formatBytes, formatClock } from "@/lib/format";
 import { useLocale, useTranslations } from "@/lib/i18n";
 import { useRouter } from "@/lib/navigation";
 import { useCreateItem } from "@/lib/use-create-item";
@@ -19,6 +18,7 @@ import type { VaultCategory } from "@/lib/vault-categories";
 import { AddFileDialog, titleOf, type AddFileValues } from "./add-file-dialog";
 import type { AddKind } from "./add-item-menu";
 import { SecuringDialog } from "./securing-dialog";
+import { VoiceDialog, type VoiceItemValues } from "./voice-dialog";
 
 interface Securing {
   jobId: string;
@@ -109,6 +109,26 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
     }
   }
 
+  async function saveVoice(values: VoiceItemValues) {
+    const jobId = await createItem({
+      title: values.title,
+      note: "",
+      category,
+      folderId: values.folderId,
+      contactIds: values.contactIds,
+      files: [values.file],
+    });
+    if (!jobId) return;
+    setSecuring({
+      jobId,
+      file: {
+        kind: "audio",
+        name: values.file.name,
+        detail: formatClock(values.file.durationSec ?? 0),
+      },
+    });
+  }
+
   return {
     add: (kind: AddKind) => {
       if (kind === "note") router.push("/vault/new");
@@ -148,14 +168,12 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
             }}
           />
         ) : null}
-        {vault ? (
-          <AddItemDialog
-            vaultId={vault._id}
-            open={voice}
-            onOpenChange={setVoice}
-            defaultCategory="other"
-          />
-        ) : null}
+        <VoiceDialog
+          open={voice}
+          onOpenChange={setVoice}
+          folders={folders ?? []}
+          onSave={saveVoice}
+        />
       </>
     ),
   };

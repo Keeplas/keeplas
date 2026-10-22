@@ -20,9 +20,11 @@ export interface NewItem {
   contactIds: Id<"trusted_contacts">[];
   files: QueuedFile[];
   /**
-   * Life check welcome message: passed on to every trusted contact, today's
-   * and future ones (`contactIds` = the current ones).
+   * Passed on to every trusted contact, today's and future ones
+   * (`contactIds` = today's, for their keys).
    */
+  everyone?: boolean;
+  /** Life check welcome message (memorial page, not the vault list). */
   releaseIntroduction?: boolean;
 }
 
@@ -56,7 +58,7 @@ export function useCreateItem() {
           seal(itemMetaJson(item.category)),
           seal(item.note),
         ]);
-      const sharing = item.releaseIntroduction
+      const sharing = item.everyone
         ? {
             accessLevel: "trusted_only" as const,
             recipientMode: "default" as const,

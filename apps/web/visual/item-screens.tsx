@@ -30,6 +30,15 @@ import landscapeNight from "../../../PRD/v2-mobile-first/figma/svg/illustrations
 import videoPoster from "../../../PRD/v2-mobile-first/figma/svg/illustrations/web-video-poster.svg";
 import { HubView } from "@/app/(dashboard)/hub/hub-view";
 import { AddFileDialog } from "@/components/vault/add-file-dialog";
+import {
+  AccessField,
+  Field,
+  FolderField,
+} from "@/components/vault/form-fields";
+import { NoteEditor } from "@/components/vault/note-editor";
+import { VoiceMeter, VoiceRecorderBody } from "@/components/vault/voice-dialog";
+import { Modal } from "@/components/v2/modal";
+import { Input } from "@keeplas/ui";
 import { SecuringDialog } from "@/components/vault/securing-dialog";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { hub, noop } from "./fixtures";
@@ -262,5 +271,101 @@ export const securingItem = () => (
       onBackground={noop}
       onOpenItem={noop}
     />
+  </>
+);
+
+// W06-5: Figma's checklist is note content; the fixture writes it as a list.
+export const newNote = () => (
+  <NoteEditor
+    breadcrumb={[{ label: "My vault", href: "/hub" }, { label: "New note" }]}
+    heading="New note"
+    subtitle="Write instructions, attach files and choose who can see them."
+    initial={{
+      title: "Instructions for my family",
+      note:
+        "<p>If something happens to me, our home insurance is with Maple Mutual. The policy is attached below. Call Sarah first: she has the spare keys and knows where the safe box is.</p>" +
+        "<ul><li>Call Sarah (555-0198)</li><li>Contact Laura Chen at Maple Mutual to open a claim</li><li>Pay the house account from Maple Bank until things are settled</li></ul>",
+      category: "wishes",
+      folderId: FOLDERS[0].id,
+      contactIds: [],
+    }}
+    saved={[
+      {
+        id: "1" as Id<"vault_item_files">,
+        kind: "document",
+        name: "Home insurance policy.pdf",
+        detail: "Scanned · 3 pages · 2.4 MB",
+      },
+      {
+        id: "2" as Id<"vault_item_files">,
+        kind: "image",
+        name: "Spare keys location.jpg",
+        detail: "Photo · 1.1 MB",
+      },
+      {
+        id: "3" as Id<"vault_item_files">,
+        kind: "audio",
+        name: "Voice note",
+        detail: "0:28 · Recorded in this browser",
+      },
+    ]}
+    folders={FOLDERS}
+    saving={null}
+    onSave={noop}
+    onCancel={noop}
+    onScan={noop}
+    onRecordVoice={async () => null}
+  />
+);
+
+// W06-6 meter: Figma's 29 recorded bars (px) as levels.
+const LEVELS = [
+  10, 18, 26, 14, 34, 22, 40, 28, 16, 30, 44, 24, 12, 20, 36, 26, 18, 32, 14,
+  22, 38, 28, 16, 24, 12, 30, 20, 14, 26,
+].map((height) => (height - 6) / 38);
+
+export const recordVoice = () => (
+  <>
+    <HubView {...hub} />
+    <Modal
+      open
+      onOpenChange={noop}
+      title="Record a voice note"
+      description="Leave a message in your own voice for the people you trust."
+      width="w-[580px]"
+    >
+      <VoiceRecorderBody
+        meter={<VoiceMeter state="recording" elapsed={28} levels={LEVELS} />}
+        fields={
+          <>
+            <Field label="Title">
+              {(id) => (
+                <Input
+                  id={id}
+                  variant="field"
+                  value="Message for Sarah"
+                  readOnly
+                />
+              )}
+            </Field>
+            <div className="grid gap-[16px] sm:grid-cols-2">
+              <FolderField
+                value={FOLDERS[0].id}
+                onChange={noop}
+                folders={FOLDERS}
+              />
+              <AccessField value={[]} onChange={noop} folder={FOLDERS[0]} />
+            </div>
+          </>
+        }
+        paused={false}
+        onDiscard={noop}
+        onReset={noop}
+        onPause={noop}
+        onSave={noop}
+        saveLabel="Save voice note"
+        busy={false}
+      />
+    </Modal>
   </>
 );

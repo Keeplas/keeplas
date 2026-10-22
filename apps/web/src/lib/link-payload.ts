@@ -1,7 +1,6 @@
-// Helpers for the always-on "Linked URLs" section on every vault item. The
-// list of URLs is encoded as a JSON array, encrypted with the item's DEK,
-// and stored in the optional encryptedLinks field. parseLinks tolerates any
-// malformed payload by returning an empty array — never throws.
+// Links saved on a vault item (v1 items, imported archives): a JSON array of
+// URLs, encrypted with the item's DEK, in the optional encryptedLinks field.
+// parseLinks tolerates any malformed payload by returning an empty array.
 
 export function serializeLinks(urls: string[]): string {
   return JSON.stringify(urls);
@@ -16,14 +15,5 @@ export function parseLinks(plaintext: string): string[] {
     return [];
   } catch {
     return [];
-  }
-}
-
-export function isValidUrl(value: string): boolean {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
   }
 }

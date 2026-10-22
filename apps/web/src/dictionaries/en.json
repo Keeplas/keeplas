@@ -326,7 +326,7 @@
       },
       "video": {
         "title": "Video",
-        "description": "Upload or record a video"
+        "description": "Upload a video from this computer"
       },
       "scan": {
         "title": "Scan with my phone",
@@ -2792,6 +2792,75 @@
       "cancel": "Cancel upload",
       "background": "Continue in background",
       "open": "Open item"
+    },
+    "editor": {
+      "newTitle": "New note",
+      "newSubtitle": "Write instructions, attach files and choose who can see them.",
+      "editTitle": "Edit",
+      "editSubtitle": "Change the note, its files and who can see them.",
+      "editCrumb": "Edit",
+      "welcomeTitle": "Welcome message",
+      "welcomeSubtitle": "What your trusted contacts read first when your vault is passed on to them.",
+      "lifeCheck": "Life check",
+      "untitled": "Untitled",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Give your note a title",
+      "titleRequired": "Give your note a title.",
+      "notePlaceholder": "Write something…",
+      "tools": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "list": "List"
+      },
+      "attachments": "Attachments · {count}",
+      "add": "Add",
+      "remove": "Remove",
+      "recordedHere": "Recorded in this browser",
+      "attach": {
+        "scan": "Scan with phone",
+        "photo": "Photo",
+        "voice": "Voice note",
+        "file": "File",
+        "video": "Video"
+      },
+      "organize": "Organize",
+      "everyone": "All your trusted contacts",
+      "whenLabel": "When they can open it",
+      "afterLifeCheck": "After a missed life check",
+      "people": "{count} trusted people",
+      "peopleOne": "1 trusted person",
+      "encrypted": "Your note and attachments are encrypted in this browser before they leave it.",
+      "legacy": "This item uses an older encryption format: save it once, then share it from its page.",
+      "cancel": "Cancel",
+      "save": "Save note",
+      "saving": "Saving…",
+      "savingPercent": "Saving… {percent}%",
+      "saveFailed": "Your changes weren't saved. Try again."
+    },
+    "voice": {
+      "title": "Record a voice note",
+      "description": "Leave a message in your own voice for the people you trust.",
+      "status": {
+        "recording": "Recording… max 10 minutes",
+        "paused": "Paused",
+        "starting": "Starting the microphone…"
+      },
+      "titleLabel": "Title",
+      "titlePlaceholder": "Message for…",
+      "defaultName": "Voice note",
+      "encrypted": "Recorded and encrypted in this browser. The audio is never stored unencrypted.",
+      "discard": "Discard",
+      "reset": "Reset",
+      "pause": "Pause",
+      "resume": "Resume",
+      "save": "Save voice note",
+      "attach": "Add to note",
+      "resetTitle": "Start this recording over?",
+      "resetBody": "Your {time} recording will be deleted from this browser and you can record again. This cannot be undone.",
+      "resetConfirm": "Delete and record again",
+      "resetKeep": "Keep this recording"
     }
   }
 }
