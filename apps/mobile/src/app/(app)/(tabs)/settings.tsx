@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -119,7 +119,14 @@ export default function Settings() {
             })}
           </Text>
         </Card>
-      ) : null}
+      ) : (
+        <Card>
+          <ActivityIndicator color={colors["text.muted"]} />
+          <View
+            style={[styles.bar, { backgroundColor: colors["progress.track"] }]}
+          />
+        </Card>
+      )}
       <Text variant="label">{t("settings.account")}</Text>
       <ListRow
         icon="laptop"
