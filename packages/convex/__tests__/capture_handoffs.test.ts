@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { CAPTURE_QR_TTL_MS } from "../capture_handoffs";
-import { buildCaptureQr, parseCaptureQr } from "../lib/capture_qr";
+import {
+  buildCaptureQr,
+  CAPTURE_QR_TTL_MS,
+  parseCaptureQr,
+} from "../lib/capture_qr";
 import {
   asUser,
   makeT,

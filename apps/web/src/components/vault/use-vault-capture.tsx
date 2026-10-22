@@ -65,9 +65,11 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
 
   async function submit(values: AddFileValues) {
     const single = values.files.length === 1;
-    const started = await Promise.all(
-      values.files.map((file) =>
-        createItem(
+    // One after another: a blocked key check asks the owner once at a time.
+    const started: (string | null)[] = [];
+    for (const file of values.files) {
+      started.push(
+        await createItem(
           {
             title: single
               ? values.title.trim() || titleOf(file.name)
@@ -87,8 +89,8 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
           },
           !single,
         ),
-      ),
-    );
+      );
+    }
     setAdding(null);
     const [jobId] = started;
     if (single && jobId) {
@@ -109,7 +111,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
     }
   }
 
-  async function saveVoice(values: VoiceItemValues) {
+  async function saveVoice(values: VoiceItemValues): Promise<boolean> {
     const jobId = await createItem({
       title: values.title,
       note: "",
@@ -118,7 +120,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
       contactIds: values.contactIds,
       files: [values.file],
     });
-    if (!jobId) return;
+    if (!jobId) return false;
     setSecuring({
       jobId,
       file: {
@@ -127,6 +129,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
         detail: formatClock(values.file.durationSec ?? 0),
       },
     });
+    return true;
   }
 
   return {

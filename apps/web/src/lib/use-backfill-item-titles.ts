@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Doc } from "@keeplas/backend/_generated/dataModel";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { useVaultCrypto } from "./use-vault-crypto";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useAuditedMutation } from "./use-audited-mutation";
@@ -12,11 +12,18 @@ import { useAuditedMutation } from "./use-audited-mutation";
  * plaintext copy via `backfillItemTitle`. Runs whenever the owner's item list is
  * in memory; converges over a session and no-ops once every row is migrated.
  *
- * Pass the same `getItems` result the screen already subscribes to — no extra
+ * Pass the item list already subscribed to (`getItemSummaries`) — no extra
  * query. Mutations run sequentially to stay gentle on a large vault.
  */
 export function useBackfillItemTitles(
-  items: Doc<"vault_items">[] | undefined,
+  items:
+    | {
+        _id: Id<"vault_items">;
+        title?: string;
+        encryptedTitle?: string;
+        ownerWrappedDek?: string;
+      }[]
+    | undefined,
 ): void {
   const { encryptContent, encryptContentWithKey, isReady } = useVaultCrypto();
   const { unwrapOwnerDek, isReady: recipientReady } = useRecipientCrypto();

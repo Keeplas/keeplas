@@ -5,7 +5,6 @@ import { listCounts } from "@keeplas/backend/lib/vault_groups";
 import { Loader } from "@keeplas/ui";
 import { ReturnAfterReleaseBanner } from "@/components/return-after-release-banner";
 import { useVaultCapture } from "@/components/vault/use-vault-capture";
-import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
 import { useItemLabels } from "@/lib/use-item-labels";
 import { useVaultData } from "@/lib/vault-data";
 import { HubView } from "./hub-view";
@@ -22,7 +21,6 @@ export default function HubPage() {
   const { items } = useVaultData();
   const labels = useItemLabels();
   const capture = useVaultCapture();
-  useBackfillItemMeta();
 
   const counts = useMemo(() => listCounts(items ?? []), [items]);
 

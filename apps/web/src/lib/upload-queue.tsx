@@ -126,6 +126,11 @@ function uploadWithProgress(
   signal?: AbortSignal,
 ): Promise<StorageRef> {
   return new Promise((resolve, reject) => {
+    // Cancelled while the upload URL was being issued: send nothing.
+    if (signal?.aborted) {
+      reject(new CancelledError());
+      return;
+    }
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/octet-stream");
@@ -324,8 +329,11 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
       }
       handle.dismiss();
       const retryFiles = failed.map((f) => files[f.index]);
+      // A full plan explains every failure; show it over a network error.
+      const cause =
+        failed.find((f) => isQuotaError(f.error))?.error ?? failed[0].error;
       await fail(
-        failed[0].error,
+        cause,
         retryFiles[0].name,
         () => void runAttachRef.current?.({ ...args, files: retryFiles }),
       );
@@ -386,6 +394,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         report("uploading");
         const files: SealedFile[] = new Array(sealed.length);
         await inSlots(sealed, async (file, index) => {
+          if (controller.signal.aborted) throw new CancelledError();
           files[index] = {
             storageId: await upload(
               file.cipherBlob,
@@ -461,9 +470,15 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     controllers.current.get(jobId)?.abort();
   }, []);
 
+  // Read through a ref: `background` stays stable while progress updates.
+  const jobsRef = useRef(jobs);
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
+
   const background = useCallback(
     (jobId: string) => {
-      const job = jobs[jobId];
+      const job = jobsRef.current[jobId];
       if (!job || !controllers.current.has(jobId)) return;
       showToast(
         jobId,
@@ -472,7 +487,7 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
         job.total,
       );
     },
-    [jobs, showToast],
+    [showToast],
   );
 
   const value = useMemo(

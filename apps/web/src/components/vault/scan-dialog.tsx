@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { buildCaptureQr } from "@keeplas/backend/lib/capture_qr";
+import {
+  buildCaptureQr,
+  CAPTURE_QR_TTL_MS,
+} from "@keeplas/backend/lib/capture_qr";
 import { Button, Icon, toast } from "@keeplas/ui";
 import { QRCodeSVG } from "@/components/qr-code-svg";
 import { Modal } from "@/components/v2/modal";
@@ -18,14 +21,18 @@ const STEPS = ["open", "add", "point"] as const;
 
 interface Session {
   handoffId: Id<"capture_handoffs">;
-  expiresAt: number;
+  /** When to show a new code, on this computer's clock. */
+  deadline: number;
 }
+
+const RENEW_EARLY_MS = 5_000;
 
 /** W06-7 body: the QR, the three steps, the live status, the actions. */
 export function ScanView({
   qr,
   status,
   remainingMs,
+  onRenew,
   onUpload,
   onCancel,
 }: {
@@ -33,6 +40,8 @@ export function ScanView({
   qr: string | undefined;
   status: "waiting" | "claimed";
   remainingMs: number;
+  /** A phone claimed the code but the scan never came: start over. */
+  onRenew: () => void;
   onUpload: () => void;
   onCancel: () => void;
 }) {
@@ -79,9 +88,20 @@ export function ScanView({
               path={ICON_PATHS.sync}
               className="size-[16px] shrink-0 text-text-accent motion-safe:animate-spin motion-safe:[animation-duration:3s]"
             />
-            {status === "claimed"
-              ? t("scanning")
-              : t("waiting", { time: formatClock(remainingMs / 1000) })}
+            <span className="flex-1">
+              {status === "claimed"
+                ? t("scanning")
+                : t("waiting", { time: formatClock(remainingMs / 1000) })}
+            </span>
+            {status === "claimed" ? (
+              <button
+                type="button"
+                onClick={onRenew}
+                className="shrink-0 rounded-xs font-semibold text-text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+              >
+                {t("newCode")}
+              </button>
+            ) : null}
           </li>
         </ol>
       </div>
@@ -146,24 +166,38 @@ function ScanSession({
     session ? { handoffId: session.handoffId } : "skip",
   );
   const creating = useRef(false);
+  const opened = useRef(false);
 
-  const waiting = !handoff || handoff.status === "waiting";
-  const expired = session !== null && waiting && now >= session.expiresAt;
+  // Gone (replaced or purged), or unclaimed past its deadline: a new code.
+  const stale =
+    session !== null &&
+    (handoff === null ||
+      (handoff?.status !== "claimed" &&
+        handoff?.status !== "completed" &&
+        now >= session.deadline));
 
-  // A first code, then a new one each time the last expires unclaimed.
   useEffect(() => {
-    if ((session && !expired) || creating.current) return;
+    if ((session && !stale) || creating.current) return;
     creating.current = true;
     create({})
-      .then((next) => setSession(next as Session))
+      .then((next) =>
+        setSession({
+          handoffId: (next as { handoffId: Id<"capture_handoffs"> }).handoffId,
+          // Measured on this computer's clock (it may differ from the
+          // server's), a few seconds before the server stops accepting it.
+          deadline: Date.now() + CAPTURE_QR_TTL_MS - RENEW_EARLY_MS,
+        }),
+      )
       .catch(() => toast({ variant: "error", title: t("failed") }))
       .finally(() => {
         creating.current = false;
       });
-  }, [session, expired, create, t]);
+  }, [session, stale, create, t]);
 
   useEffect(() => {
     if (handoff?.status !== "completed" || !handoff.itemId) return;
+    if (opened.current) return;
+    opened.current = true;
     toast({ variant: "success", title: t("saved") });
     onClose();
     router.push(`/vault/${handoff.itemId}`);
@@ -172,12 +206,13 @@ function ScanSession({
   return (
     <ScanView
       qr={
-        session && !expired
+        session && !stale
           ? buildCaptureQr(window.location.origin, session.handoffId)
           : undefined
       }
       status={handoff?.status === "claimed" ? "claimed" : "waiting"}
-      remainingMs={session ? Math.max(0, session.expiresAt - now) : 0}
+      remainingMs={session ? Math.max(0, session.deadline - now) : 0}
+      onRenew={() => setSession(null)}
       onUpload={() => {
         onClose();
         onUpload();

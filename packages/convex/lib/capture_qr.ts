@@ -6,6 +6,9 @@
 
 const QR_PATH = "/capture";
 
+/** How long a QR can be claimed. */
+export const CAPTURE_QR_TTL_MS = 2 * 60 * 1000;
+
 /** capture_handoffs.claim errors (ConvexError data). */
 export const CAPTURE_HANDOFF_INVALID = "CAPTURE_HANDOFF_INVALID";
 export const CAPTURE_HANDOFF_EXPIRED = "CAPTURE_HANDOFF_EXPIRED";

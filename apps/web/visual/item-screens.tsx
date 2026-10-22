@@ -385,6 +385,7 @@ export const scanWithPhone = () => (
         qr="https://app.keeplas.com/capture#h=k57f3qa8w2c9e4r6t1y0u5i8o3p2"
         status="waiting"
         remainingMs={105_000}
+        onRenew={noop}
         onUpload={noop}
         onCancel={noop}
       />

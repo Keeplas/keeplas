@@ -7,6 +7,7 @@ import { requireFullAuth } from "./helpers";
 import {
   CAPTURE_HANDOFF_EXPIRED,
   CAPTURE_HANDOFF_INVALID,
+  CAPTURE_QR_TTL_MS,
 } from "./lib/capture_qr";
 
 /**
@@ -21,7 +22,6 @@ import {
  * the two screens. Rows are purged an hour after creation.
  */
 
-export const CAPTURE_QR_TTL_MS = 2 * 60 * 1000;
 const PURGE_AFTER_MS = 60 * 60 * 1000;
 
 /** Browser: a new QR (any earlier waiting one stops working). */

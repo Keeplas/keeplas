@@ -146,9 +146,12 @@ export function SecuringDialog({
           </Button>
         ) : (
           <>
-            <Button variant="plain" size="regular" onClick={onCancel}>
-              {t("cancel")}
-            </Button>
+            {/* Once the item is being created there is nothing to cancel. */}
+            {phase === "saving" ? null : (
+              <Button variant="plain" size="regular" onClick={onCancel}>
+                {t("cancel")}
+              </Button>
+            )}
             <Button variant="bordered" size="regular" onClick={onBackground}>
               {t("background")}
             </Button>

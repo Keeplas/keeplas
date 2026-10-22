@@ -28,17 +28,21 @@ export function useDecryptedFiles(
   );
   const started = useRef(new Set<string>());
   const urls = useRef<string[]>([]);
+  // Bumped when the key changes or the screen unmounts: a download that
+  // finishes afterwards is stale, and its plaintext is freed at once.
+  const generation = useRef(0);
 
   // A new key (another item) starts over.
-  useEffect(() => {
-    const created = urls.current;
-    return () => {
-      created.forEach((url) => URL.revokeObjectURL(url));
+  useEffect(
+    () => () => {
+      generation.current += 1;
+      urls.current.forEach((url) => URL.revokeObjectURL(url));
       urls.current = [];
       started.current = new Set();
       setDecrypted(new Map());
-    };
-  }, [key]);
+    },
+    [key],
+  );
 
   const wantedKey = wanted.join(",");
   useEffect(() => {
@@ -47,6 +51,7 @@ export function useDecryptedFiles(
       const file = files.find((candidate) => candidate._id === id);
       if (!file || started.current.has(id)) continue;
       started.current.add(id);
+      const run = generation.current;
       void (async () => {
         let entry: DecryptedFile;
         try {
@@ -61,6 +66,7 @@ export function useDecryptedFiles(
           const plain = legacy
             ? await decryptBlob(cipher, file.iv)
             : await decryptBlobWithKey(cipher, file.iv, key);
+          if (run !== generation.current) return;
           const blob = new Blob([plain], { type: file.mimeType });
           const url = URL.createObjectURL(blob);
           urls.current.push(url);
@@ -68,7 +74,9 @@ export function useDecryptedFiles(
         } catch {
           entry = { status: "error" };
         }
-        setDecrypted((current) => new Map(current).set(id, entry));
+        if (run === generation.current) {
+          setDecrypted((current) => new Map(current).set(id, entry));
+        }
       })();
     }
   }, [files, wantedKey, key, legacy, convex, decryptBlob, decryptBlobWithKey]);

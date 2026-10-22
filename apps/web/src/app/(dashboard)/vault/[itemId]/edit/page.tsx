@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Id } from "@keeplas/backend/_generated/dataModel";
+import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
 import { contentKind } from "@keeplas/backend/lib/vault_groups";
 import { Loader, toast } from "@keeplas/ui";
 import {
@@ -9,6 +9,7 @@ import {
   type NoteValues,
   type SavedAttachment,
 } from "@/components/vault/note-editor";
+import { ItemUnavailable } from "@/components/vault/item-unavailable";
 import { useVaultCapture } from "@/components/vault/use-vault-capture";
 import { useVoiceAttach } from "@/components/vault/use-voice-attach";
 import { useTranslations } from "@/lib/i18n";
@@ -22,26 +23,66 @@ import {
   useItemSharing,
   useMoveToFolder,
 } from "@/lib/use-item-sharing";
-import { useOpenedItem } from "@/lib/use-opened-item";
+import {
+  summaryOf,
+  useOpenedItem,
+  type OpenedItem,
+} from "@/lib/use-opened-item";
+import type { OpenedFile } from "@/lib/use-opened-files";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useUploadQueue } from "@/lib/upload-queue";
 import { getErrorMessage } from "@/lib/utils";
 import { useVaultData } from "@/lib/vault-data";
+import type { VaultItemSummary } from "@/lib/vault-list";
 
 const sameIds = (a: string[], b: string[]) =>
   a.length === b.length && a.every((id) => b.includes(id));
 
 /** W06-5 on an existing item: edit its note, files and organization. */
 export default function EditItemPage() {
-  const t = useTranslations("vaultItem.editor");
-  const lists = useTranslations("vaultList");
   const params = useParams();
   const itemId = params.itemId as Id<"vault_items">;
+  const labels = useItemLabels();
+  const { raw, opened, files, failed } = useOpenedItem(itemId);
+  const summary = useMemo(
+    () => (raw && opened && files ? summaryOf(raw, opened, files) : undefined),
+    [raw, opened, files],
+  );
+
+  if (raw === null || failed) return <ItemUnavailable missing={raw === null} />;
+  // Who can see the item must be known before the form starts from it.
+  if (!raw || !opened || !files || !summary || !labels.ready) {
+    return <Loader />;
+  }
+  return (
+    <EditItem
+      key={itemId}
+      raw={raw}
+      opened={opened}
+      files={files}
+      summary={summary}
+    />
+  );
+}
+
+function EditItem({
+  raw,
+  opened,
+  files,
+  summary,
+}: {
+  raw: Doc<"vault_items">;
+  opened: OpenedItem;
+  files: OpenedFile[];
+  summary: VaultItemSummary;
+}) {
+  const t = useTranslations("vaultItem.editor");
+  const lists = useTranslations("vaultList");
   const router = useRouter();
+  const itemId = raw._id;
   const { folders } = useVaultData();
   const labels = useItemLabels();
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const { raw, opened, files } = useOpenedItem(itemId);
   const { encryptContentWithKey } = useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
   const moveToFolder = useMoveToFolder();
@@ -51,43 +92,29 @@ export default function EditItemPage() {
   // "Scan with phone": the scan is saved as its own item (W06-7).
   const capture = useVaultCapture();
   const [saving, setSaving] = useState(false);
+  // Who it is shared with when the form opened (also through v1 groups),
+  // folder grantees aside: sharing is rewritten only if the owner changes it.
+  const [recipients] = useState(() => labels.recipients(summary));
 
   const saved = useMemo<SavedAttachment[]>(
     () =>
-      (files ?? []).map((file) => ({
+      files.map((file) => ({
         id: file._id,
         kind: file.kind,
         name: file.name,
-        detail:
-          raw && opened
-            ? labels.detail({
-                id: raw._id,
-                title: opened.title,
-                category: opened.category,
-                kind: contentKind([file]),
-                files: [file],
-                sharing: {
-                  accessLevel: raw.accessLevel,
-                  recipientMode: raw.recipientMode ?? "default",
-                  contacts: raw.sharedWithContacts,
-                  groups: raw.sharedWithGroups ?? [],
-                },
-                createdAt: raw.createdAt,
-                updatedAt: raw.updatedAt,
-              })
-            : "",
+        detail: labels.detail({
+          ...summary,
+          kind: contentKind([file]),
+          files: [file],
+        }),
       })),
-    [files, raw, opened, labels],
+    [summary, files, labels],
   );
 
-  if (!raw || !opened || !files) return <Loader />;
-
   const welcome = raw.isReleaseIntroduction === true;
-  const direct = raw.recipientMode === "explicit" ? raw.sharedWithContacts : [];
   const initialFolder = raw.folderId ?? null;
 
   async function save(values: NoteValues) {
-    if (!raw || !opened) return;
     setSaving(true);
     try {
       const key = opened.key;
@@ -95,9 +122,10 @@ export default function EditItemPage() {
       if (folderChanged && !(await moveToFolder(raw, values.folderId))) return;
 
       // Sharing is rewritten only when it changed: v1 group and "every
-      // trusted contact" shares stay as they are otherwise.
+      // trusted contact" shares stay as they are otherwise. A folder move
+      // alone is done: moveItem wraps the key to the new folder's grantees.
       let sharing: Partial<Parameters<typeof updateItem>[0]> = {};
-      if (!sameIds(values.contactIds, direct) || folderChanged) {
+      if (!sameIds(values.contactIds, recipients)) {
         const grantees = (
           folders?.find((folder) => folder.id === values.folderId)?.grants ?? []
         ).map((grant) => grant.contactId);
@@ -183,7 +211,7 @@ export default function EditItemPage() {
           note: normalizeContentForRichText(opened.note),
           category: opened.category,
           folderId: initialFolder,
-          contactIds: direct,
+          contactIds: recipients,
         }}
         saved={saved}
         folders={folders ?? []}

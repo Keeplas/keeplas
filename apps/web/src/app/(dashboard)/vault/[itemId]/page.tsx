@@ -18,6 +18,7 @@ import {
   InfoCallout,
   Loader,
   RichTextEditor,
+  toast,
   useConfirm,
 } from "@keeplas/ui";
 import { StateMessage } from "@/components/state-message";
@@ -29,6 +30,7 @@ import {
 } from "@/components/vault/details-panel";
 import { FileRow } from "@/components/vault/file-row";
 import { HistorySheet } from "@/components/vault/history-sheet";
+import { ItemUnavailable } from "@/components/vault/item-unavailable";
 import { DocumentPages } from "@/components/vault/preview/document-pages";
 import {
   MediaPlayer,
@@ -57,11 +59,11 @@ import {
   useItemSharing,
   useMoveToFolder,
 } from "@/lib/use-item-sharing";
-import { useOpenedItem } from "@/lib/use-opened-item";
+import { summaryOf, useOpenedItem } from "@/lib/use-opened-item";
 import type { OpenedFile } from "@/lib/use-opened-files";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useVaultData } from "@/lib/vault-data";
-import { extensionOf, type VaultItemSummary } from "@/lib/vault-list";
+import { extensionOf } from "@/lib/vault-list";
 import type { VaultCategory } from "@/lib/vault-categories";
 import { ItemLayout } from "./item-layout";
 
@@ -139,25 +141,10 @@ export default function VaultItemPage() {
     [opened, decryptContent, decryptContentWithKey],
   );
 
-  const summary = useMemo<VaultItemSummary | undefined>(() => {
-    if (!raw || !opened || !files || !kind) return undefined;
-    return {
-      id: raw._id,
-      title: opened.title,
-      category: opened.category,
-      kind,
-      files,
-      folderId: raw.folderId,
-      sharing: {
-        accessLevel: raw.accessLevel,
-        recipientMode: raw.recipientMode ?? "default",
-        contacts: raw.sharedWithContacts,
-        groups: raw.sharedWithGroups ?? [],
-      },
-      createdAt: raw.createdAt,
-      updatedAt: raw.updatedAt,
-    };
-  }, [raw, opened, files, kind]);
+  const summary = useMemo(
+    () => (raw && opened && files ? summaryOf(raw, opened, files) : undefined),
+    [raw, opened, files],
+  );
 
   const activity = useMemo<ActivityEntry[]>(() => {
     if (!raw) return [];
@@ -199,24 +186,7 @@ export default function VaultItemPage() {
   if (raw === undefined || (raw && !opened && !failed)) return <Loader />;
 
   if (raw === null || failed || !opened || !summary) {
-    return (
-      <div className="flex justify-center pt-[80px]">
-        <StateMessage
-          icon={ICON_PATHS.alertTriangle}
-          title={raw === null ? t("missing.title") : t("locked.title")}
-          body={raw === null ? t("missing.body") : t("locked.body")}
-        >
-          <Button
-            variant="primary"
-            size="cta"
-            className="w-full"
-            onClick={() => router.push("/vault")}
-          >
-            {t("backToVault")}
-          </Button>
-        </StateMessage>
-      </div>
-    );
+    return <ItemUnavailable missing={raw === null} />;
   }
 
   const archived = raw.status === "archived";
@@ -225,12 +195,20 @@ export default function VaultItemPage() {
     contactId: grant.contactId,
     contactName: grant.contactName,
   }));
-  const direct = raw.recipientMode === "explicit" ? raw.sharedWithContacts : [];
+  const recipients = labels.recipients(summary);
   const list: VaultListKey = bucketOf(summary);
   const access = labels.access(summary);
-  const canShare = !archived && !opened.legacy;
+  // The picker starts from who can see it: wait until people are loaded.
+  const canShare = !archived && !opened.legacy && labels.ready;
 
   async function share(contactIds: ContactId[]) {
+    // Unchanged: keep v1 group and "every trusted contact" shares as they are.
+    if (
+      contactIds.length === recipients.length &&
+      contactIds.every((id) => recipients.includes(id))
+    ) {
+      return;
+    }
     const wraps = await wrap(
       [...contactIds, ...grantees.map((grantee) => grantee.contactId)],
       opened!.key,
@@ -605,6 +583,11 @@ export default function VaultItemPage() {
                         void moveToFolder(
                           raw,
                           value === NO_FOLDER ? null : (value as Id<"folders">),
+                        ).catch(() =>
+                          toast({
+                            variant: "error",
+                            title: t("details.moveFailed"),
+                          }),
                         )
                       }
                     >
@@ -641,7 +624,7 @@ export default function VaultItemPage() {
       <AccessDialog
         open={sharing}
         onOpenChange={setSharing}
-        initial={direct}
+        initial={recipients}
         inherited={grantees}
         folderName={folder?.name ?? undefined}
         onSave={share}

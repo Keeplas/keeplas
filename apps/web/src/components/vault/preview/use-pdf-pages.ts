@@ -45,7 +45,8 @@ async function renderPage(
 /**
  * A decrypted PDF rendered page by page in this browser (pdf.js, in a
  * worker): every thumbnail, and the current page at the zoom level.
- * `error` when the file is damaged or password protected.
+ * `error` when the file is damaged or password protected. State belongs to
+ * the file it was made for, so another file starts clean.
  */
 export function usePdfPages(
   file: Blob | null,
@@ -56,12 +57,19 @@ export function usePdfPages(
   page: PageImage | undefined;
   error: boolean;
 } {
-  const [pdf, setPdf] = useState<PDFDocumentProxy>();
-  const [thumbnails, setThumbnails] = useState<(string | undefined)[]>([]);
-  const [page, setPage] = useState<PageImage>();
-  const [error, setError] = useState(false);
+  const [doc, setDoc] = useState<{ file: Blob; pdf: PDFDocumentProxy }>();
+  const [thumbs, setThumbs] = useState<{
+    file: Blob;
+    list: (string | undefined)[];
+  }>();
+  const [shownPage, setShownPage] = useState<{
+    file: Blob;
+    image: PageImage;
+  }>();
+  const [failed, setFailed] = useState<Blob | null>(null);
   // The page on screen: revoked once the next render replaces it.
   const shown = useRef<string>(undefined);
+  const pdf = doc && doc.file === file ? doc.pdf : undefined;
 
   useEffect(
     () => () => {
@@ -79,18 +87,28 @@ export function usePdfPages(
       try {
         opened = await loadPdf(await file.arrayBuffer());
         if (!alive) return;
-        setPdf(opened);
-        setThumbnails(new Array(opened.numPages).fill(undefined));
+        setDoc({ file, pdf: opened });
+        setThumbs({ file, list: new Array(opened.numPages).fill(undefined) });
         for (let index = 0; index < opened.numPages; index += 1) {
           const thumb = await renderPage(opened, index, THUMB_WIDTH);
+          if (!alive) {
+            URL.revokeObjectURL(thumb.src);
+            return;
+          }
           urls.push(thumb.src);
-          if (!alive) return;
-          setThumbnails((list) =>
-            list.map((src, at) => (at === index ? thumb.src : src)),
+          setThumbs((state) =>
+            state?.file === file
+              ? {
+                  file,
+                  list: state.list.map((src, at) =>
+                    at === index ? thumb.src : src,
+                  ),
+                }
+              : state,
           );
         }
       } catch {
-        if (alive) setError(true);
+        if (alive) setFailed(file);
       }
     })();
     return () => {
@@ -101,7 +119,7 @@ export function usePdfPages(
   }, [file]);
 
   useEffect(() => {
-    if (!pdf) return;
+    if (!pdf || !file) return;
     let alive = true;
     renderPage(pdf, current, PAGE_WIDTH * zoom)
       .then((image) => {
@@ -112,17 +130,24 @@ export function usePdfPages(
         if (shown.current) URL.revokeObjectURL(shown.current);
         shown.current = image.src;
         // Laid out at its 100 % size times the zoom.
-        setPage({
-          src: image.src,
-          width: image.width / zoom,
-          height: image.height / zoom,
+        setShownPage({
+          file,
+          image: {
+            src: image.src,
+            width: image.width / zoom,
+            height: image.height / zoom,
+          },
         });
       })
-      .catch(() => alive && setError(true));
+      .catch(() => alive && setFailed(file));
     return () => {
       alive = false;
     };
-  }, [pdf, current, zoom]);
+  }, [pdf, file, current, zoom]);
 
-  return { thumbnails, page, error };
+  return {
+    thumbnails: thumbs?.file === file ? thumbs.list : [],
+    page: shownPage?.file === file ? shownPage.image : undefined,
+    error: failed !== null && failed === file,
+  };
 }

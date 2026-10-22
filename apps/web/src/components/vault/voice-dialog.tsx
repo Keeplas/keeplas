@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { Button, cn, Icon, Input, useConfirm } from "@keeplas/ui";
+import { Button, cn, Icon, Input, toast, useConfirm } from "@keeplas/ui";
 import { PermissionOffMessage } from "@/components/permission-off-message";
 import { Modal } from "@/components/v2/modal";
 import { formatCountdown } from "@/lib/format";
@@ -10,6 +10,7 @@ import type { QueuedFile } from "@/lib/upload-queue";
 import {
   LEVEL_BARS,
   useVoiceRecorder,
+  type Recording,
   type RecorderState,
 } from "@/lib/use-voice-recorder";
 import type { FolderSummary } from "@/lib/vault-data";
@@ -110,7 +111,8 @@ export function VoiceDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   folders: FolderSummary[];
-  onSave?: (values: VoiceItemValues) => Promise<void>;
+  /** Resolves false when nothing was saved (the dialog stays open). */
+  onSave?: (values: VoiceItemValues) => Promise<boolean>;
   onAttach?: (file: QueuedFile) => void;
 }) {
   const t = useTranslations("vaultItem.voice");
@@ -140,7 +142,7 @@ function VoiceForm({
   onClose,
 }: {
   folders: FolderSummary[];
-  onSave?: (values: VoiceItemValues) => Promise<void>;
+  onSave?: (values: VoiceItemValues) => Promise<boolean>;
   onAttach?: (file: QueuedFile) => void;
   onClose: () => void;
 }) {
@@ -151,6 +153,8 @@ function VoiceForm({
   const [folderId, setFolderId] = useState<Id<"folders"> | null>(null);
   const [contactIds, setContactIds] = useState<Id<"trusted_contacts">[]>([]);
   const [saving, setSaving] = useState(false);
+  // The finished take, kept so a failed save can be retried.
+  const [take, setTake] = useState<Recording | null>(null);
 
   if (recorder.state === "denied" || recorder.state === "unavailable") {
     return (
@@ -171,13 +175,17 @@ function VoiceForm({
       confirmLabel: t("resetConfirm"),
       cancelLabel: t("resetKeep"),
     });
-    if (ok) recorder.reset();
+    if (ok) {
+      setTake(null);
+      recorder.reset();
+    }
   }
 
   async function save() {
     setSaving(true);
     try {
-      const recording = await recorder.finish();
+      const recording = take ?? (await recorder.finish());
+      setTake(recording);
       const name = `${title.trim() || t("defaultName")}.${
         recording.mimeType.includes("mp4") ? "m4a" : "webm"
       }`;
@@ -190,15 +198,19 @@ function VoiceForm({
       };
       if (onAttach) {
         onAttach(file);
-      } else {
+        onClose();
+      } else if (
         await onSave?.({
           title: title.trim() || t("defaultName"),
           folderId,
           contactIds,
           file,
-        });
+        })
+      ) {
+        onClose();
       }
-      onClose();
+    } catch {
+      toast({ variant: "error", title: t("saveFailed") });
     } finally {
       setSaving(false);
     }

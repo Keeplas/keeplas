@@ -9,6 +9,8 @@ import { useOpenedFiles, type OpenedFile } from "./use-opened-files";
 import { useVaultCrypto } from "./use-vault-crypto";
 import { useVaultData } from "./vault-data";
 import type { VaultCategory } from "./vault-categories";
+import type { VaultItemSummary } from "./vault-list";
+import { contentKind } from "@keeplas/backend/lib/vault_groups";
 
 export interface OpenedItem {
   title: string;
@@ -89,4 +91,28 @@ export function useOpenedItem(itemId: Id<"vault_items">): {
   );
 
   return { raw, opened, files, failed };
+}
+
+/** The list-style summary of an opened item (labels, access, detail). */
+export function summaryOf(
+  raw: Doc<"vault_items">,
+  opened: OpenedItem,
+  files: OpenedFile[],
+): VaultItemSummary {
+  return {
+    id: raw._id,
+    title: opened.title,
+    category: opened.category,
+    kind: contentKind(files),
+    files,
+    folderId: raw.folderId,
+    sharing: {
+      accessLevel: raw.accessLevel,
+      recipientMode: raw.recipientMode ?? "default",
+      contacts: raw.sharedWithContacts,
+      groups: raw.sharedWithGroups ?? [],
+    },
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  };
 }

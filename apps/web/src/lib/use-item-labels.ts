@@ -59,6 +59,10 @@ export function useItemLabels() {
     }
 
     return {
+      /** Contacts, groups and folders loaded: access labels are final. */
+      ready:
+        contacts !== undefined && groups !== undefined && folders !== undefined,
+
       title(item: VaultItemSummary): string {
         if (item.title === null) return t("locked");
         return item.title.trim() || t("untitled");
@@ -109,6 +113,18 @@ export function useItemLabels() {
       folder(item: VaultItemSummary): string | null {
         if (!item.folderId) return null;
         return folderOf(item)?.name ?? null;
+      },
+
+      /**
+       * Who the item itself is shared with (one by one, by group, or every
+       * trusted contact), without its folder's grantees: what the sharing
+       * pickers start from.
+       */
+      recipients(item: VaultItemSummary): Id<"trusted_contacts">[] {
+        return sharedWith(item.sharing, {
+          ...people(item),
+          folderGrantees: [],
+        });
       },
 
       access(item: VaultItemSummary): ItemAccess {
