@@ -14,7 +14,13 @@
       "associatedDomains": [
         "webcredentials:app.keeplas.com",
         "applinks:app.keeplas.com"
-      ]
+      ],
+      "entitlements": {
+        "com.apple.developer.devicecheck.appattest-environment": "production"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.keeplas.app",
