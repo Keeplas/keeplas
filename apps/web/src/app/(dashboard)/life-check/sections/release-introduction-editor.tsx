@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMemo } from "react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Button, HelpHint, Icon, toast, useConfirm } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
-import { Link } from "@/lib/navigation";
+import { Link, useRouter } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
-import { AddItemDialog } from "@/components/add-item-dialog";
 
 type RecipientMode = "default" | "groups" | "explicit";
 
@@ -27,29 +26,20 @@ interface IntroductionRow {
  * (text + optional audio/video) shown at the top of the memorial vault when
  * a trusted contact unlocks it after release.
  *
- * Reuses AddItemDialog in intro mode for authoring (same crypto / upload /
+ * Written in the note editor (`/vault/new?welcome=1`: same crypto / upload /
  * recipient pipeline as regular vault items). Stored as vault_items with
  * isReleaseIntroduction=true so they're naturally swept into the release
  * fan-out, but hidden from the regular /vault listing.
  */
 export function ReleaseIntroductionEditor() {
   const t = useTranslations("lifeCheck");
-  const vault = useQuery(api.vaults.getVault);
-  const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
+  const router = useRouter();
   const intros = useQuery(api.vault_items.listReleaseIntroductions);
   const titles = useDecryptedTitles(intros);
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
-  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const confirm = useConfirm();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (vault === null) {
-      getOrCreateVault();
-    }
-  }, [vault, getOrCreateVault]);
 
   const contactNameById = useMemo(() => {
     const m = new Map<string, string>();
@@ -88,7 +78,7 @@ export function ReleaseIntroductionEditor() {
     });
     if (!ok) return;
     try {
-      await deleteItem({ itemId: id });
+      await archiveItem({ itemId: id });
     } catch (err) {
       toast({
         variant: "error",
@@ -114,17 +104,15 @@ export function ReleaseIntroductionEditor() {
             {t("welcome.description")}
           </p>
         </div>
-        {vault && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setDialogOpen(true)}
-            className="gap-2 cursor-pointer shrink-0"
-          >
-            <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
-            {t("welcome.newMessage")}
-          </Button>
-        )}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => router.push("/vault/new?welcome=1")}
+          className="gap-2 cursor-pointer shrink-0"
+        >
+          <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
+          {t("welcome.newMessage")}
+        </Button>
       </div>
 
       {intros === undefined ? (
@@ -180,15 +168,6 @@ export function ReleaseIntroductionEditor() {
             </li>
           ))}
         </ul>
-      )}
-
-      {vault && (
-        <AddItemDialog
-          vaultId={vault._id}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          mode="release_introduction"
-        />
       )}
     </section>
   );

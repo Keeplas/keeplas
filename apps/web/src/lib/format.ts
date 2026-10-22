@@ -17,6 +17,17 @@ export function formatCountdown(remainingMs: number): string {
   return `${minutes}:${seconds}`;
 }
 
+/** Media length as a player shows it: "0:28", "2:15", "1:02:05". */
+export function formatClock(totalSeconds: number): string {
+  const total = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = String(total % 60).padStart(2, "0");
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${seconds}`
+    : `${minutes}:${seconds}`;
+}
+
 // Each unit and how many of it make the next one.
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["second", 60],
@@ -76,4 +87,30 @@ export function formatDate(timestamp: number, locale: string): string {
     day: "numeric",
     year: "numeric",
   }).format(timestamp);
+}
+
+/**
+ * "Today, 10:12 AM", "Yesterday, 9:05 PM", else "Apr 12, 2026, 9:43 AM"
+ * (activity lists).
+ */
+export function formatDayTime(
+  timestamp: number,
+  locale: string,
+  now = Date.now(),
+): string {
+  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
+    timestamp,
+  );
+  const startOfDay = (value: number) => new Date(value).setHours(0, 0, 0, 0);
+  const days = Math.round(
+    (startOfDay(now) - startOfDay(timestamp)) / 86_400_000,
+  );
+  if (days === 0 || days === 1) {
+    const day = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+      -days,
+      "day",
+    );
+    return `${day.charAt(0).toLocaleUpperCase(locale)}${day.slice(1)}, ${time}`;
+  }
+  return `${formatDate(timestamp, locale)}, ${time}`;
 }

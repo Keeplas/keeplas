@@ -58,7 +58,7 @@ const CASES: Case[] = [
     figma: "W04-5_Recovery_center_status_only_.png",
     ...SHELL,
   },
-  { id: "W04-6", figma: "W04-6_Devices_and_security.png", ...SHELL },
+  { id: "W04-6", figma: "W04-6_Sessions_and_security.png", ...SHELL },
   { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
   {
     id: "W05-3",
@@ -73,6 +73,46 @@ const CASES: Case[] = [
     lang: "fr",
     prepare: blurAutoFocus,
   },
+  {
+    id: "W06-1",
+    figma: "W06-1_My_vault_Documents_list_.png",
+    ...SHELL,
+    // Figma draws the first row hovered.
+    prepare: (page) =>
+      page.getByRole("link", { name: "Home insurance policy.pdf" }).hover(),
+  },
+  {
+    id: "W06-2",
+    figma: "W06-2_Document_viewer_preview_details_.png",
+    ...SHELL,
+  },
+  {
+    id: "W06-3",
+    figma: "W06-3_Add_a_document_upload_modal_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  {
+    id: "W06-4",
+    figma: "W06-4_Securing_your_item_upload_progress_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  { id: "W06-5", figma: "W06-5_New_note_with_attachments.png", ...SHELL },
+  {
+    id: "W06-6",
+    figma: "W06-6_Record_a_voice_note.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  {
+    id: "W06-7",
+    figma: "W06-7_Scan_with_my_phone_QR_handoff_.png",
+    ...SHELL,
+    prepare: blurAutoFocus,
+  },
+  { id: "W06-8", figma: "W06-8_Photo_preview.png", ...SHELL },
+  { id: "W06-9", figma: "W06-9_Video_preview.png", ...SHELL },
   // Section 10 states that apply to the web (393 px State Message cards).
   {
     id: "state-vault-empty",

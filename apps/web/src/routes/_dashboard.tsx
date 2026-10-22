@@ -10,7 +10,10 @@ import { ForcedRotationGate } from "@/components/forced-rotation-gate";
 import { LifeCheckPrompt } from "@/components/life-check-prompt";
 import { OfflineNotice } from "@/components/offline-notice";
 import { UploadQueueProvider } from "@/lib/upload-queue";
+import { VaultDataProvider } from "@/lib/vault-data";
 import { useTranslations } from "@/lib/i18n";
+import { useBackfillItemMeta } from "@/lib/use-backfill-item-meta";
+import { useBackfillItemTitles } from "@/lib/use-backfill-item-titles";
 import { useBackfillPendingShares } from "@/lib/use-backfill-pending-shares";
 import { purgeLegacyShards } from "@/lib/purge-legacy-shards";
 import { api } from "@keeplas/backend/_generated/api";
@@ -21,12 +24,14 @@ export const Route = createFileRoute("/_dashboard")({
 });
 
 /**
- * Mounts the owner-side re-wrap of deferred shares once the vault is unlocked.
- * Renders nothing — lives inside UnlockGate so it only runs with the master
- * key available.
+ * Mounts the owner-side vault migrations once the vault is unlocked: re-wrap
+ * of deferred shares, legacy plaintext titles and metadata. Renders nothing —
+ * lives inside UnlockGate so it only runs with the master key available.
  */
-function PendingShareBackfill() {
+function VaultBackfills() {
   useBackfillPendingShares();
+  useBackfillItemTitles(useQuery(api.vault_items.getItemSummaries));
+  useBackfillItemMeta();
   return null;
 }
 
@@ -88,20 +93,22 @@ function DashboardLayout() {
   return (
     <UnlockGate>
       <UploadQueueProvider>
-        <PendingShareBackfill />
-        <ForcedRotationGate />
-        <LifeCheckPrompt />
-        <OfflineNotice />
-        <ShellAccountProvider
-          account={{
-            initials: getInitials(viewer?.name, 1),
-            signOut: () => void signOut(),
-          }}
-        >
-          <AppShell>
-            <Outlet />
-          </AppShell>
-        </ShellAccountProvider>
+        <VaultDataProvider>
+          <VaultBackfills />
+          <ForcedRotationGate />
+          <LifeCheckPrompt />
+          <OfflineNotice />
+          <ShellAccountProvider
+            account={{
+              initials: getInitials(viewer?.name, 1),
+              signOut: () => void signOut(),
+            }}
+          >
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </ShellAccountProvider>
+        </VaultDataProvider>
       </UploadQueueProvider>
     </UnlockGate>
   );

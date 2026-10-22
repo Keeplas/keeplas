@@ -4,6 +4,7 @@ import {
   getUserVault,
   getActiveItems,
   getActiveVaultFiles,
+  getStorageUsage,
 } from "./helpers";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import { storedFileBytes } from "./lib/storage";
@@ -68,8 +69,11 @@ export const getUsageStats = query({
       bytesByKind[file.kind ?? "document"] += storedFileBytes(file);
     }
 
+    const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
+
     return {
-      storageBytes: files.reduce((sum, f) => sum + storedFileBytes(f), 0),
+      storageBytes: activeBytes + archiveBytes,
+      archiveBytes,
       bytesByKind,
       fileCount: files.length,
       activeItemsCount: items.length,

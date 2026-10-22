@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -25,6 +25,7 @@ import { Text } from "@/components/text";
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { type VaultCategory } from "@/crypto/item-meta";
 import { PermissionSheet } from "@/features/capture/add-sheet";
+import { captureDepth } from "@/features/capture/capture-depth";
 import { draftStore, useDraft } from "@/features/capture/draft-store";
 import { IconPicker } from "@/features/capture/icon-picker";
 import {
@@ -37,6 +38,7 @@ import {
   type PermissionProblem,
 } from "@/features/capture/media";
 import type { CaptureFile } from "@/features/capture/seal";
+import { useShowSecuring } from "@/features/capture/securing-sheet";
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { itemVisual } from "@/features/vault/item-visual";
@@ -73,6 +75,8 @@ type Sheet = "category" | "folder" | "icon" | "item" | null;
 /** M07-7 / M07-9 New note and M07-8 Review capture, sealed for the outbox. */
 export default function ComposeCapture() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const showSecuring = useShowSecuring();
   const { t } = useI18n();
   const { colors } = useTheme();
   const draft = useDraft();
@@ -182,10 +186,15 @@ export default function ComposeCapture() {
         icon: draft.icon,
         folder: existing ? undefined : await folderRecipients(),
         attachTo: existing ? await attachTarget() : undefined,
+        handoffId: draft.handoffId,
         files,
       });
       draftStore.reset();
-      router.replace({ pathname: "/capture/securing", params: { entryId } });
+      // Back to where the capture started; the upload goes on behind the sheet.
+      router.dismiss(
+        captureDepth(navigation.getState()?.routes.map((r) => r.name) ?? []),
+      );
+      showSecuring(entryId);
     } catch (error) {
       Alert.alert(
         error instanceof FolderKeyMissing

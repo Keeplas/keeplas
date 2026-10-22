@@ -402,6 +402,22 @@ export default defineSchema({
   // only relays ciphertext: the MasterKey envelope is sealed by the phone to
   // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`
   // (scheduled at creation), so no envelope outlives the 2-minute window.
+  // W06-7 "Scan with my phone": the browser shows a QR, the owner's phone
+  // claims it, scans and seals the pages itself, then createItem completes
+  // the handoff so the browser can open the new item. No content here.
+  capture_handoffs: defineTable({
+    userId: v.id("users"),
+    status: v.union(
+      v.literal("waiting"),
+      v.literal("claimed"),
+      v.literal("completed"),
+    ),
+    // The QR is scannable until then (2 min); the row is purged later.
+    expiresAt: v.number(),
+    itemId: v.optional(v.id("vault_items")),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   pairing_sessions: defineTable({
     // Ephemeral ML-KEM-768 public key of the new browser (base64).
     browserPublicKey: v.string(),
@@ -600,6 +616,15 @@ export default defineSchema({
       }),
     ),
     releasedAt: v.optional(v.number()),
+    archivedAt: v.optional(v.number()),
+    archivedFromStatus: v.optional(
+      v.union(
+        v.literal("active"),
+        v.literal("draft"),
+        v.literal("sealed"),
+        v.literal("released"),
+      ),
+    ),
 
     // Folder the item lives in (v2 "sharing per folder"); none = loose item.
     folderId: v.optional(v.id("folders")),
@@ -617,7 +642,30 @@ export default defineSchema({
     .index("by_folder", ["folderId"])
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
+    .index("by_user_status", ["userId", "status"])
     .index("by_trigger", ["triggerType", "status"]),
+
+  vault_item_versions: defineTable({
+    itemId: v.id("vault_items"),
+    userId: v.id("users"),
+    encryptedTitle: v.optional(v.string()),
+    encryptedContent: v.string(),
+    encryptedMeta: v.optional(v.string()),
+    encryptedLinks: v.optional(v.string()),
+    files: v.array(
+      v.object({
+        storageId: v.id("_storage"),
+        iv: v.string(),
+        encryptedMeta: v.optional(v.string()),
+        sizeBucket: v.optional(v.number()),
+        order: v.number(),
+      }),
+    ),
+    savedAt: v.number(),
+    replacedAt: v.number(),
+  })
+    .index("by_item", ["itemId"])
+    .index("by_user", ["userId"]),
 
   // v2 sharing per folder (M06-4, M06-6, M03-1, M03-2). The folder name is
   // sealed: under the master key for the owner, to each grantee's ML-KEM key

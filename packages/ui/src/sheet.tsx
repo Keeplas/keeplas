@@ -50,23 +50,31 @@ const sheetVariants = cva(
 interface SheetContentProps
   extends
     React.ComponentPropsWithoutRef<typeof DialogPrimitives.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  /** v2 screens: e.g. the flat Figma scrim instead of the legacy blur. */
+  overlayClassName?: string;
+}
 
 const SheetContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitives.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <DialogPrimitives.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-    </DialogPrimitives.Content>
-  </SheetPortal>
-));
+>(
+  (
+    { side = "right", className, overlayClassName, children, ...props },
+    ref,
+  ) => (
+    <SheetPortal>
+      <SheetOverlay className={overlayClassName} />
+      <DialogPrimitives.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
+        {children}
+      </DialogPrimitives.Content>
+    </SheetPortal>
+  ),
+);
 SheetContent.displayName = DialogPrimitives.Content.displayName;
 
 const SheetHeader = ({

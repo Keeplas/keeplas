@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
@@ -15,19 +15,10 @@ import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
 import { StateMessage } from "@/components/state-message";
 import { Checkbox } from "@/components/controls";
-import { IconTile, ListRow } from "@/components/surfaces";
+import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
-import { decryptText, encryptText } from "@/crypto/envelope";
-import {
-  legacyFileMeta,
-  parseFileMeta,
-  itemMetaJson,
-  parseItemMeta,
-  type ItemMeta,
-  type FileMeta,
-  type VaultCategory,
-} from "@/crypto/item-meta";
+import { encryptText } from "@/crypto/envelope";
+import { itemMetaJson, type VaultCategory } from "@/crypto/item-meta";
 import {
   AttachmentPreview,
   PhotoGallery,
@@ -38,14 +29,12 @@ import {
   useMoveToFolder,
   useWrapForContacts,
 } from "@/features/vault/use-move-to-folder";
-import { useVaultData } from "@/features/vault/vault-data";
-import { errorReference } from "@/lib/file-errors";
 import {
-  formatBytes,
-  formatDate,
-  formatDuration,
-  formatTime,
-} from "@/lib/format";
+  useOpenedItem,
+  type Attachment,
+} from "@/features/vault/use-opened-item";
+import { useVaultData } from "@/features/vault/vault-data";
+import { formatBytes, formatDate, formatDuration } from "@/lib/format";
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
@@ -56,17 +45,6 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
 import { radius, withAlpha } from "@/theme";
-
-type Attachment = FileMeta & { id: Id<"vault_item_files">; iv: string };
-
-interface Opened {
-  key: CryptoKey;
-  title: string;
-  note: string;
-  category: VaultCategory;
-  icon?: string;
-  files: Attachment[];
-}
 
 const KIND_ICON = {
   document: "document",
@@ -81,73 +59,22 @@ export default function ItemDetails() {
   const router = useRouter();
   const { t, language } = useI18n();
   const { lock } = useVault();
-  const raw = useQuery(api.vault_items.getItem, { itemId });
-  const files = useQuery(api.vault_items.getItemFiles, { itemId });
+  const { raw, opened, failure, retry: reopen } = useOpenedItem(itemId);
+  const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const { itemKey, folders, items } = useVaultData();
+  const { folders, items } = useVaultData();
   const { colors } = useTheme();
-  const [opened, setOpened] = useState<Opened>();
-  const [attempt, setAttempt] = useState(0);
-  const [failed, setFailed] = useState<{
-    attempt: number;
-    reference: string;
-  }>();
-  const failure = failed?.attempt === attempt ? failed.reference : undefined;
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
   const [sheet, setSheet] = useState<
-    "folder" | "details" | "people" | "rename" | "category" | null
+    "folder" | "details" | "people" | "category" | null
   >(null);
   const [people, setPeople] = useState<Set<Id<"trusted_contacts">>>(new Set());
   const [sharing, setSharing] = useState(false);
   const wrapFor = useWrapForContacts();
-  const [draftTitle, setDraftTitle] = useState("");
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const unarchive = useAuditedMutation(api.vault_items.unarchiveItem);
   const moveToFolder = useMoveToFolder();
-
-  useEffect(() => {
-    if (!raw || !files) return;
-    let alive = true;
-    void (async () => {
-      try {
-        const key = await itemKey(raw);
-        const [title, note, meta, metas] = await Promise.all([
-          raw.encryptedTitle
-            ? decryptText(raw.encryptedTitle, key)
-            : (raw.title ?? ""),
-          decryptText(raw.encryptedContent, key),
-          raw.encryptedMeta
-            ? decryptText(raw.encryptedMeta, key).then(parseItemMeta)
-            : ({ v: 1, category: raw.category ?? "other" } as ItemMeta),
-          Promise.all(
-            files.map(async (file) => ({
-              ...(file.encryptedMeta
-                ? parseFileMeta(await decryptText(file.encryptedMeta, key))
-                : legacyFileMeta(file)),
-              id: file._id,
-              iv: file.iv,
-            })),
-          ),
-        ]);
-        if (alive)
-          setOpened({
-            key,
-            title,
-            note,
-            category: meta.category,
-            icon: meta.icon,
-            files: metas,
-          });
-      } catch (error) {
-        const reference = errorReference();
-        if (__DEV__) console.warn(`[item ${reference}]`, error);
-        if (alive) setFailed({ attempt, reference });
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [raw, files, itemKey, attempt]);
 
   const attachments = useMemo(() => opened?.files ?? [], [opened]);
   const { stateOf, retry } = useDecryptedAttachments(attachments, opened?.key);
@@ -277,7 +204,7 @@ export default function ItemDetails() {
           body={t("item.lockedBody")}
           primary={{
             label: t("common.tryAgain"),
-            onPress: () => setAttempt((n) => n + 1),
+            onPress: reopen,
           }}
           secondary={{ label: t("item.lockVault"), onPress: lock }}
         />
@@ -313,16 +240,6 @@ export default function ItemDetails() {
     meta: attachment,
     state: stateOf(attachment.id),
   });
-  async function rename() {
-    const title = draftTitle.trim();
-    setSheet(null);
-    if (!opened || !title || title === opened.title) return;
-    await updateItem({
-      itemId,
-      encryptedTitle: await encryptText(title, opened.key),
-    }).catch(() => Alert.alert(t("common.genericError")));
-  }
-
   async function recategorize(category: VaultCategory) {
     setSheet(null);
     if (!opened || category === opened.category) return;
@@ -334,6 +251,46 @@ export default function ItemDetails() {
       ),
     }).catch(() => Alert.alert(t("common.genericError")));
   }
+
+  const archived = raw?.status === "archived";
+  const archivedBanner = archived ? (
+    <>
+      <Callout
+        icon="inbox"
+        text={t("item.archivedOn", {
+          date: formatDate(raw?.archivedAt ?? 0, language),
+        })}
+      />
+      <Button
+        variant="secondary"
+        label={t("archives.restore")}
+        onPress={() =>
+          void unarchive({ itemId }).catch(() =>
+            Alert.alert(t("archives.restoreFailed")),
+          )
+        }
+      />
+    </>
+  ) : null;
+
+  function edit() {
+    router.push({ pathname: "/item/edit", params: { id: itemId } });
+  }
+
+  const historyRow = (
+    <ListRow
+      icon="clock"
+      title={t("item.history")}
+      description={
+        versions?.length
+          ? t("item.historyCount", { n: versions.length })
+          : t("item.historyEmpty")
+      }
+      onPress={() =>
+        router.push({ pathname: "/item/history", params: { id: itemId } })
+      }
+    />
+  );
 
   const summary = [
     file ? summaryOf(file, pages, t) : t("item.note"),
@@ -465,23 +422,6 @@ export default function ItemDetails() {
       </BottomSheet>
     </>
   );
-  const renameSheet = (
-    <BottomSheet
-      visible={sheet === "rename"}
-      onDismiss={() => setSheet(null)}
-      title={t("item.renameTitle")}
-    >
-      <TextField
-        label={t("item.titleRow")}
-        value={draftTitle}
-        onChangeText={setDraftTitle}
-        autoFocus
-        returnKeyType="done"
-        onSubmitEditing={() => void rename()}
-      />
-      <Button label={t("capture.save")} onPress={() => void rename()} />
-    </BottomSheet>
-  );
   const categorySheet = (
     <BottomSheet
       visible={sheet === "category"}
@@ -510,7 +450,6 @@ export default function ItemDetails() {
       ? itemVisual(summaryItem)
       : { icon: "note" as const, color: colors.accent };
     const created = raw?.createdAt ?? 0;
-    const when = `${formatDate(created, language)}, ${formatTime(created, language)}`;
     return (
       <Screen header={header} gap={16}>
         <View style={styles.hero}>
@@ -528,6 +467,9 @@ export default function ItemDetails() {
             {t("item.addedOn", { date: formatDate(created, language) })}
           </Text>
         </View>
+        {archivedBanner ?? (
+          <Button variant="secondary" label={t("item.edit")} onPress={edit} />
+        )}
         {!isEmptyNote(opened.note) ? (
           <View
             style={[
@@ -547,10 +489,7 @@ export default function ItemDetails() {
               icon: "edit",
               label: t("item.titleRow"),
               value: opened.title || t("capture.untitled"),
-              onPress: () => {
-                setDraftTitle(opened.title);
-                setSheet("rename");
-              },
+              onPress: edit,
             },
             {
               icon: "document",
@@ -578,36 +517,7 @@ export default function ItemDetails() {
           description={t("item.addPeopleBody")}
           onPress={share}
         />
-        <Text variant="label">{t("item.activity")}</Text>
-        <View style={styles.activity}>
-          {(
-            [
-              ["item.activityAdded", "item.byYou"],
-              ["item.activityEncrypted", "item.byYou"],
-              ["item.activityUploaded", "item.byKeeplas"],
-              ["item.activityProtected", "item.byKeeplas"],
-            ] as const
-          ).map(([label, actor]) => (
-            <View key={label} style={styles.activityRow}>
-              <View
-                style={[
-                  styles.activityDot,
-                  { backgroundColor: colors["action.primary"] },
-                ]}
-              />
-              <View style={styles.flexText}>
-                <Text variant="label">{t(label)}</Text>
-                <Text variant="body-sm" color="text.muted">
-                  {when}
-                </Text>
-              </View>
-              <Text variant="body-sm" color="text.muted">
-                {t(actor)}
-              </Text>
-            </View>
-          ))}
-        </View>
-        {renameSheet}
+        {historyRow}
         {categorySheet}
         {sheets}
       </Screen>
@@ -616,6 +526,7 @@ export default function ItemDetails() {
 
   return (
     <Screen header={header} gap={16}>
+      {archivedBanner}
       <View style={styles.meta}>
         <Icon name="lock" size={14} color="status.active" />
         <Text variant="body-sm" color="text.muted" numberOfLines={1}>
@@ -653,6 +564,9 @@ export default function ItemDetails() {
             onPress={() => void download()}
             disabled={stateOf(file.id).status !== "ready"}
           />
+          {!archived ? (
+            <ActionTile icon="edit" label={t("item.edit")} onPress={edit} />
+          ) : null}
           <ActionTile
             icon="info"
             label={t("item.details")}
@@ -695,6 +609,7 @@ export default function ItemDetails() {
             icon: "document",
             label: t("item.category"),
             value: t(`capture.category.${opened.category}`),
+            onPress: () => setSheet("category"),
           },
           {
             icon: "folder",
@@ -710,7 +625,9 @@ export default function ItemDetails() {
           },
         ]}
       />
+      {historyRow}
 
+      {categorySheet}
       {sheets}
     </Screen>
   );
@@ -790,10 +707,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 10 },
   hero: { alignItems: "center", gap: 8, paddingTop: 4 },
   noteCard: { padding: 16, borderWidth: 1, borderRadius: radius.md },
-  activity: { gap: 14 },
-  activityRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  activityDot: { width: 8, height: 8, borderRadius: 4 },
-  flexText: { flex: 1, gap: 2 },
   tile: {
     flex: 1,
     alignItems: "center",

@@ -5,20 +5,21 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { cn } from "./lib/utils";
-import { Icon } from "./icon";
 
-const TOOLBAR_ICONS = {
-  bold: "M6.75 3.75h6.375a4.125 4.125 0 0 1 0 8.25H6.75V3.75Zm0 8.25h7.5a4.125 4.125 0 0 1 0 8.25H6.75V12Z",
-  italic: "M9.75 3.75h9m-9 16.5h9M14.25 3.75 9.75 20.25",
-  bulletList:
-    "M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 17.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM7.5 6.75h12.75M7.5 12h12.75M7.5 17.25h12.75",
-  orderedList:
-    "M8.242 5.992h12M8.242 12h12m-12 6.008h12M3 6.7l1.5-1.5v6m-1.5 6h3M4.5 18l-1.5 1.5h3",
-  heading: "M5.25 4.5v15m13.5-15v15m-13.5-7.5h13.5",
-  quote:
-    "M6.75 6.75h3v3a4.5 4.5 0 0 1-4.5 4.5m13.5-7.5h3v3a4.5 4.5 0 0 1-4.5 4.5",
-  undo: "M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3",
-  redo: "m15 15 6-6m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3",
+export interface RichTextToolbarLabels {
+  bold: string;
+  italic: string;
+  heading1: string;
+  heading2: string;
+  list: string;
+}
+
+const ENGLISH: RichTextToolbarLabels = {
+  bold: "Bold",
+  italic: "Italic",
+  heading1: "Heading 1",
+  heading2: "Heading 2",
+  list: "List",
 };
 
 export interface RichTextEditorProps {
@@ -36,23 +37,26 @@ export interface RichTextEditorProps {
   // dropped before render. Use this to safely show decrypted rich-text
   // content authored elsewhere.
   readOnly?: boolean;
+  /** Translated toolbar names (aria labels, and the List button). */
+  toolbarLabels?: RichTextToolbarLabels;
+  /** Right end of the toolbar (W06-5: "Draft encrypted · 10:24 AM"). */
+  toolbarEnd?: React.ReactNode;
 }
 
-interface ToolbarButtonProps {
-  onClick: () => void;
-  active?: boolean;
-  disabled?: boolean;
-  label: string;
-  icon: string;
-}
-
-function ToolbarButton({
+/** Figma W06-5 format tool: a 28 px text chip, subtle when active. */
+function Tool({
   onClick,
   active,
-  disabled,
   label,
-  icon,
-}: ToolbarButtonProps) {
+  children,
+  className,
+}: {
+  onClick: () => void;
+  active: boolean;
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <button
       type="button"
@@ -60,70 +64,70 @@ function ToolbarButton({
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      disabled={disabled}
+      title={label}
       className={cn(
-        "p-2 rounded-xs text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
-        active && "bg-secondary/15 text-secondary",
+        "rounded-[6px] px-[10px] py-[5px] text-[13px] leading-[18px] text-text-body hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus",
+        active && "bg-bg-subtle",
+        className,
       )}
     >
-      <Icon path={icon} className="w-4 h-4" />
+      {children}
     </button>
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({
+  editor,
+  labels,
+  end,
+}: {
+  editor: Editor;
+  labels: RichTextToolbarLabels;
+  end?: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-outline-variant/40 bg-surface-container-low rounded-t-xs">
-      <ToolbarButton
-        label="Heading"
-        icon={TOOLBAR_ICONS.heading}
-        active={editor.isActive("heading", { level: 2 })}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-      />
-      <ToolbarButton
-        label="Bold"
-        icon={TOOLBAR_ICONS.bold}
+    <div className="flex flex-wrap items-center gap-[6px] border-b border-border-default pb-[12px]">
+      <Tool
+        label={labels.bold}
         active={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()}
-      />
-      <ToolbarButton
-        label="Italic"
-        icon={TOOLBAR_ICONS.italic}
+        className="font-semibold"
+      >
+        B
+      </Tool>
+      <Tool
+        label={labels.italic}
         active={editor.isActive("italic")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-      />
-      <span className="w-px h-5 bg-outline-variant/40 mx-1" />
-      <ToolbarButton
-        label="Bullet list"
-        icon={TOOLBAR_ICONS.bulletList}
+        className="italic"
+      >
+        I
+      </Tool>
+      <Tool
+        label={labels.heading1}
+        active={editor.isActive("heading", { level: 1 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className="font-semibold"
+      >
+        H1
+      </Tool>
+      <Tool
+        label={labels.heading2}
+        active={editor.isActive("heading", { level: 2 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        className="font-semibold"
+      >
+        H2
+      </Tool>
+      <Tool
+        label={labels.list}
         active={editor.isActive("bulletList")}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-      />
-      <ToolbarButton
-        label="Numbered list"
-        icon={TOOLBAR_ICONS.orderedList}
-        active={editor.isActive("orderedList")}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-      />
-      <ToolbarButton
-        label="Quote"
-        icon={TOOLBAR_ICONS.quote}
-        active={editor.isActive("blockquote")}
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-      />
-      <span className="w-px h-5 bg-outline-variant/40 mx-1" />
-      <ToolbarButton
-        label="Undo"
-        icon={TOOLBAR_ICONS.undo}
-        disabled={!editor.can().undo()}
-        onClick={() => editor.chain().focus().undo().run()}
-      />
-      <ToolbarButton
-        label="Redo"
-        icon={TOOLBAR_ICONS.redo}
-        disabled={!editor.can().redo()}
-        onClick={() => editor.chain().focus().redo().run()}
-      />
+        className="font-medium"
+      >
+        •&nbsp;&nbsp;{labels.list}
+      </Tool>
+      {end ? <span className="ml-auto">{end}</span> : null}
     </div>
   );
 }
@@ -139,6 +143,8 @@ export function RichTextEditor({
   disabled,
   autoFocus,
   readOnly,
+  toolbarLabels = ENGLISH,
+  toolbarEnd,
 }: RichTextEditorProps) {
   const editable = !readOnly && !disabled;
 
@@ -164,8 +170,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          "tiptap-content prose prose-sm max-w-none focus:outline-none text-on-surface",
-          readOnly ? "px-0 py-0" : "px-4 py-3",
+          "tiptap-content max-w-none focus:outline-none",
           editorClassName,
         ),
         "data-placeholder": placeholder ?? "",
@@ -184,17 +189,7 @@ export function RichTextEditor({
   }, [editable, editor]);
 
   if (!editor) {
-    return (
-      <div
-        className={cn(
-          readOnly
-            ? "w-full"
-            : "w-full bg-surface-container-low border border-outline-variant rounded-xs",
-          className,
-        )}
-        style={readOnly ? { minHeight } : { minHeight: minHeight + 50 }}
-      />
-    );
+    return <div className={cn("w-full", className)} style={{ minHeight }} />;
   }
 
   if (readOnly) {
@@ -205,18 +200,19 @@ export function RichTextEditor({
     );
   }
 
+  // v2 (W06-5): the toolbar, then the text; the screen draws the card.
   return (
     <div
       className={cn(
-        "w-full bg-surface-container-low border border-outline-variant rounded-xs overflow-hidden focus-within:border-secondary/40 focus-within:bg-surface-container-high transition-all",
+        "flex w-full flex-col gap-[16px]",
         disabled && "opacity-60",
         className,
       )}
     >
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} labels={toolbarLabels} end={toolbarEnd} />
       <div
-        className="overflow-y-auto"
-        style={{ minHeight, maxHeight: Math.max(minHeight * 2, 480) }}
+        className="cursor-text"
+        style={{ minHeight }}
         onClick={() => editor.chain().focus().run()}
       >
         <EditorContent editor={editor} />

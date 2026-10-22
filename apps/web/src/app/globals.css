@@ -621,11 +621,14 @@ button:not(:disabled),
 
 .tiptap-content {
   min-height: 100%;
+  color: var(--color-text-body);
+  font-size: 15px;
+  line-height: 24px;
 }
 
 .tiptap-content p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: var(--color-outline-variant);
+  color: var(--color-text-subtle);
   float: left;
   height: 0;
   pointer-events: none;
@@ -638,18 +641,23 @@ button:not(:disabled),
 .tiptap-content h1,
 .tiptap-content h2,
 .tiptap-content h3 {
-  font-family: var(--font-headline);
-  color: var(--color-primary);
+  font-family: var(--font-serif);
+  color: var(--color-text-primary);
   font-weight: 600;
-  line-height: 1.25;
   margin: 0.75rem 0 0.5rem;
 }
 
+.tiptap-content h1 {
+  font-size: 24px;
+  line-height: 30px;
+}
 .tiptap-content h2 {
-  font-size: 1.25rem;
+  font-size: 19px;
+  line-height: 24px;
 }
 .tiptap-content h3 {
-  font-size: 1.125rem;
+  font-size: 17px;
+  line-height: 22px;
 }
 
 .tiptap-content ul,
@@ -666,9 +674,9 @@ button:not(:disabled),
 }
 
 .tiptap-content blockquote {
-  border-left: 3px solid var(--color-secondary);
+  border-left: 3px solid var(--color-border-strong);
   padding-left: 1rem;
-  color: var(--color-on-surface-variant);
+  color: var(--color-text-muted);
   font-style: italic;
   margin: 0.5rem 0;
 }
@@ -680,7 +688,7 @@ button:not(:disabled),
   font-style: italic;
 }
 .tiptap-content code {
-  background: var(--color-surface-container-high);
+  background: var(--color-bg-subtle);
   padding: 0.1rem 0.35rem;
   border-radius: 0.25rem;
   font-size: 0.875em;

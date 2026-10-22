@@ -3,7 +3,10 @@
     "language": "Language",
     "resendIn": "Resend code in {seconds}s",
     "back": "Back",
-    "moreActions": "More actions for {name}"
+    "moreActions": "More actions for {name}",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "auth": {
     "hero": {
@@ -184,60 +187,6 @@
       "verifying": "Verifying…",
       "verify": "Verify"
     },
-    "recorder": {
-      "errorPermission": "Permission refused. Enable {devices} access in your browser settings.",
-      "errorNotFound": "No {devices} detected on this device.",
-      "errorBusy": "{device} is busy in another app.",
-      "errorGeneric": "Unable to access capture devices.",
-      "errorScreenDenied": "Screen sharing was cancelled or denied. Click Try again to pick a window or tab.",
-      "devicesCameraMic": "camera and microphone",
-      "devicesCameraOrMic": "camera or microphone",
-      "deviceMic": "microphone",
-      "deviceCameraCapitalized": "Camera",
-      "deviceMicCapitalized": "Microphone",
-      "notAvailable": "Media capture is not available in this browser.",
-      "deviceNotReady": "Capture device is not ready yet. Please wait.",
-      "notSupported": "Recording is not supported in this browser.",
-      "initFailed": "MediaRecorder initialization failed.",
-      "subPreparing": "Preparing capture device…",
-      "subUnavailable": "Capture unavailable. Adjust permissions and retry.",
-      "subRecording": "Recording — {elapsed} / max {max}",
-      "subPreview": "Preview — {duration}",
-      "subIdle": "Encrypted on your device. Max {max}.",
-      "titleAudio": "Voice recording",
-      "titleVideo": "Video recording",
-      "titleScreen": "Screen recording",
-      "cancelRecording": "Cancel recording",
-      "toggleCamera": "Camera",
-      "cameraOff": "Camera off",
-      "cameraDenied": "Camera unavailable — recording the screen only.",
-      "expand": "Expand",
-      "collapse": "Reduce",
-      "expandHint": "Enlarge the recorder to full screen for more room.",
-      "collapseHint": "Exit full screen.",
-      "closeHint": "Close and discard this recording.",
-      "closeConfirmTitle": "Discard this recording?",
-      "closeConfirmDescription": "Closing now ends the session and discards the current recording. This can't be undone.",
-      "closeConfirmConfirm": "Discard",
-      "closeConfirmCancel": "Keep recording",
-      "tryAgain": "Try again",
-      "turningOnCamera": "Turning on camera…",
-      "startingScreenShare": "Starting screen share…",
-      "screenIdleHint": "Click Start recording to choose a screen, window, or tab to capture.",
-      "enablingMic": "Enabling microphone…",
-      "statusRecording": "Recording",
-      "statusPaused": "Paused",
-      "pause": "Pause",
-      "resume": "Resume",
-      "statusLivePreview": "Live preview",
-      "statusMicLive": "Mic live",
-      "timeLeft": "{time} left",
-      "cancel": "Cancel",
-      "startRecording": "Start recording",
-      "stop": "Stop",
-      "reRecord": "Re-record",
-      "attachToVault": "Attach to vault"
-    },
     "offline": {
       "title": "You're offline",
       "body": "Keeplas reconnects on its own. Changes you make now are saved once you're back online.",
@@ -297,13 +246,6 @@
       "updated": "Last updated",
       "open": "Open"
     },
-    "types": {
-      "document": "Document",
-      "account": "Account",
-      "instruction": "Instruction",
-      "other": "Other",
-      "inbox": "Inbox"
-    },
     "empty": {
       "title": "Your vault is empty",
       "body": "Add your first document, account or note. It's encrypted before it leaves this device.",
@@ -330,12 +272,11 @@
       },
       "video": {
         "title": "Video",
-        "description": "Upload or record a video"
+        "description": "Upload a video from this computer"
       },
       "scan": {
         "title": "Scan with my phone",
-        "description": "Capture paper documents with your camera",
-        "onPhone": "Open Keeplas on your phone and tap Scan. The document appears here once it's encrypted."
+        "description": "Capture paper documents with your camera"
       }
     }
   },
@@ -490,11 +431,11 @@
       "kindText": "Text",
       "targetingPrefix": "· For {targeting}",
       "openAria": "Open {title}",
-      "deleteAria": "Delete {title}",
-      "deleteTitle": "Delete \"{title}\"?",
-      "deleteDescription": "Contacts will no longer see this welcome message.",
-      "deleteConfirm": "Delete",
-      "deleteError": "Failed to delete introduction"
+      "deleteAria": "Archive {title}",
+      "deleteTitle": "Archive \"{title}\"?",
+      "deleteDescription": "Contacts will no longer see this welcome message. It stays in your archives.",
+      "deleteConfirm": "Archive",
+      "deleteError": "Failed to archive introduction"
     },
     "overview": {
       "title": "Who receives what",
@@ -1364,8 +1305,8 @@
     "upload": {
       "savingTitle": "Saving {count} attachment",
       "savingTitlePlural": "Saving {count} attachments",
-      "encrypting": "{label} — encrypting…",
-      "progress": "{label} — {completed}/{total} done · {done} / {totalBytes}",
+      "encrypting": "{label}: encrypting in this browser…",
+      "progress": "{done} of {totalBytes} uploaded",
       "savedTitle": "Attachments saved",
       "savedDescription": "{label} — {count} file encrypted and uploaded",
       "savedDescriptionPlural": "{label} — {count} files encrypted and uploaded",
@@ -1383,15 +1324,9 @@
           "upgrade": "Get Lifetime",
           "manage": "Manage storage"
         }
-      }
-    },
-    "page": {
-      "loading": "Loading your vault",
-      "allSections": "All vault sections",
-      "title": "Digital Vault",
-      "subtitle": "Your life's core documentation, secured with end-to-end zero-knowledge encryption.",
-      "countOne": "Showing all {count} item in this category.",
-      "countOther": "Showing all {count} items in this category."
+      },
+      "savingItem": "Securing {label}",
+      "savedItem": "{label} is protected in your vault."
     },
     "categories": {
       "personal_document": "Personal Documents",
@@ -1410,80 +1345,6 @@
       "other": "Other",
       "inbox": "Encrypted inbox"
     },
-    "sections": {
-      "documents": {
-        "empty": "No personal documents yet. Add your first."
-      },
-      "health": {
-        "empty": "No health directives yet. Add your first."
-      },
-      "legal": {
-        "empty": "No legal documents yet. Add your first."
-      },
-      "business": {
-        "empty": "No business continuity plans yet. Add your first."
-      },
-      "financial": {
-        "empty": "No financial assets yet. Add your first."
-      },
-      "credentials": {
-        "empty": "No credentials yet. Add your first."
-      },
-      "digital": {
-        "empty": "No digital assets yet. Add your first."
-      },
-      "messages": {
-        "empty": "No conditional messages yet."
-      },
-      "property": {
-        "empty": "No belongings yet. Add your first."
-      },
-      "insurance": {
-        "empty": "No insurance policies yet. Add your first."
-      },
-      "subscriptions": {
-        "empty": "No subscriptions yet. Add your first."
-      },
-      "contacts": {
-        "empty": "No contacts yet. Add your first."
-      },
-      "wishes": {
-        "empty": "No wishes yet. Share what matters to you."
-      },
-      "other": {
-        "empty": "Nothing here yet. Add your first item."
-      }
-    },
-    "section": {
-      "viewAll": "View All",
-      "addEntry": "Add entry",
-      "viewAllCount": "View all {count} items"
-    },
-    "card": {
-      "updated": "Updated {date}"
-    },
-    "transmission": {
-      "private": "Private",
-      "groups": "{count} groups",
-      "allContacts": "All trust contacts"
-    },
-    "recipients": {
-      "label": "Who receives this at trigger?",
-      "labelIntro": "Pick the contacts who'll see this welcome",
-      "placeholderPrivate": "No one — keep private",
-      "placeholderIntro": "Pick at least one recipient",
-      "searchPlaceholder": "Search groups or contacts…",
-      "emptyMessage": "No groups or contacts yet.",
-      "helper": "Pick one or more groups (your trust contacts are already a group), or specific people. Empty = the item stays private.",
-      "helperIntro": "Broadcast to every trusted contact, target a group, or pick specific people. Combinations of groups and individuals are allowed.",
-      "allContacts": "All trust contacts",
-      "allContactsHint": "Everyone who's accepted your invite",
-      "broadcastLabel": "Broadcast",
-      "groupsLabel": "Groups",
-      "individualsLabel": "Individual contacts",
-      "contactCountOne": "{count} contact",
-      "contactCountOther": "{count} contacts"
-    },
     "links": {
       "empty": "No links saved.",
       "urlLabel": "Link URL",
@@ -1491,148 +1352,6 @@
       "hide": "Hide link",
       "reveal": "Reveal link",
       "openNewTab": "Open link in new tab"
-    },
-    "linkInput": {
-      "label": "Saved links",
-      "description": "URLs are encrypted before they leave your device. Nothing is fetched or previewed.",
-      "invalid": "Enter a valid URL (including https://).",
-      "remove": "Remove link",
-      "addAnother": "Add another link"
-    },
-    "attachments": {
-      "loading": "Loading secure attachments…",
-      "heading": "Secure Attachments · {count}",
-      "encrypted": "Encrypted",
-      "download": "Download",
-      "decrypting": "Decrypting…",
-      "decryptError": "Unable to decrypt attachment.",
-      "documentReady": "Document ready — open or download to view.",
-      "open": "Open",
-      "enlarge": "Enlarge",
-      "close": "Close"
-    },
-    "detail": {
-      "notFound": "Item not found",
-      "backToVault": "Back to Vault",
-      "edit": "Edit",
-      "deletePermanently": "Delete permanently",
-      "summaryPrivate": "Private",
-      "summaryReleasedTo": "Released to {names}",
-      "summaryReleasedAll": "Released to all trust contacts",
-      "decryptedContent": "Decrypted Content",
-      "decrypting": "Decrypting...",
-      "linkedUrls": "Linked URLs",
-      "timestamps": "Created {created} · Updated {updated}"
-    },
-    "editor": {
-      "title": "Edit Item",
-      "fieldTitle": "Title",
-      "fieldCategory": "Category",
-      "fieldContent": "Secure Content",
-      "contentPlaceholder": "Write the secure content for this item…",
-      "fieldAttachments": "Secure Attachments",
-      "noAttachments": "No attachments yet.",
-      "addFile": "Add file",
-      "fileHint": "Any file type up to 50 MB, except scripts and executables. Files are encrypted client-side before upload.",
-      "cancel": "Cancel",
-      "encrypting": "Encrypting…",
-      "saveChanges": "Save Changes",
-      "errorUnsupportedType": "{name} — scripts and executable files are not supported.",
-      "errorTooLarge": "{name} — exceeds 50 MB limit.",
-      "errorInvalidUrl": "Invalid URL: {url}",
-      "errorNoKey": "Encryption key unavailable for new attachments.",
-      "errorUpdate": "Failed to update.",
-      "progressEncrypting": "Encrypting content…",
-      "progressRemoving": "Removing attachments…",
-      "willBeDeleted": "Will be deleted",
-      "willBeEncrypted": "Will be encrypted on save",
-      "undo": "Undo",
-      "remove": "Remove"
-    },
-    "delete": {
-      "title": "Delete this item permanently?",
-      "description": "This will erase the item, every secure attachment, and all wrapped recipient keys. The action cannot be undone — there is no archive, no trash, and no recovery, even with your recovery phrase.",
-      "confirmPrefix": "Type",
-      "confirmSuffix": "to confirm",
-      "cancel": "Cancel",
-      "deleting": "Deleting…",
-      "deleteForever": "Delete forever"
-    },
-    "dialog": {
-      "breadcrumbVault": "Vault",
-      "breadcrumbWelcome": "Welcome message",
-      "breadcrumbNewAsset": "Secure New Asset",
-      "titleIntro": "Record a welcome message",
-      "titleVault": "Add to Vault",
-      "descriptionIntro": "A text, audio or video message shown at the top of the memorial vault when a trusted contact unlocks it. Encrypted on your device before it leaves.",
-      "descriptionVault": "Deposit a critical asset. Files are encrypted on your device before they leave. AES-256-GCM.",
-      "section01": "Asset Identity",
-      "section01Intro": "Message identity",
-      "section02": "Secure Documentation",
-      "section03": "Linked URLs",
-      "section04": "Transmission Logic",
-      "section04Intro": "Who sees this message?",
-      "fieldTitle": "Title",
-      "fieldName": "Asset Name",
-      "titlePlaceholder": "e.g. A few words from me",
-      "namePlaceholder": "e.g. Primary Brokerage Account",
-      "fieldCategory": "Category",
-      "categoryPlaceholder": "Choose a category",
-      "fieldYourMessage": "Your message",
-      "fieldMessage": "Message",
-      "fieldDescription": "Asset Description",
-      "optional": "(optional)",
-      "bodyPlaceholderIntro": "Write a few words for your trusted contacts. They'll see this above the items you left them…",
-      "bodyPlaceholderLetter": "Write the message that will be released…",
-      "bodyPlaceholderAsset": "Describe the significance and location of this asset…",
-      "releaseOn": "Release on",
-      "releaseDatePlaceholder": "Pick a release date",
-      "lifeCheckCalloutPrefix": "Uses your global Life Check cadence and escalation. Adjust the inactivity threshold once in",
-      "lifeCheckCalloutLink": "Life Check settings",
-      "lifeCheckCalloutSuffix": "— it applies to every letter with this trigger.",
-      "introCallout": "Released alongside your vault when Life Check confirms you're unreachable. Shown to recipients at the top of their memorial view.",
-      "recordAudio": "Record audio",
-      "recordVideo": "Record video",
-      "recordScreen": "Record screen",
-      "orDropFile": "or drop a file below",
-      "dropTitle": "Drag and drop secure files",
-      "dropHint": "Any file type up to 50 MB per file, except scripts and executables. Encrypted on arrival.",
-      "browseSystem": "Browse System",
-      "removeFile": "Remove {name}",
-      "cancel": "Cancel",
-      "sealing": "Sealing…",
-      "saveWelcome": "Save welcome message",
-      "secureToVault": "Secure Asset to Vault",
-      "errorNoKey": "Encryption key not available. Please sign in again.",
-      "errorNameRequired": "Asset name is required.",
-      "errorReleaseDate": "Pick a release date for the time-based trigger.",
-      "errorIntroRecipient": "Pick at least one recipient — an introduction with no audience is never shown.",
-      "errorSave": "Failed to save item.",
-      "progressGenKey": "Generating per-item key…",
-      "progressSealing": "Sealing vault entry…",
-      "deferredShareTitle": "Saved — some shares are pending",
-      "deferredShareBody": "{names} haven't published their encryption key yet. They'll get access automatically once they do."
-    },
-    "triggers": {
-      "label": "Trigger",
-      "placeholder": "Choose a trigger",
-      "lifeCheck": {
-        "label": "Verified Life-Check Failure",
-        "hint": "Released when you stop responding to Life Checks for the configured number of days."
-      },
-      "timeBased": {
-        "label": "Time-based Release",
-        "hint": "Released on a specific calendar date — useful for birthdays, anniversaries, or coming-of-age letters."
-      },
-      "manual": {
-        "label": "Manual Trigger",
-        "hint": "Released only when you (or a curator) explicitly approve from the hub."
-      }
-    },
-    "recorder": {
-      "videoMessage": "Video message",
-      "voiceMessage": "Voice message",
-      "screenMessage": "Screen recording"
     }
   },
   "docs": {
@@ -2589,6 +2308,310 @@
         "cloud_backup_enabled": "Backup turned on",
         "cloud_backup_disabled": "Backup turned off"
       }
+    }
+  },
+  "vaultList": {
+    "breadcrumb": "My vault",
+    "lists": {
+      "all": "All items",
+      "inbox": "Encrypted inbox",
+      "documents": "Documents",
+      "accounts": "Accounts",
+      "instructions": "Instructions",
+      "notes": "Notes",
+      "photos": "Photos",
+      "voice": "Voice notes",
+      "videos": "Videos",
+      "other": "Other"
+    },
+    "listsLabel": "Show",
+    "subtitle": "{count} items. Everything here is encrypted before it leaves your device.",
+    "subtitleOne": "1 item. Everything here is encrypted before it leaves your device.",
+    "search": "Search your vault",
+    "sort": {
+      "label": "Sort: {sort}",
+      "updated": "Last updated",
+      "name": "Name",
+      "added": "Date added"
+    },
+    "upload": "Upload files",
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "folder": "Folder",
+      "sharedWith": "Shared with",
+      "updated": "Updated",
+      "added": "Added"
+    },
+    "detail": {
+      "document": "Document",
+      "photo": "Photo",
+      "voice": "Voice note",
+      "video": "Video",
+      "note": "Note",
+      "account": "Account",
+      "attachmentOne": "1 attachment",
+      "attachments": "{count} attachments"
+    },
+    "access": {
+      "onlyYou": "Only you",
+      "people": "{count} people"
+    },
+    "noFolder": "No folder",
+    "untitled": "Untitled item",
+    "locked": "Can't be opened in this browser",
+    "loading": "Opening your vault…",
+    "noMatch": "Nothing matches “{search}”.",
+    "emptyList": "Nothing here yet.",
+    "dropHint": "Drop files anywhere on this page to add them. They are encrypted in your browser first.",
+    "actions": {
+      "open": "Open",
+      "archive": "Archive"
+    }
+  },
+  "vaultItem": {
+    "download": "Download",
+    "share": "Share",
+    "added": "Added {date}",
+    "archived": "Archived on {date}. It is no longer in your vault or passed on to anyone.",
+    "restore": "Restore",
+    "legacy": "This item uses an older encryption format: it can't be shared or put in a shared folder from the web yet.",
+    "backToVault": "Back to my vault",
+    "missing": {
+      "title": "This item isn't available",
+      "body": "It may have been deleted on another device, or it belongs to another account."
+    },
+    "locked": {
+      "title": "This item can't be opened in this browser",
+      "body": "Its key doesn't match your vault key here. Lock your vault, unlock it again, then open this item."
+    },
+    "sharing": {
+      "pendingTitle": "Shared once they're ready",
+      "pendingBody": "{names} hasn't finished setting up Keeplas yet. The item is encrypted for them automatically as soon as they do."
+    },
+    "details": {
+      "title": "Details",
+      "edit": "Edit",
+      "category": "Category",
+      "folder": "Folder",
+      "access": "Access",
+      "lockedFolder": "Locked folder",
+      "addPeople": "Add people",
+      "addPeopleBody": "Share with trusted people",
+      "encrypted": "End-to-end encrypted. Only you and the people you choose can open this file.",
+      "activity": "Activity",
+      "seeAll": "See all",
+      "moveFailed": "This item couldn't be moved. Items in the older encryption format can't go into a shared folder from the web yet."
+    },
+    "activity": {
+      "you": "You",
+      "added": "Added to your vault",
+      "attached": "{name} added",
+      "edited": "Edited"
+    },
+    "access": {
+      "title": "Who can see it",
+      "body": "Choose the trusted contacts who can open this item. It is encrypted for each of them in this browser.",
+      "nobody": "No trusted contact has joined Keeplas yet.",
+      "addContact": "Invite someone",
+      "throughFolder": "Through the folder {name}",
+      "saving": "Saving…"
+    },
+    "history": {
+      "title": "Edit history",
+      "body": "Earlier versions of this item. Restoring one keeps the current version here too.",
+      "empty": "No changes yet.",
+      "untitled": "Untitled",
+      "replaced": "Replaced {date}",
+      "restore": "Restore",
+      "cancel": "Cancel",
+      "confirmTitle": "Restore this version?",
+      "confirmBody": "The item goes back to this version. The current one stays in its history."
+    },
+    "archive": {
+      "title": "Archive this item?",
+      "body": "It leaves your vault and is no longer passed on to anyone. It stays whole in your archives, with its history, and you can restore it at any time.",
+      "confirm": "Archive",
+      "cancel": "Cancel"
+    },
+    "preview": {
+      "previous": "Previous",
+      "next": "Next",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "show": "Show preview",
+      "hide": "Hide preview",
+      "item": "this item",
+      "note": "Note",
+      "emptyNote": "This note is empty.",
+      "backToNote": "Back to note",
+      "photo": "Photo",
+      "photoOf": "Photo {photo} of {total}",
+      "pageOf": "Page {page} of {total}",
+      "rotate": "Rotate",
+      "play": "Play",
+      "pause": "Pause",
+      "position": "Position",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "fullScreen": "Full screen",
+      "streams": "Streams from an encrypted copy. Nothing is saved unencrypted on this computer.",
+      "pdfError": "This PDF can't be displayed. It may be damaged or protected with a password. Download it to open it in another app.",
+      "noPreview": "Keeplas can't show {type} files yet. Download it to open it in another app.",
+      "decryptError": "This file couldn't be decrypted in this browser. Lock your vault, unlock it again, then try again."
+    },
+    "form": {
+      "category": "Category",
+      "folder": "Folder",
+      "whoCanSee": "Who can see it",
+      "lockedFolder": "Locked folder",
+      "onlyYou": "Only you",
+      "two": "{first} and {second}",
+      "many": "{first}, {second} and {count} more"
+    },
+    "addFile": {
+      "description": "Files are encrypted in this browser before they are uploaded.",
+      "document": {
+        "title": "Add a document",
+        "hint": "PDF, Word or images · up to {max} each"
+      },
+      "photo": {
+        "title": "Add a photo",
+        "hint": "JPG, PNG, HEIC… · up to {max} each"
+      },
+      "video": {
+        "title": "Add a video",
+        "hint": "MP4, MOV… · up to {max} each"
+      },
+      "drop": "Drop your file here, or",
+      "browse": "browse",
+      "ready": "Ready to encrypt",
+      "remove": "Remove",
+      "title": "Title",
+      "titlePlaceholder": "Give it a name",
+      "encrypted": "Encrypted on this computer with your vault key. Keeplas never sees the file.",
+      "moreAfter": "You can add more files after this one.",
+      "eachItem": "{count} files, each saved as its own item.",
+      "submit": "Upload and secure",
+      "errors": {
+        "type": "“{name}” can't be added here. Choose a PDF, a Word file, a photo or a video.",
+        "size": "“{name}” is larger than {max}."
+      }
+    },
+    "securing": {
+      "title": "Securing your item",
+      "body": "Keep this tab open until the upload is finished.",
+      "doneBody": "Your item is encrypted and safely stored.",
+      "encrypting": "Encrypting in this browser",
+      "encryptingBody": "Turning your file into a secure format…",
+      "encrypted": "Encrypted in this browser",
+      "encryptedBody": "AES-256 encryption finished on this computer",
+      "uploading": "Uploading encrypted copy",
+      "uploadingBody": "Sending a secure copy to your Keeplas storage… {percent}%",
+      "uploadedBody": "The encrypted copy is in your Keeplas storage.",
+      "protected": "Protected",
+      "protectedWaiting": "Waiting for verification…",
+      "protectedBody": "Your item is encrypted and safely stored.",
+      "note": "Only an encrypted copy leaves this computer. Your trusted people get access only through the rules you set.",
+      "cancel": "Cancel upload",
+      "background": "Continue in background",
+      "open": "Open item"
+    },
+    "editor": {
+      "newTitle": "New note",
+      "newSubtitle": "Write instructions, attach files and choose who can see them.",
+      "editTitle": "Edit",
+      "editSubtitle": "Change the note, its files and who can see them.",
+      "editCrumb": "Edit",
+      "welcomeTitle": "Welcome message",
+      "welcomeSubtitle": "What your trusted contacts read first when your vault is passed on to them.",
+      "lifeCheck": "Life check",
+      "untitled": "Untitled",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Give your note a title",
+      "titleRequired": "Give your note a title.",
+      "notePlaceholder": "Write something…",
+      "tools": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "list": "List"
+      },
+      "attachments": "Attachments · {count}",
+      "add": "Add",
+      "remove": "Remove",
+      "recordedHere": "Recorded in this browser",
+      "attach": {
+        "scan": "Scan with phone",
+        "photo": "Photo",
+        "voice": "Voice note",
+        "file": "File",
+        "video": "Video"
+      },
+      "organize": "Organize",
+      "everyone": "All your trusted contacts",
+      "whenLabel": "When they can open it",
+      "afterLifeCheck": "After a missed life check",
+      "people": "{count} trusted people",
+      "peopleOne": "1 trusted person",
+      "encrypted": "Your note and attachments are encrypted in this browser before they leave it.",
+      "legacy": "This item uses an older encryption format: it can't be shared from the web yet.",
+      "cancel": "Cancel",
+      "save": "Save note",
+      "saving": "Saving…",
+      "savingPercent": "Saving… {percent}%",
+      "saveFailed": "Your changes weren't saved. Try again."
+    },
+    "voice": {
+      "title": "Record a voice note",
+      "description": "Leave a message in your own voice for the people you trust.",
+      "status": {
+        "recording": "Recording… max 10 minutes",
+        "paused": "Paused",
+        "starting": "Starting the microphone…"
+      },
+      "titleLabel": "Title",
+      "titlePlaceholder": "Message for…",
+      "defaultName": "Voice note",
+      "encrypted": "Recorded and encrypted in this browser. The audio is never stored unencrypted.",
+      "discard": "Discard",
+      "reset": "Reset",
+      "pause": "Pause",
+      "resume": "Resume",
+      "save": "Save voice note",
+      "attach": "Add to note",
+      "resetTitle": "Start this recording over?",
+      "resetBody": "Your {time} recording will be deleted from this browser and you can record again. This cannot be undone.",
+      "resetConfirm": "Delete and record again",
+      "resetKeep": "Keep this recording",
+      "saveFailed": "Your voice note wasn't saved. Your recording is kept: try again."
+    },
+    "scan": {
+      "title": "Scan with your phone",
+      "description": "Use your phone camera to capture paper documents. They appear here once they are secured.",
+      "steps": {
+        "open": {
+          "title": "Open Keeplas on your phone",
+          "body": "Use the same account as this browser"
+        },
+        "add": {
+          "title": "Point your camera at this code",
+          "body": "Camera app, or Keeplas › Devices"
+        },
+        "point": {
+          "title": "Scan your pages",
+          "body": "Your phone links to this session only"
+        }
+      },
+      "waiting": "Waiting for your phone… new code in {time}",
+      "scanning": "Scanning on your phone… it appears here once secured.",
+      "encrypted": "Pages are encrypted on your phone. This browser only gets the encrypted copy.",
+      "upload": "Upload a file instead",
+      "cancel": "Cancel",
+      "saved": "Your scan is protected in your vault.",
+      "failed": "Keeplas couldn't make a code. Check your connection and try again.",
+      "newCode": "New code"
     }
   }
 }

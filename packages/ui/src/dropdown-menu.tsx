@@ -47,6 +47,41 @@ const DropdownMenuItem = React.forwardRef<
 ));
 DropdownMenuItem.displayName = DropdownMenuPrimitives.Item.displayName;
 
+const DropdownMenuRadioGroup = DropdownMenuPrimitives.RadioGroup;
+
+/** v2 radio choice: label, check on the selected one (sort menus). */
+const DropdownMenuRadioItem = React.forwardRef<
+  React.ComponentRef<typeof DropdownMenuPrimitives.RadioItem>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.RadioItem>
+>(({ className, children, ...props }, ref) => (
+  <DropdownMenuPrimitives.RadioItem
+    ref={ref}
+    className={cn(
+      "relative flex cursor-pointer select-none items-center gap-2 rounded-xs py-2 pl-3 pr-8 text-sm outline-none transition-colors focus:bg-bg-subtle data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+    <DropdownMenuPrimitives.ItemIndicator className="absolute right-2 flex size-4 items-center justify-center text-text-link">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="size-4"
+        aria-hidden
+      >
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
+      </svg>
+    </DropdownMenuPrimitives.ItemIndicator>
+  </DropdownMenuPrimitives.RadioItem>
+));
+DropdownMenuRadioItem.displayName =
+  DropdownMenuPrimitives.RadioItem.displayName;
+
 const DropdownMenuSeparator = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitives.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.Separator>
@@ -78,6 +113,8 @@ export {
   DropdownMenuPortal,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
 };

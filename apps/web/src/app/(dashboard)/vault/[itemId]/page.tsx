@@ -1,1053 +1,641 @@
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "convex/react";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { useParams, useRouter } from "@/lib/navigation";
-import { useState, useEffect, useMemo } from "react";
 import { api } from "@keeplas/backend/_generated/api";
-import { useVaultCrypto } from "@/lib/use-vault-crypto";
-import {
-  useRecipientCrypto,
-  type WrapRecipient,
-} from "@/lib/use-recipient-crypto";
-import { toWrapRecipient, type BlockedContact } from "@/lib/verify-contact-key";
-import { useBlockedWrapAlert } from "@/lib/use-blocked-wrap-alert";
-import { useMasterKey } from "@/lib/master-key-context";
-import { getErrorMessage } from "@/lib/utils";
-import { getCategoryConfig, type VaultCategory } from "@/lib/vault-categories";
-import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
-import { VaultItemAttachments } from "@/components/vault-item-attachments";
-import { AttachmentCapture } from "@/components/attachment-capture";
-import {
-  formatFileSize,
-  iconForKind,
-  type PreparedFile,
-} from "@/lib/attachment-capture";
-import { VaultLinkList } from "@/components/vault-link-list";
-import { VaultLinkInputList } from "@/components/vault-link-input-list";
-import { MultiSelect, type MultiSelectOption } from "@/components/multi-select";
-import { parseLinks, serializeLinks, isValidUrl } from "@/lib/link-payload";
-import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
-import { useUploadQueue } from "@/lib/upload-queue";
-import { itemMetaJson, parseItemMeta } from "@/lib/item-meta";
-import { useOpenedFiles, type OpenedFile } from "@/lib/use-opened-files";
-import { useTranslations } from "@/lib/i18n";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import type { AccessLevel } from "@keeplas/backend/shared_types";
+import {
+  bucketOf,
+  contentKind,
+  type VaultListKey,
+} from "@keeplas/backend/lib/vault_groups";
 import {
   Button,
-  Icon,
-  Input,
-  Label,
-  ErrorAlert,
-  RichTextEditor,
-  Select,
-  SelectItem,
-  Spinner,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+  InfoCallout,
   Loader,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
+  RichTextEditor,
   toast,
+  useConfirm,
 } from "@keeplas/ui";
+import { StateMessage } from "@/components/state-message";
+import { AccessDialog } from "@/components/vault/access-picker";
+import {
+  DetailRow,
+  DetailsPanel,
+  type ActivityEntry,
+} from "@/components/vault/details-panel";
+import { FileRow } from "@/components/vault/file-row";
+import { HistorySheet } from "@/components/vault/history-sheet";
+import { ItemUnavailable } from "@/components/vault/item-unavailable";
+import { DocumentPages } from "@/components/vault/preview/document-pages";
+import {
+  MediaPlayer,
+  StreamNote,
+} from "@/components/vault/preview/media-player";
+import {
+  Pager,
+  PreviewPanel,
+  ToolbarButton,
+  ZoomControl,
+} from "@/components/vault/preview/preview-panel";
+import { PhotoGallery } from "@/components/vault/preview/photo-gallery";
+import { usePdfPages } from "@/components/vault/preview/use-pdf-pages";
+import { formatDate, formatDayTime } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
+import { useLocale, useTranslations } from "@/lib/i18n";
+import { itemMetaJson } from "@/lib/item-meta";
+import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
+import { useParams, useRouter } from "@/lib/navigation";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useSortedCategories, useCategoryLabel } from "@/lib/use-categories";
+import { useDecryptedFiles } from "@/lib/use-decrypted-files";
+import { useItemLabels } from "@/lib/use-item-labels";
+import {
+  sharingFields,
+  useItemSharing,
+  useMoveToFolder,
+} from "@/lib/use-item-sharing";
+import { summaryOf, useOpenedItem } from "@/lib/use-opened-item";
+import type { OpenedFile } from "@/lib/use-opened-files";
+import { useVaultCrypto } from "@/lib/use-vault-crypto";
+import { useVaultData } from "@/lib/vault-data";
+import { extensionOf } from "@/lib/vault-list";
+import type { VaultCategory } from "@/lib/vault-categories";
+import { ItemLayout } from "./item-layout";
 
-const GROUP_PREFIX = "group:";
-const CONTACT_PREFIX = "contact:";
+type ContactId = Id<"trusted_contacts">;
 
+const NO_FOLDER = "none";
+
+/** W06-2 / W06-8 / W06-9: an item, its preview and its details. */
 export default function VaultItemPage() {
-  const t = useTranslations("vault");
-  const categoryLabel = useCategoryLabel();
-  const sortedCategories = useSortedCategories();
   const params = useParams();
-  const router = useRouter();
   const itemId = params.itemId as Id<"vault_items">;
-
-  const item = useQuery(api.vault_items.getItem, { itemId });
-  const rawItemFiles = useQuery(api.vault_items.getItemFiles, { itemId });
+  const t = useTranslations("vaultItem");
+  const lists = useTranslations("vaultList");
+  const locale = useLocale();
+  const router = useRouter();
+  const confirm = useConfirm();
+  const categoryLabel = useCategoryLabel();
+  const categories = useSortedCategories();
+  const labels = useItemLabels();
+  const { folders } = useVaultData();
+  const { raw, opened, files, failed } = useOpenedItem(itemId);
+  const versions = useQuery(api.vault_items.getItemVersions, { itemId });
+  const { decryptContent, decryptContentWithKey, encryptContentWithKey } =
+    useVaultCrypto();
+  const { wrap, announcePending } = useItemSharing();
+  const moveToFolder = useMoveToFolder();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const deleteItem = useAuditedMutation(api.vault_items.deleteItem);
-  const removeItemFile = useAuditedMutation(api.vault_items.removeItemFile);
-  const {
-    decryptContent,
-    decryptContentWithKey,
-    encryptContent,
-    encryptContentWithKey,
-    isReady,
-  } = useVaultCrypto();
-  const { enqueueAttachments } = useUploadQueue();
-  const { masterKey } = useMasterKey();
-  const {
-    generateDekAndWrap,
-    wrapExistingDek,
-    unwrapOwnerDek,
-    isReady: cryptoReady,
-  } = useRecipientCrypto();
-  const showBlockedWrapAlert = useBlockedWrapAlert();
+  const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
+  const unarchiveItem = useAuditedMutation(api.vault_items.unarchiveItem);
 
-  const recipientGroupsRaw = useQuery(api.recipient_groups.listGroups);
-  const allContactsRaw = useQuery(api.trusted_contacts.getContacts);
-  const recipientGroups = useMemo(
-    () => recipientGroupsRaw ?? [],
-    [recipientGroupsRaw],
+  const [selected, setSelected] = useState(0);
+  const [showNote, setShowNote] = useState(true);
+  const [page, setPage] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [hidden, setHidden] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [history, setHistory] = useState(false);
+
+  const kind = files ? contentKind(files) : undefined;
+  const isNote = kind === "notes";
+  const file: OpenedFile | undefined =
+    files && !(isNote && showNote) ? files[selected] : undefined;
+  const photos = useMemo(
+    () => (files ?? []).filter((candidate) => candidate.kind === "image"),
+    [files],
   );
-  const allContacts = useMemo(() => allContactsRaw ?? [], [allContactsRaw]);
-
-  const [decryptedTitle, setDecryptedTitle] = useState<string>("");
-  const [decryptedCategory, setDecryptedCategory] =
-    useState<VaultCategory>("other");
-  const [decryptedIcon, setDecryptedIcon] = useState<string>();
-  const [decryptedContent, setDecryptedContent] = useState<string | null>(null);
-  const [decryptedLinks, setDecryptedLinks] = useState<string[]>([]);
-  const [decrypting, setDecrypting] = useState(false);
-  // Per-item DEK (ZK items only). `null` = still unwrapping, `undefined` = not
-  // a ZK item (use master key), `CryptoKey` = ready.
-  const [itemDek, setItemDek] = useState<CryptoKey | null | undefined>(
-    undefined,
+  const wanted = useMemo(() => {
+    if (!file) return [];
+    return file.kind === "image"
+      ? photos.map((photo) => photo._id)
+      : [file._id];
+  }, [file, photos]);
+  const decrypted = useDecryptedFiles(
+    files,
+    wanted,
+    opened?.key,
+    opened?.legacy ?? false,
   );
-  const itemFiles = useOpenedFiles(rawItemFiles, itemDek);
-  const [editing, setEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
-  const [deleting, setDeleting] = useState(false);
+  const current = file ? decrypted.get(file._id) : undefined;
+  const isPdf =
+    file?.kind === "document" &&
+    (file.mimeType === "application/pdf" || extensionOf(file.name) === "pdf");
+  const pdf = usePdfPages(
+    isPdf && current?.status === "ready" ? current.blob : null,
+    page,
+    zoom,
+  );
 
-  // Edit form state
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editLinkUrls, setEditLinkUrls] = useState<string[]>([""]);
-  const [editCategory, setEditCategory] =
-    useState<VaultCategory>("personal_document");
-  const [editRecipientSelection, setEditRecipientSelection] = useState<
-    string[]
-  >([]);
-  const [removedFileIds, setRemovedFileIds] = useState<
-    Set<Id<"vault_item_files">>
-  >(new Set());
-  const [stagedFiles, setStagedFiles] = useState<PreparedFile[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [savingProgress, setSavingProgress] = useState("");
-  const [error, setError] = useState("");
+  const decrypt = useCallback(
+    (payload: string) =>
+      opened?.legacy || !opened
+        ? decryptContent(payload)
+        : decryptContentWithKey(payload, opened.key),
+    [opened, decryptContent, decryptContentWithKey],
+  );
 
-  const recipientOptions = useMemo<MultiSelectOption[]>(() => {
-    const groupOpts: MultiSelectOption[] = recipientGroups.map((g) => ({
-      value: `${GROUP_PREFIX}${g._id}`,
-      label: g.name,
-      hint:
-        g.memberContactIds.length === 1
-          ? t("recipients.contactCountOne", { count: 1 })
-          : t("recipients.contactCountOther", {
-              count: g.memberContactIds.length,
-            }),
-      groupLabel: t("recipients.groupsLabel"),
-    }));
-    const contactOpts: MultiSelectOption[] = allContacts.map((c) => ({
-      value: `${CONTACT_PREFIX}${c._id}`,
-      label: c.name,
-      hint: c.email,
-      groupLabel: t("recipients.individualsLabel"),
-    }));
-    return [...groupOpts, ...contactOpts];
-  }, [recipientGroups, allContacts, t]);
+  const summary = useMemo(
+    () => (raw && opened && files ? summaryOf(raw, opened, files) : undefined),
+    [raw, opened, files],
+  );
 
-  // Decrypt content + linked URLs when item loads. ZK items unwrap the
-  // owner-wrapped DEK first (cached for attachments + future re-encrypt);
-  // legacy aes_256_gcm items fall back to the master key.
-  useEffect(() => {
-    if (!item || !isReady || decryptedContent || decrypting) return;
-    const isZk = item.encryptionType === "zero_knowledge";
-    if (isZk && !cryptoReady) return;
+  const activity = useMemo<ActivityEntry[]>(() => {
+    if (!raw) return [];
+    const you = t("activity.you");
+    const entries: (ActivityEntry & { at: number })[] = [
+      {
+        id: "added",
+        title: t("activity.added"),
+        at: raw.createdAt,
+        when: "",
+        actor: you,
+      },
+      ...(files ?? [])
+        .filter((attached) => attached.createdAt - raw.createdAt > 60_000)
+        .map((attached) => ({
+          id: attached._id,
+          title: t("activity.attached", { name: attached.name }),
+          at: attached.createdAt,
+          when: "",
+          actor: you,
+        })),
+      ...(versions ?? []).map((version) => ({
+        id: version._id,
+        title: t("activity.edited"),
+        at: version.replacedAt,
+        when: "",
+        actor: you,
+      })),
+    ];
+    return entries
+      .sort((a, b) => b.at - a.at)
+      .slice(0, 4)
+      .map(({ at, ...entry }) => ({
+        ...entry,
+        when: formatDayTime(at, locale),
+      }));
+  }, [raw, files, versions, t, locale]);
 
-    (async () => {
-      setDecrypting(true);
-      if (isZk) setItemDek(null);
+  if (raw === undefined || (raw && !opened && !failed)) return <Loader />;
 
-      let dek: CryptoKey | undefined;
-      try {
-        if (isZk) {
-          if (!item.ownerWrappedDek) {
-            throw new Error("Missing owner wrap on zero-knowledge item");
-          }
-          dek = await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek });
-          setItemDek(dek);
-        } else {
-          setItemDek(undefined);
-        }
+  if (raw === null || failed || !opened || !summary) {
+    return <ItemUnavailable missing={raw === null} />;
+  }
 
-        const decryptOne = (payload: string) =>
-          dek ? decryptContentWithKey(payload, dek) : decryptContent(payload);
+  const archived = raw.status === "archived";
+  const folder = folders?.find((candidate) => candidate.id === raw.folderId);
+  const grantees = (folder?.grants ?? []).map((grant) => ({
+    contactId: grant.contactId,
+    contactName: grant.contactName,
+  }));
+  const recipients = labels.recipients(summary);
+  const list: VaultListKey = bucketOf(summary);
+  const access = labels.access(summary);
+  // The picker starts from who can see it: wait until people are loaded.
+  const canShare = !archived && !opened.legacy && labels.ready;
 
-        const [title, content, links, meta] = await Promise.all([
-          item.encryptedTitle
-            ? decryptOne(item.encryptedTitle).catch(() => item.title ?? "")
-            : Promise.resolve(item.title ?? ""),
-          decryptOne(item.encryptedContent).catch(() => "[Unable to decrypt]"),
-          item.encryptedLinks
-            ? decryptOne(item.encryptedLinks)
-                .then(parseLinks)
-                .catch(() => [] as string[])
-            : Promise.resolve([] as string[]),
-          item.encryptedMeta
-            ? decryptOne(item.encryptedMeta)
-                .then((json) => parseItemMeta(json))
-                .catch(() => ({ category: item.category ?? "other" }))
-            : Promise.resolve({ category: item.category ?? "other" }),
-        ]);
-        setDecryptedTitle(title);
-        setDecryptedCategory(meta.category);
-        setDecryptedIcon("icon" in meta ? meta.icon : undefined);
-        setDecryptedContent(content);
-        setDecryptedLinks(links);
-      } catch {
-        setDecryptedTitle(item.title ?? "");
-        setDecryptedContent("[Unable to decrypt]");
-        setDecryptedLinks([]);
-        if (isZk) setItemDek(undefined);
-      } finally {
-        setDecrypting(false);
-      }
-    })();
-  }, [
-    item,
-    isReady,
-    cryptoReady,
-    decryptedContent,
-    decrypting,
-    decryptContent,
-    decryptContentWithKey,
-    unwrapOwnerDek,
-  ]);
-
-  function startEditing() {
-    if (!item || decryptedContent === null) return;
-    setEditTitle(decryptedTitle);
-    setEditContent(normalizeContentForRichText(decryptedContent));
-    setEditLinkUrls(decryptedLinks.length > 0 ? decryptedLinks : [""]);
-    setEditCategory(decryptedCategory);
-
-    const initial: string[] = [];
-    const mode = item.recipientMode ?? "default";
-    if (mode === "groups") {
-      for (const gid of item.sharedWithGroups ?? []) {
-        initial.push(`${GROUP_PREFIX}${gid}`);
-      }
-    } else if (mode === "explicit") {
-      for (const cid of item.sharedWithContacts ?? []) {
-        initial.push(`${CONTACT_PREFIX}${cid}`);
-      }
-    } else if (mode === "default" && item.accessLevel !== "private") {
-      // Legacy "default = all trust contacts": prefer the user's default group.
-      const defaultGroup = recipientGroups.find((g) => g.isDefault);
-      if (defaultGroup) initial.push(`${GROUP_PREFIX}${defaultGroup._id}`);
+  async function share(contactIds: ContactId[]) {
+    // Unchanged: keep v1 group and "every trusted contact" shares as they are.
+    if (
+      contactIds.length === recipients.length &&
+      contactIds.every((id) => recipients.includes(id))
+    ) {
+      return;
     }
-    setEditRecipientSelection(initial);
-
-    setRemovedFileIds(new Set());
-    setStagedFiles([]);
-    setError("");
-
-    setEditing(true);
+    const wraps = await wrap(
+      [...contactIds, ...grantees.map((grantee) => grantee.contactId)],
+      opened!.key,
+    );
+    if (!wraps) throw new Error("Sharing cancelled");
+    await updateItem({
+      itemId,
+      ...sharingFields(contactIds),
+      recipientKeys: wraps.recipientKeys,
+      pendingRecipients: wraps.pendingRecipients,
+    });
+    announcePending(wraps);
   }
 
-  function cancelEditing() {
-    setRemovedFileIds(new Set());
-    setStagedFiles([]);
-    setError("");
-    setEditing(false);
-  }
-
-  function toggleRemoveExisting(fileId: Id<"vault_item_files">) {
-    setRemovedFileIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(fileId)) {
-        next.delete(fileId);
-      } else {
-        next.add(fileId);
-      }
-      return next;
+  async function recategorize(category: VaultCategory) {
+    if (category === opened!.category) return;
+    const meta = itemMetaJson(category, opened!.icon);
+    // The item key: its DEK, or the master key for a legacy item.
+    await updateItem({
+      itemId,
+      encryptedMeta: await encryptContentWithKey(meta, opened!.key),
     });
   }
 
-  function removeStaged(stagedId: string) {
-    setStagedFiles((prev) => prev.filter((f) => f.id !== stagedId));
+  async function archive() {
+    const ok = await confirm({
+      title: t("archive.title"),
+      description: t("archive.body"),
+      confirmLabel: t("archive.confirm"),
+      cancelLabel: t("archive.cancel"),
+    });
+    if (!ok) return;
+    await archiveItem({ itemId });
+    router.push("/vault");
   }
 
-  function resolveEditRecipientConfig(): {
-    mode: "default" | "groups" | "explicit";
-    sharedWithGroups: Id<"recipient_groups">[];
-    sharedWithContacts: Id<"trusted_contacts">[];
-    derivedAccessLevel: AccessLevel;
-  } {
-    const groupIds = editRecipientSelection
-      .filter((v) => v.startsWith(GROUP_PREFIX))
-      .map((v) => v.slice(GROUP_PREFIX.length) as Id<"recipient_groups">);
-    const contactIds = editRecipientSelection
-      .filter((v) => v.startsWith(CONTACT_PREFIX))
-      .map((v) => v.slice(CONTACT_PREFIX.length) as Id<"trusted_contacts">);
-
-    if (groupIds.length === 0 && contactIds.length === 0) {
-      return {
-        mode: "default",
-        sharedWithGroups: [],
-        sharedWithContacts: [],
-        derivedAccessLevel: "private",
-      };
-    }
-    if (contactIds.length > 0 && groupIds.length === 0) {
-      return {
-        mode: "explicit",
-        sharedWithGroups: [],
-        sharedWithContacts: contactIds,
-        derivedAccessLevel: "trusted_only",
-      };
-    }
-    return {
-      mode: "groups",
-      sharedWithGroups: groupIds,
-      sharedWithContacts: contactIds,
-      derivedAccessLevel: "trusted_only",
-    };
+  function download() {
+    if (current?.status !== "ready" || !file) return;
+    const link = document.createElement("a");
+    link.href = current.url;
+    link.download = file.name;
+    link.click();
   }
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!isReady || !cryptoReady || !item) return;
+  const photoIndex = file?.kind === "image" ? photos.indexOf(file) : -1;
+  const selectFile = (target: OpenedFile) => {
+    setSelected(files!.indexOf(target));
+    setShowNote(false);
+    setPage(0);
+    setZoom(1);
+    setRotation(0);
+  };
 
-    const cleanUrls = editLinkUrls.map((u) => u.trim()).filter(Boolean);
-    const invalidUrl = cleanUrls.find((u) => !isValidUrl(u));
-    if (invalidUrl) {
-      setError(t("editor.errorInvalidUrl", { url: invalidUrl }));
-      return;
-    }
-    const contentPayload = editContent;
-    const linksPayload = serializeLinks(cleanUrls);
+  const noteText = opened.note.trim();
+  const noteBlock = noteText ? (
+    <RichTextEditor readOnly value={normalizeContentForRichText(opened.note)} />
+  ) : null;
 
-    setSaving(true);
-    setSavingProgress("");
-    setError("");
-
-    try {
-      const config = resolveEditRecipientConfig();
-
-      const byId = new Map(allContacts.map((c) => [c._id, c]));
-      let resolvedRecipients: WrapRecipient[] = [];
-      if (config.mode === "explicit") {
-        resolvedRecipients = config.sharedWithContacts
-          .map((id) => byId.get(id))
-          .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map(toWrapRecipient);
-      } else if (config.mode === "groups") {
-        const groupSet = new Set(config.sharedWithGroups);
-        const memberSet = new Set<string>();
-        for (const g of recipientGroups) {
-          if (!groupSet.has(g._id)) continue;
-          for (const cid of g.memberContactIds) memberSet.add(cid);
-        }
-        resolvedRecipients = Array.from(memberSet)
-          .map((id) => byId.get(id as Id<"trusted_contacts">))
-          .filter((c): c is NonNullable<typeof c> => Boolean(c))
-          .map(toWrapRecipient);
-      }
-
-      let encryptedTitle: string;
-      let encryptedContent: string;
-      let encryptedLinks: string;
-      let ownerWrappedDek: string | undefined;
-      let recipientKeysPayload: Array<{
-        contactId: Id<"trusted_contacts">;
-        wrappedDek: string;
-      }> = [];
-      // Contacts whose key isn't published yet (`unverifiable`): the save isn't
-      // blocked on them — they're recorded as pending and re-wrapped later by
-      // useBackfillPendingShares once they publish.
-      let pendingRecipientsPayload: Id<"trusted_contacts">[] = [];
-      let nextEncryptionType: "aes_256_gcm" | "zero_knowledge" =
-        "zero_knowledge";
-      // The DEK we should use to encrypt newly-added attachments under,
-      // matching whatever the item currently lives under.
-      let attachmentDek: CryptoKey | undefined;
-
-      // Verify-before-wrap (finding #2). HARD failures (signature_invalid /
-      // fingerprint_changed) are a possible server key substitution — still
-      // BLOCKING: alert, allow one re-pin retry, abort if unresolved. DEFERRABLE
-      // failures (unverifiable — contact hasn't published a key yet) don't
-      // block: returned so the caller records them as pending. Shared by both
-      // ZK branches so the policy is identical.
-      // Returns null to abort, otherwise the deferrable contacts to defer.
-      const isHard = (b: BlockedContact) =>
-        b.reason === "signature_invalid" || b.reason === "fingerprint_changed";
-      const guardBlocked = async (
-        wrap: { blocked: BlockedContact[] },
-        retryWrap: () => Promise<{ blocked: BlockedContact[] }>,
-      ): Promise<BlockedContact[] | null> => {
-        let current = wrap;
-        let hard = current.blocked.filter(isHard);
-        if (hard.length > 0) {
-          const retry = await showBlockedWrapAlert(hard);
-          if (!retry) return null;
-          current = await retryWrap();
-          hard = current.blocked.filter(isHard);
-          if (hard.length > 0) {
-            await showBlockedWrapAlert(hard);
-            return null;
-          }
-        }
-        return current.blocked.filter((b) => b.reason === "unverifiable");
-      };
-
-      setSavingProgress(t("editor.progressEncrypting"));
-      if (item.ownerWrappedDek) {
-        const dek =
-          itemDek ??
-          (await unwrapOwnerDek({ wrappedDek: item.ownerWrappedDek }));
-        attachmentDek = dek;
-        encryptedTitle = await encryptContentWithKey(editTitle.trim(), dek);
-        encryptedContent = await encryptContentWithKey(contentPayload, dek);
-        encryptedLinks = await encryptContentWithKey(linksPayload, dek);
-        let wraps = await wrapExistingDek(dek, resolvedRecipients);
-        const deferred = await guardBlocked(wraps, async () => {
-          wraps = await wrapExistingDek(dek, resolvedRecipients);
-          return wraps;
-        });
-        if (deferred === null) {
-          setSaving(false);
-          setSavingProgress("");
-          return;
-        }
-        pendingRecipientsPayload = deferred.map(
-          (b) => b.contactId as Id<"trusted_contacts">,
-        );
-        ownerWrappedDek = wraps.ownerWrap.wrappedDek;
-        recipientKeysPayload = wraps.recipientWraps.map((rw) => ({
-          contactId: rw.contactId as Id<"trusted_contacts">,
-          wrappedDek: rw.wrappedDek,
-        }));
-      } else if (item.encryptionType === "zero_knowledge") {
-        // Item flagged ZK but somehow missing the owner wrap — re-key it.
-        let fresh = await generateDekAndWrap(resolvedRecipients);
-        const deferred = await guardBlocked(fresh, async () => {
-          fresh = await generateDekAndWrap(resolvedRecipients);
-          return fresh;
-        });
-        if (deferred === null) {
-          setSaving(false);
-          setSavingProgress("");
-          return;
-        }
-        pendingRecipientsPayload = deferred.map(
-          (b) => b.contactId as Id<"trusted_contacts">,
-        );
-        attachmentDek = fresh.dek;
-        encryptedTitle = await encryptContentWithKey(
-          editTitle.trim(),
-          fresh.dek,
-        );
-        encryptedContent = await encryptContentWithKey(
-          contentPayload,
-          fresh.dek,
-        );
-        encryptedLinks = await encryptContentWithKey(linksPayload, fresh.dek);
-        ownerWrappedDek = fresh.ownerWrap.wrappedDek;
-        recipientKeysPayload = fresh.recipientWraps.map((rw) => ({
-          contactId: rw.contactId as Id<"trusted_contacts">,
-          wrappedDek: rw.wrappedDek,
-        }));
-      } else {
-        // Legacy item still encrypted under master key — keep that flow.
-        // Recipient release won't work on legacy items until they're re-saved
-        // with files re-encrypted. For now, save with master-key content.
-        encryptedTitle = await encryptContent(editTitle.trim());
-        encryptedContent = await encryptContent(contentPayload);
-        encryptedLinks = await encryptContent(linksPayload);
-        nextEncryptionType = "aes_256_gcm";
-      }
-
-      const metaJson = itemMetaJson(editCategory, decryptedIcon);
-      const encryptedMeta = attachmentDek
-        ? await encryptContentWithKey(metaJson, attachmentDek)
-        : await encryptContent(metaJson);
-
-      await updateItem({
-        itemId,
-        encryptedTitle,
-        encryptedContent,
-        encryptedLinks,
-        encryptedMeta,
-        accessLevel: config.derivedAccessLevel,
-        recipientMode: config.mode,
-        sharedWithGroups: config.sharedWithGroups,
-        sharedWithContacts: config.sharedWithContacts,
-        ...(nextEncryptionType === "zero_knowledge" && ownerWrappedDek
-          ? {
-              ownerWrappedDek,
-              recipientKeys: recipientKeysPayload,
-              pendingRecipients: pendingRecipientsPayload,
-            }
-          : {}),
-      });
-
-      // Some selected contacts hadn't published their key yet — the save
-      // wasn't blocked; flag the deferred shares so the owner knows they'll be
-      // wrapped automatically once those contacts publish.
-      if (pendingRecipientsPayload.length > 0) {
-        const deferredNames = resolvedRecipients
-          .filter((r) =>
-            pendingRecipientsPayload.includes(
-              r.contactId as Id<"trusted_contacts">,
-            ),
-          )
-          .map((r) => r.name ?? "A contact")
-          .join(", ");
-        toast({
-          title: t("dialog.deferredShareTitle"),
-          description: t("dialog.deferredShareBody", { names: deferredNames }),
-        });
-      }
-
-      // Attachment removals — independent of metadata update.
-      if (removedFileIds.size > 0) {
-        setSavingProgress(t("editor.progressRemoving"));
-        for (const fileId of removedFileIds) {
-          await removeItemFile({ itemId, fileId });
-        }
-      }
-
-      // Hand attachment additions to the background queue so the editor
-      // can close immediately. The queue encrypts under the same key as
-      // the item (or master key for legacy items), uploads with progress,
-      // and calls addItemFiles per file as it completes — the page
-      // subscribes reactively, so attachments appear progressively.
-      if (stagedFiles.length > 0) {
-        const dekForFiles = attachmentDek ?? masterKey;
-        if (!dekForFiles) {
-          throw new Error(t("editor.errorNoKey"));
-        }
-        enqueueAttachments({
-          itemId,
-          label: editTitle.trim(),
-          dek: dekForFiles,
-          files: stagedFiles.map((f) => ({
-            blob: f.blob,
-            name: f.name,
-            mimeType: f.mimeType,
-            kind: f.kind,
-            durationSec: f.durationSec,
-          })),
-        });
-      }
-
-      setDecryptedContent(contentPayload);
-      setDecryptedLinks(cleanUrls);
-      setRemovedFileIds(new Set());
-      setStagedFiles([]);
-      setEditing(false);
-    } catch (err) {
-      setError(getErrorMessage(err, t("editor.errorUpdate")));
-    } finally {
-      setSaving(false);
-      setSavingProgress("");
-    }
-  }
-
-  const DELETE_CONFIRM_TOKEN = "DELETE";
-  const canConfirmDelete = deleteConfirmInput.trim() === DELETE_CONFIRM_TOKEN;
-
-  function openDeleteDialog() {
-    setDeleteConfirmInput("");
-    setShowDeleteConfirm(true);
-  }
-
-  function handleDeleteDialogChange(open: boolean) {
-    setShowDeleteConfirm(open);
-    if (!open) setDeleteConfirmInput("");
-  }
-
-  async function handleDelete() {
-    if (!canConfirmDelete || deleting) return;
-    setDeleting(true);
-    try {
-      await deleteItem({ itemId });
-      router.push("/vault");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  if (item === undefined) {
-    return <Loader />;
-  }
-
-  if (item === null) {
-    return (
-      <div className="max-w-2xl mx-auto text-center py-24">
-        <h2 className="text-headline-md text-primary mb-2">
-          {t("detail.notFound")}
-        </h2>
-        <button
-          onClick={() => router.push("/vault")}
-          className="text-secondary font-bold cursor-pointer"
-        >
-          {t("detail.backToVault")}
-        </button>
+  let start: ReactNode;
+  let tools: ReactNode = null;
+  let body: ReactNode;
+  if (!file) {
+    start = (
+      <span className="text-[13px] leading-[18px] font-medium text-text-body">
+        {t("preview.note")}
+      </span>
+    );
+    body = (
+      <div className="flex flex-col gap-[16px] overflow-y-auto">
+        <article className="rounded-md border border-border-default bg-bg-surface px-[32px] py-[28px] text-body text-text-body">
+          {noteBlock ?? (
+            <p className="text-text-muted">{t("preview.emptyNote")}</p>
+          )}
+          {opened.links.length > 0 ? (
+            <ul className="mt-[16px] flex flex-col gap-[6px]">
+              {opened.links.map((url) => (
+                <li key={url}>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="break-all text-text-link underline"
+                  >
+                    {url}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </article>
+        {files!.map((attached) => (
+          <FileRow
+            key={attached._id}
+            kind={attached.kind}
+            name={attached.name}
+            detail={labels.detail({
+              ...summary,
+              kind: contentKind([attached]),
+              files: [attached],
+            })}
+            onOpen={() => selectFile(attached)}
+          />
+        ))}
       </div>
     );
+  } else {
+    const back = isNote ? (
+      <Button variant="plain" size="compact" onClick={() => setShowNote(true)}>
+        {t("preview.backToNote")}
+      </Button>
+    ) : null;
+    if (file.kind === "image") {
+      start = (
+        <>
+          {back}
+          <Pager
+            label={
+              photos.length > 1
+                ? t("preview.photoOf", {
+                    photo: photoIndex + 1,
+                    total: photos.length,
+                  })
+                : t("preview.photo")
+            }
+            onPrevious={
+              photoIndex > 0
+                ? () => selectFile(photos[photoIndex - 1])
+                : undefined
+            }
+            onNext={
+              photoIndex < photos.length - 1
+                ? () => selectFile(photos[photoIndex + 1])
+                : undefined
+            }
+          />
+        </>
+      );
+      tools = (
+        <>
+          <ToolbarButton
+            icon={ICON_PATHS.rotate}
+            label={t("preview.rotate")}
+            onClick={() => setRotation((turns) => (turns + 1) % 4)}
+          />
+          <ZoomControl zoom={zoom} onZoom={setZoom} />
+        </>
+      );
+      body = (
+        <PhotoGallery
+          photos={photos.map((photo) => {
+            const entry = decrypted.get(photo._id);
+            return entry?.status === "ready" ? entry.url : undefined;
+          })}
+          current={photoIndex}
+          onSelect={(index) => selectFile(photos[index])}
+          rotation={rotation}
+          zoom={zoom}
+        />
+      );
+    } else if (file.kind === "video" || file.kind === "audio") {
+      start = (
+        <>
+          {back}
+          <span className="text-[13px] leading-[18px] font-medium text-text-body">
+            {labels.detail({
+              ...summary,
+              kind: contentKind([file]),
+              files: [file],
+            })}
+          </span>
+        </>
+      );
+      body = (
+        <div className="flex flex-col gap-[16px]">
+          <MediaPlayer
+            key={file._id}
+            kind={file.kind}
+            src={current?.status === "ready" ? current.url : undefined}
+            durationSec={file.durationSec}
+          />
+          {noteBlock ? (
+            <div className="text-[14px] leading-[21px] text-text-body">
+              {noteBlock}
+            </div>
+          ) : null}
+          <StreamNote />
+        </div>
+      );
+    } else if (isPdf) {
+      start = (
+        <>
+          {back}
+          <Pager
+            label={t("preview.pageOf", {
+              page: page + 1,
+              total: Math.max(1, pdf.thumbnails.length),
+            })}
+            onPrevious={page > 0 ? () => setPage(page - 1) : undefined}
+            onNext={
+              page < pdf.thumbnails.length - 1
+                ? () => setPage(page + 1)
+                : undefined
+            }
+          />
+        </>
+      );
+      tools = <ZoomControl zoom={zoom} onZoom={setZoom} />;
+      body = pdf.error ? (
+        <InfoCallout icon={ICON_PATHS.alertTriangle}>
+          {t("preview.pdfError")}
+        </InfoCallout>
+      ) : (
+        <DocumentPages
+          thumbnails={pdf.thumbnails}
+          current={page}
+          onSelect={setPage}
+          page={pdf.page}
+          zoom={zoom}
+        />
+      );
+    } else {
+      start = back;
+      body = (
+        <div className="flex flex-1 items-center justify-center">
+          <StateMessage
+            icon={ICON_PATHS.document}
+            title={file.name}
+            body={t("preview.noPreview", {
+              type: extensionOf(file.name).toUpperCase() || file.mimeType,
+            })}
+          >
+            <Button
+              variant="primary"
+              size="cta"
+              className="w-full"
+              onClick={download}
+              disabled={current?.status !== "ready"}
+            >
+              {t("download")}
+            </Button>
+          </StateMessage>
+        </div>
+      );
+    }
+    if (current?.status === "error") {
+      body = (
+        <InfoCallout icon={ICON_PATHS.alertTriangle}>
+          {t("preview.decryptError")}
+        </InfoCallout>
+      );
+    }
   }
 
-  const category = getCategoryConfig(decryptedCategory);
-
+  const title = labels.title(summary);
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Back */}
-      <button
-        onClick={() => router.push("/vault")}
-        className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary font-label font-bold mb-8 transition-colors cursor-pointer"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-          />
-        </svg>
-        {t("detail.backToVault")}
-      </button>
-
-      {editing ? (
-        /* ─── Edit Mode ─── */
-        <form onSubmit={handleSave} className="space-y-5">
-          <h2 className="text-headline-md text-primary mb-6">
-            {t("editor.title")}
-          </h2>
-
-          {error && <ErrorAlert message={error} className="mb-0" />}
-
-          <div className="space-y-2">
-            <Label>{t("editor.fieldTitle")}</Label>
-            <Input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("editor.fieldCategory")}</Label>
-            <Select<VaultCategory>
-              value={editCategory}
-              onValueChange={setEditCategory}
-            >
-              {sortedCategories.map((cat) => (
-                <SelectItem key={cat.key} value={cat.key}>
-                  {categoryLabel(cat.key)}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("editor.fieldContent")}</Label>
-            <RichTextEditor
-              value={editContent}
-              onChange={setEditContent}
-              placeholder={t("editor.contentPlaceholder")}
-              minHeight={200}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <VaultLinkInputList
-              urls={editLinkUrls}
-              onChange={setEditLinkUrls}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("editor.fieldAttachments")}</Label>
-            <div className="space-y-2">
-              {(itemFiles ?? []).map((file) => {
-                const removed = removedFileIds.has(file._id);
-                return (
-                  <ExistingAttachmentRow
-                    key={file._id}
-                    file={file}
-                    removed={removed}
-                    onToggle={() => toggleRemoveExisting(file._id)}
-                  />
-                );
-              })}
-              {stagedFiles.map((file) => (
-                <StagedAttachmentRow
-                  key={file.id}
-                  file={file}
-                  onRemove={() => removeStaged(file.id)}
-                />
-              ))}
-              {(itemFiles?.length ?? 0) === 0 && stagedFiles.length === 0 && (
-                <p className="text-label-md text-on-surface-variant/70">
-                  {t("editor.noAttachments")}
-                </p>
-              )}
-            </div>
-            <div className="pt-2">
-              <AttachmentCapture
-                onAdd={(f) => setStagedFiles((prev) => [...prev, ...f])}
-                onError={setError}
-              />
-              <p className="text-label-md text-on-surface-variant/70 mt-2">
-                {t("editor.fileHint")}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("recipients.label")}</Label>
-            <MultiSelect
-              options={recipientOptions}
-              selected={editRecipientSelection}
-              onChange={setEditRecipientSelection}
-              placeholder={t("recipients.placeholderPrivate")}
-              searchPlaceholder={t("recipients.searchPlaceholder")}
-              emptyMessage={t("recipients.emptyMessage")}
-              renderTrigger={(selected) => {
-                if (selected.length === 0) {
-                  return (
-                    <span className="text-outline-variant">
-                      {t("recipients.placeholderPrivate")}
-                    </span>
-                  );
-                }
-                const labels = selected
-                  .map(
-                    (v) => recipientOptions.find((o) => o.value === v)?.label,
-                  )
-                  .filter(Boolean);
-                return <span className="truncate">{labels.join(", ")}</span>;
-              }}
-            />
-            <p className="text-label-md text-on-surface-variant/70">
-              {t("recipients.helper")}
-            </p>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={cancelEditing}
-              disabled={saving}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              {t("editor.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving}
-              className="flex-1 text-sm cursor-pointer"
-            >
-              {saving
-                ? savingProgress || t("editor.encrypting")
-                : t("editor.saveChanges")}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        /* ─── View Mode ─── */
-        <>
-          {/* Header */}
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <svg
-                  className="w-5 h-5 text-secondary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d={category.icon}
-                  />
-                </svg>
-                <span className="font-label text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
-                  {categoryLabel(decryptedCategory)}
-                </span>
-              </div>
-              <h1 className="text-headline-lg text-primary">
-                {decryptedTitle}
-              </h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={startEditing}
-                className="p-2 hover:bg-surface-container-high rounded-xs transition-colors cursor-pointer"
-                title={t("detail.edit")}
+    <>
+      <ItemLayout
+        breadcrumb={[
+          { label: lists("breadcrumb"), href: "/hub" },
+          { label: lists(`lists.${list}`), href: `/vault?type=${list}` },
+          { label: file?.name ?? title },
+        ]}
+        title={title}
+        subtitle={`${labels.detail(summary)} · ${t("added", {
+          date: formatDate(raw.createdAt, locale),
+        })}`}
+        onDownload={file ? download : undefined}
+        onShare={canShare ? () => setSharing(true) : undefined}
+        notice={
+          archived ? (
+            <div className="flex items-center gap-[16px] rounded-md bg-bg-pending px-[16px] py-[12px] text-body text-text-pending">
+              <span className="flex-1">
+                {t("archived", {
+                  date: formatDate(raw.archivedAt ?? raw.updatedAt, locale),
+                })}
+              </span>
+              <Button
+                variant="bordered"
+                size="compact"
+                onClick={() => void unarchiveItem({ itemId })}
               >
-                <svg
-                  className="w-5 h-5 text-on-surface-variant"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={openDeleteDialog}
-                className="p-2 hover:bg-error-container rounded-xs transition-colors cursor-pointer"
-                title={t("detail.deletePermanently")}
-              >
-                <svg
-                  className="w-5 h-5 text-error"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m5.25 0V5.625c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V7.5m-9 0h13.5"
-                  />
-                </svg>
-              </button>
+                {t("restore")}
+              </Button>
             </div>
-          </div>
-
-          {/* Metadata */}
-          <div className="flex flex-wrap gap-3 mb-6">
-            {(() => {
-              const mode = item.recipientMode ?? "default";
-              const labels: string[] = [];
-              if (mode === "groups") {
-                for (const gid of item.sharedWithGroups ?? []) {
-                  const g = recipientGroups.find((x) => x._id === gid);
-                  if (g) labels.push(g.name);
-                }
-              } else if (mode === "explicit") {
-                for (const cid of item.sharedWithContacts ?? []) {
-                  const c = allContacts.find((x) => x._id === cid);
-                  if (c) labels.push(c.name);
-                }
-              }
-              const summary =
-                item.accessLevel === "private"
-                  ? t("detail.summaryPrivate")
-                  : labels.length > 0
-                    ? t("detail.summaryReleasedTo", {
-                        names: labels.join(", "),
-                      })
-                    : t("detail.summaryReleasedAll");
-              return (
-                <span className="text-[11px] font-label font-bold text-on-surface-variant bg-surface-container-low px-3 py-1 rounded-xs">
-                  {summary}
-                </span>
-              );
-            })()}
-          </div>
-
-          {/* Decrypted Content */}
-          {(decrypting ||
-            (decryptedContent && decryptedContent.length > 0)) && (
-            <div className="bg-surface-container-low rounded-sm p-6 mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <svg
-                  className="w-4 h-4 text-secondary"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
+          ) : opened.legacy ? (
+            <InfoCallout icon={ICON_PATHS.info}>{t("legacy")}</InfoCallout>
+          ) : null
+        }
+        preview={
+          <PreviewPanel
+            start={start}
+            tools={tools}
+            hidden={hidden}
+            onToggleHidden={() => setHidden(!hidden)}
+            menu={
+              <>
+                <DropdownMenuItem
+                  onSelect={() => setHistory(true)}
+                  className="rounded-sm px-[10px] py-[8px] text-body-sm text-text-primary focus:bg-bg-subtle"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                  />
-                </svg>
-                <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
-                  {t("detail.decryptedContent")}
-                </span>
-              </div>
-              {decrypting ? (
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <Spinner size="sm" />
-                  {t("detail.decrypting")}
-                </div>
-              ) : (
-                <RichTextEditor
-                  readOnly
-                  value={normalizeContentForRichText(decryptedContent ?? "")}
-                />
-              )}
-            </div>
-          )}
-
-          {decryptedLinks.length > 0 && (
-            <div className="bg-surface-container-low rounded-sm p-6 mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Icon
-                  path={ICON_PATHS.link}
-                  className="w-4 h-4 text-secondary"
-                  strokeWidth={1.75}
-                />
-                <span className="font-label text-[10px] uppercase tracking-widest font-bold text-secondary">
-                  {t("detail.linkedUrls")}
-                </span>
-              </div>
-              <VaultLinkList urls={decryptedLinks} />
-            </div>
-          )}
-
-          {/* Secure Attachments */}
-          <div className="mb-6">
-            <VaultItemAttachments itemId={itemId} itemDek={itemDek} />
-          </div>
-
-          {/* Timestamp */}
-          <p className="text-[11px] text-outline-variant">
-            {t("detail.timestamps", {
-              created: new Date(item.createdAt).toLocaleDateString(),
-              updated: new Date(item.updatedAt).toLocaleDateString(),
-            })}
-          </p>
-
-          {/* Delete Confirmation — irreversible */}
-          <Dialog
-            open={showDeleteConfirm}
-            onOpenChange={handleDeleteDialogChange}
+                  {t("history.title")}
+                </DropdownMenuItem>
+                {archived ? null : (
+                  <DropdownMenuItem
+                    onSelect={() => void archive()}
+                    className="rounded-sm px-[10px] py-[8px] text-body-sm text-action-danger focus:bg-bg-danger"
+                  >
+                    {t("archive.confirm")}
+                  </DropdownMenuItem>
+                )}
+              </>
+            }
           >
-            <DialogContent className="max-w-sm p-8 text-left">
-              <DialogTitle className="mb-2 text-error">
-                {t("delete.title")}
-              </DialogTitle>
-              <DialogDescription className="mb-4">
-                {t("delete.description")}
-              </DialogDescription>
-              <div className="space-y-2 mb-6">
-                <Label htmlFor="delete-confirm-input">
-                  {t("delete.confirmPrefix")}{" "}
-                  <span className="font-mono font-bold text-error">
-                    {DELETE_CONFIRM_TOKEN}
-                  </span>{" "}
-                  {t("delete.confirmSuffix")}
-                </Label>
-                <Input
-                  id="delete-confirm-input"
-                  type="text"
-                  autoComplete="off"
-                  value={deleteConfirmInput}
-                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
-                  placeholder={DELETE_CONFIRM_TOKEN}
+            {body}
+          </PreviewPanel>
+        }
+        details={
+          <DetailsPanel
+            onEdit={
+              archived ? undefined : () => router.push(`/vault/${itemId}/edit`)
+            }
+            onAddPeople={canShare ? () => setSharing(true) : undefined}
+            activity={activity}
+            onSeeAll={() => setHistory(true)}
+            rows={
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={archived}>
+                    <DetailRow
+                      icon={ICON_PATHS.document}
+                      label={t("details.category")}
+                      value={categoryLabel(opened.category)}
+                    />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="max-h-[360px] min-w-[220px] overflow-y-auto rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
+                  >
+                    <DropdownMenuRadioGroup
+                      value={opened.category}
+                      onValueChange={(value) =>
+                        void recategorize(value as VaultCategory)
+                      }
+                    >
+                      {categories.map((category) => (
+                        <DropdownMenuRadioItem
+                          key={category.key}
+                          value={category.key}
+                          className="rounded-sm text-body-sm text-text-primary"
+                        >
+                          {categoryLabel(category.key)}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild disabled={archived}>
+                    <DetailRow
+                      icon={ICON_PATHS.folder}
+                      label={t("details.folder")}
+                      value={labels.folder(summary) ?? lists("noFolder")}
+                    />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="max-h-[360px] min-w-[220px] overflow-y-auto rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
+                  >
+                    <DropdownMenuRadioGroup
+                      value={raw.folderId ?? NO_FOLDER}
+                      onValueChange={(value) =>
+                        void moveToFolder(
+                          raw,
+                          value === NO_FOLDER ? null : (value as Id<"folders">),
+                        ).catch(() =>
+                          toast({
+                            variant: "error",
+                            title: t("details.moveFailed"),
+                          }),
+                        )
+                      }
+                    >
+                      <DropdownMenuRadioItem
+                        value={NO_FOLDER}
+                        className="rounded-sm text-body-sm text-text-primary"
+                      >
+                        {lists("noFolder")}
+                      </DropdownMenuRadioItem>
+                      {(folders ?? []).map((candidate) => (
+                        <DropdownMenuRadioItem
+                          key={candidate.id}
+                          value={candidate.id}
+                          className="rounded-sm text-body-sm text-text-primary"
+                        >
+                          {candidate.name ?? t("details.lockedFolder")}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DetailRow
+                  icon={ICON_PATHS.lock}
+                  label={t("details.access")}
+                  value={access.label}
+                  onClick={() => setSharing(true)}
+                  disabled={!canShare}
                 />
-              </div>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleDeleteDialogChange(false)}
-                  className="flex-1 py-3 bg-surface-container-low hover:bg-surface-container-high rounded-xs font-label font-bold text-sm cursor-pointer"
-                >
-                  {t("delete.cancel")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={!canConfirmDelete || deleting}
-                  className="flex-1 py-3 bg-error text-on-error rounded-xs font-label font-bold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deleting ? t("delete.deleting") : t("delete.deleteForever")}
-                </button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </>
-      )}
-    </div>
-  );
-}
-
-function ExistingAttachmentRow({
-  file,
-  removed,
-  onToggle,
-}: {
-  file: OpenedFile;
-  removed: boolean;
-  onToggle: () => void;
-}) {
-  const t = useTranslations("vault");
-  return (
-    <div
-      className={`flex items-center gap-3 bg-surface-container-low rounded-xs px-4 py-3 ${
-        removed ? "opacity-50" : ""
-      }`}
-    >
-      <div className="w-9 h-9 bg-surface-container-high rounded-xs flex items-center justify-center shrink-0 text-primary">
-        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p
-          className={`text-headline-sm text-primary truncate ${
-            removed ? "line-through" : ""
-          }`}
-        >
-          {file.name}
-        </p>
-        <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatFileSize(file.size)} · {t("attachments.encrypted")}
-          {removed ? ` · ${t("editor.willBeDeleted")}` : ""}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-xs"
-      >
-        {removed ? t("editor.undo") : t("editor.remove")}
-      </button>
-    </div>
-  );
-}
-
-function StagedAttachmentRow({
-  file,
-  onRemove,
-}: {
-  file: PreparedFile;
-  onRemove: () => void;
-}) {
-  const t = useTranslations("vault");
-  return (
-    <div className="flex items-center gap-3 bg-secondary/5 rounded-xs px-4 py-3">
-      <div className="w-9 h-9 bg-secondary/10 rounded-xs flex items-center justify-center shrink-0 text-secondary">
-        <Icon path={iconForKind(file.kind)} className="w-4 h-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-headline-sm text-primary truncate">{file.name}</p>
-        <p className="text-label-md text-on-surface-variant mt-0.5">
-          {formatFileSize(file.size)} · {t("editor.willBeEncrypted")}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-label-md font-bold text-on-surface-variant hover:text-error cursor-pointer px-2 py-1 rounded-xs"
-      >
-        {t("editor.remove")}
-      </button>
-    </div>
+              </>
+            }
+          />
+        }
+      />
+      <AccessDialog
+        open={sharing}
+        onOpenChange={setSharing}
+        initial={recipients}
+        inherited={grantees}
+        folderName={folder?.name ?? undefined}
+        onSave={share}
+      />
+      <HistorySheet
+        open={history}
+        onOpenChange={setHistory}
+        itemId={itemId}
+        decrypt={decrypt}
+        canRestore={!archived}
+      />
+    </>
   );
 }

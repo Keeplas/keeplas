@@ -5,15 +5,19 @@ import fr from "i18n-iso-countries/langs/fr.json";
 countries.registerLocale(en);
 countries.registerLocale(fr);
 
-/** "62 MB", "1.5 GB" in English, "62 Mo", "1,5 Go" in French; decimal units like the plan quotas (100 MB, 10 GB). */
+const KIB = 1024;
+const MIB = 1024 * KIB;
+const GIB = 1024 * MIB;
+
+/** "62 MB", "1.5 GB" in English, "62 Mo", "1,5 Go" in French; binary units like the plan quotas (100 MB, 10 GB). */
 export function formatBytes(bytes: number, locale = "en"): string {
   const french = locale.startsWith("fr");
   const [kb, mb, gb] = french ? ["Ko", "Mo", "Go"] : ["KB", "MB", "GB"];
   const join = (value: number, unit: string) =>
     `${french ? String(value).replace(".", ",") : value}\u00a0${unit}`;
-  if (bytes < 1_000_000) return join(Math.round(bytes / 1_000), kb);
-  if (bytes < 1_000_000_000) return join(Math.round(bytes / 1_000_000), mb);
-  return join(Math.round(bytes / 100_000_000) / 10, gb);
+  if (bytes < MIB) return join(Math.round(bytes / KIB), kb);
+  if (bytes < GIB) return join(Math.round(bytes / MIB), mb);
+  return join(Math.round((bytes / GIB) * 10) / 10, gb);
 }
 
 /** Local time of day, e.g. "2:32 PM" / "14:32" depending on `locale`. */

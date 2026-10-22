@@ -30,6 +30,7 @@ export interface SealedItem {
   ownerWrappedDek: string;
   folderId?: string;
   recipientKeys?: { contactId: string; wrappedDek: string }[];
+  captureHandoffId?: string;
 }
 
 export interface OutboxEntry {

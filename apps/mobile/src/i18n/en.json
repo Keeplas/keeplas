@@ -9,6 +9,7 @@
     "getHelp": "Get help",
     "openSettings": "Open Settings",
     "notNow": "Not now",
+    "close": "Close",
     "ok": "OK",
     "optional": "Optional",
     "seeAll": "See all",
@@ -505,7 +506,6 @@
     "untitled": "Untitled item",
     "untitledScan": "Scanned document",
     "localEncryption": "Title, notes, category and attachments are encrypted on this phone.",
-    "backHome": "Back to home",
     "category": {
       "inbox": "Inbox",
       "personal_document": "Documents",
@@ -526,7 +526,8 @@
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",
-      "manageStorage": "Manage storage"
+      "manageStorage": "Manage storage",
+      "background": "Continue in background"
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",
@@ -673,7 +674,12 @@
     "addTrustedPerson": "Add a trusted person",
     "shareFailedTitle": "Sharing not saved",
     "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
-    "downloading": "Downloading… {pct}%"
+    "downloading": "Downloading… {pct}%",
+    "edit": "Edit",
+    "history": "Edit history",
+    "historyCount": "{n} earlier versions",
+    "historyEmpty": "No changes yet",
+    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
   },
   "people": {
     "title": "Trusted people",
@@ -816,6 +822,10 @@
     "notConfigured": "Set your check-in frequency",
     "imOkay": "I'm okay",
     "imOkayBody": "Reset the countdown now",
+    "confirmedTitle": "Thanks, noted",
+    "confirmedBody": "Your countdown starts over. Next Life check on {date}.",
+    "confirmedBodyNoDate": "Your countdown starts over.",
+    "lastConfirmed": "Last confirmed on {date}",
     "travel": "Travel mode",
     "travelOn": "Paused for your trip",
     "travelOff": "Pause checks for 30 days",
@@ -976,10 +986,10 @@
   },
   "itemActions": {
     "open": "Open",
-    "delete": "Delete",
-    "deleteTitle": "Delete \"{title}\"?",
-    "deleteBody": "It is removed from your vault and from everyone you shared it with. This cannot be undone.",
-    "deleteFailed": "Keeplas could not delete this item. Check your connection and try again.",
+    "archive": "Archive",
+    "archiveTitle": "Archive \"{title}\"?",
+    "archiveBody": "It leaves your vault and is no longer passed on to anyone. It stays whole in Settings → Archives, with its history, and you can restore it at any time.",
+    "archiveFailed": "Keeplas could not archive this item. Check your connection and try again.",
     "moveFailed": "Keeplas could not move \"{title}\". Check your connection, or check that everyone in the folder has a verified security code.",
     "more": "More actions for {title}"
   },
@@ -1103,5 +1113,38 @@
     "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
     "retry": "Generate a new code",
     "note": "Only a phone already signed in to your account can approve this code."
+  },
+  "itemEdit": {
+    "title": "Edit",
+    "removeFile": "Remove {name}",
+    "cameraChip": "Camera",
+    "historyNote": "The current version is kept in the history, with its files. Nothing is lost.",
+    "failedTitle": "Changes not saved",
+    "failedBody": "Keeplas could not save your changes. Check your connection and try again."
+  },
+  "itemHistory": {
+    "title": "History",
+    "body": "Every edit keeps the previous version, encrypted on your devices. You can read it or restore it.",
+    "current": "Current version",
+    "since": "Since {date}",
+    "versionRange": "From {from} to {to}",
+    "created": "Item created",
+    "versionOf": "Version of {date}",
+    "noNote": "No note in this version.",
+    "restore": "Restore this version",
+    "restoreTitle": "Restore this version?",
+    "restoreBody": "The item goes back to its content of {date}. The current version is kept in the history."
+  },
+  "archives": {
+    "title": "Archives",
+    "rowBody": "Items taken out of the vault, kept with their history",
+    "body": "An archived item is no longer in your vault and is not passed on to anyone. It stays whole, with its files and history. Only deleting your account erases it.",
+    "space": "Archives and history use {size} of your storage.",
+    "archivedOn": "Archived on {date}",
+    "restore": "Restore",
+    "restoreBody": "Put it back in the vault, with its sharing",
+    "restoreFailed": "Keeplas could not restore this item. Check your connection and try again.",
+    "emptyTitle": "No archives",
+    "emptyBody": "Items you archive will show up here, with their history."
   }
 }

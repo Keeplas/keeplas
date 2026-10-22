@@ -76,33 +76,3 @@ export const CATEGORIES: CategoryConfig[] = [
 export function getCategoryConfig(key: VaultCategory): CategoryConfig {
   return CATEGORIES.find((c) => c.key === key)!;
 }
-
-/**
- * v2 groups the detailed categories into Documents, Accounts, Instructions
- * and Other (design kit), plus the Encrypted inbox: captures from the phone
- * app waiting to be sorted (category "inbox").
- */
-export type CategoryGroup =
-  "inbox" | "document" | "account" | "instruction" | "other";
-
-const CATEGORY_GROUP: Partial<Record<string, CategoryGroup>> = {
-  inbox: "inbox",
-  personal_document: "document",
-  legal_document: "document",
-  property: "document",
-  insurance_policy: "document",
-  business_continuity: "document",
-  financial_asset: "account",
-  digital_asset: "account",
-  credential: "account",
-  subscription: "account",
-  health_directive: "instruction",
-  conditional_message: "instruction",
-  wishes: "instruction",
-  contacts: "instruction",
-  other: "other",
-};
-
-/** Group of a (decrypted) category; unknown values count as "other". */
-export const categoryGroup = (category: string | undefined): CategoryGroup =>
-  CATEGORY_GROUP[category ?? "other"] ?? "other";
