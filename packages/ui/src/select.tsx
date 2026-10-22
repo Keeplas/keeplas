@@ -5,6 +5,8 @@ import * as SelectPrimitives from "@radix-ui/react-select";
 import { cn } from "./lib/utils";
 
 export interface SelectProps<Value = string> {
+  /** "field": v2 web "App/Field" box (W06-3); default is the legacy look. */
+  variant?: "default" | "field";
   value?: Value;
   defaultValue?: Value;
   onValueChange?: (value: Value) => void;
@@ -23,6 +25,8 @@ export interface SelectProps<Value = string> {
 }
 
 type ItemValueMap<Value> = Map<string, Value>;
+
+const SelectVariant = React.createContext<"default" | "field">("default");
 
 function collectItemValues<Value>(
   children: React.ReactNode,
@@ -44,6 +48,7 @@ function collectItemValues<Value>(
 }
 
 function SelectImpl<Value = string>({
+  variant = "default",
   value,
   defaultValue,
   onValueChange,
@@ -93,10 +98,10 @@ function SelectImpl<Value = string>({
       <SelectPrimitives.Trigger
         id={id}
         className={cn(
-          "w-full flex items-center justify-between gap-3 bg-surface-container-low border border-outline-variant rounded-xs px-4 py-3 text-sm text-left text-on-surface font-body transition-colors",
-          "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-          "data-[state=open]:bg-surface-container-high",
-          "disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
+          "w-full flex items-center justify-between text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer",
+          variant === "field"
+            ? "h-[46px] gap-[8px] rounded-sm border border-border-default bg-bg-surface px-[14px] text-[15px] leading-[22px] text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus data-[placeholder]:text-text-subtle"
+            : "gap-3 bg-surface-container-low border border-outline-variant rounded-xs px-4 py-3 text-sm text-on-surface font-body hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 data-[state=open]:bg-surface-container-high",
           triggerClassName,
           className,
         )}
@@ -113,9 +118,14 @@ function SelectImpl<Value = string>({
             </span>
           ) : undefined}
         </SelectPrimitives.Value>
-        <SelectPrimitives.Icon className="shrink-0 text-on-surface-variant">
+        <SelectPrimitives.Icon
+          className={cn(
+            "shrink-0",
+            variant === "field" ? "text-text-muted" : "text-on-surface-variant",
+          )}
+        >
           <svg
-            className="w-4 h-4"
+            className={variant === "field" ? "size-[18px]" : "w-4 h-4"}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -136,14 +146,18 @@ function SelectImpl<Value = string>({
           sideOffset={6}
           align={align}
           className={cn(
-            "z-[60] min-w-[var(--radix-select-trigger-width)]",
-            "bg-surface-container-lowest rounded-sm shadow-xl border border-outline-variant/20 p-1.5 font-body overflow-hidden",
+            "z-[60] min-w-[var(--radix-select-trigger-width)] overflow-hidden",
+            variant === "field"
+              ? "rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
+              : "bg-surface-container-lowest rounded-sm shadow-xl border border-outline-variant/20 p-1.5 font-body",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
             popupClassName,
           )}
         >
           <SelectPrimitives.Viewport className="p-0 max-h-[min(24rem,var(--radix-select-content-available-height))] overflow-y-auto">
-            {children}
+            <SelectVariant.Provider value={variant}>
+              {children}
+            </SelectVariant.Provider>
           </SelectPrimitives.Viewport>
         </SelectPrimitives.Content>
       </SelectPrimitives.Portal>
@@ -169,48 +183,57 @@ export interface SelectItemProps {
 }
 
 export const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
-  ({ value, disabled, children, className, label, description }, ref) => (
-    <SelectPrimitives.Item
-      ref={ref}
-      value={String(value)}
-      disabled={disabled}
-      textValue={label}
-      className={cn(
-        "relative flex items-start gap-2 rounded-xs px-3 py-2 text-sm text-on-surface cursor-pointer outline-none select-none",
-        "data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary",
-        "data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
-        "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",
-        className,
-      )}
-    >
-      <SelectPrimitives.ItemIndicator className="shrink-0 text-secondary mt-0.5">
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.25}
-          aria-hidden
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m4.5 12.75 6 6 9-13.5"
-          />
-        </svg>
-      </SelectPrimitives.ItemIndicator>
-      <div className="flex-1 min-w-0">
-        <SelectPrimitives.ItemText className="block truncate">
-          {children}
-        </SelectPrimitives.ItemText>
-        {description && (
-          <span className="block text-label-md text-on-surface-variant font-normal leading-snug mt-0.5">
-            {description}
-          </span>
+  ({ value, disabled, children, className, label, description }, ref) => {
+    const variant = React.useContext(SelectVariant);
+    return (
+      <SelectPrimitives.Item
+        ref={ref}
+        value={String(value)}
+        disabled={disabled}
+        textValue={label}
+        className={cn(
+          "relative flex items-start gap-2 cursor-pointer outline-none select-none",
+          "data-[disabled]:opacity-40 data-[disabled]:cursor-not-allowed",
+          variant === "field"
+            ? "rounded-sm px-[10px] py-[8px] text-[14px] leading-[20px] text-text-primary data-[highlighted]:bg-bg-subtle data-[state=checked]:font-semibold"
+            : "rounded-xs px-3 py-2 text-sm text-on-surface data-[highlighted]:bg-surface-container-high data-[highlighted]:text-primary data-[state=checked]:bg-secondary/10 data-[state=checked]:text-secondary data-[state=checked]:font-semibold",
+          className,
         )}
-      </div>
-    </SelectPrimitives.Item>
-  ),
+      >
+        <SelectPrimitives.ItemIndicator
+          className={cn(
+            "shrink-0 mt-0.5",
+            variant === "field" ? "text-text-link" : "text-secondary",
+          )}
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.25}
+            aria-hidden
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m4.5 12.75 6 6 9-13.5"
+            />
+          </svg>
+        </SelectPrimitives.ItemIndicator>
+        <div className="flex-1 min-w-0">
+          <SelectPrimitives.ItemText className="block truncate">
+            {children}
+          </SelectPrimitives.ItemText>
+          {description && (
+            <span className="block text-label-md text-on-surface-variant font-normal leading-snug mt-0.5">
+              {description}
+            </span>
+          )}
+        </div>
+      </SelectPrimitives.Item>
+    );
+  },
 );
 SelectItem.displayName = "SelectItem";
 

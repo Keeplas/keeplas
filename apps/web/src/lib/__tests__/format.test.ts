@@ -3,6 +3,7 @@ import {
   formatBytes,
   formatClock,
   formatCountdown,
+  formatDayTime,
   formatDate,
   formatRelative,
 } from "../format";
@@ -69,5 +70,17 @@ describe("formatBytes", () => {
 describe("formatDate", () => {
   it("uses the short month", () => {
     expect(formatDate(Date.UTC(2026, 0, 12, 12), "en")).toBe("Jan 12, 2026");
+  });
+});
+
+describe("formatDayTime", () => {
+  const now = new Date(2026, 3, 14, 15, 0).getTime();
+  it.each([
+    [new Date(2026, 3, 14, 10, 12).getTime(), "en", "Today, 10:12 AM"],
+    [new Date(2026, 3, 13, 21, 5).getTime(), "en", "Yesterday, 9:05 PM"],
+    [new Date(2026, 3, 12, 9, 43).getTime(), "en", "Apr 12, 2026, 9:43 AM"],
+    [new Date(2026, 3, 14, 10, 12).getTime(), "fr", "Aujourd’hui, 10:12"],
+  ])("formats %d in %s as %s", (timestamp, locale, text) => {
+    expect(formatDayTime(timestamp, locale, now)).toBe(text);
   });
 });

@@ -120,7 +120,6 @@ describe("vault list", () => {
         kind: "photos",
         files: [
           {
-            v: 1,
             name: "Spare keys.jpg",
             mimeType: "image/jpeg",
             size: 1,

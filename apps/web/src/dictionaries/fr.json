@@ -3,7 +3,10 @@
     "language": "Langue",
     "resendIn": "Renvoyer le code dans {seconds}s",
     "back": "Retour",
-    "moreActions": "Plus d'actions pour {name}"
+    "moreActions": "Plus d'actions pour {name}",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
   },
   "auth": {
     "hero": {
@@ -1357,8 +1360,8 @@
     "upload": {
       "savingTitle": "Enregistrement de {count} pièce jointe",
       "savingTitlePlural": "Enregistrement de {count} pièces jointes",
-      "encrypting": "{label} — chiffrement…",
-      "progress": "{label} — {completed}/{total} fichiers traités · {done} / {totalBytes}",
+      "encrypting": "{label} : chiffrement dans ce navigateur…",
+      "progress": "{done} sur {totalBytes} envoyés",
       "savedTitle": "Pièces jointes enregistrées",
       "savedDescription": "{label} — {count} fichier chiffré et téléversé",
       "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
@@ -1376,7 +1379,9 @@
           "upgrade": "Passer à l'offre À vie",
           "manage": "Gérer le stockage"
         }
-      }
+      },
+      "savingItem": "Sécurisation de {label}",
+      "savedItem": "{label} est protégé dans votre coffre."
     },
     "page": {
       "loading": "Chargement de votre coffre",
@@ -2639,6 +2644,97 @@
     "actions": {
       "open": "Ouvrir",
       "archive": "Archiver"
+    }
+  },
+  "vaultItem": {
+    "download": "Télécharger",
+    "share": "Partager",
+    "added": "Ajouté le {date}",
+    "archived": "Archivé le {date}. Il ne fait plus partie de votre coffre et n'est transmis à personne.",
+    "restore": "Restaurer",
+    "legacy": "Cet élément utilise un ancien format de chiffrement. Modifiez-le et enregistrez-le une fois pour le partager.",
+    "backToVault": "Retour à mon coffre",
+    "missing": {
+      "title": "Cet élément n'est pas disponible",
+      "body": "Il a peut-être été supprimé depuis un autre appareil, ou il appartient à un autre compte."
+    },
+    "locked": {
+      "title": "Impossible d'ouvrir cet élément dans ce navigateur",
+      "body": "Sa clé ne correspond pas à la clé de votre coffre ici. Verrouillez votre coffre, déverrouillez-le, puis ouvrez de nouveau cet élément."
+    },
+    "sharing": {
+      "pendingTitle": "Partagé dès que possible",
+      "pendingBody": "{names} n'a pas encore terminé la configuration de Keeplas. L'élément sera chiffré pour cette personne automatiquement dès que ce sera fait."
+    },
+    "details": {
+      "title": "Détails",
+      "edit": "Modifier",
+      "category": "Catégorie",
+      "folder": "Dossier",
+      "access": "Accès",
+      "lockedFolder": "Dossier verrouillé",
+      "addPeople": "Ajouter des personnes",
+      "addPeopleBody": "Partager avec vos contacts de confiance",
+      "encrypted": "Chiffré de bout en bout. Seuls vous et les personnes choisies pouvez ouvrir ce fichier.",
+      "activity": "Activité",
+      "seeAll": "Tout voir"
+    },
+    "activity": {
+      "you": "Vous",
+      "added": "Ajouté à votre coffre",
+      "attached": "{name} ajouté",
+      "edited": "Modifié"
+    },
+    "access": {
+      "title": "Qui peut le voir",
+      "body": "Choisissez les contacts de confiance qui pourront ouvrir cet élément. Il est chiffré pour chacun d'eux dans ce navigateur.",
+      "nobody": "Aucun contact de confiance n'a encore rejoint Keeplas.",
+      "addContact": "Inviter quelqu'un",
+      "throughFolder": "Via le dossier {name}",
+      "saving": "Enregistrement…"
+    },
+    "history": {
+      "title": "Historique des modifications",
+      "body": "Les versions précédentes de cet élément. En restaurer une conserve aussi la version actuelle ici.",
+      "empty": "Aucune modification pour l'instant.",
+      "untitled": "Sans titre",
+      "replaced": "Remplacée le {date}",
+      "restore": "Restaurer",
+      "cancel": "Annuler",
+      "confirmTitle": "Restaurer cette version ?",
+      "confirmBody": "L'élément revient à cette version. La version actuelle reste dans son historique."
+    },
+    "archive": {
+      "title": "Archiver cet élément ?",
+      "body": "Il quitte votre coffre et n'est plus transmis à personne. Il reste entier dans vos archives, avec son historique, et vous pouvez le restaurer à tout moment.",
+      "confirm": "Archiver",
+      "cancel": "Annuler"
+    },
+    "preview": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "show": "Afficher l'aperçu",
+      "hide": "Masquer l'aperçu",
+      "item": "cet élément",
+      "note": "Note",
+      "emptyNote": "Cette note est vide.",
+      "backToNote": "Retour à la note",
+      "photo": "Photo",
+      "photoOf": "Photo {photo} sur {total}",
+      "pageOf": "Page {page} sur {total}",
+      "rotate": "Faire pivoter",
+      "play": "Lire",
+      "pause": "Pause",
+      "position": "Position",
+      "mute": "Couper le son",
+      "unmute": "Activer le son",
+      "fullScreen": "Plein écran",
+      "streams": "Lu depuis une copie chiffrée. Rien n'est enregistré en clair sur cet ordinateur.",
+      "pdfError": "Impossible d'afficher ce PDF. Il est peut-être endommagé ou protégé par un mot de passe. Téléchargez-le pour l'ouvrir dans une autre application.",
+      "noPreview": "Keeplas ne peut pas encore afficher les fichiers {type}. Téléchargez-le pour l'ouvrir dans une autre application.",
+      "decryptError": "Impossible de déchiffrer ce fichier dans ce navigateur. Verrouillez votre coffre, déverrouillez-le, puis réessayez."
     }
   }
 }

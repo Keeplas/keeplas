@@ -88,3 +88,29 @@ export function formatDate(timestamp: number, locale: string): string {
     year: "numeric",
   }).format(timestamp);
 }
+
+/**
+ * "Today, 10:12 AM", "Yesterday, 9:05 PM", else "Apr 12, 2026, 9:43 AM"
+ * (activity lists).
+ */
+export function formatDayTime(
+  timestamp: number,
+  locale: string,
+  now = Date.now(),
+): string {
+  const time = new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(
+    timestamp,
+  );
+  const startOfDay = (value: number) => new Date(value).setHours(0, 0, 0, 0);
+  const days = Math.round(
+    (startOfDay(now) - startOfDay(timestamp)) / 86_400_000,
+  );
+  if (days === 0 || days === 1) {
+    const day = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(
+      -days,
+      "day",
+    );
+    return `${day.charAt(0).toLocaleUpperCase(locale)}${day.slice(1)}, ${time}`;
+  }
+  return `${formatDate(timestamp, locale)}, ${time}`;
+}

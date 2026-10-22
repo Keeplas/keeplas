@@ -58,7 +58,7 @@ const CASES: Case[] = [
     figma: "W04-5_Recovery_center_status_only_.png",
     ...SHELL,
   },
-  { id: "W04-6", figma: "W04-6_Devices_and_security.png", ...SHELL },
+  { id: "W04-6", figma: "W04-6_Sessions_and_security.png", ...SHELL },
   { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
   {
     id: "W05-3",
@@ -81,6 +81,13 @@ const CASES: Case[] = [
     prepare: (page) =>
       page.getByRole("link", { name: "Home insurance policy.pdf" }).hover(),
   },
+  {
+    id: "W06-2",
+    figma: "W06-2_Document_viewer_preview_details_.png",
+    ...SHELL,
+  },
+  { id: "W06-8", figma: "W06-8_Photo_preview.png", ...SHELL },
+  { id: "W06-9", figma: "W06-9_Video_preview.png", ...SHELL },
   // Section 10 states that apply to the web (393 px State Message cards).
   {
     id: "state-vault-empty",

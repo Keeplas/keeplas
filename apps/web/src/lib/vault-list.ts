@@ -17,7 +17,7 @@ export interface VaultItemSummary {
   category: VaultCategory;
   kind: ContentKind;
   icon?: string;
-  files: FileMeta[];
+  files: Omit<FileMeta, "v">[];
   folderId?: Id<"folders">;
   sharing: ItemSharing;
   createdAt: number;

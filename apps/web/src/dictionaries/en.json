@@ -3,7 +3,10 @@
     "language": "Language",
     "resendIn": "Resend code in {seconds}s",
     "back": "Back",
-    "moreActions": "More actions for {name}"
+    "moreActions": "More actions for {name}",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "auth": {
     "hero": {
@@ -1357,8 +1360,8 @@
     "upload": {
       "savingTitle": "Saving {count} attachment",
       "savingTitlePlural": "Saving {count} attachments",
-      "encrypting": "{label} — encrypting…",
-      "progress": "{label} — {completed}/{total} done · {done} / {totalBytes}",
+      "encrypting": "{label}: encrypting in this browser…",
+      "progress": "{done} of {totalBytes} uploaded",
       "savedTitle": "Attachments saved",
       "savedDescription": "{label} — {count} file encrypted and uploaded",
       "savedDescriptionPlural": "{label} — {count} files encrypted and uploaded",
@@ -1376,7 +1379,9 @@
           "upgrade": "Get Lifetime",
           "manage": "Manage storage"
         }
-      }
+      },
+      "savingItem": "Securing {label}",
+      "savedItem": "{label} is protected in your vault."
     },
     "page": {
       "loading": "Loading your vault",
@@ -2639,6 +2644,97 @@
     "actions": {
       "open": "Open",
       "archive": "Archive"
+    }
+  },
+  "vaultItem": {
+    "download": "Download",
+    "share": "Share",
+    "added": "Added {date}",
+    "archived": "Archived on {date}. It is no longer in your vault or passed on to anyone.",
+    "restore": "Restore",
+    "legacy": "This item uses an older encryption format. Edit and save it once to share it.",
+    "backToVault": "Back to my vault",
+    "missing": {
+      "title": "This item isn't available",
+      "body": "It may have been deleted on another device, or it belongs to another account."
+    },
+    "locked": {
+      "title": "This item can't be opened in this browser",
+      "body": "Its key doesn't match your vault key here. Lock your vault, unlock it again, then open this item."
+    },
+    "sharing": {
+      "pendingTitle": "Shared once they're ready",
+      "pendingBody": "{names} hasn't finished setting up Keeplas yet. The item is encrypted for them automatically as soon as they do."
+    },
+    "details": {
+      "title": "Details",
+      "edit": "Edit",
+      "category": "Category",
+      "folder": "Folder",
+      "access": "Access",
+      "lockedFolder": "Locked folder",
+      "addPeople": "Add people",
+      "addPeopleBody": "Share with trusted people",
+      "encrypted": "End-to-end encrypted. Only you and the people you choose can open this file.",
+      "activity": "Activity",
+      "seeAll": "See all"
+    },
+    "activity": {
+      "you": "You",
+      "added": "Added to your vault",
+      "attached": "{name} added",
+      "edited": "Edited"
+    },
+    "access": {
+      "title": "Who can see it",
+      "body": "Choose the trusted contacts who can open this item. It is encrypted for each of them in this browser.",
+      "nobody": "No trusted contact has joined Keeplas yet.",
+      "addContact": "Invite someone",
+      "throughFolder": "Through the folder {name}",
+      "saving": "Saving…"
+    },
+    "history": {
+      "title": "Edit history",
+      "body": "Earlier versions of this item. Restoring one keeps the current version here too.",
+      "empty": "No changes yet.",
+      "untitled": "Untitled",
+      "replaced": "Replaced {date}",
+      "restore": "Restore",
+      "cancel": "Cancel",
+      "confirmTitle": "Restore this version?",
+      "confirmBody": "The item goes back to this version. The current one stays in its history."
+    },
+    "archive": {
+      "title": "Archive this item?",
+      "body": "It leaves your vault and is no longer passed on to anyone. It stays whole in your archives, with its history, and you can restore it at any time.",
+      "confirm": "Archive",
+      "cancel": "Cancel"
+    },
+    "preview": {
+      "previous": "Previous",
+      "next": "Next",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "show": "Show preview",
+      "hide": "Hide preview",
+      "item": "this item",
+      "note": "Note",
+      "emptyNote": "This note is empty.",
+      "backToNote": "Back to note",
+      "photo": "Photo",
+      "photoOf": "Photo {photo} of {total}",
+      "pageOf": "Page {page} of {total}",
+      "rotate": "Rotate",
+      "play": "Play",
+      "pause": "Pause",
+      "position": "Position",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "fullScreen": "Full screen",
+      "streams": "Streams from an encrypted copy. Nothing is saved unencrypted on this computer.",
+      "pdfError": "This PDF can't be displayed. It may be damaged or protected with a password. Download it to open it in another app.",
+      "noPreview": "Keeplas can't show {type} files yet. Download it to open it in another app.",
+      "decryptError": "This file couldn't be decrypted in this browser. Lock your vault, unlock it again, then try again."
     }
   }
 }
