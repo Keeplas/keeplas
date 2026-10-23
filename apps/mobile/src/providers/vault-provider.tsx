@@ -57,7 +57,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(() => {
     setMasterKey(null);
-    setFinishingSetup(false);
     forgetOwnerKeys();
     clearDecryptedCache();
   }, []);

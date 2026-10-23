@@ -14,6 +14,7 @@ import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
 import { usePushNotifications } from "@/lib/use-push-notifications";
+import { useResumeOnUnlock } from "@/lib/use-resume-on-unlock";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
 
@@ -35,6 +36,7 @@ export default function AppLayout() {
   const shownAlerts = useRef(new Set<string>());
   const publishing = useRef(false);
   const registerPushToken = usePushNotifications();
+  useResumeOnUnlock();
 
   useEffect(() => {
     ensureDevice(viewer._id)
