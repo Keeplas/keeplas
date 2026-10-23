@@ -14,6 +14,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
+import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
 import { auditContext } from "@/lib/use-audited-mutation";
 import { resolveStage, type Stage } from "@/lib/session-stage";
 import { useVault } from "./vault-provider";
@@ -29,6 +30,8 @@ interface SessionValue {
   /** Re-read whether this phone holds a wrapped vault key. */
   refreshDeviceVault: () => void;
   deferMigration: () => void;
+  /** Lost number, 24-word sign-in coming: ask for the new number first. */
+  expectNewNumber: (expected: boolean) => void;
   signOut: () => Promise<void>;
 }
 
@@ -43,6 +46,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
   const totpGate = useQuery(api.totp.getMyTotpGate, skip);
   const migration = useQuery(api.account_migration.getStatus, skip);
+  const proofs = useQuery(api.session_proofs.getMine, skip);
+  const [numberLost, setNumberLost] = useState(isNewNumberPending);
   const [vaultState, setVaultState] = useState<{
     userId: string;
     has: boolean;
@@ -65,6 +70,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     };
   }, [userId, vaultCheck]);
 
+  // The new number is set once this session proved one (verifyCode): the
+  // stage no longer waits for it, and a restart must not ask again.
+  useEffect(() => {
+    if (numberLost && proofs?.phone) setNewNumberPending(false);
+  }, [numberLost, proofs?.phone]);
+
+  const expectNewNumber = useCallback((expected: boolean) => {
+    setNewNumberPending(expected);
+    setNumberLost(expected);
+  }, []);
+
   const signOut = useCallback(async () => {
     if (userId) {
       await forgetDeviceVault(userId);
@@ -73,6 +89,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     lock();
     auditContext.clear();
     setMigrationDeferred(false);
+    setNewNumberPending(false);
+    setNumberLost(false);
     await convexSignOut();
   }, [userId, lock, convexSignOut]);
 
@@ -85,6 +103,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         : viewer && { hasKeyBundle: !!viewer.encryptedKeyBundle },
     loginOtpRequired: loginGate?.required,
     totpRequired: totpGate?.required,
+    newNumberPending: numberLost
+      ? proofs === undefined
+        ? undefined
+        : !proofs?.phone
+      : false,
     needsMigration:
       migration === undefined ? undefined : !!migration?.needsMigration,
     migrationDeferred,
@@ -99,9 +122,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       viewer,
       refreshDeviceVault: () => setVaultCheck((n) => n + 1),
       deferMigration: () => setMigrationDeferred(true),
+      expectNewNumber,
       signOut,
     }),
-    [stage, setupPhrase, viewer, signOut],
+    [stage, setupPhrase, viewer, expectNewNumber, signOut],
   );
 
   return (

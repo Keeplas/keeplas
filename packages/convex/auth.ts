@@ -195,6 +195,23 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return provenSignIn(ctx, userId, "vault");
       },
     }),
+    // Lost number, no 24 words: an approved lost-number request past its
+    // 72 h window plus the WhatsApp code sent to the new number move the
+    // account to it and sign in (number_change.ts). Never creates a user.
+    ConvexCredentials({
+      id: "number-change",
+      authorize: async (credentials, ctx) => {
+        const result = await ctx.runMutation(internal.number_change.complete, {
+          requestId: String(
+            credentials.requestId ?? "",
+          ) as Id<"number_change_requests">,
+          claimToken: String(credentials.claimToken ?? ""),
+          code: String(credentials.code ?? ""),
+        });
+        if (!result.ok) throw new ConvexError(result.error);
+        return provenSignIn(ctx, result.userId, "phone");
+      },
+    }),
     // QR pairing (workflow 8): a browser approved by the owner's phone signs
     // in with the login secret it generated at `pairing.create`. Never creates
     // a user; the session belongs to the approving account.

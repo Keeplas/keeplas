@@ -140,11 +140,18 @@ export default function PhoneScreen() {
       ) : null}
       <Callout icon="shield-check" text={t("phone.reassure")} />
       {intent === "signin" ? (
-        <Button
-          variant="text"
-          label={t("phone.emailAccount")}
-          onPress={() => router.push("/email")}
-        />
+        <>
+          <Button
+            variant="text"
+            label={t("lostNumber.title")}
+            onPress={() => router.push("/lost-number")}
+          />
+          <Button
+            variant="text"
+            label={t("phone.emailAccount")}
+            onPress={() => router.push("/email")}
+          />
+        </>
       ) : null}
     </Screen>
   );

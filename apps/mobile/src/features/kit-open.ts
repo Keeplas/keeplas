@@ -33,3 +33,19 @@ export function useKitOpen() {
 /** A recovery kit is 24 words separated by spaces. */
 export const isFullKit = (words: string) =>
   words.trim().split(/\s+/).length === 24;
+
+// The 24 words just typed to sign in after losing the number, so the next
+// screen that opens the vault doesn't ask for them again. Memory only, read
+// once.
+let remembered: string | null = null;
+
+export function rememberKit(words: string | null): void {
+  remembered = words;
+}
+
+/** The remembered words (then forgotten), or "" to start empty. */
+export function takeRememberedKit(): string {
+  const words = remembered ?? "";
+  remembered = null;
+  return words;
+}

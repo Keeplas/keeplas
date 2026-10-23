@@ -94,7 +94,12 @@ export const CONVEX_REQUIRED = [
 ];
 
 export const CONVEX_OPTIONAL_GROUPS = {
-  "Support inbox (Resend)": ["SUPPORT_INBOX_EMAIL", "SUPPORT_FROM_EMAIL"],
+  "Support inbox (Resend)": [
+    "SUPPORT_INBOX_EMAIL",
+    "SUPPORT_FROM_EMAIL",
+    "SUPPORT_RECOVERY_EMAIL",
+    "ADMIN_APP_URL",
+  ],
   "Native push (Expo)": ["EXPO_ACCESS_TOKEN"],
   "WhatsApp (Infobip)": [
     "INFOBIP_BASE_URL",
@@ -146,6 +151,8 @@ export const CONVEX_SYNC_KEYS = [
   "RESEND_FROM_EMAIL",
   "SUPPORT_INBOX_EMAIL",
   "SUPPORT_FROM_EMAIL",
+  "SUPPORT_RECOVERY_EMAIL",
+  "ADMIN_APP_URL",
   "EXPO_ACCESS_TOKEN",
   "INFOBIP_BASE_URL",
   "INFOBIP_API_KEY",

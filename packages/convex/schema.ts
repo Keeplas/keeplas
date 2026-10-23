@@ -194,8 +194,47 @@ export default defineSchema({
     codeHash: v.string(),
     expiresAt: v.number(),
     attempts: v.number(),
-    intent: v.union(v.literal("signup"), v.literal("signin")),
+    // "number_change": sent to the new number of an approved lost-number
+    // request (number_change.ts), consumed by the `number-change` provider.
+    intent: v.union(
+      v.literal("signup"),
+      v.literal("signin"),
+      v.literal("number_change"),
+    ),
   }).index("by_phone", ["phoneNumber"]),
+
+  // Lost number, no 24 words (cases B / D / F): a request made signed out
+  // with the old number. It waits 72 h with alerts on every channel ("It
+  // wasn't me" cancels it) and a support review of non-encrypted details in
+  // the admin console. Completing it changes the number and signs in; the
+  // vault still needs the cloud backup, the 24 words or two contacts.
+  number_change_requests: defineTable({
+    userId: v.id("users"),
+    oldPhone: v.string(),
+    newPhone: v.string(),
+    // What the requester declared, compared by support with the account.
+    declaredName: v.string(),
+    declaredEmail: v.optional(v.string()),
+    message: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("cancelled"),
+      v.literal("completed"),
+    ),
+    // SHA-256 of the secret the requesting phone keeps to follow and
+    // complete the request (it holds no session yet).
+    claimHash: v.string(),
+    createdAt: v.number(),
+    windowEndsAt: v.number(),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    reviewNote: v.optional(v.string()),
+    closedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 
   // ═══════════════════════════════════════════════
   // EMAIL VERIFICATION / AUTH (passwordless email OTP)

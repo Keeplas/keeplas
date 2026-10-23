@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
+import { Button } from "@/components/button";
 import { CodeVerification } from "@/features/code-verification";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -34,6 +35,13 @@ export default function PhoneProof() {
       onResend={async () => {
         await requestCode();
       }}
+      footer={
+        <Button
+          variant="text"
+          label={t("lostNumber.title")}
+          onPress={() => router.replace("/lost-number")}
+        />
+      }
     />
   );
 }
