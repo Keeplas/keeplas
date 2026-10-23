@@ -115,6 +115,8 @@
   --kp-header-text-muted: var(--kp-navy-200);
   --kp-icon-default: var(--kp-navy-600);
   --kp-icon-subtle: var(--kp-navy-400);
+  /* Rim of the logo shield: blends in on light, separates it from Noir. */
+  --kp-logo-rim: var(--kp-navy-800);
   --kp-bg-accent: var(--kp-sky-100);
   --kp-text-accent: var(--kp-sky-500);
   --kp-bg-danger: var(--kp-danger-100);
@@ -169,6 +171,7 @@
   --kp-header-text-muted: var(--kp-noir-200);
   --kp-icon-default: var(--kp-noir-200);
   --kp-icon-subtle: var(--kp-noir-400);
+  --kp-logo-rim: var(--kp-navy-200);
   --kp-bg-accent: var(--kp-noir-info);
   --kp-text-accent: var(--kp-noir-sky);
   --kp-bg-danger: color-mix(
@@ -230,6 +233,7 @@
   --color-header-text-muted: var(--kp-header-text-muted);
   --color-icon-default: var(--kp-icon-default);
   --color-icon-subtle: var(--kp-icon-subtle);
+  --color-logo-rim: var(--kp-logo-rim);
   --color-bg-accent: var(--kp-bg-accent);
   --color-text-accent: var(--kp-text-accent);
   --color-bg-danger: var(--kp-bg-danger);
