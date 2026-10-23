@@ -29,6 +29,8 @@ const STORE = "keys";
 interface StoredMasterKey {
   userId: string;
   key: CryptoKey;
+  /** Epoch ms after which the copy is dropped; unset keeps it until sign-out. */
+  expiresAt?: number;
 }
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -57,18 +59,23 @@ function openDb(): Promise<IDBDatabase> {
 }
 
 /**
- * Persist the MasterKey for a user. Best-effort: failures are logged and
- * swallowed so they never block the unlock flow.
+ * Persist the MasterKey for a user, until `expiresAt` when given. Best-effort:
+ * failures are logged and swallowed so they never block the unlock flow.
  */
 export async function persistMasterKey(
   userId: string,
   key: CryptoKey,
+  expiresAt?: number,
 ): Promise<void> {
   try {
     const db = await openDb();
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put({ userId, key } satisfies StoredMasterKey);
+      tx.objectStore(STORE).put({
+        userId,
+        key,
+        expiresAt,
+      } satisfies StoredMasterKey);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -78,16 +85,23 @@ export async function persistMasterKey(
 }
 
 /**
- * Load the persisted MasterKey for a user, or null if none / on error.
+ * Load the persisted MasterKey for a user, or null if none / expired / on
+ * error. An expired copy is deleted.
  */
 export async function loadMasterKey(userId: string): Promise<CryptoKey | null> {
   try {
     const db = await openDb();
     return await new Promise<CryptoKey | null>((resolve, reject) => {
-      const tx = db.transaction(STORE, "readonly");
-      const req = tx.objectStore(STORE).get(userId);
+      const tx = db.transaction(STORE, "readwrite");
+      const store = tx.objectStore(STORE);
+      const req = store.get(userId);
       req.onsuccess = () => {
         const record = req.result as StoredMasterKey | undefined;
+        if (record?.expiresAt !== undefined && record.expiresAt <= Date.now()) {
+          store.delete(userId);
+          resolve(null);
+          return;
+        }
         resolve(record?.key ?? null);
       };
       req.onerror = () => reject(req.error);
