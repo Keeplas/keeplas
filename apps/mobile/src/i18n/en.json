@@ -56,7 +56,9 @@
     "accountExists": "An account already uses this number. Sign in instead.",
     "noAccount": "No account uses this number. Get started to create one.",
     "createAccount": "Create an account with this number",
-    "signInInstead": "Sign in with this number"
+    "signInInstead": "Sign in with this number",
+    "passkey": "Sign in with a passkey",
+    "passkeyFailed": "We couldn't sign you in with a passkey. Try again, or use your number."
   },
   "verify": {
     "title": "Verify your number",

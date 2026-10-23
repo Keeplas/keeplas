@@ -51,7 +51,9 @@
     "accountExists": "Un compte utilise déjà ce numéro. Connectez-vous plutôt.",
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
-    "signInInstead": "Me connecter avec ce numéro"
+    "signInInstead": "Me connecter avec ce numéro",
+    "passkey": "Se connecter avec une passkey",
+    "passkeyFailed": "La connexion par passkey a échoué. Réessayez, ou utilisez votre numéro."
   },
   "verify": {
     "title": "Vérifier votre numéro",
