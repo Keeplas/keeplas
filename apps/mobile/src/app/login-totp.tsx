@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -18,6 +19,7 @@ import { useSession } from "@/providers/session-provider";
  * Once cleared, the gate query flips and the root layout moves on.
  */
 export default function LoginTotp() {
+  const router = useRouter();
   const { t } = useI18n();
   const { signOut } = useSession();
   const submitCode = useMutation(api.totp.submitTotpForSession);
@@ -65,6 +67,11 @@ export default function LoginTotp() {
         chevron
         loading={busy}
         onPress={() => submit()}
+      />
+      <Button
+        variant="text"
+        label={t("totp.lost")}
+        onPress={() => router.push("/totp-recovery")}
       />
       <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>

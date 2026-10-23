@@ -1,10 +1,11 @@
 import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
-import { mutation, query } from "./_generated/server";
-import { Doc } from "./_generated/dataModel";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
 import { constantTimeStringEquals } from "./lib/crypto";
+import { requireSessionProof } from "./session_proofs";
 
 const ISSUER = "Keeplas";
 const STEP_SECONDS = 30;
@@ -413,6 +414,75 @@ export const submitTotpForSession = mutation({
 });
 
 /**
+ * Lost authenticator: drop the TOTP enrolment (the user re-enrols later) and
+ * credit the current session so it moves on at once. Audited via a manual
+ * entry rather than `auditedMutation`: this is a login-flow account-rescue
+ * path that must not be gated on the client's `_audit` envelope being
+ * present, and disabling TOTP is a security event worth recording on the
+ * chain regardless.
+ */
+async function resetTotp(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  action: "totp_recovery_used" | "totp_vault_reset",
+): Promise<void> {
+  const totp = await ctx.db
+    .query("totp_secrets")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+  if (totp) await ctx.db.delete(totp._id);
+  const user = await ctx.db.get(userId);
+  const now = Date.now();
+  const providers = (user?.authProviders ?? []).filter((p) => p !== "totp");
+  await ctx.db.patch(userId, {
+    authProviders:
+      providers.length > 0
+        ? (providers as Doc<"users">["authProviders"])
+        : undefined,
+    updatedAt: now,
+  });
+
+  const sessionId = await getAuthSessionId(ctx);
+  if (sessionId) {
+    const existing = await ctx.db
+      .query("auth_session_totp")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .first();
+    if (!existing) {
+      await ctx.db.insert("auth_session_totp", {
+        sessionId,
+        userId,
+        verifiedAt: now,
+      });
+    }
+  }
+
+  await createAuditLog(ctx, {
+    userId,
+    actorType: "user",
+    actorId: userId,
+    action,
+    resourceType: "totp",
+    resourceId: userId,
+  });
+}
+
+/**
+ * Lost authenticator, vault opened in this session (cloud backup, 24 words
+ * or this phone's screen lock): the identity key's signature resets TOTP
+ * (session_proofs.proveVault). Works without a bound recovery verifier.
+ */
+export const resetWithVaultProof = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    await requireSessionProof(ctx, "vault");
+    await resetTotp(ctx, userId, "totp_vault_reset");
+    return { success: true };
+  },
+});
+
+/**
  * Recovery-phrase escape hatch: client derives a verifier from the user's
  * seed and submits the SHA-256 hex. On match we disable TOTP entirely (the
  * user must re-enrol) and credit the current session so the dashboard
@@ -430,51 +500,7 @@ export const submitTotpRecovery = mutation({
       throw new Error("Recovery phrase did not match. Try again.");
     }
 
-    const totp = await ctx.db
-      .query("totp_secrets")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    if (totp) {
-      await ctx.db.delete(totp._id);
-    }
-    const now = Date.now();
-    const providers = (user.authProviders ?? []).filter((p) => p !== "totp");
-    await ctx.db.patch(userId, {
-      authProviders:
-        providers.length > 0
-          ? (providers as Doc<"users">["authProviders"])
-          : undefined,
-      updatedAt: now,
-    });
-
-    const sessionId = await getAuthSessionId(ctx);
-    if (sessionId) {
-      const existing = await ctx.db
-        .query("auth_session_totp")
-        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-        .first();
-      if (!existing) {
-        await ctx.db.insert("auth_session_totp", {
-          sessionId,
-          userId,
-          verifiedAt: now,
-        });
-      }
-    }
-
-    // Audited via a manual entry rather than `auditedMutation`: this is a
-    // login-flow account-rescue path that must not be gated on the client's
-    // `_audit` envelope being present. Disabling TOTP through the recovery
-    // phrase is a security event worth recording on the chain regardless.
-    await createAuditLog(ctx, {
-      userId,
-      actorType: "user",
-      actorId: userId,
-      action: "totp_recovery_used",
-      resourceType: "totp",
-      resourceId: userId,
-    });
-
+    await resetTotp(ctx, userId, "totp_recovery_used");
     return { success: true };
   },
 });

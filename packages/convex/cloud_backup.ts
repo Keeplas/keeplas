@@ -7,7 +7,7 @@ import {
   requireAuthWithLoginOtp,
   requireFullAuth,
 } from "./helpers";
-import { requirePhoneProof } from "./session_proofs";
+import { requireSessionProof } from "./session_proofs";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { activePushTokens } from "./devices";
 import { getAuthSessionId } from "@convex-dev/auth/server";
@@ -87,7 +87,7 @@ export const restore = auditedMutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuthWithLoginOtp(ctx);
-    await requirePhoneProof(ctx);
+    await requireSessionProof(ctx, "phone");
     await enforceIpRateLimit(
       ctx,
       "cloud_backup_restore",
