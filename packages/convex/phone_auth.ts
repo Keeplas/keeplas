@@ -21,10 +21,31 @@ const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
 const DEV_TEST_CODE = "000000";
 
-function isDevTestPhone(phone: string): boolean {
-  return (process.env.DEV_TEST_PHONES ?? "")
+function isListed(list: string | undefined, phone: string): boolean {
+  return (list ?? "")
     .split(",")
     .some((entry: string) => entry.trim() === phone);
+}
+
+/**
+ * The fixed code a number may use instead of a WhatsApp one, if any:
+ * - DEV_TEST_PHONES → 000000 (dev deployments only; the prod deploy guard
+ *   refuses it).
+ * - REVIEW_PHONES → the secret 6-digit REVIEW_CODE, sign-in only, so App
+ *   Store / Play reviewers can reach the demo account given in the review
+ *   notes. Safe on prod: the code is a secret and nobody can sign up with it.
+ */
+function fixedCode(phone: string, intent: "signup" | "signin"): string | null {
+  if (isListed(process.env.DEV_TEST_PHONES, phone)) return DEV_TEST_CODE;
+  const reviewCode = process.env.REVIEW_CODE ?? "";
+  if (
+    intent === "signin" &&
+    /^\d{6}$/.test(reviewCode) &&
+    isListed(process.env.REVIEW_PHONES, phone)
+  ) {
+    return reviewCode;
+  }
+  return null;
 }
 
 /**
@@ -81,8 +102,8 @@ export const requestPhoneAuthOtp = mutation({
         await ctx.db.patch(stale._id, { expiresAt: now });
     }
 
-    const testPhone = isDevTestPhone(phone);
-    const code = testPhone ? DEV_TEST_CODE : generateOtp();
+    const fixed = fixedCode(phone, args.intent);
+    const code = fixed ?? generateOtp();
     const codeHash = await sha256Hex(code);
     await ctx.db.insert("phone_auth_codes", {
       phoneNumber: phone,
@@ -92,7 +113,7 @@ export const requestPhoneAuthOtp = mutation({
       intent: args.intent,
     });
 
-    if (!testPhone) {
+    if (fixed === null) {
       await ctx.scheduler.runAfter(0, internal.dispatch.sendWhatsAppOtp, {
         phoneNumber: phone,
         code,
