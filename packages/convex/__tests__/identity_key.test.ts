@@ -36,7 +36,6 @@ async function seedTrustContactWithIdentity(
       name: `Contact ${opts.n}`,
       email: `c${opts.n}@example.com`,
       role: "family",
-      contactType: "trust",
       invitationStatus: "accepted",
       invitationToken: `tok-${opts.n}-${now}`,
       invitedAt: now,

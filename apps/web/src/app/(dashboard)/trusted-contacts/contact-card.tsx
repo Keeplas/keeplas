@@ -19,7 +19,6 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
   const t = useTranslations("trustedContacts");
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
-  const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
   const verificationBadge = computeVerificationBadge(contact);
   const roleIcon = ROLE_BADGE_ICONS[contact.role] ?? ROLE_BADGE_ICONS.other;
   const roleLabel = ROLE_LABELS[contact.role] ?? "Contact";
@@ -44,28 +43,14 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "px-3 py-1 text-label-md rounded-sm",
-              isRecipientOnly
-                ? "bg-surface-container-high text-on-surface-variant"
-                : "bg-primary/10 text-primary",
-            )}
-          >
-            {isRecipientOnly
-              ? t("contactCard.recipient")
-              : t("contactCard.trust")}
-          </span>
-          <span
-            className={cn(
-              "px-3 py-1 text-label-md rounded-sm",
-              statusConfig.className,
-            )}
-          >
-            {statusConfig.label}
-          </span>
-        </div>
+        <span
+          className={cn(
+            "px-3 py-1 text-label-md rounded-sm",
+            statusConfig.className,
+          )}
+        >
+          {statusConfig.label}
+        </span>
       </div>
 
       {/* Name + primary identifier (email, falling back to phone) */}

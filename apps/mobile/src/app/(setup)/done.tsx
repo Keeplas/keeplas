@@ -26,7 +26,7 @@ export default function SetupDone() {
   const changeLanguage = useChangeLanguage();
   const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const backup = useQuery(api.cloud_backup.status);
-  const invited = (contacts ?? []).some((c) => c.contactType === "trust");
+  const invited = (contacts ?? []).length > 0;
   const backedUp = !!backup?.enabled;
 
   return (

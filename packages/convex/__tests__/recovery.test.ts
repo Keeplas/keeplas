@@ -53,7 +53,6 @@ async function seedContact(
       name: `Contact ${n}`,
       email: `c${n}@example.com`,
       role: "friend",
-      contactType: "trust",
       invitationStatus: "accepted",
       invitationToken: `tok-${n}`,
       invitedAt: now,
@@ -312,6 +311,20 @@ describe("owner recovery", () => {
     vi.advanceTimersByTime(RECOVERY_REQUEST_TTL_MS);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     expect(await statusOf(t, requestId)).toBe("expired");
+  });
+
+  it("seals a recovery share to every accepted contact, not just 3", async () => {
+    const t = makeT();
+    const { ownerId } = await setupOwner(t, 5);
+    const shares = await t.run((ctx) =>
+      ctx.db
+        .query("recovery_secret_shares")
+        .withIndex("by_user_generation", (q) =>
+          q.eq("userId", ownerId).eq("generation", 1),
+        )
+        .collect(),
+    );
+    expect(shares).toHaveLength(5);
   });
 
   it("refuses a request with fewer than 2 contacts set up (M09-6)", async () => {

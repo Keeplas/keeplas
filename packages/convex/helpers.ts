@@ -306,7 +306,7 @@ export function createNotification(
  * Precedence:
  *   "explicit" → item.sharedWithContacts (intersected with non-revoked).
  *   "groups"   → union of memberContactIds across item.sharedWithGroups.
- *   "default" / undefined → all accepted contacts of contactType "trust".
+ *   "default" / undefined → all accepted contacts.
  */
 export async function resolveItemRecipients(
   ctx: QueryCtx,
@@ -342,10 +342,7 @@ export async function resolveItemRecipients(
   }
 
   return allContacts
-    .filter((c) => {
-      const isTrust = (c.contactType ?? "trust") === "trust";
-      return isTrust && c.invitationStatus === "accepted";
-    })
+    .filter((c) => c.invitationStatus === "accepted")
     .map((c) => c._id);
 }
 

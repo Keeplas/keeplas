@@ -5,7 +5,7 @@
 - Sign-up happens only in the mobile app (iOS / Android). The web app has no sign-up form.
 - On desktop, a visitor without an account is invited to download the app: store badges and a QR code that opens the right store.
 - A computer is only connected by scanning a QR code from the phone app; later visits on a trusted browser use a passkey.
-- Invitations opened on a computer also lead to the app: contacts and beneficiaries sign up on their phone.
+- Invitations opened on a computer also lead to the app: contacts sign up on their phone.
 - Setup, the 24-word kit and every recovery path run on the phone; the web Recovery center only shows status.
 
 ## Language
@@ -38,12 +38,11 @@
 - Optional (2): add trust contacts, export a 24-word recovery kit.
 - Without contacts or a kit, losing every device and passkey can lock the user out for good: say it clearly.
 
-## Trust contacts and beneficiaries
+## Trust contacts
 
-- Up to 3 trust contacts; 2 confirmations are enough.
-- Trust contact: helps recover access and confirms a death. Cannot read files.
-- Beneficiary: receives the content assigned to them, now or later.
-- The two roles are independent and can be combined. Replacing a contact renews protection.
+- One role: every contact is a trust contact. No cap; any 2 confirmations are enough.
+- A trust contact helps recover access, confirms a death, and receives the content shared with them, now or later. They cannot read anything else.
+- Replacing a contact renews protection.
 
 ## Access recovery
 

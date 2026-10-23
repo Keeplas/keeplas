@@ -118,7 +118,6 @@ function ContactDetailBody({
     }
   }
 
-  const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
   const verificationBadge = computeVerificationBadge(contact);
@@ -145,18 +144,6 @@ function ContactDetailBody({
           <div className="min-w-0">
             <SheetTitle className="truncate">{contact.name}</SheetTitle>
             <div className="flex items-center gap-1.5 mt-1">
-              <span
-                className={cn(
-                  "px-2 py-0.5 text-label-md rounded-sm",
-                  isRecipientOnly
-                    ? "bg-surface-container-high text-on-surface-variant"
-                    : "bg-primary/10 text-primary",
-                )}
-              >
-                {isRecipientOnly
-                  ? t("contactCard.recipient")
-                  : t("contactCard.trust")}
-              </span>
               <span
                 className={cn(
                   "px-2 py-0.5 text-label-md rounded-sm",
@@ -210,42 +197,36 @@ function ContactDetailBody({
         {/* Recovery role */}
         <section>
           <SectionLabel>{t("detail.recoveryRole")}</SectionLabel>
-          {isRecipientOnly ? (
-            <p className="text-body-md text-on-surface-variant">
-              {t("detail.recipientOnlyDescription")}
-            </p>
-          ) : (
-            verificationBadge && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    "text-label-md px-3 py-1.5 rounded-xs inline-flex items-center gap-1.5",
-                    verificationBadge.className,
-                  )}
-                >
-                  {verificationBadge.label}
-                  <HelpHint
-                    content={
-                      <>
-                        <p>{t("detail.verificationHelp")}</p>
-                        {verificationBadge.lastVerifiedAt !== undefined && (
-                          <p className="mt-2">
-                            {t("detail.lastVerified", {
-                              relative: formatRelative(
-                                verificationBadge.lastVerifiedAt,
-                              ),
-                              date: new Date(
-                                verificationBadge.lastVerifiedAt,
-                              ).toLocaleDateString(),
-                            })}
-                          </p>
-                        )}
-                      </>
-                    }
-                  />
-                </span>
-              </div>
-            )
+          {verificationBadge && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "text-label-md px-3 py-1.5 rounded-xs inline-flex items-center gap-1.5",
+                  verificationBadge.className,
+                )}
+              >
+                {verificationBadge.label}
+                <HelpHint
+                  content={
+                    <>
+                      <p>{t("detail.verificationHelp")}</p>
+                      {verificationBadge.lastVerifiedAt !== undefined && (
+                        <p className="mt-2">
+                          {t("detail.lastVerified", {
+                            relative: formatRelative(
+                              verificationBadge.lastVerifiedAt,
+                            ),
+                            date: new Date(
+                              verificationBadge.lastVerifiedAt,
+                            ).toLocaleDateString(),
+                          })}
+                        </p>
+                      )}
+                    </>
+                  }
+                />
+              </span>
+            </div>
           )}
           {isAwaitingKey(contact) && (
             <div className="mt-3">

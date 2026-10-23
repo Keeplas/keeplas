@@ -43,7 +43,7 @@ export const vaultItemStats = query({
   },
 });
 
-/** Trusted-contact totals broken down by invitation status, role, and type. */
+/** Trusted-contact totals broken down by invitation status and role. */
 export const trustedContactStats = query({
   args: {},
   handler: async (ctx) => {
@@ -53,7 +53,6 @@ export const trustedContactStats = query({
       total: contacts.length,
       byStatus: countBy(contacts, (c) => c.invitationStatus),
       byRole: countBy(contacts, (c) => c.role),
-      byType: countBy(contacts, (c) => c.contactType, "unset"),
     };
   },
 });

@@ -20,7 +20,6 @@ import {
   PhoneInput,
   isValidPhone,
   isValidEmail,
-  cn,
 } from "@keeplas/ui";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
@@ -34,20 +33,17 @@ const ROLES = [
 ] as const;
 
 type Role = (typeof ROLES)[number]["value"];
-type ContactType = "trust" | "recipient_only";
 
 interface InviteContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onContactInvited?: (contactId: Id<"trusted_contacts">) => void;
-  initialContactType?: ContactType;
 }
 
 export function InviteContactDialog({
   open,
   onOpenChange,
   onContactInvited,
-  initialContactType = "trust",
 }: InviteContactDialogProps) {
   const t = useTranslations("trustedContacts");
   const inviteContact = useAuditedMutation(api.trusted_contacts.inviteContact);
@@ -56,20 +52,8 @@ export function InviteContactDialog({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState<string | undefined>(undefined);
   const [role, setRole] = useState<Role>("family");
-  const [contactType, setContactType] =
-    useState<ContactType>(initialContactType);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  // Reset the form each time the dialog opens, adjusting during render instead
-  // of syncing in an effect.
-  const [wasOpen, setWasOpen] = useState(open);
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (open) {
-      setContactType(initialContactType);
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,13 +80,11 @@ export function InviteContactDialog({
         email: email.trim() ? email.trim().toLowerCase() : undefined,
         phoneNumber: phone || undefined,
         role,
-        contactType,
       });
       setName("");
       setEmail("");
       setPhone(undefined);
       setRole("family");
-      setContactType(initialContactType);
       onOpenChange(false);
       onContactInvited?.(
         (result as { contactId: Id<"trusted_contacts"> }).contactId,
@@ -119,15 +101,9 @@ export function InviteContactDialog({
       <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 static">
           <div className="flex-1 min-w-0">
-            <DialogTitle>
-              {contactType === "recipient_only"
-                ? t("invite.titleRecipient")
-                : t("invite.titleTrust")}
-            </DialogTitle>
+            <DialogTitle>{t("invite.titleTrust")}</DialogTitle>
             <DialogDescription className="mt-1">
-              {contactType === "recipient_only"
-                ? t("invite.descriptionRecipient")
-                : t("invite.descriptionTrust")}
+              {t("invite.descriptionTrust")}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -185,49 +161,6 @@ export function InviteContactDialog({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5">
-              {t("invite.roleInKeeplasLabel")}
-              <HelpHint content={t("invite.roleInKeeplasHelp")} />
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setContactType("trust")}
-                className={cn(
-                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
-                  contactType === "trust"
-                    ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
-                )}
-              >
-                <p className="text-headline-sm text-primary mb-1">
-                  {t("invite.trustOption.title")}
-                </p>
-                <p className="text-label-md text-on-surface-variant">
-                  {t("invite.trustOption.description")}
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setContactType("recipient_only")}
-                className={cn(
-                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
-                  contactType === "recipient_only"
-                    ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
-                )}
-              >
-                <p className="text-headline-sm text-primary mb-1">
-                  {t("invite.recipientOption.title")}
-                </p>
-                <p className="text-label-md text-on-surface-variant">
-                  {t("invite.recipientOption.description")}
-                </p>
-              </button>
-            </div>
-          </div>
-
           {error && <ErrorAlert message={error} />}
 
           <div className="flex gap-3 pt-2">
@@ -247,11 +180,7 @@ export function InviteContactDialog({
               disabled={saving || !name.trim() || (!email.trim() && !phone)}
               className="flex-1 cursor-pointer"
             >
-              {saving
-                ? t("invite.sending")
-                : contactType === "recipient_only"
-                  ? t("invite.submitRecipient")
-                  : t("invite.submitTrust")}
+              {saving ? t("invite.sending") : t("invite.submitTrust")}
             </Button>
           </div>
         </form>

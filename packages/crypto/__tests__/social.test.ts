@@ -14,7 +14,7 @@ import {
   recoveryCode,
 } from "../src/social";
 
-// Phase 5 (F3): RS split 2-of-3 between contacts, G held by Keeplas, social
+// Phase 5 (F3): RS split 2-of-n between contacts, G held by Keeplas, social
 // envelope under HKDF(RS ‖ G). Neither side opens the MasterKey alone.
 
 const OWNER = "owner1";
@@ -114,24 +114,22 @@ describe("social recovery", () => {
     );
   });
 
-  it("refuses fewer than 2 or more than 3 contacts", async () => {
-    const mk = new Uint8Array(32);
+  it("works with any number of contacts, any 2 of them", async () => {
+    const { masterKey, contacts, approve, open } = await scenario(5);
+    expect(
+      await open([await approve(contacts[4]), await approve(contacts[1])]),
+    ).toEqual(masterKey);
+  });
+
+  it("refuses fewer than 2 contacts", async () => {
     await expect(
       createSocialRecovery({
-        masterKey: mk,
+        masterKey: new Uint8Array(32),
         userId: OWNER,
         generation: 1,
         contacts: [contact("a")],
       }),
-    ).rejects.toThrow("2 to 3");
-    await expect(
-      createSocialRecovery({
-        masterKey: mk,
-        userId: OWNER,
-        generation: 1,
-        contacts: ["a", "b", "c", "d"].map(contact),
-      }),
-    ).rejects.toThrow("2 to 3");
+    ).rejects.toThrow("at least 2");
   });
 
   it("never puts RS, G or the MasterKey in a contact share", async () => {

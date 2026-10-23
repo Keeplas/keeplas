@@ -7,7 +7,6 @@ import { STALE_VERIFICATION_THRESHOLD_MS } from "../trusted-contacts/contact-dis
 
 interface IncomingVault {
   _id: Id<"trusted_contacts">;
-  contactType?: "trust" | "recipient_only";
   invitationStatus: string;
   lastVerifiedAt?: number;
 }
@@ -33,7 +32,6 @@ export function useConfirmAvailability(
     const due = vaults.filter(
       (v) =>
         v.invitationStatus === "accepted" &&
-        (v.contactType ?? "trust") === "trust" &&
         (!v.lastVerifiedAt ||
           Date.now() - v.lastVerifiedAt > STALE_VERIFICATION_THRESHOLD_MS),
     );

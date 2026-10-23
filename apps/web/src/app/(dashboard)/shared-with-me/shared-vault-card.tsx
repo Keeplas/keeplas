@@ -52,7 +52,6 @@ interface Phase {
 function getVaultPhase(opts: {
   released: boolean;
   canMarkUnreachable: boolean;
-  isRecipientOnly: boolean;
 }): Phase {
   if (opts.released) {
     return {
@@ -72,9 +71,7 @@ function getVaultPhase(opts: {
   }
   return {
     key: "guarding",
-    labelKey: opts.isRecipientOnly
-      ? "card.phase.awaitingRelease"
-      : "card.phase.guarding",
+    labelKey: "card.phase.guarding",
     pillClass: "bg-surface-container-highest text-on-surface-variant",
     dotClass: "bg-secondary",
   };
@@ -109,18 +106,15 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
   >("idle");
   const [unreachableError, setUnreachableError] = useState<string | null>(null);
 
-  const isRecipientOnly = (vault.contactType ?? "trust") === "recipient_only";
   const isAccepted = vault.invitationStatus === "accepted";
 
   const isAwaitingConfirmation =
     vault.ownerCycleStatus === "awaiting_confirmation";
-  const canMarkUnreachable =
-    !isRecipientOnly && isAccepted && isAwaitingConfirmation;
+  const canMarkUnreachable = isAccepted && isAwaitingConfirmation;
 
   const phase = getVaultPhase({
     released: vault.released,
     canMarkUnreachable,
-    isRecipientOnly,
   });
 
   const initials = vault.ownerName
@@ -183,16 +177,6 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
       </p>
 
       <div className="flex items-center gap-2 flex-wrap mt-3">
-        <span
-          className={cn(
-            "px-2.5 py-0.5 text-label-md rounded-sm",
-            isRecipientOnly
-              ? "bg-surface-container-high text-on-surface-variant"
-              : "bg-primary/10 text-primary",
-          )}
-        >
-          {isRecipientOnly ? t("card.type.recipient") : t("card.type.trust")}
-        </span>
         <span className="px-2.5 py-0.5 text-label-md rounded-sm bg-secondary-container text-on-secondary-container">
           {ROLE_KEYS[vault.role]
             ? t(`card.role.${ROLE_KEYS[vault.role]}`)
@@ -200,8 +184,8 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
         </span>
       </div>
 
-      {/* Compact availability status (trust contacts only) */}
-      {!isRecipientOnly && isAccepted && (
+      {/* Compact availability status */}
+      {isAccepted && (
         <div className="flex items-center gap-1.5 mt-4 min-w-0">
           <span className="text-label-md text-on-surface-variant truncate">
             {availabilityLabel}
@@ -214,9 +198,7 @@ export function SharedVaultCard({ vault }: SharedVaultCardProps) {
 
       {phase.key === "guarding" && (
         <p className="text-label-md text-on-surface-variant mt-5">
-          {isRecipientOnly
-            ? t("card.guarding.recipient", { ownerName: vault.ownerName })
-            : t("card.guarding.trust", { ownerName: vault.ownerName })}
+          {t("card.guarding.trust", { ownerName: vault.ownerName })}
         </p>
       )}
 
