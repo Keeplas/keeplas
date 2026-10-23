@@ -83,6 +83,17 @@ export function formatDuration(seconds: number): string {
     : `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
 
+/** Time left until `target`, split for a DAYS / HOURS / MINUTES / SECONDS countdown; zero once passed. */
+export function countdownParts(target: number, now: number = Date.now()) {
+  const total = Math.max(0, Math.floor((target - now) / 1000));
+  return {
+    days: Math.floor(total / 86_400),
+    hours: Math.floor((total % 86_400) / 3_600),
+    minutes: Math.floor((total % 3_600) / 60),
+    seconds: total % 60,
+  };
+}
+
 /**
  * "FR" → "France" in `locale`; the code itself when unknown. Uses bundled
  * data because Hermes ships without `Intl.DisplayNames`.
