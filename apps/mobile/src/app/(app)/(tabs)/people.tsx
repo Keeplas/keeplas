@@ -179,13 +179,7 @@ export default function People() {
         onPress={() => router.push("/people/add")}
       />
       <Callout icon="info" text={t("people.replaceNote")} />
-      <SectionHeader
-        title={t("people.sharedFolders")}
-        action={{
-          label: t("folders.new"),
-          onPress: () => router.push("/folder/new"),
-        }}
-      />
+      <SectionHeader title={t("people.sharedFolders")} />
       {(folders ?? []).map((folder) => (
         <ListRow
           key={folder.id}
@@ -201,6 +195,11 @@ export default function People() {
           }
         />
       ))}
+      <Button
+        variant="secondary"
+        label={t("folders.new")}
+        onPress={() => router.push("/folder/new")}
+      />
     </Screen>
   );
 }

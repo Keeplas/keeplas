@@ -135,28 +135,11 @@ export function Chip({
   );
 }
 
-/** Section title row with an optional trailing link ("See all", "Add"). */
-export function SectionHeader({
-  title,
-  action,
-}: {
-  title: string;
-  action?: { label: string; onPress: () => void };
-}) {
+/** Section title row. */
+export function SectionHeader({ title }: { title: string }) {
   return (
     <View style={styles.section}>
       <Text variant="label">{title}</Text>
-      {action ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={action.onPress}
-          hitSlop={14}
-        >
-          <Text variant="body-sm" color="text.link">
-            {action.label}
-          </Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
