@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -21,6 +21,7 @@ import { Callout, Card, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { formatDate, formatTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useReplaceKit } from "@/lib/use-replace-kit";
 import { useI18n } from "@/providers/i18n-provider";
@@ -76,7 +77,7 @@ export default function ContactRecovery() {
       );
       await start({ newDevicePublicKey: publicKey });
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }
@@ -107,7 +108,7 @@ export default function ContactRecovery() {
       refreshDeviceVault();
       router.replace("/vault-restored");
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }
@@ -149,7 +150,9 @@ export default function ContactRecovery() {
             variant="danger"
             label={t("socialRecovery.cancel")}
             onPress={() =>
-              cancel({}).catch(() => Alert.alert(t("common.genericError")))
+              cancel({}).catch(() =>
+                toast({ variant: "error", title: t("common.genericError") }),
+              )
             }
           />
         )

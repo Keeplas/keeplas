@@ -13,6 +13,7 @@ import { BottomSheet } from "@/components/sheet";
 import { Callout, IconTile, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useVaultData } from "@/features/vault/vault-data";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -48,7 +49,7 @@ export default function FolderAccess() {
           style: "destructive",
           onPress: () =>
             void revokeGrant({ grantId }).catch(() =>
-              Alert.alert(t("common.genericError")),
+              toast({ variant: "error", title: t("common.genericError") }),
             ),
         },
       ],
@@ -60,7 +61,7 @@ export default function FolderAccess() {
     const { grantId, timing } = editing;
     setEditing(null);
     await updateGrant({ grantId, timing }).catch(() =>
-      Alert.alert(t("common.genericError")),
+      toast({ variant: "error", title: t("common.genericError") }),
     );
   }
 

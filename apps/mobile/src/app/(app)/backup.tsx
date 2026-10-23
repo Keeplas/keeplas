@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -11,6 +10,7 @@ import { Callout, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceRootKey } from "@/crypto/device-vault";
 import { cloudKeyName, useSealCloudBackup } from "@/features/cloud-backup";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -43,10 +43,11 @@ export default function CloudBackup() {
       }
     } catch (error) {
       if (isPinAbort(error)) return;
-      Alert.alert(
-        t("common.genericError"),
-        error instanceof Error ? error.message : undefined,
-      );
+      toast({
+        variant: "error",
+        title: t("common.genericError"),
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       setBusy(false);
     }
@@ -58,7 +59,7 @@ export default function CloudBackup() {
       await disable({});
       await CloudKey.remove(cloudKeyName(viewer._id));
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

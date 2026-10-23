@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { Toaster } from "@/components/toaster";
 import { OutboxProvider } from "@/features/outbox/outbox-provider";
 import { AccountLanguageSync } from "@/lib/use-change-language";
 import { ConvexProvider } from "@/providers/convex-provider";
@@ -27,6 +28,7 @@ export default function RootLayout() {
                 <OutboxProvider>
                   <AccountLanguageSync />
                   <Routes />
+                  <Toaster />
                 </OutboxProvider>
               </SessionProvider>
             </VaultProvider>

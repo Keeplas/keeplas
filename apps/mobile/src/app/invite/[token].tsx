@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
@@ -41,10 +42,11 @@ export default function Invite() {
       else await decline({ token });
       router.replace("/");
     } catch (error) {
-      Alert.alert(
-        t("common.genericError"),
-        error instanceof Error ? error.message : undefined,
-      );
+      toast({
+        variant: "error",
+        title: t("common.genericError"),
+        description: error instanceof Error ? error.message : undefined,
+      });
       setBusy(false);
     }
   }

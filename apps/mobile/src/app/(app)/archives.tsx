@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -17,6 +16,7 @@ import {
 } from "@/features/vault/vault-data";
 import { itemVisual } from "@/features/vault/item-visual";
 import { formatBytes, formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -54,7 +54,7 @@ export default function Archives() {
   function restore(item: Archived) {
     setChosen(null);
     void unarchive({ itemId: item.id }).catch(() =>
-      Alert.alert(t("archives.restoreFailed")),
+      toast({ variant: "error", title: t("archives.restoreFailed") }),
     );
   }
 

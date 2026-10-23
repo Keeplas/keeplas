@@ -10,6 +10,7 @@ import { Callout, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { PasskeyButton } from "@/features/passkey-step";
 import { formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -33,7 +34,7 @@ export default function Passkeys() {
           style: "destructive",
           onPress: () =>
             void remove({ credentialId: id }).catch(() =>
-              Alert.alert(t("passkeys.removeFailed")),
+              toast({ variant: "error", title: t("passkeys.removeFailed") }),
             ),
         },
       ],

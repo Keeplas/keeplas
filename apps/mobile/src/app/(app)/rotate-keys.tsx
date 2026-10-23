@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useConvex } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -16,6 +15,7 @@ import { readDeviceRootKey, saveDeviceVault } from "@/crypto/device-vault";
 import { encryptText, exportRawKey } from "@/crypto/envelope";
 import { buildKeyBundle, createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { useVaultData } from "@/features/vault/vault-data";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -124,10 +124,11 @@ export default function RotateKeys() {
       router.back();
     } catch (error) {
       if (isPinAbort(error)) return;
-      Alert.alert(
-        t("rotation.failed"),
-        error instanceof Error ? error.message : undefined,
-      );
+      toast({
+        variant: "error",
+        title: t("rotation.failed"),
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       rawNew?.fill(0);
       rootKey?.fill(0);
