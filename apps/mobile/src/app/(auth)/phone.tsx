@@ -9,8 +9,9 @@ import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { errorText } from "@/lib/errors";
+import { errorText, passkeyFailure } from "@/lib/errors";
 import { attestationReference } from "@/lib/attestation";
+import { usePasskeySignIn } from "@/lib/use-passkey-sign-in";
 import { usePhoneField } from "@/lib/use-phone-field";
 import {
   AttestationFailed,
@@ -27,7 +28,9 @@ export default function PhoneScreen() {
   const intent: PhoneIntent = params.intent === "signin" ? "signin" : "signup";
   const phone = usePhoneField();
   const requestCode = useRequestPhoneCode();
+  const passkeySignIn = usePasskeySignIn();
   const [busy, setBusy] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [switchTo, setSwitchTo] = useState<PhoneIntent | null>(null);
 
@@ -73,6 +76,20 @@ export default function PhoneScreen() {
     }
   }
 
+  // The stage gate moves on once the session opens.
+  async function signInWithPasskey() {
+    setPasskeyBusy(true);
+    setError(null);
+    setSwitchTo(null);
+    try {
+      await passkeySignIn();
+    } catch (err) {
+      if (passkeyFailure(err) !== null) setError(t("phone.passkeyFailed"));
+    } finally {
+      setPasskeyBusy(false);
+    }
+  }
+
   return (
     <Screen
       decor="branches"
@@ -113,6 +130,14 @@ export default function PhoneScreen() {
         />
       ) : null}
       <Button label={t("phone.cta")} chevron loading={busy} onPress={submit} />
+      {intent === "signin" ? (
+        <Button
+          variant="secondary"
+          label={t("phone.passkey")}
+          loading={passkeyBusy}
+          onPress={signInWithPasskey}
+        />
+      ) : null}
       <Callout icon="shield-check" text={t("phone.reassure")} />
       {intent === "signin" ? (
         <Button
