@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
@@ -80,8 +80,14 @@ export default function Unlock() {
     refreshDeviceVault,
   ]);
 
+  const ready = !needsPin || pin.length === OTP_LENGTH;
+
   return (
-    <Screen header={<AppHeader />}>
+    <Screen
+      decor="lake"
+      header={<AppHeader />}
+      contentStyle={styles.aboveDecor}
+    >
       <Text variant="h1" align="center">
         {t("unlock.title")}
       </Text>
@@ -89,13 +95,22 @@ export default function Unlock() {
         {t("unlock.body")}
       </Text>
       <View style={styles.art}>
-        <BiometricRing kind="fingerprint" size={188} />
+        {/* Tapping the fingerprint does what the passkey button does. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("unlock.cta")}
+          disabled={busy || !ready}
+          onPress={attempt}
+          style={({ pressed }) => pressed && styles.pressed}
+        >
+          <BiometricRing kind="fingerprint" size={188} />
+        </Pressable>
       </View>
       <Button
         label={t("unlock.cta")}
         chevron
         loading={busy}
-        disabled={needsPin && pin.length < OTP_LENGTH}
+        disabled={!ready}
         onPress={attempt}
       />
       {needsPin ? (
@@ -143,7 +158,10 @@ export default function Unlock() {
 }
 
 const styles = StyleSheet.create({
-  art: { alignItems: "center", paddingVertical: 8 },
+  // Keeps the actions clear of the landscape footer (246 pt, sky on top).
+  aboveDecor: { paddingBottom: 190 },
+  art: { flex: 1, justifyContent: "center", minHeight: 220 },
+  pressed: { opacity: 0.7 },
   code: { gap: 12, padding: 14, borderWidth: 1, borderRadius: radius.md },
   codeHeader: { flexDirection: "row", gap: 10 },
   flex: { flex: 1, gap: 2 },
