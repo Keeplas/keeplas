@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import type { File } from "expo-file-system";
 
@@ -12,18 +12,15 @@ import { Callout, Card, InfoRow } from "@/components/surfaces";
 import { Icon, type IconName } from "@/components/icon";
 import { Text } from "@/components/text";
 import {
-  ExportCancelled,
-  useExportVault,
-  type ExportProgress,
-} from "@/features/export/use-export-vault";
+  cancelExport,
+  getExportPhase,
+  startExport,
+  subscribeExport,
+  watchExport,
+} from "@/features/export/export-job";
+import { useExportVault } from "@/features/export/use-export-vault";
 import { formatBytes } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
-
-type Phase =
-  | { kind: "idle" }
-  | { kind: "running"; progress: ExportProgress | null }
-  | { kind: "ready"; archive: File; skipped: number }
-  | { kind: "failed" };
 
 const CONTENTS: { key: string; icon: IconName }[] = [
   { key: "items", icon: "document" },
@@ -36,35 +33,17 @@ export default function ExportData() {
   const router = useRouter();
   const { t, language } = useI18n();
   const exportVault = useExportVault();
-  const [phase, setPhase] = useState<Phase>({ kind: "idle" });
-  const stop = useRef(false);
-  const archive = useRef<File | null>(null);
+  const phase = useSyncExternalStore(subscribeExport, getExportPhase);
 
-  useEffect(
-    () => () => {
-      stop.current = true;
-      if (archive.current?.exists) archive.current.delete();
-    },
-    [],
-  );
+  useFocusEffect(useCallback(() => watchExport(), []));
 
-  async function start() {
-    stop.current = false;
-    setPhase({ kind: "running", progress: null });
-    try {
-      const { archive: file, skipped } = await exportVault(
-        (progress) => setPhase({ kind: "running", progress }),
-        () => stop.current,
-      );
-      archive.current = file;
-      setPhase({ kind: "ready", archive: file, skipped });
-    } catch (error) {
-      setPhase(
-        error instanceof ExportCancelled
-          ? { kind: "idle" }
-          : { kind: "failed" },
-      );
-    }
+  function start() {
+    void startExport(exportVault, {
+      title: t("export.title"),
+      running: t("export.notifyRunning"),
+      ready: t("export.notifyReady"),
+      failed: t("export.notifyFailed"),
+    });
   }
 
   async function share(file: File) {
@@ -86,9 +65,7 @@ export default function ExportData() {
           <Button
             variant="secondary"
             label={t("common.cancel")}
-            onPress={() => {
-              stop.current = true;
-            }}
+            onPress={cancelExport}
           />
         ) : phase.kind === "ready" ? (
           <Button
@@ -100,7 +77,7 @@ export default function ExportData() {
             label={
               phase.kind === "failed" ? t("common.tryAgain") : t("export.start")
             }
-            onPress={() => void start()}
+            onPress={start}
           />
         )
       }
@@ -122,7 +99,7 @@ export default function ExportData() {
       {phase.kind === "running" ? (
         <View style={styles.progress}>
           <Text variant="label">
-            {progress && progress.total > 0
+            {progress?.stage === "files" && progress.total > 0
               ? t("export.progress", {
                   done: progress.done,
                   total: progress.total,
@@ -135,7 +112,7 @@ export default function ExportData() {
             }
           />
           <Text variant="body-sm" color="text.muted">
-            {t("export.keepOpen")}
+            {t("export.background")}
           </Text>
         </View>
       ) : null}

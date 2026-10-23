@@ -1,0 +1,17 @@
+// Gradle build for the local KeeplasBackgroundWork Expo module: a foreground
+// service that keeps the vault export running in the background.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.keeplas'
+version = '0.1.0'
+
+android {
+  namespace "com.keeplas.backgroundwork"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}

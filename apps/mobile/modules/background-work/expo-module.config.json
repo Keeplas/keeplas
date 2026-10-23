@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["KeeplasBackgroundWorkModule"]
+  },
+  "android": {
+    "modules": ["com.keeplas.backgroundwork.KeeplasBackgroundWorkModule"]
+  }
+}

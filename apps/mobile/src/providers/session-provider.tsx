@@ -13,6 +13,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
 import { auditContext } from "@/lib/use-audited-mutation";
@@ -87,6 +88,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await clearItemSummaries(userId).catch(() => undefined);
     }
     lock();
+    discardExport();
     auditContext.clear();
     setMigrationDeferred(false);
     setNewNumberPending(false);
