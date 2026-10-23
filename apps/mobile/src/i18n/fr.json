@@ -890,7 +890,7 @@
     "addTitle": "Ajouter un contact",
     "addBody": "Choisissez comment l'inviter.",
     "name": "Nom",
-    "email": "E-mail",
+    "email": "E-mail (facultatif)",
     "phone": "Numéro de téléphone",
     "sendInvite": "Envoyer l'invitation",
     "status": {

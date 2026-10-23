@@ -38,7 +38,7 @@ export function AddPerson() {
   const [busy, setBusy] = useState(false);
 
   function next() {
-    const emailOk = isValidEmail(email);
+    const emailOk = !email.trim() || isValidEmail(email);
     setEmailError(!emailOk);
     const e164 = phone.validate();
     if (!emailOk || !e164) return;
@@ -52,7 +52,7 @@ export function AddPerson() {
     try {
       await invite({
         name: name.trim(),
-        email: normalizeEmail(email),
+        email: email.trim() ? normalizeEmail(email) : undefined,
         phoneNumber,
         role: "friend",
       });
@@ -86,7 +86,7 @@ export function AddPerson() {
             label={t("people.continue")}
             chevron
             onPress={next}
-            disabled={!name.trim() || !email.trim() || !phone.inputProps.value}
+            disabled={!name.trim() || !phone.inputProps.value}
           />
         }
       >
@@ -172,7 +172,9 @@ export function AddPerson() {
             <Icon name="edit" size={18} color="text.link" />
           </Pressable>
         </View>
-        <Detail icon="mail" text={normalizeEmail(email)} />
+        {email.trim() ? (
+          <Detail icon="mail" text={normalizeEmail(email)} />
+        ) : null}
         <Detail icon="whatsapp" text={formatPhone(phoneNumber)} />
       </View>
 

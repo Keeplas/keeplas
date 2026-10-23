@@ -898,7 +898,7 @@
     "addTitle": "Add trusted person",
     "addBody": "Choose how to invite them.",
     "name": "Name",
-    "email": "Email",
+    "email": "Email (optional)",
     "phone": "Phone number",
     "sendInvite": "Send invitation",
     "status": {
