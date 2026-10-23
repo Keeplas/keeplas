@@ -19,7 +19,7 @@
         "com.apple.developer.devicecheck.appattest-environment": "production"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": true,
+        "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryAddUsageDescription": "Keeplas saves the photos and videos you export from your vault to your library."
       }
     },
