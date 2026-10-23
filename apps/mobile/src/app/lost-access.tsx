@@ -58,6 +58,12 @@ export default function LostAccess() {
         onPress={() => router.push("/recovery-kit")}
       />
       <Callout icon="shield-check" text={t("lostAccess.note")} />
+      <ListRow
+        icon="help"
+        title={t("help.title")}
+        description={t("help.rowBody")}
+        onPress={() => router.push("/help")}
+      />
       <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );

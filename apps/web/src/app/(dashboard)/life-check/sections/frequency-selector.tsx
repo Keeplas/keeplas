@@ -1,64 +1,48 @@
-import { HelpHint, Icon } from "@keeplas/ui";
+import { HelpHint, RadioGroup, RadioGroupItem } from "@keeplas/ui";
+import { Panel } from "@/components/v2/surface";
 import { useTranslations } from "@/lib/i18n";
 import { FREQUENCIES, type Frequency } from "./constants";
-
-const CLOCK_ICON = "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 
 interface FrequencySelectorProps {
   value: Frequency;
   onChange: (value: Frequency) => void;
 }
 
+/** Check-in cadence as the mobile Life check radio card. */
 export function FrequencySelector({ value, onChange }: FrequencySelectorProps) {
-  const t = useTranslations("lifeCheck");
+  const t = useTranslations("lifeCheck.frequency");
   return (
-    <section className="bg-surface-container-low rounded-sm p-6 relative overflow-hidden">
-      <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
-        <Icon path={CLOCK_ICON} className="w-5 h-5 text-secondary" />
-        {t("frequency.title")}
-        <HelpHint content={t("frequency.help")} />
-      </h3>
-      <p className="text-body-md text-on-surface-variant mb-6">
-        {t("frequency.description")}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {FREQUENCIES.map((freq) => {
-          const selected = value === freq.value;
-          return (
-            <button
-              key={freq.value}
-              onClick={() => onChange(freq.value)}
-              className={
-                selected
-                  ? "flex flex-col items-center justify-center p-5 bg-secondary text-on-secondary rounded-xs shadow-lg scale-[1.03] transition-transform cursor-pointer"
-                  : "flex flex-col items-center justify-center p-5 bg-surface-container-highest rounded-xs hover:scale-[1.03] transition-transform cursor-pointer group"
-              }
-            >
-              <span
-                className={`text-headline-md font-black ${
-                  selected ? "" : "text-primary group-hover:text-secondary"
-                }`}
-              >
-                {freq.label}
-              </span>
-              <span
-                className={`text-label-md mt-1 ${
-                  selected ? "opacity-80" : "text-on-surface-variant"
-                }`}
-              >
-                {t(`frequency.unit.${freq.value}`)}
-              </span>
-              <span
-                className={`text-label-md mt-1 ${
-                  selected ? "opacity-60" : "text-on-surface-variant/60"
-                }`}
-              >
-                {t(`frequency.tag.${freq.value}`)}
-              </span>
-            </button>
-          );
-        })}
+    <Panel className="flex flex-col gap-[16px] p-[20px]">
+      <div className="flex flex-col gap-[4px]">
+        <h2 className="flex items-center gap-[8px] text-h3 text-text-primary">
+          {t("title")}
+          <HelpHint content={t("help")} />
+        </h2>
+        <p className="text-body-sm text-text-muted">{t("description")}</p>
       </div>
-    </section>
+      <RadioGroup
+        value={value}
+        onValueChange={(next) => onChange(next as Frequency)}
+        aria-label={t("title")}
+      >
+        {FREQUENCIES.map((freq) => (
+          <div key={freq.value} className="flex items-center gap-[14px]">
+            <RadioGroupItem value={freq.value} id={`frequency-${freq.value}`} />
+            <label
+              htmlFor={`frequency-${freq.value}`}
+              className="flex flex-1 cursor-pointer flex-wrap items-baseline justify-between gap-x-[12px]"
+            >
+              <span className="text-body-lg text-text-primary">
+                {t(`label.${freq.value}`)}
+              </span>
+              <span className="text-body-sm text-text-muted">
+                {freq.label} {t(`unit.${freq.value}`).toLowerCase()} ·{" "}
+                {t(`tag.${freq.value}`)}
+              </span>
+            </label>
+          </div>
+        ))}
+      </RadioGroup>
+    </Panel>
   );
 }

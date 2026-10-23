@@ -1,8 +1,9 @@
 import { useMemo } from "react";
-import { DatePicker, HelpHint, Icon } from "@keeplas/ui";
+import { Button, DatePicker, HelpHint } from "@keeplas/ui";
+import { IconTile, Panel, RowText, StatusChip } from "@/components/v2/surface";
+import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 
-const CALENDAR_ICON = "M3.75 9h16.5m-16.5 6.75h16.5M3.75 4.5h16.5M12 4.5v15";
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 interface TravelModeSectionProps {
@@ -28,28 +29,29 @@ export function TravelModeSection({
   const { today, maxDate } = useMemo(() => computeDateBounds(), []);
 
   return (
-    <section
-      id="travel-mode"
-      className="bg-surface-container-low rounded-sm p-6"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-headline-sm text-primary flex items-center gap-2">
-            <Icon path={CALENDAR_ICON} className="w-5 h-5 text-secondary" />
-            {t("travel.title")}
-            <HelpHint content={t("travel.help")} />
-          </h3>
-          <p className="text-body-md text-on-surface-variant mt-1">
-            {t("travel.description")}
-          </p>
-        </div>
+    <Panel id="travel-mode" className="flex flex-col gap-[16px] p-[20px]">
+      <div className="flex items-center gap-[14px]">
+        <IconTile
+          icon={ICON_PATHS.mapPin}
+          className="bg-bg-info text-text-link"
+        />
+        <RowText
+          title={
+            <span className="flex items-center gap-[6px]">
+              {t("travel.title")}
+              <HelpHint content={t("travel.help")} />
+            </span>
+          }
+          description={t("travel.description")}
+        />
+        <StatusChip tone="neutral" label={t("travel.off")} />
       </div>
 
-      <div className="flex items-end gap-3">
-        <div className="flex-1 max-w-xs">
+      <div className="flex flex-wrap items-end gap-[12px]">
+        <div className="flex min-w-[220px] max-w-xs flex-1 flex-col gap-[6px]">
           <label
             htmlFor="travel-until"
-            className="text-label-md text-on-surface-variant block mb-1"
+            className="text-body-sm text-text-muted"
           >
             {t("travel.returnDate")}
           </label>
@@ -62,14 +64,15 @@ export function TravelModeSection({
             placeholder={t("travel.returnDatePlaceholder")}
           />
         </div>
-        <button
+        <Button
+          variant="primary"
+          size="regular"
           onClick={onToggle}
           disabled={!until}
-          className="px-5 py-3 rounded-xs bg-secondary text-on-secondary text-sm font-bold cursor-pointer disabled:opacity-60"
         >
           {t("travel.enable")}
-        </button>
+        </Button>
       </div>
-    </section>
+    </Panel>
   );
 }

@@ -51,8 +51,8 @@
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
     "signInInstead": "Me connecter avec ce numéro",
-    "passkey": "Se connecter avec une passkey",
-    "passkeyFailed": "La connexion par passkey a échoué. Réessayez, ou utilisez votre numéro."
+    "passkey": "Se connecter avec un passe-clé",
+    "passkeyFailed": "La connexion par passe-clé a échoué. Réessayez, ou utilisez votre numéro."
   },
   "verify": {
     "title": "Vérifier votre numéro",
@@ -77,7 +77,7 @@
   },
   "passkey": {
     "title": "Créer votre passe-clé",
-    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé reste sur cet appareil et ne le quitte jamais.",
+    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé se synchronise avec votre trousseau iCloud ou Google : il revient sur un nouveau téléphone.",
     "cta": "Créer le passe-clé",
     "failedTitle": "Passe-clé non créé",
     "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut un passe-clé pour garder votre coffre sur ce téléphone.",
@@ -112,7 +112,7 @@
   "kit": {
     "title": "Votre kit de récupération",
     "body": "Notez ces 24 mots dans l'ordre et gardez-les en lieu sûr. Ils permettent d'ouvrir votre coffre si vous perdez ce téléphone.",
-    "warning": "Quiconque possède ces mots et l'accès à votre numéro peut ouvrir votre coffre. Ne les partagez jamais.",
+    "warning": "Quiconque possède ces mots peut ouvrir votre coffre. Gardez-les hors ligne et ne les partagez jamais, pas même avec Keeplas.",
     "saved": "J'ai enregistré mon kit",
     "intro": "24 mots qui ouvrent votre coffre si vous ne pouvez pas le restaurer depuis votre compte Apple ou Google ni avec vos contacts. Vous n'en avez pas besoin pour vous connecter.",
     "replaces": "Créer un kit remplace le précédent : les anciens mots ne fonctionnent plus.",
@@ -218,6 +218,99 @@
     "lapsed": "Votre demande a expiré. Une demande dure 7 jours.",
     "rejected": "Nous n'avons pas pu confirmer que c'était vous, la demande est donc close. Contactez-nous si vous pensez qu'il s'agit d'une erreur.",
     "cancelled": "Cette demande a été annulée."
+  },
+  "waysBack": {
+    "covered": "Récupération prête",
+    "notCovered": "Aucun moyen de récupération",
+    "missing": "Manquant",
+    "optional": "Facultatif",
+    "contactsReady": "2 contacts prêts à vous aider",
+    "contactsNeeded": "2 contacts requis",
+    "kitBody": "24 mots, si les autres moyens manquent"
+  },
+  "support": {
+    "title": "Contacter le support",
+    "body": "Notre équipe vous répond par e-mail ou WhatsApp. Ne nous envoyez jamais vos 24 mots ni vos codes.",
+    "topic": "Sujet",
+    "topics": {
+      "general": "Question générale",
+      "recovery": "Récupération et accès au coffre",
+      "security": "Sécurité",
+      "billing": "Offre et paiement",
+      "feature_request": "Suggestion",
+      "other": "Autre"
+    },
+    "name": "Votre nom",
+    "contact": "E-mail ou numéro WhatsApp",
+    "contactPlaceholder": "vous@exemple.com ou +33 6…",
+    "message": "Votre message",
+    "messagePlaceholder": "Dites-nous ce qui se passe…",
+    "send": "Envoyer",
+    "note": "Nous ne vous demanderons jamais vos 24 mots, vos codes ou votre code PIN.",
+    "sentTitle": "Message envoyé",
+    "sentBody": "Nous vous répondrons à {contact}.",
+    "invalidContact": "Saisissez un e-mail ou un numéro WhatsApp valide, avec l'indicatif (ex. +33).",
+    "tooShort": "Votre message doit faire au moins 10 caractères.",
+    "missing": "Remplissez tous les champs."
+  },
+  "help": {
+    "title": "Aide et questions",
+    "body": "Revenir dans votre coffre après avoir changé ou perdu votre téléphone.",
+    "rowBody": "Nouveau téléphone, téléphone perdu, récupération",
+    "supportBody": "Écrivez à notre équipe, nous répondons par e-mail ou WhatsApp.",
+    "guide": "Guide complet sur keeplas.com",
+    "guideBody": "Chaque cas, étape par étape, avec des captures.",
+    "sections": {
+      "change": "Changer de téléphone",
+      "lost": "Quelque chose est perdu",
+      "understand": "Comment ça marche"
+    },
+    "q": {
+      "newPhone": {
+        "question": "Je change de téléphone",
+        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp, ou avec votre passe-clé. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
+      },
+      "platform": {
+        "question": "Je passe d'Android à iPhone, ou l'inverse",
+        "answer": "Une sauvegarde Google ne passe pas sur iCloud, et inversement. Gardez l'ancien téléphone : sur le nouveau, choisissez « Un autre appareil connecté » et approuvez depuis l'ancien. Sinon, utilisez votre kit de 24 mots ou vos contacts de confiance. La sauvegarde se réactive ensuite sur le nouveau téléphone."
+      },
+      "lostPhone": {
+        "question": "J'ai perdu mon téléphone",
+        "answer": "Personne ne peut ouvrir votre coffre dessus : il est verrouillé par Face ID, l'empreinte ou le code du téléphone. Sur un nouveau téléphone, connectez-vous et restaurez depuis iCloud ou Google. Retirez ensuite le téléphone perdu dans Réglages › Appareils pour fermer sa session."
+      },
+      "lostNumber": {
+        "question": "J'ai perdu mon numéro",
+        "answer": "Sur l'écran de connexion, touchez « Vous avez perdu votre numéro ? ». Avec vos 24 mots, vous le changez tout de suite. Sans eux, notre équipe vérifie votre demande et rien ne change pendant 72 heures. Vous pouvez aussi vous connecter avec votre passe-clé."
+      },
+      "lostAuthenticator": {
+        "question": "J'ai perdu mon application d'authentification",
+        "answer": "Sur l'écran du code, touchez « Vous avez perdu votre application d'authentification ? » et ouvrez votre coffre avec votre sauvegarde ou vos 24 mots. Le code d'authentification est désactivé ; vous pourrez en configurer un nouveau plus tard."
+      },
+      "nothingLeft": {
+        "question": "Je n'ai ni sauvegarde ni 24 mots",
+        "answer": "Demandez à vos contacts de confiance : deux d'entre eux approuvent, puis Keeplas attend 72 heures. Sans aucun de ces moyens, personne ne peut ouvrir votre coffre, pas même Keeplas : c'est ce qui le garde privé."
+      },
+      "backup": {
+        "question": "À quoi sert la sauvegarde cloud ?",
+        "answer": "Keeplas garde une copie chiffrée de la clé de votre coffre, et ce qui l'ouvre reste dans votre trousseau iCloud ou Google. Ni Keeplas, ni Apple ou Google ne peuvent l'ouvrir seuls. La restaurer demande aussi un code WhatsApp."
+      },
+      "kit": {
+        "question": "Ai-je besoin des 24 mots ?",
+        "answer": "Non. C'est un kit facultatif à créer dans Réglages › Confidentialité et sécurité, pour un moyen de revenir qui ne dépend ni du cloud ni de vos contacts. Quiconque possède ces mots peut ouvrir votre coffre : gardez-les hors ligne."
+      },
+      "wait": {
+        "question": "Pourquoi attendre 72 heures ?",
+        "answer": "Ce délai vous laisse le temps de voir une demande que vous n'avez pas faite et de l'annuler. Il ne concerne que les moyens qui ne prouvent pas directement que c'est vous : vos contacts de confiance, ou un numéro perdu sans vos 24 mots."
+      },
+      "notMe": {
+        "question": "Quelqu'un essaie d'entrer dans mon compte",
+        "answer": "Vous recevez une alerte sur vos appareils, par e-mail et sur WhatsApp. Ouvrez Keeplas et touchez « Ce n'était pas moi » pour annuler la demande. Rien n'est libéré pendant les 72 heures."
+      },
+      "zeroAccess": {
+        "question": "Keeplas peut-il ouvrir mon coffre ?",
+        "answer": "Non. Votre coffre est chiffré sur votre téléphone. Notre équipe peut vérifier votre identité pour passer votre compte à un nouveau numéro, mais jamais ouvrir votre coffre ni raccourcir une attente."
+      }
+    }
   },
   "newNumber": {
     "title": "Choisissez votre nouveau numéro",
@@ -328,7 +421,8 @@
       "image": "Photos et scans",
       "audio": "Notes vocales",
       "video": "Vidéos"
-    }
+    },
+    "help": "Aide"
   },
   "frequency": {
     "weekly": "Hebdomadaire",
@@ -351,7 +445,9 @@
     "rotation": "Renouveler les clés",
     "rotationBody": "Sécuriser le coffre après un appareil suspect ou une récupération.",
     "pinSheetTitle": "Votre téléphone protège déjà Keeplas",
-    "pinSheetBody": "Sur ce téléphone, Keeplas s'ouvre avec votre verrouillage d'écran : Face ID, empreinte ou code du téléphone. Un code PIN Keeplas distinct est disponible sur l'application web, pour les ordinateurs."
+    "pinSheetBody": "Sur ce téléphone, Keeplas s'ouvre avec votre verrouillage d'écran : Face ID, empreinte ou code du téléphone. Un code PIN Keeplas distinct est disponible sur l'application web, pour les ordinateurs.",
+    "backup": "Sauvegarde cloud",
+    "backupBody": "Votre coffre revient avec votre compte Apple ou Google."
   },
   "rotation": {
     "title": "Renouveler les clés de chiffrement",
@@ -365,7 +461,7 @@
   },
   "recoveryCenter": {
     "title": "Centre de récupération",
-    "body": "Préparez vos contacts pour que deux d'entre eux puissent vous aider si vous perdez tous vos appareils.",
+    "body": "Vos moyens de revenir dans votre coffre si vous perdez ce téléphone. Un seul suffit ; plusieurs, c'est plus sûr.",
     "ready": "Récupération par contacts prête",
     "notReady": "Récupération non configurée",
     "configure": "Configurer la récupération",
@@ -377,7 +473,8 @@
     "trustContacts": "Contacts de confiance",
     "ofTwo": "{n} sur 2",
     "active": "Actif",
-    "addContact": "Ajouter un contact de confiance"
+    "addContact": "Ajouter un contact de confiance",
+    "contactsBody": "Deux contacts de confiance peuvent vous aider à revenir si tous vos autres moyens ont disparu."
   },
   "vaultRestored": {
     "title": "Coffre restauré",
@@ -926,7 +1023,7 @@
   "backup": {
     "title": "Sauvegarde cloud",
     "bodyShort": "Récupération chiffrée dans votre trousseau cloud",
-    "body": "Keeplas conserve une enveloppe chiffrée. La clé reste séparément dans le trousseau synchronisé de votre plateforme.",
+    "body": "Votre coffre revient sur un nouveau téléphone avec votre compte {account}. Keeplas garde une copie chiffrée de sa clé ; ce qui l'ouvre reste dans votre trousseau {account}.",
     "protected": "Votre sauvegarde est protégée par votre compte {account}. Gardez-le bien sécurisé (mot de passe solide, double authentification) : c'est lui qui protège aussi votre sauvegarde Keeplas. La restaurer demande aussi un code envoyé sur votre WhatsApp.",
     "auth": "Confirmer la sauvegarde cloud",
     "noRootKey": "Ce téléphone ne peut pas créer la sauvegarde. Créez d'abord un nouveau kit de récupération.",

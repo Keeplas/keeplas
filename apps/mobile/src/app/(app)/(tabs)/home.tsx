@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { NamePrompt } from "@/features/home/name-prompt";
+import { useRecoveryWays } from "@/features/recovery-ways";
 import { VaultItemRow } from "@/features/vault/item-row";
 import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
@@ -21,7 +22,6 @@ import {
   type VaultListKey,
 } from "@/features/home/vault-groups";
 import { formatDate, relativeDay } from "@/lib/format";
-import { readPreference } from "@/lib/preferences";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -33,29 +33,16 @@ export default function Home() {
   const { colors } = useTheme();
   const router = useRouter();
   const viewer = useViewer();
-  const contactsReady =
-    useQuery(api.trusted_contacts.getContactsReady) ?? false;
   const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
   const numberChange = useQuery(api.number_change.getMineOpen);
-  const backup = useQuery(api.cloud_backup.status);
   const { items, pending } = useVaultData();
-  const [kitExported, setKitExported] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      readPreference("kitExported").then((v) => setKitExported(v === "true"));
-    }, []),
-  );
+  const { ready } = useRecoveryWays();
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   const counts = useMemo(() => listCounts(items ?? []), [items]);
   const inboxCount = counts.inbox + pending.length;
-  // Ways back in: this phone, 2 ready trust contacts, the cloud backup (or
-  // a recovery kit when the owner turned the backup off).
-  const ready =
-    1 + (contactsReady ? 1 : 0) + (backup?.enabled || kitExported ? 1 : 0);
   const openList = (group: VaultListKey) =>
     router.push({ pathname: "/vault/[group]", params: { group } });
   const itemCount = (count: number) =>

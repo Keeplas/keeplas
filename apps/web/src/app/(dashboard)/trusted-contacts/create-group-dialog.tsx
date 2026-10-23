@@ -2,21 +2,19 @@ import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  Button,
-  Input,
-  Label,
-  Textarea,
-  ErrorAlert,
-} from "@keeplas/ui";
+import { Button, Input, Textarea } from "@keeplas/ui";
 import { ContactMembersSelect } from "@/components/contact-members-select";
+import { Modal } from "@/components/v2/modal";
+import { Field } from "@/components/vault/form-fields";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+
+/**
+ * Restyles the legacy Textarea as the v2 "App/Field" box (Input
+ * variant="field"); shared with the edit dialog.
+ */
+export const TEXTAREA_FIELD =
+  "rounded-sm border-border-default bg-bg-surface px-[14px] py-[12px] text-[15px] leading-[22px] text-text-primary placeholder:text-text-subtle hover:border-border-default focus:border-border-default focus:bg-bg-surface focus-visible:ring-2 focus-visible:ring-border-focus";
 
 interface CreateGroupDialogProps {
   open: boolean;
@@ -72,79 +70,76 @@ export function CreateGroupDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="shrink-0 static">
-          <div className="flex-1 min-w-0">
-            <DialogTitle>{t("createGroup.title")}</DialogTitle>
-            <DialogDescription className="mt-1">
-              {t("createGroup.description")}
-            </DialogDescription>
-          </div>
-        </DialogHeader>
-
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="group-name">{t("createGroup.nameLabel")}</Label>
+    <Modal
+      open={open}
+      onOpenChange={handleOpenChange}
+      title={t("createGroup.title")}
+      description={t("createGroup.description")}
+      width="w-[520px]"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-[20px]">
+        <Field label={t("createGroup.nameLabel")}>
+          {(id) => (
             <Input
-              id="group-name"
+              id={id}
+              variant="field"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("createGroup.namePlaceholder")}
               required
             />
-          </div>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="group-description">
-              {t("createGroup.descriptionLabel")}
-            </Label>
+        <Field label={t("createGroup.descriptionLabel")}>
+          {(id) => (
             <Textarea
-              id="group-description"
+              id={id}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("createGroup.descriptionPlaceholder")}
               rows={2}
+              className={TEXTAREA_FIELD}
             />
-          </div>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label>{t("createGroup.membersLabel")}</Label>
+        <Field label={t("createGroup.membersLabel")}>
+          {() => (
             <ContactMembersSelect
               contacts={contacts}
               selected={members}
               onChange={setMembers}
               placeholder={t("createGroup.membersPlaceholder")}
             />
-          </div>
+          )}
+        </Field>
 
-          {error && <ErrorAlert message={error} />}
+        {error && (
+          <p role="alert" className="text-body-sm text-action-danger">
+            {error}
+          </p>
+        )}
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => handleOpenChange(false)}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              {t("createGroup.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving || !name.trim()}
-              className="flex-1 cursor-pointer"
-            >
-              {saving ? t("createGroup.creating") : t("createGroup.submit")}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end gap-[12px]">
+          <Button
+            type="button"
+            variant="plain"
+            size="regular"
+            onClick={() => handleOpenChange(false)}
+          >
+            {t("createGroup.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="regular"
+            disabled={saving || !name.trim()}
+          >
+            {saving ? t("createGroup.creating") : t("createGroup.submit")}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

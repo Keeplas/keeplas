@@ -82,7 +82,7 @@
   },
   "passkey": {
     "title": "Create your passkey",
-    "body": "Use your face, fingerprint or phone PIN to securely access your account. Your passkey stays on this device and never leaves it.",
+    "body": "Use your face, fingerprint or phone passcode to get into your account securely. Your passkey syncs with your iCloud or Google keychain, so it comes back on a new phone.",
     "cta": "Create passkey",
     "failedTitle": "Passkey not created",
     "failedBody": "The prompt closed before you finished. You need a passkey to keep your vault on this phone.",
@@ -118,7 +118,7 @@
   "kit": {
     "title": "Your recovery kit",
     "body": "Write these 24 words down, in order, and keep them somewhere safe. With them you can open your vault if you lose this phone.",
-    "warning": "Anyone with these words and access to your phone number can open your vault. Never share them.",
+    "warning": "Anyone with these words can open your vault. Keep them offline and never share them, not even with Keeplas.",
     "saved": "I've saved my kit",
     "intro": "24 words that open your vault if you can't restore it from your Apple or Google account or with your contacts. You don't need them to sign in.",
     "replaces": "Creating a kit replaces any previous one: older words stop working.",
@@ -225,6 +225,99 @@
     "lapsed": "Your request has lapsed. Requests last 7 days.",
     "rejected": "We couldn't confirm it was you, so we closed the request. Contact us if you think this is a mistake.",
     "cancelled": "This request was cancelled."
+  },
+  "waysBack": {
+    "covered": "Recovery ready",
+    "notCovered": "No way back in yet",
+    "missing": "Missing",
+    "optional": "Optional",
+    "contactsReady": "2 contacts ready to help you",
+    "contactsNeeded": "2 contacts needed",
+    "kitBody": "24 words, if the other ways are gone"
+  },
+  "support": {
+    "title": "Contact support",
+    "body": "Our team answers by email or WhatsApp. Never send us your 24 words or your codes.",
+    "topic": "Topic",
+    "topics": {
+      "general": "General question",
+      "recovery": "Recovery & vault access",
+      "security": "Security concern",
+      "billing": "Billing & plan",
+      "feature_request": "Feature request",
+      "other": "Other"
+    },
+    "name": "Your name",
+    "contact": "Email or WhatsApp number",
+    "contactPlaceholder": "you@example.com or +33 6…",
+    "message": "Your message",
+    "messagePlaceholder": "Tell us what's happening…",
+    "send": "Send",
+    "note": "We will never ask for your 24 words, your codes or your PIN.",
+    "sentTitle": "Message sent",
+    "sentBody": "We'll reply to {contact}.",
+    "invalidContact": "Enter a valid email or WhatsApp number, with its country code (e.g. +33).",
+    "tooShort": "Your message must be at least 10 characters.",
+    "missing": "Fill in every field."
+  },
+  "help": {
+    "title": "Help and questions",
+    "body": "Getting back into your vault after changing or losing your phone.",
+    "rowBody": "New phone, lost phone, recovery",
+    "supportBody": "Write to our team, we answer by email or WhatsApp.",
+    "guide": "Full guide on keeplas.com",
+    "guideBody": "Every case, step by step, with screenshots.",
+    "sections": {
+      "change": "Changing phone",
+      "lost": "Something is lost",
+      "understand": "How it works"
+    },
+    "q": {
+      "newPhone": {
+        "question": "I'm switching to a new phone",
+        "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code, or with your passkey. Tap \"Restore from iCloud\" (or Google): a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
+      },
+      "platform": {
+        "question": "I'm moving from Android to iPhone, or the reverse",
+        "answer": "A Google backup doesn't reach iCloud, and the other way round. Keep the old phone: on the new one, choose \"Another signed-in device\" and approve from the old one. Otherwise, use your 24-word kit or your trusted contacts. The backup then turns on again on the new phone."
+      },
+      "lostPhone": {
+        "question": "I lost my phone",
+        "answer": "Nobody can open your vault on it: it's locked by Face ID, fingerprint or the phone passcode. On a new phone, sign in and restore from iCloud or Google. Then remove the lost phone in Settings › Devices so its session ends."
+      },
+      "lostNumber": {
+        "question": "I lost my phone number",
+        "answer": "On the sign-in screen, tap \"Lost your number?\". With your 24 words, you change it right away. Without them, our team checks your request and nothing changes for 72 hours. You can also sign in with your passkey."
+      },
+      "lostAuthenticator": {
+        "question": "I lost my authenticator app",
+        "answer": "On the code screen, tap \"Lost your authenticator app?\" and open your vault with your backup or your 24 words. The authenticator code is turned off; you can set up a new one later."
+      },
+      "nothingLeft": {
+        "question": "I have no backup and no 24 words",
+        "answer": "Ask your trusted contacts: two of them approve, then Keeplas waits 72 hours. Without any of these ways, nobody can open your vault, not even Keeplas: that's what keeps it private."
+      },
+      "backup": {
+        "question": "What does the cloud backup do?",
+        "answer": "Keeplas keeps an encrypted copy of your vault key, and what opens it stays in your iCloud or Google keychain. Neither Keeplas nor Apple or Google can open it alone. Restoring it also asks for a WhatsApp code."
+      },
+      "kit": {
+        "question": "Do I need the 24 words?",
+        "answer": "No. They're an optional kit you can create in Settings › Privacy and security, for a way back that depends neither on the cloud nor on your contacts. Anyone with these words can open your vault: keep them offline."
+      },
+      "wait": {
+        "question": "Why wait 72 hours?",
+        "answer": "The wait gives you time to see a request you didn't make and cancel it. It only applies to the ways that don't prove it's you directly: your trusted contacts, or a lost number without your 24 words."
+      },
+      "notMe": {
+        "question": "Someone is trying to get into my account",
+        "answer": "You get an alert on your devices, by email and on WhatsApp. Open Keeplas and tap \"It wasn't me\" to cancel the request. Nothing is released while the 72 hours run."
+      },
+      "zeroAccess": {
+        "question": "Can Keeplas open my vault?",
+        "answer": "No. Your vault is encrypted on your phone. Our team can check who you are to move your account to a new number, but never open your vault or shorten a wait."
+      }
+    }
   },
   "newNumber": {
     "title": "Choose your new number",
@@ -336,7 +429,8 @@
       "image": "Photos & scans",
       "audio": "Voice notes",
       "video": "Videos"
-    }
+    },
+    "help": "Help"
   },
   "frequency": {
     "weekly": "Weekly",
@@ -359,7 +453,9 @@
     "rotation": "Rotate encryption keys",
     "rotationBody": "Secure the vault after a suspicious device or recovery.",
     "pinSheetTitle": "Your phone already guards Keeplas",
-    "pinSheetBody": "On this phone, Keeplas opens with your screen lock: Face ID, fingerprint or your phone's passcode. A separate Keeplas PIN is available on the web app, for computers."
+    "pinSheetBody": "On this phone, Keeplas opens with your screen lock: Face ID, fingerprint or your phone's passcode. A separate Keeplas PIN is available on the web app, for computers.",
+    "backup": "Cloud backup",
+    "backupBody": "Your vault comes back with your Apple or Google account."
   },
   "rotation": {
     "title": "Rotate encryption keys",
@@ -373,7 +469,7 @@
   },
   "recoveryCenter": {
     "title": "Recovery center",
-    "body": "Prepare trusted contacts so two of them can help if you lose every device.",
+    "body": "Your ways back into your vault if you lose this phone. One is enough; more is safer.",
     "ready": "Contact recovery ready",
     "notReady": "Contact recovery not ready",
     "configure": "Set up contact recovery",
@@ -385,7 +481,8 @@
     "trustContacts": "Trusted contacts",
     "ofTwo": "{n} of 2",
     "active": "Active",
-    "addContact": "Add a trusted contact"
+    "addContact": "Add a trusted contact",
+    "contactsBody": "Two trusted contacts can help you get back in if every other way is gone."
   },
   "vaultRestored": {
     "title": "Vault restored",
@@ -934,7 +1031,7 @@
   "backup": {
     "title": "Cloud backup",
     "bodyShort": "Encrypted recovery in your cloud keychain",
-    "body": "Keeplas stores an encrypted envelope. The key is kept separately in your synced platform keychain.",
+    "body": "Your vault comes back on a new phone with your {account} account. Keeplas keeps an encrypted copy of its key; what opens it stays in your {account} keychain.",
     "protected": "Your backup is protected by your {account} account. Keep it secure with a strong password and two-factor authentication, and your Keeplas backup stays safe too. Restoring it also asks for a code sent to your WhatsApp.",
     "auth": "Confirm cloud backup",
     "noRootKey": "This phone cannot create a cloud backup. Create a new recovery kit first.",

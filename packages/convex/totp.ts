@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query, type MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { optionalAuth, requireAuth } from "./helpers";
+import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
 import { constantTimeStringEquals } from "./lib/crypto";
 import { requireSessionProof } from "./session_proofs";
@@ -140,6 +140,41 @@ function buildOtpAuthUri(
 
 const TOTP_MAX_FAILURES = 10;
 const TOTP_LOCKOUT_MS = 15 * 60 * 1000;
+const INVALID_CODE = "Invalid or expired code. Try again.";
+
+/**
+ * Check a code against an enrolled authenticator, with the shared lockout:
+ * 10 wrong codes lock it for 15 minutes. A wrong code is counted and
+ * reported as `false`, never thrown: Convex rolls back the writes of a
+ * mutation that throws, and the failure must be counted (lib/otp.ts).
+ */
+async function consumeTotpCode(
+  ctx: MutationCtx,
+  totp: Doc<"totp_secrets">,
+  code: string,
+  now: number,
+): Promise<boolean> {
+  const recentFailures =
+    totp.lastFailedAt && now - totp.lastFailedAt < TOTP_LOCKOUT_MS
+      ? (totp.failedAttempts ?? 0)
+      : 0;
+  if (recentFailures >= TOTP_MAX_FAILURES) {
+    throw new ConvexError("Too many attempts. Try again in 15 minutes.");
+  }
+  if (!(await verifyTotp(totp.secret, code, now))) {
+    await ctx.db.patch(totp._id, {
+      failedAttempts: recentFailures + 1,
+      lastFailedAt: now,
+    });
+    return false;
+  }
+  await ctx.db.patch(totp._id, {
+    lastUsedAt: now,
+    failedAttempts: undefined,
+    lastFailedAt: undefined,
+  });
+  return true;
+}
 
 export const getMyTotpStatus = query({
   args: {},
@@ -288,7 +323,7 @@ export const verifyAndEnable = mutation({
       throw new Error("Authenticator already verified");
     }
     const ok = await verifyTotp(row.secret, code, Date.now());
-    if (!ok) throw new Error("Invalid or expired code. Try again.");
+    if (!ok) throw new Error(INVALID_CODE);
 
     const now = Date.now();
     await ctx.db.patch(row._id, { verifiedAt: now, lastUsedAt: now });
@@ -369,34 +404,12 @@ export const submitTotpForSession = mutation({
       throw new Error("TOTP is not enrolled for this account.");
     }
     const now = Date.now();
-    const recentFailures =
-      totp.lastFailedAt && now - totp.lastFailedAt < TOTP_LOCKOUT_MS
-        ? (totp.failedAttempts ?? 0)
-        : 0;
-    if (recentFailures >= TOTP_MAX_FAILURES) {
-      throw new ConvexError("Too many attempts. Try again in 15 minutes.");
-    }
-    // A wrong code is returned, not thrown: Convex rolls back the writes of a
-    // mutation that throws, and the failure must be counted (lib/otp.ts).
-    if (!(await verifyTotp(totp.secret, code, now))) {
-      await ctx.db.patch(totp._id, {
-        failedAttempts: recentFailures + 1,
-        lastFailedAt: now,
-      });
-      return {
-        success: false as const,
-        error: "Invalid or expired code. Try again.",
-      };
+    if (!(await consumeTotpCode(ctx, totp, code, now))) {
+      return { success: false as const, error: INVALID_CODE };
     }
 
     const sessionId = await getAuthSessionId(ctx);
     if (!sessionId) throw new Error("No active session.");
-
-    await ctx.db.patch(totp._id, {
-      lastUsedAt: now,
-      failedAttempts: undefined,
-      lastFailedAt: undefined,
-    });
 
     const existing = await ctx.db
       .query("auth_session_totp")
@@ -505,17 +518,28 @@ export const submitTotpRecovery = mutation({
   },
 });
 
+/**
+ * Turn the authenticator off from settings. Step-up: the session must have
+ * cleared every gate and the user types a current code, so a stolen session
+ * alone cannot remove the second factor. A wrong code is returned (and
+ * counted), not audited.
+ */
 export const disable = auditedMutation({
   action: "totp_disabled",
   resourceType: "totp",
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+  args: { code: v.string() },
+  handler: async (ctx, { code }) => {
+    const userId = await requireFullAuth(ctx);
     const row = await ctx.db
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    if (!row) return { success: true };
+    if (!row || !row.verifiedAt) {
+      throw new Error("TOTP is not enrolled for this account.");
+    }
+    if (!(await consumeTotpCode(ctx, row, code, Date.now()))) {
+      return { success: false as const, error: INVALID_CODE };
+    }
     await ctx.db.delete(row._id);
 
     const user = await ctx.db.get(userId);
@@ -527,8 +551,9 @@ export const disable = auditedMutation({
         updatedAt: Date.now(),
       });
     }
-    return { success: true };
+    return { success: true as const };
   },
+  skipAudit: (result) => !result.success,
 });
 
 export const cancelEnrollment = mutation({

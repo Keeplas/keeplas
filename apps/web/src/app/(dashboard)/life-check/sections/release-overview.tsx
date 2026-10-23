@@ -4,6 +4,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { Loader } from "@keeplas/ui";
 import { useTranslations } from "@/lib/i18n";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { Panel, RowText, StatusChip } from "@/components/v2/surface";
 
 const ROLE_KEYS = ["family", "friend", "lawyer", "doctor", "other"] as const;
 
@@ -24,58 +25,53 @@ export function ReleaseOverview() {
   const titles = useDecryptedTitles(allTitles);
 
   return (
-    <section className="bg-surface-container-lowest rounded-sm p-6 shadow-sm">
-      <h3 className="text-headline-sm text-primary mb-1.5">
-        {t("overview.title")}
-      </h3>
-      <p className="text-body-md text-on-surface-variant mb-5">
-        {t("overview.description")}
-      </p>
+    <Panel className="flex flex-col gap-[16px] p-[20px]">
+      <div className="flex flex-col gap-[4px]">
+        <h2 className="text-h3 text-text-primary">{t("overview.title")}</h2>
+        <p className="text-body-sm text-text-muted">
+          {t("overview.description")}
+        </p>
+      </div>
 
       {preview === undefined ? (
-        <Loader />
+        <Loader size="sm" className="min-h-0" />
       ) : preview.length === 0 ? (
-        <p className="text-body-md text-on-surface-variant">
-          {t("overview.empty")}
-        </p>
+        <p className="text-body-sm text-text-muted">{t("overview.empty")}</p>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-[16px]">
           {preview.map((r) => (
-            <div
-              key={r.contactId}
-              className="flex items-start justify-between gap-4 p-4 bg-surface-container-low rounded-xs"
-            >
-              <div className="min-w-0">
-                <p className="text-body-md font-bold text-primary">{r.name}</p>
-                <p className="text-label-md text-on-surface-variant">
-                  {(ROLE_KEYS as readonly string[]).includes(r.role)
-                    ? t(`overview.role.${r.role}`)
-                    : t("overview.role.other")}{" "}
-                  ·{" "}
-                  {t(
-                    r.itemCount === 1
-                      ? "overview.itemCountSingular"
-                      : "overview.itemCountPlural",
-                    { count: r.itemCount },
-                  )}
-                </p>
-                {r.itemTitles.length > 0 && (
-                  <p className="text-label-md text-on-surface-variant/70 truncate mt-1">
-                    {r.itemTitles
-                      .map((it) => titles[it._id] ?? "")
-                      .filter(Boolean)
-                      .join(", ")}
-                    {r.itemCount > r.itemTitles.length ? "…" : ""}
-                  </p>
-                )}
-              </div>
-              <span className="text-label-md px-3 py-1 rounded-sm bg-secondary-container/30 text-secondary shrink-0">
-                {t("overview.readOnly")}
-              </span>
+            <div key={r.contactId} className="flex items-start gap-[12px]">
+              <RowText
+                title={r.name}
+                description={
+                  <>
+                    {(ROLE_KEYS as readonly string[]).includes(r.role)
+                      ? t(`overview.role.${r.role}`)
+                      : t("overview.role.other")}{" "}
+                    ·{" "}
+                    {t(
+                      r.itemCount === 1
+                        ? "overview.itemCountSingular"
+                        : "overview.itemCountPlural",
+                      { count: r.itemCount },
+                    )}
+                    {r.itemTitles.length > 0 && (
+                      <span className="mt-[2px] block truncate text-text-subtle">
+                        {r.itemTitles
+                          .map((it) => titles[it._id] ?? "")
+                          .filter(Boolean)
+                          .join(", ")}
+                        {r.itemCount > r.itemTitles.length ? "…" : ""}
+                      </span>
+                    )}
+                  </>
+                }
+              />
+              <StatusChip tone="neutral" label={t("overview.readOnly")} />
             </div>
           ))}
         </div>
       )}
-    </section>
+    </Panel>
   );
 }

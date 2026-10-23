@@ -2,9 +2,9 @@ import { Linking } from "react-native";
 
 import type { Language } from "@/i18n/translate";
 
-/** Open a public legal page on keeplas.com (French pages live under /fr). */
-export function openLegalPage(
-  page: "privacy" | "terms",
+/** Open a public page on keeplas.com (French pages live under /fr). */
+export function openSitePage(
+  page: "privacy" | "terms" | "lost-phone",
   language: Language,
 ): Promise<void> {
   const prefix = language === "fr" ? "/fr" : "";

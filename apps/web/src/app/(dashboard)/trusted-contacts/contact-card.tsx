@@ -1,11 +1,10 @@
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { cn } from "@keeplas/ui";
+import { RowText, StatusChip } from "@/components/v2/surface";
 import { useTranslations } from "@/lib/i18n";
 import {
   computeVerificationBadge,
   getInitials,
   isAwaitingKey,
-  ROLE_BADGE_ICONS,
   ROLE_LABELS,
   STATUS_CONFIG,
 } from "./contact-display";
@@ -15,80 +14,60 @@ interface ContactCardProps {
   onSelect: (contact: Doc<"trusted_contacts">) => void;
 }
 
+/** Round navy avatar with the contact's initials (card and detail sheet). */
+export function ContactAvatar({ name }: { name: string }) {
+  return (
+    <span className="flex size-[44px] shrink-0 items-center justify-center rounded-full bg-action-primary text-label text-text-inverse">
+      {getInitials(name)}
+    </span>
+  );
+}
+
 export function ContactCard({ contact, onSelect }: ContactCardProps) {
   const t = useTranslations("trustedContacts");
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
   const verificationBadge = computeVerificationBadge(contact);
-  const roleIcon = ROLE_BADGE_ICONS[contact.role] ?? ROLE_BADGE_ICONS.other;
   const roleLabel = ROLE_LABELS[contact.role] ?? "Contact";
 
   return (
     <button
       type="button"
       onClick={() => onSelect(contact)}
-      className="w-full text-left bg-surface-container-low p-6 rounded-sm group cursor-pointer hover:bg-surface-container transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40"
+      className="flex w-full flex-col gap-[12px] rounded-md border border-border-default bg-bg-surface p-[14px] text-left transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <div
-          className={cn(
-            "w-12 h-12 rounded-sm border-2 p-0.5",
-            statusConfig.avatarBorder,
-          )}
-        >
-          <div className="w-full h-full rounded-sm bg-primary-container flex items-center justify-center">
-            <span className="text-label-md text-on-primary-container">
-              {getInitials(contact.name)}
-            </span>
-          </div>
-        </div>
-        <span
-          className={cn(
-            "px-3 py-1 text-label-md rounded-sm",
-            statusConfig.className,
-          )}
-        >
-          {statusConfig.label}
-        </span>
-      </div>
-
       {/* Name + primary identifier (email, falling back to phone) */}
-      <h3 className="text-headline-sm text-primary">{contact.name}</h3>
-      <p className="text-body-md text-on-surface-variant mb-5 truncate">
-        {contact.email ?? contact.phoneNumber}
-      </p>
+      <span className="flex w-full items-center gap-[12px]">
+        <ContactAvatar name={contact.name} />
+        <RowText
+          title={contact.name}
+          description={
+            <span className="block truncate">
+              {contact.email ?? contact.phoneNumber}
+            </span>
+          }
+        />
+      </span>
 
-      {/* Role + verification badges (details live in the contact sheet) */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-xs">
-          <svg
-            className="w-3.5 h-3.5 text-primary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d={roleIcon} />
-          </svg>
-          <span className="text-label-md text-primary">{roleLabel}</span>
-        </span>
+      {/* Status, role and verification (details live in the contact sheet) */}
+      <span className="flex flex-wrap items-center gap-[8px]">
+        <StatusChip
+          tone={statusConfig.tone}
+          label={statusConfig.label}
+          dotClassName={statusConfig.dot}
+        />
+        <StatusChip tone="neutral" label={roleLabel} />
         {isAwaitingKey(contact) && (
-          <span className="text-label-md px-3 py-1.5 rounded-xs bg-tertiary-container text-on-tertiary-container">
-            {t("contactCard.awaitingKey")}
-          </span>
+          <StatusChip tone="pending" label={t("contactCard.awaitingKey")} />
         )}
         {verificationBadge && (
-          <span
-            className={cn(
-              "text-label-md px-3 py-1.5 rounded-xs",
-              verificationBadge.className,
-            )}
-          >
-            {verificationBadge.label}
-          </span>
+          <StatusChip
+            tone={verificationBadge.tone}
+            label={verificationBadge.label}
+            dotClassName={verificationBadge.dot}
+          />
         )}
-      </div>
+      </span>
     </button>
   );
 }

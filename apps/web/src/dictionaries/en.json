@@ -291,13 +291,15 @@
       "toggleActiveError": "Failed to toggle Life Check"
     },
     "page": {
-      "intro": "Keeplas periodically asks you to confirm you're well. If you stop responding, your trusted contacts confirm you're unavailable before your vault is released to them."
+      "intro": "Choose how often Keeplas should ask you to check in.",
+      "title": "Life check"
     },
     "nextCheckIn": {
       "label": "Next check-in",
-      "description": "We'll ask you to confirm you're well. Only your explicit reply resets the countdown — using the app doesn't.",
+      "description": "Only your answer resets the countdown. Using the app doesn't.",
       "paused": "Check-ins are paused. Your countdown will resume once Life Check is back on.",
-      "reset": "I'm well — reset countdown"
+      "reset": "I'm okay, reset the countdown",
+      "lastConfirmed": "Last confirmed on {date}"
     },
     "activeCycle": {
       "title": "Check-in needed",
@@ -363,6 +365,11 @@
         "weekly": "Active",
         "monthly": "Recommended",
         "quarterly": "Relaxed"
+      },
+      "label": {
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "quarterly": "Quarterly"
       }
     },
     "timeline": {
@@ -465,7 +472,7 @@
       "noConfirmation": "If no contact confirms in time, nothing is released. A missed check-in alone never opens your vault."
     },
     "travel": {
-      "title": "Travel Mode",
+      "title": "Travel mode",
       "help": "Pauses Life Check escalation while you're off-grid. Conditional messages remain encrypted and untriggered. Capped at 180 days for safety.",
       "description": "Suspend Life Check for up to 180 days when traveling.",
       "active": "Travel mode active",
@@ -473,7 +480,8 @@
       "disable": "Disable Travel Mode",
       "returnDate": "Return date",
       "returnDatePlaceholder": "Pick your return date",
-      "enable": "Enable"
+      "enable": "Enable",
+      "off": "Off"
     },
     "badge": {
       "status": {
@@ -529,7 +537,8 @@
       "bodyUntil": "Life checks are paused until {date}. Your contacts won't be contacted while you're away.",
       "changeDates": "Change dates",
       "turnOff": "Turn off travel mode"
-    }
+    },
+    "note": "If you miss the check-in window, your contacts are asked to confirm before anything is released."
   },
   "settings": {
     "preferences": {
@@ -1068,8 +1077,7 @@
   },
   "trustedContacts": {
     "header": {
-      "titleLine1": "Trusted Circle &",
-      "titleLine2": "Release Routing",
+      "title": "Trusted people",
       "subtitle": "Designate the people who protect your legacy and decide who receives which vault items at trigger. Manage your trust contacts here, then bundle them into release groups.",
       "howItWorks": "How trust contacts work",
       "medicalIdCallout": "For acute emergencies (accident, sudden illness), set up your phone’s built-in Medical ID — paramedics check it first.",
@@ -2240,6 +2248,17 @@
       "removeBody": "You'll unlock this browser with your other methods, or link it again from your phone.",
       "removeConfirm": "Turn off",
       "removed": "PIN turned off"
+    },
+    "authenticator": {
+      "title": "Authenticator app",
+      "description": "Google Authenticator asks for a code each time you sign in.",
+      "on": "On",
+      "turnOff": "Turn off",
+      "dialogTitle": "Turn off the authenticator?",
+      "dialogBody": "Enter the 6-digit code from Google Authenticator. Sign-in will no longer ask for it.",
+      "codeLabel": "6-digit code",
+      "invalid": "Invalid or expired code. Try again.",
+      "done": "Authenticator turned off"
     },
     "activity": {
       "title": "Recent activity",

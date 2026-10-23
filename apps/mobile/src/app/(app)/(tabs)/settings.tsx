@@ -11,7 +11,7 @@ import { Screen } from "@/components/screen";
 import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { formatBytes } from "@/lib/format";
-import { openLegalPage } from "@/lib/legal";
+import { openSitePage } from "@/lib/site";
 import { useChangeLanguage } from "@/lib/use-change-language";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
@@ -199,6 +199,19 @@ export default function Settings() {
         description={t("importArchive.rowBody")}
         onPress={() => router.push("/import")}
       />
+      <Text variant="label">{t("settings.help")}</Text>
+      <ListRow
+        icon="help"
+        title={t("help.title")}
+        description={t("help.rowBody")}
+        onPress={() => router.push("/help")}
+      />
+      <ListRow
+        icon="mail"
+        title={t("support.title")}
+        description={t("help.supportBody")}
+        onPress={() => router.push("/support")}
+      />
       <Text variant="label">{t("settings.appearance")}</Text>
       <Card>
         {APPEARANCES.map((mode) => (
@@ -220,12 +233,12 @@ export default function Settings() {
       <ListRow
         icon="eye"
         title={t("legal.privacy")}
-        onPress={() => openLegalPage("privacy", language)}
+        onPress={() => openSitePage("privacy", language)}
       />
       <ListRow
         icon="document"
         title={t("legal.terms")}
-        onPress={() => openLegalPage("terms", language)}
+        onPress={() => openSitePage("terms", language)}
       />
       <ListRow
         icon="trash"

@@ -42,13 +42,13 @@ export function Countdown({ target }: CountdownProps) {
   ];
 
   return (
-    <div className="flex gap-6 sm:gap-8">
+    <div className="flex justify-between gap-[12px]">
       {segments.map((seg) => (
-        <div key={seg.key} className="text-center">
-          <p className="text-display-md text-primary tabular-nums">
+        <div key={seg.key} className="flex flex-col items-center gap-[4px]">
+          <p className="text-display text-text-primary tabular-nums">
             {String(seg.value).padStart(2, "0")}
           </p>
-          <p className="text-label-md uppercase tracking-wide text-on-surface-variant mt-1">
+          <p className="text-caption text-text-muted">
             {t(`countdown.${seg.key}`)}
           </p>
         </div>
