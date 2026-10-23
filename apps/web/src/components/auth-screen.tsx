@@ -26,6 +26,30 @@ function Brand() {
 }
 
 /**
+ * Hero landscape. Its ambient animations (sway, glow, drift, shimmer) are
+ * embedded in the SVG and only play when it is requested as `#play`, which
+ * happens only without a reduced-motion preference (as on keeplas-website).
+ */
+function Landscape({ src, className }: { src: string; className: string }) {
+  return (
+    <picture className="contents">
+      <source
+        srcSet={`${src}#play`}
+        media="(prefers-reduced-motion: no-preference)"
+      />
+      <img
+        src={src}
+        alt=""
+        className={cn(
+          "pointer-events-none absolute -bottom-[20px] -left-[40px] w-[calc(100%+80px)] max-w-none",
+          className,
+        )}
+      />
+    </picture>
+  );
+}
+
+/**
  * Signed-out desktop layout (W04-1, W04-2, D-01): landscape hero on the left,
  * centred content and the language dropdown on the right. Below `lg` the hero
  * collapses to the brand so the content stays first on small screens.
@@ -52,15 +76,13 @@ export function AuthScreen({
           </h1>
           <p className="text-body-lg text-text-body">{body}</p>
         </div>
-        <img
+        <Landscape
           src="/assets/illustrations/desktop-landscape.svg"
-          alt=""
-          className="pointer-events-none absolute -bottom-[20px] -left-[40px] w-[calc(100%+80px)] max-w-none dark:hidden"
+          className="dark:hidden"
         />
-        <img
+        <Landscape
           src="/assets/illustrations/desktop-landscape-night.svg"
-          alt=""
-          className="pointer-events-none absolute -bottom-[20px] -left-[40px] hidden w-[calc(100%+80px)] max-w-none dark:block"
+          className="hidden dark:block"
         />
         {heroFooter ? (
           <div className="absolute bottom-[60px] left-[64px] z-10">
