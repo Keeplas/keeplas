@@ -84,7 +84,12 @@ export default function CloudBackup() {
       />
       <Text variant="h1">{t("backup.title")}</Text>
       <Text color="text.muted">{t("backup.body")}</Text>
-      <Callout tone="warning" icon="alert-triangle" text={t("backup.risk")} />
+      <Callout
+        icon="shield-check"
+        text={t("backup.protected", {
+          account: CloudKey.provider === "icloud" ? "Apple" : "Google",
+        })}
+      />
     </Screen>
   );
 }

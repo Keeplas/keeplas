@@ -936,7 +936,7 @@
     "title": "Cloud backup",
     "bodyShort": "Encrypted iCloud or Google recovery",
     "body": "Keeplas stores an encrypted envelope. The key is kept separately in your synced platform keychain.",
-    "risk": "Someone who controls both your Apple or Google account and a device passcode may be able to restore this backup.",
+    "protected": "Your backup is protected by your {account} account. Keep it secure with a strong password and two-factor authentication, and your Keeplas backup stays safe too. Restoring it also asks for a code sent to your WhatsApp.",
     "auth": "Confirm cloud backup",
     "noRootKey": "This phone cannot create a cloud backup. Create a new recovery kit first.",
     "enable": "Turn on backup",

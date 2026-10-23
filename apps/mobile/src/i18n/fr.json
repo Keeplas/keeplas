@@ -928,7 +928,7 @@
     "title": "Sauvegarde cloud",
     "bodyShort": "Récupération iCloud ou Google chiffrée",
     "body": "Keeplas conserve une enveloppe chiffrée. La clé reste séparément dans le trousseau synchronisé de votre plateforme.",
-    "risk": "Une personne qui contrôle à la fois votre compte Apple ou Google et le code d'un appareil pourrait restaurer cette sauvegarde.",
+    "protected": "Votre sauvegarde est protégée par votre compte {account}. Gardez-le bien sécurisé (mot de passe solide, double authentification) : c'est lui qui protège aussi votre sauvegarde Keeplas. La restaurer demande aussi un code envoyé sur votre WhatsApp.",
     "auth": "Confirmer la sauvegarde cloud",
     "noRootKey": "Ce téléphone ne peut pas créer la sauvegarde. Créez d'abord un nouveau kit de récupération.",
     "enable": "Activer la sauvegarde",
