@@ -13,7 +13,6 @@
     "optional": "Facultatif",
     "seeAll": "Tout voir",
     "language": "Langue",
-    "comingSoon": "Disponible dans la prochaine mise à jour.",
     "genericError": "Une erreur est survenue. Réessayez."
   },
   "nav": {
@@ -101,8 +100,7 @@
     "slot": "Place {n} sur 3",
     "invite": "Inviter des contacts",
     "skip": "Passer pour l'instant",
-    "warning": "Sans contacts ni kit de récupération, perdre tous vos appareils et votre passe-clé peut vous bloquer l'accès.",
-    "later": "L'invitation de contacts arrive dans la prochaine mise à jour, dans l'onglet Contacts."
+    "warning": "Sans contacts ni kit de récupération, perdre tous vos appareils et votre passe-clé peut vous bloquer l'accès."
   },
   "setupDone": {
     "title": "Configuration terminée",
@@ -119,7 +117,7 @@
     "body": "Notez ces 24 mots dans l'ordre et gardez-les en lieu sûr. Ils permettent d'ouvrir votre coffre si vous perdez ce téléphone.",
     "warning": "Quiconque possède ces mots et l'accès à votre numéro peut ouvrir votre coffre. Ne les partagez jamais.",
     "saved": "J'ai enregistré mon kit",
-    "unavailable": "Le kit ne s'affiche que pendant la configuration de ce téléphone. Un nouveau kit pourra être créé depuis Confidentialité et sécurité dans la prochaine mise à jour."
+    "unavailable": "Le kit ne s'affiche que pendant la configuration de ce téléphone."
   },
   "oneWay": {
     "title": "Si vous perdez ce téléphone, vous perdez votre coffre",
@@ -293,6 +291,19 @@
     "deletionTitle": "Suppression du compte le {date}",
     "deletionBody": "Tout sera effacé ce jour-là. Touchez pour annuler."
   },
+  "legal": {
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "agreeBefore": "En continuant, vous acceptez les ",
+    "agreeAnd": " et la ",
+    "agreeAfter": "."
+  },
+  "push": {
+    "title": "Activer les alertes de sécurité ?",
+    "body": "Keeplas vous prévient quand un nouvel appareil se connecte, quand quelqu'un demande à récupérer votre compte et quand un Life check attend votre réponse.",
+    "allow": "Activer",
+    "notNow": "Plus tard"
+  },
   "settings": {
     "title": "Réglages",
     "subtitle": "Gérez votre offre, votre stockage et vos préférences.",
@@ -302,7 +313,6 @@
     "account": "Compte",
     "plan": "Offre",
     "planFree": "Gratuit",
-    "planFreeBody": "Gratuit · Passez à Lifetime pour 99 $",
     "planLifetime": "Lifetime",
     "privacy": "Confidentialité et sécurité",
     "privacyBody": "Passe-clé, code PIN, kit de récupération",
@@ -486,7 +496,7 @@
     "keysRotated": "Clés renouvelées",
     "keysRotatedBody": "Coffre rechiffré sur ce téléphone",
     "keysPending": "Renouvellement des clés en attente",
-    "keysPendingBody": "Terminez-le depuis un ordinateur avec votre kit de récupération. Ce téléphone le fera dans la prochaine mise à jour.",
+    "keysPendingBody": "Renouvelez vos clés maintenant pour rechiffrer votre coffre sur ce téléphone.",
     "note": "Vos autres appareils vous demanderont de déverrouiller à nouveau. C'est normal.",
     "reviewDevices": "Vérifier les appareils"
   },
@@ -611,8 +621,8 @@
     },
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",
-    "noCameraVideoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une vidéo dans votre bibliothèque.",
-    "noCameraPhotoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (le simulateur iOS et certains appareils n'en ont pas). Choisissez plutôt une photo dans votre bibliothèque.",
+    "noCameraVideoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (cet appareil n'en a pas). Choisissez plutôt une vidéo dans votre bibliothèque.",
+    "noCameraPhotoBody": "Keeplas ne peut pas ouvrir d'appareil photo ici (cet appareil n'en a pas). Choisissez plutôt une photo dans votre bibliothèque.",
     "iconLabel": "Icône",
     "iconAuto": "Automatique",
     "iconAutoBody": "Choisie selon ce que vous ajoutez",
@@ -934,7 +944,7 @@
   },
   "backup": {
     "title": "Sauvegarde cloud",
-    "bodyShort": "Récupération iCloud ou Google chiffrée",
+    "bodyShort": "Récupération chiffrée dans votre trousseau cloud",
     "body": "Keeplas conserve une enveloppe chiffrée. La clé reste séparément dans le trousseau synchronisé de votre plateforme.",
     "protected": "Votre sauvegarde est protégée par votre compte {account}. Gardez-le bien sécurisé (mot de passe solide, double authentification) : c'est lui qui protège aussi votre sauvegarde Keeplas. La restaurer demande aussi un code envoyé sur votre WhatsApp.",
     "auth": "Confirmer la sauvegarde cloud",

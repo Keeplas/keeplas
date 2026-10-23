@@ -222,7 +222,7 @@ export function PhotoGallery({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("item.rotate")}
-          hitSlop={10}
+          hitSlop={14}
           onPress={() =>
             setTurns((current) => ({ ...current, [photo.id]: (turn + 1) % 4 }))
           }

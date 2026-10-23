@@ -1,10 +1,12 @@
 import { useCallback, useEffect } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { api } from "@keeplas/backend/_generated/api";
 
+import { useI18n } from "@/providers/i18n-provider";
+import { readPreference, writePreference } from "./preferences";
 import { useAuditedMutation } from "./use-audited-mutation";
 
 Notifications.setNotificationHandler({
@@ -19,9 +21,12 @@ Notifications.setNotificationHandler({
 /**
  * Routes security-notification taps (also the one that cold-started the
  * app) and returns the registration of this phone's Expo push token.
+ * The system prompt comes after one in-app explanation, asked only once;
+ * "Not now" leaves it to the phone's settings.
  */
 export function usePushNotifications() {
   const router = useRouter();
+  const { t } = useI18n();
   const setToken = useAuditedMutation(api.devices.setPushToken);
   const response = Notifications.useLastNotificationResponse();
 
@@ -42,11 +47,28 @@ export function usePushNotifications() {
           importance: Notifications.AndroidImportance.HIGH,
         });
       }
-      const permission = await Notifications.requestPermissionsAsync();
-      if (!permission.granted) return;
+      const current = await Notifications.getPermissionsAsync();
+      if (!current.granted) {
+        if (!current.canAskAgain || (await readPreference("pushPrompted"))) {
+          return;
+        }
+        await writePreference("pushPrompted", "true");
+        const wanted = await new Promise<boolean>((resolve) =>
+          Alert.alert(t("push.title"), t("push.body"), [
+            {
+              text: t("push.notNow"),
+              style: "cancel",
+              onPress: () => resolve(false),
+            },
+            { text: t("push.allow"), onPress: () => resolve(true) },
+          ]),
+        );
+        if (!wanted) return;
+        if (!(await Notifications.requestPermissionsAsync()).granted) return;
+      }
       const pushToken = (await Notifications.getExpoPushTokenAsync()).data;
       await setToken({ deviceId, pushToken });
     },
-    [setToken],
+    [setToken, t],
   );
 }

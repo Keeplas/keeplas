@@ -64,7 +64,7 @@ export const VaultListRow = memo(function VaultListRow({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("itemActions.more", { title })}
-        hitSlop={10}
+        hitSlop={12}
         onPress={() => onMore(id)}
       >
         <Icon name="more" size={20} color="text.muted" />

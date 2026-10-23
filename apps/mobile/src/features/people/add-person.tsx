@@ -24,8 +24,11 @@ import { colors as palette, radius } from "@/theme";
 
 const MAX_TRUST = 3;
 
-/** M06-2 Add trusted person: details, then roles and permissions. */
-export default function AddPerson() {
+/**
+ * M06-2 Add trusted person: details, then roles and permissions. Mounted
+ * from People and from setup (M01-5), so it returns with `router.back()`.
+ */
+export function AddPerson() {
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
