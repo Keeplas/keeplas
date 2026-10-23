@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
-import { Callout, Card, IconBadge, InfoRow } from "@/components/surfaces";
+import { Card, IconBadge, InfoRow, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { deviceLabel } from "@/lib/attestation";
 import { formatPhone } from "@/lib/phone";
@@ -55,7 +55,7 @@ export default function Migrated() {
           description={t("migration.passwordOffBody")}
         />
       </Card>
-      <Callout icon="shield-check" text={t("migration.doneNote")} />
+      <Note icon="shield-check" text={t("migration.doneNote")} />
       <Button
         label={t("migration.goToVault")}
         style={styles.full}

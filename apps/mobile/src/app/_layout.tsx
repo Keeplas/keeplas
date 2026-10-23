@@ -70,6 +70,9 @@ function Routes() {
       <Stack.Protected guard={stage === "loginOtp"}>
         <Stack.Screen name="login-otp" />
       </Stack.Protected>
+      <Stack.Protected guard={stage === "totp"}>
+        <Stack.Screen name="login-totp" />
+      </Stack.Protected>
       <Stack.Protected guard={settingUp}>
         <Stack.Screen name="(setup)" />
       </Stack.Protected>

@@ -69,6 +69,23 @@ export function Callout({
   );
 }
 
+/**
+ * Quiet footnote: small accent icon + muted text, no fill. For reassurance
+ * lines that sit under a card, where a tinted Callout would compete with it.
+ */
+export function Note({ icon, text }: { icon: IconName; text: string }) {
+  return (
+    <View style={styles.note}>
+      <View style={styles.noteIcon}>
+        <Icon name={icon} size={16} color="accent" />
+      </View>
+      <Text variant="body-sm" color="text.muted" style={styles.flex}>
+        {text}
+      </Text>
+    </View>
+  );
+}
+
 /** Round tinted badge holding an icon (M09 headers, State Message). */
 export function IconBadge({
   icon,
@@ -245,6 +262,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
   },
+  note: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  // Centres the 16 pt icon on the first 18 pt line of Body S.
+  noteIcon: { paddingTop: 1 },
   chip: {
     borderRadius: radius.pill,
     paddingHorizontal: 10,
