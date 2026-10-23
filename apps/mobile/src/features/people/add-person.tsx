@@ -10,6 +10,7 @@ import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
+import { Callout } from "@/components/surfaces";
 import { TextField } from "@/components/text-field";
 import { Text } from "@/components/text";
 import { errorText } from "@/lib/errors";
@@ -94,6 +95,7 @@ export function AddPerson() {
         <Text variant="body-lg" color="text.muted">
           {t("people.addBody")}
         </Text>
+        <Callout icon="shield-check" text={t("people.addWhy")} />
         <TextField
           label={t("people.name")}
           value={name}
