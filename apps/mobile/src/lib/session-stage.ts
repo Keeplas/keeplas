@@ -7,6 +7,8 @@ import type { Href } from "expo-router";
  *   signedOut  → M08-1 Welcome, sign-up / sign-in
  *   loginOtp   → email accounts: the login-OTP step (requireFullAuth)
  *   totp       → accounts with an authenticator app: its code (requireFullAuth)
+ *   newNumber  → signed in with the 24 words after losing the number: set a
+ *                new one before anything else
  *   setup      → M01-3 passkey, M01-4 vault (no key bundle yet)
  *   needsKit   → account has a vault but this phone holds no key: 24 words
  *   locked     → M08-6 Unlock your vault
@@ -18,6 +20,7 @@ export type Stage =
   | "signedOut"
   | "loginOtp"
   | "totp"
+  | "newNumber"
   | "setup"
   | "needsKit"
   | "locked"
@@ -29,6 +32,7 @@ export const STAGE_HOME: Record<Exclude<Stage, "loading">, Href> = {
   signedOut: "/welcome",
   loginOtp: "/login-otp",
   totp: "/login-totp",
+  newNumber: "/new-number",
   setup: "/passkey",
   needsKit: "/recovery-kit",
   locked: "/unlock",
@@ -43,6 +47,8 @@ export interface StageInputs {
   viewer: { hasKeyBundle: boolean } | null | undefined;
   loginOtpRequired: boolean | undefined;
   totpRequired: boolean | undefined;
+  /** false unless a 24-word sign-in still has to set the new number. */
+  newNumberPending: boolean | undefined;
   needsMigration: boolean | undefined;
   migrationDeferred: boolean;
   hasDeviceVault: boolean | undefined;
@@ -55,11 +61,13 @@ export function resolveStage(i: StageInputs): Stage {
   if (
     i.viewer === undefined ||
     i.loginOtpRequired === undefined ||
-    i.totpRequired === undefined
+    i.totpRequired === undefined ||
+    i.newNumberPending === undefined
   )
     return "loading";
   if (i.loginOtpRequired) return "loginOtp";
   if (i.totpRequired) return "totp";
+  if (i.newNumberPending) return "newNumber";
   if (!i.viewer.hasKeyBundle) return "setup";
   if (!i.unlocked) {
     if (i.hasDeviceVault === undefined) return "loading";

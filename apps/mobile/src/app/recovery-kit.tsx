@@ -4,13 +4,13 @@ import { useRouter } from "expo-router";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
+import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
-import { saveDeviceVault } from "@/crypto/device-vault";
-import { openKeyBundle } from "@/crypto/vault-keys";
+import { useRestorableBackup } from "@/features/cloud-backup";
+import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession, useViewer } from "@/providers/session-provider";
-import { useVault } from "@/providers/vault-provider";
+import { useSession } from "@/providers/session-provider";
 
 /**
  * This phone holds no vault key for an account that has a vault (signed in
@@ -20,23 +20,18 @@ import { useVault } from "@/providers/vault-provider";
 export default function RecoveryKitEntry() {
   const router = useRouter();
   const { t } = useI18n();
-  const viewer = useViewer();
-  const { adopt } = useVault();
-  const { refreshDeviceVault, signOut } = useSession();
-  const [words, setWords] = useState("");
+  const { signOut } = useSession();
+  const kitOpen = useKitOpen();
+  const cloud = useRestorableBackup();
+  const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
   const [invalid, setInvalid] = useState(false);
 
   async function open() {
-    if (!viewer.encryptedKeyBundle) return;
     setBusy(true);
     setInvalid(false);
     try {
-      const keys = await openKeyBundle(viewer.encryptedKeyBundle, words);
-      await saveDeviceVault(viewer._id, keys, t("unlock.title"));
-      keys.rootKey.fill(0);
-      await adopt(keys.masterKey);
-      refreshDeviceVault();
+      await kitOpen(words);
     } catch {
       setInvalid(true);
     } finally {
@@ -54,6 +49,14 @@ export default function RecoveryKitEntry() {
       <Text variant="body-lg" color="text.muted">
         {t("recoveryKit.body")}
       </Text>
+      {cloud ? (
+        <ListRow
+          icon="sync"
+          title={t("cloudRestore.title", { provider: cloud })}
+          description={t("cloudRestore.option", { provider: cloud })}
+          onPress={() => router.push("/cloud-restore")}
+        />
+      ) : null}
       <TextField
         label={t("oneWay.kit")}
         value={words}
@@ -73,7 +76,7 @@ export default function RecoveryKitEntry() {
         label={t("recoveryKit.cta")}
         chevron
         loading={busy}
-        disabled={words.trim().split(/\s+/).length !== 24}
+        disabled={!isFullKit(words)}
         onPress={open}
       />
       <Button

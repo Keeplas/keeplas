@@ -56,7 +56,9 @@
     "accountExists": "An account already uses this number. Sign in instead.",
     "noAccount": "No account uses this number. Get started to create one.",
     "createAccount": "Create an account with this number",
-    "signInInstead": "Sign in with this number"
+    "signInInstead": "Sign in with this number",
+    "passkey": "Sign in with a passkey",
+    "passkeyFailed": "We couldn't sign you in with a passkey. Try again, or use your number."
   },
   "verify": {
     "title": "Verify your number",
@@ -166,6 +168,78 @@
     "cta": "Open my vault",
     "invalid": "These words don't open your vault. Check each word and their order.",
     "contactsCta": "Ask my trusted contacts"
+  },
+  "cloudRestore": {
+    "title": "Restore from {provider}",
+    "option": "Your backup comes back with your {provider} account.",
+    "body": "Your vault key is backed up with your {provider} account. Restore it on this phone in one step.",
+    "cta": "Restore my vault",
+    "note": "A WhatsApp code confirms it's you before your backup opens.",
+    "noKey": "This phone can't find your {provider} backup. Check that you're signed in to the same {provider} account, or use your 24 words.",
+    "failed": "We couldn't restore your vault. Try again, or use your 24 words."
+  },
+  "phoneProof": {
+    "title": "Confirm it's you",
+    "body": "We sent a code to your WhatsApp number {phone}.",
+    "cta": "Confirm"
+  },
+  "lostNumber": {
+    "title": "Lost your number?",
+    "body": "Move your account to a new number. Your vault stays locked until you open it with your backup, your 24 words or your trusted contacts.",
+    "seeRequest": "See my request",
+    "seeRequestBody": "Follow the request made from this phone.",
+    "withKit": "I have my 24 words",
+    "withKitBody": "Change your number right away.",
+    "withSupport": "I don't have my 24 words",
+    "withSupportBody": "Our team checks your request. It takes at least 72 hours.",
+    "note": "Keeplas never sees your 24 words or what's in your vault.",
+    "kitBody": "Enter your old number and your 24 words. They stay on this phone: only a proof derived from them is checked.",
+    "oldNumber": "Your old number",
+    "newNumber": "Your new number",
+    "kitCta": "Continue",
+    "kitInvalid": "This number and these 24 words don't match an account. Check each word and their order.",
+    "newTaken": "This number is already used by another Keeplas account.",
+    "requestBody": "Tell us who you are. We compare it with your account, and for your safety nothing changes for 72 hours.",
+    "name": "Your full name",
+    "email": "Email on your account (optional)",
+    "message": "Anything that helps us (optional)",
+    "messagePlaceholder": "When you lost your phone, when you created your account…",
+    "send": "Send my request",
+    "requestNote": "We alert your devices, your email and your old number. If someone else made this request, you can cancel it from there.",
+    "nameRequired": "Enter your full name.",
+    "sameNumber": "Your new number must be different from the old one.",
+    "inProgress": "A request is already in progress for this account.",
+    "invalidEmail": "Check your email address.",
+    "statusTitle": "Your request",
+    "statusBody": "Your account will move to {phone}.",
+    "stepSent": "Request sent",
+    "stepReview": "Our team checks your details",
+    "stepReviewBody": "We compare what you told us with your account.",
+    "stepWait": "72-hour safety wait",
+    "stepWaitBody": "About {n} h left, until {date}.",
+    "stepWaitDone": "The wait is over.",
+    "sendCode": "Send the code to {phone}",
+    "statusNote": "Come back here anytime: this phone keeps track of your request.",
+    "withdraw": "Withdraw my request",
+    "startOver": "Make a new request",
+    "notFound": "We can't find your request anymore.",
+    "lapsed": "Your request has lapsed. Requests last 7 days.",
+    "rejected": "We couldn't confirm it was you, so we closed the request. Contact us if you think this is a mistake.",
+    "cancelled": "This request was cancelled."
+  },
+  "newNumber": {
+    "title": "Choose your new number",
+    "body": "Your old number can't sign you in anymore. Enter the one you use now: we'll send it a WhatsApp code."
+  },
+  "numberChange": {
+    "nav": "Number change",
+    "title": "Someone asked to change your number",
+    "banner": "If it wasn't you, cancel it now.",
+    "body": "A request to move your account to {phone} was made on {date} by someone who says they lost this number. If it was you, there's nothing to do.",
+    "wait": "Nothing changes before {date}, and our team checks the request.",
+    "notMe": "It wasn't me, cancel it",
+    "cancelled": "Request cancelled. Your number stays the same.",
+    "none": "No number change in progress."
   },
   "socialRecovery": {
     "title": "Recover with contacts",
@@ -459,7 +533,13 @@
     "body": "Open your authenticator app and type the 6-digit code for Keeplas.",
     "cta": "Confirm",
     "wrong": "That code didn't work. Check your authenticator app and try again.",
-    "tooMany": "Too many tries. Wait 15 minutes, then try again."
+    "tooMany": "Too many tries. Wait 15 minutes, then try again.",
+    "lost": "Lost your authenticator app?"
+  },
+  "totpRecovery": {
+    "title": "Lost your authenticator app?",
+    "body": "Open your vault on this phone and we'll turn off the authenticator code. You can set up a new one later in Settings.",
+    "cta": "Open with my 24 words"
   },
   "email": {
     "title": "Sign in with your email",
@@ -856,7 +936,7 @@
     "title": "Cloud backup",
     "bodyShort": "Encrypted iCloud or Google recovery",
     "body": "Keeplas stores an encrypted envelope. The key is kept separately in your synced platform keychain.",
-    "risk": "Someone who controls both your Apple or Google account and a device passcode may be able to restore this backup.",
+    "protected": "Your backup is protected by your {account} account. Keep it secure with a strong password and two-factor authentication, and your Keeplas backup stays safe too. Restoring it also asks for a code sent to your WhatsApp.",
     "auth": "Confirm cloud backup",
     "noRootKey": "This phone cannot create a cloud backup. Create a new recovery kit first.",
     "enable": "Turn on backup",

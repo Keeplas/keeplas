@@ -14,6 +14,7 @@ import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { RECOVERY_REQUEST_TTL_MS, RECOVERY_WINDOW_MS } from "../recovery";
 import {
+  asPhoneProvenUser,
   asUser,
   asUserSession,
   makeT,
@@ -98,8 +99,7 @@ async function setupOwner(t: TestConvex, contactCount = 3) {
 async function startRequest(t: TestConvex, ownerId: Id<"users">) {
   const device = generateRecipientKeyPair();
   const devicePublicKey = serializePublicKey(device.publicKey);
-  const session = await seedSession(t, ownerId);
-  const newDevice = asUserSession(t, ownerId, session);
+  const newDevice = await asPhoneProvenUser(t, ownerId);
   const requestId = await newDevice.mutation(api.recovery.start, {
     newDevicePublicKey: devicePublicKey,
     _audit: await signedAudit(),

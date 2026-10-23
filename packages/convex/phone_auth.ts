@@ -11,7 +11,7 @@ import { normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { consumeSignupGrant } from "./attestation";
-import { checkOtp, INVALID_CODE } from "./lib/otp";
+import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -25,12 +25,6 @@ function isDevTestPhone(phone: string): boolean {
   return (process.env.DEV_TEST_PHONES ?? "")
     .split(",")
     .some((entry: string) => entry.trim() === phone);
-}
-
-function generateOtp(): string {
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return (arr[0] % 1_000_000).toString().padStart(6, "0");
 }
 
 /**

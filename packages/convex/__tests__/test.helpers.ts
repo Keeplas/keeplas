@@ -87,6 +87,23 @@ export async function seedPasswordAccount(
   );
 }
 
+/**
+ * Act as a user on a session that proved the account's number (a WhatsApp
+ * code, session_proofs.ts): what a phone-otp sign-in opens.
+ */
+export async function asPhoneProvenUser(t: TestConvex, userId: Id<"users">) {
+  const sessionId = await seedSession(t, userId);
+  await t.run((ctx) =>
+    ctx.db.insert("auth_session_proofs", {
+      sessionId,
+      userId,
+      kind: "phone",
+      verifiedAt: Date.now(),
+    }),
+  );
+  return asUserSession(t, userId, sessionId);
+}
+
 /** Mark a session as having cleared the always-on login-OTP step. */
 export async function clearLoginOtp(
   t: TestConvex,

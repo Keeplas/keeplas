@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { openCloudBackup, sealCloudBackup } from "@keeplas/crypto/cloud";
 import { api } from "../_generated/api";
-import { asUser, makeT, seedUser, signedAudit } from "./test.helpers";
+import {
+  asPhoneProvenUser,
+  makeT,
+  seedUser,
+  signedAudit,
+} from "./test.helpers";
 
 // Phase 5 (D7): cloud backup of the RootKey. Toggle off deletes Keeplas's
 // half (the app deletes the CBK from the platform keychain).
@@ -10,7 +15,7 @@ describe("cloud backup", () => {
   it("saves, restores on a new phone, and alerts the owner", async () => {
     const t = makeT();
     const userId = await seedUser(t);
-    const as = asUser(t, userId);
+    const as = await asPhoneProvenUser(t, userId);
     const rootKey = crypto.getRandomValues(new Uint8Array(32));
     const { cbk, envelope } = await sealCloudBackup({ rootKey, userId });
     await as.mutation(api.cloud_backup.save, {
@@ -38,7 +43,7 @@ describe("cloud backup", () => {
   it("turning it off deletes the envelope", async () => {
     const t = makeT();
     const userId = await seedUser(t);
-    const as = asUser(t, userId);
+    const as = await asPhoneProvenUser(t, userId);
     await as.mutation(api.cloud_backup.save, {
       provider: "google",
       envelope: "env",
@@ -61,7 +66,7 @@ describe("cloud backup", () => {
   it("rate-limits restores", async () => {
     const t = makeT();
     const userId = await seedUser(t);
-    const as = asUser(t, userId);
+    const as = await asPhoneProvenUser(t, userId);
     await as.mutation(api.cloud_backup.save, {
       provider: "google",
       envelope: "env",

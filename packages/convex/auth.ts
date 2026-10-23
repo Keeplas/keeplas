@@ -5,7 +5,9 @@ import {
   convexAuth,
   createAccount,
   retrieveAccount,
+  type GenericActionCtxWithAuthConfig,
 } from "@convex-dev/auth/server";
+import type { DataModel, Id } from "./_generated/dataModel";
 import { ResendOTP } from "./ResendOTP";
 import { internal } from "./_generated/api";
 import { verifyAssertionAndGetUserId } from "./webauthn";
@@ -23,6 +25,23 @@ const INITIAL_AUTH_METHOD: Record<string, "email" | "phone"> = {
   "email-otp": "email",
   "phone-otp": "phone",
 };
+
+/**
+ * Sign in on a session that already holds what the credentials proved
+ * (session_proofs.ts): "phone" for a WhatsApp code that just reached the
+ * number, "vault" for a matching 24-word verifier.
+ */
+async function provenSignIn(
+  ctx: GenericActionCtxWithAuthConfig<DataModel>,
+  userId: Id<"users">,
+  kind: "phone" | "vault",
+) {
+  const sessionId = await ctx.runMutation(
+    internal.session_proofs.openProvenSession,
+    { userId, kind },
+  );
+  return { userId, sessionId };
+}
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
@@ -107,14 +126,14 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
               ...(name ? { name } : {}),
             },
           });
-          return { userId: user._id };
+          return provenSignIn(ctx, user._id, "phone");
         }
 
         const { user } = await retrieveAccount(ctx, {
           provider: "phone-otp",
           account: { id: phone },
         });
-        return { userId: user._id };
+        return provenSignIn(ctx, user._id, "phone");
       },
     }),
     // Passwordless email sign-in, sibling of `phone-otp`: email + a one-time
@@ -156,7 +175,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           { phoneNumber: phone, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
-        return { userId };
+        return provenSignIn(ctx, userId, "vault");
       },
     }),
     // Recovery for passwordless email accounts (sibling of `phone-recovery`):
@@ -173,7 +192,24 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           { email, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
-        return { userId };
+        return provenSignIn(ctx, userId, "vault");
+      },
+    }),
+    // Lost number, no 24 words: an approved lost-number request past its
+    // 72 h window plus the WhatsApp code sent to the new number move the
+    // account to it and sign in (number_change.ts). Never creates a user.
+    ConvexCredentials({
+      id: "number-change",
+      authorize: async (credentials, ctx) => {
+        const result = await ctx.runMutation(internal.number_change.complete, {
+          requestId: String(
+            credentials.requestId ?? "",
+          ) as Id<"number_change_requests">,
+          claimToken: String(credentials.claimToken ?? ""),
+          code: String(credentials.code ?? ""),
+        });
+        if (!result.ok) throw new ConvexError(result.error);
+        return provenSignIn(ctx, result.userId, "phone");
       },
     }),
     // QR pairing (workflow 8): a browser approved by the owner's phone signs

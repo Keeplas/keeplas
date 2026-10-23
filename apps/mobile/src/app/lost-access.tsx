@@ -6,11 +6,13 @@ import { AppHeader } from "@/components/app-header";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { useRestorableBackup } from "@/features/cloud-backup";
 import { useI18n } from "@/providers/i18n-provider";
 
 export default function LostAccess() {
   const router = useRouter();
   const { t } = useI18n();
+  const cloud = useRestorableBackup();
 
   return (
     <Screen
@@ -26,6 +28,14 @@ export default function LostAccess() {
       <View style={styles.art}>
         <VaultLaptop width={320} height={220} />
       </View>
+      {cloud ? (
+        <ListRow
+          icon="sync"
+          title={t("cloudRestore.title", { provider: cloud })}
+          description={t("cloudRestore.option", { provider: cloud })}
+          onPress={() => router.push("/cloud-restore")}
+        />
+      ) : null}
       <ListRow
         icon="phone"
         title={t("lostAccess.device")}

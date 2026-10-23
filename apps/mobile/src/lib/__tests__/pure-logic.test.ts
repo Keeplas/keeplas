@@ -29,6 +29,7 @@ const base: StageInputs = {
   viewer: { hasKeyBundle: true },
   loginOtpRequired: false,
   totpRequired: false,
+  newNumberPending: false,
   needsMigration: false,
   migrationDeferred: false,
   hasDeviceVault: true,
@@ -44,6 +45,8 @@ describe("resolveStage", () => {
     [{ loginOtpRequired: true }, "loginOtp"],
     [{ totpRequired: true }, "totp"],
     [{ totpRequired: undefined }, "loading"],
+    [{ newNumberPending: true }, "newNumber"],
+    [{ newNumberPending: undefined }, "loading"],
     [{ viewer: { hasKeyBundle: false } }, "setup"],
     [{ unlocked: false, hasDeviceVault: true }, "locked"],
     [{ unlocked: false, hasDeviceVault: false }, "needsKit"],
@@ -73,6 +76,33 @@ describe("resolveStage", () => {
         unlocked: false,
       }),
     ).toBe("totp");
+  });
+});
+
+describe("resolveStage after a lost number", () => {
+  it("sets the new number after the step-up codes, before the vault opens", () => {
+    expect(
+      resolveStage({ ...base, totpRequired: true, newNumberPending: true }),
+    ).toBe("totp");
+    expect(
+      resolveStage({
+        ...base,
+        newNumberPending: true,
+        unlocked: false,
+        hasDeviceVault: false,
+      }),
+    ).toBe("newNumber");
+  });
+
+  it("goes on to the recovery kit once the new number is proven", () => {
+    expect(
+      resolveStage({
+        ...base,
+        newNumberPending: false,
+        unlocked: false,
+        hasDeviceVault: false,
+      }),
+    ).toBe("needsKit");
   });
 });
 
