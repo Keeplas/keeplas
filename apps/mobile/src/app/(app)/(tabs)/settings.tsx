@@ -138,12 +138,21 @@ export default function Settings() {
         description={t("privacy.devicesBody")}
         onPress={() => router.push("/devices")}
       />
-      <ListRow
-        icon="activity"
-        title={t("privacy.activity")}
-        description={t("privacy.activityBody")}
-        onPress={() => router.push("/activity")}
-      />
+      {lifeCheck ? (
+        <ListRow
+          icon="clock"
+          title={t("settings.lifeCheck")}
+          description={t(`frequency.${lifeCheck.frequency}`)}
+          onPress={() => router.push("/life-check")}
+        />
+      ) : (
+        <ListRow
+          icon="clock"
+          title={t("settings.lifeCheck")}
+          description={t("lifeCheck.notConfigured")}
+          onPress={() => router.push("/life-check")}
+        />
+      )}
       <ListRow
         icon="shield-check"
         title={t("settings.plan")}
@@ -168,21 +177,6 @@ export default function Settings() {
         description={t("settings.privacyBody")}
         onPress={() => router.push("/privacy")}
       />
-      {lifeCheck ? (
-        <ListRow
-          icon="clock"
-          title={t("settings.lifeCheck")}
-          description={t(`frequency.${lifeCheck.frequency}`)}
-          onPress={() => router.push("/life-check")}
-        />
-      ) : (
-        <ListRow
-          icon="clock"
-          title={t("settings.lifeCheck")}
-          description={t("lifeCheck.notConfigured")}
-          onPress={() => router.push("/life-check")}
-        />
-      )}
       <ListRow
         icon="cloud-upload"
         title={t("backup.title")}
@@ -244,6 +238,12 @@ export default function Settings() {
           onPress={() => router.push("/self-test")}
         />
       ) : null}
+      <ListRow
+        icon="activity"
+        title={t("privacy.activity")}
+        description={t("privacy.activityBody")}
+        onPress={() => router.push("/activity")}
+      />
       <ListRow
         icon="eye"
         title={t("legal.privacy")}
