@@ -1,0 +1,10 @@
+{
+  "name": "keeplas-background-work",
+  "version": "0.1.0",
+  "description": "Keeps one user-started job (the vault export) running while Keeplas is in the background",
+  "private": true,
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Keeplas",
+  "homepage": "https://keeplas.com"
+}

@@ -16,6 +16,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
 import { draftStore } from "@/features/capture/draft-store";
+import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
 import { clearFormDrafts } from "@/lib/form-drafts";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
@@ -149,6 +150,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     lock();
     setFinishingSetup(false);
+    discardExport();
     auditContext.clear();
     setMigrationDeferred(false);
     setNewNumberPending(false);
