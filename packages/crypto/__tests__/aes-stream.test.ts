@@ -13,6 +13,15 @@ async function blobToUint8(blob: Blob): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
+/**
+ * Byte equality without `toEqual`, which walks a typed array element by
+ * element: ~175 ms for 200 KB here, enough to time out on a loaded CI runner.
+ */
+function expectSameBytes(actual: Uint8Array, expected: Uint8Array) {
+  expect(actual.length).toBe(expected.length);
+  expect(Buffer.from(actual).equals(Buffer.from(expected))).toBe(true);
+}
+
 describe("AES-GCM streaming", () => {
   it("round-trips a blob smaller than one chunk", async () => {
     const key = await generateMasterKey();
@@ -28,7 +37,7 @@ describe("AES-GCM streaming", () => {
       undefined,
       chunkCount,
     );
-    expect(await blobToUint8(decrypted)).toEqual(data);
+    expectSameBytes(await blobToUint8(decrypted), data);
   });
 
   it("round-trips across multiple chunks (non-aligned remainder)", async () => {
@@ -50,7 +59,7 @@ describe("AES-GCM streaming", () => {
       chunkSize,
       chunkCount,
     );
-    expect(await blobToUint8(decrypted)).toEqual(data);
+    expectSameBytes(await blobToUint8(decrypted), data);
   });
 
   it("round-trips on exact chunk boundary", async () => {
@@ -72,7 +81,7 @@ describe("AES-GCM streaming", () => {
       chunkSize,
       chunkCount,
     );
-    expect(await blobToUint8(decrypted)).toEqual(data);
+    expectSameBytes(await blobToUint8(decrypted), data);
   });
 
   it("handles an empty blob", async () => {

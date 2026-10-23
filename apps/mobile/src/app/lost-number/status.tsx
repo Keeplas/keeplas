@@ -102,7 +102,9 @@ export default function LostNumberStatus() {
           <Button
             variant="text"
             label={t("common.getHelp")}
-            onPress={() => contactSupport(`Lost number: ${claim?.requestId}`)}
+            onPress={() =>
+              contactSupport(`Lost number: ${claim?.requestId}`, "recovery")
+            }
           />
         ) : null}
       </Screen>

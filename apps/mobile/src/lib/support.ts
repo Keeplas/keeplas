@@ -1,9 +1,24 @@
-import { Linking } from "react-native";
+import { router } from "expo-router";
 
-const SUPPORT_EMAIL = "support@keeplas.com";
+/** Topics of support.submitTicket (packages/convex/support.ts). */
+export const SUPPORT_TOPICS = [
+  "general",
+  "recovery",
+  "security",
+  "billing",
+  "feature_request",
+  "other",
+] as const;
 
-/** Open a support email, with a reference in the subject when given. */
-export function contactSupport(subject?: string): Promise<void> {
-  const query = subject ? `?subject=${encodeURIComponent(subject)}` : "";
-  return Linking.openURL(`mailto:${SUPPORT_EMAIL}${query}`);
+export type SupportTopic = (typeof SUPPORT_TOPICS)[number];
+
+/**
+ * Open the support form. `ref` (an error detail, a request id) is appended
+ * to the message so the team can diagnose without asking.
+ */
+export function contactSupport(ref?: string, topic?: SupportTopic): void {
+  router.push({
+    pathname: "/support",
+    params: { ...(ref ? { ref } : {}), ...(topic ? { topic } : {}) },
+  });
 }

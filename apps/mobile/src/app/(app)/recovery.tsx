@@ -18,6 +18,7 @@ import {
 } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
 import { useAuditedAction } from "@/lib/use-audited-action";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -34,6 +35,7 @@ export default function RecoveryCenter() {
   const targets = useQuery(api.recovery.getSetupTargets);
   const requests = useQuery(api.recovery.getRequestsForMe);
   const myRequest = useQuery(api.recovery.getMyRequest);
+  const ways = useRecoveryWays();
   const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
   const setup = useAuditedAction(api.recovery_node.setup);
 
@@ -87,13 +89,18 @@ export default function RecoveryCenter() {
       <Text variant="h1">{t("recoveryCenter.title")}</Text>
       <Text color="text.muted">{t("recoveryCenter.body")}</Text>
       <StatusChip
-        label={
-          health?.trustContacts.configured
-            ? t("recoveryCenter.ready")
-            : t("recoveryCenter.notReady")
-        }
-        tone={health?.trustContacts.configured ? "success" : "warning"}
+        label={t(ways.covered ? "waysBack.covered" : "waysBack.notCovered")}
+        tone={ways.covered ? "success" : "warning"}
       />
+      <WaysBackCard ways={ways} />
+      <Text variant="label">{t("recoveryCenter.trustContacts")}</Text>
+      <Text variant="body-sm" color="text.muted">
+        {t(
+          health?.trustContacts.configured
+            ? "recoveryCenter.ready"
+            : "recoveryCenter.contactsBody",
+        )}
+      </Text>
       {targets && targets.contacts.length < 2 ? (
         <>
           <Card>
@@ -136,7 +143,9 @@ export default function RecoveryCenter() {
           disabled={!targets}
         />
       )}
-      <Text variant="label">{t("recoveryCenter.requests")}</Text>
+      {requests?.length ? (
+        <Text variant="label">{t("recoveryCenter.requests")}</Text>
+      ) : null}
       {(requests ?? []).map((request) => (
         <ListRow
           key={request.requestId}
@@ -151,12 +160,6 @@ export default function RecoveryCenter() {
           }
         />
       ))}
-      <ListRow
-        icon="sync"
-        title={t("privacy.rotation")}
-        description={t("privacy.rotationBody")}
-        onPress={() => router.push("/rotate-keys")}
-      />
     </Screen>
   );
 }

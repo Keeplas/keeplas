@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/controls";
-import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
-import { Card, IconBadge, InfoRow, StatusChip } from "@/components/surfaces";
+import { IconBadge } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
 import { useFinishSetup } from "@/lib/use-finish-setup";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -18,6 +17,7 @@ export default function OneWayWarning() {
   const { t } = useI18n();
   const finish = useFinishSetup();
   const [understood, setUnderstood] = useState(false);
+  const ways = useRecoveryWays();
 
   return (
     <Screen header={<AppHeader onBack={router.back} />}>
@@ -26,29 +26,7 @@ export default function OneWayWarning() {
       <Text variant="body" color="text.muted">
         {t("oneWay.body")}
       </Text>
-      <Card>
-        <Text variant="caption" color="text.subtle" style={styles.caps}>
-          {t("oneWay.waysBack")}
-        </Text>
-        <InfoRow
-          leading={<Icon name="phone" size={22} color="status.active" />}
-          title={t("oneWay.thisPhone")}
-          description={t("oneWay.screenLock")}
-          trailing={<StatusChip tone="success" label={t("oneWay.active")} />}
-        />
-        <InfoRow
-          leading={<Icon name="cloud-upload" size={22} color="text.muted" />}
-          title={t("backup.title")}
-          description={t("oneWay.backupMissing")}
-          trailing={<StatusChip tone="danger" label={t("oneWay.missing")} />}
-        />
-        <InfoRow
-          leading={<Icon name="people" size={22} color="text.muted" />}
-          title={t("oneWay.contacts")}
-          description={t("oneWay.contactsNeeded", { n: 0 })}
-          trailing={<StatusChip tone="danger" label={t("oneWay.missing")} />}
-        />
-      </Card>
+      <WaysBackCard ways={ways} />
       <Button
         label={t("backup.enable")}
         onPress={() => router.push("/backup")}
@@ -77,7 +55,3 @@ export default function OneWayWarning() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  caps: { textTransform: "uppercase" },
-});
