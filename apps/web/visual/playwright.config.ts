@@ -18,6 +18,8 @@ export default defineConfig({
     deviceScaleFactor: 1,
     locale: "en-US",
     timezoneId: "Europe/Paris",
+    // Keeps the animated illustrations (<Illustration>) still between runs.
+    reducedMotion: "reduce",
   },
   webServer: {
     command: "vite --config visual/vite.config.ts",

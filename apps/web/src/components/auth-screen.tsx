@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn, KeeplasLogoMark } from "@keeplas/ui";
+import { Illustration } from "./illustration";
 import { LanguageSwitcher } from "./language-switcher";
 
 /** Card on the right of an auth screen (Figma: radius 16, thin border). */
@@ -22,30 +23,6 @@ function Brand() {
       <KeeplasLogoMark width={36} height={36} />
       <span className="text-h2 text-text-primary">Keeplas</span>
     </div>
-  );
-}
-
-/**
- * Hero landscape. Its ambient animations (sway, glow, drift, shimmer) are
- * embedded in the SVG and only play when it is requested as `#play`, which
- * happens only without a reduced-motion preference (as on keeplas-website).
- */
-function Landscape({ src, className }: { src: string; className: string }) {
-  return (
-    <picture className="contents">
-      <source
-        srcSet={`${src}#play`}
-        media="(prefers-reduced-motion: no-preference)"
-      />
-      <img
-        src={src}
-        alt=""
-        className={cn(
-          "pointer-events-none absolute -bottom-[20px] -left-[40px] w-[calc(100%+80px)] max-w-none",
-          className,
-        )}
-      />
-    </picture>
   );
 }
 
@@ -76,13 +53,13 @@ export function AuthScreen({
           </h1>
           <p className="text-body-lg text-text-body">{body}</p>
         </div>
-        <Landscape
+        <Illustration
           src="/assets/illustrations/desktop-landscape.svg"
-          className="dark:hidden"
+          className="pointer-events-none absolute -bottom-[20px] -left-[40px] w-[calc(100%+80px)] max-w-none dark:hidden"
         />
-        <Landscape
+        <Illustration
           src="/assets/illustrations/desktop-landscape-night.svg"
-          className="hidden dark:block"
+          className="pointer-events-none absolute -bottom-[20px] -left-[40px] hidden w-[calc(100%+80px)] max-w-none dark:block"
         />
         {heroFooter ? (
           <div className="absolute bottom-[60px] left-[64px] z-10">
