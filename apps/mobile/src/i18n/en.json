@@ -167,6 +167,20 @@
     "invalid": "These words don't open your vault. Check each word and their order.",
     "contactsCta": "Ask my trusted contacts"
   },
+  "cloudRestore": {
+    "title": "Restore from {provider}",
+    "option": "Your backup comes back with your {provider} account.",
+    "body": "Your vault key is backed up with your {provider} account. Restore it on this phone in one step.",
+    "cta": "Restore my vault",
+    "note": "A WhatsApp code confirms it's you before your backup opens.",
+    "noKey": "This phone can't find your {provider} backup. Check that you're signed in to the same {provider} account, or use your 24 words.",
+    "failed": "We couldn't restore your vault. Try again, or use your 24 words."
+  },
+  "phoneProof": {
+    "title": "Confirm it's you",
+    "body": "We sent a code to your WhatsApp number {phone}.",
+    "cta": "Confirm"
+  },
   "socialRecovery": {
     "title": "Recover with contacts",
     "body": "Two trusted contacts must approve. Keeplas then waits 72 hours before releasing the protected key.",

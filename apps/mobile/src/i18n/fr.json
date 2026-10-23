@@ -160,6 +160,20 @@
     "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
     "contactsCta": "Demander à mes contacts"
   },
+  "cloudRestore": {
+    "title": "Restaurer depuis {provider}",
+    "option": "Votre sauvegarde revient avec votre compte {provider}.",
+    "body": "La clé de votre coffre est sauvegardée avec votre compte {provider}. Restaurez-la sur ce téléphone en une étape.",
+    "cta": "Restaurer mon coffre",
+    "note": "Un code WhatsApp confirme que c'est bien vous avant d'ouvrir la sauvegarde.",
+    "noKey": "Ce téléphone ne trouve pas votre sauvegarde {provider}. Vérifiez que vous êtes connecté au même compte {provider}, ou utilisez vos 24 mots.",
+    "failed": "Nous n'avons pas pu restaurer votre coffre. Réessayez, ou utilisez vos 24 mots."
+  },
+  "phoneProof": {
+    "title": "Confirmez que c'est vous",
+    "body": "Nous avons envoyé un code à votre numéro WhatsApp {phone}.",
+    "cta": "Confirmer"
+  },
   "socialRecovery": {
     "title": "Récupérer avec mes contacts",
     "body": "Deux contacts doivent approuver. Keeplas attend ensuite 72 heures avant de libérer la clé protégée.",

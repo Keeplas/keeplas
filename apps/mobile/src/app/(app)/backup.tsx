@@ -11,13 +11,12 @@ import { Screen } from "@/components/screen";
 import { Callout, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceRootKey } from "@/crypto/device-vault";
+import { cloudKeyName } from "@/features/cloud-backup";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import * as CloudKey from "../../../modules/cloud-key";
 import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
-
-const storageKey = (userId: string) => `keeplas.cbk.${userId}`;
 
 /** D7 / M07-6: Keeplas envelope + synced platform CBK, on or off together. */
 export default function CloudBackup() {
@@ -39,7 +38,7 @@ export default function CloudBackup() {
       if (!rootKey) throw new Error(t("backup.noRootKey"));
       try {
         const sealed = await sealCloudBackup({ rootKey, userId: viewer._id });
-        await CloudKey.write(storageKey(viewer._id), sealed.cbk);
+        await CloudKey.write(cloudKeyName(viewer._id), sealed.cbk);
         await save({ provider: CloudKey.provider, envelope: sealed.envelope });
       } finally {
         rootKey.fill(0);
@@ -59,7 +58,7 @@ export default function CloudBackup() {
     setBusy(true);
     try {
       await disable({});
-      await CloudKey.remove(storageKey(viewer._id));
+      await CloudKey.remove(cloudKeyName(viewer._id));
     } catch {
       Alert.alert(t("common.genericError"));
     } finally {

@@ -4,10 +4,12 @@ import { useRouter } from "expo-router";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
+import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { saveDeviceVault } from "@/crypto/device-vault";
 import { openKeyBundle } from "@/crypto/vault-keys";
+import { useRestorableBackup } from "@/features/cloud-backup";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
@@ -23,6 +25,7 @@ export default function RecoveryKitEntry() {
   const viewer = useViewer();
   const { adopt } = useVault();
   const { refreshDeviceVault, signOut } = useSession();
+  const cloud = useRestorableBackup();
   const [words, setWords] = useState("");
   const [busy, setBusy] = useState(false);
   const [invalid, setInvalid] = useState(false);
@@ -54,6 +57,14 @@ export default function RecoveryKitEntry() {
       <Text variant="body-lg" color="text.muted">
         {t("recoveryKit.body")}
       </Text>
+      {cloud ? (
+        <ListRow
+          icon="sync"
+          title={t("cloudRestore.title", { provider: cloud })}
+          description={t("cloudRestore.option", { provider: cloud })}
+          onPress={() => router.push("/cloud-restore")}
+        />
+      ) : null}
       <TextField
         label={t("oneWay.kit")}
         value={words}

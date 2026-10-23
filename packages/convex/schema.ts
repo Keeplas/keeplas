@@ -529,6 +529,29 @@ export default defineSchema({
     .index("by_session", ["sessionId"])
     .index("by_user", ["userId"]),
 
+  // What a session has proven beyond its sign-in (session_proofs.ts).
+  // "phone": a WhatsApp code reached the account's number in this session
+  // (phone-otp sign-in, or the in-session code). Restoring the cloud backup
+  // or asking contacts to recover needs it, so a synced passkey alone does
+  // not open a vault. Rows live as long as the authSessions row.
+  auth_session_proofs: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    kind: v.literal("phone"),
+    verifiedAt: v.number(),
+  }).index("by_session", ["sessionId"]),
+
+  // Pending in-session WhatsApp code that grants the "phone" proof.
+  session_phone_codes: defineTable({
+    userId: v.id("users"),
+    sessionId: v.id("authSessions"),
+    // E.164 snapshot at issuance: the code is void if the number changed.
+    phoneNumber: v.string(),
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  }).index("by_user", ["userId"]),
+
   // ═══════════════════════════════════════════════
   // VAULTS
   // ═══════════════════════════════════════════════
