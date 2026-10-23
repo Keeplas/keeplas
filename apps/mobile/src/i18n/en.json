@@ -18,8 +18,10 @@
   },
   "languageNames": {
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "es": "Español"
   },
+  "languageSoon": "{name} (coming soon)",
   "nav": {
     "home": "Home",
     "search": "Search",

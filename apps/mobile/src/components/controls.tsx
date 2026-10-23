@@ -102,19 +102,22 @@ export function Radio({
   onPress,
   label,
   description,
+  disabled = false,
 }: {
   selected: boolean;
   onPress: () => void;
   label: string;
   description?: string;
+  disabled?: boolean;
 }) {
   const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={[styles.option, styles.radioRow]}
+      style={[styles.option, styles.radioRow, disabled && styles.disabled]}
     >
       <View
         style={[

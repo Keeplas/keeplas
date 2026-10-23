@@ -15,6 +15,7 @@
     "language": "Langue",
     "genericError": "Une erreur est survenue. Réessayez."
   },
+  "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
     "search": "Recherche",
