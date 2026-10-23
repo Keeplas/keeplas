@@ -71,6 +71,7 @@ import type * as recovery from "../recovery.js";
 import type * as recovery_node from "../recovery_node.js";
 import type * as release from "../release.js";
 import type * as rotation from "../rotation.js";
+import type * as session_proofs from "../session_proofs.js";
 import type * as shared_types from "../shared_types.js";
 import type * as support from "../support.js";
 import type * as testing from "../testing.js";
@@ -152,6 +153,7 @@ declare const fullApi: ApiFromModules<{
   recovery_node: typeof recovery_node;
   release: typeof release;
   rotation: typeof rotation;
+  session_proofs: typeof session_proofs;
   shared_types: typeof shared_types;
   support: typeof support;
   testing: typeof testing;

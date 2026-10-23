@@ -4,19 +4,14 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
+import { grantCurrentSessionProof } from "./session_proofs";
 import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
-import { checkOtp, INVALID_CODE } from "./lib/otp";
+import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-
-function generateOtp(): string {
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return (arr[0] % 1_000_000).toString().padStart(6, "0");
-}
 
 /**
  * Issue a fresh 6-digit OTP and dispatch it via WhatsApp. `phoneNumber` is the
@@ -176,6 +171,7 @@ export const verifyCode = auditedMutation({
       updatedAt: now,
     });
     await ctx.db.delete(active._id);
+    await grantCurrentSessionProof(ctx, userId, "phone");
 
     return { verified: true as const, phoneNumber: newPhone, previousPhone };
   },

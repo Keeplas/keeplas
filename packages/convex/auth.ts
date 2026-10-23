@@ -5,7 +5,9 @@ import {
   convexAuth,
   createAccount,
   retrieveAccount,
+  type GenericActionCtxWithAuthConfig,
 } from "@convex-dev/auth/server";
+import type { DataModel, Id } from "./_generated/dataModel";
 import { ResendOTP } from "./ResendOTP";
 import { internal } from "./_generated/api";
 import { verifyAssertionAndGetUserId } from "./webauthn";
@@ -23,6 +25,21 @@ const INITIAL_AUTH_METHOD: Record<string, "email" | "phone"> = {
   "email-otp": "email",
   "phone-otp": "phone",
 };
+
+/**
+ * A WhatsApp code just reached the number: sign in on a session that
+ * already holds the "phone" proof (session_proofs.ts).
+ */
+async function phoneProvenSignIn(
+  ctx: GenericActionCtxWithAuthConfig<DataModel>,
+  userId: Id<"users">,
+) {
+  const sessionId = await ctx.runMutation(
+    internal.session_proofs.openPhoneProvenSession,
+    { userId },
+  );
+  return { userId, sessionId };
+}
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
@@ -107,14 +124,14 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
               ...(name ? { name } : {}),
             },
           });
-          return { userId: user._id };
+          return phoneProvenSignIn(ctx, user._id);
         }
 
         const { user } = await retrieveAccount(ctx, {
           provider: "phone-otp",
           account: { id: phone },
         });
-        return { userId: user._id };
+        return phoneProvenSignIn(ctx, user._id);
       },
     }),
     // Passwordless email sign-in, sibling of `phone-otp`: email + a one-time

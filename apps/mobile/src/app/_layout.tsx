@@ -78,6 +78,8 @@ function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={stage === "needsKit" || stage === "locked"}>
         <Stack.Screen name="recovery-kit" />
+        <Stack.Screen name="cloud-restore" />
+        <Stack.Screen name="phone-proof" />
         <Stack.Screen name="contact-recovery" />
         <Stack.Screen name="lost-access" />
         <Stack.Screen name="link-from-device" />

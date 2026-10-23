@@ -6,7 +6,7 @@ import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
-import { checkOtp, INVALID_CODE } from "./lib/otp";
+import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -18,12 +18,6 @@ import { checkOtp, INVALID_CODE } from "./lib/otp";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-
-function generateOtp(): string {
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return (arr[0] % 1_000_000).toString().padStart(6, "0");
-}
 
 /**
  * Reject if `email` is already used by another user. Throws a user-facing
