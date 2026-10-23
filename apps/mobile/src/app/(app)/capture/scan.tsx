@@ -17,6 +17,7 @@ import {
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius, type } from "@/theme";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 
 /**
  * M07-2 Scan document. "Auto" opens the system document scanner (VisionKit /
@@ -47,10 +48,12 @@ export default function ScanDocument() {
     setMode("auto");
     try {
       const scanner = await import("react-native-document-scanner-plugin");
-      const result = await scanner.default.scanDocument({
-        croppedImageQuality: 85,
-        responseType: scanner.ResponseType.ImageFilePath,
-      });
+      const result = await keepUnlockedWhile(() =>
+        scanner.default.scanDocument({
+          croppedImageQuality: 85,
+          responseType: scanner.ResponseType.ImageFilePath,
+        }),
+      );
       const scanned = result.scannedImages ?? [];
       if (
         result.status === scanner.ScanDocumentResponseStatus.Success &&

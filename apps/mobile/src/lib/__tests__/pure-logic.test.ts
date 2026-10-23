@@ -11,7 +11,14 @@ import {
   recentItems,
   type ContentKind,
 } from "@/features/home/vault-groups";
-import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
+import {
+  BACKGROUND_GRACE_MS,
+  HELD_GRACE_MS,
+  holdLock,
+  isLockHeld,
+  keepUnlockedWhile,
+  shouldLockOnResume,
+} from "../auto-lock";
 import { classifyCodeError, passkeyFailure } from "../errors";
 import { formatBytes, relativeDay } from "../format";
 import {
@@ -111,6 +118,31 @@ describe("auto-lock", () => {
     expect(shouldLockOnResume(null, 10)).toBe(false);
     expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS)).toBe(false);
     expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1)).toBe(true);
+  });
+
+  it("waits up to ten minutes while the app has a system screen open", () => {
+    expect(shouldLockOnResume(0, BACKGROUND_GRACE_MS + 1, true)).toBe(false);
+    expect(shouldLockOnResume(0, HELD_GRACE_MS, true)).toBe(false);
+    expect(shouldLockOnResume(0, HELD_GRACE_MS + 1, true)).toBe(true);
+  });
+
+  it("holds the lock only while a task runs", async () => {
+    let during = false;
+    await keepUnlockedWhile(async () => {
+      during = isLockHeld();
+    });
+    expect(during).toBe(true);
+    expect(isLockHeld()).toBe(false);
+    await expect(
+      keepUnlockedWhile(async () => {
+        throw new Error("cancelled");
+      }),
+    ).rejects.toThrow("cancelled");
+    expect(isLockHeld()).toBe(false);
+    const release = holdLock();
+    release();
+    release();
+    expect(isLockHeld()).toBe(false);
   });
 });
 

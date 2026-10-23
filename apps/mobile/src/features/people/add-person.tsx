@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
@@ -16,6 +16,8 @@ import { Text } from "@/components/text";
 import { errorText } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useFormDraft } from "@/lib/form-drafts";
+import type { CountryCode } from "@/lib/phone";
 import { usePhoneField } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -30,11 +32,28 @@ export function AddPerson() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const invite = useAuditedMutation(api.trusted_contacts.inviteContact);
-  const phone = usePhoneField();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [draft, updateDraft, clearDraft] = useFormDraft("add-person", () => ({
+    name: "",
+    email: "",
+    phoneCountry: undefined as CountryCode | undefined,
+    phoneInput: "",
+    phoneNumber: null as string | null,
+  }));
+  const { name, email, phoneNumber } = draft;
+  const setName = (value: string) => updateDraft({ name: value });
+  const setEmail = (value: string) => updateDraft({ email: value });
+  const setPhoneNumber = (value: string | null) =>
+    updateDraft({ phoneNumber: value });
+  const phone = usePhoneField({
+    country: draft.phoneCountry,
+    number: draft.phoneInput,
+  });
   const [emailError, setEmailError] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+  const phoneCountry = phone.inputProps.country;
+  const phoneInput = phone.inputProps.value;
+  useEffect(() => {
+    updateDraft({ phoneCountry, phoneInput });
+  }, [phoneCountry, phoneInput, updateDraft]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -57,6 +76,7 @@ export function AddPerson() {
         phoneNumber,
         role: "friend",
       });
+      clearDraft();
       router.back();
     } catch (failure) {
       const text = errorText(failure);
@@ -73,7 +93,10 @@ export function AddPerson() {
   const header = (
     <NavBar
       title={t("people.addTitle")}
-      onBack={router.back}
+      onBack={() => {
+        clearDraft();
+        router.back();
+      }}
       right={<LanguageDropdown />}
     />
   );

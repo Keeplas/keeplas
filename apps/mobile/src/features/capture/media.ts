@@ -12,6 +12,7 @@ import * as Print from "expo-print";
 import { File } from "expo-file-system";
 
 import { fileKindOf } from "@/crypto/item-meta";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 import type { CaptureFile } from "./seal";
 
 export type PermissionProblem = "camera" | "photos" | "microphone";
@@ -50,11 +51,13 @@ export async function shoot(
   if (!Device.isDevice) throw new CameraUnavailable();
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) throw new PermissionDenied("camera");
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: [media],
-    quality: 0.85,
-    videoMaxDuration: 600,
-  });
+  const result = await keepUnlockedWhile(() =>
+    ImagePicker.launchCameraAsync({
+      mediaTypes: [media],
+      quality: 0.85,
+      videoMaxDuration: 600,
+    }),
+  );
   return result.canceled ? null : toCaptureFile(result.assets[0]);
 }
 
@@ -64,20 +67,24 @@ export async function chooseFromLibrary(
 ): Promise<CaptureFile[]> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) throw new PermissionDenied("photos");
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: media,
-    allowsMultipleSelection: true,
-    quality: 0.85,
-  });
+  const result = await keepUnlockedWhile(() =>
+    ImagePicker.launchImageLibraryAsync({
+      mediaTypes: media,
+      allowsMultipleSelection: true,
+      quality: 0.85,
+    }),
+  );
   return result.canceled ? [] : result.assets.map(toCaptureFile);
 }
 
 /** Any document from Files / Drive. */
 export async function chooseFiles(): Promise<CaptureFile[]> {
-  const result = await DocumentPicker.getDocumentAsync({
-    multiple: true,
-    copyToCacheDirectory: true,
-  });
+  const result = await keepUnlockedWhile(() =>
+    DocumentPicker.getDocumentAsync({
+      multiple: true,
+      copyToCacheDirectory: true,
+    }),
+  );
   if (result.canceled) return [];
   return result.assets.map((asset) => {
     const mimeType = asset.mimeType ?? "application/octet-stream";
