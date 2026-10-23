@@ -467,7 +467,13 @@
     "body": "Ouvrez votre application d'authentification et saisissez le code à 6 chiffres de Keeplas.",
     "cta": "Confirmer",
     "wrong": "Ce code n'a pas fonctionné. Vérifiez votre application d'authentification et réessayez.",
-    "tooMany": "Trop de tentatives. Attendez 15 minutes, puis réessayez."
+    "tooMany": "Trop de tentatives. Attendez 15 minutes, puis réessayez.",
+    "lost": "Vous avez perdu votre application d'authentification ?"
+  },
+  "totpRecovery": {
+    "title": "Application d'authentification perdue ?",
+    "body": "Ouvrez votre coffre sur ce téléphone et nous désactiverons le code d'authentification. Vous pourrez en configurer un nouveau plus tard dans les Réglages.",
+    "cta": "Ouvrir avec mes 24 mots"
   },
   "email": {
     "title": "Se connecter avec votre e-mail",

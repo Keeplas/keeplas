@@ -4,7 +4,10 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
 import { requireAuth } from "./helpers";
-import { grantCurrentSessionProof } from "./session_proofs";
+import {
+  grantCurrentSessionProof,
+  requireSessionProof,
+} from "./session_proofs";
 import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
@@ -20,6 +23,10 @@ const RATE_LIMIT_MAX = 3;
  * verifyCode commits it, mirroring how email_verification stages the email on
  * the code row. Rate-limited to 3 requests per rolling hour. Refuses if the
  * number is identical to the user's current verified one.
+ *
+ * Replacing a verified number needs this session to have proved the current
+ * one or opened the vault (session_proofs.ts): otherwise a synced passkey
+ * could swap in a new number and pass for its owner on WhatsApp.
  */
 export const requestVerification = mutation({
   args: {
@@ -33,6 +40,9 @@ export const requestVerification = mutation({
     const user = await ctx.db.get(userId);
     if (user?.phoneNumberVerifiedAt && user.phoneNumber === phone) {
       throw new Error("New phone number is the same as the current one.");
+    }
+    if (user?.phoneNumberVerifiedAt) {
+      await requireSessionProof(ctx, "phone", "vault");
     }
     await assertPhoneAvailable(ctx, phone, userId);
 

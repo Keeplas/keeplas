@@ -40,7 +40,8 @@ export class CloudKeyMissing extends Error {
 /**
  * New phone: CBK from the synced keychain + envelope from Keeplas → RootKey
  * → MasterKey, kept behind this phone's screen lock. The server refuses the
- * envelope until this session proved the account's number.
+ * envelope until this session proved the account's number. Resolves to the
+ * live MasterKey.
  */
 export function useCloudRestore() {
   const { t } = useI18n();
@@ -69,10 +70,11 @@ export function useCloudRestore() {
         { masterKey, rootKey },
         t("unlock.title"),
       );
-      await adopt(masterKey);
+      const key = await adopt(masterKey);
+      refreshDeviceVault();
+      return key;
     } finally {
       rootKey.fill(0);
     }
-    refreshDeviceVault();
   }, [viewer, restore, adopt, refreshDeviceVault, t]);
 }

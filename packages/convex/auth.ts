@@ -27,16 +27,18 @@ const INITIAL_AUTH_METHOD: Record<string, "email" | "phone"> = {
 };
 
 /**
- * A WhatsApp code just reached the number: sign in on a session that
- * already holds the "phone" proof (session_proofs.ts).
+ * Sign in on a session that already holds what the credentials proved
+ * (session_proofs.ts): "phone" for a WhatsApp code that just reached the
+ * number, "vault" for a matching 24-word verifier.
  */
-async function phoneProvenSignIn(
+async function provenSignIn(
   ctx: GenericActionCtxWithAuthConfig<DataModel>,
   userId: Id<"users">,
+  kind: "phone" | "vault",
 ) {
   const sessionId = await ctx.runMutation(
-    internal.session_proofs.openPhoneProvenSession,
-    { userId },
+    internal.session_proofs.openProvenSession,
+    { userId, kind },
   );
   return { userId, sessionId };
 }
@@ -124,14 +126,14 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
               ...(name ? { name } : {}),
             },
           });
-          return phoneProvenSignIn(ctx, user._id);
+          return provenSignIn(ctx, user._id, "phone");
         }
 
         const { user } = await retrieveAccount(ctx, {
           provider: "phone-otp",
           account: { id: phone },
         });
-        return phoneProvenSignIn(ctx, user._id);
+        return provenSignIn(ctx, user._id, "phone");
       },
     }),
     // Passwordless email sign-in, sibling of `phone-otp`: email + a one-time
@@ -173,7 +175,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           { phoneNumber: phone, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
-        return { userId };
+        return provenSignIn(ctx, userId, "vault");
       },
     }),
     // Recovery for passwordless email accounts (sibling of `phone-recovery`):
@@ -190,7 +192,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           { email, phraseHash },
         );
         if (!userId) throw new Error("Invalid recovery phrase");
-        return { userId };
+        return provenSignIn(ctx, userId, "vault");
       },
     }),
     // QR pairing (workflow 8): a browser approved by the owner's phone signs

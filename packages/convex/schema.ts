@@ -533,12 +533,23 @@ export default defineSchema({
   // "phone": a WhatsApp code reached the account's number in this session
   // (phone-otp sign-in, or the in-session code). Restoring the cloud backup
   // or asking contacts to recover needs it, so a synced passkey alone does
-  // not open a vault. Rows live as long as the authSessions row.
+  // not open a vault.
+  // "vault": the session opened the vault (identity-key signature, or the
+  // 24-word verifier at a recovery sign-in). Resets TOTP, changes the number.
+  // Rows live as long as the authSessions row.
   auth_session_proofs: defineTable({
     sessionId: v.id("authSessions"),
     userId: v.id("users"),
-    kind: v.literal("phone"),
+    kind: v.union(v.literal("phone"), v.literal("vault")),
     verifiedAt: v.number(),
+  }).index("by_session", ["sessionId"]),
+
+  // Single-use nonce the identity key signs for the "vault" proof.
+  session_vault_challenges: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    nonce: v.string(),
+    expiresAt: v.number(),
   }).index("by_session", ["sessionId"]),
 
   // Pending in-session WhatsApp code that grants the "phone" proof.

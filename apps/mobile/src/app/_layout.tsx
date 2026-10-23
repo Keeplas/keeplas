@@ -72,6 +72,12 @@ function Routes() {
       </Stack.Protected>
       <Stack.Protected guard={stage === "totp"}>
         <Stack.Screen name="login-totp" />
+        <Stack.Screen name="totp-recovery" />
+      </Stack.Protected>
+      <Stack.Protected
+        guard={stage === "totp" || stage === "needsKit" || stage === "locked"}
+      >
+        <Stack.Screen name="phone-proof" />
       </Stack.Protected>
       <Stack.Protected guard={settingUp}>
         <Stack.Screen name="(setup)" />
@@ -79,7 +85,6 @@ function Routes() {
       <Stack.Protected guard={stage === "needsKit" || stage === "locked"}>
         <Stack.Screen name="recovery-kit" />
         <Stack.Screen name="cloud-restore" />
-        <Stack.Screen name="phone-proof" />
         <Stack.Screen name="contact-recovery" />
         <Stack.Screen name="lost-access" />
         <Stack.Screen name="link-from-device" />

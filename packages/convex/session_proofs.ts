@@ -18,12 +18,14 @@ import { maskPhone } from "./lib/phone";
  * What a session has proven beyond its sign-in. A synced passkey or a
  * stolen iCloud account opens a session, but restoring the cloud backup or
  * asking contacts to recover the vault also needs a WhatsApp code that
- * reached the account's number in this session ("phone").
+ * reached the account's number in this session ("phone"). Resetting TOTP
+ * or changing the number needs the vault opened in this session ("vault",
+ * the ML-DSA identity key signs a nonce) or, for the number, the old one.
  */
 
-export type SessionProof = "phone";
+export type SessionProof = "phone" | "vault";
 
-export const PHONE_PROOF_REQUIRED = "PHONE_PROOF_REQUIRED";
+const VAULT_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -70,21 +72,36 @@ export async function grantCurrentSessionProof(
   if (sessionId) await grantSessionProof(ctx, { sessionId, userId, kind });
 }
 
-/** Throws `PHONE_PROOF_REQUIRED` unless this session proved the number. */
-export async function requirePhoneProof(ctx: QueryCtx): Promise<void> {
+/**
+ * Throws unless this session proved one of `kinds`: `PHONE_PROOF_REQUIRED`
+ * / `VAULT_PROOF_REQUIRED` for a single kind, `PROOF_REQUIRED` otherwise.
+ */
+export async function requireSessionProof(
+  ctx: QueryCtx,
+  ...kinds: SessionProof[]
+): Promise<void> {
   const sessionId = await getAuthSessionId(ctx);
-  if (!sessionId || !(await sessionHas(ctx, sessionId, "phone"))) {
-    throw new ConvexError(PHONE_PROOF_REQUIRED);
+  for (const kind of kinds) {
+    if (sessionId && (await sessionHas(ctx, sessionId, kind))) return;
   }
+  throw new ConvexError(
+    kinds.length === 1
+      ? `${kinds[0].toUpperCase()}_PROOF_REQUIRED`
+      : "PROOF_REQUIRED",
+  );
 }
 
 /**
- * Open the session the `phone-otp` provider signs in with, already holding
- * the "phone" proof: its code just reached the number (auth.ts).
+ * Open the session a credentials provider signs in with, already holding
+ * `kind` (auth.ts): "phone" when its WhatsApp code just reached the number,
+ * "vault" when the 24-word verifier just matched.
  */
-export const openPhoneProvenSession = internalMutation({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+export const openProvenSession = internalMutation({
+  args: {
+    userId: v.id("users"),
+    kind: v.union(v.literal("phone"), v.literal("vault")),
+  },
+  handler: async (ctx, { userId, kind }) => {
     const sessionId = await ctx.db.insert("authSessions", {
       userId,
       expirationTime:
@@ -92,7 +109,7 @@ export const openPhoneProvenSession = internalMutation({
         (Number(process.env.AUTH_SESSION_TOTAL_DURATION_MS) ||
           DEFAULT_SESSION_TOTAL_DURATION_MS),
     });
-    await grantSessionProof(ctx, { sessionId, userId, kind: "phone" });
+    await grantSessionProof(ctx, { sessionId, userId, kind });
     return sessionId;
   },
 });
@@ -107,6 +124,7 @@ export const getMine = query({
     const sessionId = await getAuthSessionId(ctx);
     return {
       phone: !!sessionId && (await sessionHas(ctx, sessionId, "phone")),
+      vault: !!sessionId && (await sessionHas(ctx, sessionId, "vault")),
       phoneMasked: user?.phoneNumber ? maskPhone(user.phoneNumber) : null,
     };
   },
@@ -180,4 +198,68 @@ export const verifyPhoneCode = mutation({
     await grantSessionProof(ctx, { sessionId, userId, kind: "phone" });
     return { success: true as const };
   },
+});
+
+/**
+ * Nonce for the identity key to sign (single use, 5 minutes). The signature
+ * is checked in `session_proofs_node.proveVault`: ML-DSA lives in
+ * @keeplas/crypto, which only Node actions may import.
+ */
+export const startVaultProof = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const sessionId = await getAuthSessionId(ctx);
+    if (!sessionId) throw new Error("No active session.");
+    const old = await ctx.db
+      .query("session_vault_challenges")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .collect();
+    for (const row of old) await ctx.db.delete(row._id);
+    const nonce = crypto.randomUUID();
+    await ctx.db.insert("session_vault_challenges", {
+      sessionId,
+      userId,
+      nonce,
+      expiresAt: Date.now() + VAULT_CHALLENGE_TTL_MS,
+    });
+    return { nonce };
+  },
+});
+
+/**
+ * Spend this session's nonce for `session_proofs_node.proveVault` (single
+ * use, whatever the outcome) and return what the signature is checked
+ * against; null when there is nothing valid to check.
+ */
+export const takeVaultChallenge = internalMutation({
+  args: { sessionId: v.id("authSessions"), userId: v.id("users") },
+  handler: async (ctx, { sessionId, userId }) => {
+    const challenge = await ctx.db
+      .query("session_vault_challenges")
+      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+      .first();
+    if (!challenge) return null;
+    await ctx.db.delete(challenge._id);
+    const session = await ctx.db.get(sessionId);
+    const user = await ctx.db.get(userId);
+    if (
+      challenge.userId !== userId ||
+      challenge.expiresAt <= Date.now() ||
+      session?.userId !== userId ||
+      !user?.identityPublicKey
+    ) {
+      return null;
+    }
+    return {
+      identityPublicKey: user.identityPublicKey,
+      nonce: challenge.nonce,
+    };
+  },
+});
+
+/** A valid identity signature was checked: the session opened the vault. */
+export const grantVaultProof = internalMutation({
+  args: { sessionId: v.id("authSessions"), userId: v.id("users") },
+  handler: (ctx, args) => grantSessionProof(ctx, { ...args, kind: "vault" }),
 });

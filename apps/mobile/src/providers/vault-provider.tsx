@@ -27,8 +27,8 @@ interface VaultValue {
     prompt: string,
     pin?: string,
   ) => Promise<void>;
-  /** Keep a MasterKey obtained by creation or the recovery kit. */
-  adopt: (rawMasterKey: Uint8Array) => Promise<void>;
+  /** Keep a MasterKey obtained by creation or the recovery kit (wiped). */
+  adopt: (rawMasterKey: Uint8Array) => Promise<CryptoKey>;
   lock: () => void;
   exportRawMasterKey: () => Promise<Uint8Array>;
   /** The 24 words, in memory only while this phone is being set up. */
@@ -56,8 +56,10 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const adopt = useCallback(async (raw: Uint8Array) => {
-    setMasterKey(await importMasterKey(raw));
+    const key = await importMasterKey(raw);
+    setMasterKey(key);
     raw.fill(0);
+    return key;
   }, []);
 
   const unlock = useCallback(

@@ -20,6 +20,7 @@ import {
 import { ICON_PATHS } from "@/lib/icons";
 import { getErrorMessage } from "@/lib/utils";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useProveVault } from "@/lib/use-prove-vault";
 import { useResendCooldown } from "@/lib/use-resend-cooldown";
 import { useTranslations } from "@/lib/i18n";
 
@@ -53,6 +54,17 @@ export function PhoneVerificationDialog({
     api.phone_verification.requestVerification,
   );
   const verifyCode = useAuditedMutation(api.phone_verification.verifyCode);
+  const proofs = useQuery(api.session_proofs.getMine);
+  const proveVault = useProveVault();
+
+  // Replacing a verified number needs the session to have proved the old one
+  // or the vault; a linked browser holds the vault, so prove it silently.
+  async function requestCode(phoneNumber: string) {
+    if (status?.verifiedAt && !proofs?.phone && !proofs?.vault) {
+      await proveVault();
+    }
+    await requestVerification({ phoneNumber });
+  }
 
   const [step, setStep] = useState<Step>(initialPhone ? "phone" : "phone");
   const [phone, setPhone] = useState<string | undefined>(initialPhone);
@@ -94,7 +106,7 @@ export function PhoneVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await requestVerification({ phoneNumber: phone });
+      await requestCode(phone);
       cooldown.start();
       setStep("code");
     } catch (err) {
@@ -133,7 +145,7 @@ export function PhoneVerificationDialog({
     setBusy(true);
     setError(null);
     try {
-      await requestVerification({ phoneNumber: phone });
+      await requestCode(phone);
       cooldown.start();
       setCode("");
     } catch (err) {

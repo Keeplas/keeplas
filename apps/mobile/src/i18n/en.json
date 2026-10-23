@@ -475,7 +475,13 @@
     "body": "Open your authenticator app and type the 6-digit code for Keeplas.",
     "cta": "Confirm",
     "wrong": "That code didn't work. Check your authenticator app and try again.",
-    "tooMany": "Too many tries. Wait 15 minutes, then try again."
+    "tooMany": "Too many tries. Wait 15 minutes, then try again.",
+    "lost": "Lost your authenticator app?"
+  },
+  "totpRecovery": {
+    "title": "Lost your authenticator app?",
+    "body": "Open your vault on this phone and we'll turn off the authenticator code. You can set up a new one later in Settings.",
+    "cta": "Open with my 24 words"
   },
   "email": {
     "title": "Sign in with your email",

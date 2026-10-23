@@ -16,7 +16,7 @@ import {
 } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { activePushTokens } from "./devices";
-import { requirePhoneProof } from "./session_proofs";
+import { requireSessionProof } from "./session_proofs";
 
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3, D3, D4).
@@ -234,7 +234,7 @@ export const start = auditedMutation({
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     // Contacts open the vault: a passkey session alone must not ask them.
-    await requirePhoneProof(ctx);
+    await requireSessionProof(ctx, "phone");
     if (args.newDevicePublicKey.length !== ML_KEM_768_PUBLIC_KEY_LENGTH) {
       throw new ConvexError("Invalid device key");
     }
