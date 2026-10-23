@@ -1,15 +1,10 @@
-import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuthActions } from "@convex-dev/auth/react";
 
-import { Button } from "@/components/button";
-import { Text } from "@/components/text";
 import { CodeVerification } from "@/features/code-verification";
 import { accountLanguageTag } from "@/i18n/translate";
 import { attestationReference } from "@/lib/attestation";
-import { passkeyFailure } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
-import { usePasskeySignIn } from "@/lib/use-passkey-sign-in";
 import {
   AttestationFailed,
   useRequestPhoneCode,
@@ -54,44 +49,6 @@ export default function VerifyScreen() {
           });
         }
       }}
-      footer={intent === "signin" ? <PasskeySignIn /> : undefined}
     />
-  );
-}
-
-/** Sign-in only: a synced passkey instead of the WhatsApp code. */
-function PasskeySignIn() {
-  const { t } = useI18n();
-  const passkeySignIn = usePasskeySignIn();
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  // The stage gate moves on once the session opens.
-  async function signIn() {
-    setBusy(true);
-    setFailed(false);
-    try {
-      await passkeySignIn();
-    } catch (error) {
-      setFailed(passkeyFailure(error) !== null);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <>
-      <Button
-        variant="secondary"
-        label={t("verify.passkey")}
-        loading={busy}
-        onPress={signIn}
-      />
-      {failed ? (
-        <Text variant="body-sm" color="status.revoked" align="center">
-          {t("verify.passkeyFailed")}
-        </Text>
-      ) : null}
-    </>
   );
 }

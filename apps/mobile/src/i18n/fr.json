@@ -59,9 +59,7 @@
     "noCode": "Vous n'avez pas reçu le code ?",
     "resend": "Renvoyer le code",
     "resent": "Nous vous avons envoyé un nouveau code.",
-    "note": "WhatsApp sert uniquement aux notifications. Rien de votre coffre n'y est envoyé.",
-    "passkey": "Se connecter avec un passe-clé",
-    "passkeyFailed": "La connexion par passe-clé a échoué. Réessayez, ou saisissez le code."
+    "note": "WhatsApp sert uniquement aux notifications. Rien de votre coffre n'y est envoyé."
   },
   "codeErrors": {
     "wrongTitle": "Ce code n'est pas le bon",
@@ -268,7 +266,7 @@
     "q": {
       "newPhone": {
         "question": "Je change de téléphone",
-        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp, ou avec votre passe-clé. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
+        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
       },
       "platform": {
         "question": "Je passe d'Android à iPhone, ou l'inverse",
@@ -280,7 +278,7 @@
       },
       "lostNumber": {
         "question": "J'ai perdu mon numéro",
-        "answer": "Sur l'écran de connexion, touchez « Vous avez perdu votre numéro ? ». Avec vos 24 mots, vous le changez tout de suite. Sans eux, notre équipe vérifie votre demande et rien ne change pendant 72 heures. Vous pouvez aussi vous connecter avec votre passe-clé."
+        "answer": "Sur l'écran de connexion, touchez « Vous avez perdu votre numéro ? ». Avec vos 24 mots, vous le changez tout de suite. Sans eux, notre équipe vérifie votre demande et rien ne change pendant 72 heures."
       },
       "lostAuthenticator": {
         "question": "J'ai perdu mon application d'authentification",

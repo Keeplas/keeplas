@@ -65,9 +65,7 @@
     "noCode": "Didn't get the code?",
     "resend": "Resend code",
     "resent": "We sent you a new code.",
-    "note": "We only use WhatsApp for notifications. Nothing from your vault is sent there.",
-    "passkey": "Sign in with a passkey",
-    "passkeyFailed": "We couldn't sign you in with a passkey. Try again, or enter the code."
+    "note": "We only use WhatsApp for notifications. Nothing from your vault is sent there."
   },
   "codeErrors": {
     "wrongTitle": "That code isn't right",
@@ -276,7 +274,7 @@
     "q": {
       "newPhone": {
         "question": "I'm switching to a new phone",
-        "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code, or with your passkey. Tap \"Restore from iCloud\" (or Google): a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
+        "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code. Tap \"Restore from iCloud\" (or Google): a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
       },
       "platform": {
         "question": "I'm moving from Android to iPhone, or the reverse",
@@ -288,7 +286,7 @@
       },
       "lostNumber": {
         "question": "I lost my phone number",
-        "answer": "On the sign-in screen, tap \"Lost your number?\". With your 24 words, you change it right away. Without them, our team checks your request and nothing changes for 72 hours. You can also sign in with your passkey."
+        "answer": "On the sign-in screen, tap \"Lost your number?\". With your 24 words, you change it right away. Without them, our team checks your request and nothing changes for 72 hours."
       },
       "lostAuthenticator": {
         "question": "I lost my authenticator app",
