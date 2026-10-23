@@ -1,7 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="Keeplas">
-<path d="M24 3 6 9.5v12c0 11 7.6 19.6 18 23.5 10.4-3.9 18-12.5 18-23.5v-12z" fill="#FFFFFF"/>
-<path d="M24 8.6 10.6 13.4v8.2c0 8.6 5.7 15.5 13.4 18.8 7.7-3.3 13.4-10.2 13.4-18.8v-8.2z" fill="none" stroke="#0E2340" stroke-opacity=".35" stroke-width="1"/>
-<circle cx="24" cy="22" r="9" fill="none" stroke="#0E2340" stroke-width="1.6"/>
-<circle cx="24" cy="19.6" r="2.9" fill="#0E2340"/>
-<path d="M22.4 21.4h3.2l.9 7.1h-5z" fill="#0E2340"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 512 512" role="img" aria-label="Keeplas">
+<defs>
+<linearGradient id="kShield" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#041632"/><stop offset="1" stop-color="#1B2B48"/></linearGradient>
+<linearGradient id="kAccent" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9EAFF"/><stop offset="1" stop-color="#28657A"/></linearGradient>
+</defs>
+<path d="M256 28 L462 120 C462 120 472 320 256 484 C40 320 50 120 50 120 Z" fill="url(#kShield)" stroke="#C5D7E8" stroke-width="12" stroke-linejoin="round"/>
+<path d="M256 60 L432 140 C432 140 440 310 256 452 C72 310 80 140 80 140 Z" fill="none" stroke="#28657A" stroke-width="2" opacity=".3"/>
+<circle cx="256" cy="220" r="72" fill="none" stroke="url(#kAccent)" stroke-width="6"/>
+<path d="M256 190 C240 190 228 202 228 218 C228 230 236 240 248 244 L242 290 C242 294 245 298 250 298 L262 298 C267 298 270 294 270 290 L264 244 C276 240 284 230 284 218 C284 202 272 190 256 190Z" fill="url(#kAccent)"/>
+<path d="M148 180 C148 180 130 250 160 330" fill="none" stroke="#B9EAFF" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+<path d="M364 180 C364 180 382 250 352 330" fill="none" stroke="#B9EAFF" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+<rect x="248" y="100" width="16" height="16" rx="2" transform="rotate(45 256 108)" fill="#B9EAFF" opacity=".8"/>
 </svg>

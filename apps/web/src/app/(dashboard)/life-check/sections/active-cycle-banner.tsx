@@ -1,3 +1,6 @@
+import { Button } from "@keeplas/ui";
+import { IconTile, RowText } from "@/components/v2/surface";
+import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 
 interface ActiveCycleBannerProps {
@@ -6,40 +9,40 @@ interface ActiveCycleBannerProps {
   onPostpone: (duration: "48h" | "7d") => void;
 }
 
+/** A check-in is waiting for an answer: confirm now or postpone. */
 export function ActiveCycleBanner({
   status,
   onValidate,
   onPostpone,
 }: ActiveCycleBannerProps) {
-  const t = useTranslations("lifeCheck");
+  const t = useTranslations("lifeCheck.activeCycle");
   return (
-    <div className="mb-8 bg-primary-container text-on-primary-container rounded-sm p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-headline-sm text-on-primary mb-1">
-            {t("activeCycle.title")}
-          </h3>
-          <p className="text-body-md text-on-primary-container/90">
-            {status === "running"
-              ? t("activeCycle.runningDescription")
-              : t("activeCycle.escalatingDescription")}
-          </p>
-        </div>
-      </div>
-      <div className="flex gap-3 mt-5">
-        <button
-          onClick={onValidate}
-          className="bg-secondary-fixed text-on-secondary-fixed font-bold py-2.5 px-5 rounded-xs text-sm cursor-pointer hover:scale-[1.02] transition-transform"
-        >
-          {t("activeCycle.imWell")}
-        </button>
-        <button
+    <section className="flex flex-wrap items-center gap-[14px] rounded-[16px] bg-bg-pending p-[20px]">
+      <IconTile
+        icon={ICON_PATHS.bell}
+        className="bg-bg-surface text-text-pending"
+      />
+      <RowText
+        className="min-w-[240px]"
+        title={t("title")}
+        description={
+          status === "running"
+            ? t("runningDescription")
+            : t("escalatingDescription")
+        }
+      />
+      <div className="flex gap-[12px]">
+        <Button
+          variant="bordered"
+          size="regular"
           onClick={() => onPostpone("48h")}
-          className="bg-surface-container-lowest/10 text-on-primary border border-on-primary/20 font-bold py-2.5 px-5 rounded-xs text-sm cursor-pointer"
         >
-          {t("activeCycle.postpone48h")}
-        </button>
+          {t("postpone48h")}
+        </Button>
+        <Button variant="primary" size="regular" onClick={onValidate}>
+          {t("imWell")}
+        </Button>
       </div>
-    </div>
+    </section>
   );
 }

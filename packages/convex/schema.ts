@@ -853,6 +853,9 @@ export default defineSchema({
       v.literal("other"),
     ),
 
+    // Legacy: contacts used to be "trust" or "recipient_only". Every contact
+    // is now a trust contact; `migrations:migrateContactTypes` clears this
+    // field. Drop it once that migration has run on every deployment.
     contactType: v.optional(
       v.union(v.literal("trust"), v.literal("recipient_only")),
     ),

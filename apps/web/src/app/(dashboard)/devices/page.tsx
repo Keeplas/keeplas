@@ -16,6 +16,7 @@ import { useSessionId } from "@/lib/session";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { getErrorMessage } from "@/lib/utils";
+import { AuthenticatorCard } from "./authenticator-card";
 import { DeviceUnlockManager } from "./device-unlock-manager";
 import { DevicesView } from "./devices-view";
 
@@ -150,6 +151,7 @@ export default function DevicesPage() {
         onSeeAll={allActivity ? undefined : () => setAllActivity(true)}
       >
         <DeviceUnlockManager key={unlockVersion} onChange={refresh} />
+        <AuthenticatorCard />
       </DevicesView>
       {enrolling ? (
         <EnrollDeviceUnlockDialog

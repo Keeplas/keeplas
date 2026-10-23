@@ -55,3 +55,7 @@ The Convex backend sends through the Expo push service (`packages/convex/dispatc
 2. Play Console → Setup → API access: create a service account with release permissions, then add its key with `npx eas-cli credentials --platform android` (used by `eas submit`).
 3. Play Console → App integrity: copy the SHA-256 of the **app signing** key and the **upload** key into `ANDROID_SHA256_CERT_FINGERPRINTS` (web host, assetlinks.json), and add the matching `android:apk-key-hash:` origin to `WEBAUTHN_ORIGIN` (native passkeys).
 4. Link the Play Integrity API to the Google Cloud project (`EXPO_PUBLIC_GCP_PROJECT_NUMBER`, `GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT`).
+
+## App Store
+
+App Store Connect setup, TestFlight, updates and release: [`APP_STORE.md`](./APP_STORE.md).

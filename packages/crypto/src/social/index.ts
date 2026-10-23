@@ -16,7 +16,6 @@ import { signBytes, verifyBytes } from "../sig";
  */
 
 export const RECOVERY_THRESHOLD = 2;
-export const MAX_TRUST_CONTACTS = 3;
 const SECRET_BYTES = 32;
 const HKDF_INFO = "keeplas/social-envelope/v1";
 const APPROVAL_CONTEXT = "keeplas-recovery-approval-v1";
@@ -78,8 +77,8 @@ export interface SocialRecoverySetup {
 }
 
 /**
- * Owner device: (re)create the recovery material for `generation`. Needs 2
- * or 3 trust contacts whose keys were verified (TOFU pin) beforehand.
+ * Owner device: (re)create the recovery material for `generation`. Needs at
+ * least 2 trust contacts whose keys were verified (TOFU pin) beforehand.
  */
 export async function createSocialRecovery(args: {
   masterKey: Uint8Array;
@@ -88,9 +87,9 @@ export async function createSocialRecovery(args: {
   contacts: TrustContactKey[];
 }): Promise<SocialRecoverySetup> {
   const n = args.contacts.length;
-  if (n < RECOVERY_THRESHOLD || n > MAX_TRUST_CONTACTS) {
+  if (n < RECOVERY_THRESHOLD) {
     throw new Error(
-      `Social recovery needs ${RECOVERY_THRESHOLD} to ${MAX_TRUST_CONTACTS} trust contacts`,
+      `Social recovery needs at least ${RECOVERY_THRESHOLD} trust contacts`,
     );
   }
   const rs = crypto.getRandomValues(new Uint8Array(SECRET_BYTES));

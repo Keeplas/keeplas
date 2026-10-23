@@ -49,6 +49,12 @@ export default function LostNumber() {
         description={t("lostNumber.withSupportBody")}
         onPress={() => router.push("/lost-number/request")}
       />
+      <ListRow
+        icon="help"
+        title={t("help.title")}
+        description={t("help.rowBody")}
+        onPress={() => router.push("/help")}
+      />
       <Note icon="shield-check" text={t("lostNumber.note")} />
     </Screen>
   );

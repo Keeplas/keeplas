@@ -171,3 +171,46 @@ export const migrateTestCadence = internalMutation({
     return { scanned: configs.length, migrated: stale.length };
   },
 });
+
+/**
+ * One-shot migration that retires the trust / recipient-only split: every
+ * contact is now a trust contact. Clears `contactType` on every row and adds
+ * former recipient-only contacts to their owner's default group (trust
+ * contacts were auto-added at invite time; recipient-only ones were not).
+ *
+ * Widen → MIGRATE → narrow: run this while the schema still declares
+ * `contactType`, BEFORE pushing the schema that drops it. Idempotent:
+ *   npx convex run migrations:migrateContactTypes        # dev
+ *   npx convex run migrations:migrateContactTypes --prod # prod
+ */
+export const migrateContactTypes = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("trusted_contacts").collect();
+    let migrated = 0;
+    for (const row of rows) {
+      if (row.contactType === undefined) continue;
+      if (
+        row.contactType === "recipient_only" &&
+        row.invitationStatus !== "revoked"
+      ) {
+        const group = await ctx.db
+          .query("recipient_groups")
+          .withIndex("by_user_default", (q) =>
+            q.eq("userId", row.userId).eq("isDefault", true),
+          )
+          .first();
+        if (group && !group.memberContactIds.includes(row._id)) {
+          await ctx.db.patch(group._id, {
+            memberContactIds: [...group.memberContactIds, row._id],
+            updatedAt: Date.now(),
+          });
+        }
+      }
+      // Passing `undefined` removes the field from the document.
+      await ctx.db.patch(row._id, { contactType: undefined });
+      migrated++;
+    }
+    return { scanned: rows.length, migrated };
+  },
+});

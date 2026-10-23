@@ -4,6 +4,8 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
+  buttonVariants,
+  cn,
   HelpHint,
   Icon,
   InfoCallout,
@@ -13,6 +15,8 @@ import {
   TabsList,
   TabsTrigger,
 } from "@keeplas/ui";
+import { ShellPage } from "@/components/shell/shell-page";
+import { IconTile, Panel, RowText } from "@/components/v2/surface";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { ContactCard } from "./contact-card";
@@ -24,22 +28,79 @@ import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./contact-display";
 
-const MAX_TRUST_CONTACTS = 5;
-
 const GUARDIAN_ROLES = [
-  {
-    icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    key: "noVaultAccess",
-  },
-  {
-    icon: "M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z",
-    key: "confirmsUnreachable",
-  },
-  {
-    icon: "M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z",
-    key: "releasesVault",
-  },
-];
+  { icon: ICON_PATHS.shieldCheck, key: "noVaultAccess" },
+  { icon: ICON_PATHS.user, key: "confirmsUnreachable" },
+  { icon: ICON_PATHS.send, key: "releasesVault" },
+] as const;
+
+const GROUP_STEPS = ["step1", "step2", "step3"] as const;
+
+const NETWORK_DOT = {
+  unprotected: "bg-action-danger",
+  atRisk: "bg-status-pending",
+  quorumMet: "bg-status-active",
+  resilient: "bg-status-active",
+} as const;
+
+// The legacy Tabs primitive restyled as the v2 segmented control.
+const TABS_LIST =
+  "gap-[4px] rounded-md border border-border-default bg-bg-surface p-[4px] text-text-muted";
+const TAB_TRIGGER =
+  "gap-[6px] rounded-sm px-[16px] py-[8px] text-label font-semibold hover:text-text-primary focus-visible:ring-border-focus data-[state=active]:bg-action-primary data-[state=active]:text-text-inverse data-[state=active]:shadow-none";
+const TAB_CONTENT = "focus-visible:ring-border-focus";
+
+// Main column, then the 380 px side column (W04 frames).
+const COLUMNS =
+  "grid items-start gap-[20px] lg:grid-cols-[minmax(0,1fr)_380px]";
+
+/** Dashed "add" tile closing a grid of cards. */
+function AddTile({
+  title,
+  hint,
+  onClick,
+}: {
+  title: string;
+  hint?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[132px] w-full flex-col items-center justify-center gap-[8px] rounded-md border-[1.5px] border-dashed border-border-strong p-[20px] text-center transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+    >
+      <IconTile
+        icon={ICON_PATHS.plus}
+        size={40}
+        className="bg-bg-accent text-text-accent"
+      />
+      <span className="text-label text-text-primary">{title}</span>
+      {hint ? (
+        <span className="max-w-md text-body-sm text-text-muted">{hint}</span>
+      ) : null}
+    </button>
+  );
+}
+
+/** Section title with its count and help hint. */
+function SectionTitle({
+  title,
+  count,
+  help,
+}: {
+  title: string;
+  count: string;
+  help: string;
+}) {
+  return (
+    <h2 className="flex items-center gap-[6px] text-h3 text-text-primary">
+      {title}
+      <span className="text-body-sm text-text-muted">({count})</span>
+      <HelpHint content={help} />
+    </h2>
+  );
+}
 
 export default function TrustedContactsPage() {
   const t = useTranslations("trustedContacts");
@@ -47,9 +108,6 @@ export default function TrustedContactsPage() {
   const groups = useQuery(api.recipient_groups.listGroups);
   const ensureDefaults = useMutation(api.onboarding.ensureDefaults);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
-    "trust",
-  );
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [selectedContact, setSelectedContact] =
     useState<Doc<"trusted_contacts"> | null>(null);
@@ -67,9 +125,7 @@ export default function TrustedContactsPage() {
     if (!groups || !contacts) return;
     const defaultGroup = groups.find((g) => g.isDefault);
     const hasTrustContacts = contacts.some(
-      (c) =>
-        (c.contactType ?? "trust") === "trust" &&
-        c.invitationStatus !== "revoked",
+      (c) => c.invitationStatus !== "revoked",
     );
     const needsSeed = !defaultGroup;
     const needsTopUp =
@@ -81,8 +137,7 @@ export default function TrustedContactsPage() {
     }
   }, [groups, contacts, ensureDefaults]);
 
-  function openInvite(type: "trust" | "recipient_only") {
-    setInviteType(type);
+  function openInvite() {
     setShowInviteDialog(true);
   }
 
@@ -95,16 +150,9 @@ export default function TrustedContactsPage() {
     return <Loader size="md" />;
   }
 
-  const activeContacts = contacts.filter(
+  const trustContacts = contacts.filter(
     (c) => c.invitationStatus !== "revoked",
   );
-  const trustContacts = activeContacts.filter(
-    (c) => (c.contactType ?? "trust") === "trust",
-  );
-  const recipientContacts = activeContacts.filter(
-    (c) => c.contactType === "recipient_only",
-  );
-  const canInviteTrust = trustContacts.length < MAX_TRUST_CONTACTS;
   const acceptedTrustContacts = trustContacts.filter(
     (c) => c.invitationStatus === "accepted",
   );
@@ -114,14 +162,7 @@ export default function TrustedContactsPage() {
   // Quorum = trust contacts needed to confirm the owner is unreachable.
   const threshold = MIN_TRUST_CONTACTS_FOR_RECOVERY;
   const acceptedCount = acceptedTrustContacts.length;
-  const quorumPct = Math.min(
-    100,
-    (Math.min(acceptedCount, threshold) / MAX_TRUST_CONTACTS) * 100,
-  );
-  const bufferPct = Math.max(
-    0,
-    ((acceptedCount - threshold) / MAX_TRUST_CONTACTS) * 100,
-  );
+  const quorumPct = (Math.min(acceptedCount, threshold) / threshold) * 100;
   const networkState: "unprotected" | "atRisk" | "quorumMet" | "resilient" =
     acceptedCount === 0
       ? "unprotected"
@@ -132,123 +173,130 @@ export default function TrustedContactsPage() {
           : "resilient";
 
   return (
-    <div className="max-w-screen-2xl mx-auto">
-      <header className="mb-8 max-w-3xl">
-        <h1 className="text-headline-lg text-primary mb-4">
-          {t("header.titleLine1")}
-          <br />
-          <span className="text-secondary">{t("header.titleLine2")}</span>
-        </h1>
-        <p className="text-body-lg text-on-surface-variant">
-          {t("header.subtitle")}
-        </p>
+    <ShellPage
+      title={t("header.title")}
+      subtitle={t("header.subtitle")}
+      actions={
         <Link
           href="/docs/trusted-contacts"
-          className="inline-flex items-center gap-2 text-secondary font-bold text-body-md hover:underline mt-3"
+          className={buttonVariants({ variant: "bordered", size: "regular" })}
         >
+          <Icon path={ICON_PATHS.help} className="size-[18px]" />
           {t("header.howItWorks")}
-          <Icon path={ICON_PATHS.chevronRight} className="w-3 h-3" />
         </Link>
-        <InfoCallout
-          icon={ICON_PATHS.medicalInformation}
-          tone="info"
-          className="mt-6"
-        >
+      }
+    >
+      <InfoCallout icon={ICON_PATHS.activity}>
+        <p>
           {t("header.medicalIdCallout")}{" "}
           <Link
             href="/docs/emergency-info"
-            className="font-bold text-secondary hover:underline"
+            className="rounded-xs font-semibold text-text-link hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
           >
             {t("header.learnHow")}
           </Link>
-        </InfoCallout>
-      </header>
+        </p>
+      </InfoCallout>
 
-      <Tabs defaultValue="contacts" className="space-y-8">
-        <TabsList>
-          <TabsTrigger value="contacts">
+      <Tabs defaultValue="contacts" className="flex flex-col gap-[20px]">
+        <TabsList className={cn(TABS_LIST, "self-start")}>
+          <TabsTrigger value="contacts" className={TAB_TRIGGER}>
             {t("tabs.contacts")}
-            <span className="text-label-md opacity-70">
-              ({activeContacts.length})
+            <span className="text-caption opacity-70">
+              ({trustContacts.length})
             </span>
           </TabsTrigger>
-          <TabsTrigger value="groups">
+          <TabsTrigger value="groups" className={TAB_TRIGGER}>
             {t("tabs.releaseGroups")}
-            <span className="text-label-md opacity-70">({groups.length})</span>
+            <span className="text-caption opacity-70">({groups.length})</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="contacts">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <aside className="lg:col-span-4 space-y-6">
-              <section className="bg-surface-container-low p-6 rounded-sm">
-                <h3 className="text-headline-sm text-primary mb-5">
-                  {t("guardians.heading")}
-                </h3>
-                <div className="space-y-6">
-                  {GUARDIAN_ROLES.map((role) => (
-                    <div key={role.key} className="flex gap-4">
-                      <div className="w-10 h-10 rounded-xs bg-primary-container flex items-center justify-center shrink-0">
-                        <svg
-                          className="w-5 h-5 text-secondary-fixed"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d={role.icon}
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-label-md text-primary mb-1">
-                          {t(`guardians.roles.${role.key}.title`)}
-                        </p>
-                        <p className="text-body-md text-on-surface-variant">
-                          {t(`guardians.roles.${role.key}.description`)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        <TabsContent
+          value="contacts"
+          className={cn(TAB_CONTENT, "flex flex-col gap-[32px]")}
+        >
+          <div className={COLUMNS}>
+            <div className="flex flex-col gap-[20px]">
+              {acceptedCount > 0 &&
+                acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
+                  <InfoCallout icon={ICON_PATHS.alertTriangle} tone="warning">
+                    <p className="text-label text-text-primary">
+                      {t("oneGuardianWarning.title")}
+                    </p>
+                    <p>
+                      {t("oneGuardianWarning.body", {
+                        name: acceptedTrustContacts[0].name,
+                      })}
+                    </p>
+                  </InfoCallout>
+                )}
 
-              <section className="bg-primary-container p-6 rounded-sm text-on-primary-container relative overflow-hidden">
-                <svg
-                  className="absolute top-3 right-3 w-16 h-16 opacity-10 text-on-primary"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Z" />
-                </svg>
-
-                <p className="text-label-md uppercase tracking-wider text-on-primary-container/70 mb-2 inline-flex items-center gap-1.5">
-                  {t("recoveryNetwork.title")}
-                  <HelpHint
-                    content={t("recoveryNetwork.help", { threshold })}
+              {trustContacts.length === 0 ? (
+                <Panel className="flex justify-center">
+                  <NoContactsMessage onAdd={openInvite} />
+                </Panel>
+              ) : (
+                <section className="flex flex-col gap-[12px]">
+                  <SectionTitle
+                    title={t("trustContacts.heading")}
+                    count={`${trustContacts.length}`}
+                    help={t("trustContacts.help")}
                   />
-                </p>
+                  <div className="grid gap-[12px] md:grid-cols-2">
+                    {trustContacts.map((contact) => (
+                      <ContactCard
+                        key={contact._id}
+                        contact={contact}
+                        onSelect={openContact}
+                      />
+                    ))}
+                    <AddTile
+                      title={t("trustContacts.inviteNext")}
+                      onClick={openInvite}
+                    />
+                  </div>
+                </section>
+              )}
+            </div>
 
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-[2.75rem] font-bold leading-none text-on-primary">
+            <aside className="flex flex-col gap-[20px]">
+              <Panel className="flex flex-col gap-[16px] p-[20px]">
+                <div className="flex items-center gap-[12px]">
+                  <IconTile
+                    icon={ICON_PATHS.people}
+                    size={48}
+                    className="bg-bg-info text-text-link"
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+                    <h2 className="flex items-center gap-[6px] text-h3 text-text-primary">
+                      {t("recoveryNetwork.title")}
+                      <HelpHint
+                        content={t("recoveryNetwork.help", { threshold })}
+                      />
+                    </h2>
+                    <p className="text-body-sm text-text-muted">
+                      {t("recoveryNetwork.stepLabel")}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="flex items-baseline gap-[8px]">
+                  <span className="text-display text-text-primary">
                     {acceptedCount}
                   </span>
-                  <span className="text-headline-sm text-on-primary-container/70">
-                    / {threshold}
+                  <span className="text-body-lg text-text-muted">
+                    / {threshold} {t("recoveryNetwork.quorum")}
                   </span>
-                  <span className="text-label-md text-on-primary-container/60 ml-1">
-                    {t("recoveryNetwork.quorum")}
-                  </span>
-                </div>
-
-                <p className="text-label-md text-on-primary-container/60 mb-3">
-                  {t("recoveryNetwork.stepLabel")}
                 </p>
 
-                <p className="text-label-md font-bold text-on-primary mb-4">
+                <p className="flex items-center gap-[8px] text-label text-text-primary">
+                  <span
+                    className={cn(
+                      "size-[8px] shrink-0 rounded-full",
+                      NETWORK_DOT[networkState],
+                    )}
+                  />
                   {networkState === "unprotected" &&
                     t("recoveryNetwork.state.unprotected")}
                   {networkState === "atRisk" &&
@@ -267,254 +315,104 @@ export default function TrustedContactsPage() {
                         }))}
                 </p>
 
-                <div className="h-1.5 w-full bg-primary rounded-sm overflow-hidden flex mb-4">
+                <div className="flex h-[8px] w-full overflow-hidden rounded-full bg-progress-track">
                   <div
-                    className="h-full bg-secondary-fixed transition-all"
+                    className="h-full bg-progress-fill transition-all"
                     style={{ width: `${quorumPct}%` }}
                   />
-                  <div
-                    className="h-full bg-secondary-fixed/30 transition-all"
-                    style={{ width: `${bufferPct}%` }}
-                  />
                 </div>
 
-                <ul className="space-y-1 text-label-md text-on-primary-container/80">
-                  <li className="flex justify-between">
-                    <span>{t("recoveryNetwork.accepted")}</span>
-                    <span className="font-bold text-on-primary">
+                <dl className="flex flex-col gap-[8px] text-body-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-text-muted">
+                      {t("recoveryNetwork.accepted")}
+                    </dt>
+                    <dd className="font-semibold text-text-primary">
                       {acceptedCount}
-                    </span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>{t("recoveryNetwork.pendingInvites")}</span>
-                    <span className="font-bold text-on-primary">
-                      {pendingTrustCount}
-                    </span>
-                  </li>
-                  <li className="flex justify-between pt-1 border-t border-on-primary/10 mt-1">
-                    <span className="text-on-primary-container/60">
-                      {t("recoveryNetwork.maxGuardians")}
-                    </span>
-                    <span className="text-on-primary-container/60">
-                      {MAX_TRUST_CONTACTS}
-                    </span>
-                  </li>
-                </ul>
-              </section>
-            </aside>
-
-            <div className="lg:col-span-8 space-y-6">
-              {acceptedCount > 0 &&
-                acceptedCount < MIN_TRUST_CONTACTS_FOR_RECOVERY && (
-                  <div className="p-4 bg-error-container/30 rounded-xs">
-                    <p className="text-label-md uppercase tracking-wider text-error mb-1">
-                      {t("oneGuardianWarning.title")}
-                    </p>
-                    <p className="text-body-md text-on-surface font-medium">
-                      {t("oneGuardianWarning.body", {
-                        name: acceptedTrustContacts[0].name,
-                      })}
-                    </p>
+                    </dd>
                   </div>
-                )}
+                  <div className="flex justify-between">
+                    <dt className="text-text-muted">
+                      {t("recoveryNetwork.pendingInvites")}
+                    </dt>
+                    <dd className="font-semibold text-text-primary">
+                      {pendingTrustCount}
+                    </dd>
+                  </div>
+                </dl>
+              </Panel>
 
-              {activeContacts.length === 0 ? (
-                <div className="flex justify-center rounded-[16px] border border-border-default bg-bg-surface">
-                  <NoContactsMessage onAdd={() => openInvite("trust")} />
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <section>
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
-                        {t("trustContacts.heading")}
-                        <span className="text-label-md text-on-surface-variant ml-2">
-                          ({trustContacts.length}/{MAX_TRUST_CONTACTS})
-                        </span>
-                        <HelpHint content={t("trustContacts.help")} />
-                      </h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {trustContacts.map((contact) => (
-                        <ContactCard
-                          key={contact._id}
-                          contact={contact}
-                          onSelect={openContact}
-                        />
-                      ))}
-                      {canInviteTrust && (
-                        <button
-                          onClick={() => openInvite("trust")}
-                          className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
-                        >
-                          <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <svg
-                              className="w-6 h-6 text-secondary"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                              />
-                            </svg>
-                          </div>
-                          <p className="text-headline-sm text-primary">
-                            {t("trustContacts.inviteNext")}
-                          </p>
-                          <p className="text-label-md text-on-surface-variant mt-1">
-                            {t("trustContacts.slotsRemaining", {
-                              count: MAX_TRUST_CONTACTS - trustContacts.length,
-                            })}
-                          </p>
-                        </button>
-                      )}
-                    </div>
-                  </section>
-
-                  {(recipientContacts.length > 0 ||
-                    trustContacts.length >= MAX_TRUST_CONTACTS) && (
-                    <section>
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-headline-sm text-primary flex items-center gap-1.5">
-                          {t("recipientsOnly.heading")}
-                          <span className="text-label-md text-on-surface-variant ml-2">
-                            ({recipientContacts.length})
-                          </span>
-                          <HelpHint content={t("recipientsOnly.help")} />
-                        </h2>
-                      </div>
-                      {recipientContacts.length === 0 ? (
-                        <button
-                          onClick={() => openInvite("recipient_only")}
-                          className="w-full border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
-                        >
-                          <p className="text-headline-sm text-primary">
-                            {t("recipientsOnly.addTitle")}
-                          </p>
-                          <p className="text-label-md text-on-surface-variant mt-1 text-center max-w-md">
-                            {t("recipientsOnly.addDescription")}
-                          </p>
-                        </button>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {recipientContacts.map((contact) => (
-                            <ContactCard
-                              key={contact._id}
-                              contact={contact}
-                              onSelect={openContact}
-                            />
-                          ))}
-                          <button
-                            onClick={() => openInvite("recipient_only")}
-                            className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
-                          >
-                            <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                              <svg
-                                className="w-6 h-6 text-secondary"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={1.5}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 4.5v15m7.5-7.5h-15"
-                                />
-                              </svg>
-                            </div>
-                            <p className="text-headline-sm text-primary">
-                              {t("recipientsOnly.addButton")}
-                            </p>
-                          </button>
-                        </div>
-                      )}
-                    </section>
-                  )}
-                </div>
-              )}
-            </div>
+              <Panel className="flex flex-col gap-[16px] p-[20px]">
+                <h2 className="text-h3 text-text-primary">
+                  {t("guardians.heading")}
+                </h2>
+                {GUARDIAN_ROLES.map((role) => (
+                  <div key={role.key} className="flex items-start gap-[12px]">
+                    <IconTile
+                      icon={role.icon}
+                      size={40}
+                      className="bg-bg-info text-text-link"
+                    />
+                    <RowText
+                      title={t(`guardians.roles.${role.key}.title`)}
+                      description={t(`guardians.roles.${role.key}.description`)}
+                    />
+                  </div>
+                ))}
+              </Panel>
+            </aside>
           </div>
 
-          <div className="mt-12">
-            <AccessRequestsSection />
-          </div>
+          <AccessRequestsSection />
         </TabsContent>
 
-        <TabsContent value="groups">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <aside className="lg:col-span-4 space-y-6">
-              <section className="bg-surface-container-low p-6 rounded-sm">
-                <h3 className="text-headline-sm text-primary mb-3">
-                  {t("howGroups.heading")}
-                </h3>
-                <p className="text-body-md text-on-surface-variant mb-4">
-                  {t("howGroups.intro")}
-                </p>
-                <ul className="space-y-3 text-body-md text-on-surface-variant">
-                  <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
-                      1
-                    </span>
-                    <span>{t("howGroups.step1")}</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
-                      2
-                    </span>
-                    <span>{t("howGroups.step2")}</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="w-6 h-6 rounded-sm bg-secondary/15 text-secondary flex items-center justify-center text-label-md font-bold shrink-0">
-                      3
-                    </span>
-                    <span>{t("howGroups.step3")}</span>
-                  </li>
-                </ul>
-              </section>
-            </aside>
-            <div className="lg:col-span-8 space-y-6">
-              {groups.length === 0 ? (
-                // Transient state for existing users while the self-heal
-                // mutation seeds their default group — the live query flips
-                // to non-empty within a tick.
-                <div className="flex items-center justify-center p-12 rounded-sm bg-surface-container-low/40">
-                  <Loader size="sm" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {groups.map((group) => (
-                    <RecipientGroupCard
-                      key={group._id}
-                      group={group}
-                      contacts={contacts}
-                    />
-                  ))}
-                  <button
-                    onClick={() => setShowCreateGroup(true)}
-                    className="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-8 rounded-sm hover:bg-surface-container-low transition-colors cursor-pointer group"
+        <TabsContent value="groups" className={TAB_CONTENT}>
+          <div className={COLUMNS}>
+            {groups.length === 0 ? (
+              // Transient state for existing users while the self-heal
+              // mutation seeds their default group — the live query flips
+              // to non-empty within a tick.
+              <Panel className="flex items-center justify-center p-[48px]">
+                <Loader size="sm" />
+              </Panel>
+            ) : (
+              <div className="grid gap-[12px] md:grid-cols-2">
+                {groups.map((group) => (
+                  <RecipientGroupCard
+                    key={group._id}
+                    group={group}
+                    contacts={contacts}
+                  />
+                ))}
+                <AddTile
+                  title={t("groups.newGroup")}
+                  hint={t("groups.newGroupHint")}
+                  onClick={() => setShowCreateGroup(true)}
+                />
+              </div>
+            )}
+
+            <Panel className="flex flex-col gap-[12px] p-[20px]">
+              <h2 className="text-h3 text-text-primary">
+                {t("howGroups.heading")}
+              </h2>
+              <p className="text-body-sm text-text-muted">
+                {t("howGroups.intro")}
+              </p>
+              <ol className="flex flex-col gap-[12px]">
+                {GROUP_STEPS.map((step, index) => (
+                  <li
+                    key={step}
+                    className="flex items-start gap-[12px] text-body-sm text-text-body"
                   >
-                    <div className="w-14 h-14 rounded-sm bg-surface-container flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                      <Icon
-                        path={ICON_PATHS.plus}
-                        className="w-6 h-6 text-secondary"
-                        strokeWidth={1.5}
-                      />
-                    </div>
-                    <p className="text-headline-sm text-primary">
-                      {t("groups.newGroup")}
-                    </p>
-                    <p className="text-label-md text-on-surface-variant mt-1">
-                      {t("groups.newGroupHint")}
-                    </p>
-                  </button>
-                </div>
-              )}
-            </div>
+                    <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full bg-bg-info text-caption text-text-link">
+                      {index + 1}
+                    </span>
+                    <span className="pt-[3px]">{t(`howGroups.${step}`)}</span>
+                  </li>
+                ))}
+              </ol>
+            </Panel>
           </div>
         </TabsContent>
       </Tabs>
@@ -522,7 +420,6 @@ export default function TrustedContactsPage() {
       <InviteContactDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
-        initialContactType={inviteType}
       />
       <CreateGroupDialog
         open={showCreateGroup}
@@ -534,6 +431,6 @@ export default function TrustedContactsPage() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
-    </div>
+    </ShellPage>
   );
 }

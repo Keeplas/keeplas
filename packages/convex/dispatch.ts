@@ -320,34 +320,6 @@ export const sendInvitationWhatsApp = internalAction({
 });
 
 /**
- * WhatsApp courtesy intro to a recipient-only contact who provided a phone
- * number. Utility template `keeplas_invite_recipient_only_en`: body
- * placeholder = inviter name; static "Discover Keeplas" URL button
- * (no parameter). No-op when Infobip is not configured.
- */
-export const sendRecipientInvitationWhatsApp = internalAction({
-  args: {
-    phoneNumber: v.string(),
-    inviterName: v.string(),
-    language: v.optional(v.string()),
-  },
-  handler: async (_ctx, args) => {
-    if (isNotificationsPaused()) return "paused";
-    const locale = resolveLocale(args.language);
-    return sendWhatsAppTemplate({
-      to: args.phoneNumber,
-      templateName: localizedTemplateName(
-        process.env.WHATSAPP_TC_RECIPIENT_INVITE_TEMPLATE_NAME,
-        "keeplas_invite_recipient_only",
-        locale,
-      ),
-      language: locale,
-      placeholders: [args.inviterName],
-    });
-  },
-});
-
-/**
  * WhatsApp availability re-confirmation nudge to a trusted contact whose
  * availability check is stale/missing. Utility template
  * `keeplas_tc_reconfirm_en` (`_fr` variant auto-selected by locale): body

@@ -117,9 +117,6 @@ export const markUserUnreachable = auditedMutation({
         "Contact must be accepted to confirm unreachability",
       );
     }
-    if ((contact.contactType ?? "trust") !== "trust") {
-      throw new ConvexError("Only trust contacts can confirm unreachability");
-    }
 
     // Gate: contacts may only confirm once the owner's Life Check has escalated
     // to the confirmation stage (it went unanswered through every check-in).

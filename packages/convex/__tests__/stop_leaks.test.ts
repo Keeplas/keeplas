@@ -46,7 +46,6 @@ describe("F2 — the MasterKey is never split", () => {
     );
 
     const row = await t.run((ctx) => ctx.db.get(contactId));
-    expect(row?.contactType ?? "trust").toBe("trust");
     for (const field of ["shardIndex", "encryptedShard", "shardConfirmed"]) {
       expect(row).not.toHaveProperty(field);
     }
@@ -63,7 +62,6 @@ describe("F2 — the MasterKey is never split", () => {
           userId: owner,
           name: "Legacy",
           role: "family",
-          contactType: "trust",
           invitationStatus: "accepted",
           invitationToken: "tok-legacy",
           invitedAt: now,

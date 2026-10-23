@@ -2,7 +2,8 @@ import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { cn, Icon } from "@keeplas/ui";
+import { Button, cn, Icon } from "@keeplas/ui";
+import { IconTile, Panel, StatusChip } from "@/components/v2/surface";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { EditGroupDialog } from "./edit-group-dialog";
@@ -56,115 +57,126 @@ export function RecipientGroupCard({
   }
 
   return (
-    <div
+    <Panel
       className={cn(
-        "bg-surface-container-low p-6 rounded-sm group hover:bg-surface-container transition-all",
-        group.isDefault && "ring-1 ring-secondary/40",
+        "flex flex-col gap-[12px] p-[20px]",
+        group.isDefault && "border-border-strong",
       )}
     >
-      <div className="flex items-start justify-between mb-5">
-        <div
-          className="w-12 h-12 rounded-sm flex items-center justify-center text-on-secondary shrink-0"
-          style={{ backgroundColor: group.color ?? "var(--color-secondary)" }}
+      <div className="flex items-start justify-between gap-[12px]">
+        {/* Custom group colors are user data, hence the inline style. */}
+        <span
+          className="flex shrink-0 rounded-full bg-bg-info text-text-link"
+          style={group.color ? { backgroundColor: group.color } : undefined}
         >
-          <Icon path={ICON_PATHS.users} className="w-6 h-6" strokeWidth={1.5} />
-        </div>
+          <IconTile icon={ICON_PATHS.people} />
+        </span>
         {group.isDefault && (
-          <span className="px-3 py-1 text-label-md rounded-sm bg-secondary-container text-on-secondary-container">
-            {t("groupCard.default")}
-          </span>
+          <StatusChip
+            tone="neutral"
+            label={t("groupCard.default")}
+            dotClassName="bg-progress-fill"
+          />
         )}
       </div>
 
-      <h3 className="text-headline-sm text-primary">{group.name}</h3>
-      {group.description && (
-        <p className="text-body-md text-on-surface-variant mt-1">
-          {group.description}
-        </p>
-      )}
+      <div className="flex flex-col gap-[4px]">
+        <h3 className="text-h3 text-text-primary">{group.name}</h3>
+        {group.description && (
+          <p className="text-body-sm text-text-muted">{group.description}</p>
+        )}
+      </div>
 
-      <p className="text-label-md text-on-surface-variant mt-4 mb-3">
+      <p className="text-body-sm text-text-muted">
         {memberContacts.length === 1
           ? t("groupCard.memberCountOne", { count: memberContacts.length })
           : t("groupCard.memberCountMany", { count: memberContacts.length })}
       </p>
 
-      <div className="flex flex-wrap gap-1.5 mb-6 min-h-[28px]">
+      <div className="flex min-h-[26px] flex-wrap gap-[6px]">
         {memberContacts.length === 0 ? (
-          <span className="text-label-md text-on-surface-variant/60 italic">
+          <span className="text-body-sm italic text-text-subtle">
             {t("groupCard.noMembers")}
           </span>
         ) : (
-          memberContacts.slice(0, 5).map((c) => (
-            <span
-              key={c._id}
-              className="text-label-md px-2.5 py-1 rounded-xs bg-surface-container text-on-surface-variant"
-            >
-              {c.name}
-            </span>
-          ))
+          memberContacts
+            .slice(0, 5)
+            .map((c) => (
+              <StatusChip key={c._id} tone="neutral" label={c.name} />
+            ))
         )}
         {memberContacts.length > 5 && (
-          <span className="text-label-md px-2.5 py-1 rounded-xs bg-surface-container text-on-surface-variant">
-            +{memberContacts.length - 5}
-          </span>
+          <StatusChip tone="neutral" label={`+${memberContacts.length - 5}`} />
         )}
       </div>
 
-      <div className="flex justify-between items-center pt-5 border-t border-outline-variant/15">
-        <button
+      <div className="flex items-center justify-between border-t border-border-default pt-[12px]">
+        <Button
+          variant="link"
+          size="compact"
           onClick={() => setShowEdit(true)}
-          className="text-body-md font-bold text-secondary hover:underline cursor-pointer"
+          className="px-0"
         >
           {t("groupCard.manageMembers")}
-        </button>
+        </Button>
         {!group.isDefault && (
-          <button
+          <Button
+            variant="plain"
+            size="compact"
             onClick={() => setShowActions(!showActions)}
-            className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
+            className="w-[36px] px-0 text-text-muted"
             aria-label={t("groupCard.more")}
+            aria-expanded={showActions}
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
+            <Icon
+              path={ICON_PATHS.more}
+              strokeWidth={2.6}
+              className="size-[20px]"
+            />
+          </Button>
         )}
       </div>
 
       {showActions && !group.isDefault && (
-        <div className="mt-4 space-y-2 pt-4 border-t border-outline-variant/15">
-          <button
+        <div className="flex flex-col gap-[8px] border-t border-border-default pt-[12px]">
+          <Button
+            variant="bordered"
+            size="compact"
             onClick={handleSetDefault}
             disabled={busy}
-            className="w-full text-left text-sm px-3 py-2 rounded-xs hover:bg-surface-container-high transition-colors cursor-pointer text-on-surface disabled:opacity-60"
+            className="justify-start"
           >
             {t("groupCard.setDefault")}
-          </button>
+          </Button>
           {confirmDelete ? (
-            <div className="flex gap-2">
-              <button
+            <div className="flex gap-[8px]">
+              <Button
+                variant="danger"
+                size="compact"
                 onClick={handleDelete}
                 disabled={busy}
-                className="flex-1 text-sm px-3 py-2 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                className="flex-1"
               >
                 {busy ? t("groupCard.deleting") : t("groupCard.confirmDelete")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="plain"
+                size="compact"
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 text-sm px-3 py-2 rounded-xs bg-surface-container-high text-on-surface cursor-pointer"
+                className="flex-1"
               >
                 {t("groupCard.cancel")}
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
+            <Button
+              variant="danger"
+              size="compact"
               onClick={handleDelete}
-              className="w-full text-left text-sm px-3 py-2 rounded-xs hover:bg-error/10 transition-colors cursor-pointer text-error"
+              className="justify-start"
             >
               {t("groupCard.deleteGroup")}
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -175,6 +187,6 @@ export function RecipientGroupCard({
         group={group}
         contacts={contacts}
       />
-    </div>
+    </Panel>
   );
 }

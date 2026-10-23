@@ -38,7 +38,7 @@ export function HelpHint({
         aria-label={label}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative inline-flex items-center justify-center text-outline-variant hover:text-secondary transition-colors cursor-pointer align-middle bg-transparent p-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40 rounded-sm",
+          "relative inline-flex items-center justify-center text-icon-subtle hover:text-text-link transition-colors cursor-pointer align-middle bg-transparent p-0 border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus rounded-sm",
           // Touch target ≥44px without affecting inline layout
           "before:content-[''] before:absolute before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-11 before:h-11 before:rounded-sm",
           className,
@@ -50,7 +50,7 @@ export function HelpHint({
         side={side}
         align="center"
         sideOffset={6}
-        className="max-w-xs p-3 text-xs leading-relaxed bg-surface text-on-surface shadow-lg border border-outline-variant/40"
+        className="max-w-xs rounded-sm border border-border-default bg-bg-surface p-[12px] text-body-sm text-text-body shadow-menu"
         onClick={(e) => e.stopPropagation()}
       >
         {content}

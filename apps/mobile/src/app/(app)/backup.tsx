@@ -27,6 +27,7 @@ export default function CloudBackup() {
   const seal = useSealCloudBackup();
   const disable = useAuditedMutation(api.cloud_backup.disable);
   const [busy, setBusy] = useState(false);
+  const account = CloudKey.provider === "icloud" ? "Apple" : "Google";
 
   async function enable() {
     setBusy(true);
@@ -80,11 +81,15 @@ export default function CloudBackup() {
         tone={status?.enabled ? "success" : "neutral"}
       />
       <Text variant="h1">{t("backup.title")}</Text>
-      <Text color="text.muted">{t("backup.body")}</Text>
+      <Text color="text.muted">
+        {t("backup.body", {
+          account,
+        })}
+      </Text>
       <Callout
         icon="shield-check"
         text={t("backup.protected", {
-          account: CloudKey.provider === "icloud" ? "Apple" : "Google",
+          account,
         })}
       />
     </Screen>

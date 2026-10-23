@@ -935,7 +935,6 @@ export const enterConfirmationStage = internalMutation({
       .collect();
 
     for (const contact of contacts) {
-      if ((contact.contactType ?? "trust") !== "trust") continue;
       if (!contact.contactUserId) continue;
       await createNotification(ctx, {
         userId: contact.contactUserId,

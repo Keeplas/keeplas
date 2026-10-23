@@ -10,7 +10,7 @@ import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { errorText, passkeyFailure } from "@/lib/errors";
-import { openLegalPage } from "@/lib/legal";
+import { openSitePage } from "@/lib/site";
 import { attestationReference } from "@/lib/attestation";
 import { usePasskeySignIn } from "@/lib/use-passkey-sign-in";
 import { usePhoneField } from "@/lib/use-phone-field";
@@ -141,7 +141,7 @@ export default function PhoneScreen() {
             color="text.link"
             accessibilityRole="link"
             style={linkStyle}
-            onPress={() => openLegalPage("terms", language)}
+            onPress={() => openSitePage("terms", language)}
           >
             {t("legal.terms")}
           </Text>
@@ -151,7 +151,7 @@ export default function PhoneScreen() {
             color="text.link"
             accessibilityRole="link"
             style={linkStyle}
-            onPress={() => openLegalPage("privacy", language)}
+            onPress={() => openSitePage("privacy", language)}
           >
             {t("legal.privacy")}
           </Text>

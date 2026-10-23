@@ -3,8 +3,7 @@ import { Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 
-const TRUST_BULLETS = ["min", "max", "shard", "moments"];
-const RECIPIENT_BULLETS = ["noCap", "noResponsibility", "afterUnlock"];
+const TRUST_BULLETS = ["min", "noCap", "receives", "moments"];
 const STEPS = ["accept", "receive", "confirm", "submit"];
 
 export default function TrustedContactsDocPage() {
@@ -33,7 +32,7 @@ export default function TrustedContactsDocPage() {
         </p>
       </header>
 
-      {/* Two roles */}
+      {/* One role */}
       <section className="space-y-6">
         <div className="flex items-center gap-3">
           <span className="w-2 h-8 bg-primary rounded-sm" />
@@ -42,45 +41,22 @@ export default function TrustedContactsDocPage() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <article className="bg-primary text-on-primary rounded-sm p-6 space-y-3">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-white/10">
-              <Icon path={ICON_PATHS.shieldCheck} className="w-5 h-5" />
-            </span>
-            <h3 className="text-headline-sm">
-              {t("trustedContacts.roles.trust.title")}
-            </h3>
-            <p className="text-body-md text-on-primary-container">
-              {t("trustedContacts.roles.trust.body")}
-            </p>
-            <ul className="text-body-md text-on-primary-container space-y-1 pt-2">
-              {TRUST_BULLETS.map((b) => (
-                <li key={b}>
-                  · {t(`trustedContacts.roles.trust.bullets.${b}`)}
-                </li>
-              ))}
-            </ul>
-          </article>
-
-          <article className="bg-surface-container-low rounded-sm p-6 space-y-3 ghost-border">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-secondary/10 text-secondary">
-              <Icon path={ICON_PATHS.users} className="w-5 h-5" />
-            </span>
-            <h3 className="text-headline-sm text-primary">
-              {t("trustedContacts.roles.recipient.title")}
-            </h3>
-            <p className="text-body-md text-on-surface-variant">
-              {t("trustedContacts.roles.recipient.body")}
-            </p>
-            <ul className="text-body-md text-on-surface-variant space-y-1 pt-2">
-              {RECIPIENT_BULLETS.map((b) => (
-                <li key={b}>
-                  · {t(`trustedContacts.roles.recipient.bullets.${b}`)}
-                </li>
-              ))}
-            </ul>
-          </article>
-        </div>
+        <article className="bg-primary text-on-primary rounded-sm p-6 space-y-3">
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xs bg-white/10">
+            <Icon path={ICON_PATHS.shieldCheck} className="w-5 h-5" />
+          </span>
+          <h3 className="text-headline-sm">
+            {t("trustedContacts.roles.trust.title")}
+          </h3>
+          <p className="text-body-md text-on-primary-container">
+            {t("trustedContacts.roles.trust.body")}
+          </p>
+          <ul className="text-body-md text-on-primary-container space-y-1 pt-2">
+            {TRUST_BULLETS.map((b) => (
+              <li key={b}>· {t(`trustedContacts.roles.trust.bullets.${b}`)}</li>
+            ))}
+          </ul>
+        </article>
       </section>
 
       {/* What a trust contact does */}
