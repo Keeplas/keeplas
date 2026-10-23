@@ -44,16 +44,13 @@
     "label": "Numéro de téléphone",
     "cta": "Vérifier avec WhatsApp",
     "reassure": "Votre numéro identifie votre compte. Les passe-clés protègent l'accès.",
-    "emailAccount": "Je me suis inscrit avec un e-mail",
     "chooseCountry": "Choisissez votre pays",
     "searchCountry": "Rechercher",
     "invalid": "Saisissez un numéro de téléphone valide.",
     "accountExists": "Un compte utilise déjà ce numéro. Connectez-vous plutôt.",
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
-    "signInInstead": "Me connecter avec ce numéro",
-    "passkey": "Se connecter avec un passe-clé",
-    "passkeyFailed": "La connexion par passe-clé a échoué. Réessayez, ou utilisez votre numéro."
+    "signInInstead": "Me connecter avec ce numéro"
   },
   "verify": {
     "title": "Vérifier votre numéro",
@@ -62,7 +59,9 @@
     "noCode": "Vous n'avez pas reçu le code ?",
     "resend": "Renvoyer le code",
     "resent": "Nous vous avons envoyé un nouveau code.",
-    "note": "WhatsApp sert uniquement aux notifications. Rien de votre coffre n'y est envoyé."
+    "note": "WhatsApp sert uniquement aux notifications. Rien de votre coffre n'y est envoyé.",
+    "passkey": "Se connecter avec un passe-clé",
+    "passkeyFailed": "La connexion par passe-clé a échoué. Réessayez, ou saisissez le code."
   },
   "codeErrors": {
     "wrongTitle": "Ce code n'est pas le bon",
@@ -653,12 +652,6 @@
     "cta": "Ouvrir avec mes 24 mots"
   },
   "email": {
-    "title": "Se connecter avec votre e-mail",
-    "body": "Pour les comptes créés sur le web. Vous transférerez ensuite votre compte sur ce téléphone.",
-    "email": "E-mail",
-    "password": "Mot de passe",
-    "cta": "Se connecter",
-    "wrong": "E-mail ou mot de passe incorrect.",
     "otpTitle": "Saisissez votre code de connexion",
     "otpBody": "Nous avons envoyé un code à 6 chiffres à {channel}.",
     "otpCta": "Confirmer",

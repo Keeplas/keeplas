@@ -50,16 +50,13 @@
     "label": "Phone number",
     "cta": "Verify with WhatsApp",
     "reassure": "Your number identifies your account. Passkeys protect access.",
-    "emailAccount": "I signed up with an email",
     "chooseCountry": "Choose your country",
     "searchCountry": "Search",
     "invalid": "Enter a valid phone number.",
     "accountExists": "An account already uses this number. Sign in instead.",
     "noAccount": "No account uses this number. Get started to create one.",
     "createAccount": "Create an account with this number",
-    "signInInstead": "Sign in with this number",
-    "passkey": "Sign in with a passkey",
-    "passkeyFailed": "We couldn't sign you in with a passkey. Try again, or use your number."
+    "signInInstead": "Sign in with this number"
   },
   "verify": {
     "title": "Verify your number",
@@ -68,7 +65,9 @@
     "noCode": "Didn't get the code?",
     "resend": "Resend code",
     "resent": "We sent you a new code.",
-    "note": "We only use WhatsApp for notifications. Nothing from your vault is sent there."
+    "note": "We only use WhatsApp for notifications. Nothing from your vault is sent there.",
+    "passkey": "Sign in with a passkey",
+    "passkeyFailed": "We couldn't sign you in with a passkey. Try again, or enter the code."
   },
   "codeErrors": {
     "wrongTitle": "That code isn't right",
@@ -662,12 +661,6 @@
     "cta": "Open with my 24 words"
   },
   "email": {
-    "title": "Sign in with your email",
-    "body": "For accounts created on the web. You'll then move your account to this phone.",
-    "email": "Email",
-    "password": "Password",
-    "cta": "Sign in",
-    "wrong": "Email or password is incorrect.",
     "otpTitle": "Enter your sign-in code",
     "otpBody": "We sent a 6-digit code to {channel}.",
     "otpCta": "Confirm",
