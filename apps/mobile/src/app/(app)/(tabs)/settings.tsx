@@ -8,13 +8,14 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Radio } from "@/components/controls";
 import { Screen } from "@/components/screen";
-import { Card, ListRow } from "@/components/surfaces";
+import { Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { UpgradeCard } from "@/features/billing/upgrade-card";
 import { formatBytes } from "@/lib/format";
 import { openSitePage } from "@/lib/site";
 import { useChangeLanguage } from "@/lib/use-change-language";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
+import { useSession, useViewer } from "@/providers/session-provider";
 import { APPEARANCES, useTheme } from "@/providers/theme-provider";
 import { colors as palette } from "@/theme";
 
@@ -31,6 +32,7 @@ export default function Settings() {
   const { t, language } = useI18n();
   const { appearance, setAppearance, colors } = useTheme();
   const { signOut } = useSession();
+  const viewer = useViewer();
   const changeLanguage = useChangeLanguage();
   // getUsageStats re-reads every item and file server-side on each vault
   // change; only subscribe while this tab is actually visible.
@@ -44,7 +46,8 @@ export default function Settings() {
   const usage = useQuery(api.vaults.getUsageStats, focused ? {} : "skip");
   const lifeCheck = useQuery(api.life_check.getConfig, focused ? {} : "skip");
 
-  const lifetime = usage?.plan === "lifetime";
+  const lifetime = viewer.plan === "lifetime";
+  const planLabel = t(lifetime ? "settings.planLifetime" : "settings.planFree");
   const appearanceLabel = {
     system: t("settings.appearanceSystem"),
     light: t("settings.appearanceLight"),
@@ -112,7 +115,7 @@ export default function Settings() {
           />
           <Text variant="body-sm" color="text.muted">
             {t("settings.storageLeft", {
-              plan: t(lifetime ? "settings.planLifetime" : "settings.planFree"),
+              plan: planLabel,
               left: formatBytes(
                 Math.max(0, usage.quotaBytes - usage.storageBytes),
                 language,
@@ -144,10 +147,21 @@ export default function Settings() {
       <ListRow
         icon="shield-check"
         title={t("settings.plan")}
-        description={t(
-          lifetime ? "settings.planLifetime" : "settings.planFree",
-        )}
+        description={
+          usage
+            ? t("settings.planQuota", {
+                quota: formatBytes(usage.quotaBytes, language),
+              })
+            : undefined
+        }
+        trailing={
+          <StatusChip
+            label={planLabel}
+            tone={lifetime ? "success" : "neutral"}
+          />
+        }
       />
+      {lifetime ? null : <UpgradeCard />}
       <ListRow
         icon="lock"
         title={t("settings.privacy")}
