@@ -315,6 +315,10 @@
         "question": "Someone is trying to get into my account",
         "answer": "You get an alert on your devices, by email and on WhatsApp. Open Keeplas and tap \"It wasn't me\" to cancel the request. Nothing is released while the 72 hours run."
       },
+      "travelMode": {
+        "question": "What is travel mode?",
+        "answer": "It pauses Life check for 30 days while you're away. Keeplas sends no check-ins, cancels a check-in in progress and doesn't contact your contacts. Turn it off anytime in Settings › Life check. When it ends, your countdown starts over."
+      },
       "zeroAccess": {
         "question": "Can Keeplas open my vault?",
         "answer": "No. Your vault is encrypted on your phone. Our team can check who you are to move your account to a new number, but never open your vault or shorten a wait."
@@ -1036,6 +1040,9 @@
     "changeTitle": "Change check-in frequency?",
     "changeBody": "New frequency: {frequency}. Your countdown starts over from today.",
     "changeConfirm": "Change",
+    "travelConfirmTitle": "Turn on travel mode?",
+    "travelConfirmBody": "For 30 days, Keeplas won't ask you to check in and won't contact your contacts. A check-in in progress is cancelled. When it ends, or when you turn it off, your countdown starts over.",
+    "travelConfirm": "Turn on",
     "travelChipOn": "On",
     "travelChipOff": "Off"
   },

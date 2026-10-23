@@ -307,6 +307,10 @@
         "question": "Quelqu'un essaie d'entrer dans mon compte",
         "answer": "Vous recevez une alerte sur vos appareils, par e-mail et sur WhatsApp. Ouvrez Keeplas et touchez « Ce n'était pas moi » pour annuler la demande. Rien n'est libéré pendant les 72 heures."
       },
+      "travelMode": {
+        "question": "Qu'est-ce que le mode voyage ?",
+        "answer": "Il met Life check en pause pendant 30 jours, le temps de votre absence. Keeplas n'envoie aucun contrôle, annule celui en cours et ne sollicite pas vos contacts. Désactivez-le quand vous voulez dans Réglages › Life check. À la fin, votre compte à rebours repart de zéro."
+      },
       "zeroAccess": {
         "question": "Keeplas peut-il ouvrir mon coffre ?",
         "answer": "Non. Votre coffre est chiffré sur votre téléphone. Notre équipe peut vérifier votre identité pour passer votre compte à un nouveau numéro, mais jamais ouvrir votre coffre ni raccourcir une attente."
@@ -1027,6 +1031,9 @@
     "changeTitle": "Changer la fréquence ?",
     "changeBody": "Nouvelle fréquence : {frequency}. Votre compte à rebours repart de zéro aujourd'hui.",
     "changeConfirm": "Changer",
+    "travelConfirmTitle": "Activer le mode voyage ?",
+    "travelConfirmBody": "Pendant 30 jours, Keeplas ne vous demande plus de confirmer et ne sollicite pas vos contacts. Un contrôle en cours est annulé. À la fin, ou si vous le désactivez, votre compte à rebours repart de zéro.",
+    "travelConfirm": "Activer",
     "travelChipOn": "Activé",
     "travelChipOff": "Désactivé"
   },

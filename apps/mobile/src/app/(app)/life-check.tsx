@@ -120,6 +120,28 @@ export default function LifeCheck() {
     );
   }
 
+  function toggleTravel() {
+    if (config?.travelModeEnabled) {
+      void travel({ enabled: false }).catch(failed);
+      return;
+    }
+    Alert.alert(
+      t("lifeCheck.travelConfirmTitle"),
+      t("lifeCheck.travelConfirmBody"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("lifeCheck.travelConfirm"),
+          onPress: () =>
+            void travel({
+              enabled: true,
+              until: Date.now() + 30 * 86_400_000,
+            }).catch(failed),
+        },
+      ],
+    );
+  }
+
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
     try {
       await save({
@@ -194,14 +216,7 @@ export default function LifeCheck() {
               tone={config.travelModeEnabled ? "success" : "neutral"}
             />
           }
-          onPress={() =>
-            void travel({
-              enabled: !config.travelModeEnabled,
-              until: !config.travelModeEnabled
-                ? Date.now() + 30 * 86_400_000
-                : undefined,
-            }).catch(failed)
-          }
+          onPress={toggleTravel}
         />
       ) : null}
       <Callout icon="shield-check" text={t("lifeCheck.note")} />
