@@ -962,8 +962,7 @@
       "phase": {
         "released": "Released",
         "actionNeeded": "Action needed",
-        "guarding": "Guarding",
-        "awaitingRelease": "Awaiting release"
+        "guarding": "Guarding"
       },
       "relative": {
         "justNow": "just now",
@@ -972,10 +971,6 @@
         "days": "{count}d ago",
         "months": "{count}mo ago",
         "years": "{count}y ago"
-      },
-      "type": {
-        "recipient": "Recipient",
-        "trust": "Trust"
       },
       "role": {
         "family": "Family",
@@ -986,7 +981,6 @@
         "contact": "Contact"
       },
       "guarding": {
-        "recipient": "You'll receive what {ownerName} left you here if their vault is ever released.",
         "trust": "Nothing to do for now — you'll be asked to help only if {ownerName} stops responding to their check-ins."
       },
       "released": {
@@ -1084,7 +1078,7 @@
   "trustedContacts": {
     "header": {
       "title": "Trusted people",
-      "subtitle": "Designate the people who protect your legacy and decide who receives which vault items at trigger. Manage guardians and recipient-only contacts here, then bundle them into release groups.",
+      "subtitle": "Designate the people who protect your legacy and decide who receives which vault items at trigger. Manage your trust contacts here, then bundle them into release groups.",
       "howItWorks": "How trust contacts work",
       "medicalIdCallout": "For acute emergencies (accident, sudden illness), set up your phone’s built-in Medical ID — paramedics check it first.",
       "learnHow": "Learn how →"
@@ -1123,8 +1117,7 @@
         "resilientMany": "Resilient — {count} guardians of buffer"
       },
       "accepted": "Accepted",
-      "pendingInvites": "Pending invites",
-      "maxGuardians": "Max guardians"
+      "pendingInvites": "Pending invites"
     },
     "oneGuardianWarning": {
       "title": "One guardian is not enough",
@@ -1137,22 +1130,14 @@
     },
     "trustContacts": {
       "heading": "Trust Contacts",
-      "help": "Trust contacts confirm if something happens to you. They hold no key to your vault and can't read it. Capped at 5 by design — fewer is fine.",
-      "inviteNext": "Invite Next Trust Contact",
-      "slotsRemaining": "{count} slots remaining"
-    },
-    "recipientsOnly": {
-      "heading": "Recipients Only",
-      "help": "People who only receive items when a trigger fires (conditional message, vault release). They have no confirmation role, so there's no cap on how many you can add.",
-      "addTitle": "Add a Recipient",
-      "addDescription": "People who only receive items at trigger — no confirmation role, no cap.",
-      "addButton": "Add Recipient"
+      "help": "Trust contacts confirm if something happens to you, then receive only the items you assign them. They hold no key to your vault and can't read it. Invite as many as you need.",
+      "inviteNext": "Invite Next Trust Contact"
     },
     "howGroups": {
       "heading": "How groups work",
       "intro": "When you add a vault item, you can pick one or more groups. At trigger, only the contacts in those groups receive that item. Items with no group default to all trust contacts.",
       "step1": "Create groups by context (Family, Legal…)",
-      "step2": "Add trust contacts and recipient-only people to groups",
+      "step2": "Add trust contacts to groups",
       "step3": "Pick groups when sealing items in the vault"
     },
     "groups": {
@@ -1180,8 +1165,6 @@
       "history": "History"
     },
     "contactCard": {
-      "recipient": "Recipient",
-      "trust": "Trust",
       "awaitingKey": "Awaiting key"
     },
     "detail": {
@@ -1193,7 +1176,6 @@
       "invited": "Invited",
       "accepted": "Accepted",
       "recoveryRole": "Recovery role",
-      "recipientOnlyDescription": "Recipient only — no confirmation role. They only receive the vault items routed to them when a trigger fires.",
       "awaitingKey": "Awaiting encryption key",
       "awaitingKeyHelp": "This contact accepted the invitation but hasn't published their encryption key yet. They'll get access automatically once they finish setting up their account — no action needed from you.",
       "verificationHelp": "Confirmed each time this contact opens Keeplas and their own key unlocks on their device — proof they can still act as your trusted contact. It never gives them access to your vault.",
@@ -1249,10 +1231,8 @@
       "errorInvalidEmail": "Please enter a valid email",
       "errorInvalidPhone": "Please enter a valid phone number",
       "errorSend": "Failed to send invitation",
-      "titleRecipient": "Add Recipient",
       "titleTrust": "Invite Trusted Contact",
-      "descriptionRecipient": "This person will receive vault items only when one of your triggers fires.",
-      "descriptionTrust": "This person will help confirm if something happens to you. They will never hold a key to your vault.",
+      "descriptionTrust": "This person will help confirm if something happens to you, then receive only the items you assign them. They will never hold a key to your vault.",
       "fullNameLabel": "Full Name *",
       "fullNamePlaceholder": "Enter their full name",
       "emailLabel": "Email",
@@ -1268,19 +1248,8 @@
         "doctor": "Doctor",
         "other": "Other"
       },
-      "roleInKeeplasLabel": "Role in Keeplas",
-      "roleInKeeplasHelp": "Trust contact = confirms if you're unreachable, counts toward your 5-trust cap. Recipient only = receives items at trigger, no confirmation role and no cap. Neither ever holds a key to your vault.",
-      "trustOption": {
-        "title": "Trust contact",
-        "description": "Confirms if you're unreachable. Counts toward your 5-trust-contacts cap."
-      },
-      "recipientOption": {
-        "title": "Recipient only",
-        "description": "Receives items at trigger. No cap, no confirmation role."
-      },
       "cancel": "Cancel",
       "sending": "Sending...",
-      "submitRecipient": "Add Recipient",
       "submitTrust": "Send Invitation"
     },
     "groupCard": {
@@ -1593,24 +1562,15 @@
       "eyebrow": "Recovery network",
       "intro": "The people you designate to protect your vault — both during your life (in case you lose access) and after (for your digital succession). One unified role, one mental model.",
       "roles": {
-        "heading": "Two roles, only",
+        "heading": "One role",
         "trust": {
           "title": "Trust contact",
-          "body": "Holds an encrypted shard of your master key. Can confirm you are unreachable. Participates in the cryptographic quorum that re-opens your vault.",
+          "body": "Helps you recover access if you lose your phone, confirms you are unreachable, and receives the items you assigned to them once your vault is released. Never holds a key to your vault.",
           "bullets": {
             "min": "Minimum 2 trust contacts for recovery",
-            "max": "Up to 3 shard holders in the current recovery model",
-            "shard": "Receives 1 Shamir shard, encrypted to their public key",
-            "moments": "Active role at three moments: invitation, escalation, recovery"
-          }
-        },
-        "recipient": {
-          "title": "Recipient",
-          "body": "Receives specific items you pre-assigned (letters, documents, account details) once your vault is opened post-mortem. Passive role: no shard, no validation, no action required of them.",
-          "bullets": {
             "noCap": "No cap — invite as many as you need",
-            "noResponsibility": "No cryptographic responsibility",
-            "afterUnlock": "Receives content only after the vault unlocks"
+            "receives": "Receives only the items you assign, after the vault unlocks",
+            "moments": "Active role at three moments: invitation, escalation, recovery"
           }
         }
       },

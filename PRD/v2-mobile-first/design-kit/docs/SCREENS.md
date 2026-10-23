@@ -269,25 +269,23 @@ Mockup: `mockups/06-people-sharing.png`
 
 _FR: Personnes de confiance_
 
-- **Goal**: Overview of the two roles.
-- **Elements**: Trust contacts card (up to 3, any 2 required); Beneficiaries card (sand background).
-- **Actions**: Manage trust contacts, Manage beneficiaries
+- **Goal**: The trust contacts, all in one role (no cap, any 2 required), and the folders shared with them.
+- **Elements**: Ready count; contact cards (status, replace, more); folders you share.
+- **Actions**: Add a trust contact, New folder
 
 ### M06-2 · Add trusted person
 
 _FR: Ajouter une personne de confiance_
 
-- **Goal**: Invite someone and choose their roles.
-- **Elements**: Contact card (email, WhatsApp); role checkboxes Trust contact / Beneficiary (both allowed); permissions summary.
+- **Goal**: Invite someone as a trust contact.
+- **Elements**: Contact card (email, WhatsApp); permissions summary.
 - **Actions**: Send invitation
 
 ### M06-3 · Trust contacts
 
 _FR: Contacts de confiance_
 
-- **Goal**: Manage the 3 slots.
-- **Elements**: Status 2 of 3 ready; rows with Active / Invited status; Replace; ⋮ menu; note that replacing renews protection.
-- **Actions**: Replace
+- Merged into M06-1: with one role and no cap there is no separate list (D13 in `PRD/v2-mobile-first/README.md`).
 
 ### M06-4 · Share content
 

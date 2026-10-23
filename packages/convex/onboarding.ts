@@ -84,9 +84,7 @@ export async function seedDefaults(
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
       .collect()
-  )
-    .filter((c) => (c.contactType ?? "trust") === "trust")
-    .map((c) => c._id);
+  ).map((c) => c._id);
 
   let groupCreated = false;
   if (!existingDefaultGroup) {
@@ -320,13 +318,11 @@ export const sendSetupReminder = internalMutation({
     const user = await ctx.db.get(args.userId);
     if (!user || user.onboardingStep !== "complete") return;
 
-    const trustContacts = (
-      await ctx.db
-        .query("trusted_contacts")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
-        .collect()
-    ).filter((c) => (c.contactType ?? "trust") === "trust");
+    const trustContacts = await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+      .collect();
     const items = await getActiveItems(ctx, args.userId);
 
     const missingContacts = trustContacts.length === 0;

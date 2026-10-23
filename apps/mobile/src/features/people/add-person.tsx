@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { isValidEmail, normalizeEmail } from "@keeplas/backend/lib/email";
 
 import { Button } from "@/components/button";
-import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
@@ -22,31 +20,22 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 
-const MAX_TRUST = 3;
-
 /**
- * M06-2 Add trusted person: details, then roles and permissions. Mounted
- * from People and from setup (M01-5), so it returns with `router.back()`.
+ * M06-2 Add trusted person: details, then what they can do. Mounted from
+ * People and from setup (M01-5), so it returns with `router.back()`.
  */
 export function AddPerson() {
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
   const invite = useAuditedMutation(api.trusted_contacts.inviteContact);
-  const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const phone = usePhoneField();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
-  const [trust, setTrust] = useState(true);
-  const [beneficiary, setBeneficiary] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const trustFull =
-    (contacts ?? []).filter((contact) => contact.contactType === "trust")
-      .length >= MAX_TRUST;
-  const asTrust = trust && !trustFull;
 
   function next() {
     const emailOk = isValidEmail(email);
@@ -54,11 +43,10 @@ export function AddPerson() {
     const e164 = phone.validate();
     if (!emailOk || !e164) return;
     setPhoneNumber(e164);
-    if (trustFull) setBeneficiary(true);
   }
 
   async function send() {
-    if (!phoneNumber || (!asTrust && !beneficiary)) return;
+    if (!phoneNumber) return;
     setError(null);
     setBusy(true);
     try {
@@ -67,17 +55,14 @@ export function AddPerson() {
         email: normalizeEmail(email),
         phoneNumber,
         role: "friend",
-        contactType: asTrust ? "trust" : "recipient_only",
       });
       router.back();
     } catch (failure) {
       const text = errorText(failure);
       setError(
-        text.includes("Maximum")
-          ? t("people.maxReached")
-          : text.includes("already")
-            ? t("people.alreadyInvited")
-            : t("people.inviteFailed"),
+        text.includes("already")
+          ? t("people.alreadyInvited")
+          : t("people.inviteFailed"),
       );
     } finally {
       setBusy(false);
@@ -148,12 +133,7 @@ export function AddPerson() {
     <Screen
       header={header}
       footer={
-        <Button
-          label={t("people.sendInvite")}
-          onPress={send}
-          loading={busy}
-          disabled={!asTrust && !beneficiary}
-        />
+        <Button label={t("people.sendInvite")} onPress={send} loading={busy} />
       }
     >
       <Text variant="h1">{t("people.addTitle")}</Text>
@@ -196,41 +176,12 @@ export function AddPerson() {
         <Detail icon="whatsapp" text={formatPhone(phoneNumber)} />
       </View>
 
-      <Text variant="label">{t("people.roles")}</Text>
-      <Checkbox
-        checked={asTrust}
-        onChange={setTrust}
-        disabled={trustFull}
-        label={t("people.roleTrust")}
-        description={
-          trustFull ? t("people.roleTrustFull") : t("people.roleTrustBody")
-        }
-      />
-      <Checkbox
-        checked={beneficiary}
-        onChange={setBeneficiary}
-        label={t("people.roleBeneficiary")}
-        description={t("people.roleBeneficiaryBody")}
-      />
-
       <View style={[styles.summary, { backgroundColor: colors["bg.info"] }]}>
         <Text variant="label">{t("people.permissions")}</Text>
-        {asTrust ? (
-          <Permission icon="check-circle" text={t("people.permRecovery")} />
-        ) : null}
-        {beneficiary ? (
-          <Permission icon="check-circle" text={t("people.permReceive")} />
-        ) : (
-          <Permission icon="revoke" text={t("people.permNoFiles")} />
-        )}
-        <Permission icon="info" text={t("people.permIndependent")} />
+        <Permission icon="check-circle" text={t("people.permRecovery")} />
+        <Permission icon="check-circle" text={t("people.permReceive")} />
+        <Permission icon="revoke" text={t("people.permNoFiles")} />
       </View>
-
-      {!asTrust && !beneficiary ? (
-        <Text variant="body-sm" color="status.revoked">
-          {t("people.chooseRole")}
-        </Text>
-      ) : null}
       {error ? (
         <Text variant="body-sm" color="status.revoked">
           {error}

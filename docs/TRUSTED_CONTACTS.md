@@ -10,12 +10,18 @@ from the 24-word recovery phrase (Argon2id). **The master key is never split and
 owner's devices.** Trusted contacts hold no part of it and cannot read the vault — not alone, not
 together.
 
-Two contact types (`trusted_contacts.contactType`):
+Every contact is a **trust contact** — one role, no cap. A trust contact:
 
-| Type             | Role                                                                          | Cap |
-| ---------------- | ----------------------------------------------------------------------------- | --- |
-| `trust`          | Confirms the owner is unreachable once Life Check has exhausted every channel | 5   |
-| `recipient_only` | Only receives the items assigned to them when a release fires                 | —   |
+- confirms the owner is unreachable once Life Check has exhausted every channel (any 2 confirmations
+  reach the quorum);
+- holds a share of the owner's recovery secret (2-of-n, never the master key) to help them recover
+  access on a new phone;
+- receives only the items assigned to them (directly, through a group, or through a shared folder)
+  when a release fires.
+
+The legacy `trusted_contacts.contactType` field (`trust` / `recipient_only`) is ignored and cleared
+by `migrations:migrateContactTypes`; drop it from the schema once that migration has run on every
+deployment.
 
 ## History: no more MasterKey shards (v2 phase 2)
 

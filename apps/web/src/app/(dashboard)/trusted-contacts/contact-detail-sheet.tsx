@@ -119,7 +119,6 @@ function ContactDetailBody({
     }
   }
 
-  const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
   const verificationBadge = computeVerificationBadge(contact);
@@ -136,14 +135,6 @@ function ContactDetailBody({
             {contact.name}
           </SheetTitle>
           <div className="flex flex-wrap items-center gap-[6px]">
-            <StatusChip
-              tone="neutral"
-              label={
-                isRecipientOnly
-                  ? t("contactCard.recipient")
-                  : t("contactCard.trust")
-              }
-            />
             <StatusChip
               tone={statusConfig.tone}
               label={statusConfig.label}
@@ -194,39 +185,33 @@ function ContactDetailBody({
         <section>
           <SectionLabel>{t("detail.recoveryRole")}</SectionLabel>
           <div className="flex flex-col items-start gap-[8px]">
-            {isRecipientOnly ? (
-              <p className="text-body-sm text-text-muted">
-                {t("detail.recipientOnlyDescription")}
-              </p>
-            ) : (
-              verificationBadge && (
-                <span className="inline-flex items-center gap-[6px]">
-                  <StatusChip
-                    tone={verificationBadge.tone}
-                    label={verificationBadge.label}
-                    dotClassName={verificationBadge.dot}
-                  />
-                  <HelpHint
-                    content={
-                      <>
-                        <p>{t("detail.verificationHelp")}</p>
-                        {verificationBadge.lastVerifiedAt !== undefined && (
-                          <p className="mt-2">
-                            {t("detail.lastVerified", {
-                              relative: formatRelative(
-                                verificationBadge.lastVerifiedAt,
-                              ),
-                              date: new Date(
-                                verificationBadge.lastVerifiedAt,
-                              ).toLocaleDateString(),
-                            })}
-                          </p>
-                        )}
-                      </>
-                    }
-                  />
-                </span>
-              )
+            {verificationBadge && (
+              <span className="inline-flex items-center gap-[6px]">
+                <StatusChip
+                  tone={verificationBadge.tone}
+                  label={verificationBadge.label}
+                  dotClassName={verificationBadge.dot}
+                />
+                <HelpHint
+                  content={
+                    <>
+                      <p>{t("detail.verificationHelp")}</p>
+                      {verificationBadge.lastVerifiedAt !== undefined && (
+                        <p className="mt-2">
+                          {t("detail.lastVerified", {
+                            relative: formatRelative(
+                              verificationBadge.lastVerifiedAt,
+                            ),
+                            date: new Date(
+                              verificationBadge.lastVerifiedAt,
+                            ).toLocaleDateString(),
+                          })}
+                        </p>
+                      )}
+                    </>
+                  }
+                />
+              </span>
             )}
             {isAwaitingKey(contact) && (
               <span className="inline-flex items-center gap-[6px]">

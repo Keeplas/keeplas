@@ -28,8 +28,6 @@ import { RecipientGroupCard } from "./recipient-group-card";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { MIN_TRUST_CONTACTS_FOR_RECOVERY } from "./contact-display";
 
-const MAX_TRUST_CONTACTS = 5;
-
 const GUARDIAN_ROLES = [
   { icon: ICON_PATHS.shieldCheck, key: "noVaultAccess" },
   { icon: ICON_PATHS.user, key: "confirmsUnreachable" },
@@ -110,9 +108,6 @@ export default function TrustedContactsPage() {
   const groups = useQuery(api.recipient_groups.listGroups);
   const ensureDefaults = useMutation(api.onboarding.ensureDefaults);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteType, setInviteType] = useState<"trust" | "recipient_only">(
-    "trust",
-  );
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [selectedContact, setSelectedContact] =
     useState<Doc<"trusted_contacts"> | null>(null);
@@ -130,9 +125,7 @@ export default function TrustedContactsPage() {
     if (!groups || !contacts) return;
     const defaultGroup = groups.find((g) => g.isDefault);
     const hasTrustContacts = contacts.some(
-      (c) =>
-        (c.contactType ?? "trust") === "trust" &&
-        c.invitationStatus !== "revoked",
+      (c) => c.invitationStatus !== "revoked",
     );
     const needsSeed = !defaultGroup;
     const needsTopUp =
@@ -144,8 +137,7 @@ export default function TrustedContactsPage() {
     }
   }, [groups, contacts, ensureDefaults]);
 
-  function openInvite(type: "trust" | "recipient_only") {
-    setInviteType(type);
+  function openInvite() {
     setShowInviteDialog(true);
   }
 
@@ -158,16 +150,9 @@ export default function TrustedContactsPage() {
     return <Loader size="md" />;
   }
 
-  const activeContacts = contacts.filter(
+  const trustContacts = contacts.filter(
     (c) => c.invitationStatus !== "revoked",
   );
-  const trustContacts = activeContacts.filter(
-    (c) => (c.contactType ?? "trust") === "trust",
-  );
-  const recipientContacts = activeContacts.filter(
-    (c) => c.contactType === "recipient_only",
-  );
-  const canInviteTrust = trustContacts.length < MAX_TRUST_CONTACTS;
   const acceptedTrustContacts = trustContacts.filter(
     (c) => c.invitationStatus === "accepted",
   );
@@ -177,14 +162,7 @@ export default function TrustedContactsPage() {
   // Quorum = trust contacts needed to confirm the owner is unreachable.
   const threshold = MIN_TRUST_CONTACTS_FOR_RECOVERY;
   const acceptedCount = acceptedTrustContacts.length;
-  const quorumPct = Math.min(
-    100,
-    (Math.min(acceptedCount, threshold) / MAX_TRUST_CONTACTS) * 100,
-  );
-  const bufferPct = Math.max(
-    0,
-    ((acceptedCount - threshold) / MAX_TRUST_CONTACTS) * 100,
-  );
+  const quorumPct = (Math.min(acceptedCount, threshold) / threshold) * 100;
   const networkState: "unprotected" | "atRisk" | "quorumMet" | "resilient" =
     acceptedCount === 0
       ? "unprotected"
@@ -225,7 +203,7 @@ export default function TrustedContactsPage() {
           <TabsTrigger value="contacts" className={TAB_TRIGGER}>
             {t("tabs.contacts")}
             <span className="text-caption opacity-70">
-              ({activeContacts.length})
+              ({trustContacts.length})
             </span>
           </TabsTrigger>
           <TabsTrigger value="groups" className={TAB_TRIGGER}>
@@ -254,70 +232,31 @@ export default function TrustedContactsPage() {
                   </InfoCallout>
                 )}
 
-              {activeContacts.length === 0 ? (
+              {trustContacts.length === 0 ? (
                 <Panel className="flex justify-center">
-                  <NoContactsMessage onAdd={() => openInvite("trust")} />
+                  <NoContactsMessage onAdd={openInvite} />
                 </Panel>
               ) : (
-                <>
-                  <section className="flex flex-col gap-[12px]">
-                    <SectionTitle
-                      title={t("trustContacts.heading")}
-                      count={`${trustContacts.length}/${MAX_TRUST_CONTACTS}`}
-                      help={t("trustContacts.help")}
-                    />
-                    <div className="grid gap-[12px] md:grid-cols-2">
-                      {trustContacts.map((contact) => (
-                        <ContactCard
-                          key={contact._id}
-                          contact={contact}
-                          onSelect={openContact}
-                        />
-                      ))}
-                      {canInviteTrust && (
-                        <AddTile
-                          title={t("trustContacts.inviteNext")}
-                          hint={t("trustContacts.slotsRemaining", {
-                            count: MAX_TRUST_CONTACTS - trustContacts.length,
-                          })}
-                          onClick={() => openInvite("trust")}
-                        />
-                      )}
-                    </div>
-                  </section>
-
-                  {(recipientContacts.length > 0 ||
-                    trustContacts.length >= MAX_TRUST_CONTACTS) && (
-                    <section className="flex flex-col gap-[12px]">
-                      <SectionTitle
-                        title={t("recipientsOnly.heading")}
-                        count={`${recipientContacts.length}`}
-                        help={t("recipientsOnly.help")}
+                <section className="flex flex-col gap-[12px]">
+                  <SectionTitle
+                    title={t("trustContacts.heading")}
+                    count={`${trustContacts.length}`}
+                    help={t("trustContacts.help")}
+                  />
+                  <div className="grid gap-[12px] md:grid-cols-2">
+                    {trustContacts.map((contact) => (
+                      <ContactCard
+                        key={contact._id}
+                        contact={contact}
+                        onSelect={openContact}
                       />
-                      {recipientContacts.length === 0 ? (
-                        <AddTile
-                          title={t("recipientsOnly.addTitle")}
-                          hint={t("recipientsOnly.addDescription")}
-                          onClick={() => openInvite("recipient_only")}
-                        />
-                      ) : (
-                        <div className="grid gap-[12px] md:grid-cols-2">
-                          {recipientContacts.map((contact) => (
-                            <ContactCard
-                              key={contact._id}
-                              contact={contact}
-                              onSelect={openContact}
-                            />
-                          ))}
-                          <AddTile
-                            title={t("recipientsOnly.addButton")}
-                            onClick={() => openInvite("recipient_only")}
-                          />
-                        </div>
-                      )}
-                    </section>
-                  )}
-                </>
+                    ))}
+                    <AddTile
+                      title={t("trustContacts.inviteNext")}
+                      onClick={openInvite}
+                    />
+                  </div>
+                </section>
               )}
             </div>
 
@@ -381,10 +320,6 @@ export default function TrustedContactsPage() {
                     className="h-full bg-progress-fill transition-all"
                     style={{ width: `${quorumPct}%` }}
                   />
-                  <div
-                    className="h-full bg-progress-fill/40 transition-all"
-                    style={{ width: `${bufferPct}%` }}
-                  />
                 </div>
 
                 <dl className="flex flex-col gap-[8px] text-body-sm">
@@ -403,10 +338,6 @@ export default function TrustedContactsPage() {
                     <dd className="font-semibold text-text-primary">
                       {pendingTrustCount}
                     </dd>
-                  </div>
-                  <div className="flex justify-between border-t border-border-default pt-[8px] text-text-muted">
-                    <dt>{t("recoveryNetwork.maxGuardians")}</dt>
-                    <dd>{MAX_TRUST_CONTACTS}</dd>
                   </div>
                 </dl>
               </Panel>
@@ -489,7 +420,6 @@ export default function TrustedContactsPage() {
       <InviteContactDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
-        initialContactType={inviteType}
       />
       <CreateGroupDialog
         open={showCreateGroup}

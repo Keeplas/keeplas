@@ -97,11 +97,8 @@ export const get = query({
         hasRecoveryKit: !!user?.recoveryPhraseHash,
         hasCloudBackup: backup !== null,
         passkeys: passkeys.length,
-        trustContacts: contacts.filter(
-          (c) =>
-            (c.contactType ?? "trust") === "trust" &&
-            c.invitationStatus === "accepted",
-        ).length,
+        trustContacts: contacts.filter((c) => c.invitationStatus === "accepted")
+          .length,
         devices: devices
           .filter((d) => d.revokedAt === undefined)
           .sort((a, b) => b.lastSeenAt - a.lastSeenAt)

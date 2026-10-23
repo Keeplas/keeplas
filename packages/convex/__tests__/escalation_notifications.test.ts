@@ -104,7 +104,6 @@ async function seedContact(
   opts: {
     n: number;
     contactUserId?: Id<"users">;
-    contactType?: "trust" | "recipient_only";
     phoneNumber?: string;
   },
 ): Promise<Id<"trusted_contacts">> {
@@ -117,7 +116,6 @@ async function seedContact(
       email: `c${opts.n}@example.com`,
       phoneNumber: opts.phoneNumber,
       role: "family",
-      contactType: opts.contactType ?? "trust",
       invitationStatus: "accepted",
       invitationToken: `tok-${opts.n}-${now}`,
       invitedAt: now,
@@ -139,14 +137,7 @@ describe("enterConfirmationStage outbound delivery", () => {
     const c2 = await seedUser(t);
     await seedContact(t, owner, { n: 2, contactUserId: c1 });
     await seedContact(t, owner, { n: 3, contactUserId: c2 });
-    // Skipped: recipient_only (not a trust contact)…
-    const r = await seedUser(t);
-    await seedContact(t, owner, {
-      n: 4,
-      contactUserId: r,
-      contactType: "recipient_only",
-    });
-    // …and a trust contact with no account yet (no contactUserId).
+    // Skipped: a contact with no account yet (no contactUserId).
     await seedContact(t, owner, { n: 5 });
 
     await seedPhone(t, c1, "ExponentPushToken[c1]");

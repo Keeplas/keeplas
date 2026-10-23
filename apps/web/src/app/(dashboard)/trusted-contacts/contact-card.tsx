@@ -27,7 +27,6 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
   const t = useTranslations("trustedContacts");
   const statusConfig =
     STATUS_CONFIG[contact.invitationStatus] ?? STATUS_CONFIG.pending;
-  const isRecipientOnly = (contact.contactType ?? "trust") === "recipient_only";
   const verificationBadge = computeVerificationBadge(contact);
   const roleLabel = ROLE_LABELS[contact.role] ?? "Contact";
 
@@ -46,14 +45,6 @@ export function ContactCard({ contact, onSelect }: ContactCardProps) {
             <span className="block truncate">
               {contact.email ?? contact.phoneNumber}
             </span>
-          }
-        />
-        <StatusChip
-          tone="neutral"
-          label={
-            isRecipientOnly
-              ? t("contactCard.recipient")
-              : t("contactCard.trust")
           }
         />
       </span>

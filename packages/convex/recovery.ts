@@ -31,7 +31,6 @@ import { requireSessionProof } from "./session_proofs";
 export const RECOVERY_WINDOW_MS = 72 * 60 * 60 * 1000;
 export const RECOVERY_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const RECOVERY_THRESHOLD = 2;
-const MAX_TRUST_CONTACTS = 3;
 const ML_KEM_768_PUBLIC_KEY_LENGTH = 1580; // base64 of 1184 bytes
 
 const ACTIVE = ["pending", "approved_1", "approved_2", "released"] as const;
@@ -48,7 +47,6 @@ async function eligibleTrustContacts(ctx: QueryCtx, ownerId: Id<"users">) {
     .collect();
   return contacts.filter(
     (c) =>
-      c.contactType !== "recipient_only" &&
       c.invitationStatus === "accepted" &&
       c.contactUserId !== undefined &&
       c.contactPublicKey !== undefined,
@@ -101,7 +99,7 @@ export const getSetupTargets = query({
     const envelope = await currentEnvelope(ctx, userId);
     return {
       nextGeneration: (envelope?.generation ?? 0) + 1,
-      contacts: contacts.slice(0, MAX_TRUST_CONTACTS).map((c) => ({
+      contacts: contacts.map((c) => ({
         contactId: c._id,
         name: c.name,
         publicKey: c.contactPublicKey!,
@@ -146,10 +144,11 @@ export const storeSetup = internalMutation({
     if (
       contactIds.size !== args.shares.length ||
       args.shares.length < RECOVERY_THRESHOLD ||
-      args.shares.length > MAX_TRUST_CONTACTS ||
       args.shares.some((s) => !eligible.has(s.contactId))
     ) {
-      throw new ConvexError("Recovery needs 2 or 3 accepted trust contacts");
+      throw new ConvexError(
+        "Recovery needs at least 2 accepted trust contacts",
+      );
     }
 
     if (args.completesRequestId) {

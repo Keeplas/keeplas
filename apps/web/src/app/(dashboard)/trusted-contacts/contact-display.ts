@@ -79,7 +79,6 @@ export function computeVerificationBadge(
   contact: Doc<"trusted_contacts">,
 ): (ChipStyle & { label: string; lastVerifiedAt?: number }) | null {
   if (contact.invitationStatus !== "accepted") return null;
-  if ((contact.contactType ?? "trust") === "recipient_only") return null;
   if (contact.lastVerifiedAt === undefined) {
     return {
       label: "Availability not yet confirmed",

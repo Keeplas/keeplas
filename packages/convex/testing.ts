@@ -97,8 +97,9 @@ async function loadTarget(ctx: QueryCtx, email?: string): Promise<Target> {
     .query("trusted_contacts")
     .withIndex("by_user", (q) => q.eq("userId", config.userId))
     .collect();
-  const trust = contacts.filter((c) => (c.contactType ?? "trust") === "trust");
-  const acceptedTrust = trust.filter((c) => c.invitationStatus === "accepted");
+  const acceptedTrust = contacts.filter(
+    (c) => c.invitationStatus === "accepted",
+  );
 
   let inFlight = null;
   for (const status of ["running", "awaiting_confirmation"] as const) {
@@ -124,7 +125,7 @@ async function loadTarget(ctx: QueryCtx, email?: string): Promise<Target> {
     frequency: config.frequency,
     isActive: config.isActive,
     whatsappEnabled,
-    trustContactId: (acceptedTrust[0] ?? trust[0] ?? contacts[0])?._id ?? null,
+    trustContactId: (acceptedTrust[0] ?? contacts[0])?._id ?? null,
     trustContactCount: acceptedTrust.length,
     inFlightCycleId: inFlight?._id ?? null,
     inFlightStatus: inFlight?.status ?? null,
@@ -545,7 +546,6 @@ export const inspectRelease = internalQuery({
         _id: c._id,
         name: c.name,
         email: c.email ?? null,
-        contactType: c.contactType ?? "trust",
         invitationStatus: c.invitationStatus,
         hasPublicKey: !!c.contactPublicKey,
       })),
