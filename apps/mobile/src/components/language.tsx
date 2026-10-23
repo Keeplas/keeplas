@@ -107,6 +107,12 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
                 label={t(`languageNames.${code}`)}
               />
             ))}
+            <Radio
+              disabled
+              selected={false}
+              onPress={() => {}}
+              label={t("languageSoon", { name: t("languageNames.es") })}
+            />
           </View>
         </Pressable>
       </Modal>

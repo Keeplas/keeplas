@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 import {
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -45,6 +44,7 @@ import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatDuration } from "@/lib/format";
 import { NoteEditor } from "@/features/notes/note-editor";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -151,8 +151,12 @@ export default function ComposeCapture() {
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
       else if (error instanceof CameraUnavailable)
-        Alert.alert(t("capture.noCameraTitle"), t("capture.noCameraPhotoBody"));
-      else Alert.alert(t("common.genericError"));
+        toast({
+          variant: "error",
+          title: t("capture.noCameraTitle"),
+          description: t("capture.noCameraPhotoBody"),
+        });
+      else toast({ variant: "error", title: t("common.genericError") });
     }
   }
 
@@ -196,14 +200,17 @@ export default function ComposeCapture() {
       );
       showSecuring(entryId);
     } catch (error) {
-      Alert.alert(
-        error instanceof FolderKeyMissing
-          ? t("capture.folderKeyTitle")
-          : t("common.genericError"),
-        error instanceof FolderKeyMissing
-          ? t("capture.folderKeyBody", { name: error.contactName })
-          : undefined,
-      );
+      toast({
+        variant: "error",
+        title:
+          error instanceof FolderKeyMissing
+            ? t("capture.folderKeyTitle")
+            : t("common.genericError"),
+        description:
+          error instanceof FolderKeyMissing
+            ? t("capture.folderKeyBody", { name: error.contactName })
+            : undefined,
+      });
       setBusy(false);
     }
   }

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -12,6 +11,7 @@ import { Text } from "@/components/text";
 import { PasskeyButton } from "@/features/passkey-step";
 import { StepList } from "@/features/step-list";
 import { formatPhone } from "@/lib/phone";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
 import { useI18n } from "@/providers/i18n-provider";
@@ -37,7 +37,7 @@ export default function MoveToPhone() {
     try {
       await action();
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

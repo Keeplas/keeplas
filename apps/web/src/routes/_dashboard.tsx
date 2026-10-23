@@ -60,6 +60,13 @@ function DashboardLayout() {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
+  // The session was ended server-side (device removed from the phone, "It
+  // wasn't me"): sign out now, which also wipes the vault key, instead of
+  // waiting for the JWT to expire.
+  useEffect(() => {
+    if (isAuthenticated && viewer === null) void signOut();
+  }, [isAuthenticated, viewer, signOut]);
+
   useEffect(() => {
     if (totpGate?.required) {
       navigate({ to: "/login/totp" });

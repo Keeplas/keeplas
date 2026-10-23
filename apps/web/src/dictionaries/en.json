@@ -2006,7 +2006,7 @@
           "Biometric — Face ID, Touch ID, Windows Hello — via WebAuthn + PRF extension.",
           "Hardware security key — YubiKey or any FIDO2 authenticator with PRF.",
           "All three can coexist. Lose the device? Re-enter your 24 words on a new one.",
-          "Inactivity auto-lock: after 20 minutes with no activity the vault locks itself, wiping the in-memory and on-device keys until you unlock again."
+          "Inactivity auto-lock: after one hour with no activity the vault locks itself, wiping the in-memory and on-device keys until you unlock again."
         ]
       },
       "recovery": {

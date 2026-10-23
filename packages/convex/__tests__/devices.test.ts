@@ -49,6 +49,50 @@ describe("devices", () => {
     expect(devices[0].label).toBe("Chrome on macOS");
   });
 
+  it("hides a browser link whose session ended", async () => {
+    const { t, phone, phoneId, browser } = await setup();
+    // The browser signed out (or was linked again, which signs out first).
+    await t.run((ctx) => ctx.db.delete(browser.sessionId));
+    const devices = await phone.as.query(api.devices.list, {});
+    expect(devices.map((d) => d._id)).toEqual([phoneId]);
+  });
+
+  it("hides a browser link whose session expired", async () => {
+    const { t, phone, phoneId, browser } = await setup();
+    await t.run((ctx) =>
+      ctx.db.patch(browser.sessionId, { expirationTime: Date.now() - 1 }),
+    );
+    const devices = await phone.as.query(api.devices.list, {});
+    expect(devices.map((d) => d._id)).toEqual([phoneId]);
+  });
+
+  it("keeps a signed-out browser that can come back with its passkey", async () => {
+    const { t, userId, phone, phoneId, browser, browserId } = await setup();
+    await t.run(async (ctx) => {
+      await ctx.db.insert("passkey_credentials", {
+        userId,
+        credentialId: "browser-passkey",
+        publicKey: "pk",
+        counter: 0,
+        deviceName: "Chrome",
+        keeplasDeviceId: browserId,
+        createdAt: 0,
+        lastUsedAt: 0,
+      });
+      await ctx.db.delete(browser.sessionId);
+    });
+    const devices = await phone.as.query(api.devices.list, {});
+    expect(devices.map((d) => d._id)).toEqual([browserId, phoneId]);
+  });
+
+  it("keeps a phone whose session ended", async () => {
+    const { t, phone, phoneId, browser, browserId } = await setup();
+    // The phone keeps one row across sign-ins (useEnsureDevice).
+    await t.run((ctx) => ctx.db.delete(phone.sessionId));
+    const devices = await browser.as.query(api.devices.list, {});
+    expect(devices.map((d) => d._id)).toEqual([browserId, phoneId]);
+  });
+
   it("alerts the other devices about a new one, not about the first", async () => {
     const { t, phone, browser, browserId } = await setup();
     const alerts = await phone.as.query(api.devices.pendingAlerts, {});

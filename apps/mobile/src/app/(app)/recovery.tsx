@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -19,6 +19,7 @@ import {
 import { Text } from "@/components/text";
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
+import { toast } from "@/lib/toast";
 import { useAuditedAction } from "@/lib/use-audited-action";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -73,10 +74,11 @@ export default function RecoveryCenter() {
           myRequest?.status === "released" ? myRequest.requestId : undefined,
       });
     } catch (error) {
-      Alert.alert(
-        t("common.genericError"),
-        error instanceof Error ? error.message : undefined,
-      );
+      toast({
+        variant: "error",
+        title: t("common.genericError"),
+        description: error instanceof Error ? error.message : undefined,
+      });
     } finally {
       masterKey.fill(0);
     }

@@ -19,6 +19,12 @@ import { deviceUnlockOwner } from "@/lib/use-device-unlock";
 import { useRequestContext } from "@/lib/use-request-context";
 import { deviceLabelFromUserAgent } from "@/lib/user-agent";
 
+/**
+ * How long a browser linked without "Keep me logged in" stays unlocked, across
+ * refreshes, before it must be linked again.
+ */
+const UNTRUSTED_LINK_TTL_MS = 60 * 60 * 1000;
+
 /** Ephemeral pairing secrets: memory only, erased as soon as they are spent. */
 interface PairingSecrets {
   secretKey: Uint8Array;
@@ -149,7 +155,9 @@ export function useConnectWithPhone({
           userId: viewer._id,
         });
         try {
-          setMasterKey(await importMasterKey(raw), { persist: trusted });
+          setMasterKey(await importMasterKey(raw), {
+            expiresAt: trusted ? undefined : Date.now() + UNTRUSTED_LINK_TTL_MS,
+          });
         } finally {
           raw.fill(0);
         }

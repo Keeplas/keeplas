@@ -8,6 +8,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon } from "@/components/icon";
 import { BottomSheet } from "@/components/sheet";
 import { ListRow } from "@/components/surfaces";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useMoveToFolder } from "./use-move-to-folder";
@@ -50,7 +51,11 @@ export function ItemActionsSheet({
     if (!raw) return;
     close();
     await moveToFolder(raw, folderId).catch(() =>
-      Alert.alert(t("item.folder"), t("itemActions.moveFailed", { title })),
+      toast({
+        variant: "error",
+        title: t("item.folder"),
+        description: t("itemActions.moveFailed", { title }),
+      }),
     );
   }
 
@@ -66,7 +71,10 @@ export function ItemActionsSheet({
           text: t("itemActions.archive"),
           onPress: () =>
             void archiveItem({ itemId }).catch(() =>
-              Alert.alert(t("itemActions.archiveFailed")),
+              toast({
+                variant: "error",
+                title: t("itemActions.archiveFailed"),
+              }),
             ),
         },
       ],

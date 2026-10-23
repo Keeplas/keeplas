@@ -18,10 +18,10 @@ import { useIdleTimer } from "./use-idle-timer";
 
 interface SetMasterKeyOptions {
   /**
-   * Keep a copy in IndexedDB so the vault survives a refresh (default). False
-   * keeps it in memory only, e.g. a browser linked without "Trust this browser".
+   * Drop the IndexedDB copy after this time (epoch ms), e.g. a browser linked
+   * without "Keep me logged in". Unset keeps it until sign-out.
    */
-  persist?: boolean;
+  expiresAt?: number;
 }
 
 interface MasterKeyContextValue {
@@ -53,11 +53,11 @@ export function MasterKeyProvider({ children }: { children: ReactNode }) {
   const userId = user?._id ?? null;
 
   const setMasterKey = useCallback(
-    (key: CryptoKey, { persist = true }: SetMasterKeyOptions = {}) => {
+    (key: CryptoKey, { expiresAt }: SetMasterKeyOptions = {}) => {
       setMasterKeyState(key);
-      if (persist && userId) {
+      if (userId) {
         // Best-effort: a persistence failure must never block unlocking.
-        void persistMasterKey(userId, key);
+        void persistMasterKey(userId, key, expiresAt);
       }
     },
     [userId],

@@ -15,6 +15,7 @@
     "language": "Langue",
     "genericError": "Une erreur est survenue. Réessayez."
   },
+  "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
     "search": "Recherche",
@@ -305,6 +306,10 @@
       "notMe": {
         "question": "Quelqu'un essaie d'entrer dans mon compte",
         "answer": "Vous recevez une alerte sur vos appareils, par e-mail et sur WhatsApp. Ouvrez Keeplas et touchez « Ce n'était pas moi » pour annuler la demande. Rien n'est libéré pendant les 72 heures."
+      },
+      "travelMode": {
+        "question": "Qu'est-ce que le mode voyage ?",
+        "answer": "Il met Life check en pause pendant 30 jours, le temps de votre absence. Keeplas n'envoie aucun contrôle, annule celui en cours et ne sollicite pas vos contacts. Désactivez-le quand vous voulez dans Réglages › Life check. À la fin, votre compte à rebours repart de zéro."
       },
       "zeroAccess": {
         "question": "Keeplas peut-il ouvrir mon coffre ?",
@@ -889,6 +894,7 @@
     "later": "Plus tard",
     "addTitle": "Ajouter un contact",
     "addBody": "Choisissez comment l'inviter.",
+    "addWhy": "Pourquoi c'est important : si vous perdez l'accès, 2 de vos personnes de confiance suffisent pour vous aider à le retrouver. Keeplas ne peut pas le faire à votre place, car vous seul détenez les clés.",
     "name": "Nom",
     "email": "E-mail (facultatif)",
     "phone": "Numéro de téléphone",
@@ -1023,6 +1029,12 @@
       "missedBody": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
       "missedConfirm": "Je suis là"
     },
+    "changeTitle": "Changer la fréquence ?",
+    "changeBody": "Nouvelle fréquence : {frequency}. Votre compte à rebours repart de zéro aujourd'hui.",
+    "changeConfirm": "Changer",
+    "travelConfirmTitle": "Activer le mode voyage ?",
+    "travelConfirmBody": "Pendant 30 jours, Keeplas ne vous demande plus de confirmer et ne sollicite pas vos contacts. Un contrôle en cours est annulé. À la fin, ou si vous le désactivez, votre compte à rebours repart de zéro.",
+    "travelConfirm": "Activer",
     "travelChipOn": "Activé",
     "travelChipOff": "Désactivé"
   },

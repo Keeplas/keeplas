@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -14,6 +13,7 @@ import { StepList } from "@/features/step-list";
 import { formatDate, formatTime } from "@/lib/format";
 import { clearClaim, readClaim } from "@/lib/lost-number";
 import { contactSupport } from "@/lib/support";
+import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -56,7 +56,7 @@ export default function LostNumberStatus() {
       await requestCode(args);
       router.push("/lost-number/verify");
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }
