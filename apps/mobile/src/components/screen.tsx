@@ -7,15 +7,23 @@ import Branch from "../../assets/illustrations/branch.svg";
 import LandscapeNight from "../../assets/illustrations/landscape-night.svg";
 import Landscape from "../../assets/illustrations/landscape.svg";
 import { useTheme } from "@/providers/theme-provider";
+import { Lake, LakeNight } from "./illustrations.generated";
 import { useTabBarVisible } from "./tab-bar";
 import { layout } from "@/theme";
 
-export type ScreenDecor = "branches" | "landscape";
+export type ScreenDecor = "branches" | "landscape" | "lake";
+
+// Footer art per decor: [light, night]. `lake` is the website landscape
+// (foliage, pines, lake) with its ambient motion; `landscape` the flat one.
+const FOOTER_ART = {
+  landscape: [Landscape, LandscapeNight],
+  lake: [Lake, LakeNight],
+} as const;
 
 /**
  * Screen frame shared by every page: `bg/app`, safe areas, an App Header
  * slot, scrollable content (20 pt gutter, 12 pt under the header) and the
- * Figma decor (`Decor/branch` corners or `Decor/landscape` footer).
+ * Figma decor (`Decor/branch` corners or a landscape footer).
  */
 export function Screen({
   header,
@@ -80,8 +88,8 @@ const Decor = memo(function Decor({
   kind: ScreenDecor;
   night: boolean;
 }) {
-  if (kind === "landscape") {
-    const Art = night ? LandscapeNight : Landscape;
+  if (kind !== "branches") {
+    const Art = FOOTER_ART[kind][night ? 1 : 0];
     return (
       <View pointerEvents="none" style={styles.landscape}>
         <Art width="100%" height={246} preserveAspectRatio="xMidYMax slice" />

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "gen:icons": "node scripts/gen-icons.mjs",
+    "gen:illustrations": "node scripts/gen-illustrations.mjs && prettier --write src/components/illustrations.generated.tsx",
     "clean": "rm -rf .expo dist .turbo node_modules"
   },
   "dependencies": {
