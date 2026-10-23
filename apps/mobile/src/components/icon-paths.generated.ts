@@ -11,7 +11,7 @@ export const ICON_PATHS = {
   },
   "arrow-right": { d: "M5 12h14M13 6l6 6-6 6", strokeWidth: 1.75 },
   bell: {
-    d: "M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0",
+    d: "M6 14.25v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 18.75a2 2 0 0 0 4 0",
     strokeWidth: 1.75,
   },
   browser: {
