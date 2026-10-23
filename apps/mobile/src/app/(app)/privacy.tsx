@@ -14,7 +14,9 @@ export default function Privacy() {
   const rows: { key: string; icon: IconName; href: Href }[] = [
     { key: "passkey", icon: "fingerprint", href: "/passkeys" },
     { key: "pin", icon: "pin", href: "/pin-code" },
+    { key: "backup", icon: "cloud-upload", href: "/backup" },
     { key: "kit", icon: "lifebuoy", href: "/kit" },
+    { key: "rotation", icon: "sync", href: "/rotate-keys" },
   ];
 
   return (
