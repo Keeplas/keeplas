@@ -7,7 +7,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
-import { Callout, IconBadge } from "@/components/surfaces";
+import { IconBadge, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { PasskeyButton } from "@/features/passkey-step";
 import { StepList } from "@/features/step-list";
@@ -123,7 +123,7 @@ export default function MoveToPhone() {
         {t("migration.body")}
       </Text>
       <StepList steps={steps} />
-      <Callout icon="shield-check" text={t("migration.note")} />
+      <Note icon="shield-check" text={t("migration.note")} />
       {action}
       <Button
         variant="text"

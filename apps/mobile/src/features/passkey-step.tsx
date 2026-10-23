@@ -3,6 +3,7 @@ import { Linking, Platform } from "react-native";
 
 import { Button } from "@/components/button";
 import { StateSheet } from "@/components/state-message";
+import { passkeyFailure } from "@/lib/errors";
 import { contactSupport } from "@/lib/support";
 import { useRegisterPasskey } from "@/lib/use-register-passkey";
 import { useI18n } from "@/providers/i18n-provider";
@@ -11,7 +12,8 @@ import { isDeviceSecure } from "../../modules/device-lock";
 /**
  * "Create passkey" button with its two Sign-in error sheets: "Set up a screen
  * lock" (no PIN, passcode, face or fingerprint) and "Passkey not created"
- * (prompt cancelled / failed). Shared by M01-3 and M09-7.
+ * (prompt cancelled, or a failure whose detail goes to support). Shared by
+ * M01-3 and M09-7.
  */
 export function PasskeyButton({
   userId,
@@ -26,6 +28,8 @@ export function PasskeyButton({
   const registerPasskey = useRegisterPasskey();
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState<"failed" | "screenLock" | null>(null);
+  // Why creation failed; null when the user closed the prompt.
+  const [failure, setFailure] = useState<string | null>(null);
 
   async function create() {
     setSheet(null);
@@ -34,7 +38,8 @@ export function PasskeyButton({
     try {
       await registerPasskey(userId);
       onDone();
-    } catch {
+    } catch (error) {
+      setFailure(passkeyFailure(error));
       setSheet("failed");
     } finally {
       setBusy(false);
@@ -53,11 +58,12 @@ export function PasskeyButton({
         icon="passkey"
         tone="danger"
         title={t("passkey.failedTitle")}
-        body={t("passkey.failedBody")}
+        body={t(failure ? "passkey.errorBody" : "passkey.failedBody")}
         primary={{ label: t("common.tryAgain"), onPress: create }}
         secondary={{
           label: t("common.getHelp"),
-          onPress: () => contactSupport(),
+          onPress: () =>
+            contactSupport(failure ? `Passkey: ${failure}` : undefined),
         }}
       />
       <StateSheet

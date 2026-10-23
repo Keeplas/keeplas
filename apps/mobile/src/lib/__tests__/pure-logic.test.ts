@@ -12,7 +12,7 @@ import {
   type ContentKind,
 } from "@/features/home/vault-groups";
 import { BACKGROUND_GRACE_MS, shouldLockOnResume } from "../auto-lock";
-import { classifyCodeError } from "../errors";
+import { classifyCodeError, passkeyFailure } from "../errors";
 import { formatBytes, relativeDay } from "../format";
 import {
   examplePlaceholder,
@@ -28,6 +28,7 @@ const base: StageInputs = {
   authenticated: true,
   viewer: { hasKeyBundle: true },
   loginOtpRequired: false,
+  totpRequired: false,
   needsMigration: false,
   migrationDeferred: false,
   hasDeviceVault: true,
@@ -41,6 +42,8 @@ describe("resolveStage", () => {
     [{ viewer: null }, "signedOut"],
     [{ viewer: undefined }, "loading"],
     [{ loginOtpRequired: true }, "loginOtp"],
+    [{ totpRequired: true }, "totp"],
+    [{ totpRequired: undefined }, "loading"],
     [{ viewer: { hasKeyBundle: false } }, "setup"],
     [{ unlocked: false, hasDeviceVault: true }, "locked"],
     [{ unlocked: false, hasDeviceVault: false }, "needsKit"],
@@ -56,6 +59,20 @@ describe("resolveStage", () => {
     expect(
       resolveStage({ ...base, loginOtpRequired: true, unlocked: false }),
     ).toBe("loginOtp");
+  });
+
+  it("asks for the authenticator code after the login OTP, before anything that needs full auth", () => {
+    expect(
+      resolveStage({ ...base, loginOtpRequired: true, totpRequired: true }),
+    ).toBe("loginOtp");
+    expect(
+      resolveStage({
+        ...base,
+        totpRequired: true,
+        needsMigration: true,
+        unlocked: false,
+      }),
+    ).toBe("totp");
   });
 });
 
@@ -79,6 +96,35 @@ describe("code errors", () => {
     expect(classifyCodeError(new Error("[Request ID: x] Server Error"))).toBe(
       "wrong",
     );
+  });
+});
+
+describe("passkey errors", () => {
+  it("treats a closed prompt as a cancel, with nothing to report", () => {
+    expect(
+      passkeyFailure({
+        error: "UserCancelled",
+        message: "The user cancelled the request.",
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps the native code and message of a real failure", () => {
+    expect(
+      passkeyFailure({
+        error: "RequestFailed",
+        message:
+          "Application with identifier T.com.keeplas.app is not associated with domain app.keeplas.com",
+      }),
+    ).toBe(
+      "RequestFailed: Application with identifier T.com.keeplas.app is not associated with domain app.keeplas.com",
+    );
+  });
+
+  it("reports server errors as a failure", () => {
+    expect(
+      passkeyFailure(new Error("Passkey registration failed verification")),
+    ).toBe("Passkey registration failed verification");
   });
 });
 

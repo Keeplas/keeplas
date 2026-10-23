@@ -41,6 +41,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const skip = isAuthenticated ? {} : "skip";
   const viewer = useQuery(api.users.viewer, skip);
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
+  const totpGate = useQuery(api.totp.getMyTotpGate, skip);
   const migration = useQuery(api.account_migration.getStatus, skip);
   const [vaultState, setVaultState] = useState<{
     userId: string;
@@ -83,6 +84,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         ? undefined
         : viewer && { hasKeyBundle: !!viewer.encryptedKeyBundle },
     loginOtpRequired: loginGate?.required,
+    totpRequired: totpGate?.required,
     needsMigration:
       migration === undefined ? undefined : !!migration?.needsMigration,
     migrationDeferred,

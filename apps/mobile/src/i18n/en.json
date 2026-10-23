@@ -85,6 +85,7 @@
     "cta": "Create passkey",
     "failedTitle": "Passkey not created",
     "failedBody": "The prompt closed before you finished. You need a passkey to keep your vault on this phone.",
+    "errorBody": "Your phone couldn't create the passkey. Try again, or tap Get help to send us the details.",
     "screenLockTitle": "Set up a screen lock",
     "screenLockBody": "Keeplas uses your phone's screen lock (PIN, face or fingerprint) to protect your vault. Set one up in Settings, then come back.",
     "devSkip": "Skip (development build)"
@@ -452,6 +453,13 @@
     "passwordOffBody": "Email kept for receipts only",
     "doneNote": "On a computer, sign in by scanning a QR code with this phone.",
     "goToVault": "Go to my vault"
+  },
+  "totp": {
+    "title": "Enter your authenticator code",
+    "body": "Open your authenticator app and type the 6-digit code for Keeplas.",
+    "cta": "Confirm",
+    "wrong": "That code didn't work. Check your authenticator app and try again.",
+    "tooMany": "Too many tries. Wait 15 minutes, then try again."
   },
   "email": {
     "title": "Sign in with your email",
