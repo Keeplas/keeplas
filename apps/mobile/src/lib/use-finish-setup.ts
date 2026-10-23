@@ -3,12 +3,12 @@ import { useRouter } from "expo-router";
 
 import { useVault } from "@/providers/vault-provider";
 
-/** Leave the setup screens: forget the 24 words, open the app. */
+/** Leave the setup screens, open the app. */
 export function useFinishSetup() {
   const router = useRouter();
-  const { setSetupPhrase } = useVault();
+  const { setFinishingSetup } = useVault();
   return useCallback(() => {
-    setSetupPhrase(null);
+    setFinishingSetup(false);
     router.replace("/home");
-  }, [router, setSetupPhrase]);
+  }, [router, setFinishingSetup]);
 }

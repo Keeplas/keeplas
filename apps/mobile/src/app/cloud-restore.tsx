@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -14,22 +14,28 @@ import {
 } from "@/features/cloud-backup";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { useI18n } from "@/providers/i18n-provider";
+import { useSession } from "@/providers/session-provider";
 import * as CloudKey from "../../modules/cloud-key";
 
 /**
- * New phone, vault backed up (D7): restore it in one step. The synced key
- * comes back with the Apple / Google account; a WhatsApp code confirms the
- * number first. Once the vault opens, the stage gate moves on.
+ * New phone, first screen: the vault is backed up (D7, on by default), so
+ * restore it in one step — no 24 words. The synced key comes back with the
+ * Apple / Google account; a WhatsApp code confirms the number first. Once the
+ * vault opens, the stage gate moves on. Without a backup this phone can
+ * restore, the other ways back in take over.
  */
 export default function CloudRestore() {
   const router = useRouter();
   const { t } = useI18n();
+  const { signOut } = useSession();
   const restorable = useRestorableBackup();
   const ensurePhoneProof = useEnsurePhoneProof();
   const restore = useCloudRestore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const provider = restorable ?? providerName(CloudKey.provider);
+
+  if (restorable === null) return <Redirect href="/lost-access" />;
 
   async function run() {
     if (!ensurePhoneProof()) return;
@@ -70,6 +76,12 @@ export default function CloudRestore() {
         onPress={run}
       />
       <Note icon="whatsapp" text={t("cloudRestore.note")} />
+      <Button
+        variant="secondary"
+        label={t("cloudRestore.otherWays")}
+        onPress={() => router.push("/lost-access")}
+      />
+      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

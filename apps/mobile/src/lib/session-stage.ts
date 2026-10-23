@@ -10,7 +10,8 @@ import type { Href } from "expo-router";
  *   newNumber  → signed in with the 24 words after losing the number: set a
  *                new one before anything else
  *   setup      → M01-3 passkey, M01-4 vault (no key bundle yet)
- *   needsKit   → account has a vault but this phone holds no key: 24 words
+ *   needsKit   → account has a vault but this phone holds no key: restore
+ *                from iCloud / Google, else the other ways back in
  *   locked     → M08-6 Unlock your vault
  *   migration  → M09-7 Move to phone sign-in (email accounts, D5)
  *   ready      → the app (tabs)
@@ -34,7 +35,7 @@ export const STAGE_HOME: Record<Exclude<Stage, "loading">, Href> = {
   totp: "/login-totp",
   newNumber: "/new-number",
   setup: "/passkey",
-  needsKit: "/recovery-kit",
+  needsKit: "/cloud-restore",
   locked: "/unlock",
   migration: "/move-to-phone",
   ready: "/home",

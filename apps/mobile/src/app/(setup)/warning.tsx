@@ -12,7 +12,7 @@ import { Text } from "@/components/text";
 import { useFinishSetup } from "@/lib/use-finish-setup";
 import { useI18n } from "@/providers/i18n-provider";
 
-/** M09-10 Only one way back in: shown when setup ends without a backup. */
+/** M09-10 Only one way back in: shown when the cloud backup is off at the end of setup. */
 export default function OneWayWarning() {
   const router = useRouter();
   const { t } = useI18n();
@@ -37,19 +37,24 @@ export default function OneWayWarning() {
           trailing={<StatusChip tone="success" label={t("oneWay.active")} />}
         />
         <InfoRow
+          leading={<Icon name="cloud-upload" size={22} color="text.muted" />}
+          title={t("backup.title")}
+          description={t("oneWay.backupMissing")}
+          trailing={<StatusChip tone="danger" label={t("oneWay.missing")} />}
+        />
+        <InfoRow
           leading={<Icon name="people" size={22} color="text.muted" />}
           title={t("oneWay.contacts")}
           description={t("oneWay.contactsNeeded", { n: 0 })}
           trailing={<StatusChip tone="danger" label={t("oneWay.missing")} />}
         />
-        <InfoRow
-          leading={<Icon name="document" size={22} color="text.muted" />}
-          title={t("oneWay.kit")}
-          description={t("oneWay.kitMissing")}
-          trailing={<StatusChip tone="danger" label={t("oneWay.missing")} />}
-        />
       </Card>
       <Button
+        label={t("backup.enable")}
+        onPress={() => router.push("/backup")}
+      />
+      <Button
+        variant="secondary"
         label={t("oneWay.addContacts")}
         onPress={() => router.push("/contacts")}
       />
