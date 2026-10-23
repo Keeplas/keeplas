@@ -4,12 +4,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import type { FunctionReturnType } from "convex/server";
+import type { Href } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
@@ -17,6 +19,14 @@ import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
 import { auditContext } from "@/lib/use-audited-mutation";
+import {
+  readResumePoint,
+  readSetupPending,
+  resumeTarget,
+  writeResumePoint,
+  writeSetupPending,
+  type ResumePoint,
+} from "@/lib/resume-point";
 import { resolveStage, type Stage } from "@/lib/session-stage";
 import { useVault } from "./vault-provider";
 
@@ -34,6 +44,9 @@ interface SessionValue {
   /** Lost number, 24-word sign-in coming: ask for the new number first. */
   expectNewNumber: (expected: boolean) => void;
   signOut: () => Promise<void>;
+  resumeReady: boolean;
+  rememberRoute: (pathname: string, params: Record<string, string>) => void;
+  takeResume: () => Href | null;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -41,7 +54,7 @@ const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signOut: convexSignOut } = useAuthActions();
-  const { masterKey, lock, finishingSetup } = useVault();
+  const { masterKey, lock, finishingSetup, setFinishingSetup } = useVault();
   const skip = isAuthenticated ? {} : "skip";
   const viewer = useQuery(api.users.viewer, skip);
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
@@ -59,6 +72,50 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Only trust a result read for the current user.
   const deviceVault =
     vaultState && vaultState.userId === userId ? vaultState.has : undefined;
+  const [savedFor, setSavedFor] = useState<string | null>(null);
+  const lastRoute = useRef<ResumePoint | null>(null);
+  const resumed = useRef(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    Promise.all([readResumePoint(userId), readSetupPending(userId)])
+      .catch(() => [null, false] as const)
+      .then(([point, pending]) => {
+        if (!alive) return;
+        lastRoute.current = point;
+        setFinishingSetup(pending);
+        setSavedFor(userId);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [userId, setFinishingSetup]);
+
+  useEffect(() => {
+    if (!userId || savedFor !== userId) return;
+    void writeSetupPending(userId, finishingSetup).catch(() => undefined);
+  }, [userId, savedFor, finishingSetup]);
+
+  useEffect(() => {
+    if (!masterKey) resumed.current = false;
+  }, [masterKey]);
+
+  const rememberRoute = useCallback(
+    (pathname: string, params: Record<string, string>) => {
+      if (!userId) return;
+      const point = { pathname, params, at: Date.now() };
+      lastRoute.current = point;
+      void writeResumePoint(userId, point).catch(() => undefined);
+    },
+    [userId],
+  );
+
+  const takeResume = useCallback(() => {
+    if (resumed.current) return null;
+    resumed.current = true;
+    return resumeTarget(lastRoute.current, finishingSetup, Date.now());
+  }, [finishingSetup]);
 
   useEffect(() => {
     if (!userId) return;
@@ -88,13 +145,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       await clearItemSummaries(userId).catch(() => undefined);
     }
     lock();
+    setFinishingSetup(false);
     discardExport();
     auditContext.clear();
     setMigrationDeferred(false);
     setNewNumberPending(false);
     setNumberLost(false);
     await convexSignOut();
-  }, [userId, lock, convexSignOut]);
+  }, [userId, lock, setFinishingSetup, convexSignOut]);
 
   const stage = resolveStage({
     authLoading: isLoading,
@@ -126,8 +184,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       deferMigration: () => setMigrationDeferred(true),
       expectNewNumber,
       signOut,
+      resumeReady: !userId || savedFor === userId,
+      rememberRoute,
+      takeResume,
     }),
-    [stage, finishingSetup, viewer, expectNewNumber, signOut],
+    [
+      stage,
+      finishingSetup,
+      viewer,
+      expectNewNumber,
+      signOut,
+      userId,
+      savedFor,
+      rememberRoute,
+      takeResume,
+    ],
   );
 
   return (
