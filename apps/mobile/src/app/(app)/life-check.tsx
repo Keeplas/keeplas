@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -14,6 +14,7 @@ import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { Countdown } from "@/features/life-check/countdown";
 import { formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -38,7 +39,8 @@ export default function LifeCheck() {
   const travel = useAuditedMutation(api.life_check.toggleTravelMode);
   const [started, setStarted] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const failed = () => Alert.alert(t("common.genericError"));
+  const failed = () =>
+    toast({ variant: "error", title: t("common.genericError") });
 
   if (config === null && !started) {
     return (
@@ -90,14 +92,15 @@ export default function LifeCheck() {
     setConfirming(true);
     try {
       const { nextCheckAt } = await validate({ method: "tap" });
-      Alert.alert(
-        t("lifeCheck.confirmedTitle"),
-        nextCheckAt
+      toast({
+        variant: "success",
+        title: t("lifeCheck.confirmedTitle"),
+        description: nextCheckAt
           ? t("lifeCheck.confirmedBody", {
               date: formatDate(nextCheckAt, language),
             })
           : t("lifeCheck.confirmedBodyNoDate"),
-      );
+      });
     } catch {
       failed();
     } finally {

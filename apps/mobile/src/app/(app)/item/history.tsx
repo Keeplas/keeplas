@@ -24,6 +24,7 @@ import {
   rememberDecrypted,
 } from "@/lib/files";
 import { formatBytes, formatDate, formatTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -96,7 +97,7 @@ export default function ItemHistory() {
         dialogTitle: file.name,
       });
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(null);
     }
@@ -116,7 +117,9 @@ export default function ItemHistory() {
                 setShown(null);
                 router.back();
               })
-              .catch(() => Alert.alert(t("common.genericError"))),
+              .catch(() =>
+                toast({ variant: "error", title: t("common.genericError") }),
+              ),
         },
       ],
     );

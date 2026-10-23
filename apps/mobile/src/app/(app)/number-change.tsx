@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -10,6 +9,7 @@ import { Screen } from "@/components/screen";
 import { Callout, IconBadge } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { formatDate, formatTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -31,7 +31,7 @@ export default function NumberChange() {
       await cancel();
       setCancelled(true);
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

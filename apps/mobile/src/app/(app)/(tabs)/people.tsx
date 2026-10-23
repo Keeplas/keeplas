@@ -13,6 +13,7 @@ import { Screen } from "@/components/screen";
 import { Callout, IconTile, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useVaultData } from "@/features/vault/vault-data";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -48,7 +49,9 @@ export default function People() {
         text: action,
         style: "destructive",
         onPress: () =>
-          void run().catch(() => Alert.alert(t("common.genericError"))),
+          void run().catch(() =>
+            toast({ variant: "error", title: t("common.genericError") }),
+          ),
       },
     ]);
   }
@@ -77,8 +80,15 @@ export default function People() {
               text: t("people.resend"),
               onPress: () =>
                 void resend({ contactId })
-                  .then(() => Alert.alert(t("people.resent")))
-                  .catch(() => Alert.alert(t("common.genericError"))),
+                  .then(() =>
+                    toast({ variant: "success", title: t("people.resent") }),
+                  )
+                  .catch(() =>
+                    toast({
+                      variant: "error",
+                      title: t("common.genericError"),
+                    }),
+                  ),
             },
           ]
         : []),

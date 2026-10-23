@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -31,6 +31,7 @@ import {
   type OpenedItem,
 } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -103,8 +104,12 @@ function EditForm({
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
       else if (error instanceof CameraUnavailable)
-        Alert.alert(t("capture.noCameraTitle"), t("capture.noCameraPhotoBody"));
-      else Alert.alert(t("common.genericError"));
+        toast({
+          variant: "error",
+          title: t("capture.noCameraTitle"),
+          description: t("capture.noCameraPhotoBody"),
+        });
+      else toast({ variant: "error", title: t("common.genericError") });
     }
   }
 
@@ -136,7 +141,11 @@ function EditForm({
       }
       onDone();
     } catch {
-      Alert.alert(t("itemEdit.failedTitle"), t("itemEdit.failedBody"));
+      toast({
+        variant: "error",
+        title: t("itemEdit.failedTitle"),
+        description: t("itemEdit.failedBody"),
+      });
       setSaving(false);
     }
   }

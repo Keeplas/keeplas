@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
@@ -40,6 +40,7 @@ import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
 import { isEmptyNote } from "@keeplas/export/rich-text";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -108,7 +109,11 @@ export default function ItemDetails() {
     const state = file ? stateOf(file.id) : undefined;
     if (!file || state?.status !== "ready") return;
     if (!(await Sharing.isAvailableAsync())) {
-      Alert.alert(t("item.download"), t("common.genericError"));
+      toast({
+        variant: "error",
+        title: t("item.download"),
+        description: t("common.genericError"),
+      });
       return;
     }
     await Sharing.shareAsync(state.uri, {
@@ -158,7 +163,11 @@ export default function ItemDetails() {
       });
       setSheet(null);
     } catch {
-      Alert.alert(t("item.shareFailedTitle"), t("item.shareFailedBody"));
+      toast({
+        variant: "error",
+        title: t("item.shareFailedTitle"),
+        description: t("item.shareFailedBody"),
+      });
     } finally {
       setSharing(false);
     }
@@ -168,7 +177,11 @@ export default function ItemDetails() {
     if (!raw) return;
     setSheet(null);
     await moveToFolder(raw, folderId).catch(() =>
-      Alert.alert(t("item.folder"), t("common.genericError")),
+      toast({
+        variant: "error",
+        title: t("item.folder"),
+        description: t("common.genericError"),
+      }),
     );
   }
 
@@ -249,7 +262,9 @@ export default function ItemDetails() {
         itemMetaJson(category, opened.icon),
         opened.key,
       ),
-    }).catch(() => Alert.alert(t("common.genericError")));
+    }).catch(() =>
+      toast({ variant: "error", title: t("common.genericError") }),
+    );
   }
 
   const archived = raw?.status === "archived";
@@ -266,7 +281,7 @@ export default function ItemDetails() {
         label={t("archives.restore")}
         onPress={() =>
           void unarchive({ itemId }).catch(() =>
-            Alert.alert(t("archives.restoreFailed")),
+            toast({ variant: "error", title: t("archives.restoreFailed") }),
           )
         }
       />

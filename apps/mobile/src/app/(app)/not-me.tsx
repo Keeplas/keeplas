@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -10,6 +10,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, IconBadge, InfoRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -56,7 +57,7 @@ export default function NotMe() {
         },
       });
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

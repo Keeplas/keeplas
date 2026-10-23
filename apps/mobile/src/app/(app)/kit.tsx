@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Button } from "@/components/button";
@@ -10,6 +10,7 @@ import { Text } from "@/components/text";
 import { openDeviceVault } from "@/crypto/device-vault";
 import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 import { writePreference } from "@/lib/preferences";
+import { toast } from "@/lib/toast";
 import { useReplaceKit } from "@/lib/use-replace-kit";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -43,7 +44,7 @@ export default function KitScreen() {
       }
     } catch (error) {
       if (isPinAbort(error)) return;
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

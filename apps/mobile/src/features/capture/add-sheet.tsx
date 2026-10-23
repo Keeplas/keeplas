@@ -13,6 +13,7 @@ import { BottomSheet } from "@/components/sheet";
 import { StateSheet } from "@/components/state-message";
 import { IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
@@ -75,7 +76,7 @@ function AddSheet({
       if (error instanceof PermissionDenied) setDenied(error.what);
       else if (error instanceof CameraUnavailable)
         setNoCamera(kind === "video" ? "video" : "photo");
-      else Alert.alert(t("common.genericError"));
+      else toast({ variant: "error", title: t("common.genericError") });
     }
   }
 

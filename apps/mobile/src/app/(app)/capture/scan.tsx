@@ -14,6 +14,7 @@ import {
   chooseFromLibrary,
   PermissionDenied,
 } from "@/features/capture/media";
+import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius, type } from "@/theme";
 
@@ -62,10 +63,11 @@ export default function ScanDocument() {
         return;
       }
     } catch {
-      Alert.alert(
-        t("capture.autoUnavailableTitle"),
-        t("capture.autoUnavailableBody"),
-      );
+      toast({
+        variant: "info",
+        title: t("capture.autoUnavailableTitle"),
+        description: t("capture.autoUnavailableBody"),
+      });
     }
     setMode("manual");
   }
@@ -97,10 +99,11 @@ export default function ScanDocument() {
             if (files.length) draftStore.addPages(files.map((f) => f.uri));
           } catch (error) {
             if (!(error instanceof PermissionDenied)) throw error;
-            Alert.alert(
-              t("permissions.photosTitle"),
-              t("permissions.photosBody"),
-            );
+            toast({
+              variant: "error",
+              title: t("permissions.photosTitle"),
+              description: t("permissions.photosBody"),
+            });
           }
         },
       },
