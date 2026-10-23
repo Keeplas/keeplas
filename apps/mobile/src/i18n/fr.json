@@ -1023,6 +1023,9 @@
       "missedBody": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
       "missedConfirm": "Je suis là"
     },
+    "changeTitle": "Changer la fréquence ?",
+    "changeBody": "Nouvelle fréquence : {frequency}. Votre compte à rebours repart de zéro aujourd'hui.",
+    "changeConfirm": "Changer",
     "travelChipOn": "Activé",
     "travelChipOff": "Désactivé"
   },

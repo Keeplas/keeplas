@@ -1031,6 +1031,9 @@
       "missedBody": "You didn't answer your last life check. Nothing is shared yet. Let us know you're here.",
       "missedConfirm": "I'm here"
     },
+    "changeTitle": "Change check-in frequency?",
+    "changeBody": "New frequency: {frequency}. Your countdown starts over from today.",
+    "changeConfirm": "Change",
     "travelChipOn": "On",
     "travelChipOff": "Off"
   },

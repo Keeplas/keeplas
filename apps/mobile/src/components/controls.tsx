@@ -5,7 +5,7 @@ import { radius } from "@/theme";
 import { Icon } from "./icon";
 import { Text } from "./text";
 
-// Checkbox and Radio rows are ~24 pt tall; this brings them to a 44 pt target.
+// Checkbox rows are ~24 pt tall; this brings them to a 44 pt target.
 const ROW_HIT_SLOP = { top: 10, bottom: 10 };
 
 /** Figma `Toggle`: 46×28 track, 22 pt knob. */
@@ -96,7 +96,7 @@ export function Checkbox({
   );
 }
 
-/** Figma `Radio`: 22 pt ring, 10 pt dot when selected. */
+/** Radio: 28 pt ring, 12 pt dot; the whole 48 pt row is the touch target. */
 export function Radio({
   selected,
   onPress,
@@ -114,8 +114,7 @@ export function Radio({
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       onPress={onPress}
-      hitSlop={ROW_HIT_SLOP}
-      style={styles.option}
+      style={[styles.option, styles.radioRow]}
     >
       <View
         style={[
@@ -201,14 +200,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  radioRow: { minHeight: 48 },
   radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  dot: { width: 12, height: 12, borderRadius: 6 },
   progress: { height: 10, borderRadius: 5, overflow: "hidden" },
 });

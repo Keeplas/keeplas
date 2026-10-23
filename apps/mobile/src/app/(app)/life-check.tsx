@@ -105,6 +105,21 @@ export default function LifeCheck() {
     }
   }
 
+  function confirmFrequency(frequency: (typeof FREQUENCIES)[number]) {
+    if (config?.frequency === frequency) return;
+    Alert.alert(
+      t("lifeCheck.changeTitle"),
+      t("lifeCheck.changeBody", { frequency: t(`frequency.${frequency}`) }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("lifeCheck.changeConfirm"),
+          onPress: () => void choose(frequency),
+        },
+      ],
+    );
+  }
+
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
     try {
       await save({
@@ -155,7 +170,7 @@ export default function LifeCheck() {
           <Radio
             key={frequency}
             selected={config?.frequency === frequency}
-            onPress={() => void choose(frequency)}
+            onPress={() => confirmFrequency(frequency)}
             label={t(`frequency.${frequency}`)}
           />
         ))}
