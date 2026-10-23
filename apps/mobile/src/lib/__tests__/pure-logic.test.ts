@@ -28,6 +28,7 @@ const base: StageInputs = {
   authenticated: true,
   viewer: { hasKeyBundle: true },
   loginOtpRequired: false,
+  totpRequired: false,
   needsMigration: false,
   migrationDeferred: false,
   hasDeviceVault: true,
@@ -41,6 +42,8 @@ describe("resolveStage", () => {
     [{ viewer: null }, "signedOut"],
     [{ viewer: undefined }, "loading"],
     [{ loginOtpRequired: true }, "loginOtp"],
+    [{ totpRequired: true }, "totp"],
+    [{ totpRequired: undefined }, "loading"],
     [{ viewer: { hasKeyBundle: false } }, "setup"],
     [{ unlocked: false, hasDeviceVault: true }, "locked"],
     [{ unlocked: false, hasDeviceVault: false }, "needsKit"],
@@ -56,6 +59,20 @@ describe("resolveStage", () => {
     expect(
       resolveStage({ ...base, loginOtpRequired: true, unlocked: false }),
     ).toBe("loginOtp");
+  });
+
+  it("asks for the authenticator code after the login OTP, before anything that needs full auth", () => {
+    expect(
+      resolveStage({ ...base, loginOtpRequired: true, totpRequired: true }),
+    ).toBe("loginOtp");
+    expect(
+      resolveStage({
+        ...base,
+        totpRequired: true,
+        needsMigration: true,
+        unlocked: false,
+      }),
+    ).toBe("totp");
   });
 });
 

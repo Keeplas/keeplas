@@ -454,6 +454,13 @@
     "doneNote": "On a computer, sign in by scanning a QR code with this phone.",
     "goToVault": "Go to my vault"
   },
+  "totp": {
+    "title": "Enter your authenticator code",
+    "body": "Open your authenticator app and type the 6-digit code for Keeplas.",
+    "cta": "Confirm",
+    "wrong": "That code didn't work. Check your authenticator app and try again.",
+    "tooMany": "Too many tries. Wait 15 minutes, then try again."
+  },
   "email": {
     "title": "Sign in with your email",
     "body": "For accounts created on the web. You'll then move your account to this phone.",

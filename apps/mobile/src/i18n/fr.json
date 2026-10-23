@@ -446,6 +446,13 @@
     "doneNote": "Sur un ordinateur, connectez-vous en scannant un QR code avec ce téléphone.",
     "goToVault": "Aller à mon coffre"
   },
+  "totp": {
+    "title": "Saisissez le code de votre authentificateur",
+    "body": "Ouvrez votre application d'authentification et saisissez le code à 6 chiffres de Keeplas.",
+    "cta": "Confirmer",
+    "wrong": "Ce code n'a pas fonctionné. Vérifiez votre application d'authentification et réessayez.",
+    "tooMany": "Trop de tentatives. Attendez 15 minutes, puis réessayez."
+  },
   "email": {
     "title": "Se connecter avec votre e-mail",
     "body": "Pour les comptes créés sur le web. Vous transférerez ensuite votre compte sur ce téléphone.",
