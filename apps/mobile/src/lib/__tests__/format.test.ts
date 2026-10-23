@@ -1,4 +1,4 @@
-import { countryName, placeName } from "../format";
+import { countdownParts, countryName, placeName } from "../format";
 
 describe("countryName", () => {
   // Hermes ships without Intl.DisplayNames; names must not depend on it.
@@ -28,5 +28,28 @@ describe("placeName", () => {
     );
     expect(placeName({ country: "FR" }, "en")).toBe("France");
     expect(placeName({}, "en")).toBeNull();
+  });
+});
+
+describe("countdownParts", () => {
+  const now = Date.UTC(2026, 9, 23, 12, 0, 0);
+
+  it("splits the time left into days, hours, minutes and seconds", () => {
+    const target = now + ((2 * 24 + 3) * 3_600 + 4 * 60 + 5) * 1000;
+    expect(countdownParts(target, now)).toEqual({
+      days: 2,
+      hours: 3,
+      minutes: 4,
+      seconds: 5,
+    });
+  });
+
+  it("stops at zero once the deadline has passed", () => {
+    expect(countdownParts(now - 60_000, now)).toEqual({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
   });
 });

@@ -12,6 +12,7 @@ import type { IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { Countdown } from "@/features/life-check/countdown";
 import { formatDate } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -125,6 +126,30 @@ export default function LifeCheck() {
     >
       <Text variant="h1">{t("lifeCheck.title")}</Text>
       <Text color="text.muted">{t("lifeCheck.body")}</Text>
+      {config ? (
+        <Card>
+          <Text variant="caption" color="text.muted">
+            {t("lifeCheck.nextCheckIn")}
+          </Text>
+          {config.paused ? (
+            <Text>{t("lifeCheck.paused")}</Text>
+          ) : (
+            <Countdown target={config.nextCheckAt} />
+          )}
+          <Text variant="body-sm" color="text.muted">
+            {config.lastCheckAt
+              ? t("lifeCheck.lastConfirmed", {
+                  date: formatDate(config.lastCheckAt, language),
+                })
+              : t("lifeCheck.resetBody")}
+          </Text>
+          <Button
+            label={t("lifeCheck.reset")}
+            loading={confirming}
+            onPress={() => void confirm()}
+          />
+        </Card>
+      ) : null}
       <Card>
         {FREQUENCIES.map((frequency) => (
           <Radio
@@ -135,18 +160,6 @@ export default function LifeCheck() {
           />
         ))}
       </Card>
-      <ListRow
-        icon="check-circle"
-        title={t("lifeCheck.imOkay")}
-        description={
-          config?.lastCheckAt
-            ? t("lifeCheck.lastConfirmed", {
-                date: formatDate(config.lastCheckAt, language),
-              })
-            : t("lifeCheck.imOkayBody")
-        }
-        onPress={() => void confirm()}
-      />
       {config ? (
         <ListRow
           icon="map-pin"

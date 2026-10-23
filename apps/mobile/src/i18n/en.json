@@ -908,8 +908,16 @@
     "title": "Life check",
     "body": "Choose how often Keeplas should ask you to check in.",
     "notConfigured": "Set your check-in frequency",
-    "imOkay": "I'm okay",
-    "imOkayBody": "Reset the countdown now",
+    "nextCheckIn": "Next check-in",
+    "countdown": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds"
+    },
+    "paused": "Check-ins are paused. Your countdown resumes once Life check is back on.",
+    "reset": "I'm okay, reset the countdown",
+    "resetBody": "Only your answer resets the countdown. Using the app doesn't.",
     "confirmedTitle": "Thanks, noted",
     "confirmedBody": "Your countdown starts over. Next Life check on {date}.",
     "confirmedBodyNoDate": "Your countdown starts over.",
