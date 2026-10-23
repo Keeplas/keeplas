@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  * and the in-memory identity secret are wiped, forcing a re-unlock. Single
  * source of truth — do not hardcode the duration elsewhere.
  */
-export const AUTO_LOCK_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes
+export const AUTO_LOCK_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Events that count as "the user is still here" and reset the idle clock.

@@ -126,7 +126,24 @@ export const setPushToken = auditedMutation({
   getResourceId: (args) => args.deviceId,
 });
 
-/** Active (non-revoked) devices of the signed-in user, newest first. */
+/**
+ * A browser link has expired once its session is gone (signed out, linked
+ * again, or past expiry) and no passkey of it is left to sign back in: it can
+ * only return through a new QR approval, which registers a new row. Phones
+ * keep one row across sign-ins, so they never expire this way.
+ */
+async function isExpiredLink(ctx: QueryCtx, device: Doc<"devices">) {
+  if (device.kind !== "web") return false;
+  const session = device.sessionId && (await ctx.db.get(device.sessionId));
+  if (session && session.expirationTime > Date.now()) return false;
+  const passkey = await ctx.db
+    .query("passkey_credentials")
+    .withIndex("by_keeplas_device", (q) => q.eq("keeplasDeviceId", device._id))
+    .first();
+  return passkey === null;
+}
+
+/** Active (non-revoked, unexpired) devices of the signed-in user, newest first. */
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -137,7 +154,16 @@ export const list = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .collect();
-    return devices.filter((d) => d.revokedAt === undefined);
+    const active: Doc<"devices">[] = [];
+    for (const device of devices) {
+      if (
+        device.revokedAt === undefined &&
+        !(await isExpiredLink(ctx, device))
+      ) {
+        active.push(device);
+      }
+    }
+    return active;
   },
 });
 
