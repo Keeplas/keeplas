@@ -19,7 +19,7 @@ import { radius } from "@/theme";
 import { useVault } from "@/providers/vault-provider";
 
 /**
- * M08-6 Unlock your vault: Face ID / fingerprint releases the device key
+ * M08-6 Unlock my vault: Face ID / fingerprint releases the device key
  * that unwraps the MasterKey, plus the Keeplas code when this phone has one.
  */
 export default function Unlock() {
@@ -148,11 +148,15 @@ export default function Unlock() {
         </Text>
       ) : null}
       <Button
-        variant="text"
+        variant="secondary"
         label={t("unlock.lost")}
         onPress={() => router.push("/lost-access")}
       />
-      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
+      <Button
+        variant="secondary"
+        label={t("settings.signOut")}
+        onPress={signOut}
+      />
     </Screen>
   );
 }
