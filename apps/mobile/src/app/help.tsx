@@ -11,7 +11,7 @@ import { useI18n } from "@/providers/i18n-provider";
 const SECTIONS = {
   change: ["newPhone", "platform"],
   lost: ["lostPhone", "lostNumber", "lostAuthenticator", "nothingLeft"],
-  understand: ["backup", "kit", "wait", "notMe", "zeroAccess"],
+  understand: ["backup", "kit", "wait", "travelMode", "notMe", "zeroAccess"],
 } as const;
 
 /**
