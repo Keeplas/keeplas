@@ -7,13 +7,13 @@ describe("audit chain (SHA-256)", () => {
     const t = makeT();
     const userId = await seedUser(t);
 
-    // `totp.disable` is an audited mutation guarded only by `requireAuth`, so
-    // it exercises the wrapper without the step-up gates. The wrapper appends
-    // an entry even when the handler is a no-op (no TOTP row).
-    await asUser(t, userId).mutation(api.totp.disable, {
+    // `users.updateProfile` is an audited mutation guarded only by
+    // `requireAuth`, so it exercises the wrapper without the step-up gates.
+    // The wrapper appends an entry even when nothing changes.
+    await asUser(t, userId).mutation(api.users.updateProfile, {
       _audit: await signedAudit(),
     });
-    await asUser(t, userId).mutation(api.totp.disable, {
+    await asUser(t, userId).mutation(api.users.updateProfile, {
       _audit: await signedAudit(),
     });
 
@@ -30,7 +30,7 @@ describe("audit chain (SHA-256)", () => {
     for (const log of logs) {
       // SHA-256 hex digest (64 chars) — the legacy 32-bit hash was 8 chars.
       expect(log.logHash).toMatch(/^[0-9a-f]{64}$/);
-      expect(log.action).toBe("totp_disabled");
+      expect(log.action).toBe("user.profile.updated");
       // IP / country are attested from the verified `_audit` envelope.
       expect(log.ipAddress).toBe("127.0.0.1");
       expect(log.country).toBe("FR");

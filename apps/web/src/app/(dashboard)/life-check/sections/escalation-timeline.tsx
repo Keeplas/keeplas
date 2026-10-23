@@ -1,5 +1,7 @@
-import { HelpHint, Icon } from "@keeplas/ui";
-import { useTranslations } from "@/lib/i18n";
+import { cn, HelpHint, InfoCallout } from "@keeplas/ui";
+import { Panel } from "@/components/v2/surface";
+import { formatDate } from "@/lib/format";
+import { useLocale, useTranslations } from "@/lib/i18n";
 import { ICON_PATHS } from "@/lib/icons";
 import { FREQUENCIES, type ChannelConfig, type Frequency } from "./constants";
 
@@ -17,10 +19,10 @@ const REMINDER_DAYS = [3, 7, 10] as const;
 const GRACE_HOURS = 72;
 
 const TONE_STYLES = {
-  active: "bg-secondary ring-4 ring-secondary/20",
-  reminder: "bg-secondary/50",
-  confirm: "bg-error/50",
-  triggered: "bg-error ring-4 ring-error/30",
+  active: "bg-action-primary ring-4 ring-progress-track",
+  reminder: "bg-border-strong",
+  confirm: "bg-status-pending",
+  triggered: "bg-action-danger ring-4 ring-bg-danger",
 } as const;
 
 type Tone = keyof typeof TONE_STYLES;
@@ -40,10 +42,8 @@ interface EscalationTimelineProps extends ReleasePolicy {
 interface PhaseStep {
   dayLabel: string;
   title: string;
-  titleClass: string;
   description: React.ReactNode;
   tone: Tone;
-  isFinal?: boolean;
   extra?: React.ReactNode;
   help?: string;
 }
@@ -92,7 +92,6 @@ function buildSteps(
     {
       dayLabel: "D+0",
       title: t("timeline.steps.sent.title"),
-      titleClass: "text-on-primary",
       description: enabled.length
         ? t("timeline.steps.sent.description", {
             channels: joinChannelLabels(enabled, t),
@@ -106,29 +105,24 @@ function buildSteps(
         i === REMINDER_DAYS.length - 1
           ? t("timeline.steps.reminder.titleFinal")
           : t("timeline.steps.reminder.title"),
-      titleClass: "text-on-primary/90",
       description: t("timeline.steps.reminder.description"),
       tone: "reminder" as Tone,
     })),
     {
       dayLabel: `D+${CHECK_IN_WINDOW_DAYS}`,
       title: t("timeline.steps.protocolBegins.title"),
-      titleClass: "text-on-primary text-headline-sm",
       description: t("timeline.steps.protocolBegins.description"),
       tone: "confirm",
       help: t("timeline.steps.protocolBegins.help"),
       extra: (
-        <div className="flex gap-2 flex-wrap mt-3">
-          <span className="px-3 py-1 bg-secondary text-on-secondary text-label-md rounded-sm">
-            {t("timeline.steps.protocolBegins.badge")}
-          </span>
-        </div>
+        <span className="mt-[8px] inline-flex rounded-full bg-bg-pending px-[10px] py-[4px] text-caption text-text-pending">
+          {t("timeline.steps.protocolBegins.badge")}
+        </span>
       ),
     },
     {
       dayLabel: t("timeline.steps.contactsConfirm.dayLabel"),
       title: t("timeline.steps.contactsConfirm.title"),
-      titleClass: "text-on-primary/90",
       description: t("timeline.steps.contactsConfirm.description", {
         contacts: trustedContactsLabel(confirmationThreshold, t),
         days: confirmationWindowDays,
@@ -142,7 +136,6 @@ function buildSteps(
     {
       dayLabel: `+${GRACE_HOURS}h`,
       title: t("timeline.steps.lastChance.title"),
-      titleClass: "text-on-primary/90",
       description: t("timeline.steps.lastChance.description", {
         hours: GRACE_HOURS,
       }),
@@ -152,12 +145,10 @@ function buildSteps(
     {
       dayLabel: t("timeline.steps.released.dayLabel"),
       title: t("timeline.steps.released.title"),
-      titleClass: "text-on-primary text-headline-sm",
       description: t("timeline.steps.released.description", {
         contacts: trustedContactsLabel(confirmationThreshold, t),
       }),
       tone: "triggered",
-      isFinal: true,
       help: t("timeline.steps.released.help"),
     },
   ];
@@ -182,6 +173,7 @@ export function EscalationTimeline({
   travelModeUntil,
 }: EscalationTimelineProps) {
   const t = useTranslations("lifeCheck");
+  const locale = useLocale();
   const policy: ReleasePolicy = {
     confirmationThreshold,
     confirmationWindowDays,
@@ -190,106 +182,59 @@ export function EscalationTimeline({
   const cadence = cadenceLabel(frequency, t);
 
   return (
-    <aside className="lg:col-span-5">
-      <div className="vault-gradient rounded-sm p-8 text-on-primary h-full shadow-2xl relative overflow-hidden">
-        <h3 className="text-headline-md mb-1.5 flex items-center gap-2">
+    <Panel className="flex flex-col gap-[20px] p-[20px]">
+      <div className="flex flex-col gap-[4px]">
+        <h2 className="flex items-center gap-[8px] text-h3 text-text-primary">
           {t("timeline.title")}
-          <HelpHint
-            content={t("timeline.help")}
-            className="text-on-primary/60 hover:text-secondary-fixed"
-          />
-        </h3>
-        <p className="text-body-md text-on-primary-container mb-2">
-          {t("timeline.subtitle")}
-        </p>
-        <p className="text-label-md text-on-primary-container/80 mb-8">
+          <HelpHint content={t("timeline.help")} />
+        </h2>
+        <p className="text-body-sm text-text-muted">{t("timeline.subtitle")}</p>
+        <p className="text-caption text-text-muted">
           {t("timeline.cadence", { cadence })}
         </p>
-
-        {travelModeEnabled && (
-          <div className="mb-8 p-4 bg-on-primary/5 rounded-xs ghost-border flex items-start gap-3">
-            <Icon
-              path={ICON_PATHS.globe}
-              className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
-            />
-            <p className="text-body-md text-on-primary-container">
-              {travelModeUntil
-                ? t("timeline.travelPausedUntil", {
-                    date: new Date(travelModeUntil).toLocaleDateString(),
-                  })
-                : t("timeline.travelPaused")}
-            </p>
-          </div>
-        )}
-
-        <div className="relative">
-          <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-secondary/30" />
-
-          <div className="space-y-8">
-            {steps.map((step) => (
-              <div key={step.dayLabel} className="relative pl-12">
-                <div
-                  className={`absolute left-0 top-1 w-6 h-6 rounded-sm z-10 ${TONE_STYLES[step.tone]}`}
-                />
-                {step.isFinal ? (
-                  <div className="bg-on-primary/5 p-4 rounded-xs backdrop-blur-sm">
-                    <p
-                      className={`text-headline-sm mb-1.5 flex items-center gap-1.5 ${step.titleClass}`}
-                    >
-                      {step.dayLabel}: {step.title}
-                      {step.help && (
-                        <HelpHint
-                          content={step.help}
-                          className="text-on-primary/60 hover:text-secondary-fixed"
-                        />
-                      )}
-                    </p>
-                    <p className="text-body-md text-on-primary-container mb-3">
-                      {step.description}
-                    </p>
-                    {step.extra}
-                  </div>
-                ) : (
-                  <>
-                    <p
-                      className={`text-headline-sm mb-1 flex items-center gap-1.5 ${step.titleClass}`}
-                    >
-                      {step.dayLabel}: {step.title}
-                      {step.help && (
-                        <HelpHint
-                          content={step.help}
-                          className="text-on-primary/60 hover:text-secondary-fixed"
-                        />
-                      )}
-                    </p>
-                    <p className="text-body-md text-on-primary-container">
-                      {step.description}
-                    </p>
-                    {step.extra}
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8 p-4 bg-on-primary/5 rounded-xs ghost-border">
-          <div className="flex items-start gap-3">
-            <Icon
-              path={ICON_PATHS.shieldCheck}
-              className="w-4 h-4 text-secondary-fixed shrink-0 mt-0.5"
-            />
-            <div>
-              <p className="text-label-md text-on-primary-container/80 mb-1">
-                {policyRecap(policy, t)}
-              </p>
-              <p className="text-body-md text-on-primary-container italic">
-                {t("timeline.footer")}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
-    </aside>
+
+      {travelModeEnabled && (
+        <InfoCallout icon={ICON_PATHS.globe}>
+          {travelModeUntil
+            ? t("timeline.travelPausedUntil", {
+                date: formatDate(travelModeUntil, locale),
+              })
+            : t("timeline.travelPaused")}
+        </InfoCallout>
+      )}
+
+      <ol className="relative flex flex-col gap-[20px]">
+        <span
+          aria-hidden
+          className="absolute bottom-[8px] left-[7px] top-[8px] w-px bg-border-default"
+        />
+        {steps.map((step) => (
+          <li key={step.dayLabel} className="relative pl-[32px]">
+            <span
+              aria-hidden
+              className={cn(
+                "absolute left-0 top-[3px] size-[15px] rounded-full",
+                TONE_STYLES[step.tone],
+              )}
+            />
+            <p className="text-label text-text-primary">
+              <span className="mr-[6px] text-text-muted">{step.dayLabel}</span>
+              {step.title}
+              {step.help && (
+                <HelpHint content={step.help} className="ml-[6px]" />
+              )}
+            </p>
+            <p className="text-body-sm text-text-muted">{step.description}</p>
+            {step.extra}
+          </li>
+        ))}
+      </ol>
+
+      <InfoCallout icon={ICON_PATHS.shieldCheck}>
+        <p className="text-label">{policyRecap(policy, t)}</p>
+        <p className="text-text-muted">{t("timeline.footer")}</p>
+      </InfoCallout>
+    </Panel>
   );
 }

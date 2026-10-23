@@ -4,26 +4,17 @@ import * as React from "react";
 import { Icon } from "./icon";
 import { cn } from "./lib/utils";
 
-export type InfoCalloutTone = "info" | "warning" | "success";
+export type InfoCalloutTone = "info" | "warning" | "success" | "danger";
 
+// v2 "Callout" (Figma / mobile): tinted surface, no border, semantic tokens.
 const TONE_STYLES: Record<
   InfoCalloutTone,
   { container: string; icon: string }
 > = {
-  info: {
-    container:
-      "bg-surface-container-low border-outline-variant/40 text-on-surface-variant",
-    icon: "text-secondary",
-  },
-  warning: {
-    container:
-      "bg-secondary-fixed/15 border-secondary-fixed/40 text-on-surface",
-    icon: "text-secondary",
-  },
-  success: {
-    container: "bg-secondary/10 border-secondary/30 text-on-surface",
-    icon: "text-secondary",
-  },
+  info: { container: "bg-bg-info", icon: "text-text-accent" },
+  warning: { container: "bg-bg-pending", icon: "text-text-pending" },
+  success: { container: "bg-status-active/10", icon: "text-status-active" },
+  danger: { container: "bg-bg-danger", icon: "text-action-danger" },
 };
 
 export interface InfoCalloutProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -50,14 +41,16 @@ export function InfoCallout({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-xs border",
+        "flex items-start gap-[12px] rounded-[12px] px-[14px] py-[12px] text-text-primary",
         tones.container,
         className,
       )}
       {...props}
     >
-      <Icon path={icon} className={cn("w-5 h-5 mt-0.5 shrink-0", tones.icon)} />
-      <div className="text-body-md leading-relaxed">{children}</div>
+      <Icon path={icon} className={cn("size-[22px] shrink-0", tones.icon)} />
+      <div className="min-w-0 flex-1 text-body-sm [&>*+*]:mt-[4px]">
+        {children}
+      </div>
     </div>
   );
 }

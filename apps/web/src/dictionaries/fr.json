@@ -291,13 +291,15 @@
       "toggleActiveError": "Impossible de modifier l'état du Life Check"
     },
     "page": {
-      "intro": "Keeplas vous demande régulièrement de confirmer que tout va bien. Si vous ne répondez plus, vos contacts de confiance confirment votre indisponibilité avant que votre coffre ne leur soit transmis."
+      "intro": "Choisissez à quelle fréquence Keeplas doit vous demander de confirmer.",
+      "title": "Life check"
     },
     "nextCheckIn": {
       "label": "Prochaine vérification",
-      "description": "Nous vous demanderons de confirmer que vous allez bien. Seule votre réponse explicite réinitialise le compte à rebours — utiliser l'application ne suffit pas.",
+      "description": "Seule votre réponse réinitialise le compte à rebours. Utiliser l'app ne suffit pas.",
       "paused": "Les vérifications sont en pause. Votre compte à rebours reprendra dès que Life Check sera réactivé.",
-      "reset": "Je vais bien — réinitialiser le compte à rebours"
+      "reset": "Je vais bien, réinitialiser le compte à rebours",
+      "lastConfirmed": "Dernière confirmation le {date}"
     },
     "activeCycle": {
       "title": "Vérification requise",
@@ -363,6 +365,11 @@
         "weekly": "Actif",
         "monthly": "Recommandé",
         "quarterly": "Détendu"
+      },
+      "label": {
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuel",
+        "quarterly": "Trimestriel"
       }
     },
     "timeline": {
@@ -473,7 +480,8 @@
       "disable": "Désactiver le mode voyage",
       "returnDate": "Date de retour",
       "returnDatePlaceholder": "Choisissez votre date de retour",
-      "enable": "Activer"
+      "enable": "Activer",
+      "off": "Désactivé"
     },
     "badge": {
       "status": {
@@ -529,7 +537,8 @@
       "bodyUntil": "Les Life checks sont en pause jusqu'au {date}. Vos contacts ne seront pas sollicités pendant votre absence.",
       "changeDates": "Modifier les dates",
       "turnOff": "Désactiver le mode voyage"
-    }
+    },
+    "note": "Si vous manquez la fenêtre, vos contacts doivent confirmer avant toute transmission."
   },
   "settings": {
     "preferences": {
@@ -1074,8 +1083,7 @@
   },
   "trustedContacts": {
     "header": {
-      "titleLine1": "Cercle de confiance &",
-      "titleLine2": "transmission",
+      "title": "Personnes de confiance",
       "subtitle": "Désignez les personnes qui protègent votre héritage et décidez qui reçoit quels éléments du coffre lors d'un déclenchement. Gérez ici vos gardiens et vos bénéficiaires, puis regroupez-les en groupes de transmission.",
       "howItWorks": "Comment fonctionnent les contacts de confiance",
       "medicalIdCallout": "Pour les urgences aiguës (accident, malaise soudain), configurez l'ID médical intégré à votre téléphone — les secouristes le consultent en premier.",
@@ -2280,6 +2288,17 @@
       "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
       "removeConfirm": "Désactiver",
       "removed": "PIN désactivé"
+    },
+    "authenticator": {
+      "title": "Application d'authentification",
+      "description": "Google Authenticator vous demande un code à chaque connexion.",
+      "on": "Activée",
+      "turnOff": "Désactiver",
+      "dialogTitle": "Désactiver l'authentificateur ?",
+      "dialogBody": "Saisissez le code à 6 chiffres de Google Authenticator. Il ne vous sera plus demandé à la connexion.",
+      "codeLabel": "Code à 6 chiffres",
+      "invalid": "Code invalide ou expiré. Réessayez.",
+      "done": "Authentificateur désactivé"
     },
     "activity": {
       "title": "Activité récente",

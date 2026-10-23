@@ -76,43 +76,83 @@ interface KeeplasLogoMarkProps {
   className?: string;
 }
 
-// Keeplas symbol (PRD/v2-mobile-first/design-kit/svg/logo/keeplas-symbole.svg).
-// Colors bind to semantic tokens: navy shield on light, cream shield on dark.
+// Keeplas symbol (apps/web/public/assets/logo/logo.svg): gradient shield,
+// keyhole, continuity arcs and diamond. The gradients are brand art and stay
+// fixed; only the rim follows the theme so the shield stands out on Noir.
 export const KeeplasLogoMark = React.forwardRef<
   SVGSVGElement,
   KeeplasLogoMarkProps
->(({ width = 40, height = 40, className }, ref) => (
-  <svg
-    ref={ref}
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 48 48"
-    width={width}
-    height={height}
-    className={className}
-    aria-hidden
-    focusable={false}
-  >
-    <path
-      d="M24 3 6 9.5v12c0 11 7.6 19.6 18 23.5 10.4-3.9 18-12.5 18-23.5v-12z"
-      className="fill-text-primary"
-    />
-    <path
-      d="M24 8.6 10.6 13.4v8.2c0 8.6 5.7 15.5 13.4 18.8 7.7-3.3 13.4-10.2 13.4-18.8v-8.2z"
-      fill="none"
-      strokeOpacity={0.35}
-      strokeWidth={1}
-      className="stroke-border-strong"
-    />
-    <circle
-      cx={24}
-      cy={22}
-      r={9}
-      fill="none"
-      strokeWidth={1.6}
-      className="stroke-border-strong"
-    />
-    <circle cx={24} cy={19.6} r={2.9} className="fill-border-strong" />
-    <path d="M22.4 21.4h3.2l.9 7.1h-5z" className="fill-border-strong" />
-  </svg>
-));
+>(({ width = 40, height = 40, className }, ref) => {
+  // Unique per instance: several marks on one page must not share gradient ids.
+  const id = React.useId();
+  const shield = `${id}-shield`;
+  const accent = `${id}-accent`;
+  return (
+    <svg
+      ref={ref}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      width={width}
+      height={height}
+      className={className}
+      aria-hidden
+      focusable={false}
+    >
+      <defs>
+        <linearGradient id={shield} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#041632" />
+          <stop offset="1" stopColor="#1B2B48" />
+        </linearGradient>
+        <linearGradient id={accent} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#B9EAFF" />
+          <stop offset="1" stopColor="#28657A" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M256 28 L462 120 C462 120 472 320 256 484 C40 320 50 120 50 120 Z"
+        fill={`url(#${shield})`}
+        strokeWidth={12}
+        strokeLinejoin="round"
+        className="stroke-logo-rim"
+      />
+      <path
+        d="M256 60 L432 140 C432 140 440 310 256 452 C72 310 80 140 80 140 Z"
+        fill="none"
+        stroke="#28657A"
+        strokeWidth={2}
+        opacity={0.3}
+      />
+      <circle
+        cx={256}
+        cy={220}
+        r={72}
+        fill="none"
+        stroke={`url(#${accent})`}
+        strokeWidth={6}
+      />
+      <path
+        d="M256 190 C240 190 228 202 228 218 C228 230 236 240 248 244 L242 290 C242 294 245 298 250 298 L262 298 C267 298 270 294 270 290 L264 244 C276 240 284 230 284 218 C284 202 272 190 256 190Z"
+        fill={`url(#${accent})`}
+      />
+      <path
+        d="M148 180 C148 180 130 250 160 330 M364 180 C364 180 382 250 352 330"
+        fill="none"
+        stroke="#B9EAFF"
+        strokeWidth={3}
+        strokeLinecap="round"
+        opacity={0.4}
+      />
+      <rect
+        x={248}
+        y={100}
+        width={16}
+        height={16}
+        rx={2}
+        transform="rotate(45 256 108)"
+        fill="#B9EAFF"
+        opacity={0.8}
+      />
+    </svg>
+  );
+});
 KeeplasLogoMark.displayName = "KeeplasLogoMark";

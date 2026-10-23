@@ -109,7 +109,7 @@ Spacing follows a 4 px grid (`--kp-space-1` … `--kp-space-16` = 4 … 64 px). 
 
 - **Icons**: `<Icon path={ICON_PATHS.lock} />` (`@keeplas/ui` + `apps/web/src/lib/icons.ts`). The 58 kit icons (`PRD/v2-mobile-first/design-kit/svg/icons/`) are in `ICON_PATHS` under camelCase names (`shieldCheck`, `faceId`, `cloudUpload` …), drawn at the default stroke 1.75 with `currentColor`, so they theme. `more` and `pin` are dot grids: pass `strokeWidth={2.6}`. Entries not in the kit are legacy.
 - **Illustrations**: `apps/web/public/assets/illustrations/*.svg` (from `figma/svg/illustrations/`): `landscape`, `landscape-night`, `desktop-landscape(-night)`, `desktop-modal-crest`, `branch`, `face`, `fingerprint`, `vault-laptop`, `vault-phone`, `invitation`, `scheduled-access`, `browser-linked`, `new-device`, `verification-call`. Use the `-night` variant in dark mode. `desktop-landscape(-night)` carry the keeplas-website's embedded ambient animations: render them with `<Illustration>` (`@/components/illustration`), which plays them only via `#play` and only without a reduced-motion preference. Landing illustrations (`web-*`) belong to the keeplas-website repo.
-- **Logos**: `/assets/logo/logo.svg` (symbol), `logo-inverse.svg` (on navy / dark), `logo-wordmark.svg`, `favicon.svg`. In React, `KeeplasLogoMark` from `@keeplas/ui` binds to tokens and themes itself.
+- **Logos**: the real Keeplas logo is the gradient keyhole shield (same art as the app icon and the keeplas-website). `/assets/logo/logo.svg` (symbol), `logo-inverse.svg` (light rim, on navy / dark), `logo-wordmark.svg`, `favicon.svg` (simplified for 16 px). In React, use `KeeplasLogoMark` from `@keeplas/ui`: its rim follows `--kp-logo-rim`, so it themes itself. Never redraw the old flat shield.
 
 ## Rules
 

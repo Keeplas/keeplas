@@ -2,21 +2,13 @@ import { useState } from "react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Doc, Id } from "@keeplas/backend/_generated/dataModel";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  Button,
-  Input,
-  Label,
-  Textarea,
-  ErrorAlert,
-} from "@keeplas/ui";
+import { Button, Input, Textarea } from "@keeplas/ui";
 import { ContactMembersSelect } from "@/components/contact-members-select";
+import { Modal } from "@/components/v2/modal";
+import { Field } from "@/components/vault/form-fields";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
+import { TEXTAREA_FIELD } from "./create-group-dialog";
 
 interface EditGroupDialogProps {
   open: boolean;
@@ -80,52 +72,49 @@ export function EditGroupDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="shrink-0 static">
-          <div className="flex-1 min-w-0">
-            <DialogTitle>{t("editGroup.title")}</DialogTitle>
-            <DialogDescription className="mt-1">
-              {t("editGroup.description")}
-            </DialogDescription>
-          </div>
-        </DialogHeader>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("editGroup.title")}
+      description={t("editGroup.description")}
+      width="w-[520px]"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-[20px]">
+        <Field label={t("editGroup.nameLabel")}>
+          {(id) => (
+            <>
+              <Input
+                id={id}
+                variant="field"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                readOnly={group.isDefault}
+                disabled={group.isDefault}
+              />
+              {group.isDefault && (
+                <p className="text-body-sm text-text-muted">
+                  {t("editGroup.defaultNameFixed")}
+                </p>
+              )}
+            </>
+          )}
+        </Field>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="edit-group-name">{t("editGroup.nameLabel")}</Label>
-            <Input
-              id="edit-group-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              readOnly={group.isDefault}
-              disabled={group.isDefault}
-            />
-            {group.isDefault && (
-              <p className="text-label-md text-on-surface-variant">
-                {t("editGroup.defaultNameFixed")}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-group-description">
-              {t("editGroup.descriptionLabel")}
-            </Label>
+        <Field label={t("editGroup.descriptionLabel")}>
+          {(id) => (
             <Textarea
-              id="edit-group-description"
+              id={id}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
+              className={TEXTAREA_FIELD}
             />
-          </div>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label>{t("editGroup.membersLabel")}</Label>
+        <Field label={t("editGroup.membersLabel")}>
+          {() => (
             <ContactMembersSelect
               contacts={contacts}
               selected={members}
@@ -134,32 +123,34 @@ export function EditGroupDialog({
               emptyPlaceholder={t("editGroup.membersEmptyPlaceholder")}
               emptyMessage={t("editGroup.membersEmptyMessage")}
             />
-          </div>
+          )}
+        </Field>
 
-          {error && <ErrorAlert message={error} />}
+        {error && (
+          <p role="alert" className="text-body-sm text-action-danger">
+            {error}
+          </p>
+        )}
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              {t("editGroup.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving || !name.trim()}
-              className="flex-1 cursor-pointer"
-            >
-              {saving ? t("editGroup.saving") : t("editGroup.submit")}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end gap-[12px]">
+          <Button
+            type="button"
+            variant="plain"
+            size="regular"
+            onClick={() => onOpenChange(false)}
+          >
+            {t("editGroup.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="regular"
+            disabled={saving || !name.trim()}
+          >
+            {saving ? t("editGroup.saving") : t("editGroup.submit")}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

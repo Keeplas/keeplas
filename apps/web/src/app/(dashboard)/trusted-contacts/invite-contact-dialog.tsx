@@ -3,25 +3,21 @@ import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Button,
+  cn,
+  HelpHint,
+  Input,
+  isValidEmail,
+  isValidPhone,
+  PhoneInput,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   SelectItem,
 } from "@keeplas/ui";
-import {
-  Button,
-  Input,
-  Label,
-  ErrorAlert,
-  HelpHint,
-  PhoneInput,
-  isValidPhone,
-  isValidEmail,
-  cn,
-} from "@keeplas/ui";
+import { Modal } from "@/components/v2/modal";
+import { RowText } from "@/components/v2/surface";
+import { Field } from "@/components/vault/form-fields";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
@@ -33,8 +29,17 @@ const ROLES = [
   { value: "other", key: "other" },
 ] as const;
 
+const CONTACT_TYPES = [
+  { value: "trust", key: "trustOption" },
+  { value: "recipient_only", key: "recipientOption" },
+] as const;
+
 type Role = (typeof ROLES)[number]["value"];
-type ContactType = "trust" | "recipient_only";
+type ContactType = (typeof CONTACT_TYPES)[number]["value"];
+
+/** Field label with a help hint (same look as `Field`'s label). */
+const LABEL =
+  "flex items-center gap-[6px] text-[13px] leading-[18px] font-medium text-text-body";
 
 interface InviteContactDialogProps {
   open: boolean;
@@ -115,147 +120,139 @@ export function InviteContactDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-surface max-w-lg max-h-[92vh] p-0 flex flex-col overflow-hidden">
-        <DialogHeader className="shrink-0 static">
-          <div className="flex-1 min-w-0">
-            <DialogTitle>
-              {contactType === "recipient_only"
-                ? t("invite.titleRecipient")
-                : t("invite.titleTrust")}
-            </DialogTitle>
-            <DialogDescription className="mt-1">
-              {contactType === "recipient_only"
-                ? t("invite.descriptionRecipient")
-                : t("invite.descriptionTrust")}
-            </DialogDescription>
-          </div>
-        </DialogHeader>
-
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 px-6 pb-6 pt-4 flex-1 overflow-y-auto min-h-0"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="contact-name">{t("invite.fullNameLabel")}</Label>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        contactType === "recipient_only"
+          ? t("invite.titleRecipient")
+          : t("invite.titleTrust")
+      }
+      description={
+        contactType === "recipient_only"
+          ? t("invite.descriptionRecipient")
+          : t("invite.descriptionTrust")
+      }
+      width="w-[560px]"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-[20px]">
+        <Field label={t("invite.fullNameLabel")}>
+          {(id) => (
             <Input
-              id="contact-name"
+              id={id}
+              variant="field"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("invite.fullNamePlaceholder")}
               required
             />
-          </div>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact-email">{t("invite.emailLabel")}</Label>
+        <Field label={t("invite.emailLabel")}>
+          {(id) => (
             <Input
-              id="contact-email"
+              id={id}
               type="email"
+              variant="field"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contact@example.com"
             />
-          </div>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact-phone">{t("invite.phoneLabel")}</Label>
-            <PhoneInput id="contact-phone" value={phone} onChange={setPhone} />
-            <p className="text-label-md text-on-surface-variant">
-              {t("invite.contactHint")}
-            </p>
-          </div>
+        <Field label={t("invite.phoneLabel")}>
+          {(id) => (
+            <>
+              <PhoneInput id={id} value={phone} onChange={setPhone} />
+              <p className="text-body-sm text-text-muted">
+                {t("invite.contactHint")}
+              </p>
+            </>
+          )}
+        </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="contact-role" className="flex items-center gap-1.5">
-              {t("invite.roleLabel")}
-              <HelpHint content={t("invite.roleHelp")} />
-            </Label>
-            <Select<Role>
-              id="contact-role"
-              value={role}
-              onValueChange={setRole}
-              placeholder={t("invite.rolePlaceholder")}
-            >
-              {ROLES.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {t(`invite.roles.${r.key}`)}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
+        <div className="flex flex-col gap-[6px]">
+          <label htmlFor="contact-role" className={LABEL}>
+            {t("invite.roleLabel")}
+            <HelpHint content={t("invite.roleHelp")} />
+          </label>
+          <Select<Role>
+            id="contact-role"
+            variant="field"
+            value={role}
+            onValueChange={setRole}
+            placeholder={t("invite.rolePlaceholder")}
+          >
+            {ROLES.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                {t(`invite.roles.${r.key}`)}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
 
-          <div className="space-y-2">
-            <Label className="flex items-center gap-1.5">
-              {t("invite.roleInKeeplasLabel")}
-              <HelpHint content={t("invite.roleInKeeplasHelp")} />
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setContactType("trust")}
+        <div className="flex flex-col gap-[6px]">
+          <span id="contact-type-label" className={LABEL}>
+            {t("invite.roleInKeeplasLabel")}
+            <HelpHint content={t("invite.roleInKeeplasHelp")} />
+          </span>
+          <RadioGroup
+            aria-labelledby="contact-type-label"
+            value={contactType}
+            onValueChange={(value) => setContactType(value as ContactType)}
+            className="grid gap-[8px] sm:grid-cols-2"
+          >
+            {CONTACT_TYPES.map((option) => (
+              <label
+                key={option.value}
                 className={cn(
-                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
-                  contactType === "trust"
-                    ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
+                  "flex cursor-pointer items-start gap-[12px] rounded-md border p-[14px] transition-colors",
+                  contactType === option.value
+                    ? "border-action-primary bg-bg-info"
+                    : "border-border-default bg-bg-surface hover:bg-bg-subtle",
                 )}
               >
-                <p className="text-headline-sm text-primary mb-1">
-                  {t("invite.trustOption.title")}
-                </p>
-                <p className="text-label-md text-on-surface-variant">
-                  {t("invite.trustOption.description")}
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setContactType("recipient_only")}
-                className={cn(
-                  "text-left p-4 rounded-xs border transition-colors cursor-pointer",
-                  contactType === "recipient_only"
-                    ? "border-secondary bg-secondary/10"
-                    : "border-outline-variant bg-surface-container-low hover:bg-surface-container",
-                )}
-              >
-                <p className="text-headline-sm text-primary mb-1">
-                  {t("invite.recipientOption.title")}
-                </p>
-                <p className="text-label-md text-on-surface-variant">
-                  {t("invite.recipientOption.description")}
-                </p>
-              </button>
-            </div>
-          </div>
+                <RadioGroupItem value={option.value} />
+                <RowText
+                  title={t(`invite.${option.key}.title`)}
+                  description={t(`invite.${option.key}.description`)}
+                />
+              </label>
+            ))}
+          </RadioGroup>
+        </div>
 
-          {error && <ErrorAlert message={error} />}
+        {error && (
+          <p role="alert" className="text-body-sm text-action-danger">
+            {error}
+          </p>
+        )}
 
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 bg-surface-container-low hover:bg-surface-container-high cursor-pointer"
-            >
-              {t("invite.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              variant="vault"
-              size="md"
-              disabled={saving || !name.trim() || (!email.trim() && !phone)}
-              className="flex-1 cursor-pointer"
-            >
-              {saving
-                ? t("invite.sending")
-                : contactType === "recipient_only"
-                  ? t("invite.submitRecipient")
-                  : t("invite.submitTrust")}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end gap-[12px]">
+          <Button
+            type="button"
+            variant="plain"
+            size="regular"
+            onClick={() => onOpenChange(false)}
+          >
+            {t("invite.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            size="regular"
+            disabled={saving || !name.trim() || (!email.trim() && !phone)}
+          >
+            {saving
+              ? t("invite.sending")
+              : contactType === "recipient_only"
+                ? t("invite.submitRecipient")
+                : t("invite.submitTrust")}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

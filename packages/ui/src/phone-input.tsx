@@ -342,18 +342,17 @@ export function PhoneInput({
             disabled={disabled}
             aria-label="Select country"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-3 bg-surface-container-low border border-outline-variant rounded-l-xs border-r-0 text-on-surface hover:border-outline focus:border-secondary/15 focus:bg-surface-container-high transition-all focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shrink-0",
+              // v2 web "App/Field" box, joined to the number input on its right.
+              "flex h-[46px] shrink-0 cursor-pointer items-center gap-1.5 rounded-l-sm border border-r-0 border-border-default bg-bg-surface px-[12px] text-text-primary transition-colors hover:bg-bg-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus disabled:cursor-not-allowed disabled:opacity-60",
               showInvalid && "border-error",
             )}
           >
             <span aria-hidden className="text-base leading-none">
               {flag || country}
             </span>
-            <span className="text-body-md text-on-surface-variant">
-              +{dialCode}
-            </span>
+            <span className="text-body-sm text-text-muted">+{dialCode}</span>
             <svg
-              className="w-3.5 h-3.5 text-on-surface-variant"
+              className="w-3.5 h-3.5 text-icon-subtle"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -383,7 +382,7 @@ export function PhoneInput({
                     {c.flag || c.code}
                   </span>
                   <span className="flex-1 truncate">{c.name}</span>
-                  <span className="text-on-surface-variant text-label-md">
+                  <span className="text-caption text-text-muted">
                     +{c.dialCode}
                   </span>
                 </CommandItem>
@@ -394,6 +393,7 @@ export function PhoneInput({
       </Popover>
       <Input
         id={id}
+        variant="field"
         type="tel"
         inputMode="tel"
         autoComplete="tel-national"
@@ -404,8 +404,8 @@ export function PhoneInput({
         disabled={disabled}
         aria-invalid={showInvalid || undefined}
         className={cn(
-          "rounded-l-none border-l-0 flex-1 min-w-0",
-          showInvalid && "border-error focus:border-error",
+          "rounded-l-none flex-1 min-w-0",
+          showInvalid && "border-action-danger",
         )}
       />
     </div>
