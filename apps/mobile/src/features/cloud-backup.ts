@@ -1,10 +1,11 @@
 import { useCallback } from "react";
-import { useQuery } from "convex/react";
+import { useConvex, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { openCloudBackup } from "@keeplas/crypto/cloud";
+import { openCloudBackup, sealCloudBackup } from "@keeplas/crypto/cloud";
 
 import { saveDeviceVault } from "@/crypto/device-vault";
 import { openKeyBundleWithRootKey } from "@/crypto/vault-keys";
+import { needsCloudBackup } from "@/lib/backup-policy";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -19,14 +20,71 @@ export const providerName = (provider: CloudKey.CloudKeyProvider) =>
   provider === "icloud" ? "iCloud" : "Google";
 
 /**
- * The backup this phone can restore ("iCloud" / "Google"), or null. The CBK
- * only syncs within its platform: Block Store never reaches iCloud.
+ * The backup this phone can restore ("iCloud" / "Google"), null when there
+ * is none, undefined while loading. The CBK only syncs within its platform:
+ * Block Store never reaches iCloud.
  */
-export function useRestorableBackup(): string | null {
+export function useRestorableBackup(): string | null | undefined {
   const backup = useQuery(api.cloud_backup.status);
+  if (backup === undefined) return undefined;
   return backup?.enabled && backup.provider === CloudKey.provider
     ? providerName(backup.provider)
     : null;
+}
+
+/**
+ * Turn the backup on (or re-seal it): a new CBK into the synced keychain,
+ * the envelope to Keeplas, stamped with the 24 words' salt it opens. Checks
+ * first that the RootKey opens the account's current key bundle, so a phone
+ * holding a key from older words never backs up a key that opens nothing.
+ */
+export function useSealCloudBackup() {
+  const convex = useConvex();
+  const save = useAuditedMutation(api.cloud_backup.save);
+
+  return useCallback(
+    async (rootKey: Uint8Array) => {
+      const user = await convex.query(api.users.viewer);
+      if (!user?.encryptedKeyBundle || !user.phraseSalt)
+        throw new Error("No vault to back up");
+      (await openKeyBundleWithRootKey(user.encryptedKeyBundle, rootKey)).fill(
+        0,
+      );
+      const sealed = await sealCloudBackup({ rootKey, userId: user._id });
+      await CloudKey.write(cloudKeyName(user._id), sealed.cbk);
+      await save({
+        provider: CloudKey.provider,
+        envelope: sealed.envelope,
+        phraseSalt: user.phraseSalt,
+      });
+    },
+    [convex, save],
+  );
+}
+
+/**
+ * D7, on by default: back the vault up whenever it opens (creation, unlock,
+ * 24 words, contacts) unless it already is or the owner turned it off. Takes
+ * ownership of `rootKey` and wipes it. Never throws: a failed backup must not
+ * keep the vault closed, the next opening tries again.
+ */
+export function useEnsureCloudBackup() {
+  const convex = useConvex();
+  const seal = useSealCloudBackup();
+
+  return useCallback(
+    async (rootKey: Uint8Array) => {
+      try {
+        if (needsCloudBackup(await convex.query(api.cloud_backup.status)))
+          await seal(rootKey);
+      } catch {
+        // Retried at the next opening; the backup screen shows it is off.
+      } finally {
+        rootKey.fill(0);
+      }
+    },
+    [convex, seal],
+  );
 }
 
 /** This phone's keychain doesn't hold the CBK (other account or platform). */

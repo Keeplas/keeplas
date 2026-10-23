@@ -3,7 +3,6 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { sealCloudBackup } from "@keeplas/crypto/cloud";
 
 import { Button } from "@/components/button";
 import { NavBar } from "@/components/nav-bar";
@@ -11,7 +10,7 @@ import { Screen } from "@/components/screen";
 import { Callout, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceRootKey } from "@/crypto/device-vault";
-import { cloudKeyName } from "@/features/cloud-backup";
+import { cloudKeyName, useSealCloudBackup } from "@/features/cloud-backup";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -25,7 +24,7 @@ export default function CloudBackup() {
   const { t } = useI18n();
   const viewer = useViewer();
   const status = useQuery(api.cloud_backup.status);
-  const save = useAuditedMutation(api.cloud_backup.save);
+  const seal = useSealCloudBackup();
   const disable = useAuditedMutation(api.cloud_backup.disable);
   const [busy, setBusy] = useState(false);
 
@@ -37,9 +36,7 @@ export default function CloudBackup() {
       );
       if (!rootKey) throw new Error(t("backup.noRootKey"));
       try {
-        const sealed = await sealCloudBackup({ rootKey, userId: viewer._id });
-        await CloudKey.write(cloudKeyName(viewer._id), sealed.cbk);
-        await save({ provider: CloudKey.provider, envelope: sealed.envelope });
+        await seal(rootKey);
       } finally {
         rootKey.fill(0);
       }

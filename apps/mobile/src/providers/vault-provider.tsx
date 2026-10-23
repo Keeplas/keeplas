@@ -11,7 +11,7 @@ import {
 import { AppState, View } from "react-native";
 
 import { importMasterKey } from "@/crypto/vault-keys";
-import { unlockDeviceVault } from "@/crypto/device-vault";
+import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
 import { IDLE_LOCK_MS, shouldLockOnResume } from "@/lib/auto-lock";
 import { clearDecryptedCache } from "@/lib/files";
@@ -19,8 +19,15 @@ import { clearDecryptedCache } from "@/lib/files";
 interface VaultValue {
   /** Live MasterKey while unlocked; null when locked. */
   masterKey: CryptoKey | null;
-  /** Biometric unlock (M08-6). */
-  unlock: (userId: string, prompt: string, pin?: string) => Promise<void>;
+  /**
+   * Biometric unlock (M08-6). Resolves to the RootKey when this phone knows
+   * it (the caller wipes it), so the cloud backup needs no second prompt.
+   */
+  unlock: (
+    userId: string,
+    prompt: string,
+    pin?: string,
+  ) => Promise<Uint8Array | null>;
   /** Biometric step-up without changing state (M03-5 Approve). */
   confirmPresence: (
     userId: string,
@@ -31,9 +38,9 @@ interface VaultValue {
   adopt: (rawMasterKey: Uint8Array) => Promise<CryptoKey>;
   lock: () => void;
   exportRawMasterKey: () => Promise<Uint8Array>;
-  /** The 24 words, in memory only while this phone is being set up. */
-  setupPhrase: string[] | null;
-  setSetupPhrase: (phrase: string[] | null) => void;
+  /** The vault exists but the setup screens (contacts, done) are still open. */
+  finishingSetup: boolean;
+  setFinishingSetup: (finishing: boolean) => void;
 }
 
 const VaultContext = createContext<VaultValue | null>(null);
@@ -44,13 +51,13 @@ const VaultContext = createContext<VaultValue | null>(null);
  */
 export function VaultProvider({ children }: { children: ReactNode }) {
   const [masterKey, setMasterKey] = useState<CryptoKey | null>(null);
-  const [setupPhrase, setSetupPhrase] = useState<string[] | null>(null);
+  const [finishingSetup, setFinishingSetup] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backgroundedAt = useRef<number | null>(null);
 
   const lock = useCallback(() => {
     setMasterKey(null);
-    setSetupPhrase(null);
+    setFinishingSetup(false);
     forgetOwnerKeys();
     clearDecryptedCache();
   }, []);
@@ -64,7 +71,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const unlock = useCallback(
     async (userId: string, prompt: string, pin?: string) => {
-      await adopt(await unlockDeviceVault(userId, prompt, pin));
+      const { masterKey, rootKey } = await openDeviceVault(userId, prompt, pin);
+      await adopt(masterKey);
+      return rootKey;
     },
     [adopt],
   );
@@ -111,8 +120,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       adopt,
       lock,
       exportRawMasterKey,
-      setupPhrase,
-      setSetupPhrase,
+      finishingSetup,
+      setFinishingSetup,
     }),
     [
       masterKey,
@@ -121,7 +130,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       adopt,
       lock,
       exportRawMasterKey,
-      setupPhrase,
+      finishingSetup,
     ],
   );
 

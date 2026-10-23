@@ -1,6 +1,5 @@
-import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -10,26 +9,25 @@ import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { readPreference } from "@/lib/preferences";
+import { providerName } from "@/features/cloud-backup";
 import { useChangeLanguage } from "@/lib/use-change-language";
 import { useFinishSetup } from "@/lib/use-finish-setup";
 import { useI18n } from "@/providers/i18n-provider";
+import * as CloudKey from "../../../modules/cloud-key";
 
-/** M01-6 Setup complete: optional protection, then the M09-10 check. */
+/**
+ * M01-6 Setup complete: optional protection, then the M09-10 check when the
+ * cloud backup could not be turned on.
+ */
 export default function SetupDone() {
   const router = useRouter();
   const { t, language } = useI18n();
   const finish = useFinishSetup();
   const changeLanguage = useChangeLanguage();
-  const [kitExported, setKitExported] = useState(false);
   const contacts = useQuery(api.trusted_contacts.getContactSummaries);
+  const backup = useQuery(api.cloud_backup.status);
   const invited = (contacts ?? []).some((c) => c.contactType === "trust");
-
-  useFocusEffect(
-    useCallback(() => {
-      readPreference("kitExported").then((v) => setKitExported(v === "true"));
-    }, []),
-  );
+  const backedUp = !!backup?.enabled;
 
   return (
     <Screen header={<AppHeader />}>
@@ -41,7 +39,7 @@ export default function SetupDone() {
       <View style={styles.sectionHeader}>
         <Text variant="label">{t("setupDone.optional")}</Text>
         <Text variant="body-sm" color="text.muted">
-          {`${Number(invited) + Number(kitExported)}/2`}
+          {`${Number(invited) + Number(backedUp)}/2`}
         </Text>
       </View>
       <ListRow
@@ -56,20 +54,22 @@ export default function SetupDone() {
         onPress={() => router.push("/contacts")}
       />
       <ListRow
-        icon="document"
-        title={t("setupDone.kitTitle")}
-        description={t("setupDone.kitBody")}
+        icon="cloud-upload"
+        title={t("backup.title")}
+        description={t("setupDone.backupBody", {
+          account: providerName(CloudKey.provider),
+        })}
         trailing={
-          kitExported ? (
+          backedUp ? (
             <StatusChip tone="success" label={t("oneWay.active")} />
           ) : undefined
         }
-        onPress={() => router.push("/kit")}
+        onPress={() => router.push("/backup")}
       />
       <Button
         label={t("setupDone.open")}
         chevron
-        onPress={() => (kitExported ? finish() : router.push("/warning"))}
+        onPress={() => (backedUp ? finish() : router.push("/warning"))}
       />
       <ListRow
         icon="globe"

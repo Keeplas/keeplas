@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
+import { useEnsureCloudBackup } from "@/features/cloud-backup";
 import { pinErrorText } from "@/features/pin/use-pin-gate";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -27,6 +28,7 @@ export default function Unlock() {
   const viewer = useViewer();
   const { signOut, refreshDeviceVault } = useSession();
   const { unlock } = useVault();
+  const ensureCloudBackup = useEnsureCloudBackup();
   const { colors } = useTheme();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
@@ -47,7 +49,12 @@ export default function Unlock() {
     setBusy(true);
     setFailed(null);
     try {
-      await unlock(viewer._id, t("unlock.title"), needsPin ? pin : undefined);
+      const rootKey = await unlock(
+        viewer._id,
+        t("unlock.title"),
+        needsPin ? pin : undefined,
+      );
+      if (rootKey) void ensureCloudBackup(rootKey);
     } catch (error) {
       setPin("");
       if (error instanceof DevicePinError && error.code === "wiped") {
@@ -63,7 +70,15 @@ export default function Unlock() {
     } finally {
       setBusy(false);
     }
-  }, [unlock, viewer._id, t, needsPin, pin, refreshDeviceVault]);
+  }, [
+    unlock,
+    ensureCloudBackup,
+    viewer._id,
+    t,
+    needsPin,
+    pin,
+    refreshDeviceVault,
+  ]);
 
   return (
     <Screen header={<AppHeader />}>

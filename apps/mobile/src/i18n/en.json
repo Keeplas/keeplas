@@ -95,7 +95,7 @@
     "title": "Create your private vault",
     "body": "Your vault is created securely on this device and encrypted. Only you can access it.",
     "cta": "Create my vault",
-    "note": "Your vault is encrypted on this device with your passkey. No one else can access it.",
+    "note": "Your vault is encrypted on this phone. Its key is also backed up, encrypted, with your Apple or Google account, so you can get back in on a new phone.",
     "generating": "Creating your keys…",
     "saving": "Saving your encrypted vault…"
   },
@@ -106,7 +106,7 @@
     "slot": "Slot {n} of 3",
     "invite": "Invite contacts",
     "skip": "Skip for now",
-    "warning": "Without contacts or a recovery kit, losing every device and passkey may lock you out."
+    "warning": "Without contacts or a cloud backup, losing every device and passkey may lock you out."
   },
   "setupDone": {
     "title": "Setup complete",
@@ -114,16 +114,18 @@
     "optional": "Optional protection",
     "contactsTitle": "Add trust contacts",
     "contactsBody": "Invite up to 3 people. 2 can help you recover your account and confirm a death.",
-    "kitTitle": "Export a recovery kit",
-    "kitBody": "Save a kit to regain access if you lose all your devices and passkey.",
-    "open": "Open my vault"
+    "open": "Open my vault",
+    "backupBody": "Your vault comes back on a new phone with your {account} account."
   },
   "kit": {
     "title": "Your recovery kit",
     "body": "Write these 24 words down, in order, and keep them somewhere safe. With them you can open your vault if you lose this phone.",
     "warning": "Anyone with these words and access to your phone number can open your vault. Never share them.",
     "saved": "I've saved my kit",
-    "unavailable": "Your kit can only be shown while you set up this phone."
+    "intro": "24 words that open your vault if you can't restore it from your Apple or Google account or with your contacts. You don't need them to sign in.",
+    "replaces": "Creating a kit replaces any previous one: older words stop working.",
+    "create": "Create my kit",
+    "auth": "Create a recovery kit"
   },
   "oneWay": {
     "title": "If you lose this phone, you lose your vault",
@@ -134,13 +136,13 @@
     "contacts": "Trusted contacts",
     "contactsNeeded": "{n} of 2 needed",
     "kit": "Recovery kit",
-    "kitMissing": "Not created",
     "active": "Active",
     "missing": "Missing",
     "addContacts": "Add trusted contacts",
     "createKit": "Create a recovery kit",
     "understand": "I understand I could lose everything if I lose this phone",
-    "continue": "Continue without a backup"
+    "continue": "Continue without a backup",
+    "backupMissing": "Not turned on"
   },
   "attestation": {
     "checking": "Checking this device…",
@@ -173,8 +175,9 @@
     "body": "Your vault key is backed up with your {provider} account. Restore it on this phone in one step.",
     "cta": "Restore my vault",
     "note": "A WhatsApp code confirms it's you before your backup opens.",
-    "noKey": "This phone can't find your {provider} backup. Check that you're signed in to the same {provider} account, or use your 24 words.",
-    "failed": "We couldn't restore your vault. Try again, or use your 24 words."
+    "noKey": "This phone can't find your {provider} backup. Check that you're signed in to the same {provider} account, or use another way back in.",
+    "failed": "We couldn't restore your vault. Try again, or use another way back in.",
+    "otherWays": "Other ways back in"
   },
   "phoneProof": {
     "title": "Confirm it's you",
@@ -388,11 +391,11 @@
   },
   "vaultRestored": {
     "title": "Vault restored",
-    "body": "Your vault is accessible again on this phone. Your old 24 words no longer work: keep the new kit you just saved.",
+    "body": "Your vault is accessible again on this phone. Your old 24 words no longer work.",
     "cardTitle": "Your access has been restored",
     "checks": {
       "opened": "Vault opened on this phone",
-      "kit": "New recovery kit saved",
+      "kit": "Old 24 words disabled",
       "encrypted": "Your data stays encrypted"
     },
     "renew": "Set up contact recovery again",

@@ -89,7 +89,7 @@
     "title": "Créer votre coffre privé",
     "body": "Votre coffre est créé et chiffré sur cet appareil. Vous seul pouvez y accéder.",
     "cta": "Créer mon coffre",
-    "note": "Votre coffre est chiffré sur cet appareil avec votre passe-clé. Personne d'autre ne peut y accéder.",
+    "note": "Votre coffre est chiffré sur ce téléphone. Sa clé est aussi sauvegardée, chiffrée, avec votre compte Apple ou Google, pour que vous puissiez le rouvrir sur un nouveau téléphone.",
     "generating": "Création de vos clés…",
     "saving": "Enregistrement de votre coffre chiffré…"
   },
@@ -100,7 +100,7 @@
     "slot": "Place {n} sur 3",
     "invite": "Inviter des contacts",
     "skip": "Passer pour l'instant",
-    "warning": "Sans contacts ni kit de récupération, perdre tous vos appareils et votre passe-clé peut vous bloquer l'accès."
+    "warning": "Sans contacts ni sauvegarde cloud, perdre tous vos appareils et votre passe-clé peut vous bloquer l'accès."
   },
   "setupDone": {
     "title": "Configuration terminée",
@@ -108,16 +108,18 @@
     "optional": "Protection facultative",
     "contactsTitle": "Ajouter des contacts de confiance",
     "contactsBody": "Invitez jusqu'à 3 personnes. 2 peuvent vous aider à récupérer votre compte et confirmer un décès.",
-    "kitTitle": "Exporter un kit de récupération",
-    "kitBody": "Gardez un kit pour retrouver l'accès si vous perdez tous vos appareils et votre passe-clé.",
-    "open": "Ouvrir mon coffre"
+    "open": "Ouvrir mon coffre",
+    "backupBody": "Votre coffre revient sur un nouveau téléphone avec votre compte {account}."
   },
   "kit": {
     "title": "Votre kit de récupération",
     "body": "Notez ces 24 mots dans l'ordre et gardez-les en lieu sûr. Ils permettent d'ouvrir votre coffre si vous perdez ce téléphone.",
     "warning": "Quiconque possède ces mots et l'accès à votre numéro peut ouvrir votre coffre. Ne les partagez jamais.",
     "saved": "J'ai enregistré mon kit",
-    "unavailable": "Le kit ne s'affiche que pendant la configuration de ce téléphone."
+    "intro": "24 mots qui ouvrent votre coffre si vous ne pouvez pas le restaurer depuis votre compte Apple ou Google ni avec vos contacts. Vous n'en avez pas besoin pour vous connecter.",
+    "replaces": "Créer un kit remplace le précédent : les anciens mots ne fonctionnent plus.",
+    "create": "Créer mon kit",
+    "auth": "Créer un kit de récupération"
   },
   "oneWay": {
     "title": "Si vous perdez ce téléphone, vous perdez votre coffre",
@@ -128,13 +130,13 @@
     "contacts": "Contacts de confiance",
     "contactsNeeded": "{n} sur 2 requis",
     "kit": "Kit de récupération",
-    "kitMissing": "Non créé",
     "active": "Actif",
     "missing": "Manquant",
     "addContacts": "Ajouter des contacts de confiance",
     "createKit": "Créer un kit de récupération",
     "understand": "Je comprends que je peux tout perdre si je perds ce téléphone",
-    "continue": "Continuer sans sauvegarde"
+    "continue": "Continuer sans sauvegarde",
+    "backupMissing": "Non activée"
   },
   "attestation": {
     "checking": "Vérification de cet appareil…",
@@ -166,8 +168,9 @@
     "body": "La clé de votre coffre est sauvegardée avec votre compte {provider}. Restaurez-la sur ce téléphone en une étape.",
     "cta": "Restaurer mon coffre",
     "note": "Un code WhatsApp confirme que c'est bien vous avant d'ouvrir la sauvegarde.",
-    "noKey": "Ce téléphone ne trouve pas votre sauvegarde {provider}. Vérifiez que vous êtes connecté au même compte {provider}, ou utilisez vos 24 mots.",
-    "failed": "Nous n'avons pas pu restaurer votre coffre. Réessayez, ou utilisez vos 24 mots."
+    "noKey": "Ce téléphone ne trouve pas votre sauvegarde {provider}. Vérifiez que vous êtes connecté au même compte {provider}, ou utilisez un autre moyen de récupération.",
+    "failed": "Nous n'avons pas pu restaurer votre coffre. Réessayez, ou utilisez un autre moyen de récupération.",
+    "otherWays": "Autres moyens de récupération"
   },
   "phoneProof": {
     "title": "Confirmez que c'est vous",
@@ -380,11 +383,11 @@
   },
   "vaultRestored": {
     "title": "Coffre restauré",
-    "body": "Votre coffre est de nouveau accessible sur ce téléphone. Vos anciens 24 mots ne fonctionnent plus : gardez le nouveau kit que vous venez d’enregistrer.",
+    "body": "Votre coffre est de nouveau accessible sur ce téléphone. Vos anciens 24 mots ne fonctionnent plus.",
     "cardTitle": "Votre accès a été rétabli",
     "checks": {
       "opened": "Coffre ouvert sur ce téléphone",
-      "kit": "Nouveau kit de récupération enregistré",
+      "kit": "Anciens 24 mots désactivés",
       "encrypted": "Vos données restent chiffrées"
     },
     "renew": "Reconfigurer la récupération par contacts",

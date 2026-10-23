@@ -38,6 +38,7 @@ export default function Home() {
   const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
   const numberChange = useQuery(api.number_change.getMineOpen);
+  const backup = useQuery(api.cloud_backup.status);
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
@@ -51,8 +52,10 @@ export default function Home() {
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   const counts = useMemo(() => listCounts(items ?? []), [items]);
   const inboxCount = counts.inbox + pending.length;
-  // Ways back in: this phone, 2 ready trust contacts, the recovery kit.
-  const ready = 1 + (contactsReady ? 1 : 0) + (kitExported ? 1 : 0);
+  // Ways back in: this phone, 2 ready trust contacts, the cloud backup (or
+  // a recovery kit when the owner turned the backup off).
+  const ready =
+    1 + (contactsReady ? 1 : 0) + (backup?.enabled || kitExported ? 1 : 0);
   const openList = (group: VaultListKey) =>
     router.push({ pathname: "/vault/[group]", params: { group } });
   const itemCount = (count: number) =>
