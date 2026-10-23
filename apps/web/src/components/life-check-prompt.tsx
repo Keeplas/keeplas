@@ -10,6 +10,7 @@ import {
   DialogTitle,
   toast,
 } from "@keeplas/ui";
+import { Illustration } from "@/components/illustration";
 import { StateDialog } from "@/components/state-dialog";
 import { StateMessage } from "@/components/state-message";
 import { ICON_PATHS } from "@/lib/icons";
@@ -91,9 +92,8 @@ export function LifeCheckModal({
           height={275}
           className="h-auto w-full max-w-[440px] dark:hidden"
         />
-        <img
+        <Illustration
           src="/assets/illustrations/desktop-landscape-night.svg"
-          alt=""
           width={440}
           height={275}
           className="hidden h-auto w-full max-w-[440px] rounded-md dark:block"

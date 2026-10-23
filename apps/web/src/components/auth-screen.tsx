@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn, KeeplasLogoMark } from "@keeplas/ui";
+import { Illustration } from "./illustration";
 import { LanguageSwitcher } from "./language-switcher";
 
 /** Card on the right of an auth screen (Figma: radius 16, thin border). */
@@ -52,14 +53,12 @@ export function AuthScreen({
           </h1>
           <p className="text-body-lg text-text-body">{body}</p>
         </div>
-        <img
+        <Illustration
           src="/assets/illustrations/desktop-landscape.svg"
-          alt=""
           className="pointer-events-none absolute -bottom-[20px] -left-[40px] w-[calc(100%+80px)] max-w-none dark:hidden"
         />
-        <img
+        <Illustration
           src="/assets/illustrations/desktop-landscape-night.svg"
-          alt=""
           className="pointer-events-none absolute -bottom-[20px] -left-[40px] hidden w-[calc(100%+80px)] max-w-none dark:block"
         />
         {heroFooter ? (
