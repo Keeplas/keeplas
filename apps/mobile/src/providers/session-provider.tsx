@@ -40,7 +40,7 @@ const SessionContext = createContext<SessionValue | null>(null);
 export function SessionProvider({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signOut: convexSignOut } = useAuthActions();
-  const { masterKey, lock, setupPhrase } = useVault();
+  const { masterKey, lock, finishingSetup } = useVault();
   const skip = isAuthenticated ? {} : "skip";
   const viewer = useQuery(api.users.viewer, skip);
   const loginGate = useQuery(api.login_otp.getMyLoginOtpGate, skip);
@@ -118,14 +118,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value = useMemo<SessionValue>(
     () => ({
       stage,
-      settingUp: stage === "setup" || setupPhrase !== null,
+      settingUp: stage === "setup" || finishingSetup,
       viewer,
       refreshDeviceVault: () => setVaultCheck((n) => n + 1),
       deferMigration: () => setMigrationDeferred(true),
       expectNewNumber,
       signOut,
     }),
-    [stage, setupPhrase, viewer, expectNewNumber, signOut],
+    [stage, finishingSetup, viewer, expectNewNumber, signOut],
   );
 
   return (

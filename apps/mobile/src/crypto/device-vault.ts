@@ -176,7 +176,8 @@ async function openPinLayer(
   }
 }
 
-async function openDeviceVault(
+/** Screen-lock prompt → raw MasterKey, and the RootKey when this phone knows it. */
+export async function openDeviceVault(
   userId: string,
   prompt: string,
   pin?: string,

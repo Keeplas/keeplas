@@ -2,6 +2,7 @@ import { useCallback } from "react";
 
 import { saveDeviceVault } from "@/crypto/device-vault";
 import { openKeyBundle } from "@/crypto/vault-keys";
+import { useEnsureCloudBackup } from "@/features/cloud-backup";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
@@ -15,18 +16,19 @@ export function useKitOpen() {
   const viewer = useViewer();
   const { adopt } = useVault();
   const { refreshDeviceVault } = useSession();
+  const ensureCloudBackup = useEnsureCloudBackup();
 
   return useCallback(
     async (words: string) => {
       if (!viewer.encryptedKeyBundle) throw new Error("No vault to open");
       const keys = await openKeyBundle(viewer.encryptedKeyBundle, words);
       await saveDeviceVault(viewer._id, keys, t("unlock.title"));
-      keys.rootKey.fill(0);
+      void ensureCloudBackup(keys.rootKey);
       const key = await adopt(keys.masterKey);
       refreshDeviceVault();
       return key;
     },
-    [viewer, adopt, refreshDeviceVault, t],
+    [viewer, adopt, refreshDeviceVault, ensureCloudBackup, t],
   );
 }
 

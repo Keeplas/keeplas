@@ -54,6 +54,7 @@ describe("cloud backup", () => {
     });
     expect(await as.query(api.cloud_backup.status, {})).toEqual({
       enabled: false,
+      turnedOff: true,
     });
     expect(
       await t.run((ctx) => ctx.db.query("cloud_backup_envelopes").collect()),
@@ -80,5 +81,72 @@ describe("cloud backup", () => {
     await expect(
       as.mutation(api.cloud_backup.restore, { _audit: await signedAudit() }),
     ).rejects.toThrow("Too many requests");
+  });
+
+  it("is off but not turned off before the first save", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const as = await asPhoneProvenUser(t, userId);
+    expect(await as.query(api.cloud_backup.status, {})).toEqual({
+      enabled: false,
+      turnedOff: false,
+    });
+  });
+
+  it("saving again clears the user's turn-off", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const as = await asPhoneProvenUser(t, userId);
+    await as.mutation(api.cloud_backup.disable, {
+      _audit: await signedAudit(),
+    });
+    await as.mutation(api.cloud_backup.save, {
+      provider: "icloud",
+      envelope: "env",
+      _audit: await signedAudit(),
+    });
+    expect(await as.query(api.cloud_backup.status, {})).toMatchObject({
+      enabled: true,
+    });
+    expect(
+      (await t.run((ctx) => ctx.db.get(userId)))?.cloudBackupOffAt,
+    ).toBeUndefined();
+  });
+
+  it("is stale once the 24 words (and so the RootKey) change", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const as = await asPhoneProvenUser(t, userId);
+    await t.run((ctx) => ctx.db.patch(userId, { phraseSalt: "salt-1" }));
+    await as.mutation(api.cloud_backup.save, {
+      provider: "icloud",
+      envelope: "env",
+      phraseSalt: "salt-1",
+      _audit: await signedAudit(),
+    });
+    expect(await as.query(api.cloud_backup.status, {})).toMatchObject({
+      enabled: true,
+      current: true,
+    });
+    await t.run((ctx) => ctx.db.patch(userId, { phraseSalt: "salt-2" }));
+    expect(await as.query(api.cloud_backup.status, {})).toMatchObject({
+      enabled: true,
+      current: false,
+    });
+  });
+
+  it("an envelope saved without its salt (older app) counts as stale", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const as = await asPhoneProvenUser(t, userId);
+    await t.run((ctx) => ctx.db.patch(userId, { phraseSalt: "salt-1" }));
+    await as.mutation(api.cloud_backup.save, {
+      provider: "google",
+      envelope: "env",
+      _audit: await signedAudit(),
+    });
+    expect(await as.query(api.cloud_backup.status, {})).toMatchObject({
+      current: false,
+    });
   });
 });

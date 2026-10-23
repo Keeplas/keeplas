@@ -75,6 +75,8 @@ export default defineSchema({
     // alongside the bundle so the client can re-derive the RootKey on login.
     phraseSalt: v.optional(v.string()),
     recoveryPhraseHash: v.optional(v.string()),
+    // The owner turned the cloud backup off: the app stops turning it back on.
+    cloudBackupOffAt: v.optional(v.number()),
     recoveryVerified: v.optional(v.boolean()),
     // Set by the v2 shard purge (Oct 2026) for owners whose MasterKey was once
     // Shamir-split to trusted contacts: those shards may still sit on a
@@ -381,6 +383,9 @@ export default defineSchema({
     userId: v.id("users"),
     provider: v.union(v.literal("icloud"), v.literal("google")),
     envelope: v.string(),
+    // users.phraseSalt of the key bundle the sealed RootKey opens: a new kit
+    // (new 24 words) makes the envelope stale until the phone re-seals it.
+    phraseSalt: v.optional(v.string()),
     createdAt: v.number(),
     lastRestoredAt: v.optional(v.number()),
   }).index("by_user", ["userId"]),

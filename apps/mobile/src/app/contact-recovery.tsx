@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import {
@@ -19,11 +19,10 @@ import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { saveDeviceVault } from "@/crypto/device-vault";
-import { createKitMaterial } from "@/crypto/vault-keys";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { formatDate, formatTime } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useReplaceKit } from "@/lib/use-replace-kit";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -45,10 +44,9 @@ export default function ContactRecovery() {
     api.recovery.getReleasePackage,
     request?.status === "released" ? { requestId: request.requestId } : "skip",
   );
-  const { adopt, setSetupPhrase } = useVault();
+  const { adopt } = useVault();
   const { refreshDeviceVault } = useSession();
-  const storePhraseHash = useMutation(api.onboarding.storeRecoveryPhraseHash);
-  const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
+  const replaceKit = useReplaceKit();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const ensurePhoneProof = useEnsurePhoneProof();
@@ -100,29 +98,14 @@ export default function ContactRecovery() {
         socialEnvelope: releasePackage.socialEnvelope,
         approvals: releasePackage.approvals,
       });
-      const kit = await createKitMaterial(masterKey);
-      await Promise.all([
-        storePhraseHash({
-          recoveryPhraseHash: kit.recoveryPhraseHash,
-          phraseSalt: kit.phraseSalt,
-        }),
-        storeKeyBundle({
-          encryptedKeyBundle: kit.encryptedKeyBundle,
-          phraseSalt: kit.phraseSalt,
-        }),
-      ]);
-      await saveDeviceVault(
-        viewer._id,
-        { masterKey, rootKey: kit.rawRootKey },
-        t("unlock.title"),
-      );
-      kit.rawRootKey.fill(0);
+      // The old words may be what was lost: new ones (never shown) give
+      // this phone a RootKey, so the cloud backup is sealed again.
+      await replaceKit(viewer._id, masterKey);
       await adopt(masterKey.slice());
-      setSetupPhrase(kit.phrase);
       masterKey.fill(0);
       await SecureStore.deleteItemAsync(secretKey(viewer._id));
       refreshDeviceVault();
-      router.replace({ pathname: "/(setup)/kit", params: { restored: "1" } });
+      router.replace("/vault-restored");
     } catch {
       Alert.alert(t("common.genericError"));
     } finally {
