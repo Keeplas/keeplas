@@ -18,6 +18,8 @@ export async function endSession(
   for (const table of [
     "auth_session_totp",
     "auth_session_login_otp",
+    "auth_session_proofs",
+    "session_vault_challenges",
   ] as const) {
     const markers = await ctx.db
       .query(table)

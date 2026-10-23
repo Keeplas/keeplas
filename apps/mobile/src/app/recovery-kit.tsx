@@ -8,7 +8,7 @@ import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { useRestorableBackup } from "@/features/cloud-backup";
-import { isFullKit, useKitOpen } from "@/features/kit-open";
+import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
 
@@ -23,7 +23,7 @@ export default function RecoveryKitEntry() {
   const { signOut } = useSession();
   const kitOpen = useKitOpen();
   const cloud = useRestorableBackup();
-  const [words, setWords] = useState("");
+  const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
   const [invalid, setInvalid] = useState(false);
 

@@ -67,6 +67,18 @@ function Routes() {
       <Stack.Protected guard={stage === "signedOut"}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
+      {/* Lost number: signed out, or stuck before the vault opens. */}
+      <Stack.Protected
+        guard={
+          stage === "signedOut" || stage === "totp" || stage === "needsKit"
+        }
+      >
+        <Stack.Screen name="lost-number" />
+      </Stack.Protected>
+      <Stack.Protected guard={stage === "newNumber"}>
+        <Stack.Screen name="new-number" />
+        <Stack.Screen name="new-number-verify" />
+      </Stack.Protected>
       <Stack.Protected guard={stage === "loginOtp"}>
         <Stack.Screen name="login-otp" />
       </Stack.Protected>

@@ -29,6 +29,7 @@ const base: StageInputs = {
   viewer: { hasKeyBundle: true },
   loginOtpRequired: false,
   totpRequired: false,
+  newNumberPending: false,
   needsMigration: false,
   migrationDeferred: false,
   hasDeviceVault: true,

@@ -14,7 +14,7 @@ import {
   useCloudRestore,
   useRestorableBackup,
 } from "@/features/cloud-backup";
-import { isFullKit, useKitOpen } from "@/features/kit-open";
+import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { useProveVault } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
@@ -33,7 +33,7 @@ export default function TotpRecovery() {
   const kitOpen = useKitOpen();
   const proveVault = useProveVault();
   const reset = useMutation(api.totp.resetWithVaultProof);
-  const [words, setWords] = useState("");
+  const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

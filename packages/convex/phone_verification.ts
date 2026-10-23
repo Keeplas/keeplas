@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { mutation, query, type QueryCtx } from "./_generated/server";
+import {
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
@@ -87,7 +92,7 @@ export const requestVerification = mutation({
  * `assertEmailAvailable` check. Defense-in-depth: enforced again at verify
  * time (against the `phone-otp` auth account index).
  */
-async function assertPhoneAvailable(
+export async function assertPhoneAvailable(
   ctx: QueryCtx,
   phone: string,
   userId: Id<"users">,
@@ -99,6 +104,59 @@ async function assertPhoneAvailable(
   if (owner && owner._id !== userId) {
     throw new Error("This phone number is already linked to another account.");
   }
+}
+
+/**
+ * Make `newPhone` the account's verified number and rotate or create the
+ * `phone-otp` auth account so it is the only valid one for password-less
+ * phone login. Returns the previous number. Throws when another account
+ * holds `newPhone` (re-checked at the security boundary: it could have been
+ * grabbed since the code was sent).
+ */
+export async function commitPhoneChange(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  newPhone: string,
+): Promise<string | null> {
+  await assertPhoneAvailable(ctx, newPhone, userId);
+  const existingPhoneOtp = await ctx.db
+    .query("authAccounts")
+    .withIndex("userIdAndProvider", (q) =>
+      q.eq("userId", userId).eq("provider", "phone-otp"),
+    )
+    .first();
+  const clash = await ctx.db
+    .query("authAccounts")
+    .withIndex("providerAndAccountId", (q) =>
+      q.eq("provider", "phone-otp").eq("providerAccountId", newPhone),
+    )
+    .first();
+  if (clash && clash.userId !== userId) {
+    throw new Error("This phone number is already linked to another account.");
+  }
+  if (existingPhoneOtp) {
+    if (existingPhoneOtp.providerAccountId !== newPhone) {
+      await ctx.db.patch(existingPhoneOtp._id, {
+        providerAccountId: newPhone,
+        phoneVerified: newPhone,
+      });
+    }
+  } else if (!clash) {
+    await ctx.db.insert("authAccounts", {
+      userId,
+      provider: "phone-otp",
+      providerAccountId: newPhone,
+      phoneVerified: newPhone,
+    });
+  }
+  const user = await ctx.db.get(userId);
+  const now = Date.now();
+  await ctx.db.patch(userId, {
+    phoneNumber: newPhone,
+    phoneNumberVerifiedAt: now,
+    updatedAt: now,
+  });
+  return user?.phoneNumber ?? null;
 }
 
 /**
@@ -119,7 +177,6 @@ export const verifyCode = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    const now = Date.now();
     const candidates = await ctx.db
       .query("phone_verification_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -131,55 +188,7 @@ export const verifyCode = auditedMutation({
     const { active } = check;
 
     const newPhone = active.phoneNumber;
-    const user = await ctx.db.get(userId);
-    const previousPhone = user?.phoneNumber ?? null;
-
-    // Re-check at the security boundary: another account could have grabbed
-    // this number in the interval between request and verify.
-    await assertPhoneAvailable(ctx, newPhone, userId);
-
-    // Rotate or create the `phone-otp` auth account so the new number is the
-    // only valid one for password-less phone login. Clash check covers the
-    // case where another user owns the `phone-otp` row for `newPhone`.
-    const existingPhoneOtp = await ctx.db
-      .query("authAccounts")
-      .withIndex("userIdAndProvider", (q) =>
-        q.eq("userId", userId).eq("provider", "phone-otp"),
-      )
-      .first();
-    const clash = await ctx.db
-      .query("authAccounts")
-      .withIndex("providerAndAccountId", (q) =>
-        q.eq("provider", "phone-otp").eq("providerAccountId", newPhone),
-      )
-      .first();
-    if (clash && clash.userId !== userId) {
-      await ctx.db.delete(active._id);
-      throw new Error(
-        "This phone number is already linked to another account.",
-      );
-    }
-    if (existingPhoneOtp) {
-      if (existingPhoneOtp.providerAccountId !== newPhone) {
-        await ctx.db.patch(existingPhoneOtp._id, {
-          providerAccountId: newPhone,
-          phoneVerified: newPhone,
-        });
-      }
-    } else if (!clash) {
-      await ctx.db.insert("authAccounts", {
-        userId,
-        provider: "phone-otp",
-        providerAccountId: newPhone,
-        phoneVerified: newPhone,
-      });
-    }
-
-    await ctx.db.patch(userId, {
-      phoneNumber: newPhone,
-      phoneNumberVerifiedAt: now,
-      updatedAt: now,
-    });
+    const previousPhone = await commitPhoneChange(ctx, userId, newPhone);
     await ctx.db.delete(active._id);
     await grantCurrentSessionProof(ctx, userId, "phone");
 
