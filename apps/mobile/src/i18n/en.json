@@ -155,7 +155,7 @@
     "reference": "Reference: {ref} · share this with support"
   },
   "unlock": {
-    "title": "Unlock your vault",
+    "title": "Unlock my vault",
     "body": "Your face, fingerprint or phone PIN signs you in and unlocks your vault.",
     "cta": "Continue with passkey",
     "lost": "Lost access?",

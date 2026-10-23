@@ -24,6 +24,7 @@ import { draftStore } from "@/features/capture/draft-store";
 import { formatDuration } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
+import { holdLock } from "@/lib/auto-lock";
 
 const BARS = 32;
 const RECORDING = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
@@ -118,6 +119,11 @@ const LiveSection = memo(function LiveSection({
   const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
   const [confirmReset, setConfirmReset] = useState(false);
   const [resumeAfter, setResumeAfter] = useState(false);
+
+  useEffect(
+    () => (state.isRecording ? holdLock() : undefined),
+    [state.isRecording],
+  );
 
   // dBFS (-60..0) → bar height ratio, newest bar on the right.
   const metering = state.metering;

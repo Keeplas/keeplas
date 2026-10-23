@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
@@ -32,6 +32,7 @@ import {
 } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useFormDraft } from "@/lib/form-drafts";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -65,7 +66,6 @@ export default function EditItem() {
       itemId={itemId}
       opened={opened}
       ownerWrappedDek={raw.ownerWrappedDek ?? ""}
-      header={header}
       onDone={router.back}
     />
   );
@@ -75,24 +75,27 @@ function EditForm({
   itemId,
   opened,
   ownerWrappedDek,
-  header,
   onDone,
 }: {
   itemId: Id<"vault_items">;
   opened: OpenedItem;
   ownerWrappedDek: string;
-  header: ReactNode;
   onDone: () => void;
 }) {
   const { t, language } = useI18n();
   const { capture } = useOutbox();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const [title, setTitle] = useState(opened.title);
-  const [note, setNote] = useState(opened.note);
-  const [removed, setRemoved] = useState<Set<Id<"vault_item_files">>>(
-    new Set(),
+  const [draft, updateDraft, clearDraft] = useFormDraft(
+    `edit:${itemId}`,
+    () => ({
+      title: opened.title,
+      note: opened.note,
+      removed: [] as Id<"vault_item_files">[],
+      added: [] as CaptureFile[],
+    }),
   );
-  const [added, setAdded] = useState<CaptureFile[]>([]);
+  const { title, note, added } = draft;
+  const removed = new Set(draft.removed);
   const [denied, setDenied] = useState<PermissionProblem | null>(null);
   const [saving, setSaving] = useState(false);
   const kept = opened.files.filter((file) => !removed.has(file.id));
@@ -100,7 +103,9 @@ function EditForm({
   async function addMedia(get: () => Promise<CaptureFile[]>) {
     try {
       const files = await get();
-      if (files.length) setAdded((current) => [...current, ...files]);
+      if (files.length) {
+        updateDraft((current) => ({ added: [...current.added, ...files] }));
+      }
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
       else if (error instanceof CameraUnavailable)
@@ -139,6 +144,7 @@ function EditForm({
           attachTo: { itemId, dek: opened.key, ownerWrappedDek },
         });
       }
+      clearDraft();
       onDone();
     } catch {
       toast({
@@ -152,7 +158,15 @@ function EditForm({
 
   return (
     <Screen
-      header={header}
+      header={
+        <NavBar
+          title={t("itemEdit.title")}
+          onBack={() => {
+            clearDraft();
+            onDone();
+          }}
+        />
+      }
       gap={16}
       footer={
         <Button
@@ -165,13 +179,13 @@ function EditForm({
       <TextField
         label={t("item.titleRow")}
         value={title}
-        onChangeText={setTitle}
+        onChangeText={(value) => updateDraft({ title: value })}
         placeholder={t("capture.titlePlaceholder")}
       />
       <NoteEditor
-        initialHtml={opened.note}
+        initialHtml={note}
         placeholder={t("capture.noteBodyPlaceholder")}
-        onChange={setNote}
+        onChange={(html) => updateDraft({ note: html })}
       />
       <Text variant="label">
         {t("capture.attachments", { n: kept.length + added.length })}
@@ -186,7 +200,9 @@ function EditForm({
             <RemoveButton
               label={t("itemEdit.removeFile", { name: file.name })}
               onPress={() =>
-                setRemoved((current) => new Set(current).add(file.id))
+                updateDraft((current) => ({
+                  removed: [...current.removed, file.id],
+                }))
               }
             />
           }
@@ -204,9 +220,11 @@ function EditForm({
             <RemoveButton
               label={t("itemEdit.removeFile", { name: file.name })}
               onPress={() =>
-                setAdded((current) =>
-                  current.filter((candidate) => candidate.uri !== file.uri),
-                )
+                updateDraft((current) => ({
+                  added: current.added.filter(
+                    (candidate) => candidate.uri !== file.uri,
+                  ),
+                }))
               }
             />
           }

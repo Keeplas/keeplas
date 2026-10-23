@@ -15,8 +15,10 @@ import type { Href } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import { draftStore } from "@/features/capture/draft-store";
 import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
+import { clearFormDrafts } from "@/lib/form-drafts";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
 import { auditContext } from "@/lib/use-audited-mutation";
 import {
@@ -140,6 +142,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    draftStore.reset();
+    clearFormDrafts();
     if (userId) {
       await forgetDeviceVault(userId);
       await clearItemSummaries(userId).catch(() => undefined);
