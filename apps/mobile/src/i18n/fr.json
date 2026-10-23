@@ -398,6 +398,11 @@
     "allow": "Activer",
     "notNow": "Plus tard"
   },
+  "upgrade": {
+    "title": "Passer à Lifetime",
+    "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
+    "cta": "Mettre à niveau"
+  },
   "settings": {
     "title": "Réglages",
     "subtitle": "Gérez votre offre, votre stockage et vos préférences.",
@@ -408,6 +413,7 @@
     "plan": "Offre",
     "planFree": "Gratuit",
     "planLifetime": "Lifetime",
+    "planQuota": "{quota} de stockage",
     "privacy": "Confidentialité et sécurité",
     "privacyBody": "Passe-clé, code PIN, kit de récupération",
     "appearance": "Apparence",

@@ -9,6 +9,7 @@ import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { UpgradeCard } from "@/features/billing/upgrade-card";
 import { NamePrompt } from "@/features/home/name-prompt";
 import { useRecoveryWays } from "@/features/recovery-ways";
 import { VaultItemRow } from "@/features/vault/item-row";
@@ -92,6 +93,7 @@ export default function Home() {
         description={t("home.healthReady", { n: ready })}
         onPress={() => router.push("/recovery")}
       />
+      {viewer.plan === "lifetime" ? null : <UpgradeCard />}
       <Text variant="label">{t("home.yourVault")}</Text>
       <View style={styles.tiles}>
         {VAULT_GROUPS.map((group) => (

@@ -405,6 +405,11 @@
     "allow": "Turn on",
     "notNow": "Not now"
   },
+  "upgrade": {
+    "title": "Upgrade to Lifetime",
+    "body": "10 GB of storage and every feature. One payment, no subscription.",
+    "cta": "Upgrade"
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your plan, storage and preferences.",
@@ -415,6 +420,7 @@
     "plan": "Plan",
     "planFree": "Free",
     "planLifetime": "Lifetime",
+    "planQuota": "{quota} of storage",
     "privacy": "Privacy and security",
     "privacyBody": "Passkey, PIN, recovery kit",
     "lifeCheck": "Life check",
