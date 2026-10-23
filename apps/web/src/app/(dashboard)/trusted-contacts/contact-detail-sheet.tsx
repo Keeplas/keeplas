@@ -1,30 +1,30 @@
 import { useState } from "react";
-import { Link } from "@/lib/navigation";
 import { useQuery } from "convex/react";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
-  cn,
+  Button,
   HelpHint,
   Icon,
   Loader,
   Sheet,
   SheetClose,
   SheetContent,
-  SheetHeader,
   SheetTitle,
 } from "@keeplas/ui";
+import { ListRow } from "@/components/v2/list-row";
+import { StatusChip } from "@/components/v2/surface";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { getCategoryConfig } from "@/lib/vault-categories";
 import { useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { useItemCategories } from "@/lib/use-item-categories";
+import { ContactAvatar } from "./contact-card";
 import {
   computeVerificationBadge,
   formatRelative,
-  getInitials,
   isAwaitingKey,
   ROLE_LABELS,
   STATUS_CONFIG,
@@ -52,7 +52,8 @@ export function ContactDetailSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex flex-col w-full max-w-md bg-surface-container-low"
+        overlayClassName="bg-scrim backdrop-blur-none"
+        className="flex w-full max-w-md flex-col border-l border-border-default bg-bg-surface shadow-none"
       >
         {/* Keyed remount resets the body's transient action state per contact. */}
         {contact && (
@@ -128,59 +129,41 @@ function ContactDetailBody({
 
   return (
     <>
-      <SheetHeader>
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className={cn(
-              "w-11 h-11 rounded-sm border-2 p-0.5 shrink-0",
-              statusConfig.avatarBorder,
-            )}
-          >
-            <div className="w-full h-full rounded-sm bg-primary-container flex items-center justify-center">
-              <span className="text-label-md text-on-primary-container">
-                {getInitials(contact.name)}
-              </span>
-            </div>
-          </div>
-          <div className="min-w-0">
-            <SheetTitle className="truncate">{contact.name}</SheetTitle>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span
-                className={cn(
-                  "px-2 py-0.5 text-label-md rounded-sm",
-                  isRecipientOnly
-                    ? "bg-surface-container-high text-on-surface-variant"
-                    : "bg-primary/10 text-primary",
-                )}
-              >
-                {isRecipientOnly
+      <div className="flex items-center gap-[12px] border-b border-border-default px-[24px] py-[20px]">
+        <ContactAvatar name={contact.name} />
+        <div className="flex min-w-0 flex-1 flex-col gap-[6px]">
+          <SheetTitle className="truncate text-h2 text-text-primary">
+            {contact.name}
+          </SheetTitle>
+          <div className="flex flex-wrap items-center gap-[6px]">
+            <StatusChip
+              tone="neutral"
+              label={
+                isRecipientOnly
                   ? t("contactCard.recipient")
-                  : t("contactCard.trust")}
-              </span>
-              <span
-                className={cn(
-                  "px-2 py-0.5 text-label-md rounded-sm",
-                  statusConfig.className,
-                )}
-              >
-                {statusConfig.label}
-              </span>
-            </div>
+                  : t("contactCard.trust")
+              }
+            />
+            <StatusChip
+              tone={statusConfig.tone}
+              label={statusConfig.label}
+              dotClassName={statusConfig.dot}
+            />
           </div>
         </div>
         <SheetClose
           aria-label={t("detail.close")}
-          className="p-2 rounded-sm text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer shrink-0"
+          className="-m-[4px] size-[30px] shrink-0 rounded-xs p-[4px] text-text-muted hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
         >
-          <Icon path={ICON_PATHS.close} className="w-5 h-5" />
+          <Icon path={ICON_PATHS.close} className="size-[22px]" />
         </SheetClose>
-      </SheetHeader>
+      </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+      <div className="flex flex-1 flex-col gap-[24px] overflow-y-auto p-[24px]">
         {/* Details */}
         <section>
           <SectionLabel>{t("detail.details")}</SectionLabel>
-          <dl className="space-y-2.5">
+          <dl className="flex flex-col gap-[10px]">
             {contact.email && (
               <DetailRow label={t("detail.email")} value={contact.email} />
             )}
@@ -210,20 +193,19 @@ function ContactDetailBody({
         {/* Recovery role */}
         <section>
           <SectionLabel>{t("detail.recoveryRole")}</SectionLabel>
-          {isRecipientOnly ? (
-            <p className="text-body-md text-on-surface-variant">
-              {t("detail.recipientOnlyDescription")}
-            </p>
-          ) : (
-            verificationBadge && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    "text-label-md px-3 py-1.5 rounded-xs inline-flex items-center gap-1.5",
-                    verificationBadge.className,
-                  )}
-                >
-                  {verificationBadge.label}
+          <div className="flex flex-col items-start gap-[8px]">
+            {isRecipientOnly ? (
+              <p className="text-body-sm text-text-muted">
+                {t("detail.recipientOnlyDescription")}
+              </p>
+            ) : (
+              verificationBadge && (
+                <span className="inline-flex items-center gap-[6px]">
+                  <StatusChip
+                    tone={verificationBadge.tone}
+                    label={verificationBadge.label}
+                    dotClassName={verificationBadge.dot}
+                  />
                   <HelpHint
                     content={
                       <>
@@ -244,17 +226,15 @@ function ContactDetailBody({
                     }
                   />
                 </span>
-              </div>
-            )
-          )}
-          {isAwaitingKey(contact) && (
-            <div className="mt-3">
-              <span className="text-label-md px-3 py-1.5 rounded-xs bg-tertiary-container text-on-tertiary-container inline-flex items-center gap-1.5">
-                {t("detail.awaitingKey")}
+              )
+            )}
+            {isAwaitingKey(contact) && (
+              <span className="inline-flex items-center gap-[6px]">
+                <StatusChip tone="pending" label={t("detail.awaitingKey")} />
                 <HelpHint content={t("detail.awaitingKeyHelp")} />
               </span>
-            </div>
-          )}
+            )}
+          </div>
         </section>
 
         {/* Items released to this contact */}
@@ -263,39 +243,23 @@ function ContactDetailBody({
           {summary === undefined ? (
             <Loader size="sm" />
           ) : summary.releasedItems.length === 0 ? (
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-body-sm text-text-muted">
               {t("detail.noItemsRouted")}
             </p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="flex flex-col gap-[8px]">
               {summary.releasedItems.map((item) => (
                 <li key={item._id}>
-                  <Link
+                  <ListRow
                     href={`/vault/${item._id}`}
-                    className="flex items-center gap-3 p-3 rounded-xs bg-surface border border-outline-variant/15 hover:bg-surface-container transition-colors"
-                  >
-                    <Icon
-                      path={
-                        getCategoryConfig(categories[item._id] ?? "other").icon
-                      }
-                      className="w-4 h-4 text-secondary shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-body-md text-on-surface truncate">
-                        {titles[item._id] ?? ""}
-                      </p>
-                      <p className="text-label-md text-on-surface-variant">
-                        {categoryLabel(categories[item._id] ?? "other")} ·{" "}
-                        {t(
-                          `detail.recipientMode.${RECIPIENT_MODE_KEYS[item.recipientMode]}`,
-                        )}
-                      </p>
-                    </div>
-                    <Icon
-                      path={ICON_PATHS.chevronRight}
-                      className="w-3.5 h-3.5 text-on-surface-variant shrink-0"
-                    />
-                  </Link>
+                    icon={
+                      getCategoryConfig(categories[item._id] ?? "other").icon
+                    }
+                    title={titles[item._id] ?? ""}
+                    description={`${categoryLabel(categories[item._id] ?? "other")} · ${t(
+                      `detail.recipientMode.${RECIPIENT_MODE_KEYS[item.recipientMode]}`,
+                    )}`}
+                  />
                 </li>
               ))}
             </ul>
@@ -308,18 +272,13 @@ function ContactDetailBody({
           {summary === undefined ? (
             <Loader size="sm" />
           ) : summary.memberGroups.length === 0 ? (
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-body-sm text-text-muted">
               {t("detail.notMemberOfGroup")}
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-[8px]">
               {summary.memberGroups.map((g) => (
-                <span
-                  key={g._id}
-                  className="px-3 py-1.5 rounded-xs bg-surface-container-high text-on-surface text-label-md"
-                >
-                  {g.name}
-                </span>
+                <StatusChip key={g._id} tone="neutral" label={g.name} />
               ))}
             </div>
           )}
@@ -327,47 +286,51 @@ function ContactDetailBody({
       </div>
 
       {canManage && (
-        <div className="px-6 py-4 border-t border-outline-variant/10 space-y-2">
+        <div className="flex flex-col gap-[8px] border-t border-border-default px-[24px] py-[16px]">
           {contact.invitationStatus === "pending" && (
-            <button
-              type="button"
+            <Button
+              variant="bordered"
+              size="regular"
               onClick={handleResend}
               disabled={resending}
-              className="w-full text-body-md font-bold text-secondary px-3 py-2.5 rounded-xs hover:bg-surface-container transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full"
             >
               {resending
                 ? t("detail.resending")
                 : resentAt
                   ? t("detail.invitationResent")
                   : t("detail.resendInvitation")}
-            </button>
+            </Button>
           )}
           {confirmRevoke ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
+            <div className="flex gap-[8px]">
+              <Button
+                variant="danger"
+                size="regular"
                 onClick={handleRevoke}
                 disabled={revoking}
-                className="flex-1 text-body-md px-3 py-2.5 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                className="flex-1"
               >
                 {revoking ? t("detail.revoking") : t("detail.confirmRevoke")}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="plain"
+                size="regular"
                 onClick={() => setConfirmRevoke(false)}
-                className="flex-1 text-body-md px-3 py-2.5 rounded-xs bg-surface-container-high text-on-surface cursor-pointer"
+                className="flex-1"
               >
                 {t("detail.cancel")}
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="regular"
               onClick={handleRevoke}
-              className="w-full text-left text-body-md text-error px-3 py-2.5 rounded-xs hover:bg-error/10 transition-colors cursor-pointer"
+              className="w-full"
             >
               {t("detail.revokeContact")}
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -376,18 +339,14 @@ function ContactDetailBody({
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h3 className="text-label-md uppercase tracking-wider text-on-surface-variant mb-3">
-      {children}
-    </h3>
-  );
+  return <h3 className="mb-[12px] text-label text-text-primary">{children}</h3>;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-body-md text-on-surface-variant shrink-0">{label}</dt>
-      <dd className="text-body-md text-on-surface text-right truncate">
+    <div className="flex items-baseline justify-between gap-[16px]">
+      <dt className="shrink-0 text-body-sm text-text-muted">{label}</dt>
+      <dd className="truncate text-right text-body-sm text-text-primary">
         {value}
       </dd>
     </div>

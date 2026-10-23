@@ -88,6 +88,7 @@ export {
   SheetTitle,
   SheetDescription,
 } from "./sheet";
+export { RadioGroup, RadioGroupItem } from "./radio-group";
 export { Switch } from "./switch";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 export { Spinner } from "./spinner";

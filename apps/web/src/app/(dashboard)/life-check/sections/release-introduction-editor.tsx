@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { Link, useRouter } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
+import { Panel } from "@/components/v2/surface";
 
 type RecipientMode = "default" | "groups" | "explicit";
 
@@ -90,70 +91,66 @@ export function ReleaseIntroductionEditor() {
   const rows = (intros ?? []) as IntroductionRow[];
 
   return (
-    <section
+    <Panel
       id="welcome-message"
-      className="bg-surface-container-low rounded-sm p-6 space-y-5 scroll-mt-24"
+      className="flex scroll-mt-24 flex-col gap-[16px] p-[20px]"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
+      <div className="flex items-start justify-between gap-[16px]">
+        <div className="flex flex-col gap-[4px]">
+          <h2 className="flex items-center gap-[8px] text-h3 text-text-primary">
             {t("welcome.title")}
             <HelpHint content={t("welcome.help")} />
-          </h3>
-          <p className="text-body-md text-on-surface-variant">
+          </h2>
+          <p className="text-body-sm text-text-muted">
             {t("welcome.description")}
           </p>
         </div>
         <Button
-          variant="default"
-          size="sm"
+          variant="bordered"
+          size="regular"
           onClick={() => router.push("/vault/new?welcome=1")}
-          className="gap-2 cursor-pointer shrink-0"
+          className="shrink-0"
         >
-          <Icon path={ICON_PATHS.plus} className="w-4 h-4" />
+          <Icon path={ICON_PATHS.plus} className="size-[16px]" />
           {t("welcome.newMessage")}
         </Button>
       </div>
 
       {intros === undefined ? (
-        <p className="text-body-md text-on-surface-variant/70">
-          {t("welcome.loading")}
-        </p>
+        <p className="text-body-sm text-text-muted">{t("welcome.loading")}</p>
       ) : rows.length === 0 ? (
-        <div className="border-2 border-dashed border-outline-variant/30 rounded-sm p-6 text-center">
+        <div className="flex flex-col items-center gap-[8px] rounded-md border border-dashed border-border-strong p-[24px] text-center">
           <Icon
             path={ICON_PATHS.mail}
-            className="w-8 h-8 text-on-surface-variant/40 mx-auto mb-2"
+            className="size-[28px] text-icon-subtle"
           />
-          <p className="text-body-md text-on-surface-variant">
-            {t("welcome.empty")}
-          </p>
+          <p className="text-body-sm text-text-muted">{t("welcome.empty")}</p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="flex flex-col gap-[8px]">
           {rows.map((row) => (
             <li
               key={row._id}
-              className="bg-surface rounded-xs flex items-stretch justify-between gap-2"
+              className="flex items-stretch justify-between gap-[8px] rounded-sm border border-border-default"
             >
               <Link
                 href={`/vault/${row._id}`}
                 aria-label={t("welcome.openAria", {
                   title: titles[row._id] ?? "",
                 })}
-                className="min-w-0 flex-1 p-4 rounded-xs hover:bg-surface-container-high transition-colors cursor-pointer"
+                className="flex min-w-0 flex-1 flex-col gap-[2px] rounded-sm p-[14px] transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
               >
-                <p className="text-body-md font-bold text-primary truncate">
+                <span className="truncate text-label text-text-primary">
                   {titles[row._id] ?? ""}
-                </p>
-                <p className="text-label-md text-on-surface-variant mt-1">
+                </span>
+                <span className="text-body-sm text-text-muted">
                   {row.hasAttachments
                     ? t("welcome.kindWithRecording")
                     : t("welcome.kindText")}{" "}
                   {t("welcome.targetingPrefix", {
                     targeting: describeTargeting(row),
                   })}
-                </p>
+                </span>
               </Link>
               <button
                 type="button"
@@ -161,14 +158,14 @@ export function ReleaseIntroductionEditor() {
                 aria-label={t("welcome.deleteAria", {
                   title: titles[row._id] ?? "",
                 })}
-                className="m-2 p-2 self-start rounded-xs text-on-surface-variant hover:text-error hover:bg-error-container/30 transition-colors cursor-pointer shrink-0"
+                className="m-[8px] shrink-0 cursor-pointer self-start rounded-sm p-[8px] text-icon-subtle transition-colors hover:bg-bg-danger hover:text-action-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
               >
-                <Icon path={ICON_PATHS.trash} className="w-4 h-4" />
+                <Icon path={ICON_PATHS.trash} className="size-[16px]" />
               </button>
             </li>
           ))}
         </ul>
       )}
-    </section>
+    </Panel>
   );
 }

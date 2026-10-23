@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { HelpHint, toast } from "@keeplas/ui";
+import { HelpHint, RadioGroup, RadioGroupItem, toast } from "@keeplas/ui";
+import { Panel } from "@/components/v2/surface";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useTranslations } from "@/lib/i18n";
 import { getErrorMessage } from "@/lib/utils";
@@ -9,10 +10,51 @@ import { getErrorMessage } from "@/lib/utils";
 const THRESHOLDS = [1, 2, 3];
 const WINDOWS = [3, 7, 14];
 
-const SELECTED_CLS =
-  "flex items-center justify-center p-4 bg-secondary text-on-secondary rounded-xs shadow-lg scale-[1.03] transition-transform cursor-pointer font-headline font-bold";
-const UNSELECTED_CLS =
-  "flex items-center justify-center p-4 bg-surface-container-highest rounded-xs hover:scale-[1.03] transition-transform cursor-pointer font-headline font-bold text-primary";
+/** A labelled row of numeric radio options (threshold, window). */
+function NumberChoice({
+  name,
+  label,
+  help,
+  options,
+  value,
+  format,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  help: string;
+  options: number[];
+  value: number;
+  format: (n: number) => string;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[12px]">
+      <p className="flex items-center gap-[6px] text-label text-text-primary">
+        {label}
+        <HelpHint content={help} />
+      </p>
+      <RadioGroup
+        value={String(value)}
+        onValueChange={(next) => onChange(Number(next))}
+        aria-label={label}
+        className="flex-row flex-wrap gap-x-[28px] gap-y-[12px]"
+      >
+        {options.map((n) => (
+          <div key={n} className="flex items-center gap-[10px]">
+            <RadioGroupItem value={String(n)} id={`${name}-${n}`} />
+            <label
+              htmlFor={`${name}-${n}`}
+              className="cursor-pointer text-body text-text-primary"
+            >
+              {format(n)}
+            </label>
+          </div>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+}
 
 /**
  * Stage-2 release policy editor: how many trusted contacts must confirm
@@ -56,62 +98,46 @@ export function ReleasePolicySettings() {
   }
 
   return (
-    <section className="bg-surface-container-low rounded-sm p-6 space-y-6">
-      <div>
-        <h3 className="text-headline-sm text-primary mb-1.5 flex items-center gap-2">
+    <Panel className="flex flex-col gap-[20px] p-[20px]">
+      <div className="flex flex-col gap-[4px]">
+        <h2 className="flex items-center gap-[8px] text-h3 text-text-primary">
           {t("policy.title")}
           <HelpHint content={t("policy.help")} />
-        </h3>
-        <p className="text-body-md text-on-surface-variant">
+        </h2>
+        <p className="text-body-sm text-text-muted">
           {t("policy.description")}
         </p>
       </div>
 
-      <div>
-        <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
-          {t("policy.thresholdLabel")}
-          <HelpHint content={t("policy.thresholdHelp")} />
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {THRESHOLDS.map((n) => (
-            <button
-              key={n}
-              onClick={() => {
-                setThreshold(n);
-                void persist({ threshold: n, windowDays });
-              }}
-              className={threshold === n ? SELECTED_CLS : UNSELECTED_CLS}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
+      <NumberChoice
+        name="threshold"
+        label={t("policy.thresholdLabel")}
+        help={t("policy.thresholdHelp")}
+        options={THRESHOLDS}
+        value={threshold}
+        format={String}
+        onChange={(n) => {
+          setThreshold(n);
+          void persist({ threshold: n, windowDays });
+        }}
+      />
 
-      <div>
-        <p className="text-label-md text-on-surface-variant mb-2 flex items-center gap-1.5">
-          {t("policy.windowLabel")}
-          <HelpHint content={t("policy.windowHelp")} />
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {WINDOWS.map((n) => (
-            <button
-              key={n}
-              onClick={() => {
-                setWindowDays(n);
-                void persist({ threshold, windowDays: n });
-              }}
-              className={windowDays === n ? SELECTED_CLS : UNSELECTED_CLS}
-            >
-              {t("policy.windowDays", { count: n })}
-            </button>
-          ))}
-        </div>
-      </div>
+      <NumberChoice
+        name="window"
+        label={t("policy.windowLabel")}
+        help={t("policy.windowHelp")}
+        options={WINDOWS}
+        value={windowDays}
+        format={(n) => t("policy.windowDays", { count: n })}
+        onChange={(n) => {
+          setWindowDays(n);
+          void persist({ threshold, windowDays: n });
+        }}
+      />
 
-      <p className="text-label-md text-on-surface-variant pt-1">
+      <p className="text-body-sm text-text-muted">
         {t("policy.noConfirmation")}
       </p>
-    </section>
+    </Panel>
   );
 }

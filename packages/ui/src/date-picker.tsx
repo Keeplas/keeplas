@@ -69,11 +69,11 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
           type="button"
           disabled={disabled}
           className={cn(
-            "w-full flex items-center justify-between gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xs text-sm text-left transition-colors font-body",
-            "hover:border-outline focus:bg-surface-container-high focus:border-secondary/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
-            "data-[state=open]:bg-surface-container-high",
+            // v2 web "App/Field" box: 46 px, radius 10, thin border.
+            "flex h-[46px] w-full items-center justify-between gap-3 rounded-sm border border-border-default bg-bg-surface px-[14px] text-left text-[15px] leading-[22px] transition-colors",
+            "hover:bg-bg-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus data-[state=open]:border-border-strong",
             "disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer",
-            selectedDate ? "text-on-surface" : "text-outline-variant",
+            selectedDate ? "text-text-primary" : "text-text-subtle",
             className,
           )}
         >
@@ -81,7 +81,7 @@ export const DatePicker = React.forwardRef<HTMLButtonElement, DatePickerProps>(
             {selectedDate ? formatDisplay(selectedDate, locale) : placeholder}
           </span>
           <svg
-            className="w-4 h-4 text-on-surface-variant shrink-0"
+            className="w-4 h-4 text-icon-subtle shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

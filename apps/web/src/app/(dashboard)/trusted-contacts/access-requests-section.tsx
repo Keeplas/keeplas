@@ -3,8 +3,11 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { Badge, HelpHint } from "@keeplas/ui";
+import { Button, HelpHint, InfoCallout } from "@keeplas/ui";
+import { IconTile, Panel, RowText, StatusChip } from "@/components/v2/surface";
+import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import type { ChipStyle } from "./contact-display";
 
 export function AccessRequestsSection() {
   const t = useTranslations("trustedContacts");
@@ -27,77 +30,78 @@ export function AccessRequestsSection() {
     }
   }
 
-  const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+  const STATUS_LABELS: Record<string, ChipStyle & { label: string }> = {
     pending: {
       label: t("accessRequests.status.pending"),
-      className: "bg-warning-container text-on-warning-container",
+      tone: "pending",
+      dot: "bg-status-pending",
     },
     approved: {
       label: t("accessRequests.status.approved"),
-      className: "bg-secondary-container text-on-secondary-container",
+      tone: "neutral",
+      dot: "bg-status-active",
     },
     denied: {
       label: t("accessRequests.status.denied"),
-      className: "bg-error-container text-on-error-container",
+      tone: "neutral",
+      dot: "bg-action-danger",
     },
     auto_denied: {
       label: t("accessRequests.status.autoDenied"),
-      className: "bg-surface-container-highest text-on-surface-variant",
+      tone: "neutral",
     },
-    expired: {
-      label: t("accessRequests.status.expired"),
-      className: "bg-surface-container-highest text-on-surface-variant",
-    },
-    revoked: {
-      label: t("accessRequests.status.revoked"),
-      className: "bg-surface-container-highest text-on-surface-variant",
-    },
+    expired: { label: t("accessRequests.status.expired"), tone: "neutral" },
+    revoked: { label: t("accessRequests.status.revoked"), tone: "neutral" },
   };
 
   return (
-    <section className="space-y-6">
-      <h2 className="text-headline-md text-primary inline-flex items-center gap-2">
+    <section className="flex flex-col gap-[12px]">
+      <h2 className="flex items-center gap-[6px] text-h3 text-text-primary">
         {t("accessRequests.heading")}
         <HelpHint content={t("accessRequests.help")} />
       </h2>
 
       {/* Pending emergency requests */}
       {pendingRequests && pendingRequests.length > 0 && (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-[12px]">
           {pendingRequests.map((req) => {
             const confirmations = req.contactsInitiated?.length ?? 0;
             const quorumRequired = req.quorumRequired ?? 2;
             return (
-              <div
+              <Panel
                 key={req._id}
-                className="bg-surface-container-low rounded-xs p-5"
+                className="flex flex-col gap-[12px] p-[20px]"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="text-headline-sm text-on-surface">
-                      {t("accessRequests.initiatedTitle")}
-                    </h4>
-                    <p className="text-body-md text-on-surface-variant">
-                      {t("accessRequests.confirmedCount", {
-                        confirmations,
-                        quorumRequired,
-                      })}
-                    </p>
-                  </div>
-                  <Badge className="bg-warning-container text-on-warning-container">
-                    {req.quorumReached
-                      ? t("accessRequests.quorumReached")
-                      : t("accessRequests.status.pending")}
-                  </Badge>
+                <div className="flex items-center gap-[12px]">
+                  <IconTile
+                    icon={ICON_PATHS.lifebuoy}
+                    className="bg-bg-danger text-action-danger"
+                  />
+                  <RowText
+                    title={t("accessRequests.initiatedTitle")}
+                    description={t("accessRequests.confirmedCount", {
+                      confirmations,
+                      quorumRequired,
+                    })}
+                  />
+                  <StatusChip
+                    tone="pending"
+                    dotClassName="bg-status-pending"
+                    label={
+                      req.quorumReached
+                        ? t("accessRequests.quorumReached")
+                        : t("accessRequests.status.pending")
+                    }
+                  />
                 </div>
 
                 {req.quorumReached && (
-                  <div className="mb-3 p-3 bg-error/5 rounded-xs">
-                    <p className="text-sm text-error font-medium">
+                  <InfoCallout icon={ICON_PATHS.alertCircle} tone="danger">
+                    <p className="text-label text-text-primary">
                       {t("accessRequests.unlockWindowOpen")}
                     </p>
                     {req.gracePeriodEndsAt && (
-                      <p className="text-xs text-error/80 mt-1">
+                      <p>
                         {t("accessRequests.gracePeriodEnds", {
                           date: new Date(
                             req.gracePeriodEndsAt,
@@ -105,18 +109,20 @@ export function AccessRequestsSection() {
                         })}
                       </p>
                     )}
-                    <button
+                    <Button
+                      variant="danger"
+                      size="compact"
                       onClick={() => handleCancelEmergency(req._id)}
                       disabled={processing === req._id}
-                      className="mt-2 text-sm px-4 py-2 rounded-xs bg-error text-on-error font-medium cursor-pointer disabled:opacity-60"
+                      className="mt-[4px]"
                     >
                       {processing === req._id
                         ? t("accessRequests.cancelling")
                         : t("accessRequests.cancelButton")}
-                    </button>
-                  </div>
+                    </Button>
+                  </InfoCallout>
                 )}
-              </div>
+              </Panel>
             );
           })}
         </div>
@@ -124,8 +130,8 @@ export function AccessRequestsSection() {
 
       {/* Request History */}
       {allRequests && allRequests.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-label-md text-on-surface-variant">
+        <Panel className="flex flex-col px-[20px] py-[8px]">
+          <h3 className="pt-[12px] text-label text-text-primary">
             {t("accessRequests.history")}
           </h3>
           {allRequests
@@ -137,23 +143,21 @@ export function AccessRequestsSection() {
               return (
                 <div
                   key={req._id}
-                  className="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xs"
+                  className="flex items-center gap-[12px] border-b border-border-default py-[12px] last:border-b-0"
                 >
-                  <div>
-                    <span className="text-sm font-medium text-on-surface">
-                      {req.contactName}
-                    </span>
-                    <span className="text-xs text-on-surface-variant ml-2">
-                      {new Date(req.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <Badge className={statusConfig.className}>
-                    {statusConfig.label}
-                  </Badge>
+                  <RowText
+                    title={req.contactName}
+                    description={new Date(req.createdAt).toLocaleDateString()}
+                  />
+                  <StatusChip
+                    tone={statusConfig.tone}
+                    label={statusConfig.label}
+                    dotClassName={statusConfig.dot}
+                  />
                 </div>
               );
             })}
-        </div>
+        </Panel>
       )}
     </section>
   );
