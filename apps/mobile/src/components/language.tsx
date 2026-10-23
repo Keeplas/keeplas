@@ -28,13 +28,14 @@ export function LanguageSegment() {
             accessibilityRole="radio"
             accessibilityState={{ selected: active }}
             onPress={() => changeLanguage(code)}
+            hitSlop={{ top: 6, bottom: 6 }}
             style={[
               styles.segmentItem,
               active && { backgroundColor: colors["action.primary"] },
             ]}
           >
             <Text
-              variant="caption"
+              variant="label"
               color={active ? "text.inverse" : "text.muted"}
             >
               {code.toUpperCase()}
@@ -65,6 +66,7 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
         accessibilityRole="button"
         accessibilityLabel={t("common.language")}
         onPress={() => setOpen(true)}
+        hitSlop={8}
         style={[
           styles.dropdown,
           {
@@ -75,10 +77,10 @@ export function LanguageDropdown({ inverse = false }: { inverse?: boolean }) {
           },
         ]}
       >
-        <Text variant="caption" style={{ color: fg }}>
+        <Text variant="label" style={{ color: fg }}>
           {language.toUpperCase()}
         </Text>
-        <Icon name="chevron-down" size={14} tint={fg} />
+        <Icon name="chevron-down" size={16} tint={fg} />
       </Pressable>
       <Modal
         transparent
@@ -118,18 +120,20 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: radius.pill,
   },
+  // Both pills are larger than in Figma so, with hitSlop, they clear the
+  // 44 pt (iOS) / 48 dp (Android) minimum touch target.
   segmentItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: radius.pill,
   },
   dropdown: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingLeft: 10,
-    paddingRight: 8,
-    paddingVertical: 5,
+    gap: 6,
+    paddingLeft: 14,
+    paddingRight: 10,
+    paddingVertical: 8,
     borderWidth: 1,
   },
   backdrop: {

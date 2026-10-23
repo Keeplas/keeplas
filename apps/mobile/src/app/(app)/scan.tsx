@@ -192,6 +192,7 @@ export default function Scan() {
         ) : null}
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={t("capture.flash")}
           accessibilityState={{ selected: torch }}
           onPress={() => setTorch((on) => !on)}
           style={[styles.round, styles.flash]}

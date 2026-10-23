@@ -5,6 +5,9 @@ import { radius } from "@/theme";
 import { Icon } from "./icon";
 import { Text } from "./text";
 
+// Checkbox and Radio rows are ~24 pt tall; this brings them to a 44 pt target.
+const ROW_HIT_SLOP = { top: 10, bottom: 10 };
+
 /** Figma `Toggle`: 46×28 track, 22 pt knob. */
 export function Toggle({
   value,
@@ -22,7 +25,7 @@ export function Toggle({
       accessibilityLabel={label}
       accessibilityState={{ checked: value }}
       onPress={() => onChange(!value)}
-      hitSlop={8}
+      hitSlop={10}
       style={[
         styles.track,
         {
@@ -59,6 +62,7 @@ export function Checkbox({
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
       onPress={() => onChange(!checked)}
+      hitSlop={ROW_HIT_SLOP}
       style={[styles.option, disabled && styles.disabled]}
     >
       <View
@@ -110,6 +114,7 @@ export function Radio({
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       onPress={onPress}
+      hitSlop={ROW_HIT_SLOP}
       style={styles.option}
     >
       <View

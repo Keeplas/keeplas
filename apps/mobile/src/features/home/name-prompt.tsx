@@ -35,7 +35,7 @@ export function NamePrompt() {
       <Pressable
         accessibilityRole="button"
         onPress={() => setOpen(true)}
-        hitSlop={8}
+        hitSlop={14}
       >
         <Text variant="body-sm-strong" color="text.link">
           {t("home.addName")}

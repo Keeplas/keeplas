@@ -58,3 +58,40 @@ describe("dev test phone numbers", () => {
     expect(await scheduledCount(t)).toBe(1);
   });
 });
+
+describe("store review phone numbers", () => {
+  const REVIEW_PHONE = "+33600000009";
+
+  afterEach(() => {
+    delete process.env.REVIEW_PHONES;
+    delete process.env.REVIEW_CODE;
+  });
+
+  it("signs a listed number in with REVIEW_CODE, without WhatsApp", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    await requestSignin(t, REVIEW_PHONE);
+    expect(await scheduledCount(t)).toBe(0);
+    await expect(
+      t.mutation(internal.phone_auth.consumePhoneAuthCode, {
+        phoneNumber: REVIEW_PHONE,
+        code: "482913",
+        intent: "signin",
+      }),
+    ).resolves.toEqual({ ok: true });
+  });
+
+  it("falls back to WhatsApp when REVIEW_CODE is missing or not 6 digits", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    for (const code of [undefined, "1234", "abcdef"]) {
+      if (code === undefined) delete process.env.REVIEW_CODE;
+      else process.env.REVIEW_CODE = code;
+      const t = makeT();
+      await seedPhoneUser(t, REVIEW_PHONE);
+      await requestSignin(t, REVIEW_PHONE);
+      expect(await scheduledCount(t)).toBe(1);
+    }
+  });
+});

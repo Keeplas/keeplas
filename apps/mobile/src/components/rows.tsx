@@ -84,6 +84,7 @@ export function Chip({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
+      hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => [
         styles.chip,
         {
@@ -149,7 +150,7 @@ export function SectionHeader({
         <Pressable
           accessibilityRole="button"
           onPress={action.onPress}
-          hitSlop={8}
+          hitSlop={14}
         >
           <Text variant="body-sm" color="text.link">
             {action.label}
