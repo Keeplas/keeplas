@@ -5,17 +5,13 @@ import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
-import { checkOtp, INVALID_CODE } from "./lib/otp";
+import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { maskPhone } from "./lib/phone";
+import { grantSessionProof } from "./session_proofs";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
-
-function generateOtp(): string {
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return (arr[0] % 1_000_000).toString().padStart(6, "0");
-}
 
 type Channel = "email" | "whatsapp";
 
@@ -40,8 +36,7 @@ function maskDestination(channel: Channel, destination: string): string {
     const head = local.slice(0, 1);
     return `${head}•••@${domain}`;
   }
-  // E.164 phone: keep country-ish prefix + last 2 digits.
-  return `${destination.slice(0, 3)}•••${destination.slice(-2)}`;
+  return maskPhone(destination);
 }
 
 /**
@@ -223,6 +218,7 @@ export const submitLoginOtpForSession = mutation({
         phoneNumberVerifiedAt: now,
         updatedAt: now,
       });
+      await grantSessionProof(ctx, { sessionId, userId, kind: "phone" });
     }
     return { success: true as const };
   },

@@ -131,34 +131,113 @@ export const notifySupportInbox = internalAction({
     // Contact form has its own sender (e.g. form@keeplas.com) so it stays
     // distinct from transactional senders like noreply@keeplas.com used for
     // OTP / Life Check. Falls back to RESEND_FROM_EMAIL when unset.
-    const from =
-      process.env.SUPPORT_FROM_EMAIL ?? requireEnv("RESEND_FROM_EMAIL");
     const topicLabel = TOPIC_LABELS[args.topic] ?? args.topic;
-
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [inbox],
-        // Reply-to only works for email submitters; WhatsApp tickets are
-        // answered out of band (see the footer note in the email body).
-        ...(args.channel === "email" ? { reply_to: args.contact } : {}),
-        subject: `[${topicLabel}] ${args.subject}`,
-        html: ticketEmailHtml(args),
-      }),
+    await sendSupportEmail(apiKey, {
+      to: inbox,
+      // Reply-to only works for email submitters; WhatsApp tickets are
+      // answered out of band (see the footer note in the email body).
+      replyTo: args.channel === "email" ? args.contact : undefined,
+      subject: `[${topicLabel}] ${args.subject}`,
+      html: ticketEmailHtml(args),
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`resend ${res.status}: ${text.slice(0, 160)}`);
-    }
     return "sent";
   },
 });
+
+/**
+ * Asks the reviewer (SUPPORT_RECOVERY_EMAIL, kept apart from the general
+ * inbox) to check a lost-number request in the admin console: what the
+ * requester declared next to what the account holds. Nothing from the vault
+ * is known to the server, so nothing from it can appear here.
+ */
+export const notifyRecoveryReviewer = internalAction({
+  args: {
+    requestId: v.id("number_change_requests"),
+    declaredName: v.string(),
+    declaredEmail: v.optional(v.string()),
+    message: v.optional(v.string()),
+    oldPhone: v.string(),
+    newPhone: v.string(),
+    accountName: v.optional(v.string()),
+    accountEmail: v.optional(v.string()),
+    accountCreatedAt: v.number(),
+    windowEndsAt: v.number(),
+  },
+  handler: async (_ctx, args) => {
+    const apiKey = process.env.RESEND_API_KEY;
+    const reviewer = process.env.SUPPORT_RECOVERY_EMAIL;
+    if (!apiKey || !reviewer) return "recovery_reviewer_not_configured";
+    const adminUrl = process.env.ADMIN_APP_URL;
+    await sendSupportEmail(apiKey, {
+      to: reviewer,
+      subject: `[Lost number] ${args.declaredName} — review before ${new Date(args.windowEndsAt).toUTCString()}`,
+      html: reviewerEmailHtml({
+        ...args,
+        link: adminUrl ? `${adminUrl}/recovery/${args.requestId}` : undefined,
+      }),
+    });
+    return "sent";
+  },
+});
+
+/** Resend POST from the contact-form sender; throws on a failed send. */
+async function sendSupportEmail(
+  apiKey: string,
+  args: { to: string; subject: string; html: string; replyTo?: string },
+) {
+  // Contact form has its own sender (e.g. form@keeplas.com) so it stays
+  // distinct from transactional senders like noreply@keeplas.com used for
+  // OTP / Life Check. Falls back to RESEND_FROM_EMAIL when unset.
+  const from =
+    process.env.SUPPORT_FROM_EMAIL ?? requireEnv("RESEND_FROM_EMAIL");
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [args.to],
+      ...(args.replyTo ? { reply_to: args.replyTo } : {}),
+      subject: args.subject,
+      html: args.html,
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`resend ${res.status}: ${text.slice(0, 160)}`);
+  }
+}
+
+function reviewerEmailHtml(args: {
+  declaredName: string;
+  declaredEmail?: string;
+  message?: string;
+  oldPhone: string;
+  newPhone: string;
+  accountName?: string;
+  accountEmail?: string;
+  accountCreatedAt: number;
+  windowEndsAt: number;
+  link?: string;
+}) {
+  const row = (label: string, declared: string, recorded: string) =>
+    `<tr><td style="padding:6px 8px;color:#666">${label}</td><td style="padding:6px 8px">${escapeHtml(declared)}</td><td style="padding:6px 8px">${escapeHtml(recorded)}</td></tr>`;
+  return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:600px;margin:auto;padding:24px">
+<h2 style="margin:0 0 8px">Lost-number request to review</h2>
+<p style="margin:0 0 16px">Someone asked to move an account from <strong>${escapeHtml(args.oldPhone)}</strong> to <strong>${escapeHtml(args.newPhone)}</strong>. The owner has been alerted. The change cannot complete before ${escapeHtml(new Date(args.windowEndsAt).toUTCString())}, nor without your approval.</p>
+<table style="border-collapse:collapse;width:100%;background:#f6f6f6;border-radius:8px">
+<tr><th></th><th style="text-align:left;padding:6px 8px">Declared</th><th style="text-align:left;padding:6px 8px">Account</th></tr>
+${row("Name", args.declaredName, args.accountName ?? "—")}
+${row("Email", args.declaredEmail ?? "—", args.accountEmail ?? "—")}
+${row("Created", "", new Date(args.accountCreatedAt).toUTCString())}
+</table>
+${args.message ? `<p style="margin:16px 0 4px"><strong>Message</strong></p><div style="white-space:pre-wrap;background:#f6f6f6;border-radius:8px;padding:16px">${escapeHtml(args.message)}</div>` : ""}
+${args.link ? `<p style="margin-top:24px"><a href="${escapeHtml(args.link)}" style="background:#0E2340;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Review in the console</a></p>` : ""}
+<p style="color:#666;font-size:13px;margin-top:24px">Approve only if the details match. Approving never opens the vault: the owner still needs their cloud backup, 24 words or two contacts.</p>
+</body></html>`;
+}
 
 function ticketEmailHtml(args: {
   name: string;

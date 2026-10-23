@@ -21,6 +21,7 @@ import { Callout, Card, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { saveDeviceVault } from "@/crypto/device-vault";
 import { createKitMaterial } from "@/crypto/vault-keys";
+import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { formatDate, formatTime } from "@/lib/format";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -50,6 +51,7 @@ export default function ContactRecovery() {
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const ensurePhoneProof = useEnsurePhoneProof();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function ContactRecovery() {
   }, [request]);
 
   async function begin() {
+    if (!ensurePhoneProof()) return;
     setBusy(true);
     try {
       const pair = generateRecipientKeyPair();

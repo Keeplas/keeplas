@@ -22,3 +22,8 @@ export function normalizeE164(value: string | undefined): string | undefined {
 export function isE164(value: string): boolean {
   return E164.test(value.trim());
 }
+
+/** E.164 for display to its owner: country-ish prefix + last 2 digits. */
+export function maskPhone(phone: string): string {
+  return `${phone.slice(0, 3)}•••${phone.slice(-2)}`;
+}

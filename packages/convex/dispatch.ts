@@ -1383,6 +1383,46 @@ export const notifyRecoveryStarted = internalAction({
     }),
 });
 
+const NUMBER_CHANGE_COPY = {
+  en: {
+    subject: "Keeplas — someone asked to change your phone number",
+    greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
+    body: () =>
+      "A request to move your Keeplas account to a new phone number was just made by someone who says they lost this one. Nothing changes for 72 hours, and our team checks the request. If it wasn't you, open Keeplas on your phone and tap \"It wasn't me\" to cancel it.",
+    button: "Open Keeplas",
+    fallback: "If the button doesn't work, open {{url}} in your browser.",
+  },
+  fr: {
+    subject: "Keeplas — une demande de changement de votre numéro",
+    greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
+    body: () =>
+      "Quelqu'un qui dit avoir perdu ce numéro vient de demander à déplacer votre compte Keeplas vers un nouveau numéro. Rien ne change pendant 72 heures, et notre équipe vérifie la demande. Si ce n'est pas vous, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » pour l'annuler.",
+    button: "Ouvrir Keeplas",
+    fallback:
+      "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+  },
+} satisfies Record<Locale, CtaEmailCopy>;
+
+/**
+ * Owner-facing alert: a lost-number request started (number_change.ts).
+ * WhatsApp reuses the approved recovery-started template, which says the
+ * same thing: a recovery was asked, nothing for 72 h, cancel if not you.
+ */
+export const notifyNumberChangeRequested = internalAction({
+  args: { ...alertArgs, ownerName: v.optional(v.string()) },
+  handler: (ctx, args) =>
+    sendAlert(ctx, {
+      ...args,
+      greetingName: args.ownerName,
+      bodyName: "",
+      copy: NUMBER_CHANGE_COPY,
+      path: "/hub",
+      appPath: "/number-change",
+      templateEnv: process.env.WHATSAPP_RECOVERY_STARTED_TEMPLATE_NAME,
+      templateBase: "keeplas_recovery_started",
+    }),
+});
+
 const RECOVERY_CONTACT_COPY = {
   en: {
     subject: "Keeplas — someone needs your help",

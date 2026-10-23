@@ -2,7 +2,12 @@ import { v, ConvexError } from "convex/values";
 import { query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
-import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
+import {
+  optionalAuth,
+  requireAuthWithLoginOtp,
+  requireFullAuth,
+} from "./helpers";
+import { requireSessionProof } from "./session_proofs";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { activePushTokens } from "./devices";
 import { getAuthSessionId } from "@convex-dev/auth/server";
@@ -71,15 +76,18 @@ export const disable = auditedMutation({
 });
 
 /**
- * New phone, signed in by phone OTP: fetch the envelope to open with the
- * restored CBK. Rate-limited, audited, and announced to the owner.
+ * New phone: fetch the envelope to open with the restored CBK. The session
+ * must have proved the account's number (a WhatsApp code), so a synced
+ * passkey or the Apple / Google account alone never restores. Rate-limited,
+ * audited, and announced to the owner.
  */
 export const restore = auditedMutation({
   action: "cloud_backup.restored",
   resourceType: "cloud_backup",
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireAuthWithLoginOtp(ctx);
+    await requireSessionProof(ctx, "phone");
     await enforceIpRateLimit(
       ctx,
       "cloud_backup_restore",

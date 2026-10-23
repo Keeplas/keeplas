@@ -51,7 +51,9 @@
     "accountExists": "Un compte utilise déjà ce numéro. Connectez-vous plutôt.",
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
-    "signInInstead": "Me connecter avec ce numéro"
+    "signInInstead": "Me connecter avec ce numéro",
+    "passkey": "Se connecter avec une passkey",
+    "passkeyFailed": "La connexion par passkey a échoué. Réessayez, ou utilisez votre numéro."
   },
   "verify": {
     "title": "Vérifier votre numéro",
@@ -159,6 +161,78 @@
     "cta": "Ouvrir mon coffre",
     "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
     "contactsCta": "Demander à mes contacts"
+  },
+  "cloudRestore": {
+    "title": "Restaurer depuis {provider}",
+    "option": "Votre sauvegarde revient avec votre compte {provider}.",
+    "body": "La clé de votre coffre est sauvegardée avec votre compte {provider}. Restaurez-la sur ce téléphone en une étape.",
+    "cta": "Restaurer mon coffre",
+    "note": "Un code WhatsApp confirme que c'est bien vous avant d'ouvrir la sauvegarde.",
+    "noKey": "Ce téléphone ne trouve pas votre sauvegarde {provider}. Vérifiez que vous êtes connecté au même compte {provider}, ou utilisez vos 24 mots.",
+    "failed": "Nous n'avons pas pu restaurer votre coffre. Réessayez, ou utilisez vos 24 mots."
+  },
+  "phoneProof": {
+    "title": "Confirmez que c'est vous",
+    "body": "Nous avons envoyé un code à votre numéro WhatsApp {phone}.",
+    "cta": "Confirmer"
+  },
+  "lostNumber": {
+    "title": "Vous avez perdu votre numéro ?",
+    "body": "Déplacez votre compte vers un nouveau numéro. Votre coffre reste verrouillé jusqu'à ce que vous l'ouvriez avec votre sauvegarde, vos 24 mots ou vos contacts de confiance.",
+    "seeRequest": "Voir ma demande",
+    "seeRequestBody": "Suivez la demande faite depuis ce téléphone.",
+    "withKit": "J'ai mes 24 mots",
+    "withKitBody": "Changez de numéro tout de suite.",
+    "withSupport": "Je n'ai pas mes 24 mots",
+    "withSupportBody": "Notre équipe vérifie votre demande. Cela prend au moins 72 heures.",
+    "note": "Keeplas ne voit jamais vos 24 mots ni le contenu de votre coffre.",
+    "kitBody": "Saisissez votre ancien numéro et vos 24 mots. Ils restent sur ce téléphone : seule une preuve calculée à partir d'eux est vérifiée.",
+    "oldNumber": "Votre ancien numéro",
+    "newNumber": "Votre nouveau numéro",
+    "kitCta": "Continuer",
+    "kitInvalid": "Ce numéro et ces 24 mots ne correspondent à aucun compte. Vérifiez chaque mot et leur ordre.",
+    "newTaken": "Ce numéro est déjà utilisé par un autre compte Keeplas.",
+    "requestBody": "Dites-nous qui vous êtes. Nous le comparons avec votre compte, et par sécurité rien ne change pendant 72 heures.",
+    "name": "Votre nom complet",
+    "email": "E-mail de votre compte (facultatif)",
+    "message": "Ce qui peut nous aider (facultatif)",
+    "messagePlaceholder": "Quand vous avez perdu votre téléphone, quand vous avez créé votre compte…",
+    "send": "Envoyer ma demande",
+    "requestNote": "Nous prévenons vos appareils, votre e-mail et votre ancien numéro. Si quelqu'un d'autre a fait cette demande, vous pourrez l'annuler depuis là.",
+    "nameRequired": "Saisissez votre nom complet.",
+    "sameNumber": "Votre nouveau numéro doit être différent de l'ancien.",
+    "inProgress": "Une demande est déjà en cours pour ce compte.",
+    "invalidEmail": "Vérifiez votre adresse e-mail.",
+    "statusTitle": "Votre demande",
+    "statusBody": "Votre compte passera au numéro {phone}.",
+    "stepSent": "Demande envoyée",
+    "stepReview": "Notre équipe vérifie vos informations",
+    "stepReviewBody": "Nous comparons ce que vous nous avez dit avec votre compte.",
+    "stepWait": "72 heures d'attente de sécurité",
+    "stepWaitBody": "Environ {n} h restantes, jusqu'au {date}.",
+    "stepWaitDone": "L'attente est terminée.",
+    "sendCode": "Envoyer le code au {phone}",
+    "statusNote": "Revenez ici quand vous voulez : ce téléphone garde la trace de votre demande.",
+    "withdraw": "Retirer ma demande",
+    "startOver": "Faire une nouvelle demande",
+    "notFound": "Nous ne trouvons plus votre demande.",
+    "lapsed": "Votre demande a expiré. Une demande dure 7 jours.",
+    "rejected": "Nous n'avons pas pu confirmer que c'était vous, la demande est donc close. Contactez-nous si vous pensez qu'il s'agit d'une erreur.",
+    "cancelled": "Cette demande a été annulée."
+  },
+  "newNumber": {
+    "title": "Choisissez votre nouveau numéro",
+    "body": "Votre ancien numéro ne peut plus vous connecter. Saisissez celui que vous utilisez maintenant : nous lui enverrons un code WhatsApp."
+  },
+  "numberChange": {
+    "nav": "Changement de numéro",
+    "title": "Quelqu'un a demandé à changer votre numéro",
+    "banner": "Si ce n'était pas vous, annulez-la maintenant.",
+    "body": "Une demande de passage de votre compte au numéro {phone} a été faite le {date} par quelqu'un qui dit avoir perdu ce numéro. Si c'était vous, rien à faire.",
+    "wait": "Rien ne change avant le {date}, et notre équipe vérifie la demande.",
+    "notMe": "Ce n'était pas moi, annuler",
+    "cancelled": "Demande annulée. Votre numéro ne change pas.",
+    "none": "Aucun changement de numéro en cours."
   },
   "socialRecovery": {
     "title": "Récupérer avec mes contacts",
@@ -451,7 +525,13 @@
     "body": "Ouvrez votre application d'authentification et saisissez le code à 6 chiffres de Keeplas.",
     "cta": "Confirmer",
     "wrong": "Ce code n'a pas fonctionné. Vérifiez votre application d'authentification et réessayez.",
-    "tooMany": "Trop de tentatives. Attendez 15 minutes, puis réessayez."
+    "tooMany": "Trop de tentatives. Attendez 15 minutes, puis réessayez.",
+    "lost": "Vous avez perdu votre application d'authentification ?"
+  },
+  "totpRecovery": {
+    "title": "Application d'authentification perdue ?",
+    "body": "Ouvrez votre coffre sur ce téléphone et nous désactiverons le code d'authentification. Vous pourrez en configurer un nouveau plus tard dans les Réglages.",
+    "cta": "Ouvrir avec mes 24 mots"
   },
   "email": {
     "title": "Se connecter avec votre e-mail",
@@ -848,7 +928,7 @@
     "title": "Sauvegarde cloud",
     "bodyShort": "Récupération iCloud ou Google chiffrée",
     "body": "Keeplas conserve une enveloppe chiffrée. La clé reste séparément dans le trousseau synchronisé de votre plateforme.",
-    "risk": "Une personne qui contrôle à la fois votre compte Apple ou Google et le code d'un appareil pourrait restaurer cette sauvegarde.",
+    "protected": "Votre sauvegarde est protégée par votre compte {account}. Gardez-le bien sécurisé (mot de passe solide, double authentification) : c'est lui qui protège aussi votre sauvegarde Keeplas. La restaurer demande aussi un code envoyé sur votre WhatsApp.",
     "auth": "Confirmer la sauvegarde cloud",
     "noRootKey": "Ce téléphone ne peut pas créer la sauvegarde. Créez d'abord un nouveau kit de récupération.",
     "enable": "Activer la sauvegarde",

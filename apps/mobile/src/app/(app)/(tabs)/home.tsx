@@ -37,6 +37,7 @@ export default function Home() {
     useQuery(api.trusted_contacts.getContactsReady) ?? false;
   const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
+  const numberChange = useQuery(api.number_change.getMineOpen);
   const { items, pending } = useVaultData();
   const [kitExported, setKitExported] = useState(false);
 
@@ -77,6 +78,14 @@ export default function Home() {
         {t("home.subtitle")}
       </Text>
       {firstName ? null : <NamePrompt />}
+      {numberChange ? (
+        <ListRow
+          icon="shield-alert"
+          title={t("numberChange.title")}
+          description={t("numberChange.banner")}
+          onPress={() => router.push("/number-change")}
+        />
+      ) : null}
       {deletion ? (
         <ListRow
           icon="alert-triangle"

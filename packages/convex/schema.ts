@@ -194,8 +194,47 @@ export default defineSchema({
     codeHash: v.string(),
     expiresAt: v.number(),
     attempts: v.number(),
-    intent: v.union(v.literal("signup"), v.literal("signin")),
+    // "number_change": sent to the new number of an approved lost-number
+    // request (number_change.ts), consumed by the `number-change` provider.
+    intent: v.union(
+      v.literal("signup"),
+      v.literal("signin"),
+      v.literal("number_change"),
+    ),
   }).index("by_phone", ["phoneNumber"]),
+
+  // Lost number, no 24 words (cases B / D / F): a request made signed out
+  // with the old number. It waits 72 h with alerts on every channel ("It
+  // wasn't me" cancels it) and a support review of non-encrypted details in
+  // the admin console. Completing it changes the number and signs in; the
+  // vault still needs the cloud backup, the 24 words or two contacts.
+  number_change_requests: defineTable({
+    userId: v.id("users"),
+    oldPhone: v.string(),
+    newPhone: v.string(),
+    // What the requester declared, compared by support with the account.
+    declaredName: v.string(),
+    declaredEmail: v.optional(v.string()),
+    message: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+      v.literal("cancelled"),
+      v.literal("completed"),
+    ),
+    // SHA-256 of the secret the requesting phone keeps to follow and
+    // complete the request (it holds no session yet).
+    claimHash: v.string(),
+    createdAt: v.number(),
+    windowEndsAt: v.number(),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.number()),
+    reviewNote: v.optional(v.string()),
+    closedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 
   // ═══════════════════════════════════════════════
   // EMAIL VERIFICATION / AUTH (passwordless email OTP)
@@ -528,6 +567,40 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_user", ["userId"]),
+
+  // What a session has proven beyond its sign-in (session_proofs.ts).
+  // "phone": a WhatsApp code reached the account's number in this session
+  // (phone-otp sign-in, or the in-session code). Restoring the cloud backup
+  // or asking contacts to recover needs it, so a synced passkey alone does
+  // not open a vault.
+  // "vault": the session opened the vault (identity-key signature, or the
+  // 24-word verifier at a recovery sign-in). Resets TOTP, changes the number.
+  // Rows live as long as the authSessions row.
+  auth_session_proofs: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    kind: v.union(v.literal("phone"), v.literal("vault")),
+    verifiedAt: v.number(),
+  }).index("by_session", ["sessionId"]),
+
+  // Single-use nonce the identity key signs for the "vault" proof.
+  session_vault_challenges: defineTable({
+    sessionId: v.id("authSessions"),
+    userId: v.id("users"),
+    nonce: v.string(),
+    expiresAt: v.number(),
+  }).index("by_session", ["sessionId"]),
+
+  // Pending in-session WhatsApp code that grants the "phone" proof.
+  session_phone_codes: defineTable({
+    userId: v.id("users"),
+    sessionId: v.id("authSessions"),
+    // E.164 snapshot at issuance: the code is void if the number changed.
+    phoneNumber: v.string(),
+    codeHash: v.string(),
+    expiresAt: v.number(),
+    attempts: v.number(),
+  }).index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
   // VAULTS

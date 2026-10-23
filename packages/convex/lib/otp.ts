@@ -6,12 +6,20 @@ import { sha256Hex } from "./crypto";
 export const OTP_MAX_ATTEMPTS = 5;
 export const INVALID_CODE = "Invalid code";
 
+/** Uniform random 6-digit one-time code. */
+export function generateOtp(): string {
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return (arr[0] % 1_000_000).toString().padStart(6, "0");
+}
+
 type OtpTable =
   | "phone_auth_codes"
   | "email_auth_codes"
   | "phone_verification_codes"
   | "email_verification_codes"
-  | "login_otp_codes";
+  | "login_otp_codes"
+  | "session_phone_codes";
 
 /**
  * Check a submitted 6-digit code against a user's pending codes (newest
