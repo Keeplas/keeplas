@@ -14,7 +14,6 @@
     "optional": "Optional",
     "seeAll": "See all",
     "language": "Language",
-    "comingSoon": "Coming in the next update.",
     "genericError": "Something went wrong. Try again."
   },
   "languageNames": {
@@ -107,8 +106,7 @@
     "slot": "Slot {n} of 3",
     "invite": "Invite contacts",
     "skip": "Skip for now",
-    "warning": "Without contacts or a recovery kit, losing every device and passkey may lock you out.",
-    "later": "Inviting contacts comes in the next update. You'll find it under People."
+    "warning": "Without contacts or a recovery kit, losing every device and passkey may lock you out."
   },
   "setupDone": {
     "title": "Setup complete",
@@ -125,7 +123,7 @@
     "body": "Write these 24 words down, in order, and keep them somewhere safe. With them you can open your vault if you lose this phone.",
     "warning": "Anyone with these words and access to your phone number can open your vault. Never share them.",
     "saved": "I've saved my kit",
-    "unavailable": "Your kit can only be shown while you set up this phone. A new kit can be created from Privacy and security in the next update."
+    "unavailable": "Your kit can only be shown while you set up this phone."
   },
   "oneWay": {
     "title": "If you lose this phone, you lose your vault",
@@ -300,6 +298,19 @@
     "deletionTitle": "Account deletion on {date}",
     "deletionBody": "Everything will be erased that day. Tap to cancel."
   },
+  "legal": {
+    "privacy": "Privacy policy",
+    "terms": "Terms of service",
+    "agreeBefore": "By continuing, you agree to the ",
+    "agreeAnd": " and the ",
+    "agreeAfter": "."
+  },
+  "push": {
+    "title": "Turn on security alerts?",
+    "body": "Keeplas tells you when a new device signs in, when someone asks to recover your account, and when a Life check needs your answer.",
+    "allow": "Turn on",
+    "notNow": "Not now"
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your plan, storage and preferences.",
@@ -309,7 +320,6 @@
     "account": "Account",
     "plan": "Plan",
     "planFree": "Free",
-    "planFreeBody": "Free · Upgrade to Lifetime for $99",
     "planLifetime": "Lifetime",
     "privacy": "Privacy and security",
     "privacyBody": "Passkey, PIN, recovery kit",
@@ -494,7 +504,7 @@
     "keysRotated": "Keys rotated",
     "keysRotatedBody": "Vault re-encrypted on this phone",
     "keysPending": "Key rotation pending",
-    "keysPendingBody": "Finish it from a computer with your recovery kit. This phone will do it in the next update.",
+    "keysPendingBody": "Rotate your keys now to re-encrypt your vault on this phone.",
     "note": "Your other devices will ask you to unlock again. That's expected.",
     "reviewDevices": "Review devices"
   },
@@ -619,8 +629,8 @@
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",
-    "noCameraVideoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a video from your library instead.",
-    "noCameraPhotoBody": "Keeplas can't open a camera here (the iOS Simulator and some devices have none). Choose a photo from your library instead.",
+    "noCameraVideoBody": "Keeplas can't open a camera here (this device has none). Choose a video from your library instead.",
+    "noCameraPhotoBody": "Keeplas can't open a camera here (this device has none). Choose a photo from your library instead.",
     "iconLabel": "Icon",
     "iconAuto": "Automatic",
     "iconAutoBody": "Chosen from what you add",
@@ -942,7 +952,7 @@
   },
   "backup": {
     "title": "Cloud backup",
-    "bodyShort": "Encrypted iCloud or Google recovery",
+    "bodyShort": "Encrypted recovery in your cloud keychain",
     "body": "Keeplas stores an encrypted envelope. The key is kept separately in your synced platform keychain.",
     "protected": "Your backup is protected by your {account} account. Keep it secure with a strong password and two-factor authentication, and your Keeplas backup stays safe too. Restoring it also asks for a code sent to your WhatsApp.",
     "auth": "Confirm cloud backup",

@@ -164,7 +164,10 @@ async function dropContactLinks(
 
 const SIMPLE_TABLES = [
   "phone_verification_codes",
+  "session_phone_codes",
+  "number_change_requests",
   "email_verification_codes",
+  "capture_handoffs",
   "passkey_credentials",
   "social_envelopes",
   "cloud_backup_envelopes",

@@ -639,7 +639,7 @@ export default function ComposeCapture() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("capture.page", { n: index + 1 })}
-                hitSlop={8}
+                hitSlop={12}
                 onPress={() =>
                   draftStore.update({
                     pages: draft.pages.filter((p) => p !== uri),

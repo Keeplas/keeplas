@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
@@ -51,7 +51,7 @@ export default function OneWayWarning() {
       </Card>
       <Button
         label={t("oneWay.addContacts")}
-        onPress={() => Alert.alert(t("contacts.title"), t("contacts.later"))}
+        onPress={() => router.push("/contacts")}
       />
       <Button
         variant="secondary"

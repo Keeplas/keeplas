@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useQuery } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -20,6 +22,8 @@ export default function SetupDone() {
   const finish = useFinishSetup();
   const changeLanguage = useChangeLanguage();
   const [kitExported, setKitExported] = useState(false);
+  const contacts = useQuery(api.trusted_contacts.getContactSummaries);
+  const invited = (contacts ?? []).some((c) => c.contactType === "trust");
 
   useFocusEffect(
     useCallback(() => {
@@ -37,14 +41,19 @@ export default function SetupDone() {
       <View style={styles.sectionHeader}>
         <Text variant="label">{t("setupDone.optional")}</Text>
         <Text variant="body-sm" color="text.muted">
-          {`${kitExported ? 1 : 0}/2`}
+          {`${Number(invited) + Number(kitExported)}/2`}
         </Text>
       </View>
       <ListRow
         icon="people"
         title={t("setupDone.contactsTitle")}
         description={t("setupDone.contactsBody")}
-        onPress={() => Alert.alert(t("contacts.title"), t("contacts.later"))}
+        trailing={
+          invited ? (
+            <StatusChip tone="success" label={t("people.status.pending")} />
+          ) : undefined
+        }
+        onPress={() => router.push("/contacts")}
       />
       <ListRow
         icon="document"

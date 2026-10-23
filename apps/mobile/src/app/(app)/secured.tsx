@@ -10,9 +10,8 @@ import { Text } from "@/components/text";
 import { useI18n } from "@/providers/i18n-provider";
 
 /**
- * M09-2 Account secured. `users.masterKeyRotationRequired` is now set; the
- * phone-side rotation (re-encrypting every item) is not in this part, so the
- * keys row shows it as pending.
+ * M09-2 Account secured. `users.masterKeyRotationRequired` is now set, so the
+ * keys row shows it as pending and leads to the on-phone rotation.
  */
 export default function Secured() {
   const router = useRouter();
@@ -55,6 +54,12 @@ export default function Secured() {
       </Card>
       <Callout tone="warm" icon="people" text={t("secured.note")} />
       <Button
+        label={t("rotation.start")}
+        style={styles.full}
+        onPress={() => router.push("/rotate-keys")}
+      />
+      <Button
+        variant="secondary"
         label={t("secured.reviewDevices")}
         style={styles.full}
         onPress={() => router.replace("/devices")}

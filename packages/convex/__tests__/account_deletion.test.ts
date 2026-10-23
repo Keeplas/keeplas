@@ -131,10 +131,35 @@ describe("account deletion", () => {
     const t = makeT();
     const owner = await seedVaultOwner(t);
     const versionBlob = await seedStorageRef(t, 32);
+    const sessionId = await seedSession(t, owner.userId);
     await t.run(async (ctx) => {
       await ctx.db.patch(owner.userId, {
         phoneNumber: "+33600000009",
         email: "owner@example.com",
+      });
+      await ctx.db.insert("number_change_requests", {
+        userId: owner.userId,
+        oldPhone: "+33600000009",
+        newPhone: "+33600000010",
+        declaredName: "Owner",
+        status: "completed",
+        claimHash: "hash",
+        createdAt: 0,
+        windowEndsAt: 0,
+      });
+      await ctx.db.insert("session_phone_codes", {
+        userId: owner.userId,
+        sessionId,
+        phoneNumber: "+33600000009",
+        codeHash: "hash",
+        expiresAt: 0,
+        attempts: 0,
+      });
+      await ctx.db.insert("capture_handoffs", {
+        userId: owner.userId,
+        status: "completed",
+        expiresAt: 0,
+        createdAt: 0,
       });
       await ctx.db.insert("phone_auth_codes", {
         phoneNumber: "+33600000009",
@@ -225,6 +250,18 @@ describe("account deletion", () => {
         .query("email_auth_codes")
         .withIndex("by_email", (q) => q.eq("email", "owner@example.com"))
         .collect(),
+      numberChanges: await ctx.db
+        .query("number_change_requests")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
+      sessionPhoneCodes: await ctx.db
+        .query("session_phone_codes")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
+      captureHandoffs: await ctx.db
+        .query("capture_handoffs")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
     }));
 
     expect(left.user).toBeNull();
@@ -248,5 +285,8 @@ describe("account deletion", () => {
     expect(left.versionBlob).toBeNull();
     expect(left.phoneCodes).toEqual([]);
     expect(left.emailCodes).toEqual([]);
+    expect(left.numberChanges).toEqual([]);
+    expect(left.sessionPhoneCodes).toEqual([]);
+    expect(left.captureHandoffs).toEqual([]);
   });
 });

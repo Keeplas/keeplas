@@ -44,6 +44,7 @@ export function TabBar({ active, onSelect, onAdd }: TabBarProps) {
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
         onPress={() => onSelect(name)}
+        hitSlop={{ top: 4, bottom: 4 }}
         style={[styles.item, focused && { backgroundColor: colors["bg.info"] }]}
       >
         <Icon
