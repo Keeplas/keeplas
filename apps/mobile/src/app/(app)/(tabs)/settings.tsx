@@ -11,6 +11,7 @@ import { Screen } from "@/components/screen";
 import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { formatBytes } from "@/lib/format";
+import { openLegalPage } from "@/lib/legal";
 import { useChangeLanguage } from "@/lib/use-change-language";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
@@ -144,7 +145,7 @@ export default function Settings() {
         icon="shield-check"
         title={t("settings.plan")}
         description={t(
-          lifetime ? "settings.planLifetime" : "settings.planFreeBody",
+          lifetime ? "settings.planLifetime" : "settings.planFree",
         )}
       />
       <ListRow
@@ -216,6 +217,16 @@ export default function Settings() {
           onPress={() => router.push("/self-test")}
         />
       ) : null}
+      <ListRow
+        icon="eye"
+        title={t("legal.privacy")}
+        onPress={() => openLegalPage("privacy", language)}
+      />
+      <ListRow
+        icon="document"
+        title={t("legal.terms")}
+        onPress={() => openLegalPage("terms", language)}
+      />
       <ListRow
         icon="trash"
         title={t("deleteAccount.title")}

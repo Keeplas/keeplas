@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { errorText, passkeyFailure } from "@/lib/errors";
+import { openLegalPage } from "@/lib/legal";
 import { attestationReference } from "@/lib/attestation";
 import { usePasskeySignIn } from "@/lib/use-passkey-sign-in";
 import { usePhoneField } from "@/lib/use-phone-field";
@@ -20,10 +21,12 @@ import {
 } from "@/lib/use-request-phone-code";
 import { useI18n } from "@/providers/i18n-provider";
 
+const linkStyle = { textDecorationLine: "underline" } as const;
+
 /** M01-1 Set up your account (sign-up) / the same form to sign in. */
 export default function PhoneScreen() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const params = useLocalSearchParams<{ intent?: PhoneIntent }>();
   const intent: PhoneIntent = params.intent === "signin" ? "signin" : "signup";
   const phone = usePhoneField();
@@ -130,6 +133,31 @@ export default function PhoneScreen() {
         />
       ) : null}
       <Button label={t("phone.cta")} chevron loading={busy} onPress={submit} />
+      {intent === "signup" ? (
+        <Text variant="body-sm" color="text.muted" align="center">
+          {t("legal.agreeBefore")}
+          <Text
+            variant="body-sm"
+            color="text.link"
+            accessibilityRole="link"
+            style={linkStyle}
+            onPress={() => openLegalPage("terms", language)}
+          >
+            {t("legal.terms")}
+          </Text>
+          {t("legal.agreeAnd")}
+          <Text
+            variant="body-sm"
+            color="text.link"
+            accessibilityRole="link"
+            style={linkStyle}
+            onPress={() => openLegalPage("privacy", language)}
+          >
+            {t("legal.privacy")}
+          </Text>
+          {t("legal.agreeAfter")}
+        </Text>
+      ) : null}
       {intent === "signin" ? (
         <Button
           variant="secondary"

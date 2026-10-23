@@ -13,8 +13,9 @@ import { Icon } from "./icon";
 
 /**
  * Figma `Button`: 52 pt high, radius 14, label Inter 600 16/20, optional
- * trailing chevron (20 pt). `text` is the 24 pt link-style variant and
- * `glass` the outlined pill over the M08-1 night landscape.
+ * trailing chevron (20 pt). `text` is the 24 pt link-style variant (hitSlop
+ * brings its touch target to 48 pt) and `glass` the outlined pill over the
+ * M08-1 night landscape.
  */
 export type ButtonVariant =
   "primary" | "secondary" | "danger" | "text" | "glass";
@@ -81,6 +82,7 @@ export function Button({
       accessibilityState={{ disabled: inactive, busy: loading }}
       onPress={onPress}
       disabled={inactive}
+      hitSlop={variant === "text" ? 12 : undefined}
       style={({ pressed }) => [
         styles.base,
         box,

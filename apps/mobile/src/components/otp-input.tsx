@@ -9,7 +9,8 @@ export const OTP_LENGTH = 6;
 
 /**
  * Six Figma `OTP Box`es (52×56, radius 12, 8 pt gap) over one hidden input,
- * so iOS / Android one-time-code autofill and paste work.
+ * so iOS / Android one-time-code autofill and paste work. Boxes shrink to
+ * fit narrow screens (iPhone SE: 335 pt of content for 352 pt of boxes).
  */
 export function OtpInput({
   value,
@@ -99,10 +100,14 @@ export function OtpInput({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: 2, marginHorizontal: -3 },
-  ring: { borderWidth: 3, borderRadius: 15 },
+  row: {
+    flexDirection: "row",
+    alignSelf: "stretch",
+    gap: 2,
+    marginHorizontal: -3,
+  },
+  ring: { flex: 1, maxWidth: 58, borderWidth: 3, borderRadius: 15 },
   box: {
-    width: 52,
     height: 56,
     borderRadius: 12,
     alignItems: "center",

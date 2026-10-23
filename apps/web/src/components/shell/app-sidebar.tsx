@@ -7,6 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@keeplas/ui";
+import { Illustration } from "@/components/illustration";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
 import { Link, usePathname } from "@/lib/navigation";
@@ -106,9 +107,8 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 /** Landscape at the foot of the sidebar (Figma: 288 × 180 at x −40). */
 function SidebarLandscape() {
   return (
-    <img
+    <Illustration
       src="/assets/illustrations/desktop-landscape-night.svg"
-      alt=""
       width={288}
       height={180}
       className="pointer-events-none absolute bottom-0 left-[-40px] h-[180px] w-[288px] max-w-none select-none"

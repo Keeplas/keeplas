@@ -19,7 +19,8 @@
         "com.apple.developer.devicecheck.appattest-environment": "production"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": true,
+        "NSPhotoLibraryAddUsageDescription": "Keeplas saves the photos and videos you export from your vault to your library."
       }
     },
     "android": {
@@ -29,6 +30,7 @@
         "backgroundColor": "#FDFBF7"
       },
       "predictiveBackGestureEnabled": false,
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -55,9 +57,12 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FDFBF7",
-          "image": "./assets/icon.png",
+          "image": "./assets/splash-icon.png",
           "imageWidth": 160,
-          "dark": { "backgroundColor": "#0E2340" }
+          "dark": {
+            "backgroundColor": "#0E2340",
+            "image": "./assets/splash-icon-dark.png"
+          }
         }
       ],
       [
@@ -83,7 +88,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Keeplas uses the camera to scan documents and the QR code that links a computer to your account.",
+          "cameraPermission": "Keeplas uses the camera to scan documents, take photos and videos for your vault, and scan the QR code that links a computer to your account.",
           "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first.",
           "recordAudioAndroid": true
         }
@@ -92,17 +97,24 @@
         "expo-image-picker",
         {
           "photosPermission": "Keeplas lets you add photos and videos from your library to your vault. They are encrypted on this phone first.",
-          "cameraPermission": "Keeplas uses the camera to take photos and videos for your vault.",
+          "cameraPermission": "Keeplas uses the camera to scan documents, take photos and videos for your vault, and scan the QR code that links a computer to your account.",
           "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first."
         }
       ],
       [
         "expo-audio",
         {
+          "enableBackgroundPlayback": false,
           "microphonePermission": "Keeplas uses the microphone to record voice notes and the sound of videos you add to your vault. They are encrypted on this phone first."
         }
       ],
-      "expo-video",
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
       [
         "expo-notifications",
         {
