@@ -14,6 +14,7 @@ import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { Countdown } from "@/features/life-check/countdown";
 import { formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -38,7 +39,8 @@ export default function LifeCheck() {
   const travel = useAuditedMutation(api.life_check.toggleTravelMode);
   const [started, setStarted] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const failed = () => Alert.alert(t("common.genericError"));
+  const failed = () =>
+    toast({ variant: "error", title: t("common.genericError") });
 
   if (config === null && !started) {
     return (
@@ -90,19 +92,57 @@ export default function LifeCheck() {
     setConfirming(true);
     try {
       const { nextCheckAt } = await validate({ method: "tap" });
-      Alert.alert(
-        t("lifeCheck.confirmedTitle"),
-        nextCheckAt
+      toast({
+        variant: "success",
+        title: t("lifeCheck.confirmedTitle"),
+        description: nextCheckAt
           ? t("lifeCheck.confirmedBody", {
               date: formatDate(nextCheckAt, language),
             })
           : t("lifeCheck.confirmedBodyNoDate"),
-      );
+      });
     } catch {
       failed();
     } finally {
       setConfirming(false);
     }
+  }
+
+  function confirmFrequency(frequency: (typeof FREQUENCIES)[number]) {
+    if (config?.frequency === frequency) return;
+    Alert.alert(
+      t("lifeCheck.changeTitle"),
+      t("lifeCheck.changeBody", { frequency: t(`frequency.${frequency}`) }),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("lifeCheck.changeConfirm"),
+          onPress: () => void choose(frequency),
+        },
+      ],
+    );
+  }
+
+  function toggleTravel() {
+    if (config?.travelModeEnabled) {
+      void travel({ enabled: false }).catch(failed);
+      return;
+    }
+    Alert.alert(
+      t("lifeCheck.travelConfirmTitle"),
+      t("lifeCheck.travelConfirmBody"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("lifeCheck.travelConfirm"),
+          onPress: () =>
+            void travel({
+              enabled: true,
+              until: Date.now() + 30 * 86_400_000,
+            }).catch(failed),
+        },
+      ],
+    );
   }
 
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
@@ -155,7 +195,7 @@ export default function LifeCheck() {
           <Radio
             key={frequency}
             selected={config?.frequency === frequency}
-            onPress={() => void choose(frequency)}
+            onPress={() => confirmFrequency(frequency)}
             label={t(`frequency.${frequency}`)}
           />
         ))}
@@ -179,14 +219,7 @@ export default function LifeCheck() {
               tone={config.travelModeEnabled ? "success" : "neutral"}
             />
           }
-          onPress={() =>
-            void travel({
-              enabled: !config.travelModeEnabled,
-              until: !config.travelModeEnabled
-                ? Date.now() + 30 * 86_400_000
-                : undefined,
-            }).catch(failed)
-          }
+          onPress={toggleTravel}
         />
       ) : null}
       <Callout icon="shield-check" text={t("lifeCheck.note")} />

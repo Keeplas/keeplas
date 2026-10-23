@@ -8,6 +8,7 @@ import { Screen } from "@/components/screen";
 import { TextField } from "@/components/text-field";
 import { Text } from "@/components/text";
 import { encryptText } from "@/crypto/envelope";
+import { useFormDraft } from "@/lib/form-drafts";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useVault } from "@/providers/vault-provider";
@@ -17,7 +18,12 @@ export default function NewFolder() {
   const { t } = useI18n();
   const { masterKey } = useVault();
   const create = useAuditedMutation(api.folders.create);
-  const [name, setName] = useState("");
+  const [{ name }, updateDraft, clearDraft] = useFormDraft(
+    "new-folder",
+    () => ({
+      name: "",
+    }),
+  );
   const [busy, setBusy] = useState(false);
   async function submit() {
     if (!masterKey) return;
@@ -26,6 +32,7 @@ export default function NewFolder() {
       await create({
         encryptedName: await encryptText(name.trim(), masterKey),
       });
+      clearDraft();
       router.back();
     } finally {
       setBusy(false);
@@ -33,7 +40,15 @@ export default function NewFolder() {
   }
   return (
     <Screen
-      header={<NavBar title={t("folders.new")} onBack={router.back} />}
+      header={
+        <NavBar
+          title={t("folders.new")}
+          onBack={() => {
+            clearDraft();
+            router.back();
+          }}
+        />
+      }
       footer={
         <Button
           label={t("folders.create")}
@@ -48,7 +63,7 @@ export default function NewFolder() {
       <TextField
         label={t("folders.name")}
         value={name}
-        onChangeText={setName}
+        onChangeText={(value) => updateDraft({ name: value })}
         autoFocus
       />
     </Screen>

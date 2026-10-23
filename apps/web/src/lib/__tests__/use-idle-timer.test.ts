@@ -92,7 +92,7 @@ describe("useIdleTimer", () => {
     expect(onIdle).not.toHaveBeenCalled();
   });
 
-  it("uses a 20-minute default timeout", () => {
-    expect(AUTO_LOCK_TIMEOUT_MS).toBe(20 * 60 * 1000);
+  it("uses a one-hour default timeout", () => {
+    expect(AUTO_LOCK_TIMEOUT_MS).toBe(60 * 60 * 1000);
   });
 });

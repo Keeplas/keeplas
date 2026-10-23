@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
 import { useAction } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
 import { Card, IconTile, InfoRow } from "@/components/surfaces";
+import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 
 /**
@@ -23,7 +24,7 @@ export function UpgradeCard() {
       const { url } = await createCheckout({});
       await Linking.openURL(url);
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setLoading(false);
     }

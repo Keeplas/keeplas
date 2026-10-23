@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -15,6 +15,7 @@ import { Screen } from "@/components/screen";
 import { Callout, Card, IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useVaultData } from "@/features/vault/vault-data";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -66,7 +67,11 @@ export default function RecoveryApproval() {
       await approve({ requestId: request.requestId, ...sealed });
       router.back();
     } catch {
-      Alert.alert(t("approval.failedTitle"), t("approval.failedBody"));
+      toast({
+        variant: "error",
+        title: t("approval.failedTitle"),
+        description: t("approval.failedBody"),
+      });
     } finally {
       setBusy(false);
     }
@@ -82,7 +87,7 @@ export default function RecoveryApproval() {
       });
       router.back();
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(false);
     }

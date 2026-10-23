@@ -13,7 +13,14 @@ import { AppState, View } from "react-native";
 import { importMasterKey } from "@/crypto/vault-keys";
 import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
-import { IDLE_LOCK_MS, shouldLockOnResume } from "@/lib/auto-lock";
+import { draftStore } from "@/features/capture/draft-store";
+import {
+  DRAFT_MAX_LOCKED_MS,
+  IDLE_LOCK_MS,
+  isLockHeld,
+  shouldLockOnResume,
+} from "@/lib/auto-lock";
+import { clearFormDrafts } from "@/lib/form-drafts";
 import { clearDecryptedCache } from "@/lib/files";
 
 interface VaultValue {
@@ -54,16 +61,26 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [finishingSetup, setFinishingSetup] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backgroundedAt = useRef<number | null>(null);
+  const backgroundHeld = useRef(false);
+  const lockedAt = useRef<number | null>(null);
 
   const lock = useCallback(() => {
     setMasterKey(null);
-    setFinishingSetup(false);
     forgetOwnerKeys();
     clearDecryptedCache();
+    lockedAt.current ??= Date.now();
   }, []);
 
   const adopt = useCallback(async (raw: Uint8Array) => {
     const key = await importMasterKey(raw);
+    if (
+      lockedAt.current !== null &&
+      Date.now() - lockedAt.current > DRAFT_MAX_LOCKED_MS
+    ) {
+      draftStore.reset();
+      clearFormDrafts();
+    }
+    lockedAt.current = null;
     setMasterKey(key);
     raw.fill(0);
     return key;
@@ -92,7 +109,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const armIdleTimer = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(lock, IDLE_LOCK_MS);
+    const fire = () => {
+      if (isLockHeld()) idleTimer.current = setTimeout(fire, IDLE_LOCK_MS);
+      else lock();
+    };
+    idleTimer.current = setTimeout(fire, IDLE_LOCK_MS);
   }, [lock]);
 
   useEffect(() => {
@@ -100,10 +121,16 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     armIdleTimer();
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
-        if (shouldLockOnResume(backgroundedAt.current, Date.now())) lock();
+        const held = backgroundHeld.current || isLockHeld();
+        if (shouldLockOnResume(backgroundedAt.current, Date.now(), held)) {
+          lockedAt.current = backgroundedAt.current;
+          lock();
+        }
         backgroundedAt.current = null;
+        backgroundHeld.current = false;
       } else {
         backgroundedAt.current ??= Date.now();
+        backgroundHeld.current ||= isLockHeld();
       }
     });
     return () => {

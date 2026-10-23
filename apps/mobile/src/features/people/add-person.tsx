@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
@@ -10,11 +10,14 @@ import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
+import { Callout } from "@/components/surfaces";
 import { TextField } from "@/components/text-field";
 import { Text } from "@/components/text";
 import { errorText } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { useFormDraft } from "@/lib/form-drafts";
+import type { CountryCode } from "@/lib/phone";
 import { usePhoneField } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -29,16 +32,33 @@ export function AddPerson() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const invite = useAuditedMutation(api.trusted_contacts.inviteContact);
-  const phone = usePhoneField();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [draft, updateDraft, clearDraft] = useFormDraft("add-person", () => ({
+    name: "",
+    email: "",
+    phoneCountry: undefined as CountryCode | undefined,
+    phoneInput: "",
+    phoneNumber: null as string | null,
+  }));
+  const { name, email, phoneNumber } = draft;
+  const setName = (value: string) => updateDraft({ name: value });
+  const setEmail = (value: string) => updateDraft({ email: value });
+  const setPhoneNumber = (value: string | null) =>
+    updateDraft({ phoneNumber: value });
+  const phone = usePhoneField({
+    country: draft.phoneCountry,
+    number: draft.phoneInput,
+  });
   const [emailError, setEmailError] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+  const phoneCountry = phone.inputProps.country;
+  const phoneInput = phone.inputProps.value;
+  useEffect(() => {
+    updateDraft({ phoneCountry, phoneInput });
+  }, [phoneCountry, phoneInput, updateDraft]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   function next() {
-    const emailOk = isValidEmail(email);
+    const emailOk = !email.trim() || isValidEmail(email);
     setEmailError(!emailOk);
     const e164 = phone.validate();
     if (!emailOk || !e164) return;
@@ -52,10 +72,11 @@ export function AddPerson() {
     try {
       await invite({
         name: name.trim(),
-        email: normalizeEmail(email),
+        email: email.trim() ? normalizeEmail(email) : undefined,
         phoneNumber,
         role: "friend",
       });
+      clearDraft();
       router.back();
     } catch (failure) {
       const text = errorText(failure);
@@ -72,7 +93,10 @@ export function AddPerson() {
   const header = (
     <NavBar
       title={t("people.addTitle")}
-      onBack={router.back}
+      onBack={() => {
+        clearDraft();
+        router.back();
+      }}
       right={<LanguageDropdown />}
     />
   );
@@ -86,7 +110,7 @@ export function AddPerson() {
             label={t("people.continue")}
             chevron
             onPress={next}
-            disabled={!name.trim() || !email.trim() || !phone.inputProps.value}
+            disabled={!name.trim() || !phone.inputProps.value}
           />
         }
       >
@@ -94,6 +118,7 @@ export function AddPerson() {
         <Text variant="body-lg" color="text.muted">
           {t("people.addBody")}
         </Text>
+        <Callout icon="shield-check" text={t("people.addWhy")} />
         <TextField
           label={t("people.name")}
           value={name}
@@ -172,7 +197,9 @@ export function AddPerson() {
             <Icon name="edit" size={18} color="text.link" />
           </Pressable>
         </View>
-        <Detail icon="mail" text={normalizeEmail(email)} />
+        {email.trim() ? (
+          <Detail icon="mail" text={normalizeEmail(email)} />
+        ) : null}
         <Detail icon="whatsapp" text={formatPhone(phoneNumber)} />
       </View>
 

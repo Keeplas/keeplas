@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useConvex } from "convex/react";
-import { Directory, File, Paths } from "expo-file-system";
+import { File } from "expo-file-system";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
@@ -30,15 +30,9 @@ import {
   openSource,
 } from "@/lib/files";
 import { useI18n } from "@/providers/i18n-provider";
+import { ExportCancelled, exportFolder, type ExportRun } from "./export-job";
 
 const CHUNK = 1024 * 1024;
-
-export interface ExportProgress {
-  done: number;
-  total: number;
-}
-
-export class ExportCancelled extends Error {}
 
 function parseLinks(json: string): string[] {
   try {
@@ -56,11 +50,8 @@ export function useExportVault() {
   const { t } = useI18n();
   const { itemKey, folders } = useVaultData();
 
-  return useCallback(
-    async (
-      onProgress: (progress: ExportProgress) => void,
-      cancelled: () => boolean,
-    ): Promise<{ archive: File; skipped: number }> => {
+  return useCallback<ExportRun>(
+    async (onProgress, cancelled) => {
       const now = Date.now();
       let skipped = 0;
       const [rawItems, contacts] = await Promise.all([
@@ -78,8 +69,9 @@ export function useExportVault() {
         sources: { id: Id<"vault_item_files">; iv: string; meta: FileMeta }[];
         key: CryptoKey;
       })[] = [];
-      for (const raw of rawItems) {
+      for (const [index, raw] of rawItems.entries()) {
         if (cancelled()) throw new ExportCancelled();
+        onProgress({ stage: "opening", done: index, total: rawItems.length });
         const key = await itemKey(raw);
         const [full, files] = await Promise.all([
           convex.query(api.vault_items.getItem, { itemId: raw._id }),
@@ -149,9 +141,10 @@ export function useExportVault() {
       });
       const total = opened.reduce((sum, item) => sum + item.sources.length, 0);
       let done = 0;
-      onProgress({ done, total });
+      onProgress({ stage: "files", done, total });
 
-      const dir = new Directory(Paths.cache, "open");
+      // Not the viewer's cache: locking the vault clears that one.
+      const dir = exportFolder();
       if (!dir.exists) dir.create({ intermediates: true });
       const day = new Date(now).toISOString().slice(0, 10);
       const archive = new File(dir, `keeplas-export-${day}.zip`);
@@ -212,6 +205,8 @@ export function useExportVault() {
                   source.iv,
                   key,
                   source.meta.name,
+                  undefined,
+                  dir,
                 ));
               try {
                 const reader = openSource(plain.uri);
@@ -247,7 +242,7 @@ export function useExportVault() {
               }
             }
             done += 1;
-            onProgress({ done, total });
+            onProgress({ stage: "files", done, total });
           }
         }
         sink.write(zip.finish());

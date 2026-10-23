@@ -83,8 +83,9 @@ export async function uploadFile(
 }
 
 /**
- * Download a ciphertext blob and decrypt it into the cache folder under its
- * real name (for the viewer / share sheet). The caller deletes it after use.
+ * Download a ciphertext blob and decrypt it into `into` (by default the
+ * cache folder cleared on lock) under its real name (for the viewer / share
+ * sheet). The caller deletes it after use.
  */
 export async function downloadDecrypted(
   url: string,
@@ -92,8 +93,9 @@ export async function downloadDecrypted(
   key: CryptoKey,
   name: string,
   onProgress?: (ratio: number) => void,
+  into: Directory = folder(Paths.cache, "open"),
 ): Promise<File> {
-  const cache = folder(Paths.cache, "open");
+  const cache = into;
   const cipher = new File(cache, `${Date.now()}.bin`);
   const task = File.createDownloadTask(url, cipher, {
     onProgress: ({ bytesWritten, totalBytes }) => {

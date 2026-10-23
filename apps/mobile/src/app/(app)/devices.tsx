@@ -12,6 +12,7 @@ import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceId } from "@/crypto/device-vault";
 import { formatDate, placeName } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -40,7 +41,7 @@ export default function Devices() {
           style: "destructive",
           onPress: () =>
             revoke({ deviceId: device._id }).catch(() =>
-              Alert.alert(t("common.genericError")),
+              toast({ variant: "error", title: t("common.genericError") }),
             ),
         },
       ],

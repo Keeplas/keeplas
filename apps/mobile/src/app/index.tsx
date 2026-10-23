@@ -7,9 +7,9 @@ import { useTheme } from "@/providers/theme-provider";
 
 /** Redirect hub: sends the user to the first screen of the current stage. */
 export default function Index() {
-  const { stage } = useSession();
+  const { stage, settingUp, resumeReady } = useSession();
   const { colors } = useTheme();
-  if (stage === "loading") {
+  if (stage === "loading" || (stage === "ready" && !resumeReady)) {
     return (
       <View
         style={{
@@ -23,5 +23,9 @@ export default function Index() {
       </View>
     );
   }
-  return <Redirect href={STAGE_HOME[stage]} />;
+  return (
+    <Redirect
+      href={stage === "ready" && settingUp ? "/contacts" : STAGE_HOME[stage]}
+    />
+  );
 }

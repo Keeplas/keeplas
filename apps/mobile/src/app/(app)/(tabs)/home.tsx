@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
+import Branch from "../../../../assets/illustrations/branch.svg";
 import { AppHeader } from "@/components/app-header";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
@@ -60,14 +61,20 @@ export default function Home() {
 
   return (
     <Screen header={<AppHeader right={<LanguageDropdown />} />} gap={12}>
-      <Text variant="h1">
-        {firstName
-          ? t("home.greetingNamed", { greeting, name: firstName })
-          : greeting}
-      </Text>
-      <Text variant="body-lg" color="text.muted">
-        {t("home.subtitle")}
-      </Text>
+      <View style={styles.hero}>
+        {/* Light decor behind the greeting, bleeding into the right gutter. */}
+        <View pointerEvents="none" style={styles.heroArt}>
+          <Branch width={96} height={96} opacity={0.35} />
+        </View>
+        <Text variant="h1">
+          {firstName
+            ? t("home.greetingNamed", { greeting, name: firstName })
+            : greeting}
+        </Text>
+        <Text variant="body-lg" color="text.muted">
+          {t("home.subtitle")}
+        </Text>
+      </View>
       {firstName ? null : <NamePrompt />}
       {numberChange ? (
         <ListRow
@@ -213,6 +220,13 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
+  hero: { gap: 12 },
+  heroArt: {
+    position: "absolute",
+    top: -12,
+    right: -16,
+    transform: [{ scaleX: -1 }],
+  },
   tiles: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   tile: {
     width: "48.5%",

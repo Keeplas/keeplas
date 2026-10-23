@@ -20,6 +20,7 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "BGTaskSchedulerPermittedIdentifiers": ["com.keeplas.app.export.*"],
         "NSPhotoLibraryAddUsageDescription": "Keeplas saves the photos and videos you export from your vault to your library."
       }
     },

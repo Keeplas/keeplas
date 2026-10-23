@@ -16,6 +16,7 @@ import {
   type ImportResult,
 } from "@/features/import/use-import-archive";
 import { useI18n } from "@/providers/i18n-provider";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 
 type Phase =
   | { kind: "idle" }
@@ -30,10 +31,12 @@ export default function ImportArchive() {
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
 
   async function choose() {
-    const picked = await DocumentPicker.getDocumentAsync({
-      type: ["application/zip", "application/x-zip-compressed"],
-      copyToCacheDirectory: true,
-    });
+    const picked = await keepUnlockedWhile(() =>
+      DocumentPicker.getDocumentAsync({
+        type: ["application/zip", "application/x-zip-compressed"],
+        copyToCacheDirectory: true,
+      }),
+    );
     if (picked.canceled) return;
     setPhase({ kind: "running", progress: null });
     try {

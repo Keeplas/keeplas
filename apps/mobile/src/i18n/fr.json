@@ -15,6 +15,7 @@
     "language": "Langue",
     "genericError": "Une erreur est survenue. Réessayez."
   },
+  "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
     "search": "Recherche",
@@ -43,16 +44,13 @@
     "label": "Numéro de téléphone",
     "cta": "Vérifier avec WhatsApp",
     "reassure": "Votre numéro identifie votre compte. Les passe-clés protègent l'accès.",
-    "emailAccount": "Je me suis inscrit avec un e-mail",
     "chooseCountry": "Choisissez votre pays",
     "searchCountry": "Rechercher",
     "invalid": "Saisissez un numéro de téléphone valide.",
     "accountExists": "Un compte utilise déjà ce numéro. Connectez-vous plutôt.",
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
-    "signInInstead": "Me connecter avec ce numéro",
-    "passkey": "Se connecter avec un passe-clé",
-    "passkeyFailed": "La connexion par passe-clé a échoué. Réessayez, ou utilisez votre numéro."
+    "signInInstead": "Me connecter avec ce numéro"
   },
   "verify": {
     "title": "Vérifier votre numéro",
@@ -147,7 +145,7 @@
     "reference": "Référence : {ref} · à communiquer au support"
   },
   "unlock": {
-    "title": "Déverrouiller votre coffre",
+    "title": "Déverrouiller mon coffre",
     "body": "Votre visage, votre empreinte ou le code de votre téléphone vous connecte et déverrouille votre coffre.",
     "cta": "Continuer avec le passe-clé",
     "lost": "Accès perdu ?",
@@ -268,7 +266,7 @@
     "q": {
       "newPhone": {
         "question": "Je change de téléphone",
-        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp, ou avec votre passe-clé. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
+        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
       },
       "platform": {
         "question": "Je passe d'Android à iPhone, ou l'inverse",
@@ -280,7 +278,7 @@
       },
       "lostNumber": {
         "question": "J'ai perdu mon numéro",
-        "answer": "Sur l'écran de connexion, touchez « Vous avez perdu votre numéro ? ». Avec vos 24 mots, vous le changez tout de suite. Sans eux, notre équipe vérifie votre demande et rien ne change pendant 72 heures. Vous pouvez aussi vous connecter avec votre passe-clé."
+        "answer": "Sur l'écran de connexion, touchez « Vous avez perdu votre numéro ? ». Avec vos 24 mots, vous le changez tout de suite. Sans eux, notre équipe vérifie votre demande et rien ne change pendant 72 heures."
       },
       "lostAuthenticator": {
         "question": "J'ai perdu mon application d'authentification",
@@ -305,6 +303,10 @@
       "notMe": {
         "question": "Quelqu'un essaie d'entrer dans mon compte",
         "answer": "Vous recevez une alerte sur vos appareils, par e-mail et sur WhatsApp. Ouvrez Keeplas et touchez « Ce n'était pas moi » pour annuler la demande. Rien n'est libéré pendant les 72 heures."
+      },
+      "travelMode": {
+        "question": "Qu'est-ce que le mode voyage ?",
+        "answer": "Il met Life check en pause pendant 30 jours, le temps de votre absence. Keeplas n'envoie aucun contrôle, annule celui en cours et ne sollicite pas vos contacts. Désactivez-le quand vous voulez dans Réglages › Life check. À la fin, votre compte à rebours repart de zéro."
       },
       "zeroAccess": {
         "question": "Keeplas peut-il ouvrir mon coffre ?",
@@ -648,12 +650,6 @@
     "cta": "Ouvrir avec mes 24 mots"
   },
   "email": {
-    "title": "Se connecter avec votre e-mail",
-    "body": "Pour les comptes créés sur le web. Vous transférerez ensuite votre compte sur ce téléphone.",
-    "email": "E-mail",
-    "password": "Mot de passe",
-    "cta": "Se connecter",
-    "wrong": "E-mail ou mot de passe incorrect.",
     "otpTitle": "Saisissez votre code de connexion",
     "otpBody": "Nous avons envoyé un code à 6 chiffres à {channel}.",
     "otpCta": "Confirmer",
@@ -889,8 +885,9 @@
     "later": "Plus tard",
     "addTitle": "Ajouter un contact",
     "addBody": "Choisissez comment l'inviter.",
+    "addWhy": "Pourquoi c'est important : si vous perdez l'accès, 2 de vos personnes de confiance suffisent pour vous aider à le retrouver. Keeplas ne peut pas le faire à votre place, car vous seul détenez les clés.",
     "name": "Nom",
-    "email": "E-mail",
+    "email": "E-mail (facultatif)",
     "phone": "Numéro de téléphone",
     "sendInvite": "Envoyer l'invitation",
     "status": {
@@ -1023,6 +1020,12 @@
       "missedBody": "Vous n'avez pas répondu au dernier Life check. Rien n'est encore partagé. Dites-nous que vous êtes là.",
       "missedConfirm": "Je suis là"
     },
+    "changeTitle": "Changer la fréquence ?",
+    "changeBody": "Nouvelle fréquence : {frequency}. Votre compte à rebours repart de zéro aujourd'hui.",
+    "changeConfirm": "Changer",
+    "travelConfirmTitle": "Activer le mode voyage ?",
+    "travelConfirmBody": "Pendant 30 jours, Keeplas ne vous demande plus de confirmer et ne sollicite pas vos contacts. Un contrôle en cours est annulé. À la fin, ou si vous le désactivez, votre compte à rebours repart de zéro.",
+    "travelConfirm": "Activer",
     "travelChipOn": "Activé",
     "travelChipOff": "Désactivé"
   },
@@ -1189,6 +1192,10 @@
     "preparing": "Ouverture de votre coffre…",
     "progress": "Préparation des fichiers : {done} sur {total}",
     "keepOpen": "Gardez Keeplas ouvert jusqu’à la fin.",
+    "background": "Vous pouvez quitter cet écran ou Keeplas : une notification vous prévient quand l’archive est prête.",
+    "notifyRunning": "Déchiffrement de votre coffre sur ce téléphone",
+    "notifyReady": "Votre archive est prête. Ouvrez Keeplas pour l’enregistrer ou la partager.",
+    "notifyFailed": "L’export s’est arrêté avant la fin. Ouvrez Keeplas pour réessayer.",
     "ready": "Votre archive est prête ({size}). Enregistrez-la dans Fichiers ou partagez-la. Votre coffre reste intact : seule cette copie temporaire de l’archive est effacée de Keeplas quand vous quittez cet écran.",
     "failed": "L’export s’est arrêté avant la fin. Vérifiez votre connexion et réessayez. Rien n’a été envoyé nulle part.",
     "warning": "L’archive n’est pas chiffrée. Toute personne qui obtient le fichier peut le lire : gardez-le en lieu sûr et supprimez-le quand vous n’en avez plus besoin.",

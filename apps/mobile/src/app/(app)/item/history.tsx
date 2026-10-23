@@ -24,8 +24,10 @@ import {
   rememberDecrypted,
 } from "@/lib/files";
 import { formatBytes, formatDate, formatTime } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 
 type VersionDoc = FunctionReturnType<
   typeof api.vault_items.getItemVersions
@@ -91,12 +93,15 @@ export default function ItemHistory() {
         plain = await downloadDecrypted(url, file.iv, key, file.name);
         rememberDecrypted(file.storageId, plain);
       }
-      await Sharing.shareAsync(plain.uri, {
-        mimeType: file.mimeType,
-        dialogTitle: file.name,
-      });
+      const uri = plain.uri;
+      await keepUnlockedWhile(() =>
+        Sharing.shareAsync(uri, {
+          mimeType: file.mimeType,
+          dialogTitle: file.name,
+        }),
+      );
     } catch {
-      Alert.alert(t("common.genericError"));
+      toast({ variant: "error", title: t("common.genericError") });
     } finally {
       setBusy(null);
     }
@@ -116,7 +121,9 @@ export default function ItemHistory() {
                 setShown(null);
                 router.back();
               })
-              .catch(() => Alert.alert(t("common.genericError"))),
+              .catch(() =>
+                toast({ variant: "error", title: t("common.genericError") }),
+              ),
         },
       ],
     );

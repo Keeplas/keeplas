@@ -2006,7 +2006,7 @@
           "Biométrie — Face ID, Touch ID, Windows Hello — via WebAuthn + extension PRF.",
           "Clé de sécurité matérielle — YubiKey ou tout authentificateur FIDO2 avec PRF.",
           "Les trois peuvent coexister. Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
-          "Verrouillage auto en cas d'inactivité : après 20 minutes sans activité, le coffre se verrouille et efface les clés en mémoire et sur l'appareil jusqu'au prochain déverrouillage."
+          "Verrouillage auto en cas d'inactivité : après une heure sans activité, le coffre se verrouille et efface les clés en mémoire et sur l'appareil jusqu'au prochain déverrouillage."
         ]
       },
       "recovery": {

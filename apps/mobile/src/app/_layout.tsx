@@ -1,9 +1,11 @@
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { Toaster } from "@/components/toaster";
 import { OutboxProvider } from "@/features/outbox/outbox-provider";
+import { isResumable } from "@/lib/resume-point";
 import { AccountLanguageSync } from "@/lib/use-change-language";
 import { ConvexProvider } from "@/providers/convex-provider";
 import { I18nProvider } from "@/providers/i18n-provider";
@@ -26,7 +28,9 @@ export default function RootLayout() {
               <SessionProvider>
                 <OutboxProvider>
                   <AccountLanguageSync />
+                  <ResumeTracker />
                   <Routes />
+                  <Toaster />
                 </OutboxProvider>
               </SessionProvider>
             </VaultProvider>
@@ -35,6 +39,19 @@ export default function RootLayout() {
       </ThemeProvider>
     </SafeAreaProvider>
   );
+}
+
+function ResumeTracker() {
+  const { stage, rememberRoute } = useSession();
+  const pathname = usePathname();
+  const params = JSON.stringify(useGlobalSearchParams());
+
+  useEffect(() => {
+    if (stage !== "ready" || !isResumable(pathname)) return;
+    rememberRoute(pathname, JSON.parse(params) as Record<string, string>);
+  }, [stage, pathname, params, rememberRoute]);
+
+  return null;
 }
 
 /**
