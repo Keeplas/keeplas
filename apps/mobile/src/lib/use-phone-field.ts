@@ -9,9 +9,13 @@ function deviceCountry(): CountryCode {
 }
 
 /** State of a Phone Input: country (device region by default) + number. */
-export function usePhoneField() {
-  const [country, setCountry] = useState<CountryCode>(deviceCountry);
-  const [number, setNumber] = useState("");
+export function usePhoneField(
+  initial: { country?: CountryCode; number?: string } = {},
+) {
+  const [country, setCountry] = useState<CountryCode>(
+    () => initial.country ?? deviceCountry(),
+  );
+  const [number, setNumber] = useState(initial.number ?? "");
   const [invalid, setInvalid] = useState(false);
 
   return {

@@ -46,6 +46,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
 import { radius, withAlpha } from "@/theme";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 
 const KIND_ICON = {
   document: "document",
@@ -116,10 +117,12 @@ export default function ItemDetails() {
       });
       return;
     }
-    await Sharing.shareAsync(state.uri, {
-      mimeType: file.mimeType,
-      dialogTitle: file.name,
-    });
+    await keepUnlockedWhile(() =>
+      Sharing.shareAsync(state.uri, {
+        mimeType: file.mimeType,
+        dialogTitle: file.name,
+      }),
+    );
   }, [file, stateOf, t]);
 
   const throughFolder = new Set(

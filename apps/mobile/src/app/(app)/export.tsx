@@ -18,6 +18,7 @@ import {
 } from "@/features/export/use-export-vault";
 import { formatBytes } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 
 type Phase =
   | { kind: "idle" }
@@ -68,11 +69,13 @@ export default function ExportData() {
   }
 
   async function share(file: File) {
-    await Sharing.shareAsync(file.uri, {
-      mimeType: "application/zip",
-      UTI: "public.zip-archive",
-      dialogTitle: t("export.title"),
-    });
+    await keepUnlockedWhile(() =>
+      Sharing.shareAsync(file.uri, {
+        mimeType: "application/zip",
+        UTI: "public.zip-archive",
+        dialogTitle: t("export.title"),
+      }),
+    );
   }
 
   const progress = phase.kind === "running" ? phase.progress : null;
