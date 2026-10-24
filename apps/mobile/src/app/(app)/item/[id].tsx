@@ -99,13 +99,11 @@ export default function ItemDetails() {
     opened?.key,
     fileUrl,
   );
-  const file = attachments[selected];
+  const current = Math.min(selected, Math.max(0, attachments.length - 1));
+  const file = attachments[current];
   const photos = useMemo(
     () => attachments.filter((attachment) => attachment.kind === "image"),
     [attachments],
-  );
-  const others = attachments.filter(
-    (attachment) => attachment.kind !== "image",
   );
 
   const access = useMemo(() => {
@@ -589,33 +587,27 @@ export default function ItemDetails() {
         </View>
       ) : null}
 
-      {photos.length > 0 && others.length > 0
-        ? others.map((attachment) => (
-            <ListRow
-              key={attachment.id}
-              icon={FILE_ICON[attachment.kind]}
-              title={attachment.name}
-              description={formatBytes(attachment.size, language)}
-              onPress={() => setSelected(attachments.indexOf(attachment))}
-            />
-          ))
-        : null}
-      {photos.length === 0 && others.length > 1
-        ? others.map((attachment, index) => (
+      {attachments.length > 1 ? (
+        <>
+          <Text variant="label">
+            {t("capture.attachments", { n: attachments.length })}
+          </Text>
+          {attachments.map((attachment, index) => (
             <ListRow
               key={attachment.id}
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
               trailing={
-                index === selected ? (
+                index === current ? (
                   <Icon name="check" size={18} color="status.active" />
                 ) : undefined
               }
               onPress={() => setSelected(index)}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
 
       <DetailRows
         rows={[
