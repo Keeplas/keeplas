@@ -52,6 +52,10 @@ The server only ever stores AES-GCM ciphertexts, ML-KEM-wrapped DEKs, and ML-KEM
 
 See [`packages/crypto/src/`](../packages/crypto/src) for the primitives. Each subdirectory (`aes`, `kdf`, `kem`, `recovery`, `shamir`) is paired with a `__tests__/` file under `packages/crypto/__tests__/`.
 
+## File storage
+
+Encrypted attachments and avatars live in Convex file storage, behind [`packages/convex/lib/storage.ts`](../packages/convex/lib/storage.ts), the only module allowed to touch it (`pnpm check:zk`). Every attached blob is bound to its owner in `storage_blobs`. Moving to GCS / S3 / R2 is planned in [`STORAGE_MIGRATION.md`](STORAGE_MIGRATION.md).
+
 ## Auth bootstrap (Convex Auth)
 
 Convex Auth (`@convex-dev/auth`) needs two env vars on the deployment to sign and verify session tokens:

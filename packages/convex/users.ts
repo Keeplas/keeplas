@@ -10,6 +10,7 @@ import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { vaultGroupValidator } from "./validators";
 import { auditedMutation, createAuditLog } from "./audit";
 import {
+  claimBlob,
   deleteBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
@@ -33,7 +34,13 @@ export const viewer = query({
     // subscription stable (Convex only pushes when the result changes), so a
     // heartbeat no longer re-sends the multi-KB key bundle to every client.
     const { lastSeenAt: _lastSeenAt, ...viewerDoc } = user;
-    return viewerDoc;
+    return {
+      ...viewerDoc,
+      // Resolved on every read, never stored (see `avatarStorageId`).
+      avatarUrl: user.avatarStorageId
+        ? ((await getBlobDownloadUrl(ctx, user.avatarStorageId)) ?? undefined)
+        : user.avatarUrl,
+    };
   },
 });
 
@@ -148,10 +155,10 @@ export const generateAvatarUploadUrl = mutation({
 });
 
 /**
- * Persist a freshly uploaded avatar image: resolve its serving URL, store
- * both the URL (for display) and the storage handle (for later cleanup), and
- * delete the previously uploaded blob so replacements don't orphan storage.
- * Returns the serving URL so the client can preview it immediately.
+ * Persist a freshly uploaded avatar image: store its storage handle (the
+ * serving URL is resolved on read, see `viewer`) and delete the previously
+ * uploaded blob so replacements don't orphan storage. Returns the serving URL
+ * so the client can preview it immediately.
  */
 export const setAvatarImage = auditedMutation({
   action: "user.profile.updated",
@@ -163,14 +170,16 @@ export const setAvatarImage = auditedMutation({
     if (!user) throw new Error("User not found");
 
     const url = await getBlobDownloadUrl(ctx, args.storageId);
-    if (!url) throw new Error("Uploaded image could not be resolved");
+    if (!url || !(await claimBlob(ctx, args.storageId, userId))) {
+      throw new Error("Uploaded image could not be resolved");
+    }
 
     if (user.avatarStorageId && user.avatarStorageId !== args.storageId) {
-      await deleteBlob(ctx, user.avatarStorageId);
+      await deleteBlob(ctx, user.avatarStorageId, userId);
     }
 
     await ctx.db.patch(userId, {
-      avatarUrl: url,
+      avatarUrl: undefined,
       avatarStorageId: args.storageId,
       updatedAt: Date.now(),
     });
@@ -193,7 +202,7 @@ export const removeAvatar = auditedMutation({
     if (!user) throw new Error("User not found");
 
     if (user.avatarStorageId) {
-      await deleteBlob(ctx, user.avatarStorageId);
+      await deleteBlob(ctx, user.avatarStorageId, userId);
     }
 
     await ctx.db.patch(userId, {

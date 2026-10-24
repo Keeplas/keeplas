@@ -8,6 +8,7 @@ import {
   vaultGroupValidator,
 } from "./validators";
 import { planValidator } from "./lib/plans";
+import { storageRefValidator } from "./lib/storage";
 
 export default defineSchema({
   // Auth tables (managed by @convex-dev/auth)
@@ -20,11 +21,13 @@ export default defineSchema({
   users: defineTable({
     email: v.optional(v.string()),
     name: v.optional(v.string()),
+    // Only read when there is no `avatarStorageId` (a URL typed in before
+    // avatar uploads existed); cleared when an avatar is uploaded.
     avatarUrl: v.optional(v.string()),
-    // Convex storage handle for an uploaded avatar image. Tracked so the
-    // previous blob can be deleted when the avatar is replaced or the account
-    // is wiped; `avatarUrl` holds the resolved serving URL used for display.
-    avatarStorageId: v.optional(v.id("_storage")),
+    // Storage handle of an uploaded avatar image. Its serving URL is resolved
+    // on read (users.viewer), never stored: a stored URL breaks once the blob
+    // moves to another storage provider or deployment.
+    avatarStorageId: v.optional(storageRefValidator),
     phoneNumber: v.optional(v.string()),
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),
@@ -740,7 +743,7 @@ export default defineSchema({
     encryptedLinks: v.optional(v.string()),
     files: v.array(
       v.object({
-        storageId: v.id("_storage"),
+        storageId: storageRefValidator,
         iv: v.string(),
         encryptedMeta: v.optional(v.string()),
         sizeBucket: v.optional(v.number()),
@@ -824,7 +827,7 @@ export default defineSchema({
   vault_item_files: defineTable({
     itemId: v.id("vault_items"),
     userId: v.id("users"),
-    storageId: v.id("_storage"),
+    storageId: storageRefValidator,
 
     // Legacy plaintext metadata (F4), read-only until backfilled into
     // `encryptedMeta`; dropped once `countPlaintextMetadata` reaches zero.
@@ -852,6 +855,19 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_item", ["itemId"])
+    .index("by_user", ["userId"]),
+
+  // Owner of each stored blob, bound when it is first attached (to an item or
+  // as an avatar): a handle bound to another account is refused, and only the
+  // owner's deletions remove it (lib/storage.ts claimBlob / deleteBlob). Also
+  // the inventory of live blobs a move off Convex storage walks
+  // (docs/STORAGE_MIGRATION.md).
+  storage_blobs: defineTable({
+    storageRef: storageRefValidator,
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_storage_ref", ["storageRef"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
