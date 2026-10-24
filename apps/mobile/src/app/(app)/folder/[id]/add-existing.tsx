@@ -12,6 +12,7 @@ import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
+import { useCategoryLabel } from "@/features/vault/category-sheet";
 import { useMoveToFolder } from "@/features/vault/use-move-to-folder";
 import {
   useVaultData,
@@ -26,6 +27,7 @@ export default function AddExistingItems() {
   const folderId = id as Id<"folders">;
   const router = useRouter();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { colors } = useTheme();
   const { items, folders } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
@@ -89,11 +91,11 @@ export default function AddExistingItems() {
                   folders?.find((row) => row.id === item.folderId)?.name ??
                   t("folders.title"),
               })
-            : t(`capture.category.${item.category}`)
+            : categoryLabel(item)
         }
       />
     ),
-    [selected, toggle, t, folders],
+    [selected, toggle, t, folders, categoryLabel],
   );
 
   return (

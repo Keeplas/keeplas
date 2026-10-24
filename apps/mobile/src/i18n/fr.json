@@ -371,7 +371,7 @@
     "other": "Autres",
     "items": "{count} éléments",
     "item": "1 élément",
-    "inbox": "Boîte chiffrée",
+    "inbox": "À classer",
     "recent": "Éléments récents",
     "outbox": {
       "waiting": "En attente d'envoi",
@@ -698,7 +698,7 @@
     "untitledScan": "Document scanné",
     "localEncryption": "Le titre, les notes, la catégorie et les pièces jointes sont chiffrés sur ce téléphone.",
     "category": {
-      "inbox": "Boîte chiffrée",
+      "inbox": "À classer",
       "personal_document": "Documents",
       "credential": "Comptes",
       "wishes": "Instructions",
@@ -929,6 +929,16 @@
     "saveFailed": "Vos modifications n'ont pas pu être enregistrées. Vérifiez votre connexion et réessayez.",
     "notFound": "Ce contact n'existe plus."
   },
+  "categories": {
+    "new": "Nouvelle catégorie",
+    "newBody": "Les noms de catégorie sont chiffrés comme les éléments qu'elles contiennent.",
+    "name": "Nom de la catégorie",
+    "create": "Créer la catégorie",
+    "rename": "Renommer la catégorie",
+    "delete": "Supprimer la catégorie",
+    "deleteTitle": "Supprimer {name} ?",
+    "deleteBody": "Ses éléments restent dans votre coffre, rangés dans Autres."
+  },
   "folders": {
     "title": "Dossier",
     "mine": "Mes dossiers",
@@ -944,7 +954,7 @@
     "select": "Choisir",
     "from": "Partagé par {name}",
     "move": "Déplacer vers un dossier",
-    "noFolder": "Boîte chiffrée",
+    "noFolder": "Aucun dossier",
     "timing": {
       "now": "Disponible maintenant",
       "after_verification": "Après vérification"

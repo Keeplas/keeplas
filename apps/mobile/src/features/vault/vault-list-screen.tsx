@@ -31,6 +31,7 @@ import {
   VAULT_LISTS,
   type VaultListKey,
 } from "@/features/home/vault-groups";
+import { useCategoryLabel } from "@/features/vault/category-sheet";
 import { ItemActionsSheet } from "@/features/vault/item-actions-sheet";
 import { accessIcon, itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
@@ -69,6 +70,7 @@ export function VaultListScreen({
   onBack?: () => void;
 }) {
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { colors } = useTheme();
   const openAdd = useOpenAddSheet();
   const { items, pending, folders } = useVaultData();
@@ -122,7 +124,7 @@ export function VaultListScreen({
       const length = item.durationSec ? formatDuration(item.durationSec) : ago;
       switch (styleOf(item)) {
         case "documents":
-          return `${t(`capture.category.${item.category}`)} · ${ago}`;
+          return `${categoryLabel(item)} · ${ago}`;
         case "accounts":
           return `${t("home.accounts")} · ${ago}`;
         case "instructions":
@@ -143,7 +145,7 @@ export function VaultListScreen({
           return `${t("vaultList.video")} · ${length}`;
       }
     },
-    [t],
+    [t, categoryLabel],
   );
 
   const openActions = useCallback(

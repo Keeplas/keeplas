@@ -18,6 +18,8 @@ export interface Draft {
   title: string;
   note: string;
   category?: VaultCategory;
+  /** User-made category; `category` then holds its built-in fallback. */
+  categoryId?: string;
   icon?: IconName;
   folderId?: string;
   /** W06-7: the browser waiting for this scan (capture_handoffs). */

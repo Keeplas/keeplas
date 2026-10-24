@@ -36,6 +36,11 @@ async function seedVaultOwner(t: TestConvex) {
       createdAt: now,
       updatedAt: now,
     });
+    const categoryId = await ctx.db.insert("vault_categories", {
+      userId,
+      encryptedName: SEALED,
+      createdAt: now,
+    });
     const itemId = await ctx.db.insert("vault_items", {
       vaultId,
       userId,
@@ -74,7 +79,7 @@ async function seedVaultOwner(t: TestConvex) {
       plan: "lifetime",
       createdAt: now,
     });
-    return { vaultId, folderId, itemId };
+    return { vaultId, folderId, categoryId, itemId };
   });
   return { userId, storageId, contactId, ...ids };
 }
@@ -208,6 +213,7 @@ describe("account deletion", () => {
       user: await ctx.db.get(owner.userId),
       item: await ctx.db.get(owner.itemId),
       folder: await ctx.db.get(owner.folderId),
+      category: await ctx.db.get(owner.categoryId),
       vault: await ctx.db.get(owner.vaultId),
       contact: await ctx.db.get(owner.contactId),
       files: await ctx.db
@@ -267,6 +273,7 @@ describe("account deletion", () => {
     expect(left.user).toBeNull();
     expect(left.item).toBeNull();
     expect(left.folder).toBeNull();
+    expect(left.category).toBeNull();
     expect(left.vault).toBeNull();
     expect(left.contact).toBeNull();
     expect(left.files).toEqual([]);

@@ -32,6 +32,13 @@ export interface FolderSummary {
   }[];
 }
 
+/** A user-made category (created in the phone app). */
+export interface CategorySummary {
+  id: Id<"vault_categories">;
+  /** null when the name cannot be decrypted in this browser. */
+  name: string | null;
+}
+
 type ItemDoc = FunctionReturnType<
   typeof api.vault_items.getItemSummaries
 >[number];
@@ -39,6 +46,7 @@ type ItemDoc = FunctionReturnType<
 interface VaultDataValue {
   items: VaultItemSummary[] | undefined;
   folders: FolderSummary[] | undefined;
+  categories: CategorySummary[] | undefined;
   /** The key that opens an item: its DEK, or the master key (legacy rows). */
   itemKey: (item: { ownerWrappedDek?: string }) => Promise<CryptoKey>;
 }
@@ -61,10 +69,12 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const { unwrapOwnerDek, isReady } = useRecipientCrypto();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
   const rawFolders = useQuery(api.folders.list);
+  const rawCategories = useQuery(api.vault_categories.list);
   const summaries = useRef(new Map<string, Promise<VaultItemSummary>>());
   const deks = useRef(new Map<string, Promise<CryptoKey>>());
   const [items, setItems] = useState<VaultItemSummary[]>();
   const [folders, setFolders] = useState<FolderSummary[]>();
+  const [categories, setCategories] = useState<CategorySummary[]>();
 
   useEffect(() => {
     if (masterKey) return;
@@ -126,6 +136,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
           ...base,
           title,
           category: meta?.category ?? item.category ?? "other",
+          categoryId: meta?.categoryId,
           icon: meta?.icon,
           kind: contentKind(files),
           files,
@@ -194,9 +205,23 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     };
   }, [rawFolders, masterKey, decryptContent]);
 
+  useEffect(() => {
+    if (!rawCategories || !masterKey) return;
+    let alive = true;
+    Promise.all(
+      rawCategories.map(async (category) => ({
+        id: category._id,
+        name: await decryptContent(category.encryptedName).catch(() => null),
+      })),
+    ).then((out) => alive && setCategories(out));
+    return () => {
+      alive = false;
+    };
+  }, [rawCategories, masterKey, decryptContent]);
+
   const value = useMemo<VaultDataValue>(
-    () => ({ items, folders, itemKey }),
-    [items, folders, itemKey],
+    () => ({ items, folders, categories, itemKey }),
+    [items, folders, categories, itemKey],
   );
   return (
     <VaultDataContext.Provider value={value}>

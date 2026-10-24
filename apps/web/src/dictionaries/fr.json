@@ -231,7 +231,7 @@
       }
     },
     "tiles": {
-      "inbox": "Boîte chiffrée",
+      "inbox": "À classer",
       "toOrganize": "{count} éléments à classer",
       "documents": "Documents",
       "accounts": "Comptes",
@@ -1328,7 +1328,7 @@
       "contacts": "À contacter",
       "wishes": "Dernières volontés",
       "other": "Autre",
-      "inbox": "Boîte de réception chiffrée"
+      "inbox": "À classer"
     },
     "links": {
       "empty": "Aucun lien enregistré.",
@@ -2302,7 +2302,7 @@
     "breadcrumb": "Mon coffre",
     "lists": {
       "all": "Tous les éléments",
-      "inbox": "Boîte chiffrée",
+      "inbox": "À classer",
       "documents": "Documents",
       "accounts": "Comptes",
       "instructions": "Instructions",

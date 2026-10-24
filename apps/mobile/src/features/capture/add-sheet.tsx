@@ -186,6 +186,7 @@ function AddSheet({
 
 export interface AddPreset {
   category?: VaultCategory;
+  categoryId?: string;
   folderId?: string;
 }
 

@@ -761,6 +761,17 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
+  // User-made vault categories, next to the built-in ones. The name is
+  // sealed under the owner's master key; items point at one through the
+  // `categoryId` of their sealed metadata, so the server never learns which
+  // item is in which category.
+  vault_categories: defineTable({
+    userId: v.id("users"),
+    // JSON {ciphertext, iv} under the owner's master key.
+    encryptedName: v.string(),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
   folder_grants: defineTable({
     folderId: v.id("folders"),
     ownerId: v.id("users"),

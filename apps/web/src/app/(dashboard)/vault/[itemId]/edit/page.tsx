@@ -164,7 +164,14 @@ function EditItem({
           encryptContentWithKey(values.title, key),
           encryptContentWithKey(values.note, key),
           encryptContentWithKey(
-            itemMetaJson(values.category, opened.icon),
+            itemMetaJson(
+              values.category,
+              opened.icon,
+              // Keep a user-made category unless another one was picked.
+              values.category === opened.category
+                ? opened.categoryId
+                : undefined,
+            ),
             key,
           ),
         ]);
