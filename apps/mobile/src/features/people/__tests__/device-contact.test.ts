@@ -70,17 +70,27 @@ describe("fromDeviceContact", () => {
     expect(phones).toEqual([{ label: "home", country: "FR", number: "12" }]);
   });
 
-  it("returns an empty name for a contact without one", () => {
-    // iOS leaves `name` out when the contact has no name (e.g. only a phone
-    // number); the form calls `name.trim()`, so undefined crashed the app.
+  // The iOS picker never sends `name`; the form calls `name.trim()`, so
+  // undefined crashed the app.
+  it("builds the name from its parts when iOS sends none", () => {
     const picked = fromDeviceContact(
       contact({
         name: undefined,
-        phoneNumbers: [{ label: "mobile", number: "+33 6 12 34 56 78" }],
+        firstName: "Marie",
+        middleName: "Anne",
+        lastName: "Dupont",
       }),
       "FR",
     );
-    expect(picked.name).toBe("");
+    expect(picked.name).toBe("Marie Anne Dupont");
+  });
+
+  it("falls back to the company, then to an empty name", () => {
+    expect(
+      fromDeviceContact(contact({ name: undefined, company: "Acme" }), "FR")
+        .name,
+    ).toBe("Acme");
+    expect(fromDeviceContact(contact({ name: undefined }), "FR").name).toBe("");
   });
 
   it("returns empty details for a contact with only a name", () => {
