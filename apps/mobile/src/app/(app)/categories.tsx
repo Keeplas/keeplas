@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
@@ -19,6 +19,7 @@ import {
 } from "@/features/home/vault-groups";
 import { NewCategoryForm } from "@/features/vault/category-sheet";
 import { useVaultData } from "@/features/vault/vault-data";
+import { categoryCounts } from "@/features/vault/vault-filter";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -37,6 +38,7 @@ export default function Categories() {
   const setHidden = useAuditedMutation(api.users.setHiddenCategoryGroups);
   const removeCategory = useAuditedMutation(api.vault_categories.remove);
   const [adding, setAdding] = useState(false);
+  const byCategory = useMemo(() => categoryCounts(items ?? []), [items]);
 
   const builtInLabel = (key: VaultGroupKey) =>
     t(`capture.category.${GROUP_CATEGORY[key]}`);
@@ -100,9 +102,7 @@ export default function Categories() {
       )}
       {(categories ?? []).map((category) => {
         const name = category.name ?? t("item.decrypting");
-        const count = (items ?? []).filter(
-          (item) => item.categoryId === category.id,
-        ).length;
+        const count = byCategory.get(category.id) ?? 0;
         return (
           <ListRow
             key={category.id}
