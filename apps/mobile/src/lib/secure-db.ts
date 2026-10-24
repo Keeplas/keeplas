@@ -2,7 +2,7 @@
  * The device's encrypted SQLite database (op-sqlite built with
  * `"sqlcipher": true`, see package.json). The database key is 32 random
  * bytes kept in the Keychain / Keystore (this device only). Holds the
- * capture outbox and the vault summary cache.
+ * capture outbox, the vault summary cache and the capture drafts.
  *
  * The file keeps its historical "outbox" name so existing installs reopen
  * their queue.
@@ -58,6 +58,14 @@ export function secureDb(): Promise<DB> {
         shared_with TEXT NOT NULL,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL
+      )`,
+    );
+    await handle.execute(
+      `CREATE TABLE IF NOT EXISTS capture_drafts (
+        id TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        body TEXT NOT NULL
       )`,
     );
     return handle;

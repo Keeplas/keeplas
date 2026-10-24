@@ -15,6 +15,7 @@ import type { Href } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import { deviceDraftFiles, sqliteDraftDb } from "@/features/capture/draft-db";
 import { draftStore } from "@/features/capture/draft-store";
 import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
@@ -71,6 +72,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [migrationDeferred, setMigrationDeferred] = useState(false);
   const [vaultCheck, setVaultCheck] = useState(0);
   const userId = viewer?._id;
+
+  useEffect(() => {
+    if (userId) void draftStore.attach(userId, sqliteDraftDb, deviceDraftFiles);
+  }, [userId]);
   // Only trust a result read for the current user.
   const deviceVault =
     vaultState && vaultState.userId === userId ? vaultState.has : undefined;
@@ -142,7 +147,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    draftStore.reset();
+    if (userId) await draftStore.detach(userId);
     clearFormDrafts();
     if (userId) {
       await forgetDeviceVault(userId);

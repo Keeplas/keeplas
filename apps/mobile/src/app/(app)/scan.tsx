@@ -32,6 +32,7 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
+import { draftHref } from "@/features/capture/draft-route";
 
 /**
  * M03-4 Scan the QR code. A web "Scan with my phone" code (W06-7) opens the
@@ -72,7 +73,7 @@ export default function Scan() {
         }
         if (capture.kind === "ok") {
           draftStore.start("scan", { handoffId: capture.handoffId });
-          router.replace("/capture/scan");
+          router.replace(draftHref("/capture/scan"));
           return;
         }
         const outcome = await evaluatePairingQr(text, {

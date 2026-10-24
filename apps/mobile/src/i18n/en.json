@@ -1288,5 +1288,20 @@
     "restoreFailed": "Keeplas could not restore this item. Check your connection and try again.",
     "emptyTitle": "No archives",
     "emptyBody": "Items you archive will show up here, with their history."
+  },
+  "drafts": {
+    "title": "Drafts",
+    "homeBody": "{n} in progress · tap to pick up",
+    "saved": "Draft saved on this phone",
+    "menuTitle": "Draft options",
+    "clear": "Clear draft",
+    "clearBody": "Removes the text, files and settings of this draft",
+    "delete": "Delete draft",
+    "deleteRowBody": "Also removes its files from this phone",
+    "deleteTitle": "Delete this draft?",
+    "deleteBody": "The text and attached files will be removed from this phone. This cannot be undone.",
+    "resume": "Pick up",
+    "emptyTitle": "No drafts",
+    "emptyBody": "Anything you start without saving is kept here, on this phone, to pick up later."
   }
 }
