@@ -18,10 +18,11 @@
   "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
-    "search": "Recherche",
+    "vault": "Coffre",
     "people": "Contacts",
     "settings": "Réglages",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "search": "Recherche"
   },
   "welcome": {
     "title": "Votre vie,\nbien gardée",
@@ -149,7 +150,12 @@
     "body": "Votre visage, votre empreinte ou le code de votre téléphone vous connecte et déverrouille votre coffre.",
     "cta": "Continuer avec le passe-clé",
     "lost": "Accès perdu ?",
+    "lostBody": "Votre sauvegarde, vos 24 mots ou vos contacts de confiance",
     "failed": "Impossible de déverrouiller votre coffre. Réessayez."
+  },
+  "otherOptions": {
+    "title": "Autres options",
+    "signOutBody": "Oublie ce téléphone. Vous vous reconnecterez avec votre numéro."
   },
   "recoveryKit": {
     "title": "Ouvrir votre coffre avec votre kit",
@@ -366,7 +372,6 @@
     "items": "{count} éléments",
     "item": "1 élément",
     "inbox": "Boîte chiffrée",
-    "inboxBody": "Les éléments à trier apparaîtront ici",
     "recent": "Éléments récents",
     "outbox": {
       "waiting": "En attente d'envoi",
@@ -375,8 +380,6 @@
       "quota": "Stockage plein"
     },
     "updated": "Mis à jour {when}",
-    "toOrganize": "{count} éléments à classer",
-    "toOrganizeOne": "1 élément à classer",
     "greetingNamed": "{greeting}, {name}",
     "itemWord": "élément",
     "itemsWord": "éléments",
@@ -412,10 +415,8 @@
     "storageUsed": "{used} sur {total} utilisés",
     "storageLeft": "{plan} · {left} restants",
     "account": "Compte",
-    "plan": "Offre",
     "planFree": "Gratuit",
     "planLifetime": "Lifetime",
-    "planQuota": "{quota} de stockage",
     "privacy": "Confidentialité et sécurité",
     "privacyBody": "Passe-clé, code PIN, kit de récupération",
     "appearance": "Apparence",
@@ -728,11 +729,7 @@
     "iconAutoBody": "Choisie selon ce que vous ajoutez",
     "iconSearch": "Rechercher une icône",
     "iconNone": "Aucune icône ne correspond à cette recherche.",
-    "folderLabel": "Dossier",
-    "noFolder": "Aucun dossier",
     "folderShared": "{name} · partagé avec {people}",
-    "folderKeyTitle": "Partage avec ce dossier impossible",
-    "folderKeyBody": "Keeplas n'a pas pu vérifier la clé de chiffrement de {name}, l'élément n'a donc pas été enregistré. Vérifiez votre connexion et réessayez, ou choisissez Aucun dossier et déplacez-le plus tard.",
     "reset": "Recommencer",
     "resetTitle": "Recommencer cet enregistrement ?",
     "resetBody": "Votre enregistrement de {time} sera supprimé de ce téléphone et vous pourrez enregistrer à nouveau. Cette action est définitive.",
@@ -777,7 +774,10 @@
     "modeAuto": "Auto",
     "modeManual": "Manuel",
     "autoUnavailableTitle": "Scan automatique indisponible",
-    "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo."
+    "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo.",
+    "allContacts": "Tous vos contacts de confiance",
+    "contactKeyTitle": "Partage avec {name} impossible",
+    "contactKeyBody": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, l'élément n'a donc pas été enregistré. Vérifiez-le dans Contacts, puis réessayez."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",
@@ -792,7 +792,6 @@
     "decrypting": "Ouverture…",
     "category": "Catégorie",
     "folder": "Dossier",
-    "noFolder": "Aucun dossier",
     "share": "Partager",
     "opening": "Déchiffrement sur ce téléphone…",
     "play": "Lire",
@@ -858,7 +857,7 @@
     "byYou": "Vous",
     "byKeeplas": "Keeplas",
     "shareTitle": "Qui peut le voir",
-    "shareBody": "Choisissez les contacts de confiance qui peuvent ouvrir cet élément. Keeplas le chiffre pour chacun d'eux sur ce téléphone.",
+    "shareBody": "Choisissez les contacts de confiance qui peuvent ouvrir cet élément, ou aucun pour le garder pour tous. Keeplas le chiffre pour chacun d'eux sur ce téléphone.",
     "throughFolder": "Via le dossier {name}",
     "shareNobody": "Aucun contact de confiance n'a encore rejoint Keeplas. Invitez quelqu'un d'abord.",
     "addTrustedPerson": "Ajouter un contact de confiance",
@@ -889,6 +888,10 @@
     "name": "Nom",
     "email": "E-mail (facultatif)",
     "phone": "Numéro de téléphone",
+    "fromContacts": "Choisir dans mes contacts",
+    "orManual": "ou saisir manuellement",
+    "whichNumber": "Quel numéro utiliser ?",
+    "contactsDenied": "Keeplas ne peut pas lire vos contacts. Autorisez-le dans les Réglages, ou saisissez ses coordonnées ci-dessous.",
     "sendInvite": "Envoyer l'invitation",
     "status": {
       "pending": "Invité",

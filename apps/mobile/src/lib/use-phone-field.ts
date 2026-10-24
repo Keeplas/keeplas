@@ -3,7 +3,8 @@ import { getLocales } from "expo-localization";
 
 import { isCountryCode, toE164, type CountryCode } from "./phone";
 
-function deviceCountry(): CountryCode {
+/** The device region, the Phone Input's default country. */
+export function deviceCountry(): CountryCode {
   const region = getLocales()[0]?.regionCode;
   return isCountryCode(region) ? region : "US";
 }

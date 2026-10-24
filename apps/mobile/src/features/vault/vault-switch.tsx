@@ -35,11 +35,13 @@ export function VaultSwitch({ active }: { active: "mine" | "shared" }) {
             accessibilityState={{ selected }}
             onPress={() => {
               if (selected) return;
-              router.replace(
-                option.key === "shared"
-                  ? "/shared"
-                  : { pathname: "/vault/[group]", params: { group: "all" } },
-              );
+              if (option.key === "shared") {
+                router.push("/shared");
+                return;
+              }
+              // "My vault" is the Vault tab.
+              if (router.canDismiss()) router.dismissAll();
+              router.navigate("/vault");
             }}
             style={[
               styles.option,

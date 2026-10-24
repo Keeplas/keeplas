@@ -10,7 +10,6 @@ import {
 import { useNavigation, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { Button } from "@/components/button";
 import { Icon, type IconName } from "@/components/icon";
@@ -21,7 +20,7 @@ import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
 import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { ContactKeyBlocked } from "@/crypto/contact-keys";
 import { type VaultCategory } from "@/crypto/item-meta";
 import { PermissionSheet } from "@/features/capture/add-sheet";
 import { captureDepth } from "@/features/capture/capture-depth";
@@ -41,11 +40,11 @@ import { useShowSecuring } from "@/features/capture/securing-sheet";
 import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { itemVisual } from "@/features/vault/item-visual";
+import { useEveryoneRecipients } from "@/features/vault/use-move-to-folder";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatDuration } from "@/lib/format";
 import { NoteEditor } from "@/features/notes/note-editor";
 import { toast } from "@/lib/toast";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, singleLine, type } from "@/theme";
@@ -64,13 +63,7 @@ function IconTileBox({ icon }: { icon: IconName }) {
   return <IconTile icon={icon} size={44} background={colors["bg.info"]} />;
 }
 
-class FolderKeyMissing extends Error {
-  constructor(readonly contactName: string) {
-    super("FOLDER_KEY_MISSING");
-  }
-}
-
-type Sheet = "category" | "folder" | "icon" | "item" | null;
+type Sheet = "category" | "icon" | "item" | null;
 
 /** M07-7 / M07-9 New note and M07-8 Review capture, sealed for the outbox. */
 export default function ComposeCapture() {
@@ -81,10 +74,9 @@ export default function ComposeCapture() {
   const { colors } = useTheme();
   const draft = useDraft();
   const { capture } = useOutbox();
-  const { folders, items, itemKey } = useVaultData();
+  const { items, itemKey } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
-  const contacts = useQuery(api.trusted_contacts.getContacts);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const everyone = useEveryoneRecipients();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [mode, setMode] = useState<"new" | "existing">("new");
   const [targetId, setTargetId] = useState<string>();
@@ -96,14 +88,11 @@ export default function ComposeCapture() {
     (note: string) => draftStore.update({ note }),
     [],
   );
-  const folder = folders?.find((row) => row.id === draft.folderId);
   const target = items?.find((item) => item.id === targetId);
   const hasFiles = draft.files.length + draft.pages.length > 0;
   const existing = mode === "existing" && hasFiles;
 
-  const access = folder?.grants.length
-    ? folder.grants.map((grant) => grant.contactName).join(", ")
-    : t("item.onlyYou");
+  const access = t("capture.allContacts");
 
   const pickable = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -111,28 +100,6 @@ export default function ComposeCapture() {
       (item) => !needle || item.title?.toLocaleLowerCase().includes(needle),
     );
   }, [items, search]);
-
-  async function folderRecipients() {
-    if (!folder) return undefined;
-    const recipients = await Promise.all(
-      folder.grants.map(async (grant) => {
-        const contact = contacts?.find((row) => row._id === grant.contactId);
-        if (!contact) throw new FolderKeyMissing(grant.contactName);
-        const publicKey = await requireVerifiedKey(
-          contactKeyMaterial(contact),
-          (contactId, fingerprint) =>
-            pin({
-              contactId: contactId as Id<"trusted_contacts">,
-              fingerprint,
-            }),
-        ).catch(() => {
-          throw new FolderKeyMissing(grant.contactName);
-        });
-        return { contactId: contact._id, publicKey };
-      }),
-    );
-    return { id: folder.id, recipients };
-  }
 
   async function attachTarget() {
     const raw = rawItems?.find((item) => item._id === targetId);
@@ -188,7 +155,8 @@ export default function ComposeCapture() {
         note: existing ? "" : draft.note,
         category: draft.category,
         icon: draft.icon,
-        folder: existing ? undefined : await folderRecipients(),
+        folderId: existing ? undefined : draft.folderId,
+        share: existing ? undefined : await everyone(),
         attachTo: existing ? await attachTarget() : undefined,
         handoffId: draft.handoffId,
         files,
@@ -200,16 +168,15 @@ export default function ComposeCapture() {
       );
       showSecuring(entryId);
     } catch (error) {
+      const blocked = error instanceof ContactKeyBlocked;
       toast({
         variant: "error",
-        title:
-          error instanceof FolderKeyMissing
-            ? t("capture.folderKeyTitle")
-            : t("common.genericError"),
-        description:
-          error instanceof FolderKeyMissing
-            ? t("capture.folderKeyBody", { name: error.contactName })
-            : undefined,
+        title: blocked
+          ? t("capture.contactKeyTitle")
+          : t("common.genericError"),
+        description: blocked
+          ? t("capture.contactKeyBody", { name: error.contactName ?? "" })
+          : undefined,
       });
       setBusy(false);
     }
@@ -266,16 +233,9 @@ export default function ComposeCapture() {
           onPress: () => setSheet("category"),
         },
         {
-          icon: "folder",
-          label: t("capture.folderLabel"),
-          value: folder?.name ?? t("capture.noFolder"),
-          onPress: () => setSheet("folder"),
-        },
-        {
           icon: "lock",
           label: t("capture.accessLabel"),
           value: access,
-          onPress: () => setSheet("folder"),
         },
         {
           icon: draft.icon ?? "flash",
@@ -351,48 +311,6 @@ export default function ComposeCapture() {
       </BottomSheet>
 
       <BottomSheet
-        visible={sheet === "folder"}
-        onDismiss={() => setSheet(null)}
-        title={t("capture.folderLabel")}
-      >
-        <ListRow
-          icon="mail"
-          title={t("capture.noFolder")}
-          description={t("item.onlyYou")}
-          trailing={
-            !folder ? (
-              <Icon name="check" size={18} color="status.active" />
-            ) : undefined
-          }
-          onPress={() => {
-            draftStore.update({ folderId: undefined });
-            setSheet(null);
-          }}
-        />
-        {(folders ?? []).map((row) => (
-          <ListRow
-            key={row.id}
-            icon="folder"
-            title={row.name ?? t("folders.title")}
-            description={
-              row.grants.length
-                ? row.grants.map((g) => g.contactName).join(", ")
-                : t("item.onlyYou")
-            }
-            trailing={
-              row.id === folder?.id ? (
-                <Icon name="check" size={18} color="status.active" />
-              ) : undefined
-            }
-            onPress={() => {
-              draftStore.update({ folderId: row.id });
-              setSheet(null);
-            }}
-          />
-        ))}
-      </BottomSheet>
-
-      <BottomSheet
         visible={sheet === "item"}
         onDismiss={() => setSheet(null)}
         title={t("capture.chooseItem")}
@@ -456,11 +374,12 @@ export default function ComposeCapture() {
 
   if (draft.kind === "file" && draft.files.length > 0) {
     const file = draft.files[0];
-    const select = (label: string, value: string, onPress: () => void) => (
+    const select = (label: string, value: string, onPress?: () => void) => (
       <>
         <Text variant="label">{label}</Text>
         <Pressable
-          accessibilityRole="button"
+          accessibilityRole={onPress ? "button" : undefined}
+          disabled={!onPress}
           onPress={onPress}
           style={[
             styles.select,
@@ -473,7 +392,9 @@ export default function ComposeCapture() {
           <Text variant="body" style={styles.flex}>
             {value}
           </Text>
-          <Icon name="chevron-down" size={18} color="text.muted" />
+          {onPress ? (
+            <Icon name="chevron-down" size={18} color="text.muted" />
+          ) : null}
         </Pressable>
       </>
     );
@@ -564,12 +485,7 @@ export default function ComposeCapture() {
           t(`capture.category.${draft.category ?? "inbox"}`),
           () => setSheet("category"),
         )}
-        {select(
-          t("capture.folderLabel"),
-          folder?.name ?? t("capture.noFolder"),
-          () => setSheet("folder"),
-        )}
-        {select(t("capture.whoCanSee"), access, () => setSheet("folder"))}
+        {select(t("capture.whoCanSee"), access)}
         <Callout icon="shield-check" text={t("capture.neverSees")} />
         {sheets}
       </Screen>

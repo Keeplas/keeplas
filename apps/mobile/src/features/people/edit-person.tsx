@@ -11,9 +11,10 @@ import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { errorText } from "@/lib/errors";
-import { splitE164 } from "@/lib/phone";
+import { toPhoneField } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
+import { deviceCountry } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
 
 import { PersonFields, usePersonForm } from "./person-form";
@@ -61,7 +62,7 @@ function EditPersonForm({
   const update = useAuditedMutation(api.trusted_contacts.updateContact);
   const form = usePersonForm(`edit-person:${contact._id}`, () => {
     const phone = contact.phoneNumber
-      ? splitE164(contact.phoneNumber)
+      ? toPhoneField(contact.phoneNumber, deviceCountry())
       : undefined;
     return {
       name: contact.name,

@@ -4,6 +4,7 @@ describe("tab bar visibility", () => {
   it("stays on tabs and on screens opened from them", () => {
     for (const path of [
       "/home",
+      "/vault",
       "/search",
       "/people",
       "/settings",

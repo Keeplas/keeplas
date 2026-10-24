@@ -1,4 +1,4 @@
-export const TAB_NAMES = ["home", "search", "people", "settings"] as const;
+export const TAB_NAMES = ["home", "vault", "people", "settings"] as const;
 
 export type TabName = (typeof TAB_NAMES)[number];
 

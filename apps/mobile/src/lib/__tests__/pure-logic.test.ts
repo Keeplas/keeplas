@@ -26,7 +26,6 @@ import {
   flagEmoji,
   formatPhone,
   isTooLong,
-  splitE164,
   toE164,
 } from "../phone";
 import { resolveStage, type StageInputs } from "../session-stage";
@@ -209,14 +208,6 @@ describe("formatters", () => {
     expect(toE164("CA", "123")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");
-  });
-
-  it("splits an E.164 number back into country and national number", () => {
-    expect(splitE164("+33612345678")).toEqual({
-      country: "FR",
-      number: "612345678",
-    });
-    expect(toE164("FR", "612345678")).toBe("+33612345678");
   });
 
   it("drops the national trunk prefix from the placeholder", () => {

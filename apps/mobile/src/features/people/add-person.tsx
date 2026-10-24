@@ -1,27 +1,35 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import {
+  presentContactPickerAsync,
+  requestPermissionsAsync,
+} from "expo-contacts/legacy";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
+import { DetailRows } from "@/components/rows";
 import { Screen } from "@/components/screen";
+import { BottomSheet } from "@/components/sheet";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { errorText } from "@/lib/errors";
-import { formatPhone, type CountryCode } from "@/lib/phone";
+import { formatPhone, toE164, type CountryCode } from "@/lib/phone";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
-
+import { fromDeviceContact, type ContactPhone } from "./device-contact";
 import { PersonFields, usePersonForm } from "./person-form";
 
 /**
  * M06-2 Add trusted person: details, then what they can do. Mounted from
  * People and from setup (M01-5), so it returns with `router.back()`.
+ * The details can be prefilled from a contact picked in the phone's
+ * address book, then edited.
  */
 export function AddPerson() {
   const router = useRouter();
@@ -41,8 +49,38 @@ export function AddPerson() {
     } | null,
   }));
   const { details } = form.draft;
+  const phoneCountry = form.phone.inputProps.country;
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [phoneChoices, setPhoneChoices] = useState<ContactPhone[]>([]);
+  const [contactsDenied, setContactsDenied] = useState(false);
+
+  function fillPhone(country: CountryCode, number: string) {
+    form.phone.inputProps.onCountryChange(country);
+    form.phone.inputProps.onChangeText(number);
+    setPhoneChoices([]);
+  }
+
+  async function pickContact() {
+    setContactsDenied(false);
+    // The iOS picker hands over the picked contact without any permission;
+    // Android needs READ_CONTACTS to read its details.
+    if (
+      Platform.OS === "android" &&
+      !(await requestPermissionsAsync()).granted
+    ) {
+      setContactsDenied(true);
+      return;
+    }
+    const contact = await presentContactPickerAsync();
+    if (!contact) return;
+    const picked = fromDeviceContact(contact, phoneCountry);
+    form.updateDraft({ name: picked.name, email: picked.email });
+    form.setEmailError(false);
+    const [first] = picked.phones;
+    if (picked.phones.length > 1) setPhoneChoices(picked.phones);
+    else fillPhone(first?.country ?? phoneCountry, first?.number ?? "");
+  }
 
   function next() {
     const valid = form.validate();
@@ -98,7 +136,45 @@ export function AddPerson() {
           {t("people.addBody")}
         </Text>
         <Callout icon="shield-check" text={t("people.addWhy")} />
+        <Button
+          variant="secondary"
+          label={t("people.fromContacts")}
+          onPress={pickContact}
+        />
+        {contactsDenied ? (
+          <Text variant="body-sm" color="status.revoked">
+            {t("people.contactsDenied")}
+          </Text>
+        ) : null}
+        <View style={styles.divider}>
+          <View
+            style={[styles.line, { backgroundColor: colors["border.default"] }]}
+          />
+          <Text variant="caption" color="text.subtle">
+            {t("people.orManual")}
+          </Text>
+          <View
+            style={[styles.line, { backgroundColor: colors["border.default"] }]}
+          />
+        </View>
         <PersonFields form={form} onSubmit={next} />
+        <BottomSheet
+          visible={phoneChoices.length > 0}
+          onDismiss={() => setPhoneChoices([])}
+          title={t("people.whichNumber")}
+        >
+          <DetailRows
+            rows={phoneChoices.map(({ label, country, number }) => {
+              const e164 = toE164(country, number);
+              return {
+                icon: "phone",
+                label,
+                value: e164 ? formatPhone(e164) : number,
+                onPress: () => fillPhone(country, number),
+              };
+            })}
+          />
+        </BottomSheet>
       </Screen>
     );
   }
@@ -198,4 +274,6 @@ const styles = StyleSheet.create({
   },
   detail: { flexDirection: "row", alignItems: "center", gap: 8 },
   summary: { gap: 10, padding: 14, borderRadius: radius.md },
+  divider: { flexDirection: "row", alignItems: "center", gap: 10 },
+  line: { flex: 1, height: 1 },
 });

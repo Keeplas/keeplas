@@ -5,6 +5,7 @@ import {
   parsePhoneNumberFromString,
   validatePhoneNumberLength,
   type CountryCode,
+  type PhoneNumber,
 } from "libphonenumber-js/mobile";
 import examples from "libphonenumber-js/mobile/examples";
 
@@ -48,10 +49,28 @@ export function isCountryCode(
  */
 export function examplePlaceholder(country: CountryCode): string {
   const example = getExampleNumber(country, examples);
-  if (!example) return "";
-  return example
+  return example ? withoutDialCode(example) : "";
+}
+
+/**
+ * A stored number split for the Phone Input ("+44 7400 123456" → GB and
+ * "7400 123456"), read in `country` when it has no dial code. A number it
+ * can't read stays as typed in `country`, so the field flags it.
+ */
+export function toPhoneField(
+  raw: string,
+  country: CountryCode,
+): { country: CountryCode; number: string } {
+  const parsed = parsePhoneNumberFromString(raw, country);
+  return parsed?.country && parsed.isValid()
+    ? { country: parsed.country, number: withoutDialCode(parsed) }
+    : { country, number: raw.trim() };
+}
+
+function withoutDialCode(phone: PhoneNumber): string {
+  return phone
     .formatInternational()
-    .replace(`+${example.countryCallingCode}`, "")
+    .replace(`+${phone.countryCallingCode}`, "")
     .trim();
 }
 
@@ -69,14 +88,4 @@ export function toE164(country: CountryCode, input: string): string | null {
 /** "+14165550123" → "+1 416 555 0123" for display. */
 export function formatPhone(e164: string): string {
   return parsePhoneNumberFromString(e164)?.formatInternational() ?? e164;
-}
-
-/** "+33612345678" → { country: "FR", number: "612345678" } to prefill a Phone Input. */
-export function splitE164(
-  e164: string,
-): { country: CountryCode; number: string } | undefined {
-  const parsed = parsePhoneNumberFromString(e164);
-  return parsed?.country
-    ? { country: parsed.country, number: parsed.nationalNumber }
-    : undefined;
 }

@@ -20,7 +20,7 @@ export default function TabsLayout() {
       })}
     >
       <Tabs.Screen name="home" />
-      <Tabs.Screen name="search" />
+      <Tabs.Screen name="vault" />
       <Tabs.Screen name="people" />
       <Tabs.Screen name="settings" />
     </Tabs>
