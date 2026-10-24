@@ -1498,7 +1498,7 @@ export const notifyRelease = internalAction({
       bodyName: args.ownerName,
       copy: TC_RELEASE_COPY,
       path: "/shared-with-me",
-      appPath: "/people",
+      appPath: "/shared",
       templateEnv: process.env.WHATSAPP_TC_RELEASE_TEMPLATE_NAME,
       templateBase: "keeplas_tc_release",
     }),
