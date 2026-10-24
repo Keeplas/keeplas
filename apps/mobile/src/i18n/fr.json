@@ -873,11 +873,6 @@
     "add": "Ajouter",
     "trusted": "Contacts de confiance",
     "empty": "Aucun contact de confiance.",
-    "sharedWithMe": "Partagé avec moi",
-    "items": "{n} éléments",
-    "notAvailable": "Disponible après vérification",
-    "available": "Disponible",
-    "later": "Plus tard",
     "addTitle": "Ajouter un contact",
     "addBody": "Choisissez comment l'inviter.",
     "addWhy": "Pourquoi c'est important : si vous perdez l'accès, 2 de vos personnes de confiance suffisent pour vous aider à le retrouver. Keeplas ne peut pas le faire à votre place, car vous seul détenez les clés.",
@@ -1041,6 +1036,25 @@
       "yearAgo": "Il y a 1 an",
       "yearsAgo": "Il y a {n} ans"
     }
+  },
+  "shared": {
+    "title": "Partagé avec moi",
+    "body": "Les coffres des personnes qui vous ont choisi comme contact de confiance.",
+    "myVault": "Mon coffre",
+    "emptyTitle": "Rien n'a encore été partagé avec vous",
+    "emptyBody": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici.",
+    "trusted": "Vous êtes contact de confiance",
+    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance.",
+    "oneItem": "1 élément laissé pour vous",
+    "items": "{n} éléments laissés pour vous",
+    "accessNow": "Accéder maintenant",
+    "readOnly": "Lecture seule : uniquement ce que {name} vous a laissé, déchiffré sur ce téléphone.",
+    "messageFrom": "Un message de {name}",
+    "unreadable": "Impossible à ouvrir sur ce téléphone",
+    "nothingLeft": "Aucun élément lisible ne vous a été laissé.",
+    "notReleasedTitle": "Pas encore disponible",
+    "notReleasedBody": "Il s'ouvrira dès que ce coffre vous sera transmis.",
+    "leftBy": "Laissé pour vous par {name}"
   },
   "passkeys": {
     "subtitle": "Les clés d'accès vous connectent avec votre visage, votre empreinte ou le code du téléphone. Touchez-en une pour la supprimer.",

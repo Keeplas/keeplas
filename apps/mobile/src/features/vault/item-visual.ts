@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/icon";
+import type { FileKind } from "@/crypto/item-meta";
 import { bucketOf, type ContentKind } from "@/features/home/vault-groups";
 import { colors as palette } from "@/theme";
 import type { VaultItemSummary } from "./vault-data";
@@ -27,6 +28,14 @@ export function itemVisual(item: VaultItemSummary): {
   const visual = VISUAL[styleOf(item)];
   return { icon: item.icon ?? visual.icon, color: visual.color };
 }
+
+/** Icon of an attachment, by file kind. */
+export const FILE_ICON: Record<FileKind, IconName> = {
+  document: "document",
+  image: "photo",
+  audio: "mic",
+  video: "video",
+};
 
 export function accessIcon(item: VaultItemSummary): IconName {
   const people = item.sharedWith.length;

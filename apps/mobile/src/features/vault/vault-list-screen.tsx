@@ -35,6 +35,7 @@ import { useCategoryLabel } from "@/features/vault/category-sheet";
 import { ItemActionsSheet } from "@/features/vault/item-actions-sheet";
 import { accessIcon, itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
+import { VaultSwitch } from "@/features/vault/vault-switch";
 import {
   useVaultData,
   type VaultItemSummary,
@@ -196,6 +197,7 @@ export function VaultListScreen({
           ListHeaderComponentStyle={styles.header}
           ListHeaderComponent={
             <>
+              {list === "all" ? <VaultSwitch active="mine" /> : null}
               <View
                 style={[
                   styles.search,

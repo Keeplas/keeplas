@@ -26,10 +26,8 @@ import {
 import type { CaptureFile } from "@/features/capture/seal";
 import { NoteEditor } from "@/features/notes/note-editor";
 import { useOutbox } from "@/features/outbox/outbox-provider";
-import {
-  useOpenedItem,
-  type OpenedItem,
-} from "@/features/vault/use-opened-item";
+import type { OpenedItem } from "@/features/vault/open-sealed-item";
+import { useOpenedItem } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useFormDraft } from "@/lib/form-drafts";
