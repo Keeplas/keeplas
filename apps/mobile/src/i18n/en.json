@@ -157,9 +157,11 @@
     "cta": "Continue with passkey",
     "lost": "Lost access?",
     "lostBody": "Your backup, your 24 words or your trusted contacts",
-    "more": "Other options",
-    "signOutBody": "Removes this phone's vault key",
     "failed": "We couldn't unlock your vault. Try again."
+  },
+  "otherOptions": {
+    "title": "Other options",
+    "signOutBody": "Forgets this phone. You'll sign in again with your number."
   },
   "recoveryKit": {
     "title": "Open your vault with your kit",

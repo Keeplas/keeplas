@@ -7,12 +7,11 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { OtpInput, OTP_LENGTH } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
-import { BottomSheet } from "@/components/sheet";
-import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
 import { useEnsureCloudBackup } from "@/features/cloud-backup";
+import { OtherOptions } from "@/features/other-options";
 import { pinErrorText } from "@/features/pin/use-pin-gate";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -28,7 +27,7 @@ export default function Unlock() {
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
-  const { signOut, refreshDeviceVault } = useSession();
+  const { refreshDeviceVault } = useSession();
   const { unlock } = useVault();
   const ensureCloudBackup = useEnsureCloudBackup();
   const { colors } = useTheme();
@@ -36,7 +35,6 @@ export default function Unlock() {
   const [failed, setFailed] = useState<string | null>(null);
   const [needsPin, setNeedsPin] = useState(false);
   const [pin, setPin] = useState("");
-  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -150,41 +148,16 @@ export default function Unlock() {
           {failed}
         </Text>
       ) : null}
-      <Button
-        variant="text"
-        label={t("unlock.more")}
-        onPress={() => setMoreOpen(true)}
+      <OtherOptions
+        options={[
+          {
+            icon: "lifebuoy",
+            title: t("unlock.lost"),
+            description: t("unlock.lostBody"),
+            onPress: () => router.push("/lost-access"),
+          },
+        ]}
       />
-      <BottomSheet
-        visible={moreOpen}
-        onDismiss={() => setMoreOpen(false)}
-        title={t("unlock.more")}
-      >
-        <ListRow
-          icon="lifebuoy"
-          title={t("unlock.lost")}
-          description={t("unlock.lostBody")}
-          onPress={() => {
-            setMoreOpen(false);
-            router.push("/lost-access");
-          }}
-        />
-        <ListRow
-          leading={
-            <IconTile
-              icon="revoke"
-              color="status.revoked"
-              background={colors["status.revoked.bg"]}
-            />
-          }
-          title={t("settings.signOut")}
-          description={t("unlock.signOutBody")}
-          onPress={() => {
-            setMoreOpen(false);
-            void signOut();
-          }}
-        />
-      </BottomSheet>
     </Screen>
   );
 }
