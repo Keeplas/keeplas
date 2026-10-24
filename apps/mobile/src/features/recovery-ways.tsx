@@ -14,10 +14,9 @@ import * as CloudKey from "../../modules/cloud-key";
 
 /**
  * The owner's ways back into the vault after losing this phone: the cloud
- * backup, two ready trust contacts, a recovery kit. `ready` counts them with
- * this phone, out of 3: the backup and the kit fill the same slot (the kit
- * is the fallback when the backup is off). Shared by Home and the Recovery
- * center so they never disagree.
+ * backup, two ready trust contacts, a recovery kit. One is enough, so Home
+ * and the Recovery center both show `covered`; sharing this hook keeps them
+ * from disagreeing.
  */
 export function useRecoveryWays() {
   const backup = useQuery(api.cloud_backup.status);
@@ -37,7 +36,6 @@ export function useRecoveryWays() {
     kit,
     /** At least one way back besides this phone. */
     covered: backedUp || contacts || kit,
-    ready: 1 + (contacts ? 1 : 0) + (backedUp || kit ? 1 : 0),
   };
 }
 

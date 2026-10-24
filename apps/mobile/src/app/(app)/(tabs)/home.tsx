@@ -40,7 +40,7 @@ export default function Home() {
   const numberChange = useQuery(api.number_change.getMineOpen);
   const { items, pending, categories } = useVaultData();
   const hidden = viewer.hiddenCategoryGroups ?? [];
-  const { ready } = useRecoveryWays();
+  const { covered } = useRecoveryWays();
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
@@ -116,7 +116,7 @@ export default function Home() {
       <ListRow
         icon="shield-check"
         title={t("home.recoveryHealth")}
-        description={t("home.healthReady", { n: ready })}
+        description={t(covered ? "waysBack.covered" : "waysBack.notCovered")}
         onPress={() => router.push("/recovery")}
       />
       {viewer.plan === "lifetime" ? null : <UpgradeCard />}
