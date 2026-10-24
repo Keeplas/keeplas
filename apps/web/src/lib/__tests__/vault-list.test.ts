@@ -54,8 +54,9 @@ describe("vault list", () => {
       "instructions",
     );
     expect(itemStyle({ category: "personal_document", kind: "photos" })).toBe(
-      "photos",
+      "documents",
     );
+    expect(itemStyle({ category: "other", kind: "photos" })).toBe("photos");
     // Inbox captures look like what they hold.
     expect(itemStyle({ category: "inbox", kind: "voice" })).toBe("voice");
   });
@@ -66,7 +67,11 @@ describe("vault list", () => {
     ).toEqual({ type: "category", key: "insurance_policy" });
     expect(
       categoryLabelKey({ category: "personal_document", kind: "photos" }),
-    ).toEqual({ type: "list", key: "photos" });
+    ).toEqual({ type: "list", key: "documents" });
+    expect(categoryLabelKey({ category: "other", kind: "photos" })).toEqual({
+      type: "list",
+      key: "photos",
+    });
     expect(
       categoryLabelKey({ category: "health_directive", kind: "documents" }),
     ).toEqual({ type: "list", key: "instructions" });
@@ -113,6 +118,7 @@ describe("vault list", () => {
       item({
         id: "b" as Id<"vault_items">,
         title: "Keys",
+        category: "other",
         kind: "photos",
         files: [
           {
