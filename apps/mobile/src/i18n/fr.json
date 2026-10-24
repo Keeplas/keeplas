@@ -897,7 +897,6 @@
     "ready": "{n} prêt(s)",
     "readyBody": "2 de vos contacts suffisent pour récupérer votre compte.",
     "replace": "Remplacer",
-    "replaceNote": "Remplacer un contact renouvelle la protection de récupération de votre compte.",
     "replaceTitle": "Remplacer {name} ?",
     "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte. Vous pourrez ensuite inviter quelqu'un d'autre.",
     "resend": "Renvoyer l'invitation",
