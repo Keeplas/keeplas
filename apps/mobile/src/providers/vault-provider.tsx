@@ -13,13 +13,7 @@ import { AppState, View } from "react-native";
 import { importMasterKey } from "@/crypto/vault-keys";
 import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
-import {
-  DRAFT_MAX_LOCKED_MS,
-  IDLE_LOCK_MS,
-  isLockHeld,
-  shouldLockOnResume,
-} from "@/lib/auto-lock";
-import { clearFormDrafts } from "@/lib/form-drafts";
+import { IDLE_LOCK_MS, isLockHeld, shouldLockOnResume } from "@/lib/auto-lock";
 import { clearDecryptedCache } from "@/lib/files";
 
 interface VaultValue {
@@ -61,24 +55,15 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backgroundedAt = useRef<number | null>(null);
   const backgroundHeld = useRef(false);
-  const lockedAt = useRef<number | null>(null);
 
   const lock = useCallback(() => {
     setMasterKey(null);
     forgetOwnerKeys();
     clearDecryptedCache();
-    lockedAt.current ??= Date.now();
   }, []);
 
   const adopt = useCallback(async (raw: Uint8Array) => {
     const key = await importMasterKey(raw);
-    if (
-      lockedAt.current !== null &&
-      Date.now() - lockedAt.current > DRAFT_MAX_LOCKED_MS
-    ) {
-      clearFormDrafts();
-    }
-    lockedAt.current = null;
     setMasterKey(key);
     raw.fill(0);
     return key;
@@ -121,7 +106,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (state === "active") {
         const held = backgroundHeld.current || isLockHeld();
         if (shouldLockOnResume(backgroundedAt.current, Date.now(), held)) {
-          lockedAt.current = backgroundedAt.current;
           lock();
         }
         backgroundedAt.current = null;

@@ -68,6 +68,14 @@ export function secureDb(): Promise<DB> {
         body TEXT NOT NULL
       )`,
     );
+    await handle.execute(
+      `CREATE TABLE IF NOT EXISTS form_drafts (
+        key TEXT PRIMARY KEY NOT NULL,
+        user_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        body TEXT NOT NULL
+      )`,
+    );
     return handle;
   });
   return database;
