@@ -64,8 +64,8 @@ export const rename = auditedMutation({
 });
 
 /**
- * Delete a category. Its items stay in the vault: their sealed metadata
- * still names it, and clients file them under the built-in fallback.
+ * Delete a category. Its items keep their sealed metadata; the apps show an
+ * item whose category no longer exists in the Inbox.
  */
 export const remove = auditedMutation({
   action: "vault_category.deleted",

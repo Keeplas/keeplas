@@ -759,7 +759,8 @@
         "signOut": "Sign out",
         "export": "Export my data",
         "deleteAccount": "Delete my account",
-        "import": "Import an archive"
+        "import": "Import an archive",
+        "categories": "Categories"
       }
     },
     "export": {
@@ -824,9 +825,27 @@
       "skippedFiles": "{n} file(s) could not be read from the archive and were left out.",
       "notKeeplas": "This file is not a Keeplas export. Choose the ZIP made with \"Export my data\", without unzipping and zipping it again.",
       "failed": "The import stopped before the end. Items already added stay in your vault. Check your storage and try again.",
-      "folderSuffix": "{name} (import)",
       "untitled": "Untitled",
       "keepOpen": "Keep this tab open until it finishes."
+    },
+    "categories": {
+      "title": "Categories",
+      "body": "Sort your vault your way. Deleting a category never deletes its items.",
+      "inboxBody": "Where new items land. It can't be deleted.",
+      "itemOne": "1 item",
+      "items": "{count} items",
+      "locked": "Can't be opened in this browser",
+      "new": "New category",
+      "name": "Category name",
+      "create": "Create category",
+      "newBody": "Category names are encrypted like the items inside them.",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete {name}?",
+      "deleteBody": "Its items stay in your vault and move to To sort.",
+      "removed": "Deleted categories",
+      "restore": "Restore",
+      "failed": "Something went wrong. Try again."
     }
   },
   "settingsSecurity": {
@@ -955,6 +974,12 @@
     }
   },
   "sharedWithMe": {
+    "title": "Shared with me",
+    "subtitle": "Vaults of people who chose you as a trusted contact.",
+    "empty": {
+      "title": "Nothing shared with you yet",
+      "body": "When someone makes you a trusted contact, their shared items appear here."
+    },
     "list": {
       "title": "Vaults you protect"
     },
@@ -1053,26 +1078,6 @@
       "open": "Open",
       "enlarge": "Enlarge",
       "close": "Close"
-    },
-    "folders": {
-      "title": "Shared with me",
-      "subtitle": "Documents shared with you by people who trust you.",
-      "sharedBy": "Shared by {name}",
-      "permission": "Permission",
-      "view": "View",
-      "name": "Name",
-      "size": "Size",
-      "updated": "Updated",
-      "download": "Download",
-      "locked": {
-        "title": "Access after verification",
-        "body": "{name}, from {owner}. After 2 confirmations and a 72-hour grace period."
-      },
-      "empty": {
-        "title": "Nothing shared with you yet",
-        "body": "When someone makes you a trusted contact, their shared items appear here."
-      },
-      "downloadFailed": "Couldn't download this file. Try again."
     }
   },
   "trustedContacts": {
@@ -2326,7 +2331,6 @@
     "columns": {
       "name": "Name",
       "category": "Category",
-      "folder": "Folder",
       "sharedWith": "Shared with",
       "updated": "Updated",
       "added": "Added"
@@ -2345,7 +2349,6 @@
       "onlyYou": "Only you",
       "people": "{count} people"
     },
-    "noFolder": "No folder",
     "untitled": "Untitled item",
     "locked": "Can't be opened in this browser",
     "loading": "Opening your vault…",
@@ -2381,15 +2384,13 @@
       "title": "Details",
       "edit": "Edit",
       "category": "Category",
-      "folder": "Folder",
       "access": "Access",
-      "lockedFolder": "Locked folder",
       "addPeople": "Add people",
       "addPeopleBody": "Share with trusted people",
       "encrypted": "End-to-end encrypted. Only you and the people you choose can open this file.",
       "activity": "Activity",
       "seeAll": "See all",
-      "moveFailed": "This item couldn't be moved. Items in the older encryption format can't go into a shared folder from the web yet."
+      "lockedCategory": "Locked category"
     },
     "activity": {
       "you": "You",
@@ -2402,7 +2403,6 @@
       "body": "Choose the trusted contacts who can open this item. It is encrypted for each of them in this browser.",
       "nobody": "No trusted contact has joined Keeplas yet.",
       "addContact": "Invite someone",
-      "throughFolder": "Through the folder {name}",
       "saving": "Saving…"
     },
     "history": {
@@ -2450,12 +2450,11 @@
     },
     "form": {
       "category": "Category",
-      "folder": "Folder",
       "whoCanSee": "Who can see it",
-      "lockedFolder": "Locked folder",
       "onlyYou": "Only you",
       "two": "{first} and {second}",
-      "many": "{first}, {second} and {count} more"
+      "many": "{first}, {second} and {count} more",
+      "lockedCategory": "Locked category"
     },
     "addFile": {
       "description": "Files are encrypted in this browser before they are uploaded.",

@@ -21,6 +21,7 @@ import {
   parseFileMeta,
   parseItemMeta,
   type FileMeta,
+  type ItemMeta,
 } from "@/crypto/item-meta";
 import { useVaultData } from "@/features/vault/vault-data";
 import {
@@ -48,7 +49,7 @@ function parseLinks(json: string): string[] {
 export function useExportVault() {
   const convex = useConvex();
   const { t } = useI18n();
-  const { itemKey, folders } = useVaultData();
+  const { itemKey, categories } = useVaultData();
 
   return useCallback<ExportRun>(
     async (onProgress, cancelled) => {
@@ -61,8 +62,12 @@ export function useExportVault() {
       const contactName = new Map(
         contacts.map((contact) => [contact._id as string, contact.name]),
       );
-      const folderOf = new Map(
-        (folders ?? []).map((folder) => [folder.id as string, folder]),
+      // The archive keeps a user-made category as the item's folder.
+      const categoryName = new Map(
+        (categories ?? []).map((category) => [
+          category.id as string,
+          category.name,
+        ]),
       );
 
       const opened: (ExportItem & {
@@ -88,8 +93,8 @@ export function useExportVault() {
             : Promise.resolve([]),
           raw.encryptedMeta
             ? decryptText(raw.encryptedMeta, key).then(parseItemMeta)
-            : Promise.resolve({
-                v: 1 as const,
+            : Promise.resolve<ItemMeta>({
+                v: 1,
                 category: raw.category ?? "other",
               }),
           Promise.all(
@@ -107,18 +112,17 @@ export function useExportVault() {
           continue;
         }
         const [title, note, links, meta, sources] = decrypted;
-        const folder = raw.folderId ? folderOf.get(raw.folderId) : undefined;
         const people = new Set(
           (full.sharedWithContacts ?? [])
             .map((id) => contactName.get(id))
             .filter((name): name is string => Boolean(name)),
         );
-        for (const grant of folder?.grants ?? []) people.add(grant.contactName);
         opened.push({
           id: raw._id,
           title,
           category: meta.category,
-          folder: folder ? (folder.name ?? t("folders.title")) : null,
+          folder:
+            (meta.categoryId && categoryName.get(meta.categoryId)) || null,
           createdAt: raw.createdAt,
           updatedAt: raw.updatedAt,
           note,
@@ -136,7 +140,7 @@ export function useExportVault() {
 
       const planned = planExport(opened, {
         untitled: t("capture.untitled"),
-        noFolder: t("folders.noFolder"),
+        noFolder: t("nav.vault"),
         file: t("export.file"),
       });
       const total = opened.reduce((sum, item) => sum + item.sources.length, 0);
@@ -254,6 +258,6 @@ export function useExportVault() {
         throw error;
       }
     },
-    [convex, itemKey, folders, t],
+    [convex, itemKey, categories, t],
   );
 }

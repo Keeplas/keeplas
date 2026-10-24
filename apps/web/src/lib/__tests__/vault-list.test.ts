@@ -42,7 +42,6 @@ const people: AccessPeople = {
     ["maya", "Maya"],
   ]),
   groupMembers: new Map([["family", [contact("sarah"), contact("daniel")]]]),
-  folderGrantees: [],
   allContacts: [contact("sarah"), contact("daniel"), contact("maya")],
 };
 
@@ -73,11 +72,8 @@ describe("vault list", () => {
     ).toEqual({ type: "list", key: "instructions" });
   });
 
-  it("keeps private items to their folder's grantees", () => {
+  it("keeps private items to the owner", () => {
     expect(sharedWith(PRIVATE, people)).toEqual([]);
-    expect(
-      sharedWith(PRIVATE, { ...people, folderGrantees: [contact("maya")] }),
-    ).toEqual(["maya"]);
   });
 
   it("resolves explicit, group and v1 default shares", () => {

@@ -10,7 +10,6 @@ import {
   requireVerifiedKey,
 } from "@/crypto/contact-keys";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { useVaultData } from "./vault-data";
 
 export function useWrapForContacts() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
@@ -80,27 +79,5 @@ export function useEveryoneRecipients() {
       return { recipients, pending };
     },
     [contacts, pin],
-  );
-}
-
-export function useMoveToFolder() {
-  const { itemKey, folders } = useVaultData();
-  const wrapFor = useWrapForContacts();
-  const moveItem = useAuditedMutation(api.folders.moveItem);
-
-  return useCallback(
-    async (
-      item: { _id: Id<"vault_items">; ownerWrappedDek?: string },
-      folderId: Id<"folders"> | null,
-    ) => {
-      const target = folders?.find((candidate) => candidate.id === folderId);
-      const dek = await itemKey(item);
-      const recipientKeys = await wrapFor(
-        dek,
-        (target?.grants ?? []).map((grant) => grant.contactId),
-      );
-      await moveItem({ itemId: item._id, folderId, recipientKeys });
-    },
-    [folders, itemKey, wrapFor, moveItem],
   );
 }

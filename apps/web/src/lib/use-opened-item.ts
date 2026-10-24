@@ -107,7 +107,7 @@ export function summaryOf(
     category: opened.category,
     kind: contentKind(files),
     files,
-    folderId: raw.folderId,
+    categoryId: opened.categoryId,
     sharing: {
       accessLevel: raw.accessLevel,
       recipientMode: raw.recipientMode ?? "default",

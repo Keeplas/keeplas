@@ -35,7 +35,6 @@ import { useCategoryLabel } from "@/features/vault/category-sheet";
 import { ItemActionsSheet } from "@/features/vault/item-actions-sheet";
 import { accessIcon, itemVisual, styleOf } from "@/features/vault/item-visual";
 import { VaultListRow } from "@/features/vault/vault-list-row";
-import { VaultSwitch } from "@/features/vault/vault-switch";
 import {
   useVaultData,
   type VaultItemSummary,
@@ -73,7 +72,7 @@ export function VaultListScreen({
   const categoryLabel = useCategoryLabel();
   const { colors } = useTheme();
   const openAdd = useOpenAddSheet();
-  const { items, pending, folders } = useVaultData();
+  const { items, pending } = useVaultData();
   const [actionsFor, setActionsFor] = useState<Id<"vault_items"> | null>(null);
   const [list, setList] = useState<VaultListKey>(initial);
   const [term, setTerm] = useState("");
@@ -163,14 +162,14 @@ export function VaultListScreen({
           subtitle={subtitle(item)}
           icon={visual.icon}
           color={visual.color}
-          access={accessIcon(item, folders)}
+          access={accessIcon(item)}
           onMore={openActions}
           first={index === 0}
           last={index === listItems.length - 1}
         />
       );
     },
-    [t, subtitle, listItems.length, folders, openActions],
+    [t, subtitle, listItems.length, openActions],
   );
 
   return (
@@ -197,7 +196,6 @@ export function VaultListScreen({
           ListHeaderComponentStyle={styles.header}
           ListHeaderComponent={
             <>
-              {list === "all" ? <VaultSwitch active="mine" /> : null}
               <View
                 style={[
                   styles.search,

@@ -5,6 +5,7 @@ import {
   categoryValidator,
   accessLevelValidator,
   contactRoleValidator,
+  vaultGroupValidator,
 } from "./validators";
 import { planValidator } from "./lib/plans";
 
@@ -27,6 +28,8 @@ export default defineSchema({
     phoneNumber: v.optional(v.string()),
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),
+    // Built-in categories the user deleted (their items show in the Inbox).
+    hiddenCategoryGroups: v.optional(v.array(vaultGroupValidator)),
 
     // Auth methods available on this account. Seeded with the sign-up method
     // ("email" for password/email-OTP accounts, "phone" for phone-OTP) by the
@@ -708,7 +711,8 @@ export default defineSchema({
       ),
     ),
 
-    // Folder the item lives in (v2 "sharing per folder"); none = loose item.
+    // Former folder of the item, cleared when its category moves into the
+    // sealed metadata (folders.migrateItem).
     folderId: v.optional(v.id("folders")),
 
     // When true, the item is a "release introduction": a welcome message the
@@ -749,14 +753,15 @@ export default defineSchema({
     .index("by_item", ["itemId"])
     .index("by_user", ["userId"]),
 
-  // v2 sharing per folder (M06-4, M06-6, M03-1, M03-2). The folder name is
-  // sealed: under the master key for the owner, to each grantee's ML-KEM key
-  // on the grant. Item DEKs are wrapped to grantees in
-  // vault_item_recipient_keys, like item-level sharing.
+  // Former v2 folders, being turned into vault_categories by the owner's
+  // phone (folders.adopt / folders.migrateItem): each one is deleted once
+  // its items carry the category in their sealed metadata.
   folders: defineTable({
     userId: v.id("users"),
     // JSON {ciphertext, iv} under the owner's master key.
     encryptedName: v.string(),
+    // The vault category this folder became (set by folders.adopt).
+    categoryId: v.optional(v.id("vault_categories")),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
@@ -772,6 +777,8 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
 
+  // Deprecated: folders became categories (access is set per item). Emptied
+  // by migrations:dropFolderGrants; drop the table once that has run.
   folder_grants: defineTable({
     folderId: v.id("folders"),
     ownerId: v.id("users"),

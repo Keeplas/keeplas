@@ -6,7 +6,8 @@ import {
   query,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { optionalAuth, requireAuth } from "./helpers";
+import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
+import { vaultGroupValidator } from "./validators";
 import { auditedMutation, createAuditLog } from "./audit";
 import {
   deleteBlob,
@@ -357,6 +358,21 @@ export const setPublicKey = auditedMutation({
       contactPublicKeySignature: args.publicKeySignature,
     });
   },
+});
+
+/** Built-in categories the user deleted (or restored) in Settings. */
+export const setHiddenCategoryGroups = auditedMutation({
+  action: "user.categories.updated",
+  resourceType: "user",
+  args: { groups: v.array(vaultGroupValidator) },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    await ctx.db.patch(userId, {
+      hiddenCategoryGroups: [...new Set(args.groups)],
+      updatedAt: Date.now(),
+    });
+  },
+  getMetadata: (args) => ({ groups: args.groups }),
 });
 
 /**

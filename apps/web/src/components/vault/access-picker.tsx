@@ -9,11 +9,6 @@ import { Link } from "@/lib/navigation";
 
 type ContactId = Id<"trusted_contacts">;
 
-export interface Grantee {
-  contactId: ContactId;
-  contactName: string;
-}
-
 /** Contacts who joined Keeplas and can open what is shared with them. */
 export function useShareableContacts() {
   const contacts = useQuery(api.trusted_contacts.getContacts);
@@ -22,27 +17,17 @@ export function useShareableContacts() {
   );
 }
 
-/**
- * "Who can see it": one checkbox per trusted contact, plus the folder's
- * grantees, checked and locked (their access comes from the folder).
- */
+/** "Who can see it": one checkbox per trusted contact. */
 export function ContactChecklist({
   selected,
   onChange,
-  inherited = [],
-  folderName,
 }: {
   selected: ContactId[];
   onChange: (selected: ContactId[]) => void;
-  inherited?: Grantee[];
-  folderName?: string;
 }) {
   const t = useTranslations("vaultItem.access");
-  const contacts = useShareableContacts().filter(
-    (contact) =>
-      !inherited.some((grantee) => grantee.contactId === contact._id),
-  );
-  if (contacts.length === 0 && inherited.length === 0) {
+  const contacts = useShareableContacts();
+  if (contacts.length === 0) {
     return (
       <p className="text-body-sm text-text-muted">
         {t("nobody")}{" "}
@@ -54,21 +39,6 @@ export function ContactChecklist({
   }
   return (
     <ul className="flex flex-col gap-[4px]">
-      {inherited.map((grantee) => (
-        <li key={grantee.contactId}>
-          <label className="flex items-center gap-[12px] rounded-sm px-[8px] py-[8px] opacity-70">
-            <Checkbox checked disabled />
-            <span className="flex min-w-0 flex-col">
-              <span className="text-label text-text-primary">
-                {grantee.contactName}
-              </span>
-              <span className="text-body-sm text-text-muted">
-                {t("throughFolder", { name: folderName ?? "" })}
-              </span>
-            </span>
-          </label>
-        </li>
-      ))}
       {contacts.map((contact) => (
         <li key={contact._id}>
           <label className="flex cursor-pointer items-center gap-[12px] rounded-sm px-[8px] py-[8px] hover:bg-bg-subtle">
@@ -116,20 +86,12 @@ export function AccessDialog({
 
 interface AccessFormProps {
   initial: ContactId[];
-  inherited: Grantee[];
-  folderName?: string;
   /** Resolves when saved; the dialog stays open if it throws. */
   onSave: (contactIds: ContactId[]) => Promise<void>;
   onClose: () => void;
 }
 
-function AccessForm({
-  initial,
-  inherited,
-  folderName,
-  onSave,
-  onClose,
-}: AccessFormProps) {
+function AccessForm({ initial, onSave, onClose }: AccessFormProps) {
   const t = useTranslations("vaultItem.access");
   const common = useTranslations("common");
   const [selected, setSelected] = useState<ContactId[]>(initial);
@@ -147,12 +109,7 @@ function AccessForm({
 
   return (
     <>
-      <ContactChecklist
-        selected={selected}
-        onChange={setSelected}
-        inherited={inherited}
-        folderName={folderName}
-      />
+      <ContactChecklist selected={selected} onChange={setSelected} />
       <div className="flex justify-end gap-[12px]">
         <Button variant="plain" size="regular" onClick={onClose}>
           {common("cancel")}

@@ -759,7 +759,8 @@
         "signOut": "Se déconnecter",
         "export": "Exporter mes données",
         "deleteAccount": "Supprimer mon compte",
-        "import": "Importer une archive"
+        "import": "Importer une archive",
+        "categories": "Catégories"
       }
     },
     "export": {
@@ -824,9 +825,27 @@
       "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
       "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
       "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
-      "folderSuffix": "{name} (import)",
       "untitled": "Sans titre",
       "keepOpen": "Gardez cet onglet ouvert jusqu’à la fin."
+    },
+    "categories": {
+      "title": "Catégories",
+      "body": "Classez votre coffre à votre façon. Supprimer une catégorie ne supprime jamais ses éléments.",
+      "inboxBody": "Là où arrivent les nouveaux éléments. Elle ne peut pas être supprimée.",
+      "itemOne": "1 élément",
+      "items": "{count} éléments",
+      "locked": "Illisible dans ce navigateur",
+      "new": "Nouvelle catégorie",
+      "name": "Nom de la catégorie",
+      "create": "Créer la catégorie",
+      "newBody": "Les noms des catégories sont chiffrés comme leur contenu.",
+      "delete": "Supprimer",
+      "cancel": "Annuler",
+      "deleteTitle": "Supprimer {name} ?",
+      "deleteBody": "Ses éléments restent dans votre coffre et passent dans À classer.",
+      "removed": "Catégories supprimées",
+      "restore": "Restaurer",
+      "failed": "Une erreur est survenue. Réessayez."
     }
   },
   "settingsSecurity": {
@@ -955,6 +974,12 @@
     }
   },
   "sharedWithMe": {
+    "title": "Partagé avec moi",
+    "subtitle": "Les coffres des personnes qui vous ont choisi comme contact de confiance.",
+    "empty": {
+      "title": "Rien n'a encore été partagé avec vous",
+      "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
+    },
     "list": {
       "title": "Coffres que vous protégez"
     },
@@ -1053,26 +1078,6 @@
       "open": "Ouvrir",
       "enlarge": "Agrandir",
       "close": "Fermer"
-    },
-    "folders": {
-      "title": "Partagé avec moi",
-      "subtitle": "Les documents partagés avec vous par des personnes qui vous font confiance.",
-      "sharedBy": "Partagé par {name}",
-      "permission": "Autorisation",
-      "view": "Consultation",
-      "name": "Nom",
-      "size": "Taille",
-      "updated": "Mis à jour",
-      "download": "Télécharger",
-      "locked": {
-        "title": "Accès après vérification",
-        "body": "{name}, de {owner}. Après 2 confirmations et un délai de grâce de 72 heures."
-      },
-      "empty": {
-        "title": "Rien n'a encore été partagé avec vous",
-        "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
-      },
-      "downloadFailed": "Impossible de télécharger ce fichier. Réessayez."
     }
   },
   "trustedContacts": {
@@ -2326,7 +2331,6 @@
     "columns": {
       "name": "Nom",
       "category": "Catégorie",
-      "folder": "Dossier",
       "sharedWith": "Partagé avec",
       "updated": "Modifié",
       "added": "Ajouté"
@@ -2345,7 +2349,6 @@
       "onlyYou": "Vous seul",
       "people": "{count} personnes"
     },
-    "noFolder": "Aucun dossier",
     "untitled": "Élément sans titre",
     "locked": "Impossible à ouvrir dans ce navigateur",
     "loading": "Ouverture de votre coffre…",
@@ -2381,15 +2384,13 @@
       "title": "Détails",
       "edit": "Modifier",
       "category": "Catégorie",
-      "folder": "Dossier",
       "access": "Accès",
-      "lockedFolder": "Dossier verrouillé",
       "addPeople": "Ajouter des personnes",
       "addPeopleBody": "Partager avec vos contacts de confiance",
       "encrypted": "Chiffré de bout en bout. Seuls vous et les personnes choisies pouvez ouvrir ce fichier.",
       "activity": "Activité",
       "seeAll": "Tout voir",
-      "moveFailed": "Impossible de déplacer cet élément. Les éléments à l'ancien format de chiffrement ne peuvent pas encore aller dans un dossier partagé depuis le web."
+      "lockedCategory": "Catégorie verrouillée"
     },
     "activity": {
       "you": "Vous",
@@ -2402,7 +2403,6 @@
       "body": "Choisissez les contacts de confiance qui pourront ouvrir cet élément. Il est chiffré pour chacun d'eux dans ce navigateur.",
       "nobody": "Aucun contact de confiance n'a encore rejoint Keeplas.",
       "addContact": "Inviter quelqu'un",
-      "throughFolder": "Via le dossier {name}",
       "saving": "Enregistrement…"
     },
     "history": {
@@ -2450,12 +2450,11 @@
     },
     "form": {
       "category": "Catégorie",
-      "folder": "Dossier",
       "whoCanSee": "Qui peut le voir",
-      "lockedFolder": "Dossier verrouillé",
       "onlyYou": "Vous seul",
       "two": "{first} et {second}",
-      "many": "{first}, {second} et {count} autres"
+      "many": "{first}, {second} et {count} autres",
+      "lockedCategory": "Catégorie verrouillée"
     },
     "addFile": {
       "description": "Les fichiers sont chiffrés dans ce navigateur avant d'être envoyés.",

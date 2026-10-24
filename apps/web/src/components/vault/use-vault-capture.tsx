@@ -9,9 +9,9 @@ import {
 import { formatBytes, formatClock } from "@/lib/format";
 import { useLocale } from "@/lib/i18n";
 import { useRouter } from "@/lib/navigation";
+import { useVaultData } from "@/lib/vault-data";
 import { useCreateItem } from "@/lib/use-create-item";
 import { useUploadQueue } from "@/lib/upload-queue";
-import { useVaultData } from "@/lib/vault-data";
 import { extensionOf } from "@/lib/vault-list";
 import type { VaultCategory } from "@/lib/vault-categories";
 import { AddFileDialog, titleOf, type AddFileValues } from "./add-file-dialog";
@@ -40,7 +40,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
   const router = useRouter();
   const vault = useQuery(api.vaults.getVault);
   const getOrCreateVault = useMutation(api.vaults.getOrCreateVault);
-  const { folders } = useVaultData();
+  const { categories } = useVaultData();
   const createItem = useCreateItem();
   const { jobs, cancel, background } = useUploadQueue();
   const [adding, setAdding] = useState<{
@@ -76,7 +76,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
               : titleOf(file.name),
             note: "",
             category: values.category,
-            folderId: values.folderId,
+            categoryId: values.categoryId,
             contactIds: values.contactIds,
             files: [
               {
@@ -115,8 +115,8 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
     const jobId = await createItem({
       title: values.title,
       note: "",
-      category,
-      folderId: values.folderId,
+      category: values.category,
+      categoryId: values.categoryId,
       contactIds: values.contactIds,
       files: [values.file],
     });
@@ -148,7 +148,7 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
           kind={adding?.kind ?? "document"}
           initialFiles={adding?.files ?? []}
           defaultCategory={category}
-          folders={folders ?? []}
+          categories={categories ?? []}
           onSubmit={submit}
         />
         {securing ? (
@@ -178,7 +178,8 @@ export function useVaultCapture(category: VaultCategory = "personal_document") {
         <VoiceDialog
           open={voice}
           onOpenChange={setVoice}
-          folders={folders ?? []}
+          defaultCategory={category}
+          categories={categories ?? []}
           onSave={saveVoice}
         />
       </>

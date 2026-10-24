@@ -28,7 +28,7 @@ import {
 } from "./media";
 import type { CaptureFile } from "./seal";
 
-const SHEET_CLOSE_MS = 350;
+export const SHEET_CLOSE_MS = 350;
 
 const ITEMS: { kind: CaptureKind; icon: IconName; key: string }[] = [
   { kind: "scan", icon: "document", key: "document" },
@@ -187,7 +187,6 @@ function AddSheet({
 export interface AddPreset {
   category?: VaultCategory;
   categoryId?: string;
-  folderId?: string;
 }
 
 const AddSheetContext = createContext<(preset?: AddPreset) => void>(

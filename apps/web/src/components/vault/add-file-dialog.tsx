@@ -12,8 +12,9 @@ import {
 import { formatBytes } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useLocale, useTranslations } from "@/lib/i18n";
-import type { FolderSummary } from "@/lib/vault-data";
 import { extensionOf } from "@/lib/vault-list";
+import type { CategoryChoice } from "@/lib/item-meta";
+import type { CategorySummary } from "@/lib/vault-data";
 import type { VaultCategory } from "@/lib/vault-categories";
 import { FileRow } from "./file-row";
 import {
@@ -21,7 +22,6 @@ import {
   CategoryField,
   EncryptionNote,
   Field,
-  FolderField,
 } from "./form-fields";
 
 export interface AddFileValues {
@@ -29,7 +29,7 @@ export interface AddFileValues {
   /** The item title when there is one file; else each file's name. */
   title: string;
   category: VaultCategory;
-  folderId: Id<"folders"> | null;
+  categoryId?: string;
   contactIds: Id<"trusted_contacts">[];
 }
 
@@ -74,7 +74,7 @@ export function AddFileDialog({
   kind,
   initialFiles,
   defaultCategory,
-  folders,
+  categories,
   onSubmit,
 }: {
   open: boolean;
@@ -82,7 +82,7 @@ export function AddFileDialog({
   kind: CaptureKind;
   initialFiles: File[];
   defaultCategory: VaultCategory;
-  folders: FolderSummary[];
+  categories: CategorySummary[];
   onSubmit: (values: AddFileValues) => Promise<void>;
 }) {
   const t = useTranslations("vaultItem.addFile");
@@ -99,7 +99,7 @@ export function AddFileDialog({
         kind={kind}
         initialFiles={initialFiles}
         defaultCategory={defaultCategory}
-        folders={folders}
+        categories={categories}
         onSubmit={onSubmit}
         onCancel={() => onOpenChange(false)}
       />
@@ -111,14 +111,14 @@ function AddFileForm({
   kind,
   initialFiles,
   defaultCategory,
-  folders,
+  categories,
   onSubmit,
   onCancel,
 }: {
   kind: CaptureKind;
   initialFiles: File[];
   defaultCategory: VaultCategory;
-  folders: FolderSummary[];
+  categories: CategorySummary[];
   onSubmit: (values: AddFileValues) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -134,8 +134,9 @@ function AddFileForm({
   const [title, setTitle] = useState(
     initial.accepted.length === 1 ? titleOf(initial.accepted[0].name) : "",
   );
-  const [category, setCategory] = useState(defaultCategory);
-  const [folderId, setFolderId] = useState<Id<"folders"> | null>(null);
+  const [filing, setFiling] = useState<CategoryChoice>({
+    category: defaultCategory,
+  });
   const [contactIds, setContactIds] = useState<Id<"trusted_contacts">[]>([]);
   const [dragging, setDragging] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -172,7 +173,7 @@ function AddFileForm({
     }
     setSaving(true);
     try {
-      await onSubmit({ files, title, category, folderId, contactIds });
+      await onSubmit({ files, title, ...filing, contactIds });
     } finally {
       setSaving(false);
     }
@@ -269,19 +270,12 @@ function AddFileForm({
           )}
         </Field>
       ) : null}
-      <div className="grid gap-[16px] sm:grid-cols-2">
-        <CategoryField value={category} onChange={setCategory} />
-        <FolderField
-          value={folderId}
-          onChange={setFolderId}
-          folders={folders}
-        />
-      </div>
-      <AccessField
-        value={contactIds}
-        onChange={setContactIds}
-        folder={folders.find((folder) => folder.id === folderId)}
+      <CategoryField
+        value={filing}
+        onChange={setFiling}
+        categories={categories}
       />
+      <AccessField value={contactIds} onChange={setContactIds} />
       <EncryptionNote>{t("encrypted")}</EncryptionNote>
 
       <div className="flex items-center gap-[12px]">

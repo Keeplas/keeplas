@@ -44,7 +44,7 @@ import {
   useCategoryLabel,
 } from "@/features/vault/category-sheet";
 import { itemVisual } from "@/features/vault/item-visual";
-import { useEveryoneRecipients } from "@/features/vault/use-move-to-folder";
+import { useEveryoneRecipients } from "@/features/vault/use-recipients";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatDuration } from "@/lib/format";
 import { NoteEditor } from "@/features/notes/note-editor";
@@ -179,7 +179,6 @@ export default function ComposeCapture() {
         category: draft.category,
         categoryId: draft.categoryId,
         icon: draft.icon,
-        folderId: existing ? undefined : draft.folderId,
         share: existing
           ? undefined
           : {
