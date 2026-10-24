@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import {
-  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -19,12 +18,13 @@ import { Text } from "@/components/text";
 import { SHEET_CLOSE_MS } from "@/features/capture/add-sheet";
 import { VAULT_GROUPS } from "@/features/home/vault-groups";
 import { CategoryNameForm } from "@/features/vault/category-sheet";
+import { useDeleteCategory } from "@/features/vault/delete-category";
 import { useVaultData } from "@/features/vault/vault-data";
+import { inFilter } from "@/features/vault/vault-filter";
 import {
   useFilterTitle,
   VaultItemList,
 } from "@/features/vault/vault-item-list";
-import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
@@ -43,43 +43,31 @@ export default function CategoryPage() {
   const router = useRouter();
   const { t } = useI18n();
   const title = useFilterTitle();
-  const { categories } = useVaultData();
+  const { categories, items } = useVaultData();
   const hidden = useViewer().hiddenCategoryGroups ?? [];
   const setHidden = useAuditedMutation(api.users.setHiddenCategoryGroups);
   const rename = useAuditedMutation(api.vault_categories.rename);
   const remove = useAuditedMutation(api.vault_categories.remove);
+  const deleteCategory = useDeleteCategory();
   const [renaming, setRenaming] = useState(false);
   const group = VAULT_GROUPS.find((candidate) => candidate.key === id)?.key;
   const name = title(id);
 
-  function confirmDelete() {
-    Alert.alert(
-      t("categories.deleteTitle", { name }),
-      t("categories.deleteBody"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("categories.delete"),
-          style: "destructive",
-          onPress: () =>
-            void (
-              group
-                ? setHidden({ groups: [...hidden, group] })
-                : remove({ categoryId })
-            )
-              .then(() => router.back())
-              .catch(() =>
-                toast({ variant: "error", title: t("common.genericError") }),
-              ),
-        },
-      ],
-    );
-  }
-
   const deleteAction: MenuAction = {
     icon: "trash",
     label: t("categories.deleteCategory"),
-    onPress: confirmDelete,
+    onPress: () =>
+      deleteCategory.request({
+        name,
+        itemIds: (items ?? [])
+          .filter((item) => inFilter(item, id))
+          .map((item) => item.id),
+        remove: () =>
+          group
+            ? setHidden({ groups: [...hidden, group] })
+            : remove({ categoryId }),
+        onDeleted: router.back,
+      }),
     destructive: true,
   };
 
@@ -130,6 +118,7 @@ export default function CategoryPage() {
           />
         ) : null}
       </BottomSheet>
+      {deleteCategory.sheet}
     </Screen>
   );
 }

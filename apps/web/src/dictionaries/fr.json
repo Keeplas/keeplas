@@ -827,7 +827,7 @@
     },
     "categories": {
       "title": "Catégories",
-      "body": "Classez votre coffre à votre façon. Supprimer une catégorie ne supprime jamais ses éléments.",
+      "body": "Classez votre coffre à votre façon. Supprimer une catégorie supprime aussi ses éléments : vous pouvez les restaurer depuis Archives dans l'app Keeplas.",
       "inboxBody": "Là où arrivent les nouveaux éléments. Elle ne peut pas être supprimée.",
       "itemOne": "1 élément",
       "items": "{count} éléments",
@@ -839,7 +839,9 @@
       "delete": "Supprimer",
       "cancel": "Annuler",
       "deleteTitle": "Supprimer {name} ?",
-      "deleteBody": "Ses éléments restent dans votre coffre et passent dans À classer.",
+      "deleteEmptyBody": "Cette catégorie est vide.",
+      "deleteItemsOne": "Son élément sera aussi supprimé. Vous pourrez toujours le restaurer depuis Archives dans l'app Keeplas.",
+      "deleteItems": "Ses {count} éléments seront aussi supprimés. Vous pourrez toujours les restaurer depuis Archives dans l'app Keeplas.",
       "removed": "Catégories supprimées",
       "restore": "Restaurer",
       "failed": "Une erreur est survenue. Réessayez."
