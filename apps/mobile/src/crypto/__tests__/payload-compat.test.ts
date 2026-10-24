@@ -79,7 +79,12 @@ describe("text envelope ({ciphertext, iv})", () => {
 
 describe("metadata payloads (F4)", () => {
   it("matches the web JSON shapes", () => {
-    expect(itemMetaJson("inbox")).toBe('{"v":1,"category":"inbox"}');
+    expect(itemMetaJson({ category: "inbox" })).toBe(
+      '{"v":1,"category":"inbox"}',
+    );
+    expect(itemMetaJson({ category: "other", categoryId: "k1" }, "pin")).toBe(
+      '{"v":1,"category":"other","icon":"pin","categoryId":"k1"}',
+    );
     expect(
       fileMetaJson({
         name: "scan.jpg",

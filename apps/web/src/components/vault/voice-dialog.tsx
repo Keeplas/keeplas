@@ -6,15 +6,22 @@ import { Modal } from "@/components/v2/modal";
 import { formatCountdown } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
+import type { CategoryChoice } from "@/lib/item-meta";
+import type { CategorySummary } from "@/lib/vault-data";
 import type { QueuedFile } from "@/lib/upload-queue";
+import type { VaultCategory } from "@/lib/vault-categories";
 import {
   LEVEL_BARS,
   useVoiceRecorder,
   type Recording,
   type RecorderState,
 } from "@/lib/use-voice-recorder";
-import type { FolderSummary } from "@/lib/vault-data";
-import { AccessField, EncryptionNote, Field, FolderField } from "./form-fields";
+import {
+  AccessField,
+  CategoryField,
+  EncryptionNote,
+  Field,
+} from "./form-fields";
 
 /** W06-6: notes stop at 10 minutes. */
 export const MAX_VOICE_SECONDS = 10 * 60;
@@ -30,9 +37,8 @@ const STATUS: Record<RecorderState, "recording" | "paused" | "starting"> = {
 // Grey bars before the meter fills (Figma's resting heights).
 const RESTING = [10, 18, 8, 12, 6, 8, 6];
 
-export interface VoiceItemValues {
+export interface VoiceItemValues extends CategoryChoice {
   title: string;
-  folderId: Id<"folders"> | null;
   contactIds: Id<"trusted_contacts">[];
   file: QueuedFile;
 }
@@ -98,19 +104,22 @@ export function VoiceMeter({
 }
 
 /**
- * W06-6 "Record a voice note". As a new item: title, folder and who can see
+ * W06-6 "Record a voice note". As a new item: title, category and who can see
  * it. In a note editor (`onAttach`): the recording only, attached on save.
  */
 export function VoiceDialog({
   open,
   onOpenChange,
-  folders,
+  defaultCategory = "inbox",
+  categories = [],
   onSave,
   onAttach,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  folders: FolderSummary[];
+  defaultCategory?: VaultCategory;
+  /** User-made categories (new item only). */
+  categories?: CategorySummary[];
   /** Resolves false when nothing was saved (the dialog stays open). */
   onSave?: (values: VoiceItemValues) => Promise<boolean>;
   onAttach?: (file: QueuedFile) => void;
@@ -126,7 +135,8 @@ export function VoiceDialog({
     >
       {/* Mounted while open: the microphone is on only while it shows. */}
       <VoiceForm
-        folders={folders}
+        defaultCategory={defaultCategory}
+        categories={categories}
         onSave={onSave}
         onAttach={onAttach}
         onClose={() => onOpenChange(false)}
@@ -136,12 +146,14 @@ export function VoiceDialog({
 }
 
 function VoiceForm({
-  folders,
+  defaultCategory,
+  categories,
   onSave,
   onAttach,
   onClose,
 }: {
-  folders: FolderSummary[];
+  defaultCategory: VaultCategory;
+  categories: CategorySummary[];
   onSave?: (values: VoiceItemValues) => Promise<boolean>;
   onAttach?: (file: QueuedFile) => void;
   onClose: () => void;
@@ -150,7 +162,9 @@ function VoiceForm({
   const confirm = useConfirm();
   const recorder = useVoiceRecorder(MAX_VOICE_SECONDS);
   const [title, setTitle] = useState("");
-  const [folderId, setFolderId] = useState<Id<"folders"> | null>(null);
+  const [filing, setFiling] = useState<CategoryChoice>({
+    category: defaultCategory,
+  });
   const [contactIds, setContactIds] = useState<Id<"trusted_contacts">[]>([]);
   const [saving, setSaving] = useState(false);
   // The finished take, kept so a failed save can be retried.
@@ -202,7 +216,7 @@ function VoiceForm({
       } else if (
         await onSave?.({
           title: title.trim() || t("defaultName"),
-          folderId,
+          ...filing,
           contactIds,
           file,
         })
@@ -240,16 +254,12 @@ function VoiceForm({
               )}
             </Field>
             <div className="grid gap-[16px] sm:grid-cols-2">
-              <FolderField
-                value={folderId}
-                onChange={setFolderId}
-                folders={folders}
+              <CategoryField
+                value={filing}
+                onChange={setFiling}
+                categories={categories}
               />
-              <AccessField
-                value={contactIds}
-                onChange={setContactIds}
-                folder={folders.find((folder) => folder.id === folderId)}
-              />
+              <AccessField value={contactIds} onChange={setContactIds} />
             </div>
           </>
         )

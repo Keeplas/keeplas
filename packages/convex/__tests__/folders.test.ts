@@ -10,8 +10,8 @@ import {
   type TestConvex,
 } from "./test.helpers";
 
-// v2 sharing per folder (M06-4, M06-6, M03-1, M03-2): "this folder only",
-// now or after verification (release).
+// Former v2 folders: no sharing any more (access is set per item); the
+// owner's phone turns each one into a vault category.
 
 const SEALED = JSON.stringify({ ciphertext: "c2VhbGVk", iv: "aXY=" });
 
@@ -20,14 +20,15 @@ async function setup() {
   const ownerId = await seedUser(t);
   const owner = asUser(t, ownerId);
   const contactId = await seedTrustContact(t, ownerId, { n: 1 });
-  const recipientId = await seedUser(t);
-  await t.run((ctx) => ctx.db.patch(contactId, { contactUserId: recipientId }));
-  const recipient = asUser(t, recipientId);
 
-  const folderId = await owner.mutation(api.folders.create, {
-    encryptedName: SEALED,
-    _audit: await signedAudit(),
-  });
+  const folderId = await t.run((ctx) =>
+    ctx.db.insert("folders", {
+      userId: ownerId,
+      encryptedName: SEALED,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }),
+  );
   const itemIds = await t.run(async (ctx) => {
     const now = Date.now();
     const vaultId = await ctx.db.insert("vaults", {
@@ -37,7 +38,7 @@ async function setup() {
       createdAt: now,
       updatedAt: now,
     });
-    const make = (folder?: Id<"folders">) =>
+    const make = (folder?: Id<"folders">, accessLevel = "private" as const) =>
       ctx.db.insert("vault_items", {
         vaultId,
         userId: ownerId,
@@ -47,7 +48,7 @@ async function setup() {
         encryptionType: "zero_knowledge",
         ownerWrappedDek: "owner-dek",
         sharedWithContacts: [],
-        accessLevel: "private",
+        accessLevel,
         status: "active",
         createdAt: now,
         updatedAt: now,
@@ -57,25 +58,7 @@ async function setup() {
       other: await make(),
     };
   });
-  return { t, ownerId, owner, contactId, recipient, folderId, itemIds };
-}
-
-async function grant(
-  s: Awaited<ReturnType<typeof setup>>,
-  timing: "now" | "after_verification",
-) {
-  return s.owner.mutation(api.folders.grant, {
-    folderId: s.folderId,
-    contactId: s.contactId,
-    timing,
-    sealedName: "sealed-for-contact",
-    itemKeys: [
-      { itemId: s.itemIds.inFolder, wrappedDek: "dek-for-contact" },
-      // Not in the folder: must be ignored.
-      { itemId: s.itemIds.other, wrappedDek: "smuggled" },
-    ],
-    _audit: await signedAudit(),
-  });
+  return { t, ownerId, owner, contactId, folderId, itemIds };
 }
 
 function keysFor(t: TestConvex, contactId: Id<"trusted_contacts">) {
@@ -87,104 +70,117 @@ function keysFor(t: TestConvex, contactId: Id<"trusted_contacts">) {
   );
 }
 
-describe("folder sharing", () => {
-  it("shares this folder only, readable now", async () => {
+describe("folders", () => {
+  it("lists the owner's folders with their item counts", async () => {
     const s = await setup();
-    const grantId = await grant(s, "now");
-
-    const keys = await keysFor(s.t, s.contactId);
-    expect(keys.map((k) => k.itemId)).toEqual([s.itemIds.inFolder]);
-
-    const [shared] = await s.recipient.query(api.folders.sharedWithMe, {});
-    expect(shared).toMatchObject({
-      grantId,
-      sealedName: "sealed-for-contact",
-      available: true,
+    const [category] = await s.owner.query(api.folders.list, {});
+    expect(category).toMatchObject({
+      _id: s.folderId,
+      encryptedName: SEALED,
       itemCount: 1,
     });
-    const folder = await s.recipient.query(api.folders.getSharedFolder, {
-      grantId,
+  });
+
+  it("deleting a folder keeps its items", async () => {
+    const s = await setup();
+    await s.owner.mutation(api.folders.remove, {
+      folderId: s.folderId,
+      _audit: await signedAudit(),
     });
-    expect(folder?.items.map((i) => [i._id, i.wrappedDek])).toEqual([
-      [s.itemIds.inFolder, "dek-for-contact"],
+    expect(await s.owner.query(api.folders.list, {})).toEqual([]);
+    const item = await s.t.run((ctx) => ctx.db.get(s.itemIds.inFolder));
+    expect(item?.folderId).toBeUndefined();
+  });
+
+  it("someone else cannot change the folder", async () => {
+    const s = await setup();
+    const intruder = asUser(s.t, await seedUser(s.t));
+    await expect(
+      intruder.mutation(api.folders.remove, {
+        folderId: s.folderId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Folder not found");
+  });
+});
+
+describe("folders become categories", () => {
+  it("adopts a folder as a category once, with the same sealed name", async () => {
+    const s = await setup();
+    const adopt = async () =>
+      s.owner.mutation(api.folders.adopt, {
+        folderId: s.folderId,
+        _audit: await signedAudit(),
+      });
+    const categoryId = await adopt();
+    expect(await adopt()).toBe(categoryId);
+    expect(await s.owner.query(api.vault_categories.list, {})).toMatchObject([
+      { _id: categoryId, encryptedName: SEALED },
     ]);
   });
 
-  it("keeps an after-verification folder locked until the release", async () => {
+  it("moves an item's category into its sealed metadata", async () => {
     const s = await setup();
-    const grantId = await grant(s, "after_verification");
-    expect(await s.recipient.query(api.folders.sharedWithMe, {})).toMatchObject(
-      [{ available: false }],
-    );
-    expect(
-      await s.recipient.query(api.folders.getSharedFolder, { grantId }),
-    ).toBeNull();
-
-    await s.t.mutation(internal.release.triggerRelease, {
-      userId: s.ownerId,
-      reason: "test",
-    });
-    expect(await s.recipient.query(api.folders.sharedWithMe, {})).toMatchObject(
-      [{ available: true }],
-    );
-    const request = await s.t.run((ctx) =>
-      ctx.db.query("access_requests").first(),
-    );
-    expect(request?.sectionsRequested).toEqual([`item:${s.itemIds.inFolder}`]);
-  });
-
-  it("revoking ends access and drops the DEK wraps", async () => {
-    const s = await setup();
-    const grantId = await grant(s, "now");
-    await s.owner.mutation(api.folders.revokeGrant, {
-      grantId,
-      _audit: await signedAudit(),
-    });
-    expect(await s.recipient.query(api.folders.sharedWithMe, {})).toEqual([]);
-    expect(await keysFor(s.t, s.contactId)).toEqual([]);
-  });
-
-  it("moving an item out of a shared folder drops its wrap", async () => {
-    const s = await setup();
-    await grant(s, "now");
-    await s.owner.mutation(api.folders.moveItem, {
+    await s.owner.mutation(api.folders.migrateItem, {
       itemId: s.itemIds.inFolder,
-      folderId: null,
-      recipientKeys: [],
+      encryptedMeta: "meta-with-category",
       _audit: await signedAudit(),
     });
-    expect(await keysFor(s.t, s.contactId)).toEqual([]);
-  });
-
-  it("moving an item in wraps it for the folder's grantees only", async () => {
-    const s = await setup();
-    await grant(s, "now");
-    const stranger = await seedTrustContact(s.t, s.ownerId, { n: 2 });
-    await s.owner.mutation(api.folders.moveItem, {
-      itemId: s.itemIds.other,
-      folderId: s.folderId,
-      recipientKeys: [
-        { contactId: s.contactId, wrappedDek: "dek2" },
-        { contactId: stranger, wrappedDek: "nope" },
-      ],
-      _audit: await signedAudit(),
-    });
-    expect((await keysFor(s.t, s.contactId)).length).toBe(2);
-    expect(await keysFor(s.t, stranger)).toEqual([]);
-  });
-
-  it("someone else cannot open the folder", async () => {
-    const s = await setup();
-    const grantId = await grant(s, "now");
-    const intruder = asUser(s.t, await seedUser(s.t));
-    expect(
-      await intruder.query(api.folders.getSharedFolder, { grantId }),
-    ).toBeNull();
+    const item = await s.t.run((ctx) => ctx.db.get(s.itemIds.inFolder));
+    expect(item).toMatchObject({ encryptedMeta: "meta-with-category" });
+    expect(item?.folderId).toBeUndefined();
     await expect(
-      intruder.mutation(api.folders.revokeGrant, {
-        grantId,
+      s.owner.mutation(api.folders.migrateItem, {
+        itemId: s.itemIds.other,
+        encryptedMeta: "x",
         _audit: await signedAudit(),
       }),
-    ).rejects.toThrow("Access not found");
+    ).rejects.toThrow("not in a folder");
+  });
+});
+
+describe("migrations.dropFolderGrants", () => {
+  async function seedGrant(
+    s: Awaited<ReturnType<typeof setup>>,
+    itemId: Id<"vault_items">,
+  ) {
+    await s.t.run(async (ctx) => {
+      await ctx.db.insert("folder_grants", {
+        folderId: s.folderId,
+        ownerId: s.ownerId,
+        contactId: s.contactId,
+        timing: "now",
+        sealedName: "sealed-for-contact",
+        createdAt: Date.now(),
+      });
+      await ctx.db.insert("vault_item_recipient_keys", {
+        itemId,
+        contactId: s.contactId,
+        wrappedDek: "dek-for-contact",
+        createdAt: Date.now(),
+      });
+    });
+  }
+
+  it("ends folder access and drops the wraps it gave", async () => {
+    const s = await setup();
+    await seedGrant(s, s.itemIds.inFolder);
+    expect(await s.t.mutation(internal.migrations.dropFolderGrants, {})).toBe(
+      1,
+    );
+    expect(
+      await s.t.run((ctx) => ctx.db.query("folder_grants").collect()),
+    ).toEqual([]);
+    expect(await keysFor(s.t, s.contactId)).toEqual([]);
+  });
+
+  it("keeps the wrap of an item the contact still receives", async () => {
+    const s = await setup();
+    await s.t.run((ctx) =>
+      ctx.db.patch(s.itemIds.inFolder, { accessLevel: "trusted_only" }),
+    );
+    await seedGrant(s, s.itemIds.inFolder);
+    await s.t.mutation(internal.migrations.dropFolderGrants, {});
+    expect((await keysFor(s.t, s.contactId)).length).toBe(1);
   });
 });

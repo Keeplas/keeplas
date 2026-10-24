@@ -99,13 +99,15 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
       createItem: async ({ vaultId, files, ...item }) =>
         (await createItem({
           ...item,
-          folderId: item.folderId as Id<"folders"> | undefined,
           captureHandoffId: item.captureHandoffId as
             Id<"capture_handoffs"> | undefined,
           recipientKeys: item.recipientKeys?.map((key) => ({
             contactId: key.contactId as Id<"trusted_contacts">,
             wrappedDek: key.wrappedDek,
           })),
+          sharedWithContacts: item.sharedWithContacts?.map(
+            (id) => id as Id<"trusted_contacts">,
+          ),
           pendingRecipients: item.pendingRecipients?.map(
             (id) => id as Id<"trusted_contacts">,
           ),

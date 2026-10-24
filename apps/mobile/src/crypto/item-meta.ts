@@ -14,7 +14,18 @@ export interface ItemMeta {
   v: 1;
   category: VaultCategory;
   icon?: string;
+  /**
+   * User-made category (vault_categories). `category` then holds the
+   * built-in fallback ("other") for readers that do not know it.
+   */
+  categoryId?: string;
 }
+
+/** Where an item is filed: a built-in category, or a user-made one. */
+export type CategoryChoice = Pick<ItemMeta, "category" | "categoryId">;
+
+/** Built-in category of items filed under a user-made category. */
+export const CUSTOM_FALLBACK: VaultCategory = "other";
 
 export interface FileMeta {
   v: 1;
@@ -28,11 +39,15 @@ export interface FileMeta {
 /** Captures waiting to be sorted (the encrypted inbox). */
 export const INBOX: VaultCategory = "inbox";
 
-export const itemMetaJson = (category: VaultCategory, icon?: string): string =>
+export const itemMetaJson = (
+  { category, categoryId }: CategoryChoice,
+  icon?: string,
+): string =>
   JSON.stringify({
     v: 1,
     category,
     ...(icon ? { icon } : {}),
+    ...(categoryId ? { categoryId } : {}),
   } satisfies ItemMeta);
 
 export const fileMetaJson = (meta: Omit<FileMeta, "v"> | FileMeta): string =>

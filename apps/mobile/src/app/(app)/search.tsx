@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/app-header";
 import { Screen } from "@/components/screen";
 import { TextField } from "@/components/text-field";
 import { Text } from "@/components/text";
+import { useCategoryLabel } from "@/features/vault/category-sheet";
 import { VaultItemRow } from "@/features/vault/item-row";
 import {
   useVaultData,
@@ -16,6 +17,7 @@ import { useI18n } from "@/providers/i18n-provider";
 export default function Search() {
   const router = useRouter();
   const { t } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { items } = useVaultData();
   const [term, setTerm] = useState("");
   // Defer filtering so keystrokes stay responsive on large vaults.
@@ -33,10 +35,10 @@ export default function Search() {
       <VaultItemRow
         id={item.id}
         title={item.title ?? t("item.decrypting")}
-        description={t(`capture.category.${item.category}`)}
+        description={categoryLabel(item)}
       />
     ),
-    [t],
+    [t, categoryLabel],
   );
 
   return (

@@ -33,13 +33,12 @@ import { colors as palette, radius, withAlpha } from "@/theme";
 /** M08-5 Home. Counts are computed on the device from the decrypted vault. */
 export default function Home() {
   const { t, language } = useI18n();
-  const { colors } = useTheme();
   const router = useRouter();
   const viewer = useViewer();
-  const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
   const numberChange = useQuery(api.number_change.getMineOpen);
-  const { items, pending, folders } = useVaultData();
+  const { items, pending, categories } = useVaultData();
+  const hidden = viewer.hiddenCategoryGroups ?? [];
   const { ready } = useRecoveryWays();
 
   const greeting = t(greetingKey(new Date().getHours()));
@@ -120,44 +119,37 @@ export default function Home() {
       {viewer.plan === "lifetime" ? null : <UpgradeCard />}
       <Text variant="label">{t("home.yourVault")}</Text>
       <View style={styles.tiles}>
-        {VAULT_GROUPS.map((group) => (
+        {VAULT_GROUPS.filter((group) => !hidden.includes(group.key)).map(
+          (group) => (
+            <VaultTile
+              key={group.key}
+              icon={group.icon}
+              tint={palette.category[group.color]}
+              label={t(`home.${group.key}`)}
+              count={counts[group.key]}
+              onPress={() => openList(group.key)}
+            />
+          ),
+        )}
+        {(categories ?? []).map((category) => (
           <VaultTile
-            key={group.key}
-            icon={group.icon}
-            tint={palette.category[group.color]}
-            label={t(`home.${group.key}`)}
-            count={counts[group.key]}
-            onPress={() => openList(group.key)}
-          />
-        ))}
-        {(folders ?? []).map((folder) => (
-          <VaultTile
-            key={folder.id}
-            icon="folder"
-            tint={colors["text.primary"]}
-            label={folder.name ?? t("folders.title")}
-            count={folder.itemCount}
+            key={category.id}
+            icon="document"
+            tint={palette.category.other}
+            label={category.name ?? t("item.decrypting")}
+            count={
+              (items ?? []).filter((item) => item.categoryId === category.id)
+                .length
+            }
             onPress={() =>
               router.push({
-                pathname: "/folder/[id]",
-                params: { id: folder.id },
+                pathname: "/category/[id]",
+                params: { id: category.id },
               })
             }
           />
         ))}
       </View>
-      {shared && shared.length > 0 ? (
-        <ListRow
-          icon="people"
-          title={t("shared.title")}
-          description={
-            shared.length === 1
-              ? t("shared.oneFolder")
-              : t("shared.folders", { n: shared.length })
-          }
-          onPress={() => router.push("/shared")}
-        />
-      ) : null}
       {showRecent ? (
         <>
           <View style={styles.sectionHeader}>

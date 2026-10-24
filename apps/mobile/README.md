@@ -43,7 +43,7 @@ The Convex backend sends through the Expo push service (`packages/convex/dispatc
 2. Upload it as an EAS file variable in every environment:
    `npx eas-cli env:set --environment development --environment preview --environment production --visibility secret --type file --name GOOGLE_SERVICES_JSON --value ./google-services.json`
    For local builds, put the file at `apps/mobile/google-services.json` (gitignored). Its content is kept in Infisical as `ANDROID_GOOGLE_SERVICES_JSON` (restore command in the root `.env.example`).
-3. Firebase → Project settings → Service accounts → generate a private key, then `npx eas-cli credentials --platform android` → Google Service Account → "Manage your Google Service Account Key for Push Notifications (FCM V1)" → upload it.
+3. Firebase → Project settings → Service accounts → generate a private key, then `npx eas-cli credentials --platform android` → Google Service Account → "Manage your Google Service Account Key for Push Notifications (FCM V1)" → upload it. Keep the key in Infisical prod under `/keeplas_mobile` (`keeplas_firebase_adminsdk`), never in `/keeplas_app`: that folder syncs to Vercel, and the sync does not delete removed secrets.
 
 **iOS (APNs)**: `npx eas-cli credentials --platform ios` creates the push key once the Apple Developer account is active.
 
@@ -54,7 +54,7 @@ The Convex backend sends through the Expo push service (`packages/convex/dispatc
 1. Create the app in the Play Console (`com.keeplas.app`). The first AAB must be uploaded by hand: `eas build --profile production`, then upload the `.aab` to the internal track.
 2. Play Console → Setup → API access: create a service account with release permissions, then add its key with `npx eas-cli credentials --platform android` (used by `eas submit`).
 3. Play Console → App integrity: copy the SHA-256 of the **app signing** key and the **upload** key into `ANDROID_SHA256_CERT_FINGERPRINTS` (web host, assetlinks.json), and add the matching `android:apk-key-hash:` origin to `WEBAUTHN_ORIGIN` (native passkeys).
-4. Link the Play Integrity API to the Google Cloud project (`EXPO_PUBLIC_GCP_PROJECT_NUMBER`, `GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT`).
+4. Play Console → App integrity: link the Google Cloud project `keeplas-eb259` (`EXPO_PUBLIC_GCP_PROJECT_NUMBER`). Its `play-integrity` service account (no IAM role; manage with prince@prince-code.com, which owns the project) signs the Convex calls; its key is `GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT` in Infisical prod `/keeplas_mobile`, set on Convex with `npx convex env set` (not in `/keeplas_app`, which syncs to Vercel).
 
 ## App Store
 

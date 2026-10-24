@@ -11,6 +11,7 @@ export {
   isVaultListKey,
   listCounts,
   presetCategory,
+  shownFiling,
   VAULT_LISTS,
   type ContentKind,
   type VaultGroupKey,

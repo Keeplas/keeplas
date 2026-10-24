@@ -42,6 +42,29 @@ export function groupOf(category: string): VaultGroupKey | null {
   );
 }
 
+/**
+ * Where an item is shown: in the inbox when the user deleted its category
+ * in Settings (a built-in one, or a user-made one no longer in
+ * `categoryIds`, which is undefined while still loading).
+ */
+export function shownFiling<
+  T extends { category: string; categoryId?: string },
+>(
+  item: T,
+  hidden: readonly VaultGroupKey[],
+  categoryIds: readonly string[] | undefined,
+): T {
+  if (item.categoryId) {
+    return !categoryIds || categoryIds.includes(item.categoryId)
+      ? item
+      : { ...item, category: "inbox", categoryId: undefined };
+  }
+  const group = groupOf(item.category);
+  return group && hidden.includes(group)
+    ? { ...item, category: "inbox" }
+    : item;
+}
+
 export type ContentKind = "documents" | "notes" | "photos" | "voice" | "videos";
 
 const KIND_OF_FILE: Record<FileKind, ContentKind> = {
@@ -93,6 +116,8 @@ export function presetCategory(list: VaultListKey): VaultCategory | undefined {
 interface Listed {
   category: string;
   kind: ContentKind;
+  /** User-made category: listed under it and by its content kind only. */
+  categoryId?: string;
 }
 
 /**
@@ -100,15 +125,20 @@ interface Listed {
  * the accounts or instructions group, or else its content kind.
  */
 export function bucketOf(item: Listed): Exclude<VaultListKey, "all" | "other"> {
+  if (item.categoryId) return item.kind;
   if (item.category === "inbox") return "inbox";
   const group = groupOf(item.category);
   if (group === "accounts" || group === "instructions") return group;
   return item.kind;
 }
 
+function inOther(item: Listed): boolean {
+  return !item.categoryId && groupOf(item.category) === "other";
+}
+
 export function inVaultList(item: Listed, list: VaultListKey): boolean {
   if (list === "all") return true;
-  if (list === "other") return groupOf(item.category) === "other";
+  if (list === "other") return inOther(item);
   return bucketOf(item) === list;
 }
 
@@ -121,7 +151,7 @@ export function listCounts(
   for (const item of items) {
     counts.all += 1;
     counts[bucketOf(item)] += 1;
-    if (groupOf(item.category) === "other") counts.other += 1;
+    if (inOther(item)) counts.other += 1;
   }
   return counts;
 }

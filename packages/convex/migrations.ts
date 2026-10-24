@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { folderItems } from "./folders";
+import { resolveItemRecipients } from "./helpers";
 import { deleteBlob } from "./lib/storage";
 
 /**
@@ -212,5 +214,41 @@ export const migrateContactTypes = internalMutation({
       migrated++;
     }
     return { scanned: rows.length, migrated };
+  },
+});
+
+/**
+ * Folders became categories: access is set per item, so folder grants end.
+ * Deletes every `folder_grants` row and the DEK wraps it gave, except where
+ * the contact still receives the item through its own access. Run once after
+ * deploying the categories change, before the schema drops the table.
+ * Idempotent:
+ *   npx convex run migrations:dropFolderGrants        # dev
+ *   npx convex run migrations:dropFolderGrants --prod # prod
+ */
+export const dropFolderGrants = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const grants = await ctx.db.query("folder_grants").collect();
+    for (const grant of grants) {
+      for (const item of await folderItems(ctx, grant.folderId)) {
+        const recipients = await resolveItemRecipients(ctx, item, item.userId);
+        if (
+          item.accessLevel !== "private" &&
+          recipients.includes(grant.contactId)
+        ) {
+          continue;
+        }
+        const row = await ctx.db
+          .query("vault_item_recipient_keys")
+          .withIndex("by_item_contact", (q) =>
+            q.eq("itemId", item._id).eq("contactId", grant.contactId),
+          )
+          .first();
+        if (row) await ctx.db.delete(row._id);
+      }
+      await ctx.db.delete(grant._id);
+    }
+    return grants.length;
   },
 });

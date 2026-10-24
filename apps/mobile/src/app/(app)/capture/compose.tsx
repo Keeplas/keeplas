@@ -12,6 +12,7 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavAction, NavBar } from "@/components/nav-bar";
@@ -21,7 +22,7 @@ import { BottomSheet } from "@/components/sheet";
 import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { ContactKeyBlocked } from "@/crypto/contact-keys";
-import { type VaultCategory } from "@/crypto/item-meta";
+import { INBOX } from "@/crypto/item-meta";
 import { PermissionSheet } from "@/features/capture/add-sheet";
 import { captureDepth } from "@/features/capture/capture-depth";
 import { draftStore, useDraft } from "@/features/capture/draft-store";
@@ -37,10 +38,13 @@ import {
 } from "@/features/capture/media";
 import type { CaptureFile } from "@/features/capture/seal";
 import { useShowSecuring } from "@/features/capture/securing-sheet";
-import { GROUP_CATEGORY } from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
+import {
+  CategorySheet,
+  useCategoryLabel,
+} from "@/features/vault/category-sheet";
 import { itemVisual } from "@/features/vault/item-visual";
-import { useEveryoneRecipients } from "@/features/vault/use-move-to-folder";
+import { useEveryoneRecipients } from "@/features/vault/use-recipients";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatDuration } from "@/lib/format";
 import { NoteEditor } from "@/features/notes/note-editor";
@@ -48,8 +52,6 @@ import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, singleLine, type } from "@/theme";
-
-const CATEGORIES: VaultCategory[] = Object.values(GROUP_CATEGORY);
 
 const KIND_ICON = {
   document: "document",
@@ -63,7 +65,7 @@ function IconTileBox({ icon }: { icon: IconName }) {
   return <IconTile icon={icon} size={44} background={colors["bg.info"]} />;
 }
 
-type Sheet = "category" | "icon" | "item" | null;
+type Sheet = "category" | "access" | "icon" | "item" | null;
 
 /** M07-7 / M07-9 New note and M07-8 Review capture, sealed for the outbox. */
 export default function ComposeCapture() {
@@ -72,10 +74,16 @@ export default function ComposeCapture() {
   const showSecuring = useShowSecuring();
   const { t } = useI18n();
   const { colors } = useTheme();
+  const categoryLabel = useCategoryLabel();
   const draft = useDraft();
+  const filedAs = {
+    category: draft.category ?? INBOX,
+    categoryId: draft.categoryId,
+  };
   const { capture } = useOutbox();
   const { items, itemKey } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
+  const contacts = useQuery(api.trusted_contacts.getContacts);
   const everyone = useEveryoneRecipients();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [mode, setMode] = useState<"new" | "existing">("new");
@@ -92,7 +100,22 @@ export default function ComposeCapture() {
   const hasFiles = draft.files.length + draft.pages.length > 0;
   const existing = mode === "existing" && hasFiles;
 
-  const access = t("capture.allContacts");
+  const chosen = (contacts ?? []).filter((contact) =>
+    draft.contactIds?.includes(contact._id),
+  );
+  const access =
+    chosen.length === 0
+      ? t("capture.allContacts")
+      : chosen.length === 1
+        ? chosen[0].name
+        : t("item.sharedMany", { name: chosen[0].name, n: chosen.length - 1 });
+
+  function toggleContact(contactId: string, checked: boolean) {
+    const next = (draft.contactIds ?? []).filter((id) => id !== contactId);
+    if (checked) next.push(contactId);
+    // Nobody picked: the item is for every trusted contact.
+    draftStore.update({ contactIds: next.length ? next : undefined });
+  }
 
   const pickable = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -154,9 +177,14 @@ export default function ComposeCapture() {
               : t("capture.untitled")),
         note: existing ? "" : draft.note,
         category: draft.category,
+        categoryId: draft.categoryId,
         icon: draft.icon,
-        folderId: existing ? undefined : draft.folderId,
-        share: existing ? undefined : await everyone(),
+        share: existing
+          ? undefined
+          : {
+              ...(await everyone(draft.contactIds)),
+              contactIds: draft.contactIds,
+            },
         attachTo: existing ? await attachTarget() : undefined,
         handoffId: draft.handoffId,
         files,
@@ -229,13 +257,14 @@ export default function ComposeCapture() {
         {
           icon: "document",
           label: t("capture.categoryLabel"),
-          value: t(`capture.category.${draft.category ?? "inbox"}`),
+          value: categoryLabel(filedAs),
           onPress: () => setSheet("category"),
         },
         {
           icon: "lock",
           label: t("capture.accessLabel"),
           value: access,
+          onPress: () => setSheet("access"),
         },
         {
           icon: draft.icon ?? "flash",
@@ -287,27 +316,47 @@ export default function ComposeCapture() {
 
   const sheets = (
     <>
-      <BottomSheet
+      <CategorySheet
         visible={sheet === "category"}
+        value={filedAs}
+        onChange={({ category, categoryId }) =>
+          draftStore.update({ category, categoryId })
+        }
         onDismiss={() => setSheet(null)}
-        title={t("capture.categoryLabel")}
+      />
+
+      <BottomSheet
+        visible={sheet === "access"}
+        onDismiss={() => setSheet(null)}
+        title={t("item.shareTitle")}
       >
-        {CATEGORIES.map((category) => (
-          <ListRow
-            key={category}
-            icon="document"
-            title={t(`capture.category.${category}`)}
-            trailing={
-              (draft.category ?? "inbox") === category ? (
-                <Icon name="check" size={18} color="status.active" />
-              ) : undefined
+        <Text variant="body-sm" color="text.muted">
+          {t("item.shareBody")}
+        </Text>
+        <ListRow
+          icon="people"
+          title={t("capture.allContacts")}
+          trailing={
+            draft.contactIds ? undefined : (
+              <Icon name="check" size={18} color="status.active" />
+            )
+          }
+          onPress={() => draftStore.update({ contactIds: undefined })}
+        />
+        {(contacts ?? []).map((contact) => (
+          <Checkbox
+            key={contact._id}
+            checked={draft.contactIds?.includes(contact._id) ?? false}
+            onChange={(checked) => toggleContact(contact._id, checked)}
+            label={contact.name}
+            description={
+              contact.invitationStatus === "accepted"
+                ? undefined
+                : t(`people.status.${contact.invitationStatus}`)
             }
-            onPress={() => {
-              draftStore.update({ category });
-              setSheet(null);
-            }}
           />
         ))}
+        <Button label={t("common.done")} onPress={() => setSheet(null)} />
       </BottomSheet>
 
       <BottomSheet
@@ -343,7 +392,7 @@ export default function ComposeCapture() {
             key={item.id}
             icon={itemVisual(item).icon}
             title={item.title ?? t("item.decrypting")}
-            description={t(`capture.category.${item.category}`)}
+            description={categoryLabel(item)}
             trailing={
               item.id === targetId ? (
                 <Icon name="check" size={18} color="status.active" />
@@ -480,12 +529,10 @@ export default function ComposeCapture() {
             },
           ]}
         />
-        {select(
-          t("capture.categoryLabel"),
-          t(`capture.category.${draft.category ?? "inbox"}`),
-          () => setSheet("category"),
+        {select(t("capture.categoryLabel"), categoryLabel(filedAs), () =>
+          setSheet("category"),
         )}
-        {select(t("capture.whoCanSee"), access)}
+        {select(t("capture.whoCanSee"), access, () => setSheet("access"))}
         <Callout icon="shield-check" text={t("capture.neverSees")} />
         {sheets}
       </Screen>
@@ -721,9 +768,7 @@ export default function ComposeCapture() {
               icon={target ? itemVisual(target).icon : "search"}
               title={target?.title ?? t("capture.chooseItem")}
               description={
-                target
-                  ? t(`capture.category.${target.category}`)
-                  : t("capture.chooseItemBody")
+                target ? categoryLabel(target) : t("capture.chooseItemBody")
               }
               onPress={() => setSheet("item")}
             />

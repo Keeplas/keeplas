@@ -18,8 +18,7 @@ import { Checkbox } from "@/components/controls";
 import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { wrapDek } from "@keeplas/crypto/kem";
-import { encryptText } from "@/crypto/envelope";
-import { itemMetaJson, type VaultCategory } from "@/crypto/item-meta";
+import { type CategoryChoice } from "@/crypto/item-meta";
 import {
   AttachmentPreview,
   PhotoGallery,
@@ -29,14 +28,18 @@ import { useDecryptedAttachments } from "@/features/vault/use-decrypted-attachme
 import {
   useEveryoneRecipients,
   useWrapForContacts,
-} from "@/features/vault/use-move-to-folder";
+} from "@/features/vault/use-recipients";
 import {
   useOpenedItem,
   type Attachment,
 } from "@/features/vault/use-opened-item";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes, formatDate, formatDuration } from "@/lib/format";
-import { GROUP_CATEGORY } from "@/features/home/vault-groups";
+import {
+  CategorySheet,
+  useCategoryLabel,
+  useRecategorize,
+} from "@/features/vault/category-sheet";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
@@ -61,11 +64,13 @@ export default function ItemDetails() {
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
   const { t, language } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { lock } = useVault();
   const { raw, opened, failure, retry: reopen } = useOpenedItem(itemId);
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const contacts = useQuery(api.trusted_contacts.getContacts);
-  const { folders, items } = useVaultData();
+  const { items } = useVaultData();
+  const recategorizeItem = useRecategorize();
   const { colors } = useTheme();
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
@@ -89,7 +94,6 @@ export default function ItemDetails() {
   const others = attachments.filter(
     (attachment) => attachment.kind !== "image",
   );
-  const folder = folders?.find((candidate) => candidate.id === raw?.folderId);
 
   const access = useMemo(() => {
     if (
@@ -104,7 +108,6 @@ export default function ItemDetails() {
       );
       if (contact?.name) names.add(contact.name);
     }
-    for (const grant of folder?.grants ?? []) names.add(grant.contactName);
     const list = [...names];
     if (list.length === 0) return t("item.onlyYou");
     return list.length === 1
@@ -115,7 +118,6 @@ export default function ItemDetails() {
     raw?.recipientMode,
     raw?.sharedWithContacts,
     contacts,
-    folder,
     t,
   ]);
 
@@ -138,13 +140,8 @@ export default function ItemDetails() {
     );
   }, [file, stateOf, t]);
 
-  const throughFolder = new Set(
-    (folder?.grants ?? []).map((grant) => grant.contactId),
-  );
   const shareable = (contacts ?? []).filter(
-    (contact) =>
-      contact.invitationStatus === "accepted" &&
-      !throughFolder.has(contact._id),
+    (contact) => contact.invitationStatus === "accepted",
   );
 
   function share() {
@@ -175,10 +172,7 @@ export default function ItemDetails() {
           sharedWithContacts: direct,
           recipientMode: "explicit",
           accessLevel: "trusted_only",
-          recipientKeys: await wrapFor(opened.key, [
-            ...direct,
-            ...throughFolder,
-          ]),
+          recipientKeys: await wrapFor(opened.key, direct),
           pendingRecipients: [],
         });
       } else {
@@ -278,16 +272,9 @@ export default function ItemDetails() {
     meta: attachment,
     state: stateOf(attachment.id),
   });
-  async function recategorize(category: VaultCategory) {
-    setSheet(null);
-    if (!opened || category === opened.category) return;
-    await updateItem({
-      itemId,
-      encryptedMeta: await encryptText(
-        itemMetaJson(category, opened.icon),
-        opened.key,
-      ),
-    }).catch(() =>
+  async function recategorize(choice: CategoryChoice) {
+    if (!raw || !opened) return;
+    await recategorizeItem(raw, opened, choice).catch(() =>
       toast({ variant: "error", title: t("common.genericError") }),
     );
   }
@@ -390,18 +377,7 @@ export default function ItemDetails() {
         <Text variant="body-sm" color="text.muted">
           {t("item.shareBody")}
         </Text>
-        {(folder?.grants ?? []).map((grant) => (
-          <Checkbox
-            key={grant.grantId}
-            checked
-            disabled
-            onChange={() => undefined}
-            label={grant.contactName}
-            description={t("item.throughFolder", {
-              name: folder?.name ?? t("folders.title"),
-            })}
-          />
-        ))}
+
         {shareable.map((contact) => (
           <Checkbox
             key={contact._id}
@@ -410,7 +386,7 @@ export default function ItemDetails() {
             label={contact.name}
           />
         ))}
-        {shareable.length === 0 && !folder?.grants.length ? (
+        {shareable.length === 0 ? (
           <Text variant="body-sm" color="text.muted">
             {t("item.shareNobody")}
           </Text>
@@ -433,25 +409,12 @@ export default function ItemDetails() {
     </>
   );
   const categorySheet = (
-    <BottomSheet
+    <CategorySheet
       visible={sheet === "category"}
+      value={opened}
+      onChange={(choice) => void recategorize(choice)}
       onDismiss={() => setSheet(null)}
-      title={t("item.category")}
-    >
-      {Object.values(GROUP_CATEGORY).map((category) => (
-        <ListRow
-          key={category}
-          icon="document"
-          title={t(`capture.category.${category}`)}
-          trailing={
-            opened.category === category ? (
-              <Icon name="check" size={18} color="status.active" />
-            ) : undefined
-          }
-          onPress={() => void recategorize(category)}
-        />
-      ))}
-    </BottomSheet>
+    />
   );
 
   if (!file) {
@@ -504,7 +467,7 @@ export default function ItemDetails() {
             {
               icon: "document",
               label: t("item.category"),
-              value: t(`capture.category.${opened.category}`),
+              value: categoryLabel(opened),
               onPress: () => setSheet("category"),
             },
             {
@@ -612,7 +575,7 @@ export default function ItemDetails() {
           {
             icon: "document",
             label: t("item.category"),
-            value: t(`capture.category.${opened.category}`),
+            value: categoryLabel(opened),
             onPress: () => setSheet("category"),
           },
           {

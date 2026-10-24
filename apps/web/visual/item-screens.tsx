@@ -33,7 +33,7 @@ import { AddFileDialog } from "@/components/vault/add-file-dialog";
 import {
   AccessField,
   Field,
-  FolderField,
+  CategoryField,
 } from "@/components/vault/form-fields";
 import { NoteEditor } from "@/components/vault/note-editor";
 import { ScanView } from "@/components/vault/scan-dialog";
@@ -89,7 +89,6 @@ function Details({ category, access }: { category: string; access: string }) {
             label="Category"
             value={category}
           />
-          <DetailRow icon={ICON_PATHS.folder} label="Folder" value="Family" />
           <DetailRow icon={ICON_PATHS.lock} label="Access" value={access} />
         </>
       }
@@ -238,9 +237,7 @@ const policy = new File(
   "Home insurance policy.pdf",
   { type: "application/pdf" },
 );
-const FOLDERS = [
-  { id: "family" as Id<"folders">, name: "Family", itemCount: 4, grants: [] },
-];
+const CATEGORIES = [{ id: "family" as Id<"vault_categories">, name: "Family" }];
 
 export const addDocument = () => (
   <>
@@ -251,7 +248,7 @@ export const addDocument = () => (
       kind="document"
       initialFiles={[policy]}
       defaultCategory="insurance_policy"
-      folders={FOLDERS}
+      categories={CATEGORIES}
       onSubmit={async () => {}}
     />
   </>
@@ -287,7 +284,6 @@ export const newNote = () => (
         "<p>If something happens to me, our home insurance is with Maple Mutual. The policy is attached below. Call Sarah first: she has the spare keys and knows where the safe box is.</p>" +
         "<ul><li>Call Sarah (555-0198)</li><li>Contact Laura Chen at Maple Mutual to open a claim</li><li>Pay the house account from Maple Bank until things are settled</li></ul>",
       category: "wishes",
-      folderId: FOLDERS[0].id,
       contactIds: [],
     }}
     saved={[
@@ -310,7 +306,7 @@ export const newNote = () => (
         detail: "0:28 · Recorded in this browser",
       },
     ]}
-    folders={FOLDERS}
+    categories={CATEGORIES}
     saving={null}
     onSave={noop}
     onCancel={noop}
@@ -350,12 +346,12 @@ export const recordVoice = () => (
               )}
             </Field>
             <div className="grid gap-[16px] sm:grid-cols-2">
-              <FolderField
-                value={FOLDERS[0].id}
+              <CategoryField
+                value={{ category: "other", categoryId: CATEGORIES[0].id }}
                 onChange={noop}
-                folders={FOLDERS}
+                categories={CATEGORIES}
               />
-              <AccessField value={[]} onChange={noop} folder={FOLDERS[0]} />
+              <AccessField value={[]} onChange={noop} />
             </div>
           </>
         }

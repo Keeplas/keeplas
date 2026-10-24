@@ -43,16 +43,17 @@ export interface CaptureDraft {
   note: string;
   files: CaptureFile[];
   category?: VaultCategory;
+  categoryId?: string;
   icon?: string;
-  /** Set when the capture starts from a folder screen. */
-  folderId?: string;
   /**
-   * New items are for every trusted contact: the DEK is wrapped to each
-   * verified key; contacts without a published key wait in `pending`.
+   * New items are for every trusted contact unless `contactIds` narrows
+   * them: the DEK is wrapped to each verified key; contacts without a
+   * published key wait in `pending`.
    */
   share?: {
     recipients: { contactId: string; publicKey: string }[];
     pending: string[];
+    contactIds?: string[];
   };
   attachTo?: { itemId: string; dek: CryptoKey; ownerWrappedDek: string };
   /** W06-7: completes the browser's handoff when the item is created. */
@@ -80,6 +81,9 @@ async function shareFields(
   );
   return {
     accessLevel: "trusted_only",
+    ...(share.contactIds
+      ? { recipientMode: "explicit", sharedWithContacts: share.contactIds }
+      : {}),
     ...(recipientKeys.length ? { recipientKeys } : {}),
     ...(share.pending.length ? { pendingRecipients: share.pending } : {}),
   };
@@ -97,11 +101,13 @@ export async function sealCapture(
       draft.attachTo?.ownerWrappedDek ?? (await wrapDek(dek, ownerPublicKey)),
     encryptedTitle: await encryptText(draft.title.trim(), dek),
     encryptedMeta: await encryptText(
-      itemMetaJson(draft.category ?? INBOX, draft.icon),
+      itemMetaJson(
+        { category: draft.category ?? INBOX, categoryId: draft.categoryId },
+        draft.icon,
+      ),
       dek,
     ),
     encryptedContent: await encryptText(noteToHtml(draft.note), dek),
-    ...(draft.folderId && !draft.attachTo ? { folderId: draft.folderId } : {}),
     ...(draft.share && !draft.attachTo
       ? await shareFields(dek, draft.share)
       : {}),

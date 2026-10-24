@@ -22,6 +22,14 @@ export const categoryValidator = v.union(
 // TEMPORARY: "public" and "emergency_only" are kept here only so the schema
 // can accept legacy rows during the one-shot migrateAccessLevels run. Narrow
 // back to ("private" | "trusted_only") once the migration has executed.
+/** A built-in category group (lib/vault_groups.ts GROUP_CATEGORIES). */
+export const vaultGroupValidator = v.union(
+  v.literal("documents"),
+  v.literal("accounts"),
+  v.literal("instructions"),
+  v.literal("other"),
+);
+
 export const accessLevelValidator = v.union(
   v.literal("private"),
   v.literal("trusted_only"),

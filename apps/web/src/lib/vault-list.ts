@@ -18,7 +18,8 @@ export interface VaultItemSummary {
   kind: ContentKind;
   icon?: string;
   files: Omit<FileMeta, "v">[];
-  folderId?: Id<"folders">;
+  /** User-made category (vault_categories), from the sealed metadata. */
+  categoryId?: string;
   sharing: ItemSharing;
   createdAt: number;
   updatedAt: number;
@@ -70,23 +71,20 @@ export const extensionOf = (name: string) =>
 export interface AccessPeople {
   contactNames: Map<string, string>;
   groupMembers: Map<string, Id<"trusted_contacts">[]>;
-  /** Contacts with access through the item's folder. */
-  folderGrantees: Id<"trusted_contacts">[];
   /** Every live trusted contact ("default" mode shares with all of them). */
   allContacts: Id<"trusted_contacts">[];
 }
 
 /**
  * The people who can open the item once released: its own recipients (one
- * by one, by group, or every trusted contact for v1 "default" shares) and
- * the grantees of its folder. Revoked contacts are not in the maps and drop
- * out.
+ * by one, by group, or every trusted contact for v1 "default" shares).
+ * Revoked contacts are not in the maps and drop out.
  */
 export function sharedWith(
   sharing: ItemSharing,
   people: AccessPeople,
 ): Id<"trusted_contacts">[] {
-  const ids = new Set<Id<"trusted_contacts">>(people.folderGrantees);
+  const ids = new Set<Id<"trusted_contacts">>();
   if (sharing.accessLevel !== "private") {
     if (sharing.recipientMode === "default") {
       people.allContacts.forEach((id) => ids.add(id));

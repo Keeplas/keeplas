@@ -23,13 +23,13 @@ export interface ItemAccess {
 
 /**
  * How an item reads on the vault screens: its title, the "PDF · 2.4 MB"
- * detail, the Category column, its folder and who it is shared with.
+ * detail, the Category column and who it is shared with.
  */
 export function useItemLabels() {
   const t = useTranslations("vaultList");
   const categoryLabel = useCategoryLabel();
   const locale = useLocale();
-  const { folders } = useVaultData();
+  const { categories } = useVaultData();
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
 
@@ -44,24 +44,12 @@ export function useItemLabels() {
       ]),
     );
     const allContacts = (contacts ?? []).map((contact) => contact._id);
-    const folderOf = (item: VaultItemSummary) =>
-      folders?.find((folder) => folder.id === item.folderId);
 
-    function people(item: VaultItemSummary): AccessPeople {
-      return {
-        contactNames,
-        groupMembers,
-        allContacts,
-        folderGrantees: (folderOf(item)?.grants ?? []).map(
-          (grant) => grant.contactId,
-        ),
-      };
-    }
+    const people: AccessPeople = { contactNames, groupMembers, allContacts };
 
     return {
-      /** Contacts, groups and folders loaded: access labels are final. */
-      ready:
-        contacts !== undefined && groups !== undefined && folders !== undefined,
+      /** Contacts and groups loaded: access labels are final. */
+      ready: contacts !== undefined && groups !== undefined,
 
       title(item: VaultItemSummary): string {
         if (item.title === null) return t("locked");
@@ -104,31 +92,26 @@ export function useItemLabels() {
       },
 
       category(item: VaultItemSummary): string {
+        const custom =
+          item.categoryId &&
+          categories?.find((category) => category.id === item.categoryId);
+        if (custom) return custom.name ?? t("locked");
         const label = categoryLabelKey(item);
         return label.type === "category"
           ? categoryLabel(label.key)
           : t(`lists.${label.key}`);
       },
 
-      folder(item: VaultItemSummary): string | null {
-        if (!item.folderId) return null;
-        return folderOf(item)?.name ?? null;
-      },
-
       /**
-       * Who the item itself is shared with (one by one, by group, or every
-       * trusted contact), without its folder's grantees: what the sharing
-       * pickers start from.
+       * Who the item is shared with (one by one, by group, or every trusted
+       * contact): what the sharing pickers start from.
        */
       recipients(item: VaultItemSummary): Id<"trusted_contacts">[] {
-        return sharedWith(item.sharing, {
-          ...people(item),
-          folderGrantees: [],
-        });
+        return sharedWith(item.sharing, people);
       },
 
       access(item: VaultItemSummary): ItemAccess {
-        const contactIds = sharedWith(item.sharing, people(item));
+        const contactIds = sharedWith(item.sharing, people);
         if (contactIds.length === 0) {
           return { icon: "lock", label: t("access.onlyYou"), contactIds };
         }
@@ -146,5 +129,5 @@ export function useItemLabels() {
         };
       },
     };
-  }, [t, categoryLabel, locale, folders, contacts, groups]);
+  }, [t, categoryLabel, locale, categories, contacts, groups]);
 }

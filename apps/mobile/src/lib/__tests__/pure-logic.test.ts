@@ -1,6 +1,7 @@
 import type { VaultCategory } from "@/crypto/item-meta";
 import {
   bucketOf,
+  shownFiling,
   contentKind,
   greetingKey,
   groupOf,
@@ -292,6 +293,38 @@ describe("home groups", () => {
       voice: 0,
       notes: 0,
     });
+  });
+
+  it("lists an item of a custom category by its type only", () => {
+    const custom = { ...item("inbox", "voice"), categoryId: "c1" };
+    expect(bucketOf(custom)).toBe("voice");
+    expect(inVaultList({ ...item("other"), categoryId: "c1" }, "other")).toBe(
+      false,
+    );
+    expect(listCounts([custom])).toMatchObject({ all: 1, voice: 1, inbox: 0 });
+  });
+
+  it("shows items of a deleted category in the inbox", () => {
+    const filed = (category: string, categoryId?: string) => ({
+      category,
+      categoryId,
+    });
+    expect(shownFiling(filed("credential"), ["accounts"], [])).toEqual(
+      filed("inbox"),
+    );
+    expect(shownFiling(filed("wishes"), ["accounts"], [])).toEqual(
+      filed("wishes"),
+    );
+    expect(shownFiling(filed("other", "gone"), [], ["c1"])).toEqual(
+      filed("inbox"),
+    );
+    expect(shownFiling(filed("other", "c1"), ["other"], ["c1"])).toEqual(
+      filed("other", "c1"),
+    );
+    // Categories not loaded yet: keep the item where it is.
+    expect(shownFiling(filed("other", "c1"), [], undefined)).toEqual(
+      filed("other", "c1"),
+    );
   });
 
   it("accepts only known vault list keys from a route", () => {

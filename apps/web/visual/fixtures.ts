@@ -2,7 +2,6 @@ import type { DevicesViewProps } from "@/app/(dashboard)/devices/devices-view";
 import type { HubViewProps } from "@/app/(dashboard)/hub/hub-view";
 import type { RecoveryCenterViewProps } from "@/app/(dashboard)/settings/recovery/recovery-center-view";
 import type { SettingsViewProps } from "@/app/(dashboard)/settings/settings-view";
-import type { SharedFolder } from "@/app/(dashboard)/shared-with-me/shared-with-me-view";
 import type {
   VaultListRow,
   VaultListViewProps,
@@ -45,42 +44,6 @@ export const hub: HubViewProps = {
   onAdd: noop,
   onScan: noop,
 };
-
-export const sharedFolders: SharedFolder[] = [
-  {
-    id: "family",
-    name: "Family documents",
-    ownerName: "Alex",
-    available: true,
-    files: [
-      {
-        id: "will",
-        title: "Will",
-        detail: "PDF · 1.2 MB",
-        updatedAt: new Date(2026, 0, 12).getTime(),
-      },
-      {
-        id: "medical",
-        title: "Medical directives",
-        detail: "DOCX · 850 KB",
-        updatedAt: new Date(2026, 1, 3).getTime(),
-      },
-      {
-        id: "financial",
-        title: "Financial information",
-        detail: "XLSX · 520 KB",
-        updatedAt: new Date(2026, 1, 18).getTime(),
-      },
-    ],
-  },
-  {
-    id: "letters",
-    name: "Letters",
-    ownerName: "Alex",
-    available: false,
-    files: [],
-  },
-];
 
 export const recovery: RecoveryCenterViewProps = {
   identifier: "+1 415 555 0123",
@@ -184,7 +147,6 @@ const row = (
   detail: string,
   style: VaultListRow["style"],
   category: string,
-  folder: string,
   access: VaultListRow["access"],
   updated: string,
 ): VaultListRow => ({
@@ -193,7 +155,6 @@ const row = (
   detail,
   style,
   category,
-  folder,
   access,
   updated,
 });
@@ -223,7 +184,6 @@ export const vaultList: VaultListViewProps = {
       "PDF · 3 pages · 2.4 MB",
       "documents",
       "Insurance",
-      "Family",
       onlyYou,
       "Today",
     ),
@@ -233,7 +193,6 @@ export const vaultList: VaultListViewProps = {
       "PDF · 12 pages · 4.1 MB",
       "documents",
       "Legal",
-      "Family",
       people(2),
       "2 days ago",
     ),
@@ -243,7 +202,6 @@ export const vaultList: VaultListViewProps = {
       "Note · 3 attachments",
       "notes",
       "Instructions",
-      "Family",
       people(3),
       "4 days ago",
     ),
@@ -253,7 +211,6 @@ export const vaultList: VaultListViewProps = {
       "Account · Maple Bank",
       "accounts",
       "Accounts",
-      "Home",
       onlyYou,
       "4 days ago",
     ),
@@ -263,7 +220,6 @@ export const vaultList: VaultListViewProps = {
       "Document · DOCX · 220 KB",
       "instructions",
       "Instructions",
-      "Health",
       sarah,
       "1 week ago",
     ),
@@ -273,7 +229,6 @@ export const vaultList: VaultListViewProps = {
       "Photo · 1.1 MB",
       "photos",
       "Photos",
-      "Home",
       sarah,
       "2 weeks ago",
     ),
@@ -283,7 +238,6 @@ export const vaultList: VaultListViewProps = {
       "Voice note · 0:28",
       "voice",
       "Voice notes",
-      "Family",
       onlyYou,
       "3 weeks ago",
     ),
@@ -293,7 +247,6 @@ export const vaultList: VaultListViewProps = {
       "PDF · 5 pages · 1.8 MB",
       "documents",
       "Property",
-      "Home",
       people(2),
       "1 month ago",
     ),

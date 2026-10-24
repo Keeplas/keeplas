@@ -184,7 +184,6 @@ describe("capture sealing + outbox upload", () => {
         title: "Family plan",
         note: "",
         files: [],
-        folderId: "folder1",
         share: {
           recipients: [
             {
@@ -215,7 +214,6 @@ describe("capture sealing + outbox upload", () => {
 
     const [args] = server.created;
     expect(args).toMatchObject({
-      folderId: "folder1",
       accessLevel: "trusted_only",
       recipientMode: "default",
       pendingRecipients: ["lea"],
@@ -249,6 +247,54 @@ describe("capture sealing + outbox upload", () => {
     expect(sealed.item.accessLevel).toBe("trusted_only");
     expect(sealed.item.recipientKeys).toBeUndefined();
     expect(sealed.item.pendingRecipients).toBeUndefined();
+  });
+
+  it("shares a new capture with the chosen contacts only", async () => {
+    const owner = generateRecipientKeyPair();
+    const marie = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e5",
+      {
+        title: "Car papers",
+        note: "",
+        files: [],
+        share: {
+          recipients: [
+            {
+              contactId: "marie",
+              publicKey: serializePublicKey(marie.publicKey),
+            },
+          ],
+          pending: ["lea"],
+          contactIds: ["marie", "lea"],
+        },
+      },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    const server = fakeServer();
+    await uploadEntry(
+      {
+        id: "e5",
+        userId: "u1",
+        createdAt: 1,
+        status: "waiting",
+        attempts: 0,
+        ...sealed,
+      },
+      memoryStore(),
+      server.deps,
+    );
+
+    expect(server.created[0]).toMatchObject({
+      accessLevel: "trusted_only",
+      recipientMode: "explicit",
+      sharedWithContacts: ["marie", "lea"],
+      pendingRecipients: ["lea"],
+    });
+    expect(
+      server.created[0].recipientKeys?.map((key) => key.contactId),
+    ).toEqual(["marie"]);
   });
 
   it("adds files to an existing item with that item's key", async () => {
@@ -332,10 +378,9 @@ describe("capture sealing + outbox upload", () => {
     expect(server.created[0].captureHandoffId).toBe("handoff1");
   });
 
-  it("adds no folder or extra keys when none is chosen", async () => {
+  it("adds no extra keys when nobody is chosen", async () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);
-    expect(entry.item.folderId).toBeUndefined();
     expect(entry.item.accessLevel).toBeUndefined();
     expect(entry.item.recipientKeys).toBeUndefined();
     expect(entry.item.captureHandoffId).toBeUndefined();

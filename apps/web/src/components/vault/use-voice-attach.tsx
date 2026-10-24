@@ -31,7 +31,6 @@ export function useVoiceAttach() {
       <VoiceDialog
         open={open}
         onOpenChange={(next) => !next && settle(null)}
-        folders={[]}
         onAttach={settle}
       />
     ),

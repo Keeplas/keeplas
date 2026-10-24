@@ -11,7 +11,29 @@ export interface ItemMeta {
   v: 1;
   category: VaultCategory;
   icon?: string;
+  /**
+   * User-made category (vault_categories). `category` then holds the
+   * built-in fallback ("other").
+   */
+  categoryId?: string;
 }
+
+/** Where an item is filed: a built-in category, or a user-made one. */
+export type CategoryChoice = Pick<ItemMeta, "category" | "categoryId">;
+
+/** Built-in category of items filed under a user-made category. */
+export const CUSTOM_FALLBACK: VaultCategory = "other";
+
+const CUSTOM = "custom:";
+
+/** One string per choice, for a select's value (`choiceOf` reverses it). */
+export const choiceKey = ({ category, categoryId }: CategoryChoice): string =>
+  categoryId ? `${CUSTOM}${categoryId}` : category;
+
+export const choiceOf = (key: string): CategoryChoice =>
+  key.startsWith(CUSTOM)
+    ? { category: CUSTOM_FALLBACK, categoryId: key.slice(CUSTOM.length) }
+    : { category: key as VaultCategory };
 
 export interface FileMeta {
   v: 1;
@@ -22,11 +44,16 @@ export interface FileMeta {
   durationSec?: number;
 }
 
-export const itemMetaJson = (category: VaultCategory, icon?: string): string =>
+export const itemMetaJson = (
+  category: VaultCategory,
+  icon?: string,
+  categoryId?: string,
+): string =>
   JSON.stringify({
     v: 1,
     category,
     ...(icon ? { icon } : {}),
+    ...(categoryId ? { categoryId } : {}),
   } satisfies ItemMeta);
 
 export const fileMetaJson = (meta: Omit<FileMeta, "v"> | FileMeta): string =>

@@ -8,11 +8,9 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
-import { SectionHeader } from "@/components/rows";
 import { Screen } from "@/components/screen";
-import { Callout, IconTile, ListRow, StatusChip } from "@/components/surfaces";
+import { Callout, IconTile, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { useVaultData } from "@/features/vault/vault-data";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -23,7 +21,7 @@ const AVATAR_COLORS = Object.values(palette.category);
 
 /**
  * M06-1 Trusted people: every contact is a trust contact. They help recover
- * the account, confirm a death, and receive the folders shared with them.
+ * the account, confirm a death, and receive the items shared with them.
  */
 export default function People() {
   const router = useRouter();
@@ -32,7 +30,6 @@ export default function People() {
   const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const revoke = useAuditedMutation(api.trusted_contacts.revokeContact);
   const resend = useAuditedMutation(api.trusted_contacts.resendInvitation);
-  const { folders } = useVaultData();
   const ready = (contacts ?? []).filter(
     (contact) => contact.invitationStatus === "accepted",
   ).length;
@@ -194,27 +191,6 @@ export default function People() {
         onPress={() => router.push("/people/add")}
       />
       <Callout icon="info" text={t("people.replaceNote")} />
-      <SectionHeader title={t("people.sharedFolders")} />
-      {(folders ?? []).map((folder) => (
-        <ListRow
-          key={folder.id}
-          icon="folder"
-          title={folder.name ?? t("folders.title")}
-          description={
-            folder.grants.length
-              ? folder.grants.map((grant) => grant.contactName).join(", ")
-              : t("people.onlyYou")
-          }
-          onPress={() =>
-            router.push({ pathname: "/folder/[id]", params: { id: folder.id } })
-          }
-        />
-      ))}
-      <Button
-        variant="secondary"
-        label={t("folders.new")}
-        onPress={() => router.push("/folder/new")}
-      />
     </Screen>
   );
 }

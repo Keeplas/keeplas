@@ -83,6 +83,7 @@ import type * as totp from "../totp.js";
 import type * as trusted_contacts from "../trusted_contacts.js";
 import type * as users from "../users.js";
 import type * as validators from "../validators.js";
+import type * as vault_categories from "../vault_categories.js";
 import type * as vault_items from "../vault_items.js";
 import type * as vaults from "../vaults.js";
 import type * as webauthn from "../webauthn.js";
@@ -169,6 +170,7 @@ declare const fullApi: ApiFromModules<{
   trusted_contacts: typeof trusted_contacts;
   users: typeof users;
   validators: typeof validators;
+  vault_categories: typeof vault_categories;
   vault_items: typeof vault_items;
   vaults: typeof vaults;
   webauthn: typeof webauthn;

@@ -12,7 +12,6 @@ import { createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { createNotification } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
-import { releasedFolderItems } from "./folders";
 
 /**
  * Run the per-recipient release fan-out for a user. For each active vault
@@ -53,11 +52,6 @@ async function fanOutRelease(
       list.push(item._id);
       perRecipient.set(cid, list);
     }
-  }
-  // Folders shared "after verification" open at release too.
-  for (const [cid, itemIds] of await releasedFolderItems(ctx, userId)) {
-    const merged = new Set([...(perRecipient.get(cid) ?? []), ...itemIds]);
-    perRecipient.set(cid, [...merged]);
   }
 
   const now = Date.now();

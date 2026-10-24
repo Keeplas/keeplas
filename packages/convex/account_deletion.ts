@@ -177,6 +177,7 @@ const SIMPLE_TABLES = [
   "login_otp_codes",
   "auth_session_login_otp",
   "recipient_groups",
+  "vault_categories",
   "life_check_cycles",
   "life_check_configs",
   "notifications",

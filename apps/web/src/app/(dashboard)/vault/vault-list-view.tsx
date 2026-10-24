@@ -26,7 +26,6 @@ export interface VaultListRow {
   detail: string;
   style: ItemStyle;
   category: string;
-  folder: string | null;
   access: { icon: "lock" | "user" | "people"; label: string };
   updated: string;
 }
@@ -65,9 +64,9 @@ const LISTS: VaultListKey[] = [
 
 const SORTS: VaultSort[] = ["updated", "name", "added"];
 
-// Name, Category, Folder, Shared with, Updated, menu (W06-1 cells).
+// Name, Category, Shared with, Updated, menu (W06-1 cells).
 const COLUMNS =
-  "grid grid-cols-[minmax(0,1fr)_190px_150px_150px_104px_20px] items-center px-[20px]";
+  "grid grid-cols-[minmax(0,1fr)_190px_150px_104px_20px] items-center px-[20px]";
 
 const ACCESS_ICON = {
   lock: ICON_PATHS.lock,
@@ -117,16 +116,6 @@ function Row({
         </span>
       </span>
       <Cell icon={<CategoryDot style={row.style} />}>{row.category}</Cell>
-      <Cell
-        icon={
-          <Icon
-            path={ICON_PATHS.folder}
-            className="size-[16px] shrink-0 text-icon-default"
-          />
-        }
-      >
-        {row.folder ?? t("noFolder")}
-      </Cell>
       <Cell
         icon={
           <Icon
@@ -334,7 +323,6 @@ export function VaultListView({
                 >
                   <span>{t("columns.name")}</span>
                   <span>{t("columns.category")}</span>
-                  <span>{t("columns.folder")}</span>
                   <span>{t("columns.sharedWith")}</span>
                   <span>{t(`columns.${sort}`)}</span>
                 </div>

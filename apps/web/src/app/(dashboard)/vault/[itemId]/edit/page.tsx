@@ -18,11 +18,8 @@ import { useParams, useRouter } from "@/lib/navigation";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useItemLabels } from "@/lib/use-item-labels";
-import {
-  sharingFields,
-  useItemSharing,
-  useMoveToFolder,
-} from "@/lib/use-item-sharing";
+import { useVaultData } from "@/lib/vault-data";
+import { sharingFields, useItemSharing } from "@/lib/use-item-sharing";
 import {
   summaryOf,
   useOpenedItem,
@@ -32,7 +29,6 @@ import type { OpenedFile } from "@/lib/use-opened-files";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useUploadQueue } from "@/lib/upload-queue";
 import { getErrorMessage } from "@/lib/utils";
-import { useVaultData } from "@/lib/vault-data";
 import type { VaultItemSummary } from "@/lib/vault-list";
 
 const sameIds = (a: string[], b: string[]) =>
@@ -80,20 +76,19 @@ function EditItem({
   const lists = useTranslations("vaultList");
   const router = useRouter();
   const itemId = raw._id;
-  const { folders } = useVaultData();
   const labels = useItemLabels();
+  const { categories } = useVaultData();
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const { encryptContentWithKey } = useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
-  const moveToFolder = useMoveToFolder();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const { enqueueAttachments } = useUploadQueue();
   const voice = useVoiceAttach();
   // "Scan with phone": the scan is saved as its own item (W06-7).
   const capture = useVaultCapture();
   const [saving, setSaving] = useState(false);
-  // Who it is shared with when the form opened (also through v1 groups),
-  // folder grantees aside: sharing is rewritten only if the owner changes it.
+  // Who it is shared with when the form opened (also through v1 groups):
+  // sharing is rewritten only if the owner changes it.
   const [recipients] = useState(() => labels.recipients(summary));
 
   const saved = useMemo<SavedAttachment[]>(
@@ -112,33 +107,22 @@ function EditItem({
   );
 
   const welcome = raw.isReleaseIntroduction === true;
-  const initialFolder = raw.folderId ?? null;
 
   async function save(values: NoteValues) {
     setSaving(true);
     try {
       const key = opened.key;
-      const folderChanged = values.folderId !== initialFolder;
-      if (folderChanged && !(await moveToFolder(raw, values.folderId))) return;
-
       // Sharing is rewritten only when it changed: v1 group and "every
-      // trusted contact" shares stay as they are otherwise. A folder move
-      // alone is done: moveItem wraps the key to the new folder's grantees.
+      // trusted contact" shares stay as they are otherwise.
       let sharing: Partial<Parameters<typeof updateItem>[0]> = {};
       if (!sameIds(values.contactIds, recipients)) {
-        const grantees = (
-          folders?.find((folder) => folder.id === values.folderId)?.grants ?? []
-        ).map((grant) => grant.contactId);
         const everyone = welcome && values.contactIds.length === 0;
         const wraps = opened.legacy
           ? null
           : await wrap(
-              [
-                ...(everyone
-                  ? (contacts ?? []).map((contact) => contact._id)
-                  : values.contactIds),
-                ...grantees,
-              ],
+              everyone
+                ? (contacts ?? []).map((contact) => contact._id)
+                : values.contactIds,
               key,
             );
         if (!opened.legacy && !wraps) return;
@@ -164,7 +148,7 @@ function EditItem({
           encryptContentWithKey(values.title, key),
           encryptContentWithKey(values.note, key),
           encryptContentWithKey(
-            itemMetaJson(values.category, opened.icon),
+            itemMetaJson(values.category, opened.icon, values.categoryId),
             key,
           ),
         ]);
@@ -210,11 +194,11 @@ function EditItem({
           title: opened.title,
           note: normalizeContentForRichText(opened.note),
           category: opened.category,
-          folderId: initialFolder,
+          categoryId: opened.categoryId,
           contactIds: recipients,
         }}
         saved={saved}
-        folders={folders ?? []}
+        categories={categories ?? []}
         shareable={!opened.legacy}
         saving={saving ? t("saving") : null}
         onSave={(values) => void save(values)}

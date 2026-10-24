@@ -18,7 +18,6 @@ import {
   InfoCallout,
   Loader,
   RichTextEditor,
-  toast,
   useConfirm,
 } from "@keeplas/ui";
 import { StateMessage } from "@/components/state-message";
@@ -47,29 +46,28 @@ import { usePdfPages } from "@/components/vault/preview/use-pdf-pages";
 import { formatDate, formatDayTime } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useLocale, useTranslations } from "@/lib/i18n";
-import { itemMetaJson } from "@/lib/item-meta";
+import {
+  choiceKey,
+  choiceOf,
+  CUSTOM_FALLBACK,
+  itemMetaJson,
+  type CategoryChoice,
+} from "@/lib/item-meta";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useParams, useRouter } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useSortedCategories, useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedFiles } from "@/lib/use-decrypted-files";
 import { useItemLabels } from "@/lib/use-item-labels";
-import {
-  sharingFields,
-  useItemSharing,
-  useMoveToFolder,
-} from "@/lib/use-item-sharing";
+import { sharingFields, useItemSharing } from "@/lib/use-item-sharing";
 import { summaryOf, useOpenedItem } from "@/lib/use-opened-item";
 import type { OpenedFile } from "@/lib/use-opened-files";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useVaultData } from "@/lib/vault-data";
 import { extensionOf } from "@/lib/vault-list";
-import type { VaultCategory } from "@/lib/vault-categories";
 import { ItemLayout } from "./item-layout";
 
 type ContactId = Id<"trusted_contacts">;
-
-const NO_FOLDER = "none";
 
 /** W06-2 / W06-8 / W06-9: an item, its preview and its details. */
 export default function VaultItemPage() {
@@ -83,13 +81,12 @@ export default function VaultItemPage() {
   const categoryLabel = useCategoryLabel();
   const categories = useSortedCategories();
   const labels = useItemLabels();
-  const { folders } = useVaultData();
+  const { categories: custom } = useVaultData();
   const { raw, opened, files, failed } = useOpenedItem(itemId);
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const { decryptContent, decryptContentWithKey, encryptContentWithKey } =
     useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
-  const moveToFolder = useMoveToFolder();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const unarchiveItem = useAuditedMutation(api.vault_items.unarchiveItem);
@@ -190,11 +187,6 @@ export default function VaultItemPage() {
   }
 
   const archived = raw.status === "archived";
-  const folder = folders?.find((candidate) => candidate.id === raw.folderId);
-  const grantees = (folder?.grants ?? []).map((grant) => ({
-    contactId: grant.contactId,
-    contactName: grant.contactName,
-  }));
   const recipients = labels.recipients(summary);
   const list: VaultListKey = bucketOf(summary);
   const access = labels.access(summary);
@@ -209,10 +201,7 @@ export default function VaultItemPage() {
     ) {
       return;
     }
-    const wraps = await wrap(
-      [...contactIds, ...grantees.map((grantee) => grantee.contactId)],
-      opened!.key,
-    );
+    const wraps = await wrap(contactIds, opened!.key);
     if (!wraps) throw new Error("Sharing cancelled");
     await updateItem({
       itemId,
@@ -223,9 +212,9 @@ export default function VaultItemPage() {
     announcePending(wraps);
   }
 
-  async function recategorize(category: VaultCategory) {
-    if (category === opened!.category) return;
-    const meta = itemMetaJson(category, opened!.icon);
+  async function recategorize(choice: CategoryChoice) {
+    if (choiceKey(choice) === choiceKey(opened!)) return;
+    const meta = itemMetaJson(choice.category, opened!.icon, choice.categoryId);
     // The item key: its DEK, or the master key for a legacy item.
     await updateItem({
       itemId,
@@ -540,7 +529,7 @@ export default function VaultItemPage() {
                     <DetailRow
                       icon={ICON_PATHS.document}
                       label={t("details.category")}
-                      value={categoryLabel(opened.category)}
+                      value={labels.category(summary)}
                     />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -548,9 +537,9 @@ export default function VaultItemPage() {
                     className="max-h-[360px] min-w-[220px] overflow-y-auto rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
                   >
                     <DropdownMenuRadioGroup
-                      value={opened.category}
+                      value={choiceKey(summary)}
                       onValueChange={(value) =>
-                        void recategorize(value as VaultCategory)
+                        void recategorize(choiceOf(value))
                       }
                     >
                       {categories.map((category) => (
@@ -562,48 +551,16 @@ export default function VaultItemPage() {
                           {categoryLabel(category.key)}
                         </DropdownMenuRadioItem>
                       ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild disabled={archived}>
-                    <DetailRow
-                      icon={ICON_PATHS.folder}
-                      label={t("details.folder")}
-                      value={labels.folder(summary) ?? lists("noFolder")}
-                    />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="max-h-[360px] min-w-[220px] overflow-y-auto rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
-                  >
-                    <DropdownMenuRadioGroup
-                      value={raw.folderId ?? NO_FOLDER}
-                      onValueChange={(value) =>
-                        void moveToFolder(
-                          raw,
-                          value === NO_FOLDER ? null : (value as Id<"folders">),
-                        ).catch(() =>
-                          toast({
-                            variant: "error",
-                            title: t("details.moveFailed"),
-                          }),
-                        )
-                      }
-                    >
-                      <DropdownMenuRadioItem
-                        value={NO_FOLDER}
-                        className="rounded-sm text-body-sm text-text-primary"
-                      >
-                        {lists("noFolder")}
-                      </DropdownMenuRadioItem>
-                      {(folders ?? []).map((candidate) => (
+                      {(custom ?? []).map((category) => (
                         <DropdownMenuRadioItem
-                          key={candidate.id}
-                          value={candidate.id}
+                          key={category.id}
+                          value={choiceKey({
+                            category: CUSTOM_FALLBACK,
+                            categoryId: category.id,
+                          })}
                           className="rounded-sm text-body-sm text-text-primary"
                         >
-                          {candidate.name ?? t("details.lockedFolder")}
+                          {category.name ?? t("details.lockedCategory")}
                         </DropdownMenuRadioItem>
                       ))}
                     </DropdownMenuRadioGroup>
@@ -625,8 +582,6 @@ export default function VaultItemPage() {
         open={sharing}
         onOpenChange={setSharing}
         initial={recipients}
-        inherited={grantees}
-        folderName={folder?.name ?? undefined}
         onSave={share}
       />
       <HistorySheet
