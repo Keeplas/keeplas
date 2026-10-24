@@ -4,7 +4,8 @@
  * All ciphertext blob I/O MUST go through this module. Direct calls to
  * `ctx.storage.*` outside this file are prohibited so that swapping the
  * underlying provider (e.g. Convex Storage → S3 / GCS) requires changes
- * here only, never in business logic.
+ * here only, never in business logic. `pnpm check:zk` enforces it, and
+ * docs/STORAGE_MIGRATION.md is the plan for that swap.
  *
  * The `StorageRef` type is the opaque handle persisted on `vault_item_files`
  * rows and ferried by the upload client. Today it is a Convex storage id;
@@ -44,11 +45,55 @@ export async function getBlobDownloadUrl(
   return ctx.storage.getUrl(ref);
 }
 
+function blobOwner(ctx: MutationCtx, ref: StorageRef) {
+  return ctx.db
+    .query("storage_blobs")
+    .withIndex("by_storage_ref", (q) => q.eq("storageRef", ref))
+    .unique();
+}
+
+/**
+ * Bind a blob to the account attaching it, on first use. Returns false when
+ * it is bound to another account: a handle is not a secret (a released
+ * contact sees the file rows of the items left to them), so it must never
+ * let someone else attach the blob — and later delete it.
+ */
+export async function claimBlob(
+  ctx: MutationCtx,
+  ref: StorageRef,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const owner = await blobOwner(ctx, ref);
+  if (owner) return owner.userId === userId;
+  await ctx.db.insert("storage_blobs", {
+    storageRef: ref,
+    userId,
+    createdAt: Date.now(),
+  });
+  return true;
+}
+
+/**
+ * Delete one of the account's blobs. Idempotent, as on an object store (a
+ * blob already gone is a no-op), and a blob bound to another account is left
+ * alone: wiping one's own rows never removes someone else's file.
+ */
 export async function deleteBlob(
   ctx: MutationCtx,
   ref: StorageRef,
+  userId: Id<"users">,
 ): Promise<void> {
-  await ctx.storage.delete(ref);
+  const owner = await blobOwner(ctx, ref);
+  if (owner && owner.userId !== userId) return;
+  if (await ctx.db.system.get(ref)) await ctx.storage.delete(ref);
+  if (owner) await ctx.db.delete(owner._id);
+}
+
+/** Delete every stored blob — full deployment wipe only. Returns the count. */
+export async function deleteAllBlobs(ctx: MutationCtx): Promise<number> {
+  const blobs = await ctx.db.system.query("_storage").collect();
+  for (const blob of blobs) await ctx.storage.delete(blob._id);
+  return blobs.length;
 }
 
 /** Exact size of a stored (ciphertext) blob, from Convex's storage table. */

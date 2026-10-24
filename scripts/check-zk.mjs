@@ -6,9 +6,11 @@
  * Two invariants:
  *  1. Vault items must never be created or updated with `accessLevel: "public"`.
  *     Public access would imply unencrypted data on Emergency Card QRs.
- *  2. Convex `ctx.storage.*` calls (and `Id<"_storage">` imports) must only
+ *  2. Convex `ctx.storage.*` calls and any mention of the `_storage` table
+ *     (`Id<"_storage">`, `v.id("_storage")`, system-table reads) must only
  *     appear inside `packages/convex/lib/storage.ts`. The wrapper exists so we
- *     can swap S3 / GCS / R2 without rewriting every domain file.
+ *     can swap S3 / GCS / R2 without rewriting every domain file
+ *     (docs/STORAGE_MIGRATION.md).
  *
  * Exits with code 1 on the first violation, printing path + line number.
  */
@@ -59,9 +61,9 @@ const RULES = [
 		allow: (relPath) => relPath === STORAGE_WRAPPER_REL,
 	},
 	{
-		pattern: /Id<["']_storage["']>/,
+		pattern: /["']_storage["']/,
 		message:
-			"Do not import Id<\"_storage\"> outside packages/convex/lib/storage.ts.",
+			'The "_storage" table belongs to packages/convex/lib/storage.ts — use StorageRef / storageRefValidator.',
 		allow: (relPath) => relPath === STORAGE_WRAPPER_REL,
 	},
 	{

@@ -22,7 +22,7 @@
     "@keeplas/crypto": "workspace:^",
     "@keeplas/export": "workspace:^",
     "@op-engineering/op-sqlite": "^18.2.5",
-    "convex": "^1.40.0",
+    "convex": "^1.48.0",
     "expo": "~57.0.29",
     "expo-asset": "~57.0.20",
     "expo-audio": "~57.0.5",

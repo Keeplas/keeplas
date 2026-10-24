@@ -25,8 +25,9 @@ pnpm format             # Prettier on **/*.{ts,tsx,js,jsx,json,css,md}
 
 # Deploy Convex (prod) — ALWAYS use this, never bare `convex deploy`
 pnpm deploy:convex      # Guarded prod deploy: dry-run preflight refuses an
-                        # empty / mass-index-deleting push before it can wipe
-                        # production (see scripts/check-convex-deploy.mjs).
+                        # empty push, or one deleting any index not listed in
+                        # ALLOW_DELETED_INDEXES=table.index,… (see
+                        # scripts/check-convex-deploy.mjs).
                         # Env comes from Infisical `prod` (/keeplas_app) via
                         # `pnpm with-env`; needs `infisical login` + `npx convex login`
 
@@ -117,8 +118,12 @@ The web app was migrated off Next.js to TanStack Start (Vite). Conventions:
 
 This project uses [Convex](https://convex.dev) as its backend.
 
-When working on Convex code, **always read `packages/convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+When working on Convex code, **always read
+`packages/convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
 
-Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
 
 <!-- convex-ai-end -->
