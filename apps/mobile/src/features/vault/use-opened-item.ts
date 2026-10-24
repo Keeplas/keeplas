@@ -1,39 +1,24 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
-import { decryptText } from "@/crypto/envelope";
+import { unwrapOwnerDek } from "@/crypto/owner-keys";
 import {
-  legacyFileMeta,
-  parseFileMeta,
-  parseItemMeta,
-  type FileMeta,
-  type ItemMeta,
-  type VaultCategory,
-} from "@/crypto/item-meta";
+  openSealedItem,
+  type OpenedItem,
+  type SealedFile,
+  type SealedItem,
+} from "@/features/vault/open-sealed-item";
 import { useVaultData } from "@/features/vault/vault-data";
 import { errorReference } from "@/lib/file-errors";
 
-export type Attachment = FileMeta & {
-  id: Id<"vault_item_files">;
-  iv: string;
-};
-
-export interface OpenedItem {
-  key: CryptoKey;
-  title: string;
-  note: string;
-  category: VaultCategory;
-  categoryId?: string;
-  icon?: string;
-  files: Attachment[];
-}
-
-export function useOpenedItem(itemId: Id<"vault_items">) {
-  const raw = useQuery(api.vault_items.getItem, { itemId });
-  const files = useQuery(api.vault_items.getItemFiles, { itemId });
-  const { itemKey } = useVaultData();
+/** Opens a sealed row once it, its files and its key are known. */
+function useSealedItem<T extends SealedItem>(
+  raw: T | null | undefined,
+  files: readonly SealedFile[] | undefined,
+  keyOf: (raw: T) => Promise<CryptoKey>,
+) {
   const [opened, setOpened] = useState<OpenedItem>();
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState<{
@@ -46,35 +31,8 @@ export function useOpenedItem(itemId: Id<"vault_items">) {
     let alive = true;
     void (async () => {
       try {
-        const key = await itemKey(raw);
-        const [title, note, meta, metas] = await Promise.all([
-          raw.encryptedTitle
-            ? decryptText(raw.encryptedTitle, key)
-            : (raw.title ?? ""),
-          decryptText(raw.encryptedContent, key),
-          raw.encryptedMeta
-            ? decryptText(raw.encryptedMeta, key).then(parseItemMeta)
-            : ({ v: 1, category: raw.category ?? "other" } as ItemMeta),
-          Promise.all(
-            files.map(async (file) => ({
-              ...(file.encryptedMeta
-                ? parseFileMeta(await decryptText(file.encryptedMeta, key))
-                : legacyFileMeta(file)),
-              id: file._id,
-              iv: file.iv,
-            })),
-          ),
-        ]);
-        if (alive)
-          setOpened({
-            key,
-            title,
-            note,
-            category: meta.category,
-            categoryId: meta.categoryId,
-            icon: meta.icon,
-            files: metas,
-          });
+        const item = await openSealedItem(raw, files, await keyOf(raw));
+        if (alive) setOpened(item);
       } catch (error) {
         const reference = errorReference();
         if (__DEV__) console.warn(`[item ${reference}]`, error);
@@ -84,12 +42,46 @@ export function useOpenedItem(itemId: Id<"vault_items">) {
     return () => {
       alive = false;
     };
-  }, [raw, files, itemKey, attempt]);
+  }, [raw, files, keyOf, attempt]);
 
   return {
-    raw,
     opened,
     failure: failed?.attempt === attempt ? failed.reference : undefined,
     retry: () => setAttempt((n) => n + 1),
   };
+}
+
+export function useOpenedItem(itemId: Id<"vault_items">) {
+  const raw = useQuery(api.vault_items.getItem, { itemId });
+  const files = useQuery(api.vault_items.getItemFiles, { itemId });
+  const { itemKey } = useVaultData();
+  return { raw, ...useSealedItem(raw, files, itemKey) };
+}
+
+/**
+ * An item a trusted person released to me (Shared with me): its DEK is
+ * wrapped to my own ML-KEM key. `shared` is null when it was not released
+ * to me.
+ */
+export function useOpenedSharedItem(
+  contactId: Id<"trusted_contacts">,
+  itemId: Id<"vault_items">,
+) {
+  const shared = useQuery(api.memorial.getReleasedItemForMe, {
+    contactId,
+    itemId,
+  });
+  const files = useQuery(api.memorial.getMemorialItemFiles, {
+    contactId,
+    itemId,
+  });
+  const { ownerKeys } = useVaultData();
+  const keyOf = useCallback(
+    async ({ wrappedDek }: { wrappedDek: string | null }) => {
+      if (!wrappedDek) throw new Error("Item is not wrapped to this account");
+      return unwrapOwnerDek(wrappedDek, await ownerKeys());
+    },
+    [ownerKeys],
+  );
+  return { shared, ...useSealedItem(shared?.item, files, keyOf) };
 }

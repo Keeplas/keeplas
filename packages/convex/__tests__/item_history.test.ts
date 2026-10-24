@@ -273,6 +273,41 @@ describe("item archive", () => {
     ).toBe(1);
   });
 
+  it("archives several items at once, only the owner's", async () => {
+    const t = makeT();
+    const { userId, vaultId } = await seedOwner(t);
+    const first = await createItem(t, userId, vaultId);
+    const second = await createItem(t, userId, vaultId);
+    const kept = await createItem(t, userId, vaultId);
+    const owner = asUser(t, userId);
+
+    await owner.mutation(api.vault_items.archiveItems, {
+      itemIds: [first.itemId, second.itemId],
+      _audit: await signedAudit(),
+    });
+
+    const archived = await owner.query(api.vault_items.getArchivedItems, {});
+    expect(archived.map((item) => item._id).sort()).toEqual(
+      [first.itemId, second.itemId].sort(),
+    );
+    expect(
+      (await owner.query(api.vault_items.getItemSummaries, {})).map(
+        (item) => item._id,
+      ),
+    ).toEqual([kept.itemId]);
+    expect(
+      (await t.run((ctx) => ctx.db.get(vaultId)))?.encryptedItemsCount,
+    ).toBe(1);
+
+    const stranger = asUser(t, await seedUser(t));
+    await expect(
+      stranger.mutation(api.vault_items.archiveItems, {
+        itemIds: [kept.itemId],
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Item not found");
+  });
+
   it("counts archives and history in the storage used", async () => {
     const t = makeT();
     const { userId, vaultId } = await seedOwner(t);

@@ -8,6 +8,7 @@ import {
   vaultGroupValidator,
 } from "./validators";
 import { planValidator } from "./lib/plans";
+import { storageRefValidator } from "./lib/storage";
 
 export default defineSchema({
   // Auth tables (managed by @convex-dev/auth)
@@ -20,11 +21,13 @@ export default defineSchema({
   users: defineTable({
     email: v.optional(v.string()),
     name: v.optional(v.string()),
+    // Only read when there is no `avatarStorageId` (a URL typed in before
+    // avatar uploads existed); cleared when an avatar is uploaded.
     avatarUrl: v.optional(v.string()),
-    // Convex storage handle for an uploaded avatar image. Tracked so the
-    // previous blob can be deleted when the avatar is replaced or the account
-    // is wiped; `avatarUrl` holds the resolved serving URL used for display.
-    avatarStorageId: v.optional(v.id("_storage")),
+    // Storage handle of an uploaded avatar image. Its serving URL is resolved
+    // on read (users.viewer), never stored: a stored URL breaks once the blob
+    // moves to another storage provider or deployment.
+    avatarStorageId: v.optional(storageRefValidator),
     phoneNumber: v.optional(v.string()),
     timezone: v.optional(v.string()),
     language: v.optional(v.string()),
@@ -138,12 +141,13 @@ export default defineSchema({
     // Cleared if the phone number is changed afterward.
     phoneNumberVerifiedAt: v.optional(v.number()),
 
-    // Billing tier. Absent = "free". Flipped to "lifetime" only by the Stripe
-    // webhook (`billing.fulfillCheckout`) after a successful one-time payment;
-    // never set client-side. Drives the storage quota (see lib/plans.ts).
+    // Billing tier. Absent = "free". Flipped to "lifetime" only by the
+    // RevenueCat webhook (`billing.fulfillStorePurchase`) after a successful
+    // in-app purchase; never set client-side. Drives the storage quota (see
+    // lib/plans.ts).
     plan: v.optional(planValidator),
-    // Stripe Customer id captured from the completed Checkout session, kept so
-    // future receipts / the customer portal can reuse the same customer.
+    // Legacy: Stripe Customer id of buyers from the former web Checkout. No
+    // longer written; kept so existing rows still validate.
     stripeCustomerId: v.optional(v.string()),
 
     // Back-office role. Absent = a normal product user. "admin" grants access
@@ -153,28 +157,31 @@ export default defineSchema({
   })
     .index("email", ["email"])
     .index("by_last_seen", ["lastSeenAt"])
-    .index("by_phone", ["phoneNumber"])
-    .index("by_stripe_customer", ["stripeCustomerId"]),
+    .index("by_phone", ["phoneNumber"]),
 
   // ═══════════════════════════════════════════════
-  // PAYMENTS (Stripe one-time Checkout)
+  // PAYMENTS (RevenueCat in-app purchases on mobile)
   // ═══════════════════════════════════════════════
 
-  // One row per completed Stripe Checkout session. Serves two purposes:
-  // webhook idempotency (a re-delivered `checkout.session.completed` finds the
-  // existing row by `stripeSessionId` and no-ops) and a billing/receipt
-  // history for the user. The Stripe secret never touches this table.
+  // One row per completed Lifetime purchase. Serves two purposes: webhook
+  // idempotency (a re-delivered event finds the existing row by its store
+  // transaction id and no-ops) and a billing/receipt history for the user.
+  // No provider secret ever touches this table.
   payments: defineTable({
     userId: v.id("users"),
-    stripeSessionId: v.string(),
+    // Legacy: rows from the former Stripe web Checkout. No longer written;
+    // kept so existing rows still validate.
+    stripeSessionId: v.optional(v.string()),
     stripePaymentIntentId: v.optional(v.string()),
+    // App Store / Play transaction id relayed by the RevenueCat webhook.
+    revenueCatTransactionId: v.optional(v.string()),
     amountCents: v.number(),
     currency: v.string(),
     plan: planValidator,
     status: v.literal("paid"),
     createdAt: v.number(),
   })
-    .index("by_session", ["stripeSessionId"])
+    .index("by_revenuecat_transaction", ["revenueCatTransactionId"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════
@@ -740,7 +747,7 @@ export default defineSchema({
     encryptedLinks: v.optional(v.string()),
     files: v.array(
       v.object({
-        storageId: v.id("_storage"),
+        storageId: storageRefValidator,
         iv: v.string(),
         encryptedMeta: v.optional(v.string()),
         sizeBucket: v.optional(v.number()),
@@ -824,7 +831,7 @@ export default defineSchema({
   vault_item_files: defineTable({
     itemId: v.id("vault_items"),
     userId: v.id("users"),
-    storageId: v.id("_storage"),
+    storageId: storageRefValidator,
 
     // Legacy plaintext metadata (F4), read-only until backfilled into
     // `encryptedMeta`; dropped once `countPlaintextMetadata` reaches zero.
@@ -852,6 +859,19 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_item", ["itemId"])
+    .index("by_user", ["userId"]),
+
+  // Owner of each stored blob, bound when it is first attached (to an item or
+  // as an avatar): a handle bound to another account is refused, and only the
+  // owner's deletions remove it (lib/storage.ts claimBlob / deleteBlob). Also
+  // the inventory of live blobs a move off Convex storage walks
+  // (docs/STORAGE_MIGRATION.md).
+  storage_blobs: defineTable({
+    storageRef: storageRefValidator,
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_storage_ref", ["storageRef"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════

@@ -5,7 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { optionalAuth, requireFullAuth } from "./helpers";
-import { deleteBlob, getBlobSize } from "./lib/storage";
+import { deleteBlob } from "./lib/storage";
 
 export const DELETION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 const BATCH = 200;
@@ -114,7 +114,9 @@ export const wipeStep = internalMutation({
       }
     }
     const user = await ctx.db.get(userId);
-    if (user?.avatarStorageId) await deleteBlob(ctx, user.avatarStorageId);
+    if (user?.avatarStorageId) {
+      await deleteBlob(ctx, user.avatarStorageId, userId);
+    }
     if (user) await ctx.db.delete(userId);
   },
 });
@@ -172,6 +174,7 @@ const SIMPLE_TABLES = [
   "social_envelopes",
   "cloud_backup_envelopes",
   "devices",
+  "storage_blobs",
   "totp_secrets",
   "auth_session_totp",
   "login_otp_codes",
@@ -263,7 +266,7 @@ const STEPS: Step[] = [
         .query("vault_item_files")
         .withIndex("by_item", (q) => q.eq("itemId", item._id))
         .collect()) {
-        await deleteBlob(ctx, file.storageId);
+        await deleteBlob(ctx, file.storageId, userId);
         await ctx.db.delete(file._id);
         deleted += 1;
       }
@@ -278,7 +281,7 @@ const STEPS: Step[] = [
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .take(limit);
     for (const file of files) {
-      await deleteBlob(ctx, file.storageId);
+      await deleteBlob(ctx, file.storageId, userId);
       await ctx.db.delete(file._id);
     }
     return files.length;
@@ -291,9 +294,7 @@ const STEPS: Step[] = [
     let deleted = 0;
     for (const version of versions) {
       for (const file of version.files) {
-        if ((await getBlobSize(ctx, file.storageId)) !== null) {
-          await deleteBlob(ctx, file.storageId);
-        }
+        await deleteBlob(ctx, file.storageId, userId);
       }
       await ctx.db.delete(version._id);
       deleted += 1 + version.files.length;

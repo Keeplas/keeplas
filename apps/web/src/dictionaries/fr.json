@@ -611,9 +611,6 @@
       "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
       "popular": "Populaire",
       "currentPlan": "Forfait actuel",
-      "checkoutSuccess": "Paiement reçu — votre forfait Lifetime est en cours d'activation.",
-      "checkoutCancel": "Paiement annulé. Aucun montant n'a été débité.",
-      "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
       "priceSuffix": {
         "forever": "/pour toujours",
@@ -628,7 +625,7 @@
         "lifetime": {
           "name": "À vie",
           "tagline": "Tout ce dont vous avez besoin, pour toujours, en un seul paiement.",
-          "cta": "Obtenir l'accès à vie"
+          "inApp": "Achetez l'offre À vie dans l'app mobile Keeplas : Réglages → Passer à Lifetime."
         }
       },
       "features": {
@@ -743,7 +740,7 @@
           "name": "À vie",
           "summary": "Coffre de 10 Go · Jusqu'à 3 contacts de confiance · Life check"
         },
-        "upgrade": "Passer à l'offre À vie · 199 $",
+        "upgrade": "Passer à l'offre À vie · 99 $",
         "upgradeNote": "Coffre de 10 Go. Paiement unique."
       },
       "preferences": {
@@ -830,7 +827,7 @@
     },
     "categories": {
       "title": "Catégories",
-      "body": "Classez votre coffre à votre façon. Supprimer une catégorie ne supprime jamais ses éléments.",
+      "body": "Classez votre coffre à votre façon. Supprimer une catégorie supprime aussi ses éléments : vous pouvez les restaurer depuis Archives dans l'app Keeplas.",
       "inboxBody": "Là où arrivent les nouveaux éléments. Elle ne peut pas être supprimée.",
       "itemOne": "1 élément",
       "items": "{count} éléments",
@@ -842,7 +839,9 @@
       "delete": "Supprimer",
       "cancel": "Annuler",
       "deleteTitle": "Supprimer {name} ?",
-      "deleteBody": "Ses éléments restent dans votre coffre et passent dans À classer.",
+      "deleteEmptyBody": "Cette catégorie est vide.",
+      "deleteItemsOne": "Son élément sera aussi supprimé. Vous pourrez toujours le restaurer depuis Archives dans l'app Keeplas.",
+      "deleteItems": "Ses {count} éléments seront aussi supprimés. Vous pourrez toujours les restaurer depuis Archives dans l'app Keeplas.",
       "removed": "Catégories supprimées",
       "restore": "Restaurer",
       "failed": "Une erreur est survenue. Réessayez."
@@ -2406,7 +2405,7 @@
       "saving": "Enregistrement…"
     },
     "history": {
-      "title": "Historique des modifications",
+      "title": "Historique",
       "body": "Les versions précédentes de cet élément. En restaurer une conserve aussi la version actuelle ici.",
       "empty": "Aucune modification pour l'instant.",
       "untitled": "Sans titre",

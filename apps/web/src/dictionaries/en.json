@@ -611,9 +611,6 @@
       "description": "Choose the protection level that fits your continuity plan. Both tiers run the same zero-knowledge encryption — only the surface area changes.",
       "popular": "Popular",
       "currentPlan": "Current plan",
-      "checkoutSuccess": "Payment received — your Lifetime plan is being activated.",
-      "checkoutCancel": "Checkout cancelled. No charge was made.",
-      "checkoutError": "Could not start checkout. Please try again.",
       "footer": "Pricing displayed in USD. Switching plans never deletes your vault.",
       "priceSuffix": {
         "forever": "/forever",
@@ -628,7 +625,7 @@
         "lifetime": {
           "name": "Lifetime",
           "tagline": "Everything you need, forever, in a single payment.",
-          "cta": "Get Lifetime Access"
+          "inApp": "Buy Lifetime in the Keeplas mobile app: Settings → Upgrade to Lifetime."
         }
       },
       "features": {
@@ -743,7 +740,7 @@
           "name": "Lifetime",
           "summary": "10 GB vault · Up to 3 trust contacts · Life check"
         },
-        "upgrade": "Upgrade to Lifetime · $199",
+        "upgrade": "Upgrade to Lifetime · $99",
         "upgradeNote": "10 GB vault. Paid once."
       },
       "preferences": {
@@ -830,7 +827,7 @@
     },
     "categories": {
       "title": "Categories",
-      "body": "Sort your vault your way. Deleting a category never deletes its items.",
+      "body": "Sort your vault your way. Deleting a category deletes its items too: you can restore them from Archives in the Keeplas app.",
       "inboxBody": "Where new items land. It can't be deleted.",
       "itemOne": "1 item",
       "items": "{count} items",
@@ -842,7 +839,9 @@
       "delete": "Delete",
       "cancel": "Cancel",
       "deleteTitle": "Delete {name}?",
-      "deleteBody": "Its items stay in your vault and move to To sort.",
+      "deleteEmptyBody": "This category is empty.",
+      "deleteItemsOne": "Its item will be deleted too. You can still restore it from Archives in the Keeplas app.",
+      "deleteItems": "Its {count} items will be deleted too. You can still restore them from Archives in the Keeplas app.",
       "removed": "Deleted categories",
       "restore": "Restore",
       "failed": "Something went wrong. Try again."
@@ -2406,7 +2405,7 @@
       "saving": "Saving…"
     },
     "history": {
-      "title": "Edit history",
+      "title": "History",
       "body": "Earlier versions of this item. Restoring one keeps the current version here too.",
       "empty": "No changes yet.",
       "untitled": "Untitled",

@@ -15,10 +15,15 @@ import type { Href } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import {
+  deviceDraftFiles,
+  sqliteDraftDb,
+  sqliteFormDraftDb,
+} from "@/features/capture/draft-db";
 import { draftStore } from "@/features/capture/draft-store";
 import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
-import { clearFormDrafts } from "@/lib/form-drafts";
+import { attachFormDrafts, clearFormDrafts } from "@/lib/form-drafts";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
 import { auditContext } from "@/lib/use-audited-mutation";
 import {
@@ -30,6 +35,7 @@ import {
   type ResumePoint,
 } from "@/lib/resume-point";
 import { resolveStage, type Stage } from "@/lib/session-stage";
+import { clearKeptCiphers } from "@/lib/files";
 import { useVault } from "./vault-provider";
 
 /** The signed-in user as `users.viewer` projects it (no analytics fields). */
@@ -71,6 +77,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [migrationDeferred, setMigrationDeferred] = useState(false);
   const [vaultCheck, setVaultCheck] = useState(0);
   const userId = viewer?._id;
+
+  useEffect(() => {
+    if (!userId) return;
+    void draftStore.attach(userId, sqliteDraftDb, deviceDraftFiles);
+    void attachFormDrafts(userId, sqliteFormDraftDb);
+  }, [userId]);
   // Only trust a result read for the current user.
   const deviceVault =
     vaultState && vaultState.userId === userId ? vaultState.has : undefined;
@@ -142,11 +154,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    draftStore.reset();
+    if (userId) await draftStore.detach(userId);
     clearFormDrafts();
     if (userId) {
       await forgetDeviceVault(userId);
       await clearItemSummaries(userId).catch(() => undefined);
+      clearKeptCiphers();
     }
     lock();
     setFinishingSetup(false);

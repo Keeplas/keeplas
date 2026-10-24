@@ -21,6 +21,7 @@ import { useOpenedItem } from "@/features/vault/use-opened-item";
 import {
   cachedDecrypted,
   downloadDecrypted,
+  hasKeptCipher,
   rememberDecrypted,
 } from "@/lib/files";
 import { formatBytes, formatDate, formatTime } from "@/lib/format";
@@ -85,12 +86,23 @@ export default function ItemHistory() {
     try {
       let plain = cachedDecrypted(file.storageId);
       if (!plain) {
-        const url = await convex.query(api.vault_items.getVersionFileUrl, {
-          versionId: version.id,
-          storageId: file.storageId as VersionDoc["files"][number]["storageId"],
-        });
-        if (!url) throw new Error("missing");
-        plain = await downloadDecrypted(url, file.iv, key, file.name);
+        const url = hasKeptCipher(file.storageId)
+          ? ""
+          : await convex.query(api.vault_items.getVersionFileUrl, {
+              versionId: version.id,
+              storageId:
+                file.storageId as VersionDoc["files"][number]["storageId"],
+            });
+        if (url === null) throw new Error("missing");
+        plain = await downloadDecrypted(
+          url,
+          file.iv,
+          key,
+          file.name,
+          undefined,
+          undefined,
+          file.storageId,
+        );
         rememberDecrypted(file.storageId, plain);
       }
       const uri = plain.uri;

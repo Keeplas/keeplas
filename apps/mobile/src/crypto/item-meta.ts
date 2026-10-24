@@ -34,6 +34,7 @@ export interface FileMeta {
   size: number;
   kind: FileKind;
   durationSec?: number;
+  poster?: string;
 }
 
 /** Captures waiting to be sorted (the encrypted inbox). */

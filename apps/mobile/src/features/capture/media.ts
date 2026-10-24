@@ -104,13 +104,17 @@ export async function chooseFiles(): Promise<CaptureFile[]> {
 const PDF_PAGE_MAX_PX = 1600;
 const PDF_PAGE_JPEG_QUALITY = 0.7;
 
-async function pageDataUri(uri: string): Promise<string> {
+async function jpegDataUri(
+  uri: string,
+  width: number,
+  quality: number,
+): Promise<string> {
   const context = ImageManipulator.manipulate(uri);
-  context.resize({ width: PDF_PAGE_MAX_PX });
+  context.resize({ width });
   const image = await context.renderAsync();
   const result = await image.saveAsync({
     format: SaveFormat.JPEG,
-    compress: PDF_PAGE_JPEG_QUALITY,
+    compress: quality,
   });
   const file = new File(result.uri);
   const dataUri = `data:image/jpeg;base64,${await file.base64()}`;
@@ -126,7 +130,7 @@ export async function pagesToPdf(
   // Sequential on purpose: one downscaled page on the heap at a time.
   const images: string[] = [];
   for (const uri of pages) {
-    images.push(await pageDataUri(uri));
+    images.push(await jpegDataUri(uri, PDF_PAGE_MAX_PX, PDF_PAGE_JPEG_QUALITY));
   }
   const html = `<html><head><style>
     @page { margin: 0; }
@@ -144,4 +148,67 @@ export async function pagesToPdf(
     mimeType: "application/pdf",
     kind: "document",
   };
+}
+
+export const VIDEO_MAX_PX = 1920;
+export const VIDEO_BITRATE = 6_000_000;
+export const VIDEO_MIN_BYTES = 8 * 1024 * 1024;
+const POSTER_PX = 320;
+const POSTER_QUALITY = 0.5;
+
+const asFileUri = (path: string) =>
+  path.startsWith("/") ? `file://${path}` : path;
+
+type Compressor = Pick<
+  typeof import("react-native-compressor"),
+  "Video" | "createVideoThumbnail"
+>;
+
+const loadCompressor = (): Promise<Compressor> =>
+  import("react-native-compressor");
+
+export async function prepareVideo(
+  file: CaptureFile,
+  onProgress?: (ratio: number) => void,
+  load: () => Promise<Compressor> = loadCompressor,
+): Promise<CaptureFile> {
+  if (file.kind !== "video") return file;
+  try {
+    const { Video, createVideoThumbnail } = await load();
+    let prepared = file;
+    const before = new File(file.uri).size;
+    if (before > VIDEO_MIN_BYTES) {
+      const output = asFileUri(
+        await Video.compress(
+          file.uri,
+          {
+            compressionMethod: "manual",
+            maxSize: VIDEO_MAX_PX,
+            bitrate: VIDEO_BITRATE,
+          },
+          (progress) => onProgress?.(progress > 1 ? progress / 100 : progress),
+        ),
+      );
+      const compressed = new File(output);
+      if (compressed.exists && compressed.size < before) {
+        prepared = {
+          ...file,
+          uri: output,
+          mimeType: "video/mp4",
+          name: file.name.replace(/\.[^.]+$/, "") + ".mp4",
+        };
+      } else if (compressed.exists) {
+        compressed.delete();
+      }
+    }
+    const thumbnail = await createVideoThumbnail(prepared.uri);
+    const poster = await jpegDataUri(
+      asFileUri(thumbnail.path),
+      POSTER_PX,
+      POSTER_QUALITY,
+    );
+    return { ...prepared, poster };
+  } catch {
+    return file;
+  }
 }

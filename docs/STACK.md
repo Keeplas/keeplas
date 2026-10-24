@@ -88,7 +88,7 @@ Convex hosts the schema, queries, mutations, actions, and the realtime sync. Why
 - **Resend** — transactional email (Life Check notices, OTP, contact form).
 - **WhatsApp via Infobip** — OTP channel and Life Check liveness (a reply proves the user is alive). Login-critical for phone accounts.
 - **Expo push service** — native push to phones (security alerts, Life Check); dead tokens are dropped from tickets and receipts.
-- **Stripe** — one-time hosted Checkout for the Lifetime plan; fulfillment via an idempotent webhook on the Convex side. No client-side Stripe.js (the browser never loads Stripe), so payments stay off the critical CSP/JS surface.
+- **RevenueCat** — the one-time Lifetime purchase, sold only in the mobile app through App Store / Google Play billing; fulfillment via an idempotent webhook on the Convex side. The web app has no checkout.
 
 ---
 

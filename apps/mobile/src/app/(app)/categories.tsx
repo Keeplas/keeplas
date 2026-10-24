@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 
@@ -18,7 +18,12 @@ import {
   type VaultGroupKey,
 } from "@/features/home/vault-groups";
 import { NewCategoryForm } from "@/features/vault/category-sheet";
+import {
+  useDeleteCategory,
+  type CategoryToDelete,
+} from "@/features/vault/delete-category";
 import { useVaultData } from "@/features/vault/vault-data";
+import { inFilter } from "@/features/vault/vault-filter";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -26,8 +31,8 @@ import { useViewer } from "@/providers/session-provider";
 
 /**
  * Settings → Categories: delete built-in categories (restorable) and add or
- * delete your own. Items of a deleted category show in the Inbox, which
- * always stays.
+ * delete your own. Deleting a category archives its items; the Inbox always
+ * stays.
  */
 export default function Categories() {
   const router = useRouter();
@@ -36,6 +41,7 @@ export default function Categories() {
   const hidden = useViewer().hiddenCategoryGroups ?? [];
   const setHidden = useAuditedMutation(api.users.setHiddenCategoryGroups);
   const removeCategory = useAuditedMutation(api.vault_categories.remove);
+  const deleteCategory = useDeleteCategory();
   const [adding, setAdding] = useState(false);
 
   const builtInLabel = (key: VaultGroupKey) =>
@@ -43,27 +49,17 @@ export default function Categories() {
   const failed = () =>
     toast({ variant: "error", title: t("common.genericError") });
 
-  function confirmDelete(name: string, run: () => Promise<unknown>) {
-    Alert.alert(
-      t("categories.deleteTitle", { name }),
-      t("categories.deleteBody"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("categories.delete"),
-          style: "destructive",
-          onPress: () => void run().catch(failed),
-        },
-      ],
-    );
-  }
+  const itemIdsOf = (filter: string) =>
+    (items ?? [])
+      .filter((item) => inFilter(item, filter))
+      .map((item) => item.id);
 
-  const trash = (name: string, run: () => Promise<unknown>) => (
+  const trash = (category: CategoryToDelete) => (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t("categories.deleteTitle", { name })}
+      accessibilityLabel={t("categories.deleteTitle", { name: category.name })}
       hitSlop={10}
-      onPress={() => confirmDelete(name, run)}
+      onPress={() => deleteCategory.request(category)}
     >
       <Icon name="trash" size={18} color="text.muted" />
     </Pressable>
@@ -92,26 +88,28 @@ export default function Categories() {
             key={group.key}
             icon={group.icon}
             title={builtInLabel(group.key)}
-            trailing={trash(builtInLabel(group.key), () =>
-              setHidden({ groups: [...hidden, group.key] }),
-            )}
+            trailing={trash({
+              name: builtInLabel(group.key),
+              itemIds: itemIdsOf(group.key),
+              remove: () => setHidden({ groups: [...hidden, group.key] }),
+            })}
           />
         ),
       )}
       {(categories ?? []).map((category) => {
         const name = category.name ?? t("item.decrypting");
-        const count = (items ?? []).filter(
-          (item) => item.categoryId === category.id,
-        ).length;
+        const itemIds = itemIdsOf(category.id);
         return (
           <ListRow
             key={category.id}
             icon="document"
             title={name}
-            description={t("categories.items", { n: count })}
-            trailing={trash(name, () =>
-              removeCategory({ categoryId: category.id }),
-            )}
+            description={t("categories.items", { n: itemIds.length })}
+            trailing={trash({
+              name,
+              itemIds,
+              remove: () => removeCategory({ categoryId: category.id }),
+            })}
           />
         );
       })}
@@ -145,6 +143,7 @@ export default function Categories() {
       >
         <NewCategoryForm onCreated={() => setAdding(false)} />
       </BottomSheet>
+      {deleteCategory.sheet}
     </Screen>
   );
 }

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { noteToHtml, parseNote } from "@keeplas/export/rich-text";
+import { noteToHtml } from "@keeplas/export/rich-text";
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -26,15 +26,22 @@ import {
 import type { CaptureFile } from "@/features/capture/seal";
 import { NoteEditor } from "@/features/notes/note-editor";
 import { useOutbox } from "@/features/outbox/outbox-provider";
-import {
-  useOpenedItem,
-  type OpenedItem,
-} from "@/features/vault/use-opened-item";
+import type { OpenedItem } from "@/features/vault/open-sealed-item";
+import { useOpenedItem } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useFormDraft } from "@/lib/form-drafts";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
+import { deviceDraftFiles } from "@/features/capture/draft-db";
+import {
+  editDraftKey,
+  editFilesFolder,
+  hasEditChanges,
+  sameNote,
+  type EditDraft,
+} from "@/features/vault/edit-draft";
+import { usePrepareMedia } from "@/features/capture/use-prepare-media";
 
 const KIND_ICON = {
   document: "document",
@@ -84,16 +91,26 @@ function EditForm({
 }) {
   const { t, language } = useI18n();
   const { capture } = useOutbox();
+  const prepare = usePrepareMedia();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const [draft, updateDraft, clearDraft] = useFormDraft(
-    `edit:${itemId}`,
-    () => ({
-      title: opened.title,
-      note: opened.note,
-      removed: [] as Id<"vault_item_files">[],
-      added: [] as CaptureFile[],
-    }),
+  const [draft, updateDraft, clearDraft] = useFormDraft<EditDraft>(
+    editDraftKey(itemId),
+    () => ({ title: opened.title, note: opened.note, removed: [], added: [] }),
   );
+  const [resumed, setResumed] = useState(() => hasEditChanges(draft, opened));
+  const [editorKey, setEditorKey] = useState(0);
+  const folder = editFilesFolder(itemId);
+
+  function forgetDraft() {
+    clearDraft();
+    deviceDraftFiles.dropDraft(folder);
+  }
+
+  function discardChanges() {
+    forgetDraft();
+    setResumed(false);
+    setEditorKey((n) => n + 1);
+  }
   const { title, note, added } = draft;
   const removed = new Set(draft.removed);
   const [denied, setDenied] = useState<PermissionProblem | null>(null);
@@ -102,9 +119,13 @@ function EditForm({
 
   async function addMedia(get: () => Promise<CaptureFile[]>) {
     try {
-      const files = await get();
+      const files = await prepare(await get());
       if (files.length) {
-        updateDraft((current) => ({ added: [...current.added, ...files] }));
+        const moved = files.map((file) => ({
+          ...file,
+          uri: deviceDraftFiles.keep(folder, file.uri),
+        }));
+        updateDraft((current) => ({ added: [...current.added, ...moved] }));
       }
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
@@ -144,7 +165,7 @@ function EditForm({
           attachTo: { itemId, dek: opened.key, ownerWrappedDek },
         });
       }
-      clearDraft();
+      forgetDraft();
       onDone();
     } catch {
       toast({
@@ -162,7 +183,7 @@ function EditForm({
         <NavBar
           title={t("itemEdit.title")}
           onBack={() => {
-            clearDraft();
+            if (!hasEditChanges(draft, opened)) forgetDraft();
             onDone();
           }}
         />
@@ -182,7 +203,18 @@ function EditForm({
         onChangeText={(value) => updateDraft({ title: value })}
         placeholder={t("capture.titlePlaceholder")}
       />
+      {resumed ? (
+        <>
+          <Callout icon="clock" text={t("itemEdit.resumed")} />
+          <Button
+            variant="text"
+            label={t("itemEdit.discard")}
+            onPress={discardChanges}
+          />
+        </>
+      ) : null}
       <NoteEditor
+        key={editorKey}
         initialHtml={note}
         placeholder={t("capture.noteBodyPlaceholder")}
         onChange={(html) => updateDraft({ note: html })}
@@ -219,13 +251,14 @@ function EditForm({
           trailing={
             <RemoveButton
               label={t("itemEdit.removeFile", { name: file.name })}
-              onPress={() =>
+              onPress={() => {
+                deviceDraftFiles.drop(file.uri);
                 updateDraft((current) => ({
                   added: current.added.filter(
                     (candidate) => candidate.uri !== file.uri,
                   ),
-                }))
-              }
+                }));
+              }}
             />
           }
         />
@@ -256,10 +289,6 @@ function EditForm({
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
     </Screen>
   );
-}
-
-function sameNote(a: string, b: string): boolean {
-  return JSON.stringify(parseNote(a)) === JSON.stringify(parseNote(b));
 }
 
 function RemoveButton({

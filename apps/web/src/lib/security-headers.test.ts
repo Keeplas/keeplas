@@ -93,6 +93,16 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toMatch(/font-src [^;]*data:/);
   });
 
+  it("allows images served by Convex storage, like an uploaded avatar", () => {
+    process.env.NEXT_PUBLIC_CONVEX_URL =
+      "https://energetic-pony-179.convex.cloud";
+    const csp = buildContentSecurityPolicy([HASH]);
+    expect(csp).toMatch(
+      /img-src [^;]*https:\/\/energetic-pony-179\.convex\.cloud/,
+    );
+    expect(csp).not.toMatch(/img-src [^;]*wss:/);
+  });
+
   it("allows blob: media so decrypted audio/video attachments can play", () => {
     const csp = buildContentSecurityPolicy([HASH]);
     expect(csp).toMatch(/media-src [^;]*blob:/);

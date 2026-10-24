@@ -35,6 +35,13 @@ export function AppHeader({
   const { stage, settingUp } = useSession();
   const home = stage === "loading" || settingUp ? null : STAGE_HOME[stage];
   const LogoMark = inverse || scheme === "dark" ? MarkInverse : Mark;
+  // Like the tab bar: `dismissTo` alone can't switch tabs (from People or
+  // Settings it was a no-op), so pop the stack, then navigate.
+  const goHome = () => {
+    if (!home) return;
+    if (router.canDismiss()) router.dismissAll();
+    router.navigate(home);
+  };
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>
@@ -53,7 +60,7 @@ export function AppHeader({
           accessibilityRole="link"
           accessibilityLabel={t("common.appName")}
           disabled={!home}
-          onPress={() => home && router.dismissTo(home)}
+          onPress={goHome}
           style={styles.brand}
         >
           <LogoMark width={30} height={30} />

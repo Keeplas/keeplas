@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useConvex } from "convex/react";
 import { useNetworkState } from "expo-network";
-import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import {
@@ -13,6 +11,7 @@ import {
 import {
   cachedDecrypted,
   downloadDecrypted,
+  hasKeptCipher,
   rememberDecrypted,
 } from "@/lib/files";
 
@@ -27,14 +26,19 @@ export interface AttachmentSource {
   name: string;
 }
 
+/** Short-lived signed URL of a file's ciphertext; null when not allowed. */
+export type FileUrl = (
+  fileId: Id<"vault_item_files">,
+) => Promise<string | null>;
+
 const PARALLEL = 2;
 const LOADING: AttachmentState = { status: "loading" };
 
 export function useDecryptedAttachments(
   files: readonly AttachmentSource[],
   key: CryptoKey | undefined,
+  fileUrl: FileUrl,
 ) {
-  const convex = useConvex();
   const network = useNetworkState();
   const online = useRef(network.isInternetReachable);
   const [attempts, setAttempts] = useState<Record<string, number>>({});
@@ -67,10 +71,10 @@ export function useDecryptedAttachments(
         if (cached) {
           state = { status: "ready", uri: cached.uri };
         } else {
-          const url = await convex.query(api.vault_items.getItemFileUrl, {
-            fileId: request.id,
-          });
-          if (!url) throw new FileProblemError("missing");
+          const url = hasKeptCipher(request.id)
+            ? ""
+            : await fileUrl(request.id);
+          if (url === null) throw new FileProblemError("missing");
           let shown = -1;
           const plain = await downloadDecrypted(
             url,
@@ -86,6 +90,8 @@ export function useDecryptedAttachments(
                 [request.token]: { status: "loading", progress: ratio },
               }));
             },
+            undefined,
+            request.id,
           );
           rememberDecrypted(request.id, plain);
           state = { status: "ready", uri: plain.uri };
@@ -115,7 +121,7 @@ export function useDecryptedAttachments(
     return () => {
       alive = false;
     };
-  }, [convex, key, wanted]);
+  }, [fileUrl, key, wanted]);
 
   const retry = useCallback(
     (id: string) =>

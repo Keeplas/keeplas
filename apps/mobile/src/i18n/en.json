@@ -372,7 +372,6 @@
     "greetingNamed": "{greeting}, {name}",
     "subtitle": "Your important information is safe and ready for tomorrow.",
     "recoveryHealth": "Recovery health",
-    "healthReady": "{n} of 3 ready",
     "yourVault": "Your vault",
     "documents": "Documents",
     "accounts": "Accounts",
@@ -413,8 +412,12 @@
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
+    "titleWithPrice": "Upgrade to Lifetime · {price}",
     "body": "10 GB of storage and every feature. One payment, no subscription.",
-    "cta": "Upgrade"
+    "cta": "Upgrade",
+    "restore": "Restore purchase",
+    "activating": "Purchase confirmed. Your Lifetime plan is being activated.",
+    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account."
   },
   "settings": {
     "title": "Settings",
@@ -785,7 +788,9 @@
     "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead.",
     "allContacts": "All trusted contacts",
     "contactKeyTitle": "Couldn't share with {name}",
-    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again."
+    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again.",
+    "preparingVideo": "Preparing the video",
+    "preparingVideoPct": "Making it lighter to load fast, with no visible loss · {pct}%"
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
@@ -871,7 +876,7 @@
     "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
     "downloading": "Downloading… {pct}%",
     "edit": "Edit",
-    "history": "Edit history",
+    "history": "History",
     "historyCount": "{n} earlier versions",
     "historyEmpty": "No changes yet",
     "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
@@ -882,11 +887,6 @@
     "add": "Add",
     "trusted": "Trust contacts",
     "empty": "No trusted contacts yet.",
-    "sharedWithMe": "Shared with me",
-    "items": "{n} items",
-    "notAvailable": "Available after verification",
-    "available": "Available",
-    "later": "Later",
     "addTitle": "Add trusted person",
     "addBody": "Choose how to invite them.",
     "addWhy": "Why it matters: if you ever lose access, any 2 of your trusted people can help you get back in. Keeplas can't do it for you, because only you hold the keys.",
@@ -907,7 +907,6 @@
     "ready": "{n} ready",
     "readyBody": "Any 2 of your contacts can help you recover your account.",
     "replace": "Replace",
-    "replaceNote": "Replacing a contact renews recovery protection for your account.",
     "replaceTitle": "Replace {name}?",
     "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
     "resend": "Resend invitation",
@@ -939,16 +938,20 @@
     "create": "Create category",
     "title": "Categories",
     "rowBody": "Add or delete categories",
-    "body": "Sort your vault your way. Deleting a category never deletes its items.",
+    "body": "Sort your vault your way. Deleting a category deletes its items too: you can restore them from Archives.",
     "inboxBody": "Where new items land. It can't be deleted.",
     "rename": "Rename category",
     "items": "{n} items",
     "move": "Change category",
     "delete": "Delete",
+    "deleteCategory": "Delete category",
     "deleteTitle": "Delete {name}?",
-    "deleteBody": "Its items stay in your vault and move to To sort.",
+    "deleteEmptyBody": "This category is empty.",
+    "deleteItemsOne": "Its item will be deleted too. You can still restore it from Settings → Archives.",
+    "deleteItems": "Its {n} items will be deleted too. You can still restore them from Settings → Archives.",
     "removed": "Deleted categories",
-    "restore": "Tap to restore"
+    "restore": "Tap to restore",
+    "search": "Search in {name}"
   },
   "search": {
     "label": "Search your vault",
@@ -1057,6 +1060,25 @@
       "yearAgo": "1 year ago",
       "yearsAgo": "{n} years ago"
     }
+  },
+  "shared": {
+    "title": "Shared with me",
+    "body": "Vaults of people who chose you as a trusted contact.",
+    "myVault": "My vault",
+    "emptyTitle": "Nothing shared with you yet",
+    "emptyBody": "When someone makes you a trusted contact, their shared items appear here.",
+    "trusted": "You are a trusted contact",
+    "later": "Access after verification. Requires two trust-contact confirmations.",
+    "oneItem": "1 item left for you",
+    "items": "{n} items left for you",
+    "accessNow": "Access now",
+    "readOnly": "Read-only: only what {name} left for you, decrypted on this phone.",
+    "messageFrom": "A message from {name}",
+    "unreadable": "Can't be opened on this phone",
+    "nothingLeft": "No readable items were left for you.",
+    "notReleasedTitle": "Not available yet",
+    "notReleasedBody": "It opens once this vault is released to you.",
+    "leftBy": "Left for you by {name}"
   },
   "passkeys": {
     "subtitle": "Passkeys let you sign in with your face, fingerprint or phone PIN. Tap one to remove it.",
@@ -1262,7 +1284,13 @@
     "cameraChip": "Camera",
     "historyNote": "The current version is kept in the history, with its files. Nothing is lost.",
     "failedTitle": "Changes not saved",
-    "failedBody": "Keeplas could not save your changes. Check your connection and try again."
+    "failedBody": "Keeplas could not save your changes. Check your connection and try again.",
+    "pending": "You have unsaved changes on this item.",
+    "resume": "Pick up the changes",
+    "discard": "Discard changes",
+    "discardTitle": "Discard the changes?",
+    "discardBody": "Your unsaved changes and added files will be removed from this phone. The item stays as it is saved.",
+    "resumed": "You are picking up unsaved changes."
   },
   "itemHistory": {
     "title": "History",
@@ -1288,5 +1316,20 @@
     "restoreFailed": "Keeplas could not restore this item. Check your connection and try again.",
     "emptyTitle": "No archives",
     "emptyBody": "Items you archive will show up here, with their history."
+  },
+  "drafts": {
+    "title": "Drafts",
+    "homeBody": "{n} in progress · tap to pick up",
+    "saved": "Draft saved on this phone",
+    "menuTitle": "Draft options",
+    "clear": "Clear draft",
+    "clearBody": "Removes the text, files and settings of this draft",
+    "delete": "Delete draft",
+    "deleteRowBody": "Also removes its files from this phone",
+    "deleteTitle": "Delete this draft?",
+    "deleteBody": "The text and attached files will be removed from this phone. This cannot be undone.",
+    "resume": "Pick up",
+    "emptyTitle": "No drafts",
+    "emptyBody": "Anything you start without saving is kept here, on this phone, to pick up later."
   }
 }

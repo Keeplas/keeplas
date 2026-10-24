@@ -55,6 +55,9 @@ export function NoteEditor({
     `;
     return {
       initialContent: initialHtml,
+      // tentap paints the web view white by default; let the themed
+      // surface behind it show through instead (unreadable in dark mode).
+      theme: { webview: { backgroundColor: "transparent" } },
       bridgeExtensions: [
         CoreBridge.configureCSS(css),
         PlaceholderBridge.configureExtension({ placeholder }),
@@ -237,7 +240,13 @@ export function NoteEditor({
         ) : null}
       </View>
       <View style={styles.web}>
-        <RichText editor={editor} scrollEnabled />
+        {/* Keep iOS's native bar above the keyboard so "Done" also sits
+            on the keyboard itself (tentap hides it by default). */}
+        <RichText
+          editor={editor}
+          scrollEnabled
+          hideKeyboardAccessoryView={false}
+        />
       </View>
     </View>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -14,7 +15,6 @@ import { api } from "@keeplas/backend/_generated/api";
 import { Button } from "@/components/button";
 import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
-import { LanguageDropdown } from "@/components/language";
 import { NavAction, NavBar } from "@/components/nav-bar";
 import { Chip, DetailRows } from "@/components/rows";
 import { Screen } from "@/components/screen";
@@ -23,9 +23,13 @@ import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { ContactKeyBlocked } from "@/crypto/contact-keys";
 import { INBOX } from "@/crypto/item-meta";
-import { PermissionSheet } from "@/features/capture/add-sheet";
+import { PermissionSheet, SHEET_CLOSE_MS } from "@/features/capture/add-sheet";
 import { captureDepth } from "@/features/capture/capture-depth";
-import { draftStore, useDraft } from "@/features/capture/draft-store";
+import {
+  draftStore,
+  useDraft,
+  useDrafts,
+} from "@/features/capture/draft-store";
 import { IconPicker } from "@/features/capture/icon-picker";
 import {
   CameraUnavailable,
@@ -46,12 +50,15 @@ import {
 import { itemVisual } from "@/features/vault/item-visual";
 import { useEveryoneRecipients } from "@/features/vault/use-recipients";
 import { useVaultData } from "@/features/vault/vault-data";
+import { deleteFile } from "@/lib/files";
 import { formatDuration } from "@/lib/format";
 import { NoteEditor } from "@/features/notes/note-editor";
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, singleLine, type } from "@/theme";
+import { draftHref, useDraftParam } from "@/features/capture/draft-route";
+import { usePrepareMedia } from "@/features/capture/use-prepare-media";
 
 const KIND_ICON = {
   document: "document",
@@ -65,10 +72,11 @@ function IconTileBox({ icon }: { icon: IconName }) {
   return <IconTile icon={icon} size={44} background={colors["bg.info"]} />;
 }
 
-type Sheet = "category" | "access" | "icon" | "item" | null;
+type Sheet = "category" | "access" | "icon" | "item" | "draft" | null;
 
 /** M07-7 / M07-9 New note and M07-8 Review capture, sealed for the outbox. */
 export default function ComposeCapture() {
+  useDraftParam();
   const router = useRouter();
   const navigation = useNavigation();
   const showSecuring = useShowSecuring();
@@ -76,6 +84,8 @@ export default function ComposeCapture() {
   const { colors } = useTheme();
   const categoryLabel = useCategoryLabel();
   const draft = useDraft();
+  const prepare = usePrepareMedia();
+  const savedDraft = useDrafts().some((row) => row.id === draft.id);
   const filedAs = {
     category: draft.category ?? INBOX,
     categoryId: draft.categoryId,
@@ -136,7 +146,7 @@ export default function ComposeCapture() {
 
   async function addMedia(get: () => Promise<CaptureFile[]>) {
     try {
-      const files = await get();
+      const files = await prepare(await get());
       if (files.length) draftStore.addFiles(files);
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
@@ -159,15 +169,13 @@ export default function ComposeCapture() {
     setBusy(true);
     try {
       let files = draft.files;
-      if (draft.pages.length) {
-        files = [
-          ...files,
-          await pagesToPdf(
+      const pdf = draft.pages.length
+        ? await pagesToPdf(
             draft.pages,
             draft.title.trim() || t("capture.untitledScan"),
-          ),
-        ];
-      }
+          )
+        : null;
+      if (pdf) files = [...files, pdf];
       const entryId = await capture({
         title: existing
           ? (target?.title ?? t("capture.untitled"))
@@ -189,6 +197,7 @@ export default function ComposeCapture() {
         handoffId: draft.handoffId,
         files,
       });
+      if (pdf) deleteFile(pdf.uri);
       draftStore.reset();
       // Back to where the capture started; the upload goes on behind the sheet.
       router.dismiss(
@@ -217,7 +226,7 @@ export default function ComposeCapture() {
             {
               icon: "document" as const,
               label: t("capture.scanChip"),
-              onPress: () => router.push("/capture/scan"),
+              onPress: () => router.push(draftHref("/capture/scan")),
             },
           ]
         : []),
@@ -229,7 +238,7 @@ export default function ComposeCapture() {
       {
         icon: "mic",
         label: t("capture.voiceChip"),
-        onPress: () => router.push("/capture/voice"),
+        onPress: () => router.push(draftHref("/capture/voice")),
       },
       {
         icon: "cloud-upload",
@@ -313,6 +322,21 @@ export default function ComposeCapture() {
       ))}
     </View>
   );
+
+  function confirmClear() {
+    Alert.alert(t("drafts.deleteTitle"), t("drafts.deleteBody"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("drafts.delete"),
+        style: "destructive",
+        onPress: () => {
+          const leave = draft.kind !== "note";
+          draftStore.discard();
+          if (leave) router.back();
+        },
+      },
+    ]);
+  }
 
   const sheets = (
     <>
@@ -418,8 +442,40 @@ export default function ComposeCapture() {
         onDismiss={() => setSheet(null)}
       />
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
+      <BottomSheet
+        visible={sheet === "draft"}
+        onDismiss={() => setSheet(null)}
+        title={t("drafts.menuTitle")}
+      >
+        <ListRow
+          icon="trash"
+          title={t("drafts.clear")}
+          description={t("drafts.clearBody")}
+          onPress={() => {
+            setSheet(null);
+            setTimeout(confirmClear, SHEET_CLOSE_MS);
+          }}
+        />
+      </BottomSheet>
     </>
   );
+
+  const draftMenu = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t("drafts.menuTitle")}
+      hitSlop={12}
+      onPress={() => setSheet("draft")}
+    >
+      <Icon name="more" size={22} color="text.primary" />
+    </Pressable>
+  );
+
+  const savedNote = savedDraft ? (
+    <Text variant="caption" color="text.subtle">
+      {t("drafts.saved")}
+    </Text>
+  ) : null;
 
   if (draft.kind === "file" && draft.files.length > 0) {
     const file = draft.files[0];
@@ -453,7 +509,7 @@ export default function ComposeCapture() {
           <NavBar
             title={t("capture.addDocumentTitle")}
             onBack={router.back}
-            right={<LanguageDropdown />}
+            right={draftMenu}
           />
         }
         footer={
@@ -466,15 +522,13 @@ export default function ComposeCapture() {
             <Button
               variant="text"
               label={t("common.cancel")}
-              onPress={() => {
-                draftStore.reset();
-                router.back();
-              }}
+              onPress={router.back}
             />
           </View>
         }
         gap={12}
       >
+        {savedNote}
         <View
           style={[
             styles.fileCard,
@@ -553,13 +607,16 @@ export default function ComposeCapture() {
           onBack={router.back}
           right={
             isNote ? (
-              <NavAction
-                label={t("capture.save")}
-                onPress={save}
-                disabled={busy}
-              />
+              <View style={styles.navRight}>
+                <NavAction
+                  label={t("capture.save")}
+                  onPress={save}
+                  disabled={busy}
+                />
+                {draftMenu}
+              </View>
             ) : (
-              <LanguageDropdown />
+              draftMenu
             )
           }
         />
@@ -578,7 +635,7 @@ export default function ComposeCapture() {
               label={t("capture.retake")}
               onPress={() => {
                 draftStore.update({ pages: [] });
-                router.replace("/capture/scan");
+                router.replace(draftHref("/capture/scan"));
               }}
             />
           ) : null}
@@ -586,6 +643,7 @@ export default function ComposeCapture() {
       }
       gap={14}
     >
+      {savedNote}
       {draft.pages.length ? (
         <ScrollView
           horizontal
@@ -626,7 +684,7 @@ export default function ComposeCapture() {
           ))}
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push("/capture/scan")}
+            onPress={() => router.push(draftHref("/capture/scan"))}
             style={[
               styles.page,
               styles.addPage,
@@ -688,6 +746,7 @@ export default function ComposeCapture() {
       {isNote ? (
         <>
           <NoteEditor
+            key={draft.id}
             initialHtml={draft.note}
             placeholder={t("capture.noteBodyPlaceholder")}
             onChange={updateNote}
@@ -787,6 +846,7 @@ export default function ComposeCapture() {
 }
 
 const styles = StyleSheet.create({
+  navRight: { flexDirection: "row", alignItems: "center", gap: 16 },
   footer: { gap: 10 },
   flex: { flex: 1, gap: 2 },
   fileCard: {

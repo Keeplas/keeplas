@@ -22,6 +22,7 @@ import { auditedMutation } from "./audit";
 import { completeHandoff } from "./capture_handoffs";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
+  claimBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
   getBlobSize,
@@ -315,16 +316,24 @@ type NewFile = { storageId: StorageRef; iv: string; encryptedMeta: string };
 
 /**
  * Size bucket of each uploaded blob, measured from storage (the client
- * cannot under-report). Throws if a blob is missing.
+ * cannot under-report), binding it to the user. Throws if a blob is missing
+ * or belongs to another account. One at a time: two claims of one handle
+ * must not race.
  */
-async function measureFiles(ctx: MutationCtx, files: NewFile[]) {
-  return await Promise.all(
-    files.map(async (file) => {
-      const size = await getBlobSize(ctx, file.storageId);
-      if (size === null) throw new Error("Uploaded file not found");
-      return { ...file, sizeBucket: sizeBucket(size) };
-    }),
-  );
+async function measureFiles(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  files: NewFile[],
+) {
+  const measured = [];
+  for (const file of files) {
+    const size = await getBlobSize(ctx, file.storageId);
+    if (size === null || !(await claimBlob(ctx, file.storageId, userId))) {
+      throw new Error("Uploaded file not found");
+    }
+    measured.push({ ...file, sizeBucket: sizeBucket(size) });
+  }
+  return measured;
 }
 
 /**
@@ -429,7 +438,7 @@ export const createItem = auditedMutation({
       throw new Error("Vault not found");
     }
 
-    const files = await measureFiles(ctx, args.files ?? []);
+    const files = await measureFiles(ctx, userId, args.files ?? []);
     await assertWithinStorageQuota(ctx, userId, files);
 
     const recipientMode = args.recipientMode ?? "default";
@@ -964,7 +973,7 @@ export const addItemFiles = auditedMutation({
     await requireItemOwnership(ctx, args.itemId, userId);
     if (args.files.length === 0) return;
 
-    const files = await measureFiles(ctx, args.files);
+    const files = await measureFiles(ctx, userId, args.files);
     await assertWithinStorageQuota(ctx, userId, files);
 
     const existing = await ctx.db
@@ -1027,6 +1036,28 @@ export const resolveRecipientsForItem = query({
   },
 });
 
+async function archiveOwnedItem(
+  ctx: MutationCtx,
+  itemId: Id<"vault_items">,
+  userId: Id<"users">,
+) {
+  const item = await requireItemOwnership(ctx, itemId, userId);
+  if (item.status === "archived") return;
+  const now = Date.now();
+  await ctx.db.patch(itemId, {
+    status: "archived",
+    archivedFromStatus: item.status,
+    archivedAt: now,
+  });
+  const vault = await ctx.db.get(item.vaultId);
+  if (vault) {
+    await ctx.db.patch(item.vaultId, {
+      encryptedItemsCount: Math.max(0, vault.encryptedItemsCount - 1),
+      updatedAt: now,
+    });
+  }
+}
+
 export const archiveItem = auditedMutation({
   action: "vault_item.archived",
   resourceType: "vault_item",
@@ -1034,22 +1065,26 @@ export const archiveItem = auditedMutation({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    const item = await requireItemOwnership(ctx, args.itemId, userId);
-    if (item.status === "archived") return;
-    const now = Date.now();
-    await ctx.db.patch(args.itemId, {
-      status: "archived",
-      archivedFromStatus: item.status,
-      archivedAt: now,
-    });
-    const vault = await ctx.db.get(item.vaultId);
-    if (vault) {
-      await ctx.db.patch(item.vaultId, {
-        encryptedItemsCount: Math.max(0, vault.encryptedItemsCount - 1),
-        updatedAt: now,
-      });
+    await archiveOwnedItem(ctx, args.itemId, userId);
+  },
+});
+
+/**
+ * Archive every item of a category the owner deletes. The server can't tell
+ * which items a category holds (it's sealed in their metadata), so the app
+ * sends their ids.
+ */
+export const archiveItems = auditedMutation({
+  action: "vault_items.archived",
+  resourceType: "vault_item",
+  args: { itemIds: v.array(v.id("vault_items")) },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    for (const itemId of args.itemIds) {
+      await archiveOwnedItem(ctx, itemId, userId);
     }
   },
+  getMetadata: (args) => ({ itemIds: args.itemIds }),
 });
 
 export const unarchiveItem = auditedMutation({

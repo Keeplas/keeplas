@@ -9,7 +9,7 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
-import { Callout, IconTile, StatusChip } from "@/components/surfaces";
+import { IconTile, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -190,7 +190,6 @@ export default function People() {
         label={t("people.addTrust")}
         onPress={() => router.push("/people/add")}
       />
-      <Callout icon="info" text={t("people.replaceNote")} />
     </Screen>
   );
 }
@@ -213,7 +212,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   replace: {
-    height: 34,
+    height: 44,
     paddingHorizontal: 14,
     justifyContent: "center",
     borderWidth: 1,

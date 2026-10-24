@@ -10,7 +10,8 @@ import { usePathname, useRouter } from "expo-router";
 
 import { TabBar, TabBarVisibleContext } from "@/components/tab-bar";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
-import { showsTabBar, type TabName } from "./tab-routes";
+import { filterPreset } from "@/features/vault/vault-filter";
+import { categoryOfPath, showsTabBar, type TabName } from "./tab-routes";
 
 const ReportTabContext = createContext<(tab: TabName) => void>(() => undefined);
 
@@ -22,6 +23,7 @@ export function TabShell({ children }: { children: ReactNode }) {
   const openAdd = useOpenAddSheet();
   const [active, setActive] = useState<TabName>("home");
   const visible = showsTabBar(pathname);
+  const category = categoryOfPath(pathname);
 
   const select = useCallback(
     (tab: TabName) => {
@@ -36,7 +38,11 @@ export function TabShell({ children }: { children: ReactNode }) {
       <TabBarVisibleContext.Provider value={visible}>
         <View style={styles.flex}>{children}</View>
         {visible ? (
-          <TabBar active={active} onSelect={select} onAdd={() => openAdd()} />
+          <TabBar
+            active={active}
+            onSelect={select}
+            onAdd={() => openAdd(category ? filterPreset(category) : undefined)}
+          />
         ) : null}
       </TabBarVisibleContext.Provider>
     </ReportTabContext.Provider>

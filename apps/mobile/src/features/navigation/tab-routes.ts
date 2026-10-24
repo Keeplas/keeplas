@@ -20,5 +20,10 @@ export function showsTabBar(pathname: string): boolean {
   );
 }
 
+/** Category shown at `/category/<id>`: the (+) adds into it there. */
+export function categoryOfPath(pathname: string): string | undefined {
+  return /^\/category\/([^/]+)$/.exec(pathname)?.[1];
+}
+
 export const isTabName = (name: string): name is TabName =>
   (TAB_NAMES as readonly string[]).includes(name);

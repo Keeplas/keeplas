@@ -36,6 +36,7 @@ export interface CaptureFile {
   mimeType: string;
   kind: FileKind;
   durationSec?: number;
+  poster?: string;
 }
 
 export interface CaptureDraft {
@@ -139,6 +140,7 @@ export async function sealCapture(
           size,
           kind: file.kind,
           durationSec: file.durationSec,
+          poster: file.poster,
         }),
         dek,
       ),
