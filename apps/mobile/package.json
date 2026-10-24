@@ -70,6 +70,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
     "@types/node": "^25",
     "@types/react": "~19.2.2",
@@ -87,7 +88,7 @@
   "jest": {
     "preset": "jest-expo",
     "transformIgnorePatterns": [
-      "node_modules/(?!(?:\\.pnpm/)?(@?react-native|@react-native|@?expo|@noble|@keeplas|hash-wasm|libphonenumber-js))"
+      "node_modules/(?!(?:\\.pnpm/)?(@?react-native|@react-native|@?expo|@noble|@keeplas|hash-wasm|libphonenumber-js|standard-navigation))"
     ]
   },
   "op-sqlite": {
