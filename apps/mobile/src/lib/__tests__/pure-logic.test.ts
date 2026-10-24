@@ -5,6 +5,7 @@ import {
   contentKind,
   greetingKey,
   groupOf,
+  inGroup,
   inVaultList,
   isVaultListKey,
   listCounts,
@@ -302,6 +303,15 @@ describe("home groups", () => {
       false,
     );
     expect(listCounts([custom])).toMatchObject({ all: 1, voice: 1, inbox: 0 });
+  });
+
+  it("files items without a user-made category under their group", () => {
+    expect(inGroup({ category: "credential" }, "accounts")).toBe(true);
+    expect(inGroup({ category: "wishes" }, "accounts")).toBe(false);
+    expect(inGroup({ category: "inbox" }, "other")).toBe(false);
+    expect(
+      inGroup({ category: "credential", categoryId: "c1" }, "accounts"),
+    ).toBe(false);
   });
 
   it("shows items of a deleted category in the inbox", () => {

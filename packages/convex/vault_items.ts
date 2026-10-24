@@ -1027,6 +1027,28 @@ export const resolveRecipientsForItem = query({
   },
 });
 
+async function archiveOwnedItem(
+  ctx: MutationCtx,
+  itemId: Id<"vault_items">,
+  userId: Id<"users">,
+) {
+  const item = await requireItemOwnership(ctx, itemId, userId);
+  if (item.status === "archived") return;
+  const now = Date.now();
+  await ctx.db.patch(itemId, {
+    status: "archived",
+    archivedFromStatus: item.status,
+    archivedAt: now,
+  });
+  const vault = await ctx.db.get(item.vaultId);
+  if (vault) {
+    await ctx.db.patch(item.vaultId, {
+      encryptedItemsCount: Math.max(0, vault.encryptedItemsCount - 1),
+      updatedAt: now,
+    });
+  }
+}
+
 export const archiveItem = auditedMutation({
   action: "vault_item.archived",
   resourceType: "vault_item",
@@ -1034,22 +1056,26 @@ export const archiveItem = auditedMutation({
   args: { itemId: v.id("vault_items") },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-    const item = await requireItemOwnership(ctx, args.itemId, userId);
-    if (item.status === "archived") return;
-    const now = Date.now();
-    await ctx.db.patch(args.itemId, {
-      status: "archived",
-      archivedFromStatus: item.status,
-      archivedAt: now,
-    });
-    const vault = await ctx.db.get(item.vaultId);
-    if (vault) {
-      await ctx.db.patch(item.vaultId, {
-        encryptedItemsCount: Math.max(0, vault.encryptedItemsCount - 1),
-        updatedAt: now,
-      });
+    await archiveOwnedItem(ctx, args.itemId, userId);
+  },
+});
+
+/**
+ * Archive every item of a category the owner deletes. The server can't tell
+ * which items a category holds (it's sealed in their metadata), so the app
+ * sends their ids.
+ */
+export const archiveItems = auditedMutation({
+  action: "vault_items.archived",
+  resourceType: "vault_item",
+  args: { itemIds: v.array(v.id("vault_items")) },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    for (const itemId of args.itemIds) {
+      await archiveOwnedItem(ctx, itemId, userId);
     }
   },
+  getMetadata: (args) => ({ itemIds: args.itemIds }),
 });
 
 export const unarchiveItem = auditedMutation({

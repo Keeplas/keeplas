@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Alert, FlatList } from "react-native";
+import { FlatList } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -13,13 +13,13 @@ import { Text } from "@/components/text";
 import { CUSTOM_FALLBACK } from "@/crypto/item-meta";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import { CategoryNameForm } from "@/features/vault/category-sheet";
+import { useDeleteCategory } from "@/features/vault/delete-category";
 import { VaultItemRow } from "@/features/vault/item-row";
 import { itemVisual } from "@/features/vault/item-visual";
 import {
   useVaultData,
   type VaultItemSummary,
 } from "@/features/vault/vault-data";
-import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -33,6 +33,7 @@ export default function CategoryDetails() {
   const openAdd = useOpenAddSheet();
   const rename = useAuditedMutation(api.vault_categories.rename);
   const remove = useAuditedMutation(api.vault_categories.remove);
+  const deleteCategory = useDeleteCategory();
   const [renaming, setRenaming] = useState(false);
   const stored = categories?.find((row) => row.id === id)?.name;
   const name = stored ?? t("item.decrypting");
@@ -51,26 +52,6 @@ export default function CategoryDetails() {
     ),
     [t],
   );
-
-  function confirmDelete() {
-    Alert.alert(
-      t("categories.deleteTitle", { name }),
-      t("categories.deleteBody"),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("categories.delete"),
-          style: "destructive",
-          onPress: () =>
-            void remove({ categoryId })
-              .then(() => router.back())
-              .catch(() =>
-                toast({ variant: "error", title: t("common.genericError") }),
-              ),
-        },
-      ],
-    );
-  }
 
   return (
     <Screen
@@ -105,7 +86,14 @@ export default function CategoryDetails() {
             <ListRow
               icon="trash"
               title={t("categories.delete")}
-              onPress={confirmDelete}
+              onPress={() =>
+                deleteCategory.request({
+                  name,
+                  itemIds: categoryItems.map((item) => item.id),
+                  remove: () => remove({ categoryId }),
+                  onDeleted: router.back,
+                })
+              }
             />
           </>
         }
@@ -127,6 +115,7 @@ export default function CategoryDetails() {
           />
         ) : null}
       </BottomSheet>
+      {deleteCategory.sheet}
     </Screen>
   );
 }

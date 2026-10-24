@@ -1,10 +1,23 @@
 import { useState, type ReactNode } from "react";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
   GROUP_CATEGORIES,
+  inGroup,
   type VaultGroupKey,
 } from "@keeplas/backend/lib/vault_groups";
-import { Button, Icon, Input, toast, useConfirm } from "@keeplas/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Icon,
+  Input,
+  Label,
+  toast,
+  useConfirm,
+} from "@keeplas/ui";
 import { Field } from "@/components/vault/form-fields";
 import { Panel } from "@/components/v2/surface";
 import { ICON_PATHS } from "@/lib/icons";
@@ -15,6 +28,13 @@ import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useVaultData } from "@/lib/vault-data";
 
 const GROUPS = Object.keys(GROUP_CATEGORIES) as VaultGroupKey[];
+
+interface CategoryToDelete {
+  label: string;
+  itemIds: Id<"vault_items">[];
+  /** Deletes a user-made category, or hides a built-in one. */
+  remove: () => Promise<unknown>;
+}
 
 function Row({
   label,
@@ -40,12 +60,13 @@ function Row({
 
 /**
  * Settings → Categories: delete built-in categories (restorable) and add or
- * delete your own. Items of a deleted category show in To sort, which
- * always stays.
+ * delete your own. Deleting a category archives its items, after the owner
+ * types DELETE when there are any; To sort always stays.
  */
 export default function CategoriesPage() {
   const t = useTranslations("settings.categories");
   const lists = useTranslations("vaultList.lists");
+  const deleteAccount = useTranslations("settings.deleteAccount");
   const confirm = useConfirm();
   const { categories, items } = useVaultData();
   const hidden = useHiddenCategoryGroups();
@@ -53,8 +74,14 @@ export default function CategoriesPage() {
   const setHidden = useAuditedMutation(api.users.setHiddenCategoryGroups);
   const create = useAuditedMutation(api.vault_categories.create);
   const remove = useAuditedMutation(api.vault_categories.remove);
+  const archiveItems = useAuditedMutation(api.vault_items.archiveItems);
   const [name, setName] = useState("");
   const [adding, setAdding] = useState(false);
+  const [pending, setPending] = useState<CategoryToDelete | null>(null);
+  const [typing, setTyping] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const word = deleteAccount("confirmWord");
 
   async function run(action: () => Promise<unknown>) {
     try {
@@ -64,15 +91,40 @@ export default function CategoriesPage() {
     }
   }
 
-  async function confirmDelete(label: string, action: () => Promise<unknown>) {
+  const itemsBody = (count: number) =>
+    count === 1 ? t("deleteItemsOne") : t("deleteItems", { count });
+
+  async function deleteCategory(category: CategoryToDelete) {
+    if (category.itemIds.length) {
+      await archiveItems({ itemIds: category.itemIds });
+    }
+    await category.remove();
+  }
+
+  async function confirmDelete(category: CategoryToDelete) {
+    const count = category.itemIds.length;
     const ok = await confirm({
-      title: t("deleteTitle", { name: label }),
-      description: t("deleteBody"),
+      title: t("deleteTitle", { name: category.label }),
+      description: count ? itemsBody(count) : t("deleteEmptyBody"),
       confirmLabel: t("delete"),
       cancelLabel: t("cancel"),
       variant: "destructive",
     });
-    if (ok) await run(action);
+    if (!ok) return;
+    if (!count) return run(() => deleteCategory(category));
+    setPending(category);
+    setTyped("");
+    setTyping(true);
+  }
+
+  async function confirmTyped() {
+    if (!pending || typed.trim().toUpperCase() !== word) return;
+    setDeleting(true);
+    await run(async () => {
+      await deleteCategory(pending);
+      setTyping(false);
+    });
+    setDeleting(false);
   }
 
   async function add() {
@@ -85,12 +137,12 @@ export default function CategoriesPage() {
     setAdding(false);
   }
 
-  const trash = (label: string, action: () => Promise<unknown>) => (
+  const trash = (category: CategoryToDelete) => (
     <Button
       variant="plain"
       size="icon"
-      aria-label={t("deleteTitle", { name: label })}
-      onClick={() => void confirmDelete(label, action)}
+      aria-label={t("deleteTitle", { name: category.label })}
+      onClick={() => void confirmDelete(category)}
     >
       <Icon path={ICON_PATHS.trash} className="size-[18px] text-icon-default" />
     </Button>
@@ -110,22 +162,31 @@ export default function CategoriesPage() {
             <Row
               key={group}
               label={lists(group)}
-              action={trash(lists(group), () =>
-                setHidden({ groups: [...hidden, group] }),
-              )}
+              action={trash({
+                label: lists(group),
+                itemIds: (items ?? [])
+                  .filter((item) => inGroup(item, group))
+                  .map((item) => item.id),
+                remove: () => setHidden({ groups: [...hidden, group] }),
+              })}
             />
           ))}
           {(categories ?? []).map((category) => {
             const label = category.name ?? t("locked");
-            const count = (items ?? []).filter(
-              (item) => item.categoryId === category.id,
-            ).length;
+            const itemIds = (items ?? [])
+              .filter((item) => item.categoryId === category.id)
+              .map((item) => item.id);
+            const count = itemIds.length;
             return (
               <Row
                 key={category.id}
                 label={label}
                 detail={count === 1 ? t("itemOne") : t("items", { count })}
-                action={trash(label, () => remove({ categoryId: category.id }))}
+                action={trash({
+                  label,
+                  itemIds,
+                  remove: () => remove({ categoryId: category.id }),
+                })}
               />
             );
           })}
@@ -192,6 +253,58 @@ export default function CategoriesPage() {
           </ul>
         </Panel>
       ) : null}
+
+      <Dialog open={typing} onOpenChange={setTyping}>
+        <DialogContent className="max-w-md space-y-5 p-6" role="alertdialog">
+          <div className="space-y-2">
+            <DialogTitle className="text-h3 text-text-primary">
+              {pending ? t("deleteTitle", { name: pending.label }) : null}
+            </DialogTitle>
+            <DialogDescription className="text-body text-text-muted">
+              {pending ? itemsBody(pending.itemIds.length) : null}
+            </DialogDescription>
+          </div>
+          <form
+            className="flex flex-col gap-[12px]"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void confirmTyped();
+            }}
+          >
+            <Label htmlFor="confirm-category-delete">
+              {deleteAccount("typeLabel", { word })}
+            </Label>
+            <Input
+              id="confirm-category-delete"
+              variant="field"
+              value={typed}
+              onChange={(event) => setTyped(event.target.value)}
+              placeholder={word}
+              autoComplete="off"
+              spellCheck={false}
+              autoFocus
+            />
+            <div className="flex justify-end gap-[8px]">
+              <Button
+                type="button"
+                variant="plain"
+                size="regular"
+                onClick={() => setTyping(false)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                variant="danger"
+                size="regular"
+                disabled={deleting || typed.trim().toUpperCase() !== word}
+              >
+                {t("delete")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
