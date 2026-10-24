@@ -148,6 +148,9 @@ export function PhoneInput({
               data={filtered}
               keyExtractor={(item) => item.code}
               keyboardShouldPersistTaps="handled"
+              // The search field keeps the keyboard up: inset the list so its
+              // last countries scroll clear of it.
+              automaticallyAdjustKeyboardInsets
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
