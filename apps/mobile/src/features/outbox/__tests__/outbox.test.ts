@@ -251,6 +251,54 @@ describe("capture sealing + outbox upload", () => {
     expect(sealed.item.pendingRecipients).toBeUndefined();
   });
 
+  it("shares a new capture with the chosen contacts only", async () => {
+    const owner = generateRecipientKeyPair();
+    const marie = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e5",
+      {
+        title: "Car papers",
+        note: "",
+        files: [],
+        share: {
+          recipients: [
+            {
+              contactId: "marie",
+              publicKey: serializePublicKey(marie.publicKey),
+            },
+          ],
+          pending: ["lea"],
+          contactIds: ["marie", "lea"],
+        },
+      },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    const server = fakeServer();
+    await uploadEntry(
+      {
+        id: "e5",
+        userId: "u1",
+        createdAt: 1,
+        status: "waiting",
+        attempts: 0,
+        ...sealed,
+      },
+      memoryStore(),
+      server.deps,
+    );
+
+    expect(server.created[0]).toMatchObject({
+      accessLevel: "trusted_only",
+      recipientMode: "explicit",
+      sharedWithContacts: ["marie", "lea"],
+      pendingRecipients: ["lea"],
+    });
+    expect(
+      server.created[0].recipientKeys?.map((key) => key.contactId),
+    ).toEqual(["marie"]);
+  });
+
   it("adds files to an existing item with that item's key", async () => {
     const owner = generateRecipientKeyPair();
     const existingDek = await generateDek();

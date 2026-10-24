@@ -106,6 +106,9 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
             contactId: key.contactId as Id<"trusted_contacts">,
             wrappedDek: key.wrappedDek,
           })),
+          sharedWithContacts: item.sharedWithContacts?.map(
+            (id) => id as Id<"trusted_contacts">,
+          ),
           pendingRecipients: item.pendingRecipients?.map(
             (id) => id as Id<"trusted_contacts">,
           ),
