@@ -64,7 +64,7 @@ export function DetailRows({ rows }: { rows: DetailRow[] }) {
   );
 }
 
-/** Figma `Chip` (34 pt pill, 16 pt icon, Caption-strong label). */
+/** Chip: 44 pt pill (full touch target), 18 pt icon, Body S strong label. */
 export function Chip({
   icon,
   label,
@@ -84,7 +84,6 @@ export function Chip({
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => [
         styles.chip,
         {
@@ -102,7 +101,7 @@ export function Chip({
       {icon ? (
         <Icon
           name={icon}
-          size={16}
+          size={18}
           color={selected ? "text.inverse" : "text.primary"}
         />
       ) : null}
@@ -161,13 +160,13 @@ const styles = StyleSheet.create({
   label: { flex: 1 },
   value: { flexShrink: 1, maxWidth: "55%" },
   chip: {
-    height: 34,
+    height: 44,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
+    gap: 8,
+    paddingHorizontal: 16,
     borderWidth: 1,
-    borderRadius: 18,
+    borderRadius: 22,
   },
   count: {
     minWidth: 20,

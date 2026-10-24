@@ -5,9 +5,6 @@ import { radius } from "@/theme";
 import { Icon } from "./icon";
 import { Text } from "./text";
 
-// Checkbox rows are ~24 pt tall; this brings them to a 44 pt target.
-const ROW_HIT_SLOP = { top: 10, bottom: 10 };
-
 /** Figma `Toggle`: 46×28 track, 22 pt knob. */
 export function Toggle({
   value,
@@ -41,7 +38,7 @@ export function Toggle({
   );
 }
 
-/** Figma `Checkbox`: 22 pt, radius 6, 2 pt border; label in Body S. */
+/** Checkbox: 28 pt box, radius 6, 2 pt border; the whole 48 pt row is the touch target. */
 export function Checkbox({
   checked,
   onChange,
@@ -62,8 +59,7 @@ export function Checkbox({
       accessibilityState={{ checked, disabled }}
       disabled={disabled}
       onPress={() => onChange(!checked)}
-      hitSlop={ROW_HIT_SLOP}
-      style={[styles.option, disabled && styles.disabled]}
+      style={[styles.option, styles.row, disabled && styles.disabled]}
     >
       <View
         style={[
@@ -78,7 +74,7 @@ export function Checkbox({
           },
         ]}
       >
-        {checked ? <Icon name="check" size={16} color="text.inverse" /> : null}
+        {checked ? <Icon name="check" size={20} color="text.inverse" /> : null}
       </View>
       {description ? (
         <View style={styles.flex}>
@@ -117,7 +113,7 @@ export function Radio({
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.option, styles.radioRow, disabled && styles.disabled]}
+      style={[styles.option, styles.row, disabled && styles.disabled]}
     >
       <View
         style={[
@@ -195,15 +191,15 @@ const styles = StyleSheet.create({
   },
   option: { flexDirection: "row", alignItems: "center", gap: 12 },
   disabled: { opacity: 0.5 },
+  row: { minHeight: 48 },
   checkbox: {
-    width: 22,
-    height: 22,
+    width: 28,
+    height: 28,
     borderRadius: radius.xs,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  radioRow: { minHeight: 48 },
   radio: {
     width: 28,
     height: 28,
