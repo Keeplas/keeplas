@@ -19,7 +19,14 @@ export function fromDeviceContact(
   country: CountryCode,
 ): { name: string; email: string; phones: ContactPhone[] } {
   return {
-    name: contact.name,
+    // Typed as a string, but the iOS picker never sends it: rebuild it.
+    name:
+      contact.name ??
+      ([contact.firstName, contact.middleName, contact.lastName]
+        .filter(Boolean)
+        .join(" ") ||
+        contact.company ||
+        ""),
     email: contact.emails?.[0]?.email ?? "",
     phones: (contact.phoneNumbers ?? []).flatMap(
       ({ label, number, countryCode }) => {
