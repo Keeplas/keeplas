@@ -936,10 +936,12 @@
     "items": "{n} éléments",
     "move": "Changer de catégorie",
     "delete": "Supprimer",
+    "deleteCategory": "Supprimer la catégorie",
     "deleteTitle": "Supprimer {name} ?",
     "deleteBody": "Ses éléments restent dans votre coffre et passent dans À classer.",
     "removed": "Catégories supprimées",
-    "restore": "Touchez pour la restaurer"
+    "restore": "Touchez pour la restaurer",
+    "search": "Rechercher dans {name}"
   },
   "search": {
     "label": "Rechercher dans le coffre",

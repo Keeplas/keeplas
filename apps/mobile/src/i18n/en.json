@@ -945,10 +945,12 @@
     "items": "{n} items",
     "move": "Change category",
     "delete": "Delete",
+    "deleteCategory": "Delete category",
     "deleteTitle": "Delete {name}?",
     "deleteBody": "Its items stay in your vault and move to To sort.",
     "removed": "Deleted categories",
-    "restore": "Tap to restore"
+    "restore": "Tap to restore",
+    "search": "Search in {name}"
   },
   "search": {
     "label": "Search your vault",
