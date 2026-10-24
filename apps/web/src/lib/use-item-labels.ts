@@ -29,7 +29,7 @@ export function useItemLabels() {
   const t = useTranslations("vaultList");
   const categoryLabel = useCategoryLabel();
   const locale = useLocale();
-  const { folders } = useVaultData();
+  const { folders, categories } = useVaultData();
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const groups = useQuery(api.recipient_groups.listGroups);
 
@@ -104,6 +104,11 @@ export function useItemLabels() {
       },
 
       category(item: VaultItemSummary): string {
+        const custom = item.categoryId
+          ? categories?.find((category) => category.id === item.categoryId)
+              ?.name
+          : undefined;
+        if (custom) return custom;
         const label = categoryLabelKey(item);
         return label.type === "category"
           ? categoryLabel(label.key)
@@ -146,5 +151,5 @@ export function useItemLabels() {
         };
       },
     };
-  }, [t, categoryLabel, locale, folders, contacts, groups]);
+  }, [t, categoryLabel, locale, folders, categories, contacts, groups]);
 }

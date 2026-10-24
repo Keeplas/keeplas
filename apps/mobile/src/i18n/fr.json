@@ -933,7 +933,11 @@
     "new": "Nouvelle catégorie",
     "newBody": "Les noms de catégorie sont chiffrés comme les éléments qu'elles contiennent.",
     "name": "Nom de la catégorie",
-    "create": "Créer la catégorie"
+    "create": "Créer la catégorie",
+    "rename": "Renommer la catégorie",
+    "delete": "Supprimer la catégorie",
+    "deleteTitle": "Supprimer {name} ?",
+    "deleteBody": "Ses éléments restent dans votre coffre, rangés dans Autres."
   },
   "folders": {
     "title": "Dossier",

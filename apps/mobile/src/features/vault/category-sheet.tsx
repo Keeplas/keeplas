@@ -30,9 +30,68 @@ export function useCategoryLabel() {
 }
 
 /**
+ * Name field of a user-made category. The name is sealed under the master
+ * key before it leaves the phone; `onSubmit` gets the ciphertext.
+ */
+export function CategoryNameForm({
+  initial = "",
+  submitLabel,
+  onSubmit,
+}: {
+  initial?: string;
+  submitLabel: string;
+  onSubmit: (encryptedName: string) => Promise<void>;
+}) {
+  const { t } = useI18n();
+  const { masterKey } = useVault();
+  const [name, setName] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  async function submit() {
+    if (!masterKey) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      await onSubmit(await encryptText(name.trim(), masterKey));
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <TextField
+        label={t("categories.name")}
+        value={name}
+        onChangeText={setName}
+        autoFocus
+        returnKeyType="done"
+        onSubmitEditing={() => name.trim() && void submit()}
+      />
+      <Text variant="body-sm" color="text.muted">
+        {t("categories.newBody")}
+      </Text>
+      {failed ? (
+        <Text variant="body-sm" color="status.revoked">
+          {t("common.genericError")}
+        </Text>
+      ) : null}
+      <Button
+        label={submitLabel}
+        loading={busy}
+        disabled={!name.trim()}
+        onPress={() => void submit()}
+      />
+    </>
+  );
+}
+
+/**
  * Category picker of capture and item details: the built-in categories, the
- * owner's own ones, and a row to add a new one (name sealed under the master
- * key before it leaves the phone).
+ * owner's own ones, and a row to add a new one.
  */
 export function CategorySheet({
   visible,
@@ -46,18 +105,12 @@ export function CategorySheet({
   onDismiss: () => void;
 }) {
   const { t } = useI18n();
-  const { masterKey } = useVault();
   const { categories } = useVaultData();
   const create = useAuditedMutation(api.vault_categories.create);
   const [naming, setNaming] = useState(false);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
 
   function close() {
     setNaming(false);
-    setName("");
-    setFailed(false);
     onDismiss();
   }
 
@@ -66,23 +119,11 @@ export function CategorySheet({
     close();
   }
 
-  async function add() {
-    if (!masterKey) return;
-    setBusy(true);
-    setFailed(false);
-    try {
-      const categoryId = await create({
-        encryptedName: await encryptText(name.trim(), masterKey),
-      });
-      choose({ category: CUSTOM_FALLBACK, categoryId });
-    } catch {
-      setFailed(true);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const check = <Icon name="check" size={18} color="status.active" />;
+  // A deleted category leaves its id in the item: show the fallback checked.
+  const customId = categories?.some((c) => c.id === value.categoryId)
+    ? value.categoryId
+    : undefined;
 
   return (
     <BottomSheet
@@ -91,30 +132,13 @@ export function CategorySheet({
       title={naming ? t("categories.new") : t("capture.categoryLabel")}
     >
       {naming ? (
-        <>
-          <TextField
-            label={t("categories.name")}
-            value={name}
-            onChangeText={setName}
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={() => name.trim() && void add()}
-          />
-          <Text variant="body-sm" color="text.muted">
-            {t("categories.newBody")}
-          </Text>
-          {failed ? (
-            <Text variant="body-sm" color="status.revoked">
-              {t("common.genericError")}
-            </Text>
-          ) : null}
-          <Button
-            label={t("categories.create")}
-            loading={busy}
-            disabled={!name.trim()}
-            onPress={() => void add()}
-          />
-        </>
+        <CategoryNameForm
+          submitLabel={t("categories.create")}
+          onSubmit={async (encryptedName) => {
+            const categoryId = await create({ encryptedName });
+            choose({ category: CUSTOM_FALLBACK, categoryId });
+          }}
+        />
       ) : (
         <>
           {BUILT_IN.map((category) => (
@@ -123,9 +147,7 @@ export function CategorySheet({
               icon="document"
               title={t(`capture.category.${category}`)}
               trailing={
-                !value.categoryId && value.category === category
-                  ? check
-                  : undefined
+                !customId && value.category === category ? check : undefined
               }
               onPress={() => choose({ category })}
             />
@@ -135,7 +157,7 @@ export function CategorySheet({
               key={category.id}
               icon="document"
               title={category.name ?? t("item.decrypting")}
-              trailing={value.categoryId === category.id ? check : undefined}
+              trailing={customId === category.id ? check : undefined}
               onPress={() =>
                 choose({ category: CUSTOM_FALLBACK, categoryId: category.id })
               }

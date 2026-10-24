@@ -942,7 +942,11 @@
     "new": "New category",
     "newBody": "Category names are encrypted like the items inside them.",
     "name": "Category name",
-    "create": "Create category"
+    "create": "Create category",
+    "rename": "Rename category",
+    "delete": "Delete category",
+    "deleteTitle": "Delete {name}?",
+    "deleteBody": "Its items stay in your vault, filed under Other."
   },
   "folders": {
     "title": "Folder",

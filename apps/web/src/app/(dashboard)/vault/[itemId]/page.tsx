@@ -83,7 +83,7 @@ export default function VaultItemPage() {
   const categoryLabel = useCategoryLabel();
   const categories = useSortedCategories();
   const labels = useItemLabels();
-  const { folders } = useVaultData();
+  const { folders, categories: customCategories } = useVaultData();
   const { raw, opened, files, failed } = useOpenedItem(itemId);
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const { decryptContent, decryptContentWithKey, encryptContentWithKey } =
@@ -139,6 +139,10 @@ export default function VaultItemPage() {
         ? decryptContent(payload)
         : decryptContentWithKey(payload, opened.key),
     [opened, decryptContent, decryptContentWithKey],
+  );
+
+  const customCategory = customCategories?.find(
+    (category) => category.id === opened?.categoryId,
   );
 
   const summary = useMemo(
@@ -223,9 +227,16 @@ export default function VaultItemPage() {
     announcePending(wraps);
   }
 
-  async function recategorize(category: VaultCategory) {
-    if (category === opened!.category) return;
-    const meta = itemMetaJson(category, opened!.icon);
+  /** `value` is a built-in category key or a user-made category id. */
+  async function recategorize(value: string) {
+    const custom = customCategories?.some((c) => c.id === value);
+    // User-made categories keep "other" as the built-in fallback.
+    const category = custom ? "other" : (value as VaultCategory);
+    const categoryId = custom ? value : undefined;
+    if (category === opened!.category && categoryId === opened!.categoryId) {
+      return;
+    }
+    const meta = itemMetaJson(category, opened!.icon, categoryId);
     // The item key: its DEK, or the master key for a legacy item.
     await updateItem({
       itemId,
@@ -540,7 +551,9 @@ export default function VaultItemPage() {
                     <DetailRow
                       icon={ICON_PATHS.document}
                       label={t("details.category")}
-                      value={categoryLabel(opened.category)}
+                      value={
+                        customCategory?.name ?? categoryLabel(opened.category)
+                      }
                     />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -548,10 +561,8 @@ export default function VaultItemPage() {
                     className="max-h-[360px] min-w-[220px] overflow-y-auto rounded-md border border-border-default bg-bg-surface p-[6px] shadow-menu"
                   >
                     <DropdownMenuRadioGroup
-                      value={opened.category}
-                      onValueChange={(value) =>
-                        void recategorize(value as VaultCategory)
-                      }
+                      value={customCategory?.id ?? opened.category}
+                      onValueChange={(value) => void recategorize(value)}
                     >
                       {categories.map((category) => (
                         <DropdownMenuRadioItem
@@ -560,6 +571,15 @@ export default function VaultItemPage() {
                           className="rounded-sm text-body-sm text-text-primary"
                         >
                           {categoryLabel(category.key)}
+                        </DropdownMenuRadioItem>
+                      ))}
+                      {(customCategories ?? []).map((category) => (
+                        <DropdownMenuRadioItem
+                          key={category.id}
+                          value={category.id}
+                          className="rounded-sm text-body-sm text-text-primary"
+                        >
+                          {category.name ?? lists("locked")}
                         </DropdownMenuRadioItem>
                       ))}
                     </DropdownMenuRadioGroup>

@@ -15,6 +15,8 @@ export interface VaultItemSummary {
   /** null when the item cannot be decrypted in this browser. */
   title: string | null;
   category: VaultCategory;
+  /** User-made category (vault_categories); `category` is its fallback. */
+  categoryId?: string;
   kind: ContentKind;
   icon?: string;
   files: Omit<FileMeta, "v">[];
