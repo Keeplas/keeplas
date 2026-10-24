@@ -2,12 +2,19 @@ import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 
 /**
- * The two billing tiers. Lifetime is a one-time purchase ($199) — there is no
- * recurring subscription. A user with no `plan` field is on `free`.
+ * The two billing tiers. Lifetime is a one-time in-app purchase ($99) — there is
+ * no recurring subscription. A user with no `plan` field is on `free`.
  */
 export const planValidator = v.union(v.literal("free"), v.literal("lifetime"));
 
 export type Plan = "free" | "lifetime";
+
+/**
+ * RevenueCat entitlement unlocked by the in-app Lifetime purchase. Must match
+ * the entitlement identifier configured in the RevenueCat dashboard; read by
+ * the mobile paywall and the `/webhooks/revenuecat` handler.
+ */
+export const LIFETIME_ENTITLEMENT_ID = "lifetime";
 
 /**
  * Encrypted-storage ceiling per plan, in bytes. Enforced server-side before

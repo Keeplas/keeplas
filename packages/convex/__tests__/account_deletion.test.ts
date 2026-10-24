@@ -72,8 +72,8 @@ async function seedVaultOwner(t: TestConvex) {
     });
     await ctx.db.insert("payments", {
       userId,
-      stripeSessionId: "cs_test",
-      amountCents: 19900,
+      revenueCatTransactionId: "rc_test",
+      amountCents: 9900,
       currency: "usd",
       status: "paid",
       plan: "lifetime",

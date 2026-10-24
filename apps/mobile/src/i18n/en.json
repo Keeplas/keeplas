@@ -413,8 +413,12 @@
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
+    "titleWithPrice": "Upgrade to Lifetime · {price}",
     "body": "10 GB of storage and every feature. One payment, no subscription.",
-    "cta": "Upgrade"
+    "cta": "Upgrade",
+    "restore": "Restore purchase",
+    "activating": "Purchase confirmed. Your Lifetime plan is being activated.",
+    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account."
   },
   "settings": {
     "title": "Settings",

@@ -611,9 +611,6 @@
       "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
       "popular": "Populaire",
       "currentPlan": "Forfait actuel",
-      "checkoutSuccess": "Paiement reçu — votre forfait Lifetime est en cours d'activation.",
-      "checkoutCancel": "Paiement annulé. Aucun montant n'a été débité.",
-      "checkoutError": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
       "priceSuffix": {
         "forever": "/pour toujours",
@@ -628,7 +625,7 @@
         "lifetime": {
           "name": "À vie",
           "tagline": "Tout ce dont vous avez besoin, pour toujours, en un seul paiement.",
-          "cta": "Obtenir l'accès à vie"
+          "inApp": "Achetez l'offre À vie dans l'app mobile Keeplas : Réglages → Passer à Lifetime."
         }
       },
       "features": {
@@ -743,7 +740,7 @@
           "name": "À vie",
           "summary": "Coffre de 10 Go · Jusqu'à 3 contacts de confiance · Life check"
         },
-        "upgrade": "Passer à l'offre À vie · 199 $",
+        "upgrade": "Passer à l'offre À vie · 99 $",
         "upgradeNote": "Coffre de 10 Go. Paiement unique."
       },
       "preferences": {

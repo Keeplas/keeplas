@@ -123,8 +123,9 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
    - age rating and category;
    - the data collection questionnaire. Vault content is end-to-end encrypted, but phone number and device data are still collected.
 4. **Build**: select the TestFlight build to ship.
-5. **App Review Information**: give the reviewer a demo account and short notes on the sign-in flow (code, PIN). Without these, review is usually rejected for an app gated by sign-in.
-6. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
+5. **In-App Purchases**: add `keeplas_lifetime` to the version. Apple requires the first in-app purchase to ship with an app version. Before that, replace its review screenshot, a blank placeholder uploaded by RevenueCat, with the Settings screen showing the Upgrade to Lifetime card.
+6. **App Review Information**: give the reviewer a demo account and short notes on the sign-in flow (code, PIN). Without these, review is usually rejected for an app gated by sign-in.
+7. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
 
 ## Troubleshooting
 
