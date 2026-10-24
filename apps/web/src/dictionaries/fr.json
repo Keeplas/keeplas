@@ -2405,7 +2405,7 @@
       "saving": "Enregistrement…"
     },
     "history": {
-      "title": "Historique des modifications",
+      "title": "Historique",
       "body": "Les versions précédentes de cet élément. En restaurer une conserve aussi la version actuelle ici.",
       "empty": "Aucune modification pour l'instant.",
       "untitled": "Sans titre",

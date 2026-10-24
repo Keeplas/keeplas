@@ -2405,7 +2405,7 @@
       "saving": "Saving…"
     },
     "history": {
-      "title": "Edit history",
+      "title": "History",
       "body": "Earlier versions of this item. Restoring one keeps the current version here too.",
       "empty": "No changes yet.",
       "untitled": "Untitled",
