@@ -28,6 +28,7 @@ import {
 } from "./media";
 import type { CaptureFile } from "./seal";
 import { draftHref } from "./draft-route";
+import { usePrepareMedia } from "./use-prepare-media";
 
 export const SHEET_CLOSE_MS = 350;
 
@@ -57,6 +58,7 @@ function AddSheet({
   const { t } = useI18n();
   const [denied, setDenied] = useState<PermissionProblem | null>(null);
   const [noCamera, setNoCamera] = useState<"photo" | "video" | null>(null);
+  const prepare = usePrepareMedia();
 
   function fromLibrary(kind: "photo" | "video") {
     return withMedia(kind, () =>
@@ -69,7 +71,7 @@ function AddSheet({
     get: () => Promise<CaptureFile[]>,
   ) {
     try {
-      const files = await get();
+      const files = await prepare(await get());
       if (files.length === 0) return;
       draftStore.start(kind, { files, ...preset });
       router.push(draftHref("/capture/compose"));

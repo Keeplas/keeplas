@@ -780,7 +780,9 @@
     "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo.",
     "allContacts": "Tous vos contacts de confiance",
     "contactKeyTitle": "Partage avec {name} impossible",
-    "contactKeyBody": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, l'élément n'a donc pas été enregistré. Vérifiez-le dans Contacts, puis réessayez."
+    "contactKeyBody": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, l'élément n'a donc pas été enregistré. Vérifiez-le dans Contacts, puis réessayez.",
+    "preparingVideo": "Préparation de la vidéo",
+    "preparingVideoPct": "Allègement pour un chargement rapide, sans perte visible · {pct} %"
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",

@@ -59,6 +59,27 @@ export function AttachmentPreview({
   const { meta, state } = file;
 
   if (state.status !== "ready") {
+    if (meta.kind === "video" && meta.poster && state.status === "loading") {
+      return (
+        <View
+          style={[
+            styles.video,
+            styles.posterFrame,
+            { backgroundColor: colors["bg.header"] },
+          ]}
+        >
+          <Image
+            source={{ uri: meta.poster }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="contain"
+            blurRadius={2}
+          />
+          <View style={[StyleSheet.absoluteFill, styles.center]}>
+            <PreviewStatus file={file} {...handlers} dark />
+          </View>
+        </View>
+      );
+    }
     return (
       <View style={[card, styles.center]}>
         <PreviewStatus file={file} {...handlers} />
@@ -644,6 +665,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   video: { alignSelf: "stretch", height: 265 },
+  posterFrame: { borderRadius: radius.lg, overflow: "hidden" },
   audio: {
     alignSelf: "stretch",
     flexDirection: "row",

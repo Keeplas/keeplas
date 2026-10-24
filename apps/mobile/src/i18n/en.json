@@ -789,7 +789,9 @@
     "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead.",
     "allContacts": "All trusted contacts",
     "contactKeyTitle": "Couldn't share with {name}",
-    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again."
+    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again.",
+    "preparingVideo": "Preparing the video",
+    "preparingVideoPct": "Making it lighter to load fast, with no visible loss · {pct}%"
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
