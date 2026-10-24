@@ -43,6 +43,7 @@ export interface CaptureDraft {
   note: string;
   files: CaptureFile[];
   category?: VaultCategory;
+  categoryId?: string;
   icon?: string;
   /** Set when the capture starts from a folder screen. */
   folderId?: string;
@@ -97,7 +98,10 @@ export async function sealCapture(
       draft.attachTo?.ownerWrappedDek ?? (await wrapDek(dek, ownerPublicKey)),
     encryptedTitle: await encryptText(draft.title.trim(), dek),
     encryptedMeta: await encryptText(
-      itemMetaJson(draft.category ?? INBOX, draft.icon),
+      itemMetaJson(
+        { category: draft.category ?? INBOX, categoryId: draft.categoryId },
+        draft.icon,
+      ),
       dek,
     ),
     encryptedContent: await encryptText(noteToHtml(draft.note), dek),

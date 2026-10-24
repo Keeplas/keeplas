@@ -18,6 +18,7 @@ export interface OpenedItem {
   note: string;
   links: string[];
   category: VaultCategory;
+  categoryId?: string;
   icon?: string;
   /** The DEK, or the master key for a legacy (pre-ZK) item. */
   key: CryptoKey;
@@ -71,6 +72,7 @@ export function useOpenedItem(itemId: Id<"vault_items">): {
           note,
           links,
           category: meta?.category ?? raw.category ?? "other",
+          categoryId: meta?.categoryId,
           icon: meta?.icon,
           key,
           legacy,

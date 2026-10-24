@@ -25,6 +25,7 @@ export interface OpenedItem {
   title: string;
   note: string;
   category: VaultCategory;
+  categoryId?: string;
   icon?: string;
   files: Attachment[];
 }
@@ -70,6 +71,7 @@ export function useOpenedItem(itemId: Id<"vault_items">) {
             title,
             note,
             category: meta.category,
+            categoryId: meta.categoryId,
             icon: meta.icon,
             files: metas,
           });

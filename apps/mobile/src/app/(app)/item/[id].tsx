@@ -19,7 +19,7 @@ import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { wrapDek } from "@keeplas/crypto/kem";
 import { encryptText } from "@/crypto/envelope";
-import { itemMetaJson, type VaultCategory } from "@/crypto/item-meta";
+import { itemMetaJson, type CategoryChoice } from "@/crypto/item-meta";
 import {
   AttachmentPreview,
   PhotoGallery,
@@ -36,7 +36,10 @@ import {
 } from "@/features/vault/use-opened-item";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes, formatDate, formatDuration } from "@/lib/format";
-import { GROUP_CATEGORY } from "@/features/home/vault-groups";
+import {
+  CategorySheet,
+  useCategoryLabel,
+} from "@/features/vault/category-sheet";
 import { itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
@@ -61,6 +64,7 @@ export default function ItemDetails() {
   const itemId = id as Id<"vault_items">;
   const router = useRouter();
   const { t, language } = useI18n();
+  const categoryLabel = useCategoryLabel();
   const { lock } = useVault();
   const { raw, opened, failure, retry: reopen } = useOpenedItem(itemId);
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
@@ -278,13 +282,17 @@ export default function ItemDetails() {
     meta: attachment,
     state: stateOf(attachment.id),
   });
-  async function recategorize(category: VaultCategory) {
-    setSheet(null);
-    if (!opened || category === opened.category) return;
+  async function recategorize(choice: CategoryChoice) {
+    if (
+      !opened ||
+      (choice.category === opened.category &&
+        choice.categoryId === opened.categoryId)
+    )
+      return;
     await updateItem({
       itemId,
       encryptedMeta: await encryptText(
-        itemMetaJson(category, opened.icon),
+        itemMetaJson(choice, opened.icon),
         opened.key,
       ),
     }).catch(() =>
@@ -433,25 +441,12 @@ export default function ItemDetails() {
     </>
   );
   const categorySheet = (
-    <BottomSheet
+    <CategorySheet
       visible={sheet === "category"}
+      value={opened}
+      onChange={(choice) => void recategorize(choice)}
       onDismiss={() => setSheet(null)}
-      title={t("item.category")}
-    >
-      {Object.values(GROUP_CATEGORY).map((category) => (
-        <ListRow
-          key={category}
-          icon="document"
-          title={t(`capture.category.${category}`)}
-          trailing={
-            opened.category === category ? (
-              <Icon name="check" size={18} color="status.active" />
-            ) : undefined
-          }
-          onPress={() => void recategorize(category)}
-        />
-      ))}
-    </BottomSheet>
+    />
   );
 
   if (!file) {
@@ -504,7 +499,7 @@ export default function ItemDetails() {
             {
               icon: "document",
               label: t("item.category"),
-              value: t(`capture.category.${opened.category}`),
+              value: categoryLabel(opened),
               onPress: () => setSheet("category"),
             },
             {
@@ -612,7 +607,7 @@ export default function ItemDetails() {
           {
             icon: "document",
             label: t("item.category"),
-            value: t(`capture.category.${opened.category}`),
+            value: categoryLabel(opened),
             onPress: () => setSheet("category"),
           },
           {

@@ -38,6 +38,7 @@ export interface VaultItemSummary {
   /** null when the item cannot be decrypted on this phone. */
   title: string | null;
   category: VaultCategory;
+  categoryId?: string;
   kind: ContentKind;
   icon?: IconName;
   attachments: number;
@@ -60,6 +61,11 @@ export interface FolderSummary {
   }[];
 }
 
+export interface CategorySummary {
+  id: Id<"vault_categories">;
+  name: string | null;
+}
+
 export interface PendingSummary {
   entry: OutboxEntry;
   title: string | null;
@@ -68,6 +74,8 @@ export interface PendingSummary {
 interface VaultDataValue {
   items: VaultItemSummary[] | undefined;
   folders: FolderSummary[] | undefined;
+  /** User-made categories (the built-in ones are fixed). */
+  categories: CategorySummary[] | undefined;
   /** Captures still on this phone (outbox), newest first. */
   pending: PendingSummary[];
   ownerKeys: () => Promise<OwnerKeys>;
@@ -94,6 +102,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const { entries } = useOutbox();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
   const rawFolders = useQuery(api.folders.list);
+  const rawCategories = useQuery(api.vault_categories.list);
   const cache = useRef(new Map<string, Promise<VaultItemSummary>>());
   // ML-KEM decapsulation is the expensive step of opening an item; keep the
   // unwrapped DEKs for the unlocked session (same exposure as the cached
@@ -102,6 +111,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const pendingCache = useRef(new Map<string, Promise<string | null>>());
   const [items, setItems] = useState<VaultItemSummary[]>();
   const [folders, setFolders] = useState<FolderSummary[]>();
+  const [categories, setCategories] = useState<CategorySummary[]>();
   const [pending, setPending] = useState<PendingSummary[]>([]);
 
   useEffect(() => {
@@ -164,6 +174,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
           ...base,
           title,
           category,
+          categoryId: meta?.categoryId,
           icon,
           kind: contentKind(files),
           attachments: files.length,
@@ -262,6 +273,22 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     };
   }, [rawFolders, masterKey]);
 
+  useEffect(() => {
+    if (!rawCategories || !masterKey) return;
+    let alive = true;
+    Promise.all(
+      rawCategories.map(async (category) => ({
+        id: category._id,
+        name: await decryptText(category.encryptedName, masterKey).catch(
+          () => null,
+        ),
+      })),
+    ).then((out) => alive && setCategories(out));
+    return () => {
+      alive = false;
+    };
+  }, [rawCategories, masterKey]);
+
   // Outbox entries reload after every upload step; cache their decrypted
   // titles so a flush does not redo one ML-KEM unwrap per entry each time.
   useEffect(() => {
@@ -287,8 +314,16 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   }, [entries, itemKey]);
 
   const value = useMemo<VaultDataValue>(
-    () => ({ items, folders, pending, ownerKeys, itemKey, summarize }),
-    [items, folders, pending, ownerKeys, itemKey, summarize],
+    () => ({
+      items,
+      folders,
+      categories,
+      pending,
+      ownerKeys,
+      itemKey,
+      summarize,
+    }),
+    [items, folders, categories, pending, ownerKeys, itemKey, summarize],
   );
   return (
     <VaultDataContext.Provider value={value}>

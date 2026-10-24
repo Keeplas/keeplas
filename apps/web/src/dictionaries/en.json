@@ -231,7 +231,7 @@
       }
     },
     "tiles": {
-      "inbox": "Encrypted inbox",
+      "inbox": "To sort",
       "toOrganize": "{count} items to organize",
       "documents": "Documents",
       "accounts": "Accounts",
@@ -1328,7 +1328,7 @@
       "contacts": "Contacts",
       "wishes": "Wishes",
       "other": "Other",
-      "inbox": "Encrypted inbox"
+      "inbox": "To sort"
     },
     "links": {
       "empty": "No links saved.",
@@ -2302,7 +2302,7 @@
     "breadcrumb": "My vault",
     "lists": {
       "all": "All items",
-      "inbox": "Encrypted inbox",
+      "inbox": "To sort",
       "documents": "Documents",
       "accounts": "Accounts",
       "instructions": "Instructions",

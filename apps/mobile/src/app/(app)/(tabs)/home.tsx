@@ -39,7 +39,7 @@ export default function Home() {
   const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
   const numberChange = useQuery(api.number_change.getMineOpen);
-  const { items, pending, folders } = useVaultData();
+  const { items, pending, folders, categories } = useVaultData();
   const { ready } = useRecoveryWays();
 
   const greeting = t(greetingKey(new Date().getHours()));
@@ -128,6 +128,24 @@ export default function Home() {
             label={t(`home.${group.key}`)}
             count={counts[group.key]}
             onPress={() => openList(group.key)}
+          />
+        ))}
+        {(categories ?? []).map((category) => (
+          <VaultTile
+            key={category.id}
+            icon="document"
+            tint={palette.category.other}
+            label={category.name ?? t("item.decrypting")}
+            count={
+              (items ?? []).filter((item) => item.categoryId === category.id)
+                .length
+            }
+            onPress={() =>
+              router.push({
+                pathname: "/category/[id]",
+                params: { id: category.id },
+              })
+            }
           />
         ))}
         {(folders ?? []).map((folder) => (

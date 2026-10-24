@@ -11,6 +11,11 @@ export interface ItemMeta {
   v: 1;
   category: VaultCategory;
   icon?: string;
+  /**
+   * User-made category (vault_categories, created in the phone app).
+   * `category` then holds the built-in fallback ("other").
+   */
+  categoryId?: string;
 }
 
 export interface FileMeta {
@@ -22,11 +27,16 @@ export interface FileMeta {
   durationSec?: number;
 }
 
-export const itemMetaJson = (category: VaultCategory, icon?: string): string =>
+export const itemMetaJson = (
+  category: VaultCategory,
+  icon?: string,
+  categoryId?: string,
+): string =>
   JSON.stringify({
     v: 1,
     category,
     ...(icon ? { icon } : {}),
+    ...(categoryId ? { categoryId } : {}),
   } satisfies ItemMeta);
 
 export const fileMetaJson = (meta: Omit<FileMeta, "v"> | FileMeta): string =>

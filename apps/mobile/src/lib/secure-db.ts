@@ -42,12 +42,14 @@ export function secureDb(): Promise<DB> {
     await handle.execute("DROP TABLE IF EXISTS item_summaries");
     await handle.execute("DROP TABLE IF EXISTS item_summaries_v2");
     await handle.execute("DROP TABLE IF EXISTS item_summaries_v3");
+    await handle.execute("DROP TABLE IF EXISTS item_summaries_v4");
     await handle.execute(
-      `CREATE TABLE IF NOT EXISTS item_summaries_v4 (
+      `CREATE TABLE IF NOT EXISTS item_summaries_v5 (
         id TEXT PRIMARY KEY NOT NULL,
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         category TEXT NOT NULL,
+        category_id TEXT,
         kind TEXT NOT NULL,
         icon TEXT,
         attachments INTEGER NOT NULL,

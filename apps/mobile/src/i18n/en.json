@@ -380,7 +380,7 @@
     "other": "Other",
     "items": "{count} items",
     "item": "1 item",
-    "inbox": "Encrypted inbox",
+    "inbox": "To sort",
     "recent": "Recent items",
     "outbox": {
       "waiting": "Waiting to upload",
@@ -707,7 +707,7 @@
     "untitledScan": "Scanned document",
     "localEncryption": "Title, notes, category and attachments are encrypted on this phone.",
     "category": {
-      "inbox": "Inbox",
+      "inbox": "To sort",
       "personal_document": "Documents",
       "credential": "Accounts",
       "wishes": "Instructions",
@@ -938,6 +938,12 @@
     "saveFailed": "Your changes couldn't be saved. Check your connection and try again.",
     "notFound": "This contact no longer exists."
   },
+  "categories": {
+    "new": "New category",
+    "newBody": "Category names are encrypted like the items inside them.",
+    "name": "Category name",
+    "create": "Create category"
+  },
   "folders": {
     "title": "Folder",
     "mine": "My folders",
@@ -953,7 +959,7 @@
     "select": "Select",
     "from": "Shared by {name}",
     "move": "Move to folder",
-    "noFolder": "Encrypted inbox",
+    "noFolder": "No folder",
     "timing": {
       "now": "Available now",
       "after_verification": "After verification"

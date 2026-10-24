@@ -24,15 +24,16 @@ export async function loadItemSummaries(
   const { rows } = await (
     await secureDb()
   ).execute(
-    `SELECT id, title, category, kind, icon, attachments, duration_sec,
-       folder_id, shared_with, created_at, updated_at
-     FROM item_summaries_v4 WHERE user_id = ? ORDER BY updated_at DESC`,
+    `SELECT id, title, category, category_id, kind, icon, attachments,
+       duration_sec, folder_id, shared_with, created_at, updated_at
+     FROM item_summaries_v5 WHERE user_id = ? ORDER BY updated_at DESC`,
     [userId],
   );
   return rows.map((row) => ({
     id: String(row.id) as Id<"vault_items">,
     title: String(row.title),
     category: String(row.category) as VaultCategory,
+    categoryId: row.category_id ? String(row.category_id) : undefined,
     kind: String(row.kind) as ContentKind,
     icon:
       row.icon && isIconName(String(row.icon))
@@ -57,21 +58,23 @@ export async function saveItemSummaries(
 ): Promise<void> {
   const db = await secureDb();
   await db.transaction(async (tx) => {
-    await tx.execute("DELETE FROM item_summaries_v4 WHERE user_id = ?", [
+    await tx.execute("DELETE FROM item_summaries_v5 WHERE user_id = ?", [
       userId,
     ]);
     for (const item of items) {
       if (item.title === null) continue;
       await tx.execute(
-        `INSERT INTO item_summaries_v4
-           (id, user_id, title, category, kind, icon, attachments,
-            duration_sec, folder_id, shared_with, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO item_summaries_v5
+           (id, user_id, title, category, category_id, kind, icon,
+            attachments, duration_sec, folder_id, shared_with, created_at,
+            updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           item.id,
           userId,
           item.title,
           item.category,
+          item.categoryId ?? null,
           item.kind,
           item.icon ?? null,
           item.attachments,
@@ -89,5 +92,5 @@ export async function saveItemSummaries(
 export async function clearItemSummaries(userId: string): Promise<void> {
   await (
     await secureDb()
-  ).execute("DELETE FROM item_summaries_v4 WHERE user_id = ?", [userId]);
+  ).execute("DELETE FROM item_summaries_v5 WHERE user_id = ?", [userId]);
 }
