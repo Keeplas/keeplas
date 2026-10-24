@@ -36,6 +36,23 @@ jest.mock("../../../modules/device-lock", () => {
   };
 });
 
+// Argon2id (19 MiB per call) is covered in packages/crypto; here it only
+// slows the PIN-attempt tests past Jest's timeout on busy CI runners. A
+// SHA-256 stand-in keeps "wrong PIN → wrong key → decrypt fails".
+jest.mock("@keeplas/crypto/kdf", () => ({
+  deriveDeviceWrapKey: async (secret: string, salt: Uint8Array) =>
+    crypto.subtle.importKey(
+      "raw",
+      await crypto.subtle.digest(
+        "SHA-256",
+        new Uint8Array([...new TextEncoder().encode(secret), ...salt]),
+      ),
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"],
+    ),
+}));
+
 const masterKey = () => new Uint8Array(32).fill(7);
 const rootKey = () => new Uint8Array(32).fill(9);
 
