@@ -7,6 +7,8 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { OtpInput, OTP_LENGTH } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
+import { BottomSheet } from "@/components/sheet";
+import { IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
@@ -34,6 +36,7 @@ export default function Unlock() {
   const [failed, setFailed] = useState<string | null>(null);
   const [needsPin, setNeedsPin] = useState(false);
   const [pin, setPin] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -148,15 +151,40 @@ export default function Unlock() {
         </Text>
       ) : null}
       <Button
-        variant="secondary"
-        label={t("unlock.lost")}
-        onPress={() => router.push("/lost-access")}
+        variant="text"
+        label={t("unlock.more")}
+        onPress={() => setMoreOpen(true)}
       />
-      <Button
-        variant="secondary"
-        label={t("settings.signOut")}
-        onPress={signOut}
-      />
+      <BottomSheet
+        visible={moreOpen}
+        onDismiss={() => setMoreOpen(false)}
+        title={t("unlock.more")}
+      >
+        <ListRow
+          icon="lifebuoy"
+          title={t("unlock.lost")}
+          description={t("unlock.lostBody")}
+          onPress={() => {
+            setMoreOpen(false);
+            router.push("/lost-access");
+          }}
+        />
+        <ListRow
+          leading={
+            <IconTile
+              icon="revoke"
+              color="status.revoked"
+              background={colors["status.revoked.bg"]}
+            />
+          }
+          title={t("settings.signOut")}
+          description={t("unlock.signOutBody")}
+          onPress={() => {
+            setMoreOpen(false);
+            void signOut();
+          }}
+        />
+      </BottomSheet>
     </Screen>
   );
 }
