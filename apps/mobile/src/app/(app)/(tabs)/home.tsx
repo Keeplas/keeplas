@@ -17,12 +17,12 @@ import { useRecoveryWays } from "@/features/recovery-ways";
 import { VaultItemRow } from "@/features/vault/item-row";
 import { itemVisual } from "@/features/vault/item-visual";
 import { useVaultData } from "@/features/vault/vault-data";
+import { categoryCounts } from "@/features/vault/vault-filter";
 import {
   greetingKey,
   listCounts,
   recentItems,
   VAULT_GROUPS,
-  type VaultListKey,
 } from "@/features/home/vault-groups";
 import { formatDate, relativeDay } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
@@ -46,8 +46,9 @@ export default function Home() {
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   const drafts = useDrafts();
   const counts = useMemo(() => listCounts(items ?? []), [items]);
-  const openList = (group: VaultListKey) =>
-    router.push({ pathname: "/vault/[group]", params: { group } });
+  const byCategory = useMemo(() => categoryCounts(items ?? []), [items]);
+  const openCategory = (id: string) =>
+    router.push({ pathname: "/category/[id]", params: { id } });
   const recent = useMemo(() => recentItems(items ?? []), [items]);
   const recentPending = pending.slice(0, 3);
   const showRecent = recent.length + recentPending.length > 0;
@@ -129,7 +130,7 @@ export default function Home() {
               tint={palette.category[group.color]}
               label={t(`home.${group.key}`)}
               count={counts[group.key]}
-              onPress={() => openList(group.key)}
+              onPress={() => openCategory(group.key)}
             />
           ),
         )}
@@ -139,16 +140,8 @@ export default function Home() {
             icon="document"
             tint={palette.category.other}
             label={category.name ?? t("item.decrypting")}
-            count={
-              (items ?? []).filter((item) => item.categoryId === category.id)
-                .length
-            }
-            onPress={() =>
-              router.push({
-                pathname: "/category/[id]",
-                params: { id: category.id },
-              })
-            }
+            count={byCategory.get(category.id) ?? 0}
+            onPress={() => openCategory(category.id)}
           />
         ))}
       </View>
@@ -167,7 +160,12 @@ export default function Home() {
             <Pressable
               accessibilityRole="link"
               hitSlop={12}
-              onPress={() => openList("all")}
+              onPress={() =>
+                router.push({
+                  pathname: "/vault/[group]",
+                  params: { group: "all" },
+                })
+              }
             >
               <Text variant="body-sm" color="text.link">
                 {t("common.seeAll")}

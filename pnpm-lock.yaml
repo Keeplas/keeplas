@@ -21,8 +21,8 @@ importers:
   .:
     dependencies:
       convex:
-        specifier: ^1.40.0
-        version: 1.40.0(react@19.2.7)
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.2.7)
     devDependencies:
       husky:
         specifier: ^9.1.7
@@ -47,7 +47,7 @@ importers:
         version: 1.0.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-native-webview@13.16.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       '@convex-dev/auth':
         specifier: ^0.0.93
-        version: 0.0.93(@auth/core@0.41.3)(convex@1.40.0(react@19.2.3))(react@19.2.3)
+        version: 0.0.93(@auth/core@0.41.3)(convex@1.48.0(react@19.2.3))(react@19.2.3)
       '@expo/app-integrity':
         specifier: ^57.0.2
         version: 57.0.2(expo@57.0.29)(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))
@@ -64,8 +64,8 @@ importers:
         specifier: ^18.2.5
         version: 18.2.5(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       convex:
-        specifier: ^1.40.0
-        version: 1.40.0(react@19.2.3)
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.2.3)
       expo:
         specifier: ~57.0.29
         version: 57.0.29(@babel/core@7.29.7)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(expo-router@57.0.27)(react-dom@18.3.1(react@19.2.3))(react-native-webview@13.16.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
@@ -171,6 +171,9 @@ importers:
       react-native-pdf:
         specifier: ^7.0.5
         version: 7.0.5(react-native-blob-util@0.25.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      react-native-purchases:
+        specifier: ^10.15.1
+        version: 10.15.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
       react-native-qrcode-svg:
         specifier: 6.3.21
         version: 6.3.21(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
@@ -246,7 +249,7 @@ importers:
         version: 0.41.3(@simplewebauthn/browser@13.3.0)
       '@convex-dev/auth':
         specifier: ^0.0.93
-        version: 0.0.93(@auth/core@0.41.3(@simplewebauthn/browser@13.3.0))(convex@1.40.0(react@19.2.7))(react@19.2.7)
+        version: 0.0.93(@auth/core@0.41.3(@simplewebauthn/browser@13.3.0))(convex@1.48.0(react@19.2.7))(react@19.2.7)
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
@@ -278,8 +281,8 @@ importers:
         specifier: ^1.168.61
         version: 1.168.61(crossws@0.4.5(srvx@0.11.22))(esbuild@0.28.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rolldown@1.2.15)(rollup@4.64.5)(vite@7.3.7(@types/node@25.9.9)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.0))
       convex:
-        specifier: ^1.40.0
-        version: 1.40.0(react@19.2.7)
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.2.7)
       nitro:
         specifier: 3.0.260603-beta
         version: 3.0.260603-beta(chokidar@5.0.0)(dotenv@17.4.2)(jiti@2.7.0)(lru-cache@11.5.3)(rollup@4.64.5)(vite@7.3.7(@types/node@25.9.9)(jiti@2.7.0)(lightningcss@1.33.0)(terser@5.51.2)(yaml@2.9.0))
@@ -373,7 +376,7 @@ importers:
         version: 0.41.3(@simplewebauthn/server@13.3.3)
       '@convex-dev/auth':
         specifier: ^0.0.93
-        version: 0.0.93(@auth/core@0.41.3(@simplewebauthn/server@13.3.3))(convex@1.40.0(react@19.2.7))(react@19.2.7)
+        version: 0.0.93(@auth/core@0.41.3(@simplewebauthn/server@13.3.3))(convex@1.48.0(react@19.2.7))(react@19.2.7)
       '@keeplas/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -387,15 +390,15 @@ importers:
         specifier: ^13.3.3
         version: 13.3.3
       convex:
-        specifier: ^1.40.0
-        version: 1.40.0(react@19.2.7)
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.2.7)
     devDependencies:
       '@types/node':
         specifier: ^25
         version: 25.9.9
       convex-test:
         specifier: ^0.0.53
-        version: 0.0.53(convex@1.40.0(react@19.2.7))
+        version: 0.0.53(convex@1.48.0(react@19.2.7))
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -2837,6 +2840,15 @@ packages:
       '@types/react':
         optional: true
 
+  '@revenuecat/purchases-js-hybrid-mappings@19.14.1':
+    resolution: {integrity: sha512-Sj/sqXuQu0D3GKQQIhL8KQtAqpMUBGJjeXACrgzbvZBGbDu4AKPrnix0kwTOlGDoS4Cw5NZHJEnNU9D8jOxBmQ==}
+
+  '@revenuecat/purchases-js@1.71.0':
+    resolution: {integrity: sha512-FC118I8NvBh1gvFCw/JtL6oRoZwXws4TnfGtUY7YFPZIA39+kTpmWkGxQwSwn9XXqXPtBVD1b3Hvs7d+OgBpHQ==}
+
+  '@revenuecat/purchases-typescript-internal@19.14.1':
+    resolution: {integrity: sha512-knMoRyyLvIG4+yvPXprjddxLB/Y05Ca7pjrAONNL1/7gaq6ezlVC+/YksK8dr/3LHP6kCbJ1tMF+YD6LW4O63Q==}
+
   '@rolldown/binding-android-arm-eabi@1.2.15':
     resolution: {integrity: sha512-aLcgK9gIJ3YRvrrtfSBbRa27F5WrpiTaPulnFpsHPxpUHgFlSgnU4854MHwoRGEBhfRJDWCS2WQ7lIjskE9Olw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -4414,9 +4426,9 @@ packages:
     peerDependencies:
       convex: ^1.32.0
 
-  convex@1.40.0:
-    resolution: {integrity: sha512-jChWEB45q+9Ibryc7hg0l6hB1xA4zwE2y6ZhkhGP6oJkqYeiURkMagA2ZQZYMy1/T8PZ9ztoVJJtbL/+Ob851Q==}
-    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
+  convex@1.48.0:
+    resolution: {integrity: sha512-M9jEgTvCN8ziP/VgQQUH+j0ijM7g+NmQd8tFlvETK8/HMC/aaqHZwcu4hBO30X5DV2VIyYK4mOoLQGIb1766ew==}
+    engines: {node: '>=20.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
       '@auth0/auth0-react': ^2.0.1
@@ -6966,6 +6978,16 @@ packages:
       react-native: '*'
       react-native-blob-util: '>=0.13.7'
 
+  react-native-purchases@10.15.1:
+    resolution: {integrity: sha512-ooyXWMdC1/BJnokE+Pro+6yWInxzkQbFN4lR3EOvkSPhYh3H/j0Esk/LRnQApCqzkIbWEpfUhPnQdq/CMGofHA==}
+    peerDependencies:
+      react: '>= 16.6.3'
+      react-native: '>= 0.73.0'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
+
   react-native-qrcode-svg@6.3.21:
     resolution: {integrity: sha512-6vcj4rcdpWedvphDR+NSJcudJykNuLgNGFwm2p4xYjR8RdyTzlrELKI5LkO4ANS9cQUbqsfkpippPv64Q2tUtA==}
     peerDependencies:
@@ -8952,12 +8974,12 @@ snapshots:
       hashery: 1.5.1
       keyv: 5.6.0
 
-  '@convex-dev/auth@0.0.93(@auth/core@0.41.3(@simplewebauthn/browser@13.3.0))(convex@1.40.0(react@19.2.7))(react@19.2.7)':
+  '@convex-dev/auth@0.0.93(@auth/core@0.41.3(@simplewebauthn/browser@13.3.0))(convex@1.48.0(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@auth/core': 0.41.3(@simplewebauthn/browser@13.3.0)
       '@oslojs/crypto': 1.0.1
       '@oslojs/encoding': 1.1.0
-      convex: 1.40.0(react@19.2.7)
+      convex: 1.48.0(react@19.2.7)
       cookie: 1.1.1
       is-network-error: 1.3.2
       jose: 5.10.0
@@ -8969,12 +8991,12 @@ snapshots:
     optionalDependencies:
       react: 19.2.7
 
-  '@convex-dev/auth@0.0.93(@auth/core@0.41.3(@simplewebauthn/server@13.3.3))(convex@1.40.0(react@19.2.7))(react@19.2.7)':
+  '@convex-dev/auth@0.0.93(@auth/core@0.41.3(@simplewebauthn/server@13.3.3))(convex@1.48.0(react@19.2.7))(react@19.2.7)':
     dependencies:
       '@auth/core': 0.41.3(@simplewebauthn/server@13.3.3)
       '@oslojs/crypto': 1.0.1
       '@oslojs/encoding': 1.1.0
-      convex: 1.40.0(react@19.2.7)
+      convex: 1.48.0(react@19.2.7)
       cookie: 1.1.1
       is-network-error: 1.3.2
       jose: 5.10.0
@@ -8986,12 +9008,12 @@ snapshots:
     optionalDependencies:
       react: 19.2.7
 
-  '@convex-dev/auth@0.0.93(@auth/core@0.41.3)(convex@1.40.0(react@19.2.3))(react@19.2.3)':
+  '@convex-dev/auth@0.0.93(@auth/core@0.41.3)(convex@1.48.0(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@auth/core': 0.41.3(@simplewebauthn/browser@13.3.0)
+      '@auth/core': 0.41.3(@simplewebauthn/server@13.3.3)
       '@oslojs/crypto': 1.0.1
       '@oslojs/encoding': 1.1.0
-      convex: 1.40.0(react@19.2.3)
+      convex: 1.48.0(react@19.2.3)
       cookie: 1.1.1
       is-network-error: 1.3.2
       jose: 5.10.0
@@ -11149,6 +11171,14 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.17
 
+  '@revenuecat/purchases-js-hybrid-mappings@19.14.1':
+    dependencies:
+      '@revenuecat/purchases-js': 1.71.0
+
+  '@revenuecat/purchases-js@1.71.0': {}
+
+  '@revenuecat/purchases-typescript-internal@19.14.1': {}
+
   '@rolldown/binding-android-arm-eabi@1.2.15':
     optional: true
 
@@ -12825,11 +12855,11 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-test@0.0.53(convex@1.40.0(react@19.2.7)):
+  convex-test@0.0.53(convex@1.48.0(react@19.2.7)):
     dependencies:
-      convex: 1.40.0(react@19.2.7)
+      convex: 1.48.0(react@19.2.7)
 
-  convex@1.40.0(react@19.2.3):
+  convex@1.48.0(react@19.2.3):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.9.10
@@ -12840,7 +12870,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  convex@1.40.0(react@19.2.7):
+  convex@1.48.0(react@19.2.7):
     dependencies:
       esbuild: 0.27.0
       prettier: 3.9.10
@@ -15955,6 +15985,13 @@ snapshots:
       react: 19.2.3
       react-native: 0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
       react-native-blob-util: 0.25.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+
+  react-native-purchases@10.15.1(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      '@revenuecat/purchases-js-hybrid-mappings': 19.14.1
+      '@revenuecat/purchases-typescript-internal': 19.14.1
+      react: 19.2.3
+      react-native: 0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
 
   react-native-qrcode-svg@6.3.21(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/jest-preset@0.86.3(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.87.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3):
     dependencies:

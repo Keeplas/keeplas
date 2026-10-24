@@ -1,11 +1,10 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
 import { auth } from "./auth";
 import { constantTimeStringEquals } from "./lib/crypto";
-import { verifyStripeSignature } from "./lib/stripe_webhook";
 import { requireEnv } from "./lib/require_env";
+import { LIFETIME_ENTITLEMENT_ID } from "./lib/plans";
 
 const http = httpRouter();
 
@@ -65,70 +64,65 @@ http.route({
 });
 
 /**
- * Stripe webhook. Fulfils a paid one-time Lifetime Checkout: on
- * `checkout.session.completed` with `payment_status === "paid"` it flips the
- * referenced user to the `lifetime` plan (idempotently — see
- * `billing.fulfillCheckout`). All other event types are acknowledged with 200
- * so Stripe does not retry.
+ * RevenueCat webhook. Fulfils an in-app (App Store / Play) Lifetime purchase:
+ * a `NON_RENEWING_PURCHASE` carrying the Lifetime entitlement flips the buyer
+ * (`app_user_id` = Convex user id) to `lifetime` idempotently — see
+ * `billing.fulfillStorePurchase`. A `TRANSFER` (purchase restored onto another
+ * account) grants the receiving account. All other event types, including the
+ * dashboard's `TEST`, are acknowledged with 200 so RevenueCat does not retry.
  *
- * Auth: the raw body is HMAC-verified against `STRIPE_WEBHOOK_SECRET` using the
- * `Stripe-Signature` header before any parsing. An invalid or stale signature
- * is rejected with 400.
+ * Amounts are stored in USD (`price`, RevenueCat's converted price) so the
+ * admin revenue totals stay comparable across storefront currencies. Sandbox
+ * purchases (App Review, TestFlight) still unlock the plan but are recorded at
+ * 0 so they never count as revenue.
+ *
+ * Auth: the dashboard sends `Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>`.
+ * Any other value is rejected with 401.
  */
 http.route({
-  path: "/webhooks/stripe",
+  path: "/webhooks/revenuecat",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    // The signature is computed over the exact raw body — read text, verify,
-    // then parse. Parsing first (and re-serializing) would break the HMAC.
-    const raw = await request.text();
-    const valid = await verifyStripeSignature(
-      raw,
-      request.headers.get("stripe-signature"),
-      requireEnv("STRIPE_WEBHOOK_SECRET"),
-    );
-    if (!valid) {
-      return new Response("invalid signature", { status: 400 });
+    const secret = requireEnv("REVENUECAT_WEBHOOK_SECRET");
+    const provided = request.headers.get("authorization");
+    if (!provided || !constantTimeStringEquals(provided, `Bearer ${secret}`)) {
+      return new Response("unauthorized", { status: 401 });
     }
 
     let event: {
       type?: string;
-      data?: {
-        object?: {
-          id?: string;
-          payment_status?: string;
-          client_reference_id?: string;
-          payment_intent?: string;
-          amount_total?: number;
-          currency?: string;
-          customer?: string;
-          metadata?: { userId?: string };
-        };
-      };
+      app_user_id?: string;
+      transaction_id?: string;
+      entitlement_ids?: string[] | null;
+      price?: number;
+      environment?: string;
+      transferred_to?: string[];
     };
     try {
-      event = JSON.parse(raw);
+      event = ((await request.json()) as { event?: typeof event }).event ?? {};
     } catch {
       return new Response("bad request", { status: 400 });
     }
 
-    if (event.type === "checkout.session.completed") {
-      const session = event.data?.object;
-      const userId = session?.client_reference_id ?? session?.metadata?.userId;
-      if (session?.payment_status === "paid" && userId) {
-        await ctx.runMutation(internal.billing.fulfillCheckout, {
-          userId: userId as Id<"users">,
-          stripeSessionId: session.id ?? "",
-          stripePaymentIntentId: session.payment_intent,
-          amountCents: session.amount_total ?? 0,
-          currency: session.currency ?? "usd",
-          // Stripe sends `customer: null` for `payment`-mode sessions when no
-          // Customer object was created (the common first-buyer case). The
-          // mutation's `v.optional(v.string())` rejects null, so normalize it
-          // to undefined here at the boundary.
-          stripeCustomerId: session.customer ?? undefined,
-        });
-      }
+    if (
+      event.type === "NON_RENEWING_PURCHASE" &&
+      event.entitlement_ids?.includes(LIFETIME_ENTITLEMENT_ID) &&
+      event.app_user_id &&
+      event.transaction_id
+    ) {
+      await ctx.runMutation(internal.billing.fulfillStorePurchase, {
+        appUserId: event.app_user_id,
+        transactionId: event.transaction_id,
+        amountCents:
+          event.environment === "SANDBOX"
+            ? 0
+            : Math.round((event.price ?? 0) * 100),
+        currency: "usd",
+      });
+    } else if (event.type === "TRANSFER" && event.transferred_to?.length) {
+      await ctx.runMutation(internal.billing.grantStoreTransfer, {
+        appUserIds: event.transferred_to,
+      });
     }
 
     return new Response(null, { status: 200 });

@@ -44,6 +44,7 @@ export function buildContentSecurityPolicy(
   scriptHashes: string[] = [],
   scriptNonces: string[] = [],
 ): string {
+  const convexSources = convexConnectSources();
   const scriptSrc = ["'self'", "'wasm-unsafe-eval'"];
   if (process.env.NODE_ENV === "development") {
     // Dev only: Vite/HMR + React Refresh inject inline scripts and rely on
@@ -69,8 +70,15 @@ export function buildContentSecurityPolicy(
     "script-src-elem": scriptSrc,
     // Tailwind / Vite inject runtime <style> tags; hashing them is impractical.
     "style-src": ["'self'", "'unsafe-inline'"],
-    "connect-src": ["'self'", ...convexConnectSources()],
-    "img-src": ["'self'", "data:", "blob:"],
+    "connect-src": ["'self'", ...convexSources],
+    // Convex storage serves uploaded avatars as plain <img> URLs (vault
+    // attachments are decrypted into blob: URLs instead).
+    "img-src": [
+      "'self'",
+      "data:",
+      "blob:",
+      ...convexSources.filter((source) => source.startsWith("https:")),
+    ],
     // Decrypted vault attachments (audio/video) are played from in-memory
     // `blob:` object URLs. Without an explicit media-src the browser falls back
     // to default-src ('self') and refuses the blob, so the player stays stuck at

@@ -405,8 +405,12 @@
   },
   "upgrade": {
     "title": "Passer à Lifetime",
+    "titleWithPrice": "Passer à Lifetime · {price}",
     "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
-    "cta": "Mettre à niveau"
+    "cta": "Mettre à niveau",
+    "restore": "Restaurer un achat",
+    "activating": "Achat confirmé. Votre forfait Lifetime est en cours d'activation.",
+    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google."
   },
   "settings": {
     "title": "Réglages",
@@ -931,10 +935,12 @@
     "items": "{n} éléments",
     "move": "Changer de catégorie",
     "delete": "Supprimer",
+    "deleteCategory": "Supprimer la catégorie",
     "deleteTitle": "Supprimer {name} ?",
     "deleteBody": "Ses éléments restent dans votre coffre et passent dans À classer.",
     "removed": "Catégories supprimées",
-    "restore": "Touchez pour la restaurer"
+    "restore": "Touchez pour la restaurer",
+    "search": "Rechercher dans {name}"
   },
   "search": {
     "label": "Rechercher dans le coffre",

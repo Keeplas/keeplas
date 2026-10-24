@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   // Inline the `NEXT_PUBLIC_*` vars as `process.env.NEXT_PUBLIC_*` member
   // expressions so the existing client code keeps working unchanged (this
   // mirrors Next.js' build-time inlining of public env vars). Server-only
-  // secrets (KEEPLAS_CTX_SECRET, STRIPE_*, ...) are read from process.env at
+  // secrets (KEEPLAS_CTX_SECRET, ...) are read from process.env at
   // runtime inside server middleware/functions and are intentionally NOT
   // inlined into the client bundle.
   // Vite's `loadEnv` only reads `.env` FILES. On Vercel/CI the `NEXT_PUBLIC_*`

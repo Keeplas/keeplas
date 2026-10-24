@@ -236,10 +236,10 @@ For the full Convex workflow (provisioning, schema changes, JWT bootstrap, env s
 
 Keeplas ships with a deliberately simple two-tier model — **no monthly subscription**:
 
-| Plan         | Price           | Storage | Highlights                                                                                                                                                                          |
-| ------------ | --------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Free**     | $0 / forever    | 100 MB  | Zero-knowledge vault, monthly Life Check, 1 emergency contact, digital Emergency Card                                                                                               |
-| **Lifetime** | $199 / one-time | 10 GB   | Full Scenario Engine, up to 3 trust contacts, priority Social Recovery, physical Emergency Card, video legacy messages, weekly Life Check, priority support, more storage as add-on |
+| Plan         | Price          | Storage | Highlights                                                                                                                                                                          |
+| ------------ | -------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Free**     | $0 / forever   | 100 MB  | Zero-knowledge vault, monthly Life Check, 1 emergency contact, digital Emergency Card                                                                                               |
+| **Lifetime** | $99 / one-time | 10 GB   | Full Scenario Engine, up to 3 trust contacts, priority Social Recovery, physical Emergency Card, video legacy messages, weekly Life Check, priority support, more storage as add-on |
 
 Both tiers run the same zero-knowledge encryption — only the surface area changes. Switching plans never deletes your vault.
 
