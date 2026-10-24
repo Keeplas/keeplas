@@ -903,6 +903,10 @@
     "name": "Name",
     "email": "Email (optional)",
     "phone": "Phone number",
+    "fromContacts": "Choose from my contacts",
+    "orManual": "or enter manually",
+    "whichNumber": "Which number?",
+    "contactsDenied": "Keeplas can't read your contacts. Allow it in Settings, or enter their details below.",
     "sendInvite": "Send invitation",
     "status": {
       "pending": "Invited",

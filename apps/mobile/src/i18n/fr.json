@@ -894,6 +894,10 @@
     "name": "Nom",
     "email": "E-mail (facultatif)",
     "phone": "Numéro de téléphone",
+    "fromContacts": "Choisir dans mes contacts",
+    "orManual": "ou saisir manuellement",
+    "whichNumber": "Quel numéro utiliser ?",
+    "contactsDenied": "Keeplas ne peut pas lire vos contacts. Autorisez-le dans les Réglages, ou saisissez ses coordonnées ci-dessous.",
     "sendInvite": "Envoyer l'invitation",
     "status": {
       "pending": "Invité",
