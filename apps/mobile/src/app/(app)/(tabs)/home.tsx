@@ -29,6 +29,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius, withAlpha } from "@/theme";
+import { useDrafts } from "@/features/capture/draft-store";
 
 /** M08-5 Home. Counts are computed on the device from the decrypted vault. */
 export default function Home() {
@@ -43,6 +44,7 @@ export default function Home() {
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
+  const drafts = useDrafts();
   const counts = useMemo(() => listCounts(items ?? []), [items]);
   const openList = (group: VaultListKey) =>
     router.push({ pathname: "/vault/[group]", params: { group } });
@@ -150,6 +152,14 @@ export default function Home() {
           />
         ))}
       </View>
+      {drafts.length ? (
+        <ListRow
+          icon="edit"
+          title={t("drafts.title")}
+          description={t("drafts.homeBody", { n: drafts.length })}
+          onPress={() => router.push("/drafts")}
+        />
+      ) : null}
       {showRecent ? (
         <>
           <View style={styles.sectionHeader}>

@@ -1272,5 +1272,20 @@
     "restoreFailed": "Keeplas n'a pas pu restaurer cet élément. Vérifiez votre connexion et réessayez.",
     "emptyTitle": "Aucune archive",
     "emptyBody": "Les éléments que vous archivez apparaîtront ici, avec leur historique."
+  },
+  "drafts": {
+    "title": "Brouillons",
+    "homeBody": "{n} en cours · touchez pour reprendre",
+    "saved": "Brouillon enregistré sur ce téléphone",
+    "menuTitle": "Options du brouillon",
+    "clear": "Effacer le brouillon",
+    "clearBody": "Retire le texte, les fichiers et les réglages de ce brouillon",
+    "delete": "Supprimer le brouillon",
+    "deleteRowBody": "Retire aussi ses fichiers de ce téléphone",
+    "deleteTitle": "Supprimer ce brouillon ?",
+    "deleteBody": "Le texte et les fichiers joints seront retirés de ce téléphone. Cette action est définitive.",
+    "resume": "Reprendre",
+    "emptyTitle": "Aucun brouillon",
+    "emptyBody": "Ce que vous commencez sans l'enregistrer est gardé ici, sur ce téléphone, pour le reprendre plus tard."
   }
 }

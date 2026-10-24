@@ -25,6 +25,7 @@ import { formatDuration } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { holdLock } from "@/lib/auto-lock";
+import { draftHref, useDraftParam } from "@/features/capture/draft-route";
 
 const BARS = 32;
 const RECORDING = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
@@ -37,6 +38,7 @@ const RECORDING = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
  * second); the screen frame, rings and callout render once.
  */
 export default function VoiceNote() {
+  useDraftParam();
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -153,7 +155,7 @@ const LiveSection = memo(function LiveSection({
         },
       ],
     });
-    router.replace("/capture/compose");
+    router.replace(draftHref("/capture/compose"));
   }
 
   function togglePause() {

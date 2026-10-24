@@ -13,7 +13,6 @@ import { AppState, View } from "react-native";
 import { importMasterKey } from "@/crypto/vault-keys";
 import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
-import { draftStore } from "@/features/capture/draft-store";
 import {
   DRAFT_MAX_LOCKED_MS,
   IDLE_LOCK_MS,
@@ -77,7 +76,6 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       lockedAt.current !== null &&
       Date.now() - lockedAt.current > DRAFT_MAX_LOCKED_MS
     ) {
-      draftStore.reset();
       clearFormDrafts();
     }
     lockedAt.current = null;

@@ -27,6 +27,7 @@ import {
   type PermissionProblem,
 } from "./media";
 import type { CaptureFile } from "./seal";
+import { draftHref } from "./draft-route";
 
 export const SHEET_CLOSE_MS = 350;
 
@@ -71,7 +72,7 @@ function AddSheet({
       const files = await get();
       if (files.length === 0) return;
       draftStore.start(kind, { files, ...preset });
-      router.push("/capture/compose");
+      router.push(draftHref("/capture/compose"));
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
       else if (error instanceof CameraUnavailable)
@@ -91,15 +92,15 @@ function AddSheet({
     switch (kind) {
       case "scan":
         draftStore.start("scan", preset);
-        router.push("/capture/scan");
+        router.push(draftHref("/capture/scan"));
         return;
       case "voice":
         draftStore.start("voice", preset);
-        router.push("/capture/voice");
+        router.push(draftHref("/capture/voice"));
         return;
       case "note":
         draftStore.start("note", preset);
-        router.push("/capture/compose");
+        router.push(draftHref("/capture/compose"));
         return;
       case "video":
         Alert.alert(t("capture.video"), undefined, [
