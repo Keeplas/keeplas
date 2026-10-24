@@ -1,7 +1,17 @@
-import { memo, type ReactNode } from "react";
-import { ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
+import { memo, useEffect, useRef, type ReactNode } from "react";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  type ViewStyle,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from "expo-router";
 
 import Branch from "../../assets/illustrations/branch.svg";
 import LandscapeNight from "../../assets/illustrations/landscape-night.svg";
@@ -12,6 +22,8 @@ import { useTabBarVisible } from "./tab-bar";
 import { layout } from "@/theme";
 
 export type ScreenDecor = "branches" | "landscape" | "lake";
+
+const KEYBOARD_GAP = 24;
 
 // Footer art per decor: [light, night]. `lake` is the website landscape
 // (foliage, pines, lake) with its ambient motion; `landscape` the flat one.
@@ -47,6 +59,39 @@ export function Screen({
 }) {
   const { colors, scheme } = useTheme();
   const tabBar = useTabBarVisible();
+  const scrollRef = useRef<ScrollView>(null);
+  const offset = useRef(0);
+  const focused = useRef(true);
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    focused.current = isFocused;
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (!scroll) return;
+    const subscription = Keyboard.addListener("keyboardDidShow", () => {
+      const input = TextInput.State.currentlyFocusedInput();
+      const view = scrollRef.current;
+      const frame = view?.getNativeScrollRef();
+      if (!focused.current || !input || !view || !frame) return;
+      frame.measureInWindow((_fx, frameTop, _fw, frameHeight) => {
+        input.measureInWindow((_x, top, _width, height) => {
+          const below = top + height + KEYBOARD_GAP - (frameTop + frameHeight);
+          const above = frameTop + KEYBOARD_GAP - top;
+          if (below > 0) {
+            view.scrollTo({ y: offset.current + below, animated: true });
+          } else if (above > 0) {
+            view.scrollTo({
+              y: Math.max(0, offset.current - above),
+              animated: true,
+            });
+          }
+        });
+      });
+    });
+    return () => subscription.remove();
+  }, [scroll]);
   const content: ViewStyle[] = [
     styles.content,
     { gap },
@@ -61,20 +106,31 @@ export function Screen({
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       {decor ? <Decor kind={decor} night={scheme === "dark"} /> : null}
       {header}
-      {scroll ? (
-        <ScrollView
-          contentContainerStyle={content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
-          {children}
-        </View>
-      )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        {scroll ? (
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={content}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+            scrollEventThrottle={32}
+            onScroll={(event) => {
+              offset.current = event.nativeEvent.contentOffset.y;
+            }}
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
+            {children}
+          </View>
+        )}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

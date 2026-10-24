@@ -5,14 +5,15 @@ import {
   contentKind,
   greetingKey,
   groupOf,
-  inGroup,
   inVaultList,
   isVaultListKey,
   listCounts,
   presetCategory,
   recentItems,
   type ContentKind,
+  type VaultListKey,
 } from "@/features/home/vault-groups";
+import { GROUP_CATEGORIES } from "@keeplas/backend/lib/vault_groups";
 import {
   BACKGROUND_GRACE_MS,
   HELD_GRACE_MS,
@@ -248,13 +249,52 @@ describe("home groups", () => {
     kind,
   });
 
-  it("puts each item in one list: inbox, accounts, instructions or its type", () => {
+  it("puts each item in one list: inbox, its category group or its type", () => {
     expect(bucketOf(item("inbox", "photos"))).toBe("inbox");
     expect(bucketOf(item("credential", "documents"))).toBe("accounts");
     expect(bucketOf(item("wishes", "voice"))).toBe("instructions");
     expect(bucketOf(item("legal_document", "documents"))).toBe("documents");
-    expect(bucketOf(item("property", "photos"))).toBe("photos");
+    expect(bucketOf(item("property", "photos"))).toBe("documents");
     expect(bucketOf(item("mystery", "notes"))).toBe("notes");
+  });
+
+  it("lists every built-in category under its own tile, whatever it holds", () => {
+    const kinds: ContentKind[] = [
+      "documents",
+      "notes",
+      "photos",
+      "voice",
+      "videos",
+    ];
+    for (const [group, categories] of Object.entries(GROUP_CATEGORIES)) {
+      for (const category of categories) {
+        for (const kind of kinds) {
+          const filed = item(category, kind);
+          expect(groupOf(category)).toBe(group);
+          expect(inVaultList(filed, group as VaultListKey)).toBe(true);
+          expect(listCounts([filed])[group as VaultListKey]).toBe(1);
+        }
+      }
+    }
+  });
+
+  it("keeps the inbox, user-made and hidden categories in their own place", () => {
+    expect(inVaultList(item("inbox", "photos"), "inbox")).toBe(true);
+    const custom = { ...item("other", "notes"), categoryId: "c1" };
+    expect(inVaultList(custom, "other")).toBe(false);
+    expect(inVaultList(custom, "documents")).toBe(false);
+    const hidden = shownFiling(item("credential", "notes"), ["accounts"], []);
+    expect(inVaultList(hidden, "inbox")).toBe(true);
+    expect(inVaultList(hidden, "accounts")).toBe(false);
+  });
+
+  it("shows a note or photo filed in Documents on the Documents tile", () => {
+    const note = item("personal_document", "notes");
+    expect(inVaultList(note, "documents")).toBe(true);
+    expect(inVaultList(note, "notes")).toBe(false);
+    expect(
+      listCounts([note, item("insurance_policy", "photos")]).documents,
+    ).toBe(2);
   });
 
   it("maps a category to its tile", () => {
@@ -303,15 +343,6 @@ describe("home groups", () => {
       false,
     );
     expect(listCounts([custom])).toMatchObject({ all: 1, voice: 1, inbox: 0 });
-  });
-
-  it("files items without a user-made category under their group", () => {
-    expect(inGroup({ category: "credential" }, "accounts")).toBe(true);
-    expect(inGroup({ category: "wishes" }, "accounts")).toBe(false);
-    expect(inGroup({ category: "inbox" }, "other")).toBe(false);
-    expect(
-      inGroup({ category: "credential", categoryId: "c1" }, "accounts"),
-    ).toBe(false);
   });
 
   it("shows items of a deleted category in the inbox", () => {

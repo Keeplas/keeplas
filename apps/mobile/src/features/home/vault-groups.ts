@@ -7,7 +7,6 @@ export {
   contentKind,
   GROUP_CATEGORY,
   groupOf,
-  inGroup,
   inVaultList,
   isVaultListKey,
   listCounts,

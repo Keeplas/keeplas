@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
@@ -51,6 +51,14 @@ import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
 import { radius, withAlpha } from "@/theme";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
+import { deviceDraftFiles } from "@/features/capture/draft-db";
+import {
+  editDraftKey,
+  editFilesFolder,
+  hasEditChanges,
+  type EditDraft,
+} from "@/features/vault/edit-draft";
+import { removeFormDraft, useStoredFormDraft } from "@/lib/form-drafts";
 
 const KIND_ICON = {
   document: "document",
@@ -67,6 +75,7 @@ export default function ItemDetails() {
   const categoryLabel = useCategoryLabel();
   const { lock } = useVault();
   const { raw, opened, failure, retry: reopen } = useOpenedItem(itemId);
+  const pendingEdit = useStoredFormDraft<EditDraft>(editDraftKey(itemId));
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const { items } = useVaultData();
@@ -86,13 +95,11 @@ export default function ItemDetails() {
 
   const attachments = useMemo(() => opened?.files ?? [], [opened]);
   const { stateOf, retry } = useDecryptedAttachments(attachments, opened?.key);
-  const file = attachments[selected];
+  const current = Math.min(selected, Math.max(0, attachments.length - 1));
+  const file = attachments[current];
   const photos = useMemo(
     () => attachments.filter((attachment) => attachment.kind === "image"),
     [attachments],
-  );
-  const others = attachments.filter(
-    (attachment) => attachment.kind !== "image",
   );
 
   const access = useMemo(() => {
@@ -300,6 +307,39 @@ export default function ItemDetails() {
     </>
   ) : null;
 
+  const editBanner =
+    !archived && hasEditChanges(pendingEdit, opened) ? (
+      <>
+        <Callout icon="clock" text={t("itemEdit.pending")} />
+        <View style={styles.actions}>
+          <Button
+            variant="secondary"
+            label={t("itemEdit.resume")}
+            onPress={() => edit()}
+          />
+          <Button
+            variant="text"
+            label={t("itemEdit.discard")}
+            onPress={confirmDiscardEdit}
+          />
+        </View>
+      </>
+    ) : null;
+
+  function confirmDiscardEdit() {
+    Alert.alert(t("itemEdit.discardTitle"), t("itemEdit.discardBody"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("itemEdit.discard"),
+        style: "destructive",
+        onPress: () => {
+          removeFormDraft(editDraftKey(itemId));
+          deviceDraftFiles.dropDraft(editFilesFolder(itemId));
+        },
+      },
+    ]);
+  }
+
   function edit() {
     router.push({ pathname: "/item/edit", params: { id: itemId } });
   }
@@ -440,7 +480,7 @@ export default function ItemDetails() {
             {t("item.addedOn", { date: formatDate(created, language) })}
           </Text>
         </View>
-        {archivedBanner ?? (
+        {archivedBanner ?? editBanner ?? (
           <Button variant="secondary" label={t("item.edit")} onPress={edit} />
         )}
         {!isEmptyNote(opened.note) ? (
@@ -494,6 +534,7 @@ export default function ItemDetails() {
   return (
     <Screen header={header} gap={16}>
       {archivedBanner}
+      {editBanner}
       <View style={styles.meta}>
         <Icon name="lock" size={14} color="status.active" />
         <Text variant="body-sm" color="text.muted" numberOfLines={1}>
@@ -542,33 +583,27 @@ export default function ItemDetails() {
         </View>
       ) : null}
 
-      {photos.length > 0 && others.length > 0
-        ? others.map((attachment) => (
-            <ListRow
-              key={attachment.id}
-              icon={KIND_ICON[attachment.kind]}
-              title={attachment.name}
-              description={formatBytes(attachment.size, language)}
-              onPress={() => setSelected(attachments.indexOf(attachment))}
-            />
-          ))
-        : null}
-      {photos.length === 0 && others.length > 1
-        ? others.map((attachment, index) => (
+      {attachments.length > 1 ? (
+        <>
+          <Text variant="label">
+            {t("capture.attachments", { n: attachments.length })}
+          </Text>
+          {attachments.map((attachment, index) => (
             <ListRow
               key={attachment.id}
               icon={KIND_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
               trailing={
-                index === selected ? (
+                index === current ? (
                   <Icon name="check" size={18} color="status.active" />
                 ) : undefined
               }
               onPress={() => setSelected(index)}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
 
       <DetailRows
         rows={[

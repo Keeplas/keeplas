@@ -14,7 +14,6 @@ import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import {
   GROUP_CATEGORY,
-  inGroup,
   VAULT_GROUPS,
   type VaultGroupKey,
 } from "@/features/home/vault-groups";
@@ -24,6 +23,7 @@ import {
   type CategoryToDelete,
 } from "@/features/vault/delete-category";
 import { useVaultData } from "@/features/vault/vault-data";
+import { inFilter } from "@/features/vault/vault-filter";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -48,6 +48,11 @@ export default function Categories() {
     t(`capture.category.${GROUP_CATEGORY[key]}`);
   const failed = () =>
     toast({ variant: "error", title: t("common.genericError") });
+
+  const itemIdsOf = (filter: string) =>
+    (items ?? [])
+      .filter((item) => inFilter(item, filter))
+      .map((item) => item.id);
 
   const trash = (category: CategoryToDelete) => (
     <Pressable
@@ -85,9 +90,7 @@ export default function Categories() {
             title={builtInLabel(group.key)}
             trailing={trash({
               name: builtInLabel(group.key),
-              itemIds: (items ?? [])
-                .filter((item) => inGroup(item, group.key))
-                .map((item) => item.id),
+              itemIds: itemIdsOf(group.key),
               remove: () => setHidden({ groups: [...hidden, group.key] }),
             })}
           />
@@ -95,9 +98,7 @@ export default function Categories() {
       )}
       {(categories ?? []).map((category) => {
         const name = category.name ?? t("item.decrypting");
-        const itemIds = (items ?? [])
-          .filter((item) => item.categoryId === category.id)
-          .map((item) => item.id);
+        const itemIds = itemIdsOf(category.id);
         return (
           <ListRow
             key={category.id}

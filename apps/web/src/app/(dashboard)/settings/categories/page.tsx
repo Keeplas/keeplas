@@ -3,7 +3,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
   GROUP_CATEGORIES,
-  inGroup,
+  inVaultList,
   type VaultGroupKey,
 } from "@keeplas/backend/lib/vault_groups";
 import {
@@ -165,7 +165,7 @@ export default function CategoriesPage() {
               action={trash({
                 label: lists(group),
                 itemIds: (items ?? [])
-                  .filter((item) => inGroup(item, group))
+                  .filter((item) => inVaultList(item, group))
                   .map((item) => item.id),
                 remove: () => setHidden({ groups: [...hidden, group] }),
               })}

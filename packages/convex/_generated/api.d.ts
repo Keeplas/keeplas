@@ -55,7 +55,6 @@ import type * as lib_rate_limit from "../lib/rate_limit.js";
 import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_sessions from "../lib/sessions.js";
 import type * as lib_storage from "../lib/storage.js";
-import type * as lib_stripe_webhook from "../lib/stripe_webhook.js";
 import type * as lib_vault_groups from "../lib/vault_groups.js";
 import type * as lib_vault_proof from "../lib/vault_proof.js";
 import type * as life_check from "../life_check.js";
@@ -142,7 +141,6 @@ declare const fullApi: ApiFromModules<{
   "lib/require_env": typeof lib_require_env;
   "lib/sessions": typeof lib_sessions;
   "lib/storage": typeof lib_storage;
-  "lib/stripe_webhook": typeof lib_stripe_webhook;
   "lib/vault_groups": typeof lib_vault_groups;
   "lib/vault_proof": typeof lib_vault_proof;
   life_check: typeof life_check;

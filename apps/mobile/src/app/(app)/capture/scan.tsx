@@ -18,6 +18,7 @@ import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius, type } from "@/theme";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
+import { draftHref, useDraftParam } from "@/features/capture/draft-route";
 
 /**
  * M07-2 Scan document. "Auto" opens the system document scanner (VisionKit /
@@ -26,6 +27,7 @@ import { keepUnlockedWhile } from "@/lib/auto-lock";
  * (M07-8). The gallery button adds photos or files instead.
  */
 export default function ScanDocument() {
+  useDraftParam();
   const router = useRouter();
   const { t } = useI18n();
   const draft = useDraft();
@@ -42,7 +44,7 @@ export default function ScanDocument() {
     }
   }, [permission, requestPermission]);
 
-  const review = () => router.replace("/capture/compose");
+  const review = () => router.replace(draftHref("/capture/compose"));
 
   async function scanAuto() {
     setMode("auto");
@@ -345,7 +347,7 @@ const styles = StyleSheet.create({
   },
   done: {
     minWidth: 96,
-    height: 30,
+    height: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

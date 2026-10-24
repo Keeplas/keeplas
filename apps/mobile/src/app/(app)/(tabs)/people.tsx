@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   replace: {
-    height: 34,
+    height: 44,
     paddingHorizontal: 14,
     justifyContent: "center",
     borderWidth: 1,

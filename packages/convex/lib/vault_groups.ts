@@ -122,27 +122,23 @@ interface Listed {
 
 /**
  * The one list an item belongs to besides "all" (and "other"): the inbox,
- * the accounts or instructions group, or else its content kind.
+ * the documents, accounts or instructions group, or else its content kind.
  */
 export function bucketOf(item: Listed): Exclude<VaultListKey, "all" | "other"> {
   if (item.categoryId) return item.kind;
   if (item.category === "inbox") return "inbox";
   const group = groupOf(item.category);
-  if (group === "accounts" || group === "instructions") return group;
+  if (group && group !== "other") return group;
   return item.kind;
 }
 
-/** Whether an item is filed under a built-in group (not a user-made one). */
-export function inGroup(
-  item: { category: string; categoryId?: string },
-  group: VaultGroupKey,
-): boolean {
-  return !item.categoryId && groupOf(item.category) === group;
+function inOther(item: Listed): boolean {
+  return !item.categoryId && groupOf(item.category) === "other";
 }
 
 export function inVaultList(item: Listed, list: VaultListKey): boolean {
   if (list === "all") return true;
-  if (list === "other") return inGroup(item, "other");
+  if (list === "other") return inOther(item);
   return bucketOf(item) === list;
 }
 
@@ -155,7 +151,7 @@ export function listCounts(
   for (const item of items) {
     counts.all += 1;
     counts[bucketOf(item)] += 1;
-    if (inGroup(item, "other")) counts.other += 1;
+    if (inOther(item)) counts.other += 1;
   }
   return counts;
 }
