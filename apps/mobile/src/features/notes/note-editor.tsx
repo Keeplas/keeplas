@@ -237,7 +237,13 @@ export function NoteEditor({
         ) : null}
       </View>
       <View style={styles.web}>
-        <RichText editor={editor} scrollEnabled />
+        {/* Keep iOS's native bar above the keyboard so "Done" also sits
+            on the keyboard itself (tentap hides it by default). */}
+        <RichText
+          editor={editor}
+          scrollEnabled
+          hideKeyboardAccessoryView={false}
+        />
       </View>
     </View>
   );
