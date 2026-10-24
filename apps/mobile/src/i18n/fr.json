@@ -1250,7 +1250,13 @@
     "cameraChip": "Appareil photo",
     "historyNote": "La version actuelle est conservée dans l'historique, avec ses fichiers. Rien n'est perdu.",
     "failedTitle": "Modification non enregistrée",
-    "failedBody": "Keeplas n'a pas pu enregistrer vos changements. Vérifiez votre connexion et réessayez."
+    "failedBody": "Keeplas n'a pas pu enregistrer vos changements. Vérifiez votre connexion et réessayez.",
+    "pending": "Vous avez des modifications non enregistrées sur cet élément.",
+    "resume": "Reprendre les modifications",
+    "discard": "Annuler les modifications",
+    "discardTitle": "Annuler les modifications ?",
+    "discardBody": "Vos changements non enregistrés et les fichiers ajoutés seront retirés de ce téléphone. L'élément reste tel qu'il est enregistré.",
+    "resumed": "Vous reprenez des modifications non enregistrées."
   },
   "itemHistory": {
     "title": "Historique",
@@ -1276,5 +1282,20 @@
     "restoreFailed": "Keeplas n'a pas pu restaurer cet élément. Vérifiez votre connexion et réessayez.",
     "emptyTitle": "Aucune archive",
     "emptyBody": "Les éléments que vous archivez apparaîtront ici, avec leur historique."
+  },
+  "drafts": {
+    "title": "Brouillons",
+    "homeBody": "{n} en cours · touchez pour reprendre",
+    "saved": "Brouillon enregistré sur ce téléphone",
+    "menuTitle": "Options du brouillon",
+    "clear": "Effacer le brouillon",
+    "clearBody": "Retire le texte, les fichiers et les réglages de ce brouillon",
+    "delete": "Supprimer le brouillon",
+    "deleteRowBody": "Retire aussi ses fichiers de ce téléphone",
+    "deleteTitle": "Supprimer ce brouillon ?",
+    "deleteBody": "Le texte et les fichiers joints seront retirés de ce téléphone. Cette action est définitive.",
+    "resume": "Reprendre",
+    "emptyTitle": "Aucun brouillon",
+    "emptyBody": "Ce que vous commencez sans l'enregistrer est gardé ici, sur ce téléphone, pour le reprendre plus tard."
   }
 }
