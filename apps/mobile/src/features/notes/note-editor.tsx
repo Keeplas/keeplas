@@ -188,37 +188,54 @@ export function NoteEditor({
         },
       ]}
     >
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyboardShouldPersistTaps="always"
-        contentContainerStyle={styles.tools}
+      <View
         style={[
           styles.toolbar,
           { borderBottomColor: colors["border.default"] },
         ]}
       >
-        {tools.map((tool) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          contentContainerStyle={styles.tools}
+        >
+          {tools.map((tool) => (
+            <Pressable
+              key={tool.key}
+              accessibilityRole="button"
+              accessibilityLabel={tool.label}
+              accessibilityState={{
+                selected: tool.active,
+                disabled: tool.disabled,
+              }}
+              disabled={tool.disabled}
+              onPress={tool.onPress}
+              style={[
+                styles.tool,
+                tool.active && { backgroundColor: colors["bg.info"] },
+                tool.disabled && styles.disabled,
+              ]}
+            >
+              {tool.glyph}
+            </Pressable>
+          ))}
+        </ScrollView>
+        {/* The editor is a web view: tapping outside doesn't close its
+            keyboard, so give a way out without saving. */}
+        {state.isFocused ? (
           <Pressable
-            key={tool.key}
             accessibilityRole="button"
-            accessibilityLabel={tool.label}
-            accessibilityState={{
-              selected: tool.active,
-              disabled: tool.disabled,
-            }}
-            disabled={tool.disabled}
-            onPress={tool.onPress}
-            style={[
-              styles.tool,
-              tool.active && { backgroundColor: colors["bg.info"] },
-              tool.disabled && styles.disabled,
-            ]}
+            hitSlop={8}
+            onPress={editor.blur}
+            style={[styles.done, { borderLeftColor: colors["border.default"] }]}
           >
-            {tool.glyph}
+            <Text variant="label" color="accent.text">
+              {t("common.done")}
+            </Text>
           </Pressable>
-        ))}
-      </ScrollView>
+        ) : null}
+      </View>
       <View style={styles.web}>
         <RichText editor={editor} scrollEnabled />
       </View>
@@ -228,7 +245,11 @@ export function NoteEditor({
 
 const styles = StyleSheet.create({
   box: { borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
-  toolbar: { borderBottomWidth: StyleSheet.hairlineWidth, flexGrow: 0 },
+  toolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   tools: { paddingHorizontal: 6, paddingVertical: 6, gap: 2 },
   tool: {
     minWidth: 36,
@@ -237,6 +258,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
+  },
+  done: {
+    alignSelf: "stretch",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    borderLeftWidth: StyleSheet.hairlineWidth,
   },
   disabled: { opacity: 0.35 },
   mirror: { transform: [{ scaleX: -1 }] },

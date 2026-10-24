@@ -174,7 +174,7 @@ describe("capture sealing + outbox upload", () => {
     expect(Buffer.from(out.bytes()).equals(Buffer.from(photo))).toBe(true);
   });
 
-  it("files a capture in a folder with a key for each person on it", async () => {
+  it("shares a new capture with every trusted contact", async () => {
     const owner = generateRecipientKeyPair();
     const marie = generateRecipientKeyPair();
     const paul = generateRecipientKeyPair();
@@ -184,8 +184,8 @@ describe("capture sealing + outbox upload", () => {
         title: "Family plan",
         note: "",
         files: [],
-        folder: {
-          id: "folder1",
+        folderId: "folder1",
+        share: {
           recipients: [
             {
               contactId: "marie",
@@ -196,6 +196,7 @@ describe("capture sealing + outbox upload", () => {
               publicKey: serializePublicKey(paul.publicKey),
             },
           ],
+          pending: ["lea"],
         },
       },
       serializePublicKey(owner.publicKey),
@@ -213,7 +214,12 @@ describe("capture sealing + outbox upload", () => {
     await uploadEntry(entry, memoryStore(), server.deps);
 
     const [args] = server.created;
-    expect(args.folderId).toBe("folder1");
+    expect(args).toMatchObject({
+      folderId: "folder1",
+      accessLevel: "trusted_only",
+      recipientMode: "default",
+      pendingRecipients: ["lea"],
+    });
     expect(args.recipientKeys?.map((key) => key.contactId)).toEqual([
       "marie",
       "paul",
@@ -225,6 +231,24 @@ describe("capture sealing + outbox upload", () => {
       );
       expect(await decryptText(args.encryptedTitle, dek)).toBe("Family plan");
     }
+  });
+
+  it("stays shared with every contact before any has a key", async () => {
+    const owner = generateRecipientKeyPair();
+    const sealed = await sealCapture(
+      "e4",
+      {
+        title: "Wishes",
+        note: "",
+        files: [],
+        share: { recipients: [], pending: [] },
+      },
+      serializePublicKey(owner.publicKey),
+      memoryDisk({}).io,
+    );
+    expect(sealed.item.accessLevel).toBe("trusted_only");
+    expect(sealed.item.recipientKeys).toBeUndefined();
+    expect(sealed.item.pendingRecipients).toBeUndefined();
   });
 
   it("adds files to an existing item with that item's key", async () => {
@@ -312,6 +336,7 @@ describe("capture sealing + outbox upload", () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);
     expect(entry.item.folderId).toBeUndefined();
+    expect(entry.item.accessLevel).toBeUndefined();
     expect(entry.item.recipientKeys).toBeUndefined();
     expect(entry.item.captureHandoffId).toBeUndefined();
   });

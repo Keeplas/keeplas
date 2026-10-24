@@ -44,9 +44,15 @@ export interface CaptureDraft {
   files: CaptureFile[];
   category?: VaultCategory;
   icon?: string;
-  folder?: {
-    id: string;
+  /** Set when the capture starts from a folder screen. */
+  folderId?: string;
+  /**
+   * New items are for every trusted contact: the DEK is wrapped to each
+   * verified key; contacts without a published key wait in `pending`.
+   */
+  share?: {
     recipients: { contactId: string; publicKey: string }[];
+    pending: string[];
   };
   attachTo?: { itemId: string; dek: CryptoKey; ownerWrappedDek: string };
   /** W06-7: completes the browser's handoff when the item is created. */
@@ -60,6 +66,23 @@ export interface SealIO {
     entryId: string,
     index: number,
   ) => ByteSink & { path: string; close: () => number };
+}
+
+async function shareFields(
+  dek: CryptoKey,
+  share: NonNullable<CaptureDraft["share"]>,
+): Promise<Partial<SealedItem>> {
+  const recipientKeys = await Promise.all(
+    share.recipients.map(async (recipient) => ({
+      contactId: recipient.contactId,
+      wrappedDek: await wrapDek(dek, recipient.publicKey),
+    })),
+  );
+  return {
+    accessLevel: "trusted_only",
+    ...(recipientKeys.length ? { recipientKeys } : {}),
+    ...(share.pending.length ? { pendingRecipients: share.pending } : {}),
+  };
 }
 
 export async function sealCapture(
@@ -78,16 +101,9 @@ export async function sealCapture(
       dek,
     ),
     encryptedContent: await encryptText(noteToHtml(draft.note), dek),
-    ...(draft.folder && !draft.attachTo
-      ? {
-          folderId: draft.folder.id,
-          recipientKeys: await Promise.all(
-            draft.folder.recipients.map(async (recipient) => ({
-              contactId: recipient.contactId,
-              wrappedDek: await wrapDek(dek, recipient.publicKey),
-            })),
-          ),
-        }
+    ...(draft.folderId && !draft.attachTo ? { folderId: draft.folderId } : {}),
+    ...(draft.share && !draft.attachTo
+      ? await shareFields(dek, draft.share)
       : {}),
     ...(draft.handoffId && !draft.attachTo
       ? { captureHandoffId: draft.handoffId }

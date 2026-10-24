@@ -18,10 +18,11 @@
   "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
-    "search": "Recherche",
+    "vault": "Coffre",
     "people": "Contacts",
     "settings": "Réglages",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "search": "Recherche"
   },
   "welcome": {
     "title": "Votre vie,\nbien gardée",
@@ -371,7 +372,6 @@
     "items": "{count} éléments",
     "item": "1 élément",
     "inbox": "Boîte chiffrée",
-    "inboxBody": "Les éléments à trier apparaîtront ici",
     "recent": "Éléments récents",
     "outbox": {
       "waiting": "En attente d'envoi",
@@ -380,8 +380,6 @@
       "quota": "Stockage plein"
     },
     "updated": "Mis à jour {when}",
-    "toOrganize": "{count} éléments à classer",
-    "toOrganizeOne": "1 élément à classer",
     "greetingNamed": "{greeting}, {name}",
     "itemWord": "élément",
     "itemsWord": "éléments",
@@ -731,11 +729,7 @@
     "iconAutoBody": "Choisie selon ce que vous ajoutez",
     "iconSearch": "Rechercher une icône",
     "iconNone": "Aucune icône ne correspond à cette recherche.",
-    "folderLabel": "Dossier",
-    "noFolder": "Aucun dossier",
     "folderShared": "{name} · partagé avec {people}",
-    "folderKeyTitle": "Partage avec ce dossier impossible",
-    "folderKeyBody": "Keeplas n'a pas pu vérifier la clé de chiffrement de {name}, l'élément n'a donc pas été enregistré. Vérifiez votre connexion et réessayez, ou choisissez Aucun dossier et déplacez-le plus tard.",
     "reset": "Recommencer",
     "resetTitle": "Recommencer cet enregistrement ?",
     "resetBody": "Votre enregistrement de {time} sera supprimé de ce téléphone et vous pourrez enregistrer à nouveau. Cette action est définitive.",
@@ -780,7 +774,10 @@
     "modeAuto": "Auto",
     "modeManual": "Manuel",
     "autoUnavailableTitle": "Scan automatique indisponible",
-    "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo."
+    "autoUnavailableBody": "Ce téléphone ne peut pas ouvrir le scanner de documents automatique. Photographiez chaque page avec l’appareil photo.",
+    "allContacts": "Tous vos contacts de confiance",
+    "contactKeyTitle": "Partage avec {name} impossible",
+    "contactKeyBody": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, l'élément n'a donc pas été enregistré. Vérifiez-le dans Contacts, puis réessayez."
   },
   "permissions": {
     "cameraTitle": "L'accès à la caméra est désactivé",
@@ -795,7 +792,6 @@
     "decrypting": "Ouverture…",
     "category": "Catégorie",
     "folder": "Dossier",
-    "noFolder": "Aucun dossier",
     "share": "Partager",
     "opening": "Déchiffrement sur ce téléphone…",
     "play": "Lire",
@@ -861,7 +857,7 @@
     "byYou": "Vous",
     "byKeeplas": "Keeplas",
     "shareTitle": "Qui peut le voir",
-    "shareBody": "Choisissez les contacts de confiance qui peuvent ouvrir cet élément. Keeplas le chiffre pour chacun d'eux sur ce téléphone.",
+    "shareBody": "Choisissez les contacts de confiance qui peuvent ouvrir cet élément, ou aucun pour le garder pour tous. Keeplas le chiffre pour chacun d'eux sur ce téléphone.",
     "throughFolder": "Via le dossier {name}",
     "shareNobody": "Aucun contact de confiance n'a encore rejoint Keeplas. Invitez quelqu'un d'abord.",
     "addTrustedPerson": "Ajouter un contact de confiance",
