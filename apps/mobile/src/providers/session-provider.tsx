@@ -35,6 +35,7 @@ import {
   type ResumePoint,
 } from "@/lib/resume-point";
 import { resolveStage, type Stage } from "@/lib/session-stage";
+import { clearKeptCiphers } from "@/lib/files";
 import { useVault } from "./vault-provider";
 
 /** The signed-in user as `users.viewer` projects it (no analytics fields). */
@@ -158,6 +159,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (userId) {
       await forgetDeviceVault(userId);
       await clearItemSummaries(userId).catch(() => undefined);
+      clearKeptCiphers();
     }
     lock();
     setFinishingSetup(false);

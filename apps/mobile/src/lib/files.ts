@@ -94,27 +94,70 @@ export async function downloadDecrypted(
   name: string,
   onProgress?: (ratio: number) => void,
   into: Directory = folder(Paths.cache, "open"),
+  keepAs?: string,
 ): Promise<File> {
   const cache = into;
-  const cipher = new File(cache, `${Date.now()}.bin`);
-  const task = File.createDownloadTask(url, cipher, {
-    onProgress: ({ bytesWritten, totalBytes }) => {
-      if (totalBytes > 0) onProgress?.(bytesWritten / totalBytes);
-    },
-  });
-  await task.downloadAsync();
+  const kept = keepAs ? keptCipher(keepAs) : null;
+  let cipher: File;
+  if (kept?.exists) {
+    cipher = kept;
+    onProgress?.(1);
+  } else {
+    const download = new File(cache, `${Date.now()}.bin`);
+    const task = File.createDownloadTask(url, download, {
+      onProgress: ({ bytesWritten, totalBytes }) => {
+        if (totalBytes > 0) onProgress?.(bytesWritten / totalBytes);
+      },
+    });
+    await task.downloadAsync();
+    if (kept) download.move(kept);
+    cipher = kept ?? download;
+  }
   const safeName = name.replace(/[/\\]/g, "_") || "file";
   const plain = new File(cache, `${Date.now()}-${safeName}`);
   const source = openSource(cipher.uri);
   const sink = createSink(plain);
+  let decrypted = false;
   try {
     await decryptFile(source, iv, key, sink);
+    decrypted = true;
   } finally {
     source.close();
     sink.close();
-    cipher.delete();
+    if (!kept || !decrypted) cipher.delete();
   }
+  if (kept) trimKeptCiphers();
   return plain;
+}
+
+export const KEPT_CIPHER_MAX_BYTES = 500 * 1024 * 1024;
+
+const keptFolder = () => folder(Paths.cache, "cipher");
+
+export function hasKeptCipher(id: string): boolean {
+  return keptCipher(id).exists;
+}
+
+function keptCipher(id: string): File {
+  return new File(keptFolder(), `${id.replace(/[^\w-]/g, "_")}.bin`);
+}
+
+export function trimKeptCiphers(maxBytes = KEPT_CIPHER_MAX_BYTES): void {
+  const files = keptFolder()
+    .list()
+    .filter((entry): entry is File => entry instanceof File)
+    .map((file) => ({ file, ...file.info() }))
+    .sort((a, b) => (b.modificationTime ?? 0) - (a.modificationTime ?? 0));
+  let total = 0;
+  for (const entry of files) {
+    total += entry.size ?? 0;
+    if (total > maxBytes) entry.file.delete();
+  }
+}
+
+export function clearKeptCiphers(): void {
+  const dir = new Directory(Paths.cache, "cipher");
+  if (dir.exists) dir.delete();
 }
 
 const opened = new Map<string, File>();
