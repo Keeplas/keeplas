@@ -1,5 +1,11 @@
 import { memo, type ReactNode } from "react";
-import { ScrollView, StyleSheet, View, type ViewStyle } from "react-native";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
@@ -23,7 +29,8 @@ const FOOTER_ART = {
 /**
  * Screen frame shared by every page: `bg/app`, safe areas, an App Header
  * slot, scrollable content (20 pt gutter, 12 pt under the header) and the
- * Figma decor (`Decor/branch` corners or a landscape footer).
+ * Figma decor (`Decor/branch` corners or a landscape footer). The body
+ * avoids the keyboard so focused fields and the pinned footer stay visible.
  */
 export function Screen({
   header,
@@ -61,20 +68,22 @@ export function Screen({
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       {decor ? <Decor kind={decor} night={scheme === "dark"} /> : null}
       {header}
-      {scroll ? (
-        <ScrollView
-          contentContainerStyle={content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {children}
-        </ScrollView>
-      ) : (
-        <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
-          {children}
-        </View>
-      )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      <KeyboardAvoidingView behavior="padding" style={styles.flex}>
+        {scroll ? (
+          <ScrollView
+            contentContainerStyle={content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        ) : (
+          <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
+            {children}
+          </View>
+        )}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
