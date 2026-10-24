@@ -31,7 +31,10 @@
         "backgroundColor": "#FDFBF7"
       },
       "predictiveBackGestureEnabled": false,
-      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WRITE_CONTACTS"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -121,6 +124,12 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#0E2340"
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Keeplas reads the contact you pick to fill in a trusted person's name, email and phone number. Your address book is not sent anywhere."
         }
       ],
       "expo-sharing",
