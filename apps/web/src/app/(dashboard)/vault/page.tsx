@@ -51,7 +51,6 @@ export default function VaultPage() {
         detail: labels.detail(item),
         style: itemStyle(item),
         category: labels.category(item),
-        folder: labels.folder(item),
         access: labels.access(item),
         updated: formatRelative(
           sort === "added" ? item.createdAt : item.updatedAt,

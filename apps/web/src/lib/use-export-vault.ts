@@ -13,7 +13,12 @@ import {
   type ExportItem,
 } from "@keeplas/export";
 
-import { legacyFileMeta, parseFileMeta, parseItemMeta } from "@/lib/item-meta";
+import {
+  legacyFileMeta,
+  parseFileMeta,
+  parseItemMeta,
+  type CategoryChoice,
+} from "@/lib/item-meta";
 import { parseLinks } from "@/lib/link-payload";
 import { useRecipientCrypto } from "@/lib/use-recipient-crypto";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
@@ -59,25 +64,24 @@ export function useExportVault() {
     ): Promise<{ archive: Blob; name: string; skipped: number }> => {
       const now = Date.now();
       let skipped = 0;
-      const [rawItems, contacts, folders] = await Promise.all([
+      const [rawItems, contacts, categories] = await Promise.all([
         convex.query(api.vault_items.getItemSummaries, {}),
         convex.query(api.trusted_contacts.getContacts, {}),
-        convex.query(api.folders.list, {}),
+        convex.query(api.vault_categories.list, {}),
       ]);
       const contactName = new Map(
         contacts.map((contact) => [contact._id as string, contact.name]),
       );
-      const folderOf = new Map(
+      // The archive keeps a user-made category as the item's folder.
+      const categoryName = new Map(
         await Promise.all(
-          folders.map(
-            async (folder) =>
+          categories.map(
+            async (category) =>
               [
-                folder._id as string,
-                {
-                  name: await decryptContent(folder.encryptedName).catch(
-                    () => labels.noFolder,
-                  ),
-                },
+                category._id as string,
+                await decryptContent(category.encryptedName).catch(
+                  () => labels.noFolder,
+                ),
               ] as const,
           ),
         ),
@@ -109,7 +113,9 @@ export function useExportVault() {
               : Promise.resolve([] as string[]),
             raw.encryptedMeta
               ? decryptOne(raw.encryptedMeta).then(parseItemMeta)
-              : Promise.resolve({ category: raw.category ?? "other" }),
+              : Promise.resolve<CategoryChoice>({
+                  category: raw.category ?? "other",
+                }),
             Promise.all(
               files.map(async (file) =>
                 file.encryptedMeta
@@ -118,7 +124,6 @@ export function useExportVault() {
               ),
             ),
           ]);
-          const folder = raw.folderId ? folderOf.get(raw.folderId) : undefined;
           const people = new Set(
             (full.sharedWithContacts ?? [])
               .map((id) => contactName.get(id))
@@ -128,7 +133,8 @@ export function useExportVault() {
             id: raw._id,
             title,
             category: meta.category,
-            folder: folder?.name ?? null,
+            folder:
+              (meta.categoryId && categoryName.get(meta.categoryId)) || null,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,
             note,

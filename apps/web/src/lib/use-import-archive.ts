@@ -14,7 +14,7 @@ import {
 } from "@keeplas/export";
 
 import { inferFileKind } from "@/lib/attachment-capture";
-import { itemMetaJson } from "@/lib/item-meta";
+import { CUSTOM_FALLBACK, itemMetaJson } from "@/lib/item-meta";
 import { serializeLinks } from "@/lib/link-payload";
 import { useUploadQueue } from "@/lib/upload-queue";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -105,7 +105,7 @@ function rangeReader(file: Blob) {
 export function useImportArchive() {
   const convex = useConvex();
   const createItem = useAuditedMutation(api.vault_items.createItem);
-  const createFolder = useAuditedMutation(api.folders.create);
+  const createCategory = useAuditedMutation(api.vault_categories.create);
   const { encryptContent, encryptContentWithKey, decryptContent } =
     useVaultCrypto();
   const { generateDekAndWrap } = useRecipientCrypto();
@@ -132,24 +132,26 @@ export function useImportArchive() {
       }
       const byName = new Map(entries.map((entry) => [entry.name, entry]));
 
-      const [vault, folders] = await Promise.all([
+      const [vault, categories] = await Promise.all([
         convex.query(api.vaults.getVault, {}),
-        convex.query(api.folders.list, {}),
+        convex.query(api.vault_categories.list, {}),
       ]);
       if (!vault) throw new Error("No vault");
-      const folderIds = new Map<string, Id<"folders">>();
-      // An archive folder is a custom category: reuse one of that name.
-      for (const folder of folders) {
-        const name = await decryptContent(folder.encryptedName).catch(() => "");
-        if (name) folderIds.set(name, folder._id);
+      // An archive folder is a user-made category: reuse one of that name.
+      const categoryIds = new Map<string, string>();
+      for (const category of categories) {
+        const name = await decryptContent(category.encryptedName).catch(
+          () => "",
+        );
+        if (name) categoryIds.set(name, category._id);
       }
-      async function folderFor(name: string): Promise<Id<"folders">> {
-        const known = folderIds.get(name);
+      async function categoryFor(name: string): Promise<string> {
+        const known = categoryIds.get(name);
         if (known) return known;
-        const id = (await createFolder({
+        const id = await createCategory({
           encryptedName: await encryptContent(name),
-        })) as Id<"folders">;
-        folderIds.set(name, id);
+        });
+        categoryIds.set(name, id);
         return id;
       }
 
@@ -165,7 +167,15 @@ export function useImportArchive() {
             dek,
           ),
           encryptedMeta: await encryptContentWithKey(
-            itemMetaJson(isCategory(item.category) ? item.category : "other"),
+            item.folder
+              ? itemMetaJson(
+                  CUSTOM_FALLBACK,
+                  undefined,
+                  await categoryFor(item.folder),
+                )
+              : itemMetaJson(
+                  isCategory(item.category) ? item.category : "other",
+                ),
             dek,
           ),
           encryptedContent: await encryptContentWithKey(item.note, dek),
@@ -175,7 +185,6 @@ export function useImportArchive() {
           accessLevel: "private",
           encryptionType: "zero_knowledge",
           ownerWrappedDek: ownerWrap.wrappedDek,
-          folderId: item.folder ? await folderFor(item.folder) : undefined,
         })) as Id<"vault_items">;
 
         const files = [];
@@ -208,7 +217,7 @@ export function useImportArchive() {
     [
       convex,
       createItem,
-      createFolder,
+      createCategory,
       encryptContent,
       encryptContentWithKey,
       decryptContent,

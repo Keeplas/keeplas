@@ -14,7 +14,7 @@ export interface NewItem {
   /** Rich-text note (HTML), "" for none. */
   note: string;
   category: VaultCategory;
-  folderId: Id<"folders"> | null;
+  categoryId?: string;
   /** Who can open it once released; [] keeps it private. */
   contactIds: Id<"trusted_contacts">[];
   files: QueuedFile[];
@@ -50,7 +50,7 @@ export function useCreateItem() {
       const [encryptedTitle, encryptedMeta, encryptedContent] =
         await Promise.all([
           seal(item.title.trim()),
-          seal(itemMetaJson(item.category)),
+          seal(itemMetaJson(item.category, undefined, item.categoryId)),
           seal(item.note),
         ]);
       const sharing = item.everyone
@@ -78,7 +78,6 @@ export function useCreateItem() {
               ...sharing,
               recipientKeys: wraps.recipientKeys,
               pendingRecipients: wraps.pendingRecipients,
-              folderId: item.folderId ?? undefined,
               files,
               isReleaseIntroduction: item.releaseIntroduction || undefined,
             });

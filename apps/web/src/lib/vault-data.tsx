@@ -12,19 +12,19 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
-import { contentKind } from "@keeplas/backend/lib/vault_groups";
+import { contentKind, shownFiling } from "@keeplas/backend/lib/vault_groups";
 import { legacyFileMeta, parseFileMeta, parseItemMeta } from "./item-meta";
 import { useMasterKey } from "./master-key-context";
+import { useHiddenCategoryGroups } from "./use-categories";
 import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useVaultCrypto } from "./use-vault-crypto";
 import type { VaultItemSummary } from "./vault-list";
 
-/** A custom category (stored as a folder). */
-export interface FolderSummary {
-  id: Id<"folders">;
+/** A user-made category (the built-in ones are fixed). */
+export interface CategorySummary {
+  id: Id<"vault_categories">;
   /** null when the name cannot be decrypted in this browser. */
   name: string | null;
-  itemCount: number;
 }
 
 type ItemDoc = FunctionReturnType<
@@ -33,7 +33,7 @@ type ItemDoc = FunctionReturnType<
 
 interface VaultDataValue {
   items: VaultItemSummary[] | undefined;
-  folders: FolderSummary[] | undefined;
+  categories: CategorySummary[] | undefined;
   /** The key that opens an item: its DEK, or the master key (legacy rows). */
   itemKey: (item: { ownerWrappedDek?: string }) => Promise<CryptoKey>;
 }
@@ -55,11 +55,11 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const { decryptContent, decryptContentWithKey } = useVaultCrypto();
   const { unwrapOwnerDek, isReady } = useRecipientCrypto();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
-  const rawFolders = useQuery(api.folders.list);
+  const rawCategories = useQuery(api.vault_categories.list);
   const summaries = useRef(new Map<string, Promise<VaultItemSummary>>());
   const deks = useRef(new Map<string, Promise<CryptoKey>>());
   const [items, setItems] = useState<VaultItemSummary[]>();
-  const [folders, setFolders] = useState<FolderSummary[]>();
+  const [categories, setCategories] = useState<CategorySummary[]>();
 
   useEffect(() => {
     if (masterKey) return;
@@ -88,7 +88,6 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     async (item: ItemDoc): Promise<VaultItemSummary> => {
       const base = {
         id: item._id,
-        folderId: item.folderId,
         sharing: {
           accessLevel: item.accessLevel,
           recipientMode: item.recipientMode,
@@ -121,6 +120,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
           ...base,
           title,
           category: meta?.category ?? item.category ?? "other",
+          categoryId: meta?.categoryId,
           icon: meta?.icon,
           kind: contentKind(files),
           files,
@@ -174,23 +174,29 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   }, [rawItems, masterKey, isReady, summarize]);
 
   useEffect(() => {
-    if (!rawFolders || !masterKey) return;
+    if (!rawCategories || !masterKey) return;
     let alive = true;
     Promise.all(
-      rawFolders.map(async (folder) => ({
-        id: folder._id,
-        name: await decryptContent(folder.encryptedName).catch(() => null),
-        itemCount: folder.itemCount,
+      rawCategories.map(async (category) => ({
+        id: category._id,
+        name: await decryptContent(category.encryptedName).catch(() => null),
       })),
-    ).then((out) => alive && setFolders(out));
+    ).then((out) => alive && setCategories(out));
     return () => {
       alive = false;
     };
-  }, [rawFolders, masterKey, decryptContent]);
+  }, [rawCategories, masterKey, decryptContent]);
+
+  // Items of a category the user deleted show in To sort.
+  const hidden = useHiddenCategoryGroups();
+  const shownItems = useMemo(() => {
+    const ids = categories?.map((category) => category.id as string);
+    return items?.map((item) => shownFiling(item, hidden, ids));
+  }, [items, hidden, categories]);
 
   const value = useMemo<VaultDataValue>(
-    () => ({ items, folders, itemKey }),
-    [items, folders, itemKey],
+    () => ({ items: shownItems, categories, itemKey }),
+    [shownItems, categories, itemKey],
   );
   return (
     <VaultDataContext.Provider value={value}>
