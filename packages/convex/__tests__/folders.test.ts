@@ -21,10 +21,14 @@ async function setup() {
   const owner = asUser(t, ownerId);
   const contactId = await seedTrustContact(t, ownerId, { n: 1 });
 
-  const folderId = await owner.mutation(api.folders.create, {
-    encryptedName: SEALED,
-    _audit: await signedAudit(),
-  });
+  const folderId = await t.run((ctx) =>
+    ctx.db.insert("folders", {
+      userId: ownerId,
+      encryptedName: SEALED,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    }),
+  );
   const itemIds = await t.run(async (ctx) => {
     const now = Date.now();
     const vaultId = await ctx.db.insert("vaults", {
@@ -75,33 +79,6 @@ describe("folders", () => {
       encryptedName: SEALED,
       itemCount: 1,
     });
-  });
-
-  it("renames a folder", async () => {
-    const s = await setup();
-    await s.owner.mutation(api.folders.rename, {
-      folderId: s.folderId,
-      encryptedName: "renamed",
-      _audit: await signedAudit(),
-    });
-    const [category] = await s.owner.query(api.folders.list, {});
-    expect(category.encryptedName).toBe("renamed");
-  });
-
-  it("moves an item in and out of a folder", async () => {
-    const s = await setup();
-    await s.owner.mutation(api.folders.moveItem, {
-      itemId: s.itemIds.other,
-      folderId: s.folderId,
-      _audit: await signedAudit(),
-    });
-    expect((await s.owner.query(api.folders.list, {}))[0].itemCount).toBe(2);
-    await s.owner.mutation(api.folders.moveItem, {
-      itemId: s.itemIds.other,
-      folderId: null,
-      _audit: await signedAudit(),
-    });
-    expect((await s.owner.query(api.folders.list, {}))[0].itemCount).toBe(1);
   });
 
   it("deleting a folder keeps its items", async () => {

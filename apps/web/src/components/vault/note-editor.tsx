@@ -8,9 +8,9 @@ import { formatBytes, formatClock } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useLocale, useTranslations } from "@/lib/i18n";
 import type { QueuedFile } from "@/lib/upload-queue";
-import type { FolderSummary } from "@/lib/vault-data";
 import { extensionOf } from "@/lib/vault-list";
-import type { VaultCategory } from "@/lib/vault-categories";
+import type { CategoryChoice } from "@/lib/item-meta";
+import type { CategorySummary } from "@/lib/vault-data";
 import { useShareableContacts } from "./access-picker";
 import { FileRow } from "./file-row";
 import {
@@ -18,11 +18,9 @@ import {
   CategoryField,
   EncryptionNote,
   Field,
-  FolderField,
 } from "./form-fields";
 
 type ContactId = Id<"trusted_contacts">;
-type FolderId = Id<"folders">;
 
 /** A file already in the item (edit), kept unless removed. */
 export interface SavedAttachment {
@@ -32,11 +30,9 @@ export interface SavedAttachment {
   detail: string;
 }
 
-export interface NoteValues {
+export interface NoteValues extends CategoryChoice {
   title: string;
   note: string;
-  category: VaultCategory;
-  folderId: FolderId | null;
   contactIds: ContactId[];
   /** New files to encrypt and upload. */
   added: QueuedFile[];
@@ -69,9 +65,9 @@ const AVATAR_TONES = [
 
 /**
  * W06-5 note editor: title, rich text, attachments, and the Organize panel
- * (category, folder, who can see it, when they can open it). Used to write a
- * new note, edit any item, and write the life check welcome message
- * (`welcome`: no category or folder; nobody picked = every trusted contact).
+ * (category, who can see it, when they can open it). Used to write a new
+ * note, edit any item, and write the life check welcome message (`welcome`:
+ * no category; nobody picked = every trusted contact).
  */
 export function NoteEditor({
   breadcrumb,
@@ -80,7 +76,7 @@ export function NoteEditor({
   welcome = false,
   initial,
   saved = [],
-  folders,
+  categories,
   shareable = true,
   saving,
   onSave,
@@ -94,7 +90,7 @@ export function NoteEditor({
   welcome?: boolean;
   initial: Omit<NoteValues, "added" | "removed">;
   saved?: SavedAttachment[];
-  folders: FolderSummary[];
+  categories: CategorySummary[];
   /** False for a legacy item: it can't be shared until re-keyed. */
   shareable?: boolean;
   /** Label of the save button while saving ("Saving… 42 %"). */
@@ -112,8 +108,10 @@ export function NoteEditor({
   const picker = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(initial.title);
   const [note, setNote] = useState(initial.note);
-  const [category, setCategory] = useState(initial.category);
-  const [folderId, setFolderId] = useState(initial.folderId);
+  const [filing, setFiling] = useState<CategoryChoice>({
+    category: initial.category,
+    categoryId: initial.categoryId,
+  });
   const [contactIds, setContactIds] = useState(initial.contactIds);
   const [added, setAdded] = useState<QueuedFile[]>([]);
   const [removed, setRemoved] = useState<Id<"vault_item_files">[]>([]);
@@ -145,8 +143,7 @@ export function NoteEditor({
     onSave({
       title: title.trim(),
       note,
-      category,
-      folderId,
+      ...filing,
       contactIds,
       added,
       removed,
@@ -321,14 +318,11 @@ export function NoteEditor({
         <aside className="flex w-full flex-col gap-[16px] rounded-[20px] border border-border-default bg-bg-surface p-[20px] lg:w-[360px] lg:shrink-0">
           <h2 className="text-h3 text-text-primary">{t("organize")}</h2>
           {welcome ? null : (
-            <>
-              <CategoryField value={category} onChange={setCategory} />
-              <FolderField
-                value={folderId}
-                onChange={setFolderId}
-                folders={folders}
-              />
-            </>
+            <CategoryField
+              value={filing}
+              onChange={setFiling}
+              categories={categories}
+            />
           )}
           {shareable ? (
             <AccessField

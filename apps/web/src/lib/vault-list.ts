@@ -18,7 +18,8 @@ export interface VaultItemSummary {
   kind: ContentKind;
   icon?: string;
   files: Omit<FileMeta, "v">[];
-  folderId?: Id<"folders">;
+  /** User-made category (vault_categories), from the sealed metadata. */
+  categoryId?: string;
   sharing: ItemSharing;
   createdAt: number;
   updatedAt: number;

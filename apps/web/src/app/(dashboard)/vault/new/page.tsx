@@ -6,9 +6,9 @@ import { useVaultCapture } from "@/components/vault/use-vault-capture";
 import { useVoiceAttach } from "@/components/vault/use-voice-attach";
 import { useTranslations } from "@/lib/i18n";
 import { useRouter, useSearchParams } from "@/lib/navigation";
+import { useVaultData } from "@/lib/vault-data";
 import { useCreateItem } from "@/lib/use-create-item";
 import { useUploadQueue } from "@/lib/upload-queue";
-import { useVaultData } from "@/lib/vault-data";
 
 /**
  * W06-5 New note, and the life check welcome message (`?welcome=1`): sealed
@@ -19,8 +19,8 @@ export default function NewNotePage() {
   const lists = useTranslations("vaultList");
   const router = useRouter();
   const welcome = useSearchParams().get("welcome") === "1";
-  const { folders } = useVaultData();
   const contacts = useQuery(api.trusted_contacts.getContacts);
+  const { categories } = useVaultData();
   const createItem = useCreateItem();
   const { jobs, background } = useUploadQueue();
   const voice = useVoiceAttach();
@@ -64,7 +64,7 @@ export default function NewNotePage() {
         title: values.title,
         note: values.note,
         category: welcome ? "conditional_message" : values.category,
-        folderId: welcome ? null : values.folderId,
+        categoryId: welcome ? undefined : values.categoryId,
         contactIds: everyone
           ? (contacts ?? []).map((contact) => contact._id)
           : values.contactIds,
@@ -111,10 +111,9 @@ export default function NewNotePage() {
           title: "",
           note: "",
           category: "wishes",
-          folderId: null,
           contactIds: [],
         }}
-        folders={folders ?? []}
+        categories={categories ?? []}
         saving={saving}
         onSave={(values) => void save(values)}
         onCancel={() => router.back()}

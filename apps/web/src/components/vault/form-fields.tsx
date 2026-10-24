@@ -11,15 +11,22 @@ import {
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { useTranslations } from "@/lib/i18n";
-import { useCategoryLabel, useSortedCategories } from "@/lib/use-categories";
-import type { FolderSummary } from "@/lib/vault-data";
-import type { VaultCategory } from "@/lib/vault-categories";
+import { shownFiling } from "@keeplas/backend/lib/vault_groups";
+import {
+  choiceKey,
+  choiceOf,
+  CUSTOM_FALLBACK,
+  type CategoryChoice,
+} from "@/lib/item-meta";
+import {
+  useCategoryLabel,
+  useHiddenCategoryGroups,
+  useSortedCategories,
+} from "@/lib/use-categories";
+import type { CategorySummary } from "@/lib/vault-data";
 import { ContactChecklist, useShareableContacts } from "./access-picker";
 
 type ContactId = Id<"trusted_contacts">;
-type FolderId = Id<"folders">;
-
-const NO_FOLDER = "none";
 
 /** Figma "App/Field": label (13/18) over its control, 6 px apart. */
 export function Field({
@@ -59,66 +66,53 @@ export function EncryptionNote({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Category select: the built-in categories the user kept, then their own
+ * (vault_categories). A deleted category shows as To sort.
+ */
 export function CategoryField({
   value,
   onChange,
+  categories,
   className,
 }: {
-  value: VaultCategory;
-  onChange: (category: VaultCategory) => void;
+  value: CategoryChoice;
+  onChange: (choice: CategoryChoice) => void;
+  categories: CategorySummary[];
   className?: string;
 }) {
   const t = useTranslations("vaultItem.form");
   const label = useCategoryLabel();
-  const categories = useSortedCategories();
+  const builtIn = useSortedCategories();
+  const hidden = useHiddenCategoryGroups();
+  const current = shownFiling(
+    value,
+    hidden,
+    categories.map((category) => category.id as string),
+  );
   return (
     <Field label={t("category")} className={className}>
-      {(id) => (
-        <Select<VaultCategory>
-          id={id}
-          variant="field"
-          value={value}
-          onValueChange={onChange}
-        >
-          {categories.map((category) => (
-            <SelectItem key={category.key} value={category.key}>
-              {label(category.key)}
-            </SelectItem>
-          ))}
-        </Select>
-      )}
-    </Field>
-  );
-}
-
-export function FolderField({
-  value,
-  onChange,
-  folders,
-  className,
-}: {
-  value: FolderId | null;
-  onChange: (folder: FolderId | null) => void;
-  folders: FolderSummary[];
-  className?: string;
-}) {
-  const t = useTranslations("vaultItem.form");
-  const lists = useTranslations("vaultList");
-  return (
-    <Field label={t("folder")} className={className}>
       {(id) => (
         <Select<string>
           id={id}
           variant="field"
-          value={value ?? NO_FOLDER}
-          onValueChange={(next) =>
-            onChange(next === NO_FOLDER ? null : (next as FolderId))
-          }
+          value={choiceKey(current)}
+          onValueChange={(next) => onChange(choiceOf(next))}
         >
-          <SelectItem value={NO_FOLDER}>{lists("noFolder")}</SelectItem>
-          {folders.map((folder) => (
-            <SelectItem key={folder.id} value={folder.id}>
-              {folder.name ?? t("lockedFolder")}
+          {builtIn.map((category) => (
+            <SelectItem key={category.key} value={category.key}>
+              {label(category.key)}
+            </SelectItem>
+          ))}
+          {categories.map((category) => (
+            <SelectItem
+              key={category.id}
+              value={choiceKey({
+                category: CUSTOM_FALLBACK,
+                categoryId: category.id,
+              })}
+            >
+              {category.name ?? t("lockedCategory")}
             </SelectItem>
           ))}
         </Select>

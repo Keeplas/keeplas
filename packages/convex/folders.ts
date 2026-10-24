@@ -8,8 +8,7 @@ import { optionalAuth, requireFullAuth, requireItemOwnership } from "./helpers";
  * Former v2 folders. Folders became categories (who can open an item is set
  * per item): the owner's phone turns each folder into a vault category
  * (`adopt`), moves the category of its items into their sealed metadata
- * (`migrateItem`), then deletes it (`remove`). The web still files items in
- * folders until it switches to categories.
+ * (`migrateItem`), then deletes it (`remove`). No new folder is created.
  */
 
 async function requireOwnFolder(
@@ -51,38 +50,6 @@ export const list = query({
   },
 });
 
-export const create = auditedMutation({
-  action: "folder.created",
-  resourceType: "folder",
-  args: { encryptedName: v.string() },
-  handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
-    const now = Date.now();
-    return await ctx.db.insert("folders", {
-      userId,
-      encryptedName: args.encryptedName,
-      createdAt: now,
-      updatedAt: now,
-    });
-  },
-  getResourceId: (_args, folderId) => folderId,
-});
-
-export const rename = auditedMutation({
-  action: "folder.renamed",
-  resourceType: "folder",
-  args: { folderId: v.id("folders"), encryptedName: v.string() },
-  handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
-    await requireOwnFolder(ctx, args.folderId, userId);
-    await ctx.db.patch(args.folderId, {
-      encryptedName: args.encryptedName,
-      updatedAt: Date.now(),
-    });
-  },
-  getResourceId: (args) => args.folderId,
-});
-
 /** Delete a folder: its items stay in the vault. */
 export const remove = auditedMutation({
   action: "folder.deleted",
@@ -97,26 +64,6 @@ export const remove = auditedMutation({
     await ctx.db.delete(args.folderId);
   },
   getResourceId: (args) => args.folderId,
-});
-
-/** Put an item in a folder, or out of it with `folderId` null. */
-export const moveItem = auditedMutation({
-  action: "folder.item_moved",
-  resourceType: "vault_item",
-  args: {
-    itemId: v.id("vault_items"),
-    folderId: v.union(v.id("folders"), v.null()),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
-    await requireItemOwnership(ctx, args.itemId, userId);
-    if (args.folderId) await requireOwnFolder(ctx, args.folderId, userId);
-    await ctx.db.patch(args.itemId, {
-      folderId: args.folderId ?? undefined,
-      updatedAt: Date.now(),
-    });
-  },
-  getResourceId: (args) => args.itemId,
 });
 
 /**
