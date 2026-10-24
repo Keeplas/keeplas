@@ -1,6 +1,11 @@
 import en from "../en.json";
 import fr from "../fr.json";
-import { accountLanguageTag, resolveLanguage, translate } from "../translate";
+import {
+  accountLanguageTag,
+  deviceLanguage,
+  resolveLanguage,
+  translate,
+} from "../translate";
 
 type Dict = { [key: string]: string | Dict };
 
@@ -56,5 +61,22 @@ describe("language tags", () => {
     expect(resolveLanguage(null)).toBe("en");
     expect(accountLanguageTag("fr")).toBe("fr-FR");
     expect(accountLanguageTag("en")).toBe("en-US");
+  });
+});
+
+describe("deviceLanguage", () => {
+  it("follows the phone language when it is supported", () => {
+    expect(deviceLanguage(["fr-CA"])).toBe("fr");
+    expect(deviceLanguage(["en-GB"])).toBe("en");
+  });
+
+  it("uses the first supported language in the phone's preference order", () => {
+    expect(deviceLanguage(["de-DE", "fr-FR", "en-US"])).toBe("fr");
+    expect(deviceLanguage(["en-US", "fr-FR"])).toBe("en");
+  });
+
+  it("falls back to English when no phone language is supported", () => {
+    expect(deviceLanguage(["de-DE", "es-ES"])).toBe("en");
+    expect(deviceLanguage([])).toBe("en");
   });
 });

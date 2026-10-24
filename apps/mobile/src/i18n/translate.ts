@@ -1,7 +1,7 @@
 import en from "./en.json";
 import fr from "./fr.json";
 
-/** UI languages (D12): English by default, French optional. */
+/** UI languages (D12): the phone language when supported, else English. */
 export const LANGUAGES = ["en", "fr"] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const DEFAULT_LANGUAGE: Language = "en";
@@ -44,6 +44,19 @@ export function translate(
 export function resolveLanguage(value: string | null | undefined): Language {
   const normalized = value?.trim().toLowerCase() ?? "";
   return normalized === "fr" || normalized.startsWith("fr-") ? "fr" : "en";
+}
+
+/**
+ * First UI language in the phone's preference order (`getLocales()` tags),
+ * English when none is supported (D12).
+ */
+export function deviceLanguage(tags: readonly string[]): Language {
+  for (const tag of tags) {
+    const code = tag.trim().toLowerCase().split("-")[0];
+    if ((LANGUAGES as readonly string[]).includes(code))
+      return code as Language;
+  }
+  return DEFAULT_LANGUAGE;
 }
 
 /** BCP-47 tag stored on `users.language` (mirrors convex/lib/locale.ts). */
