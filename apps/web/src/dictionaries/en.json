@@ -1189,6 +1189,7 @@
       },
       "releaseGroups": "Release groups",
       "notMemberOfGroup": "Not a member of any release group.",
+      "editContact": "Edit contact",
       "resending": "Resending...",
       "invitationResent": "Invitation resent ✓",
       "resendInvitation": "Resend invitation",
@@ -1251,6 +1252,13 @@
       "cancel": "Cancel",
       "sending": "Sending...",
       "submitTrust": "Send Invitation"
+    },
+    "edit": {
+      "title": "Edit Contact",
+      "reinviteNote": "Changing their email or phone number sends them a new invitation.",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "errorSave": "Failed to save changes"
     },
     "groupCard": {
       "default": "Default",
@@ -2278,6 +2286,7 @@
         "folder_access_granted": "Folder shared",
         "folder_access_revoked": "Folder access revoked",
         "trusted_contact_invited": "Contact invited",
+        "trusted_contact_updated": "Contact updated",
         "trusted_contact_accepted": "Contact joined",
         "trusted_contact_revoked": "Contact removed",
         "recovery_request_started": "Recovery requested",
