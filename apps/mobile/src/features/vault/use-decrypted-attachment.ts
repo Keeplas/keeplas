@@ -11,6 +11,7 @@ import {
 import {
   cachedDecrypted,
   downloadDecrypted,
+  hasKeptCipher,
   rememberDecrypted,
 } from "@/lib/files";
 
@@ -70,8 +71,10 @@ export function useDecryptedAttachments(
         if (cached) {
           state = { status: "ready", uri: cached.uri };
         } else {
-          const url = await fileUrl(request.id);
-          if (!url) throw new FileProblemError("missing");
+          const url = hasKeptCipher(request.id)
+            ? ""
+            : await fileUrl(request.id);
+          if (url === null) throw new FileProblemError("missing");
           let shown = -1;
           const plain = await downloadDecrypted(
             url,
@@ -87,6 +90,8 @@ export function useDecryptedAttachments(
                 [request.token]: { status: "loading", progress: ratio },
               }));
             },
+            undefined,
+            request.id,
           );
           rememberDecrypted(request.id, plain);
           state = { status: "ready", uri: plain.uri };
