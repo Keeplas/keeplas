@@ -149,6 +149,9 @@
     "body": "Votre visage, votre empreinte ou le code de votre téléphone vous connecte et déverrouille votre coffre.",
     "cta": "Continuer avec le passe-clé",
     "lost": "Accès perdu ?",
+    "lostBody": "Votre sauvegarde, vos 24 mots ou vos contacts de confiance",
+    "more": "Autres options",
+    "signOutBody": "Retire la clé du coffre de ce téléphone",
     "failed": "Impossible de déverrouiller votre coffre. Réessayez."
   },
   "recoveryKit": {
