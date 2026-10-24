@@ -138,12 +138,13 @@ export default defineSchema({
     // Cleared if the phone number is changed afterward.
     phoneNumberVerifiedAt: v.optional(v.number()),
 
-    // Billing tier. Absent = "free". Flipped to "lifetime" only by the Stripe
-    // webhook (`billing.fulfillCheckout`) after a successful one-time payment;
-    // never set client-side. Drives the storage quota (see lib/plans.ts).
+    // Billing tier. Absent = "free". Flipped to "lifetime" only by the
+    // RevenueCat webhook (`billing.fulfillStorePurchase`) after a successful
+    // in-app purchase; never set client-side. Drives the storage quota (see
+    // lib/plans.ts).
     plan: v.optional(planValidator),
-    // Stripe Customer id captured from the completed Checkout session, kept so
-    // future receipts / the customer portal can reuse the same customer.
+    // Legacy: Stripe Customer id of buyers from the former web Checkout. No
+    // longer written; kept so existing rows still validate.
     stripeCustomerId: v.optional(v.string()),
 
     // Back-office role. Absent = a normal product user. "admin" grants access
@@ -153,28 +154,31 @@ export default defineSchema({
   })
     .index("email", ["email"])
     .index("by_last_seen", ["lastSeenAt"])
-    .index("by_phone", ["phoneNumber"])
-    .index("by_stripe_customer", ["stripeCustomerId"]),
+    .index("by_phone", ["phoneNumber"]),
 
   // ═══════════════════════════════════════════════
-  // PAYMENTS (Stripe one-time Checkout)
+  // PAYMENTS (RevenueCat in-app purchases on mobile)
   // ═══════════════════════════════════════════════
 
-  // One row per completed Stripe Checkout session. Serves two purposes:
-  // webhook idempotency (a re-delivered `checkout.session.completed` finds the
-  // existing row by `stripeSessionId` and no-ops) and a billing/receipt
-  // history for the user. The Stripe secret never touches this table.
+  // One row per completed Lifetime purchase. Serves two purposes: webhook
+  // idempotency (a re-delivered event finds the existing row by its store
+  // transaction id and no-ops) and a billing/receipt history for the user.
+  // No provider secret ever touches this table.
   payments: defineTable({
     userId: v.id("users"),
-    stripeSessionId: v.string(),
+    // Legacy: rows from the former Stripe web Checkout. No longer written;
+    // kept so existing rows still validate.
+    stripeSessionId: v.optional(v.string()),
     stripePaymentIntentId: v.optional(v.string()),
+    // App Store / Play transaction id relayed by the RevenueCat webhook.
+    revenueCatTransactionId: v.optional(v.string()),
     amountCents: v.number(),
     currency: v.string(),
     plan: planValidator,
     status: v.literal("paid"),
     createdAt: v.number(),
   })
-    .index("by_session", ["stripeSessionId"])
+    .index("by_revenuecat_transaction", ["revenueCatTransactionId"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════

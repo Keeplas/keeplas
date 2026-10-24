@@ -31,7 +31,22 @@ EAS builds do not read `.env.local`. Each EAS environment (`development`, `previ
 npx eas-cli env:set --environment production --visibility plaintext --name EXPO_PUBLIC_CONVEX_URL --value https://<deployment>.convex.cloud
 npx eas-cli env:set --environment production --visibility plaintext --name EXPO_PUBLIC_APP_URL --value https://app.keeplas.com
 npx eas-cli env:set --environment production --visibility plaintext --name EXPO_PUBLIC_GCP_PROJECT_NUMBER --value <number>
+npx eas-cli env:set --environment production --visibility plaintext --name EXPO_PUBLIC_REVENUECAT_APPLE_API_KEY --value appl_<key>
+npx eas-cli env:set --environment production --visibility plaintext --name EXPO_PUBLIC_REVENUECAT_GOOGLE_API_KEY --value goog_<key>
 ```
+
+## In-app purchase (RevenueCat)
+
+Lifetime is sold in the app through App Store / Google Play billing via RevenueCat (`src/features/billing/purchases.ts`); it is the only place Lifetime is sold (the web app has no checkout). The RevenueCat app user id is the Convex user id, which is how the webhook finds the buyer.
+
+1. App Store Connect and Play Console: create a **non-consumable** in-app product (Play: one-time product) for Lifetime, e.g. `keeplas_lifetime`.
+2. RevenueCat: add the App Store app (`com.keeplas.app`, App Store Connect in-app purchase key) and the Play app (`com.keeplas.app`, Play service-account JSON), import both products.
+3. RevenueCat → Entitlements: create `lifetime` (must equal `LIFETIME_ENTITLEMENT_ID` in `packages/convex/lib/plans.ts`) and attach both products.
+4. RevenueCat → Offerings: in the **current** offering, add a package of type **Lifetime** containing both products.
+5. RevenueCat → Integrations → Webhooks: URL `https://<deployment>.convex.site/webhooks/revenuecat`, Authorization header `Bearer <REVENUECAT_WEBHOOK_SECRET>`, then `pnpm sync:convex-env`. Sandbox purchases (TestFlight, App Review) unlock the plan but are recorded at $0. Keeplas runs one webhook per deployment: dev (sandbox events only) and prod (all events); a deployment ignores buyers it doesn't know.
+6. Set the `appl_…` / `goog_…` public SDK keys as shown above. `react-native-purchases` is a native module: rebuild the dev client after pulling.
+
+Before the store products exist, debug builds can buy from the RevenueCat **Test Store**: set its `test_…` key as `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` in the `development` EAS environment only (`npx eas-cli env:set --environment development --visibility plaintext --name EXPO_PUBLIC_REVENUECAT_TEST_API_KEY --value test_<key>`). It is read only when `__DEV__`, since the SDK crashes a release build that carries it.
 
 ## Push notifications
 

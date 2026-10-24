@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "@/lib/navigation";
-import { useAction, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { Button, cn, Icon, Spinner, toast } from "@keeplas/ui";
+import { Button, cn, Icon } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
-import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
 interface PlanFeature {
@@ -40,7 +37,7 @@ const PLANS: Plan[] = [
   },
   {
     id: "lifetime",
-    priceOneTime: "$199",
+    priceOneTime: "$99",
     priceSuffixKey: "oneTime",
     features: [
       { key: "lifetimeVault", included: true },
@@ -90,19 +87,16 @@ function PriceDisplay({ plan }: { plan: Plan }) {
 
 /**
  * Per-card call to action. The active plan renders a disabled "Current plan"
- * marker; the Lifetime card otherwise drives the Stripe Checkout redirect. The
+ * marker. Lifetime is only sold in the mobile app (App Store / Google Play
+ * billing), so its card points there instead of offering a web checkout. The
  * Free card is never purchasable from here, so its button stays inert.
  */
 function PlanCta({
   plan,
   currentPlan,
-  redirecting,
-  onUpgrade,
 }: {
   plan: Plan;
   currentPlan: "free" | "lifetime" | undefined;
-  redirecting: boolean;
-  onUpgrade: () => void;
 }) {
   const t = useTranslations("settings");
   const isCurrent = currentPlan === plan.id;
@@ -129,58 +123,16 @@ function PlanCta({
   }
 
   return (
-    <Button
-      variant="secondary"
-      size="lg"
-      onClick={onUpgrade}
-      disabled={redirecting || currentPlan === undefined}
-      className="w-full bg-secondary-fixed text-on-secondary-fixed hover:bg-secondary-fixed/90"
-    >
-      {redirecting ? <Spinner /> : t("subscription.plans.lifetime.cta")}
-    </Button>
+    <p className="text-body-md text-white/80 text-center">
+      {t("subscription.plans.lifetime.inApp")}
+    </p>
   );
 }
 
 export default function SubscriptionPage() {
   const t = useTranslations("settings");
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const stats = useQuery(api.vaults.getUsageStats);
   const currentPlan = stats?.plan;
-  const createCheckoutSession = useAction(api.billing.createCheckoutSession);
-  const [redirecting, setRedirecting] = useState(false);
-
-  // Surface the outcome of a returning Checkout redirect, then strip the query
-  // param so a refresh doesn't re-toast. The actual plan flip lands via the
-  // Stripe webhook, so the Lifetime card updates reactively once getUsageStats
-  // refetches — this toast just acknowledges the payment.
-  useEffect(() => {
-    const checkout = searchParams.get("checkout");
-    if (!checkout) return;
-    if (checkout === "success") {
-      toast({
-        variant: "success",
-        title: t("subscription.checkoutSuccess"),
-      });
-    } else if (checkout === "cancel") {
-      toast({ title: t("subscription.checkoutCancel") });
-    }
-    router.replace("/settings/subscription");
-  }, [searchParams, router, t]);
-
-  async function handleUpgrade() {
-    setRedirecting(true);
-    try {
-      const { url } = await createCheckoutSession({});
-      window.location.href = url;
-    } catch (err) {
-      toast({
-        variant: "error",
-        title: getErrorMessage(err, t("subscription.checkoutError")),
-      });
-      setRedirecting(false);
-    }
-  }
 
   return (
     <div className="max-w-screen-xl mx-auto space-y-10">
@@ -276,12 +228,7 @@ export default function SubscriptionPage() {
             </div>
 
             <div className="pt-8">
-              <PlanCta
-                plan={plan}
-                currentPlan={currentPlan}
-                redirecting={redirecting}
-                onUpgrade={handleUpgrade}
-              />
+              <PlanCta plan={plan} currentPlan={currentPlan} />
             </div>
           </article>
         ))}

@@ -405,8 +405,12 @@
   },
   "upgrade": {
     "title": "Passer à Lifetime",
+    "titleWithPrice": "Passer à Lifetime · {price}",
     "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
-    "cta": "Mettre à niveau"
+    "cta": "Mettre à niveau",
+    "restore": "Restaurer un achat",
+    "activating": "Achat confirmé. Votre forfait Lifetime est en cours d'activation.",
+    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google."
   },
   "settings": {
     "title": "Réglages",
