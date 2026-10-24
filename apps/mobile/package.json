@@ -54,6 +54,7 @@
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-blob-util": "^0.25.1",
+    "react-native-compressor": "2.0.3",
     "react-native-document-scanner-plugin": "2.0.4",
     "react-native-nitro-modules": "^0.37.1",
     "react-native-passkey": "^3.6.2",

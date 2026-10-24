@@ -41,6 +41,7 @@ import {
   sameNote,
   type EditDraft,
 } from "@/features/vault/edit-draft";
+import { usePrepareMedia } from "@/features/capture/use-prepare-media";
 
 const KIND_ICON = {
   document: "document",
@@ -90,6 +91,7 @@ function EditForm({
 }) {
   const { t, language } = useI18n();
   const { capture } = useOutbox();
+  const prepare = usePrepareMedia();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const [draft, updateDraft, clearDraft] = useFormDraft<EditDraft>(
     editDraftKey(itemId),
@@ -117,7 +119,7 @@ function EditForm({
 
   async function addMedia(get: () => Promise<CaptureFile[]>) {
     try {
-      const files = await get();
+      const files = await prepare(await get());
       if (files.length) {
         const moved = files.map((file) => ({
           ...file,

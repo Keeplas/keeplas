@@ -58,6 +58,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius, singleLine, type } from "@/theme";
 import { draftHref, useDraftParam } from "@/features/capture/draft-route";
+import { usePrepareMedia } from "@/features/capture/use-prepare-media";
 
 const KIND_ICON = {
   document: "document",
@@ -83,6 +84,7 @@ export default function ComposeCapture() {
   const { colors } = useTheme();
   const categoryLabel = useCategoryLabel();
   const draft = useDraft();
+  const prepare = usePrepareMedia();
   const savedDraft = useDrafts().some((row) => row.id === draft.id);
   const filedAs = {
     category: draft.category ?? INBOX,
@@ -144,7 +146,7 @@ export default function ComposeCapture() {
 
   async function addMedia(get: () => Promise<CaptureFile[]>) {
     try {
-      const files = await get();
+      const files = await prepare(await get());
       if (files.length) draftStore.addFiles(files);
     } catch (error) {
       if (error instanceof PermissionDenied) setDenied(error.what);
