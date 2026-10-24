@@ -101,9 +101,12 @@ const DEV_ONLY_FLAGS = [
   "ATTESTATION_SIMULATOR_BYPASS",
   "APP_ATTEST_ALLOW_DEVELOPMENT",
 ];
+// --names-only prints one name per line and keeps every secret value out of
+// this process. Without it, convex >= 1.48 prints names only when it detects
+// an AI agent, so a `NAME=value` match would silently find nothing.
 const envList = spawnSync(
   "npx",
-  ["--no-install", "convex", "env", "list", "--prod"],
+  ["--no-install", "convex", "env", "list", "--prod", "--names-only"],
   {
     cwd: process.cwd(),
     encoding: "utf8",
@@ -116,7 +119,7 @@ if (envList.status !== 0) {
   );
 }
 const setFlags = DEV_ONLY_FLAGS.filter((flag) =>
-  new RegExp(`^${flag}=\\S`, "m").test(envList.stdout || ""),
+  new RegExp(`^${flag}$`, "m").test(envList.stdout || ""),
 );
 if (setFlags.length > 0)
   fail(
