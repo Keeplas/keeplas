@@ -74,6 +74,11 @@ export default function People() {
     invited: boolean,
   ) {
     Alert.alert(name, undefined, [
+      {
+        text: t("people.editTitle"),
+        onPress: () =>
+          router.push({ pathname: "/people/edit", params: { id: contactId } }),
+      },
       ...(invited
         ? [
             {

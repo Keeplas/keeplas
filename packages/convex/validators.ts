@@ -28,3 +28,11 @@ export const accessLevelValidator = v.union(
   v.literal("emergency_only"),
   v.literal("public"),
 );
+
+export const contactRoleValidator = v.union(
+  v.literal("family"),
+  v.literal("friend"),
+  v.literal("lawyer"),
+  v.literal("doctor"),
+  v.literal("other"),
+);

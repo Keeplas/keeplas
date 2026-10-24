@@ -22,6 +22,7 @@ import { useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedTitles } from "@/lib/use-decrypted-titles";
 import { useItemCategories } from "@/lib/use-item-categories";
 import { ContactAvatar } from "./contact-card";
+import { EditContactDialog } from "./edit-contact-dialog";
 import {
   computeVerificationBadge,
   formatRelative,
@@ -81,6 +82,7 @@ function ContactDetailBody({
   const [revoking, setRevoking] = useState(false);
   const [resending, setResending] = useState(false);
   const [resentAt, setResentAt] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const revokeContact = useAuditedMutation(api.trusted_contacts.revokeContact);
   const resendInvitation = useAuditedMutation(
@@ -272,6 +274,14 @@ function ContactDetailBody({
 
       {canManage && (
         <div className="flex flex-col gap-[8px] border-t border-border-default px-[24px] py-[16px]">
+          <Button
+            variant="bordered"
+            size="regular"
+            onClick={() => setEditing(true)}
+            className="w-full"
+          >
+            {t("detail.editContact")}
+          </Button>
           {contact.invitationStatus === "pending" && (
             <Button
               variant="bordered"
@@ -319,6 +329,11 @@ function ContactDetailBody({
           )}
         </div>
       )}
+      <EditContactDialog
+        contact={contact}
+        open={editing}
+        onOpenChange={setEditing}
+      />
     </>
   );
 }

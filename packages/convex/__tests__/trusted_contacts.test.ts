@@ -7,6 +7,7 @@ import {
   signedAudit,
   seedTrustContact,
 } from "./test.helpers";
+import type { Id } from "../_generated/dataModel";
 
 describe("confirmAvailability", () => {
   it("stamps lastVerifiedAt for an accepted trust contact", async () => {
@@ -101,5 +102,133 @@ describe("migrateContactTypes", () => {
     expect(
       await t.mutation(internal.migrations.migrateContactTypes, {}),
     ).toEqual({ scanned: 2, migrated: 0 });
+  });
+});
+
+describe("updateContact", () => {
+  async function invite(
+    t: ReturnType<typeof makeT>,
+    owner: Id<"users">,
+    n: number,
+  ) {
+    const { contactId } = await asUser(t, owner).mutation(
+      api.trusted_contacts.inviteContact,
+      {
+        name: `Contact ${n}`,
+        email: `c${n}@example.com`,
+        role: "friend",
+        _audit: await signedAudit(),
+      },
+    );
+    return contactId;
+  }
+
+  it("edits an accepted contact's details without touching the invitation", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    const before = await t.run((ctx) => ctx.db.get(contactId));
+
+    await asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+      contactId,
+      name: "  Ada Lovelace ",
+      email: "ADA@example.com",
+      phoneNumber: "+33612345678",
+      role: "lawyer",
+      _audit: await signedAudit(),
+    });
+
+    const row = await t.run((ctx) => ctx.db.get(contactId));
+    expect(row).toMatchObject({
+      name: "Ada Lovelace",
+      role: "lawyer",
+      email: "ada@example.com",
+      phoneNumber: "+33612345678",
+      invitationStatus: "accepted",
+      invitationToken: before?.invitationToken,
+    });
+  });
+
+  it("re-issues a pending invitation when its email or phone changes", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactId = await invite(t, owner, 1);
+    const before = await t.run((ctx) => ctx.db.get(contactId));
+
+    await asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+      contactId,
+      name: "Contact 1",
+      email: "fixed@example.com",
+      _audit: await signedAudit(),
+    });
+
+    const row = await t.run((ctx) => ctx.db.get(contactId));
+    expect(row?.email).toBe("fixed@example.com");
+    expect(row?.invitationToken).not.toBe(before?.invitationToken);
+  });
+
+  it("keeps a pending invitation when only the name changes", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactId = await invite(t, owner, 1);
+    const before = await t.run((ctx) => ctx.db.get(contactId));
+
+    await asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+      contactId,
+      name: "Renamed",
+      email: "c1@example.com",
+      _audit: await signedAudit(),
+    });
+
+    const row = await t.run((ctx) => ctx.db.get(contactId));
+    expect(row?.name).toBe("Renamed");
+    expect(row?.invitationToken).toBe(before?.invitationToken);
+  });
+
+  it("refuses an email already used by another contact", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedTrustContact(t, owner, { n: 1 });
+    const contactId = await seedTrustContact(t, owner, { n: 2 });
+
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+        contactId,
+        name: "Contact 2",
+        email: "c1@example.com",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it("refuses a contact with neither email nor phone", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+        contactId,
+        name: "Contact 1",
+        email: " ",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/email or a phone number/);
+  });
+
+  it("refuses to edit another owner's contact", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const stranger = await seedUser(t);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+
+    await expect(
+      asUser(t, stranger).mutation(api.trusted_contacts.updateContact, {
+        contactId,
+        name: "Hijacked",
+        email: "c1@example.com",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/not found/);
   });
 });

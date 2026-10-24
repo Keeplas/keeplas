@@ -927,7 +927,13 @@
     "permissions": "Permissions summary",
     "permRecovery": "Can help you recover access and confirm a death.",
     "permReceive": "Receives only the folders you share with them, after you're gone.",
-    "permNoFiles": "Cannot read anything you don't share with them."
+    "permNoFiles": "Cannot read anything you don't share with them.",
+    "editTitle": "Edit contact",
+    "editReinvite": "Changing their email or phone number sends them a new invitation.",
+    "save": "Save",
+    "saved": "Contact updated.",
+    "saveFailed": "Your changes couldn't be saved. Check your connection and try again.",
+    "notFound": "This contact no longer exists."
   },
   "folders": {
     "title": "Folder",
@@ -1144,6 +1150,7 @@
       "folder_access_granted": "Folder shared",
       "folder_access_revoked": "Folder access revoked",
       "trusted_contact_invited": "Contact invited",
+      "trusted_contact_updated": "Contact updated",
       "trusted_contact_accepted": "Contact joined",
       "trusted_contact_revoked": "Contact removed",
       "recovery_request_started": "Recovery requested",

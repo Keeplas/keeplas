@@ -1189,6 +1189,7 @@
       },
       "releaseGroups": "Groupes de transmission",
       "notMemberOfGroup": "Membre d'aucun groupe de transmission.",
+      "editContact": "Modifier le contact",
       "resending": "Renvoi en cours…",
       "invitationResent": "Invitation renvoyée ✓",
       "resendInvitation": "Renvoyer l'invitation",
@@ -1251,6 +1252,13 @@
       "cancel": "Annuler",
       "sending": "Envoi…",
       "submitTrust": "Envoyer l'invitation"
+    },
+    "edit": {
+      "title": "Modifier le contact",
+      "reinviteNote": "Si vous modifiez son e-mail ou son numéro, une nouvelle invitation lui sera envoyée.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "errorSave": "Échec de l'enregistrement des modifications"
     },
     "groupCard": {
       "default": "Par défaut",
@@ -2278,6 +2286,7 @@
         "folder_access_granted": "Dossier partagé",
         "folder_access_revoked": "Accès au dossier retiré",
         "trusted_contact_invited": "Contact invité",
+        "trusted_contact_updated": "Contact modifié",
         "trusted_contact_accepted": "Contact inscrit",
         "trusted_contact_revoked": "Contact retiré",
         "recovery_request_started": "Récupération demandée",

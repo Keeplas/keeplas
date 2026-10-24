@@ -70,3 +70,13 @@ export function toE164(country: CountryCode, input: string): string | null {
 export function formatPhone(e164: string): string {
   return parsePhoneNumberFromString(e164)?.formatInternational() ?? e164;
 }
+
+/** "+33612345678" → { country: "FR", number: "612345678" } to prefill a Phone Input. */
+export function splitE164(
+  e164: string,
+): { country: CountryCode; number: string } | undefined {
+  const parsed = parsePhoneNumberFromString(e164);
+  return parsed?.country
+    ? { country: parsed.country, number: parsed.nationalNumber }
+    : undefined;
+}

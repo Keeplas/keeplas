@@ -918,7 +918,13 @@
     "permissions": "Résumé des autorisations",
     "permRecovery": "Peut vous aider à récupérer l'accès et confirmer un décès.",
     "permReceive": "Reçoit uniquement les dossiers que vous partagez avec lui, après votre départ.",
-    "permNoFiles": "Ne peut rien lire de ce que vous ne partagez pas avec lui."
+    "permNoFiles": "Ne peut rien lire de ce que vous ne partagez pas avec lui.",
+    "editTitle": "Modifier le contact",
+    "editReinvite": "Si vous modifiez son e-mail ou son numéro, une nouvelle invitation lui sera envoyée.",
+    "save": "Enregistrer",
+    "saved": "Contact mis à jour.",
+    "saveFailed": "Vos modifications n'ont pas pu être enregistrées. Vérifiez votre connexion et réessayez.",
+    "notFound": "Ce contact n'existe plus."
   },
   "folders": {
     "title": "Dossier",
@@ -1128,6 +1134,7 @@
       "folder_access_granted": "Dossier partagé",
       "folder_access_revoked": "Accès au dossier retiré",
       "trusted_contact_invited": "Contact invité",
+      "trusted_contact_updated": "Contact modifié",
       "trusted_contact_accepted": "Contact inscrit",
       "trusted_contact_revoked": "Contact retiré",
       "recovery_request_started": "Récupération demandée",

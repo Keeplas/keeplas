@@ -21,6 +21,7 @@ export const LABELLED_ACTIONS = [
   "folder.access_granted",
   "folder.access_revoked",
   "trusted_contact.invited",
+  "trusted_contact.updated",
   "trusted_contact.accepted",
   "trusted_contact.revoked",
   "recovery.request.started",
