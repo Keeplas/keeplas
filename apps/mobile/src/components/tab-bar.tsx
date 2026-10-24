@@ -10,7 +10,7 @@ import { Text } from "./text";
 
 const TABS: Record<TabName, { icon: IconName; label: string }> = {
   home: { icon: "home", label: "nav.home" },
-  search: { icon: "search", label: "nav.search" },
+  vault: { icon: "lock", label: "nav.vault" },
   people: { icon: "people", label: "nav.people" },
   settings: { icon: "settings", label: "nav.settings" },
 };
@@ -26,7 +26,7 @@ export interface TabBarProps {
 }
 
 /**
- * Figma `Tab Bar`: Home, Search, FAB (+), People, Settings on a surface with
+ * Figma `Tab Bar`: Home, Vault, FAB (+), People, Settings on a surface with
  * a top border. Active item gets the `bg/info` pill.
  */
 export function TabBar({ active, onSelect, onAdd }: TabBarProps) {

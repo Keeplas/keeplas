@@ -157,9 +157,7 @@ export function useImportArchive() {
               note: noteWithLinks(item, t("importArchive.links")),
               category: isCategory(item.category) ? item.category : "other",
               files: extracted,
-              folder: item.folder
-                ? { id: await folderFor(item.folder), recipients: [] }
-                : undefined,
+              folderId: item.folder ? await folderFor(item.folder) : undefined,
             });
           } finally {
             for (const file of extracted) {

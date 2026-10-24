@@ -6,6 +6,7 @@ import { api } from "@keeplas/backend/_generated/api";
 
 import Branch from "../../../../assets/illustrations/branch.svg";
 import { AppHeader } from "@/components/app-header";
+import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, ListRow } from "@/components/surfaces";
@@ -38,17 +39,14 @@ export default function Home() {
   const shared = useQuery(api.folders.sharedWithMe);
   const deletion = useQuery(api.account_deletion.getStatus);
   const numberChange = useQuery(api.number_change.getMineOpen);
-  const { items, pending } = useVaultData();
+  const { items, pending, folders } = useVaultData();
   const { ready } = useRecoveryWays();
 
   const greeting = t(greetingKey(new Date().getHours()));
   const firstName = viewer.name?.trim().split(/\s+/)[0];
   const counts = useMemo(() => listCounts(items ?? []), [items]);
-  const inboxCount = counts.inbox + pending.length;
   const openList = (group: VaultListKey) =>
     router.push({ pathname: "/vault/[group]", params: { group } });
-  const itemCount = (count: number) =>
-    count === 1 ? t("home.item") : t("home.items", { count });
   const recent = useMemo(() => recentItems(items ?? []), [items]);
   const recentPending = pending.slice(0, 3);
   const showRecent = recent.length + recentPending.length > 0;
@@ -60,7 +58,26 @@ export default function Home() {
   };
 
   return (
-    <Screen header={<AppHeader right={<LanguageDropdown />} />} gap={12}>
+    <Screen
+      header={
+        <AppHeader
+          right={
+            <View style={styles.headerActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("nav.search")}
+                hitSlop={12}
+                onPress={() => router.push("/search")}
+              >
+                <Icon name="search" size={22} />
+              </Pressable>
+              <LanguageDropdown />
+            </View>
+          }
+        />
+      }
+      gap={12}
+    >
       <View style={styles.hero}>
         {/* Light decor behind the greeting, bleeding into the right gutter. */}
         <View pointerEvents="none" style={styles.heroArt}>
@@ -104,72 +121,31 @@ export default function Home() {
       <Text variant="label">{t("home.yourVault")}</Text>
       <View style={styles.tiles}>
         {VAULT_GROUPS.map((group) => (
-          <Pressable
+          <VaultTile
             key={group.key}
-            accessibilityRole="button"
+            icon={group.icon}
+            tint={palette.category[group.color]}
+            label={t(`home.${group.key}`)}
+            count={counts[group.key]}
             onPress={() => openList(group.key)}
-            style={[
-              styles.tile,
-              {
-                backgroundColor: colors["bg.surface"],
-                borderColor: colors["border.default"],
-              },
-            ]}
-          >
-            <IconTile
-              icon={group.icon}
-              size={36}
-              iconSize={18}
-              background={withAlpha(palette.category[group.color], 0.12)}
-              tint={palette.category[group.color]}
-            />
-            <View style={styles.tileText}>
-              <Text variant="label">{t(`home.${group.key}`)}</Text>
-              <View
-                style={styles.count}
-                accessible
-                accessibilityLabel={itemCount(counts[group.key])}
-              >
-                <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: withAlpha(
-                        palette.category[group.color],
-                        0.12,
-                      ),
-                    },
-                  ]}
-                >
-                  <Text
-                    variant="caption"
-                    style={{ color: palette.category[group.color] }}
-                  >
-                    {counts[group.key]}
-                  </Text>
-                </View>
-                <Text variant="body-sm" color="text.muted">
-                  {counts[group.key] === 1
-                    ? t("home.itemWord")
-                    : t("home.itemsWord")}
-                </Text>
-              </View>
-            </View>
-          </Pressable>
+          />
+        ))}
+        {(folders ?? []).map((folder) => (
+          <VaultTile
+            key={folder.id}
+            icon="folder"
+            tint={colors["text.primary"]}
+            label={folder.name ?? t("folders.title")}
+            count={folder.itemCount}
+            onPress={() =>
+              router.push({
+                pathname: "/folder/[id]",
+                params: { id: folder.id },
+              })
+            }
+          />
         ))}
       </View>
-      <ListRow
-        icon="mail"
-        title={t("home.inbox")}
-        description={
-          inboxCount === 0
-            ? t("home.inboxBody")
-            : inboxCount === 1
-              ? t("home.toOrganizeOne")
-              : t("home.toOrganize", { count: inboxCount })
-        }
-        onPress={() => openList("inbox")}
-      />
       {shared && shared.length > 0 ? (
         <ListRow
           icon="people"
@@ -219,7 +195,69 @@ export default function Home() {
   );
 }
 
+/** A "Your vault" tile: a category group or a folder, with its item count. */
+function VaultTile({
+  icon,
+  tint,
+  label,
+  count,
+  onPress,
+}: {
+  icon: IconName;
+  tint: string;
+  label: string;
+  count: number;
+  onPress: () => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const tone = withAlpha(tint, 0.12);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[
+        styles.tile,
+        {
+          backgroundColor: colors["bg.surface"],
+          borderColor: colors["border.default"],
+        },
+      ]}
+    >
+      <IconTile
+        icon={icon}
+        size={36}
+        iconSize={18}
+        background={tone}
+        tint={tint}
+      />
+      <View style={styles.tileText}>
+        <Text variant="label" numberOfLines={1}>
+          {label}
+        </Text>
+        <View
+          style={styles.count}
+          accessible
+          accessibilityLabel={
+            count === 1 ? t("home.item") : t("home.items", { count })
+          }
+        >
+          <View style={[styles.badge, { backgroundColor: tone }]}>
+            <Text variant="caption" style={{ color: tint }}>
+              {count}
+            </Text>
+          </View>
+          <Text variant="body-sm" color="text.muted">
+            {count === 1 ? t("home.itemWord") : t("home.itemsWord")}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
   hero: { gap: 12 },
   heroArt: {
     position: "absolute",

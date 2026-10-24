@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { FlatList } from "react-native";
+import { useRouter } from "expo-router";
 import { AppHeader } from "@/components/app-header";
 import { Screen } from "@/components/screen";
 import { TextField } from "@/components/text-field";
@@ -11,8 +12,9 @@ import {
 } from "@/features/vault/vault-data";
 import { useI18n } from "@/providers/i18n-provider";
 
-/** Local-only search over decrypted in-memory titles. */
+/** Local-only search over decrypted in-memory titles (from the Home header). */
 export default function Search() {
+  const router = useRouter();
   const { t } = useI18n();
   const { items } = useVaultData();
   const [term, setTerm] = useState("");
@@ -38,7 +40,7 @@ export default function Search() {
   );
 
   return (
-    <Screen header={<AppHeader />} scroll={false}>
+    <Screen header={<AppHeader onBack={router.back} />} scroll={false}>
       <Text variant="h1">{t("nav.search")}</Text>
       <TextField
         label={t("search.label")}

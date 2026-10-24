@@ -24,10 +24,11 @@
   "languageSoon": "{name} (coming soon)",
   "nav": {
     "home": "Home",
-    "search": "Search",
+    "vault": "Vault",
     "people": "People",
     "settings": "Settings",
-    "add": "Add"
+    "add": "Add",
+    "search": "Search"
   },
   "welcome": {
     "title": "Your life,\nwell kept",
@@ -375,7 +376,6 @@
     "items": "{count} items",
     "item": "1 item",
     "inbox": "Encrypted inbox",
-    "inboxBody": "Items to sort will show up here",
     "recent": "Recent items",
     "outbox": {
       "waiting": "Waiting to upload",
@@ -384,8 +384,6 @@
       "quota": "Storage full"
     },
     "updated": "Updated {when}",
-    "toOrganize": "{count} items to organize",
-    "toOrganizeOne": "1 item to organize",
     "itemWord": "item",
     "itemsWord": "items",
     "addName": "What should we call you?",
@@ -737,11 +735,7 @@
     "iconAutoBody": "Chosen from what you add",
     "iconSearch": "Search icons",
     "iconNone": "No icon matches this search.",
-    "folderLabel": "Folder",
-    "noFolder": "No folder",
     "folderShared": "{name} · shared with {people}",
-    "folderKeyTitle": "Couldn't share with this folder",
-    "folderKeyBody": "Keeplas couldn't verify {name}'s encryption key, so the item wasn't saved. Check your connection and try again, or choose No folder and move it later.",
     "reset": "Reset",
     "resetTitle": "Start this recording over?",
     "resetBody": "Your {time} recording will be deleted from this phone and you can record again. This cannot be undone.",
@@ -786,7 +780,10 @@
     "modeAuto": "Auto",
     "modeManual": "Manual",
     "autoUnavailableTitle": "Automatic scan unavailable",
-    "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead."
+    "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead.",
+    "allContacts": "All trusted contacts",
+    "contactKeyTitle": "Couldn't share with {name}",
+    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
@@ -801,7 +798,6 @@
     "decrypting": "Opening item…",
     "category": "Category",
     "folder": "Folder",
-    "noFolder": "No folder",
     "share": "Share",
     "opening": "Decrypting on this phone…",
     "play": "Play",
@@ -867,7 +863,7 @@
     "byYou": "You",
     "byKeeplas": "Keeplas",
     "shareTitle": "Who can see it",
-    "shareBody": "Choose the trusted contacts who can open this item. Keeplas encrypts it for each of them on this phone.",
+    "shareBody": "Choose the trusted contacts who can open this item, or none to keep it for all of them. Keeplas encrypts it for each of them on this phone.",
     "throughFolder": "Through the folder {name}",
     "shareNobody": "No trusted contact has joined Keeplas yet. Invite someone first.",
     "addTrustedPerson": "Add a trusted person",
