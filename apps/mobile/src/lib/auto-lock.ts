@@ -5,7 +5,6 @@
 export const IDLE_LOCK_MS = 5 * 60 * 1000;
 export const BACKGROUND_GRACE_MS = 30 * 1000;
 export const HELD_GRACE_MS = 10 * 60 * 1000;
-export const DRAFT_MAX_LOCKED_MS = 60 * 60 * 1000;
 
 /** Lock when the app comes back after more than the background grace. */
 export function shouldLockOnResume(

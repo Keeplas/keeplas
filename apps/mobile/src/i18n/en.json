@@ -413,8 +413,12 @@
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
+    "titleWithPrice": "Upgrade to Lifetime · {price}",
     "body": "10 GB of storage and every feature. One payment, no subscription.",
-    "cta": "Upgrade"
+    "cta": "Upgrade",
+    "restore": "Restore purchase",
+    "activating": "Purchase confirmed. Your Lifetime plan is being activated.",
+    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account."
   },
   "settings": {
     "title": "Settings",
@@ -945,10 +949,12 @@
     "items": "{n} items",
     "move": "Change category",
     "delete": "Delete",
+    "deleteCategory": "Delete category",
     "deleteTitle": "Delete {name}?",
     "deleteBody": "Its items stay in your vault and move to To sort.",
     "removed": "Deleted categories",
-    "restore": "Tap to restore"
+    "restore": "Tap to restore",
+    "search": "Search in {name}"
   },
   "search": {
     "label": "Search your vault",
@@ -1262,7 +1268,13 @@
     "cameraChip": "Camera",
     "historyNote": "The current version is kept in the history, with its files. Nothing is lost.",
     "failedTitle": "Changes not saved",
-    "failedBody": "Keeplas could not save your changes. Check your connection and try again."
+    "failedBody": "Keeplas could not save your changes. Check your connection and try again.",
+    "pending": "You have unsaved changes on this item.",
+    "resume": "Pick up the changes",
+    "discard": "Discard changes",
+    "discardTitle": "Discard the changes?",
+    "discardBody": "Your unsaved changes and added files will be removed from this phone. The item stays as it is saved.",
+    "resumed": "You are picking up unsaved changes."
   },
   "itemHistory": {
     "title": "History",
@@ -1288,5 +1300,20 @@
     "restoreFailed": "Keeplas could not restore this item. Check your connection and try again.",
     "emptyTitle": "No archives",
     "emptyBody": "Items you archive will show up here, with their history."
+  },
+  "drafts": {
+    "title": "Drafts",
+    "homeBody": "{n} in progress · tap to pick up",
+    "saved": "Draft saved on this phone",
+    "menuTitle": "Draft options",
+    "clear": "Clear draft",
+    "clearBody": "Removes the text, files and settings of this draft",
+    "delete": "Delete draft",
+    "deleteRowBody": "Also removes its files from this phone",
+    "deleteTitle": "Delete this draft?",
+    "deleteBody": "The text and attached files will be removed from this phone. This cannot be undone.",
+    "resume": "Pick up",
+    "emptyTitle": "No drafts",
+    "emptyBody": "Anything you start without saving is kept here, on this phone, to pick up later."
   }
 }

@@ -1,8 +1,11 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import type { PaginationResult } from "convex/server";
+import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, type MutationCtx } from "./_generated/server";
 import { folderItems } from "./folders";
 import { resolveItemRecipients } from "./helpers";
-import { deleteBlob } from "./lib/storage";
+import { claimBlob, deleteAllBlobs, type StorageRef } from "./lib/storage";
 
 /**
  * DANGER — full data wipe. Deletes every document in every application table
@@ -32,6 +35,7 @@ export const wipeAllData = internalMutation({
       "life_check_configs",
       "trusted_contacts",
       "vault_item_files",
+      "storage_blobs",
       "vault_item_recipient_keys",
       "recipient_groups",
       "vault_items",
@@ -65,12 +69,9 @@ export const wipeAllData = internalMutation({
     }
 
     // Drop every stored blob so the wipe leaves no orphaned storage.
-    const blobs = await ctx.db.system.query("_storage").collect();
-    for (const blob of blobs) {
-      await deleteBlob(ctx, blob._id);
-    }
+    const blobsDeleted = await deleteAllBlobs(ctx);
 
-    return { deletedByTable, blobsDeleted: blobs.length };
+    return { deletedByTable, blobsDeleted };
   },
 });
 
@@ -250,5 +251,88 @@ export const dropFolderGrants = internalMutation({
       await ctx.db.delete(grant._id);
     }
     return grants.length;
+  },
+});
+
+type BlobHolders = PaginationResult<[StorageRef, Id<"users">]>;
+
+/**
+ * The rows holding blob handles, oldest first within each table: when two
+ * accounts hold one blob, the account with the older file row keeps it. File
+ * rows and version snapshots come before avatars, which are fresh uploads.
+ */
+const BLOB_HOLDERS: ((
+  ctx: MutationCtx,
+  cursor: string | null,
+) => Promise<BlobHolders>)[] = [
+  async (ctx, cursor) => {
+    const page = await ctx.db
+      .query("vault_item_files")
+      .paginate({ cursor, numItems: 100 });
+    return { ...page, page: page.page.map((f) => [f.storageId, f.userId]) };
+  },
+  async (ctx, cursor) => {
+    const page = await ctx.db
+      .query("vault_item_versions")
+      .paginate({ cursor, numItems: 100 });
+    return {
+      ...page,
+      page: page.page.flatMap((version) =>
+        version.files.map((f): [StorageRef, Id<"users">] => [
+          f.storageId,
+          version.userId,
+        ]),
+      ),
+    };
+  },
+  async (ctx, cursor) => {
+    const page = await ctx.db
+      .query("users")
+      .paginate({ cursor, numItems: 100 });
+    return {
+      ...page,
+      page: page.page.flatMap((user): [StorageRef, Id<"users">][] =>
+        user.avatarStorageId ? [[user.avatarStorageId, user._id]] : [],
+      ),
+    };
+  },
+];
+
+/**
+ * One-shot backfill binding every blob attached before `storage_blobs`
+ * existed to its owner, so no other account can claim it. Walks the holder
+ * tables a page at a time, rescheduling itself until done; a blob held by two
+ * accounts is logged for review. Idempotent — run once after deploying the
+ * table:
+ *   npx convex run migrations:backfillBlobOwners        # dev
+ *   npx convex run migrations:backfillBlobOwners --prod # prod
+ */
+export const backfillBlobOwners = internalMutation({
+  args: {
+    step: v.optional(v.number()),
+    cursor: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, { step = 0, cursor = null }) => {
+    const { page, isDone, continueCursor } = await BLOB_HOLDERS[step](
+      ctx,
+      cursor,
+    );
+    for (const [ref, userId] of page) {
+      if (!(await claimBlob(ctx, ref, userId))) {
+        console.warn(
+          `backfillBlobOwners: blob ${ref} kept by its first holder, also held by ${userId}`,
+        );
+      }
+    }
+    const next = isDone
+      ? { step: step + 1, cursor: null }
+      : { step, cursor: continueCursor };
+    if (next.step < BLOB_HOLDERS.length) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.backfillBlobOwners,
+        next,
+      );
+    }
   },
 });

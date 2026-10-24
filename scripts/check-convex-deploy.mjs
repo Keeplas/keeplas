@@ -22,7 +22,6 @@ import { spawnSync } from "node:child_process";
 const MIN_MODULES = 15; // real ~30; an empty deploy has 0
 const MIN_INDEXES = 40; // real 67; an empty schema has 0
 const MIN_CRONS = 1; // real 3; crons.ts must register
-const MAX_DELETED_INDEXES = 5; // a correct change rarely drops many at once
 
 function fail(msg) {
   console.error(`\n✖ Convex deploy BLOCKED — ${msg}`);
@@ -36,19 +35,27 @@ function fail(msg) {
   process.exit(1);
 }
 
-// --dry-run prints the generated config WITHOUT deploying. --yes skips the
+// --dry-run prints what the push would do WITHOUT deploying. --yes skips the
 // interactive prod confirmation (unavailable in scripted contexts). Convex
-// writes the verbose config to STDERR, so both streams must be captured.
-const res = spawnSync(
-  "npx",
-  ["--no-install", "convex", "deploy", "--dry-run", "--yes", "-v"],
-  { cwd: process.cwd(), encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
-);
-const out = (res.stdout || "") + (res.stderr || "");
-if (res.error || res.status !== 0) {
-  console.error(out);
-  fail("`convex deploy --dry-run` itself failed (see output above).");
+// writes to STDERR, so both streams must be captured.
+function dryRun(...flags) {
+  const res = spawnSync(
+    "npx",
+    ["--no-install", "convex", "deploy", "--dry-run", "--yes", ...flags],
+    { cwd: process.cwd(), encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  const output = (res.stdout || "") + (res.stderr || "");
+  if (res.error || res.status !== 0) {
+    console.error(output);
+    fail("`convex deploy --dry-run` itself failed (see output above).");
+  }
+  return output;
 }
+
+// -v prints the generated config (counted below) but skips the readable
+// index diff, which only the plain run prints.
+const out = dryRun("-v");
+const diff = dryRun();
 
 const moduleCount = new Set(
   [...out.matchAll(/"path":\s*"([a-zA-Z0-9_]+)\.js"/g)]
@@ -67,15 +74,32 @@ const cronCount =
     ? (out.match(/"cronSchedule":/g) || []).length
     : 0;
 
-// Destructive index removal — both the human-readable banner and the machine
-// list are checked.
-const deletedBanner = /Deleted table indexes:/i.test(out);
-const deletedIndexCount = (out.match(/"deleted_indexes":\s*\[\s*[^\]]/g) || [])
-  .length;
+// Indexes the push would delete: the dry-run lists them under "Would delete
+// table indexes:" as "  [-] table.index   fields". Without that block it must
+// say "No indexes are deleted by this push", otherwise we can't tell.
+const lines = diff.split("\n");
+const deletedAt = lines.findIndex((line) =>
+  line.includes("Would delete table indexes:"),
+);
+const deletedIndexes = [];
+for (let i = deletedAt + 1; deletedAt !== -1 && i < lines.length; i++) {
+  const index = lines[i].match(/^\s+\[-\]\s+(\S+)/);
+  if (!index) break;
+  deletedIndexes.push(index[1]);
+}
+// An intended deletion is listed explicitly, e.g.
+// ALLOW_DELETED_INDEXES=payments.by_session,users.by_stripe_customer
+const allowedDeletions = (process.env.ALLOW_DELETED_INDEXES ?? "")
+  .split(",")
+  .map((name) => name.trim())
+  .filter(Boolean);
+const unexpectedDeletions = deletedIndexes.filter(
+  (name) => !allowedDeletions.includes(name),
+);
 
 console.log(
   `Convex deploy preflight → modules=${moduleCount} indexes=${indexCount} ` +
-    `crons=${cronCount} deletedBanner=${deletedBanner}`,
+    `crons=${cronCount} deletedIndexes=${deletedIndexes.join(",") || "none"}`,
 );
 
 if (moduleCount < MIN_MODULES)
@@ -90,10 +114,13 @@ if (indexCount < MIN_INDEXES)
   );
 if (cronCount < MIN_CRONS)
   fail(`no cron jobs resolved (min ${MIN_CRONS}). crons.ts not picked up.`);
-if (deletedBanner || deletedIndexCount > MAX_DELETED_INDEXES)
+if (deletedAt === -1 && !/No indexes are deleted by this push/.test(diff))
+  fail("the dry-run doesn't say whether this push deletes indexes.");
+if (unexpectedDeletions.length > 0)
   fail(
-    "this push DELETES table indexes. Refusing automatically — re-run " +
-      "interactively and confirm only if the schema change is intentional.",
+    `this push DELETES table indexes: ${unexpectedDeletions.join(", ")}. ` +
+      "If the schema change is intended, re-run with " +
+      `ALLOW_DELETED_INDEXES=${deletedIndexes.join(",")}.`,
   );
 
 const DEV_ONLY_FLAGS = [
@@ -101,9 +128,12 @@ const DEV_ONLY_FLAGS = [
   "ATTESTATION_SIMULATOR_BYPASS",
   "APP_ATTEST_ALLOW_DEVELOPMENT",
 ];
+// --names-only prints one name per line and keeps every secret value out of
+// this process. Without it, convex >= 1.48 prints names only when it detects
+// an AI agent, so a `NAME=value` match would silently find nothing.
 const envList = spawnSync(
   "npx",
-  ["--no-install", "convex", "env", "list", "--prod"],
+  ["--no-install", "convex", "env", "list", "--prod", "--names-only"],
   {
     cwd: process.cwd(),
     encoding: "utf8",
@@ -116,7 +146,7 @@ if (envList.status !== 0) {
   );
 }
 const setFlags = DEV_ONLY_FLAGS.filter((flag) =>
-  new RegExp(`^${flag}=\\S`, "m").test(envList.stdout || ""),
+  new RegExp(`^${flag}$`, "m").test(envList.stdout || ""),
 );
 if (setFlags.length > 0)
   fail(

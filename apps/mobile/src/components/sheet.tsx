@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -42,9 +43,11 @@ export function BottomSheet({
       animationType="slide"
       onRequestClose={onDismiss}
     >
-      {/* "padding" only lifts by the actual keyboard overlap, so it is a
-          no-op where the OS already resized the window (Android). */}
-      <KeyboardAvoidingView behavior="padding" style={styles.scrim}>
+      {/* Same as `Screen`: Android resizes the window for the keyboard. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.scrim}
+      >
         <Pressable style={styles.backdrop} onPress={onDismiss}>
           <Pressable
             style={[
