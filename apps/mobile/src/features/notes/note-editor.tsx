@@ -55,6 +55,9 @@ export function NoteEditor({
     `;
     return {
       initialContent: initialHtml,
+      // tentap paints the web view white by default; let the themed
+      // surface behind it show through instead (unreadable in dark mode).
+      theme: { webview: { backgroundColor: "transparent" } },
       bridgeExtensions: [
         CoreBridge.configureCSS(css),
         PlaceholderBridge.configureExtension({ placeholder }),
