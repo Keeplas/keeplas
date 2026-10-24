@@ -19,7 +19,8 @@ export function fromDeviceContact(
   country: CountryCode,
 ): { name: string; email: string; phones: ContactPhone[] } {
   return {
-    name: contact.name,
+    // Typed as a string, but iOS omits it for a contact without a name.
+    name: contact.name ?? "",
     email: contact.emails?.[0]?.email ?? "",
     phones: (contact.phoneNumbers ?? []).flatMap(
       ({ label, number, countryCode }) => {
