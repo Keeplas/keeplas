@@ -830,7 +830,7 @@
     },
     "categories": {
       "title": "Categories",
-      "body": "Sort your vault your way. Deleting a category never deletes its items.",
+      "body": "Sort your vault your way. Deleting a category deletes its items too: you can restore them from Archives in the Keeplas app.",
       "inboxBody": "Where new items land. It can't be deleted.",
       "itemOne": "1 item",
       "items": "{count} items",
@@ -842,7 +842,9 @@
       "delete": "Delete",
       "cancel": "Cancel",
       "deleteTitle": "Delete {name}?",
-      "deleteBody": "Its items stay in your vault and move to To sort.",
+      "deleteEmptyBody": "This category is empty.",
+      "deleteItemsOne": "Its item will be deleted too. You can still restore it from Archives in the Keeplas app.",
+      "deleteItems": "Its {count} items will be deleted too. You can still restore them from Archives in the Keeplas app.",
       "removed": "Deleted categories",
       "restore": "Restore",
       "failed": "Something went wrong. Try again."
