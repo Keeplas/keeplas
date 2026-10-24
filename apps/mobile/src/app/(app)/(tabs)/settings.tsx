@@ -8,12 +8,11 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Radio } from "@/components/controls";
 import { Screen } from "@/components/screen";
-import { Card, ListRow, StatusChip } from "@/components/surfaces";
+import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { UpgradeCard } from "@/features/billing/upgrade-card";
 import { formatBytes } from "@/lib/format";
 import { openSitePage } from "@/lib/site";
-import { useChangeLanguage } from "@/lib/use-change-language";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { APPEARANCES, useTheme } from "@/providers/theme-provider";
@@ -26,14 +25,13 @@ const KINDS = [
   { kind: "video", color: palette.category.note },
 ] as const;
 
-/** M08-7 Settings: storage, account rows, language, appearance, sign out. */
+/** M08-7 Settings: storage, account rows, appearance, sign out. */
 export default function Settings() {
   const router = useRouter();
   const { t, language } = useI18n();
   const { appearance, setAppearance, colors } = useTheme();
   const { signOut } = useSession();
   const viewer = useViewer();
-  const changeLanguage = useChangeLanguage();
   // getUsageStats re-reads every item and file server-side on each vault
   // change; only subscribe while this tab is actually visible.
   const [focused, setFocused] = useState(true);
@@ -153,23 +151,6 @@ export default function Settings() {
           onPress={() => router.push("/life-check")}
         />
       )}
-      <ListRow
-        icon="shield-check"
-        title={t("settings.plan")}
-        description={
-          usage
-            ? t("settings.planQuota", {
-                quota: formatBytes(usage.quotaBytes, language),
-              })
-            : undefined
-        }
-        trailing={
-          <StatusChip
-            label={planLabel}
-            tone={lifetime ? "success" : "neutral"}
-          />
-        }
-      />
       {lifetime ? null : <UpgradeCard />}
       <ListRow
         icon="lock"
@@ -182,12 +163,6 @@ export default function Settings() {
         title={t("backup.title")}
         description={t("backup.bodyShort")}
         onPress={() => router.push("/backup")}
-      />
-      <ListRow
-        icon="globe"
-        title={t("common.language")}
-        description={t(`languageNames.${language}`)}
-        onPress={() => changeLanguage(language === "en" ? "fr" : "en")}
       />
       <ListRow
         icon="inbox"
