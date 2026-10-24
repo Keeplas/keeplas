@@ -906,7 +906,6 @@
     "ready": "{n} ready",
     "readyBody": "Any 2 of your contacts can help you recover your account.",
     "replace": "Replace",
-    "replaceNote": "Replacing a contact renews recovery protection for your account.",
     "replaceTitle": "Replace {name}?",
     "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
     "resend": "Resend invitation",
