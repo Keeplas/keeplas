@@ -122,13 +122,13 @@ interface Listed {
 
 /**
  * The one list an item belongs to besides "all" (and "other"): the inbox,
- * the accounts or instructions group, or else its content kind.
+ * the documents, accounts or instructions group, or else its content kind.
  */
 export function bucketOf(item: Listed): Exclude<VaultListKey, "all" | "other"> {
   if (item.categoryId) return item.kind;
   if (item.category === "inbox") return "inbox";
   const group = groupOf(item.category);
-  if (group === "accounts" || group === "instructions") return group;
+  if (group && group !== "other") return group;
   return item.kind;
 }
 
