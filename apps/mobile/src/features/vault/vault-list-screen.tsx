@@ -15,6 +15,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useVaultData } from "./vault-data";
 import { categoryCounts } from "./vault-filter";
 import { useFilterTitle, VaultItemList } from "./vault-item-list";
+import { VaultSwitch } from "./vault-switch";
 
 /**
  * M10-1 vault list: search, filter chips and the items of one filter. The
@@ -49,6 +50,7 @@ export function VaultListScreen({
       }
       scroll={false}
     >
+      {filter === "all" ? <VaultSwitch active="mine" /> : null}
       <VaultItemList
         filter={filter}
         searchLabel={t("vaultList.search")}

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useQuery } from "convex/react";
+import { useConvex, useQuery } from "convex/react";
 import * as Sharing from "expo-sharing";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -24,15 +24,16 @@ import {
   PhotoGallery,
   type PreviewFile,
 } from "@/features/vault/attachment-preview";
-import { useDecryptedAttachments } from "@/features/vault/use-decrypted-attachment";
+import {
+  useDecryptedAttachments,
+  type FileUrl,
+} from "@/features/vault/use-decrypted-attachment";
 import {
   useEveryoneRecipients,
   useWrapForContacts,
 } from "@/features/vault/use-recipients";
-import {
-  useOpenedItem,
-  type Attachment,
-} from "@/features/vault/use-opened-item";
+import type { Attachment } from "@/features/vault/open-sealed-item";
+import { useOpenedItem } from "@/features/vault/use-opened-item";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes, formatDate, formatDuration } from "@/lib/format";
 import {
@@ -40,7 +41,7 @@ import {
   useCategoryLabel,
   useRecategorize,
 } from "@/features/vault/category-sheet";
-import { itemVisual } from "@/features/vault/item-visual";
+import { FILE_ICON, itemVisual } from "@/features/vault/item-visual";
 import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
 import { isEmptyNote } from "@keeplas/export/rich-text";
@@ -59,13 +60,6 @@ import {
   type EditDraft,
 } from "@/features/vault/edit-draft";
 import { removeFormDraft, useStoredFormDraft } from "@/lib/form-drafts";
-
-const KIND_ICON = {
-  document: "document",
-  image: "photo",
-  audio: "mic",
-  video: "video",
-} as const;
 
 export default function ItemDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -93,8 +87,18 @@ export default function ItemDetails() {
   const unarchive = useAuditedMutation(api.vault_items.unarchiveItem);
   const everyone = useEveryoneRecipients();
 
+  const convex = useConvex();
+  const fileUrl = useCallback<FileUrl>(
+    (fileId) => convex.query(api.vault_items.getItemFileUrl, { fileId }),
+    [convex],
+  );
+
   const attachments = useMemo(() => opened?.files ?? [], [opened]);
-  const { stateOf, retry } = useDecryptedAttachments(attachments, opened?.key);
+  const { stateOf, retry } = useDecryptedAttachments(
+    attachments,
+    opened?.key,
+    fileUrl,
+  );
   const current = Math.min(selected, Math.max(0, attachments.length - 1));
   const file = attachments[current];
   const photos = useMemo(
@@ -384,7 +388,7 @@ export default function ItemDetails() {
                     value: file.name,
                   },
                   {
-                    icon: KIND_ICON[file.kind],
+                    icon: FILE_ICON[file.kind],
                     label: t("item.fileType"),
                     value: file.mimeType,
                   },
@@ -591,7 +595,7 @@ export default function ItemDetails() {
           {attachments.map((attachment, index) => (
             <ListRow
               key={attachment.id}
-              icon={KIND_ICON[attachment.kind]}
+              icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
               trailing={

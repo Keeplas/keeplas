@@ -36,6 +36,7 @@ import type { OutboxEntry } from "@/features/outbox/outbox";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
 import { useAdoptFolders } from "./adopt-folders";
+import { openTitle } from "./open-sealed-item";
 import { loadItemSummaries, saveItemSummaries } from "./summary-cache";
 
 export interface VaultItemSummary {
@@ -144,9 +145,7 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
       };
       try {
         const key = await itemKey(item);
-        const title = item.encryptedTitle
-          ? await decryptText(item.encryptedTitle, key)
-          : (item.title ?? "");
+        const title = await openTitle(item, key);
         const meta = item.encryptedMeta
           ? parseItemMeta(await decryptText(item.encryptedMeta, key))
           : undefined;
