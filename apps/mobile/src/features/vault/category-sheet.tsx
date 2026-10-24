@@ -100,29 +100,31 @@ export function useRecategorize() {
   );
 }
 
-/** Name a new category (sealed under the master key before it is sent). */
-export function NewCategoryForm({
-  onCreated,
+/**
+ * Name field of a user-made category. The name is sealed under the master
+ * key before it leaves the phone; `onSubmit` gets the ciphertext.
+ */
+export function CategoryNameForm({
+  initial = "",
+  submitLabel,
+  onSubmit,
 }: {
-  onCreated: (categoryId: Id<"vault_categories">) => void;
+  initial?: string;
+  submitLabel: string;
+  onSubmit: (encryptedName: string) => Promise<void>;
 }) {
   const { t } = useI18n();
   const { masterKey } = useVault();
-  const create = useAuditedMutation(api.vault_categories.create);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  async function add() {
+  async function submit() {
     if (!masterKey || !name.trim()) return;
     setBusy(true);
     setFailed(false);
     try {
-      onCreated(
-        await create({
-          encryptedName: await encryptText(name.trim(), masterKey),
-        }),
-      );
+      await onSubmit(await encryptText(name.trim(), masterKey));
     } catch {
       setFailed(true);
     } finally {
@@ -138,7 +140,7 @@ export function NewCategoryForm({
         onChangeText={setName}
         autoFocus
         returnKeyType="done"
-        onSubmitEditing={() => void add()}
+        onSubmitEditing={() => void submit()}
       />
       <Text variant="body-sm" color="text.muted">
         {t("categories.newBody")}
@@ -149,12 +151,30 @@ export function NewCategoryForm({
         </Text>
       ) : null}
       <Button
-        label={t("categories.create")}
+        label={submitLabel}
         loading={busy}
         disabled={!name.trim()}
-        onPress={() => void add()}
+        onPress={() => void submit()}
       />
     </>
+  );
+}
+
+/** Name and create a new category. */
+export function NewCategoryForm({
+  onCreated,
+}: {
+  onCreated: (categoryId: Id<"vault_categories">) => void;
+}) {
+  const { t } = useI18n();
+  const create = useAuditedMutation(api.vault_categories.create);
+  return (
+    <CategoryNameForm
+      submitLabel={t("categories.create")}
+      onSubmit={async (encryptedName) =>
+        onCreated(await create({ encryptedName }))
+      }
+    />
   );
 }
 

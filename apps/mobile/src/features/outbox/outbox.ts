@@ -30,6 +30,9 @@ export interface SealedItem {
   ownerWrappedDek: string;
   /** "trusted_only" when shared with every trusted contact; else private. */
   accessLevel?: "private" | "trusted_only";
+  /** "explicit" when shared with `sharedWithContacts` only. */
+  recipientMode?: "default" | "explicit";
+  sharedWithContacts?: string[];
   recipientKeys?: { contactId: string; wrappedDek: string }[];
   /** Contacts without a published key yet, re-wrapped by the owner later. */
   pendingRecipients?: string[];
@@ -58,7 +61,7 @@ export interface CreateItemArgs extends SealedItem {
   vaultId: string;
   accessLevel: "private" | "trusted_only";
   encryptionType: "zero_knowledge";
-  recipientMode: "default";
+  recipientMode: "default" | "explicit";
   files: { storageId: string; iv: string; encryptedMeta: string }[];
 }
 
@@ -137,9 +140,9 @@ export async function uploadEntry(
       itemId = await deps.createItem({
         vaultId: await deps.vaultId(),
         accessLevel: "private",
+        recipientMode: "default",
         ...current.item,
         encryptionType: "zero_knowledge",
-        recipientMode: "default",
         files: uploaded,
       });
     }

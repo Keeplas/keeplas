@@ -12,6 +12,7 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavAction, NavBar } from "@/components/nav-bar";
@@ -64,7 +65,7 @@ function IconTileBox({ icon }: { icon: IconName }) {
   return <IconTile icon={icon} size={44} background={colors["bg.info"]} />;
 }
 
-type Sheet = "category" | "icon" | "item" | null;
+type Sheet = "category" | "access" | "icon" | "item" | null;
 
 /** M07-7 / M07-9 New note and M07-8 Review capture, sealed for the outbox. */
 export default function ComposeCapture() {
@@ -82,6 +83,7 @@ export default function ComposeCapture() {
   const { capture } = useOutbox();
   const { items, itemKey } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
+  const contacts = useQuery(api.trusted_contacts.getContacts);
   const everyone = useEveryoneRecipients();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [mode, setMode] = useState<"new" | "existing">("new");
@@ -98,7 +100,22 @@ export default function ComposeCapture() {
   const hasFiles = draft.files.length + draft.pages.length > 0;
   const existing = mode === "existing" && hasFiles;
 
-  const access = t("capture.allContacts");
+  const chosen = (contacts ?? []).filter((contact) =>
+    draft.contactIds?.includes(contact._id),
+  );
+  const access =
+    chosen.length === 0
+      ? t("capture.allContacts")
+      : chosen.length === 1
+        ? chosen[0].name
+        : t("item.sharedMany", { name: chosen[0].name, n: chosen.length - 1 });
+
+  function toggleContact(contactId: string, checked: boolean) {
+    const next = (draft.contactIds ?? []).filter((id) => id !== contactId);
+    if (checked) next.push(contactId);
+    // Nobody picked: the item is for every trusted contact.
+    draftStore.update({ contactIds: next.length ? next : undefined });
+  }
 
   const pickable = useMemo(() => {
     const needle = search.trim().toLocaleLowerCase();
@@ -162,7 +179,12 @@ export default function ComposeCapture() {
         category: draft.category,
         categoryId: draft.categoryId,
         icon: draft.icon,
-        share: existing ? undefined : await everyone(),
+        share: existing
+          ? undefined
+          : {
+              ...(await everyone(draft.contactIds)),
+              contactIds: draft.contactIds,
+            },
         attachTo: existing ? await attachTarget() : undefined,
         handoffId: draft.handoffId,
         files,
@@ -242,6 +264,7 @@ export default function ComposeCapture() {
           icon: "lock",
           label: t("capture.accessLabel"),
           value: access,
+          onPress: () => setSheet("access"),
         },
         {
           icon: draft.icon ?? "flash",
@@ -301,6 +324,40 @@ export default function ComposeCapture() {
         }
         onDismiss={() => setSheet(null)}
       />
+
+      <BottomSheet
+        visible={sheet === "access"}
+        onDismiss={() => setSheet(null)}
+        title={t("item.shareTitle")}
+      >
+        <Text variant="body-sm" color="text.muted">
+          {t("item.shareBody")}
+        </Text>
+        <ListRow
+          icon="people"
+          title={t("capture.allContacts")}
+          trailing={
+            draft.contactIds ? undefined : (
+              <Icon name="check" size={18} color="status.active" />
+            )
+          }
+          onPress={() => draftStore.update({ contactIds: undefined })}
+        />
+        {(contacts ?? []).map((contact) => (
+          <Checkbox
+            key={contact._id}
+            checked={draft.contactIds?.includes(contact._id) ?? false}
+            onChange={(checked) => toggleContact(contact._id, checked)}
+            label={contact.name}
+            description={
+              contact.invitationStatus === "accepted"
+                ? undefined
+                : t(`people.status.${contact.invitationStatus}`)
+            }
+          />
+        ))}
+        <Button label={t("common.done")} onPress={() => setSheet(null)} />
+      </BottomSheet>
 
       <BottomSheet
         visible={sheet === "item"}
@@ -475,7 +532,7 @@ export default function ComposeCapture() {
         {select(t("capture.categoryLabel"), categoryLabel(filedAs), () =>
           setSheet("category"),
         )}
-        {select(t("capture.whoCanSee"), access)}
+        {select(t("capture.whoCanSee"), access, () => setSheet("access"))}
         <Callout icon="shield-check" text={t("capture.neverSees")} />
         {sheets}
       </Screen>

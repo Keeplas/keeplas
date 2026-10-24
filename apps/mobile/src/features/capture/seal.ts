@@ -46,12 +46,14 @@ export interface CaptureDraft {
   categoryId?: string;
   icon?: string;
   /**
-   * New items are for every trusted contact: the DEK is wrapped to each
-   * verified key; contacts without a published key wait in `pending`.
+   * New items are for every trusted contact unless `contactIds` narrows
+   * them: the DEK is wrapped to each verified key; contacts without a
+   * published key wait in `pending`.
    */
   share?: {
     recipients: { contactId: string; publicKey: string }[];
     pending: string[];
+    contactIds?: string[];
   };
   attachTo?: { itemId: string; dek: CryptoKey; ownerWrappedDek: string };
   /** W06-7: completes the browser's handoff when the item is created. */
@@ -79,6 +81,9 @@ async function shareFields(
   );
   return {
     accessLevel: "trusted_only",
+    ...(share.contactIds
+      ? { recipientMode: "explicit", sharedWithContacts: share.contactIds }
+      : {}),
     ...(recipientKeys.length ? { recipientKeys } : {}),
     ...(share.pending.length ? { pendingRecipients: share.pending } : {}),
   };

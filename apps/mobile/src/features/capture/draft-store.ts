@@ -21,6 +21,8 @@ export interface Draft {
   /** User-made category; `category` then holds its built-in fallback. */
   categoryId?: string;
   icon?: IconName;
+  /** Trusted contacts who can open the item; unset = all of them. */
+  contactIds?: string[];
   /** W06-7: the browser waiting for this scan (capture_handoffs). */
   handoffId?: string;
   /** Scanned page images, bound into one PDF when saved. */

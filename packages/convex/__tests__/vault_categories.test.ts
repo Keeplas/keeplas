@@ -40,25 +40,57 @@ describe("vault categories", () => {
       }),
     );
   });
+});
 
-  it("deletes only the owner's own category", async () => {
+describe("vault category rename and delete", () => {
+  async function setup() {
     const t = makeT();
     const owner = asUser(t, await seedUser(t));
-    const other = asUser(t, await seedUser(t));
+    const stranger = asUser(t, await seedUser(t));
     const categoryId = await owner.mutation(api.vault_categories.create, {
       encryptedName: SEALED,
       _audit: await signedAudit(),
     });
-    await expect(
-      other.mutation(api.vault_categories.remove, {
-        categoryId,
-        _audit: await signedAudit(),
-      }),
-    ).rejects.toThrow("Category not found");
+    return { owner, stranger, categoryId };
+  }
+
+  it("renames the owner's category", async () => {
+    const { owner, categoryId } = await setup();
+    const renamed = JSON.stringify({ ciphertext: "cmVuYW1lZA==", iv: "aXY=" });
+    await owner.mutation(api.vault_categories.rename, {
+      categoryId,
+      encryptedName: renamed,
+      _audit: await signedAudit(),
+    });
+    expect(await owner.query(api.vault_categories.list, {})).toMatchObject([
+      { _id: categoryId, encryptedName: renamed },
+    ]);
+  });
+
+  it("deletes the owner's category", async () => {
+    const { owner, categoryId } = await setup();
     await owner.mutation(api.vault_categories.remove, {
       categoryId,
       _audit: await signedAudit(),
     });
     expect(await owner.query(api.vault_categories.list, {})).toEqual([]);
+  });
+
+  it("refuses another user's category", async () => {
+    const { owner, stranger, categoryId } = await setup();
+    await expect(
+      stranger.mutation(api.vault_categories.rename, {
+        categoryId,
+        encryptedName: SEALED,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Category not found");
+    await expect(
+      stranger.mutation(api.vault_categories.remove, {
+        categoryId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Category not found");
+    expect(await owner.query(api.vault_categories.list, {})).toHaveLength(1);
   });
 });

@@ -932,6 +932,7 @@
     "rowBody": "Ajouter ou supprimer des catégories",
     "body": "Classez votre coffre à votre façon. Supprimer une catégorie ne supprime jamais ses éléments.",
     "inboxBody": "Là où arrivent les nouveaux éléments. Elle ne peut pas être supprimée.",
+    "rename": "Renommer la catégorie",
     "items": "{n} éléments",
     "move": "Changer de catégorie",
     "delete": "Supprimer",

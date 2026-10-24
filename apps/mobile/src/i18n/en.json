@@ -941,6 +941,7 @@
     "rowBody": "Add or delete categories",
     "body": "Sort your vault your way. Deleting a category never deletes its items.",
     "inboxBody": "Where new items land. It can't be deleted.",
+    "rename": "Rename category",
     "items": "{n} items",
     "move": "Change category",
     "delete": "Delete",
