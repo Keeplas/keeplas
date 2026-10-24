@@ -3,18 +3,16 @@ import { useRouter } from "expo-router";
 
 import VaultLaptop from "../../assets/illustrations/vault-laptop.svg";
 import { AppHeader } from "@/components/app-header";
-import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useRestorableBackup } from "@/features/cloud-backup";
+import { OtherOptions } from "@/features/other-options";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
 
 export default function LostAccess() {
   const router = useRouter();
   const { t } = useI18n();
-  const { signOut } = useSession();
   const cloud = useRestorableBackup();
 
   return (
@@ -64,7 +62,7 @@ export default function LostAccess() {
         description={t("help.rowBody")}
         onPress={() => router.push("/help")}
       />
-      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
+      <OtherOptions />
     </Screen>
   );
 }
