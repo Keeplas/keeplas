@@ -17,6 +17,7 @@ import {
   resolveItemRecipients,
 } from "./helpers";
 import { auditedMutation } from "./audit";
+import { contactRoleValidator } from "./validators";
 import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
@@ -214,68 +215,16 @@ export const inviteContact = auditedMutation({
     name: v.string(),
     email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
-    role: v.union(
-      v.literal("family"),
-      v.literal("friend"),
-      v.literal("lawyer"),
-      v.literal("doctor"),
-      v.literal("other"),
-    ),
+    role: contactRoleValidator,
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
-
-    // A contact is reachable by email, phone, or both — but at least one
-    // identifier is required. `normalizeE164` also validates the phone format.
-    const email = args.email?.trim() ? normalizeEmail(args.email) : undefined;
-    const phoneNumber = normalizeE164(args.phoneNumber);
-    if (!email && !phoneNumber) {
-      throw new Error("Add an email or a phone number");
-    }
-    if (email && !isValidEmail(email)) {
-      throw new Error("Please enter a valid email");
-    }
-
-    const existing = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
-      .collect();
-
-    // Dedup on whichever identifier(s) the invite carries.
-    if (email && existing.some((c) => c.email?.toLowerCase() === email)) {
-      throw new ConvexError("A contact with this email already exists");
-    }
-    if (
-      phoneNumber &&
-      existing.some((c) => normalizeE164(c.phoneNumber) === phoneNumber)
-    ) {
-      throw new ConvexError("A contact with this phone number already exists");
-    }
-
-    // C1: dedup by the distinct HUMAN, not just by channel. If this invitee
-    // already has a Keeplas account whose verified email/phone backs a
-    // non-revoked contact row for this owner, the same person is being invited
-    // through a second channel. Block it — otherwise one person would hold two
-    // rows (two quorum votes) and could reach the unreachability quorum
-    // alone.
-    const inviteeUserId = await resolveInviteePersonId(ctx, {
-      email,
-      phoneNumber,
-    });
-    if (
-      inviteeUserId &&
-      existing.some((c) => c.contactUserId === inviteeUserId)
-    ) {
-      throw new ConvexError("This person is already one of your contacts");
-    }
-
-    const tokenBytes = new Uint8Array(32);
-    crypto.getRandomValues(tokenBytes);
-    const invitationToken = Array.from(tokenBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-
+    const { email, phoneNumber } = await checkContactChannels(
+      ctx,
+      userId,
+      args,
+    );
+    const invitationToken = newInvitationToken();
     const now = Date.now();
 
     const baseFields = {
@@ -320,34 +269,177 @@ export const inviteContact = auditedMutation({
       relatedType: "trusted_contact",
     });
 
-    // Email carries the acceptance link — fire whenever an email is on file.
-    if (email) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.trusted_contacts.sendInvitationEmail,
-        { contactId },
-      );
-    }
-
-    // Additive WhatsApp nudge for contacts who provided a phone number.
-    // Email remains the canonical channel (carries the same accept link).
-    if (baseFields.phoneNumber) {
-      const inviter = await ctx.db.get(userId);
-      await ctx.scheduler.runAfter(
-        0,
-        internal.dispatch.sendInvitationWhatsApp,
-        {
-          phoneNumber: baseFields.phoneNumber,
-          inviterName: formatSenderIdentity(inviter),
-          invitationToken,
-          language: inviter?.language,
-        },
-      );
-    }
+    await deliverInvitation(ctx, userId, {
+      contactId,
+      email,
+      phoneNumber,
+      invitationToken,
+    });
 
     return { contactId, invitationToken };
   },
 });
+
+/**
+ * Edit a contact's name, email, phone and role. A pending invitation whose email or
+ * phone changed is re-issued: the old link is invalidated (it may have gone to
+ * the wrong person) and the new one is sent to the corrected channels. An
+ * accepted contact stays bound to the account that accepted; the new channels
+ * only change where notifications are delivered.
+ */
+export const updateContact = auditedMutation({
+  action: "trusted_contact.updated",
+  resourceType: "trusted_contact",
+  getResourceId: (args) => args.contactId,
+  args: {
+    contactId: v.id("trusted_contacts"),
+    name: v.string(),
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+    role: v.optional(contactRoleValidator),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const contact = await ctx.db.get(args.contactId);
+    if (
+      !contact ||
+      contact.userId !== userId ||
+      contact.invitationStatus === "revoked"
+    ) {
+      throw new Error("Contact not found");
+    }
+    const name = args.name.trim();
+    if (!name) throw new Error("Add a name");
+
+    const { email, phoneNumber } = await checkContactChannels(
+      ctx,
+      userId,
+      args,
+      contact._id,
+    );
+    const now = Date.now();
+    await ctx.db.patch(contact._id, {
+      name,
+      email,
+      phoneNumber,
+      role: args.role ?? contact.role,
+      updatedAt: now,
+    });
+
+    const channelsChanged =
+      email !== contact.email || phoneNumber !== contact.phoneNumber;
+    if (contact.invitationStatus === "pending" && channelsChanged) {
+      const invitationToken = newInvitationToken();
+      await ctx.db.patch(contact._id, { invitationToken, invitedAt: now });
+      await deliverInvitation(ctx, userId, {
+        contactId: contact._id,
+        email,
+        phoneNumber,
+        invitationToken,
+      });
+    }
+    return { success: true };
+  },
+});
+
+/**
+ * Normalize and validate a contact's email / phone for `userId`, refusing any
+ * already held by another of their non-revoked contacts. `selfId` excludes the
+ * row being edited.
+ */
+async function checkContactChannels(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: { email?: string; phoneNumber?: string },
+  selfId?: Id<"trusted_contacts">,
+) {
+  // A contact is reachable by email, phone, or both — but at least one
+  // identifier is required. `normalizeE164` also validates the phone format.
+  const email = args.email?.trim() ? normalizeEmail(args.email) : undefined;
+  const phoneNumber = normalizeE164(args.phoneNumber);
+  if (!email && !phoneNumber) {
+    throw new Error("Add an email or a phone number");
+  }
+  if (email && !isValidEmail(email)) {
+    throw new Error("Please enter a valid email");
+  }
+
+  const others = (
+    await ctx.db
+      .query("trusted_contacts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
+      .collect()
+  ).filter((c) => c._id !== selfId);
+
+  // Dedup on whichever identifier(s) the contact carries.
+  if (email && others.some((c) => c.email?.toLowerCase() === email)) {
+    throw new ConvexError("A contact with this email already exists");
+  }
+  if (
+    phoneNumber &&
+    others.some((c) => normalizeE164(c.phoneNumber) === phoneNumber)
+  ) {
+    throw new ConvexError("A contact with this phone number already exists");
+  }
+
+  // C1: dedup by the distinct HUMAN, not just by channel. If this invitee
+  // already has a Keeplas account whose verified email/phone backs a
+  // non-revoked contact row for this owner, the same person is being invited
+  // through a second channel. Block it — otherwise one person would hold two
+  // rows (two quorum votes) and could reach the unreachability quorum
+  // alone.
+  const inviteeUserId = await resolveInviteePersonId(ctx, {
+    email,
+    phoneNumber,
+  });
+  if (inviteeUserId && others.some((c) => c.contactUserId === inviteeUserId)) {
+    throw new ConvexError("This person is already one of your contacts");
+  }
+
+  return { email, phoneNumber };
+}
+
+function newInvitationToken(): string {
+  const tokenBytes = new Uint8Array(32);
+  crypto.getRandomValues(tokenBytes);
+  return Array.from(tokenBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+/**
+ * Send the accept link on every channel on file. Email is the canonical
+ * channel; WhatsApp carries the same link and is the only one for phone-only
+ * contacts.
+ */
+async function deliverInvitation(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  invite: {
+    contactId: Id<"trusted_contacts">;
+    email?: string;
+    phoneNumber?: string;
+    invitationToken: string;
+  },
+) {
+  if (invite.email) {
+    await ctx.scheduler.runAfter(
+      0,
+      internal.trusted_contacts.sendInvitationEmail,
+      { contactId: invite.contactId },
+    );
+  }
+  if (invite.phoneNumber) {
+    const inviter = await ctx.db.get(userId);
+    await ctx.scheduler.runAfter(0, internal.dispatch.sendInvitationWhatsApp, {
+      phoneNumber: invite.phoneNumber,
+      inviterName: formatSenderIdentity(inviter),
+      invitationToken: invite.invitationToken,
+      language: inviter?.language,
+    });
+  }
+}
 
 /**
  * Get a contact invitation by token (public - no auth required).
@@ -758,42 +850,18 @@ export const resendInvitation = auditedMutation({
       throw new Error("Can only resend for pending invitations");
     }
 
-    // Generate new token
-    const tokenBytes = new Uint8Array(32);
-    crypto.getRandomValues(tokenBytes);
-    const invitationToken = Array.from(tokenBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-
+    const invitationToken = newInvitationToken();
     await ctx.db.patch(args.contactId, {
       invitationToken,
       invitedAt: Date.now(),
       updatedAt: Date.now(),
     });
-
-    // Re-deliver on whichever channel the contact has on file. Email carries
-    // the accept link; WhatsApp does too — and is the only channel for
-    // phone-only contacts.
-    if (contact.email) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.trusted_contacts.sendInvitationEmail,
-        { contactId: args.contactId },
-      );
-    }
-    if (contact.phoneNumber) {
-      const inviter = await ctx.db.get(userId);
-      await ctx.scheduler.runAfter(
-        0,
-        internal.dispatch.sendInvitationWhatsApp,
-        {
-          phoneNumber: contact.phoneNumber,
-          inviterName: formatSenderIdentity(inviter),
-          invitationToken,
-          language: inviter?.language,
-        },
-      );
-    }
+    await deliverInvitation(ctx, userId, {
+      contactId: args.contactId,
+      email: contact.email,
+      phoneNumber: contact.phoneNumber,
+      invitationToken,
+    });
     return { invitationToken };
   },
 });

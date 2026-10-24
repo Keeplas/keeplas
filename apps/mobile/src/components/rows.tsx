@@ -30,7 +30,7 @@ export function DetailRows({ rows }: { rows: DetailRow[] }) {
     >
       {rows.map((row, index) => (
         <Pressable
-          key={row.label}
+          key={index}
           accessibilityRole={row.onPress ? "button" : undefined}
           onPress={row.onPress}
           disabled={!row.onPress}

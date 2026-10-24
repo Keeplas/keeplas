@@ -10,6 +10,7 @@ import { TabShell } from "@/features/navigation/tab-shell";
 import { hasPendingLink } from "@/features/link/pending-link";
 import { LifeCheckPrompt } from "@/features/life-check/life-check-prompt";
 import { PinGateProvider } from "@/features/pin/use-pin-gate";
+import { useBackfillShares } from "@/features/vault/use-backfill-shares";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
@@ -68,6 +69,7 @@ export default function AppLayout() {
   return (
     <PinGateProvider>
       <VaultDataProvider>
+        <ShareBackfill />
         <SecuringSheetProvider>
           <AddSheetProvider>
             <TabShell>
@@ -83,4 +85,10 @@ export default function AppLayout() {
       </VaultDataProvider>
     </PinGateProvider>
   );
+}
+
+/** Runs under VaultDataProvider, whose cached item keys it reuses. */
+function ShareBackfill() {
+  useBackfillShares();
+  return null;
 }

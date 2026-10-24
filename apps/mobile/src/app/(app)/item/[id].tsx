@@ -17,6 +17,7 @@ import { StateMessage } from "@/components/state-message";
 import { Checkbox } from "@/components/controls";
 import { Callout, IconTile, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { wrapDek } from "@keeplas/crypto/kem";
 import { encryptText } from "@/crypto/envelope";
 import { itemMetaJson, type VaultCategory } from "@/crypto/item-meta";
 import {
@@ -26,7 +27,7 @@ import {
 } from "@/features/vault/attachment-preview";
 import { useDecryptedAttachments } from "@/features/vault/use-decrypted-attachment";
 import {
-  useMoveToFolder,
+  useEveryoneRecipients,
   useWrapForContacts,
 } from "@/features/vault/use-move-to-folder";
 import {
@@ -68,15 +69,15 @@ export default function ItemDetails() {
   const { colors } = useTheme();
   const [selected, setSelected] = useState(0);
   const [pages, setPages] = useState(0);
-  const [sheet, setSheet] = useState<
-    "folder" | "details" | "people" | "category" | null
-  >(null);
+  const [sheet, setSheet] = useState<"details" | "people" | "category" | null>(
+    null,
+  );
   const [people, setPeople] = useState<Set<Id<"trusted_contacts">>>(new Set());
   const [sharing, setSharing] = useState(false);
   const wrapFor = useWrapForContacts();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const unarchive = useAuditedMutation(api.vault_items.unarchiveItem);
-  const moveToFolder = useMoveToFolder();
+  const everyone = useEveryoneRecipients();
 
   const attachments = useMemo(() => opened?.files ?? [], [opened]);
   const { stateOf, retry } = useDecryptedAttachments(attachments, opened?.key);
@@ -91,6 +92,11 @@ export default function ItemDetails() {
   const folder = folders?.find((candidate) => candidate.id === raw?.folderId);
 
   const access = useMemo(() => {
+    if (
+      raw?.accessLevel !== "private" &&
+      (raw?.recipientMode ?? "default") === "default"
+    )
+      return t("capture.allContacts");
     const names = new Set<string>();
     for (const contactId of raw?.sharedWithContacts ?? []) {
       const contact = contacts?.find(
@@ -104,7 +110,14 @@ export default function ItemDetails() {
     return list.length === 1
       ? list[0]
       : t("item.sharedMany", { name: list[0], n: list.length - 1 });
-  }, [raw?.sharedWithContacts, contacts, folder, t]);
+  }, [
+    raw?.accessLevel,
+    raw?.recipientMode,
+    raw?.sharedWithContacts,
+    contacts,
+    folder,
+    t,
+  ]);
 
   const download = useCallback(async () => {
     const state = file ? stateOf(file.id) : undefined;
@@ -152,18 +165,39 @@ export default function ItemDetails() {
     if (!raw || !opened) return;
     setSharing(true);
     try {
+      // A legacy item opens with the master key itself: wrapping it to a
+      // contact would hand them the whole vault.
+      if (!raw.ownerWrappedDek) throw new Error("Legacy items can't be shared");
       const direct = [...people];
-      const recipientKeys = await wrapFor(opened.key, [
-        ...direct,
-        ...throughFolder,
-      ]);
-      await updateItem({
-        itemId,
-        sharedWithContacts: direct,
-        recipientMode: direct.length ? "explicit" : "default",
-        accessLevel: direct.length ? "trusted_only" : "private",
-        recipientKeys,
-      });
+      if (direct.length) {
+        await updateItem({
+          itemId,
+          sharedWithContacts: direct,
+          recipientMode: "explicit",
+          accessLevel: "trusted_only",
+          recipientKeys: await wrapFor(opened.key, [
+            ...direct,
+            ...throughFolder,
+          ]),
+          pendingRecipients: [],
+        });
+      } else {
+        // Nobody picked: the item is for every trusted contact.
+        const { recipients, pending } = await everyone();
+        await updateItem({
+          itemId,
+          sharedWithContacts: [],
+          recipientMode: "default",
+          accessLevel: "trusted_only",
+          recipientKeys: await Promise.all(
+            recipients.map(async ({ contactId, publicKey }) => ({
+              contactId,
+              wrappedDek: await wrapDek(opened.key, publicKey),
+            })),
+          ),
+          pendingRecipients: pending,
+        });
+      }
       setSheet(null);
     } catch {
       toast({
@@ -174,18 +208,6 @@ export default function ItemDetails() {
     } finally {
       setSharing(false);
     }
-  }
-
-  async function move(folderId: Id<"folders"> | null) {
-    if (!raw) return;
-    setSheet(null);
-    await moveToFolder(raw, folderId).catch(() =>
-      toast({
-        variant: "error",
-        title: t("item.folder"),
-        description: t("common.genericError"),
-      }),
-    );
   }
 
   const header = (
@@ -320,36 +342,6 @@ export default function ItemDetails() {
 
   const sheets = (
     <>
-      <BottomSheet
-        visible={sheet === "folder"}
-        onDismiss={() => setSheet(null)}
-        title={t("folders.move")}
-      >
-        <ListRow
-          icon="mail"
-          title={t("folders.noFolder")}
-          trailing={
-            !folder ? (
-              <Icon name="check" size={18} color="status.active" />
-            ) : undefined
-          }
-          onPress={() => void move(null)}
-        />
-        {(folders ?? []).map((candidate) => (
-          <ListRow
-            key={candidate.id}
-            icon="folder"
-            title={candidate.name ?? t("folders.title")}
-            trailing={
-              candidate.id === folder?.id ? (
-                <Icon name="check" size={18} color="status.active" />
-              ) : undefined
-            }
-            onPress={() => void move(candidate.id)}
-          />
-        ))}
-      </BottomSheet>
-
       <BottomSheet
         visible={sheet === "details"}
         onDismiss={() => setSheet(null)}
@@ -516,12 +508,6 @@ export default function ItemDetails() {
               onPress: () => setSheet("category"),
             },
             {
-              icon: "folder",
-              label: t("item.folder"),
-              value: folder?.name ?? t("item.noFolder"),
-              onPress: () => setSheet("folder"),
-            },
-            {
               icon: "lock",
               label: t("item.access"),
               value: access,
@@ -628,12 +614,6 @@ export default function ItemDetails() {
             label: t("item.category"),
             value: t(`capture.category.${opened.category}`),
             onPress: () => setSheet("category"),
-          },
-          {
-            icon: "folder",
-            label: t("item.folder"),
-            value: folder?.name ?? t("item.noFolder"),
-            onPress: () => setSheet("folder"),
           },
           {
             icon: "lock",

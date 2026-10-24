@@ -9,9 +9,9 @@ import { OtpInput, OTP_LENGTH } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { OtherOptions } from "@/features/other-options";
 import { classifyCodeError } from "@/lib/errors";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
 
 /**
  * TOTP step for accounts with an authenticator app (the web's /login/totp):
@@ -21,7 +21,6 @@ import { useSession } from "@/providers/session-provider";
 export default function LoginTotp() {
   const router = useRouter();
   const { t } = useI18n();
-  const { signOut } = useSession();
   const submitCode = useMutation(api.totp.submitTotpForSession);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -68,12 +67,15 @@ export default function LoginTotp() {
         loading={busy}
         onPress={() => submit()}
       />
-      <Button
-        variant="text"
-        label={t("totp.lost")}
-        onPress={() => router.push("/totp-recovery")}
+      <OtherOptions
+        options={[
+          {
+            icon: "lifebuoy",
+            title: t("totp.lost"),
+            onPress: () => router.push("/totp-recovery"),
+          },
+        ]}
       />
-      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

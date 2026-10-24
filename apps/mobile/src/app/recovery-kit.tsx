@@ -9,8 +9,8 @@ import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { useRestorableBackup } from "@/features/cloud-backup";
 import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
+import { OtherOptions } from "@/features/other-options";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
 
 /**
  * This phone holds no vault key for an account that has a vault (signed in
@@ -20,7 +20,6 @@ import { useSession } from "@/providers/session-provider";
 export default function RecoveryKitEntry() {
   const router = useRouter();
   const { t } = useI18n();
-  const { signOut } = useSession();
   const kitOpen = useKitOpen();
   const cloud = useRestorableBackup();
   const [words, setWords] = useState(takeRememberedKit);
@@ -79,12 +78,16 @@ export default function RecoveryKitEntry() {
         disabled={!isFullKit(words)}
         onPress={open}
       />
-      <Button
-        variant="secondary"
-        label={t("recoveryKit.contactsCta")}
-        onPress={() => router.push("/contact-recovery")}
+      <OtherOptions
+        options={[
+          {
+            icon: "people",
+            title: t("recoveryKit.contactsCta"),
+            description: t("lostAccess.contactsBody"),
+            onPress: () => router.push("/contact-recovery"),
+          },
+        ]}
       />
-      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

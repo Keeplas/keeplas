@@ -7,9 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getLocales } from "expo-localization";
 
 import {
-  DEFAULT_LANGUAGE,
+  deviceLanguage,
   resolveLanguage,
   translate,
   type Language,
@@ -26,9 +27,11 @@ interface I18nValue {
 
 const I18nContext = createContext<I18nValue | null>(null);
 
-/** English by default, including first launch; French saved on the device (D12). */
+/** Follows the phone language until a choice is saved on the device (D12). */
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(DEFAULT_LANGUAGE);
+  const [language, setLanguageState] = useState<Language>(() =>
+    deviceLanguage(getLocales().map((locale) => locale.languageTag)),
+  );
 
   useEffect(() => {
     readPreference("language").then((stored) => {

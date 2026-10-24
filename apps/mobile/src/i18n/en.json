@@ -24,10 +24,11 @@
   "languageSoon": "{name} (coming soon)",
   "nav": {
     "home": "Home",
-    "search": "Search",
+    "vault": "Vault",
     "people": "People",
     "settings": "Settings",
-    "add": "Add"
+    "add": "Add",
+    "search": "Search"
   },
   "welcome": {
     "title": "Your life,\nwell kept",
@@ -156,7 +157,12 @@
     "body": "Your face, fingerprint or phone PIN signs you in and unlocks your vault.",
     "cta": "Continue with passkey",
     "lost": "Lost access?",
+    "lostBody": "Your backup, your 24 words or your trusted contacts",
     "failed": "We couldn't unlock your vault. Try again."
+  },
+  "otherOptions": {
+    "title": "Other options",
+    "signOutBody": "Forgets this phone. You'll sign in again with your number."
   },
   "recoveryKit": {
     "title": "Open your vault with your kit",
@@ -375,7 +381,6 @@
     "items": "{count} items",
     "item": "1 item",
     "inbox": "Encrypted inbox",
-    "inboxBody": "Items to sort will show up here",
     "recent": "Recent items",
     "outbox": {
       "waiting": "Waiting to upload",
@@ -384,8 +389,6 @@
       "quota": "Storage full"
     },
     "updated": "Updated {when}",
-    "toOrganize": "{count} items to organize",
-    "toOrganizeOne": "1 item to organize",
     "itemWord": "item",
     "itemsWord": "items",
     "addName": "What should we call you?",
@@ -420,10 +423,8 @@
     "storageUsed": "{used} of {total} used",
     "storageLeft": "{plan} · {left} left",
     "account": "Account",
-    "plan": "Plan",
     "planFree": "Free",
     "planLifetime": "Lifetime",
-    "planQuota": "{quota} of storage",
     "privacy": "Privacy and security",
     "privacyBody": "Passkey, PIN, recovery kit",
     "lifeCheck": "Life check",
@@ -737,11 +738,7 @@
     "iconAutoBody": "Chosen from what you add",
     "iconSearch": "Search icons",
     "iconNone": "No icon matches this search.",
-    "folderLabel": "Folder",
-    "noFolder": "No folder",
     "folderShared": "{name} · shared with {people}",
-    "folderKeyTitle": "Couldn't share with this folder",
-    "folderKeyBody": "Keeplas couldn't verify {name}'s encryption key, so the item wasn't saved. Check your connection and try again, or choose No folder and move it later.",
     "reset": "Reset",
     "resetTitle": "Start this recording over?",
     "resetBody": "Your {time} recording will be deleted from this phone and you can record again. This cannot be undone.",
@@ -786,7 +783,10 @@
     "modeAuto": "Auto",
     "modeManual": "Manual",
     "autoUnavailableTitle": "Automatic scan unavailable",
-    "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead."
+    "autoUnavailableBody": "This phone cannot open the automatic document scanner. Take each page with the camera instead.",
+    "allContacts": "All trusted contacts",
+    "contactKeyTitle": "Couldn't share with {name}",
+    "contactKeyBody": "Keeplas couldn't verify {name}'s security code, so the item wasn't saved. Check it in People, then try again."
   },
   "permissions": {
     "cameraTitle": "Camera access is off",
@@ -801,7 +801,6 @@
     "decrypting": "Opening item…",
     "category": "Category",
     "folder": "Folder",
-    "noFolder": "No folder",
     "share": "Share",
     "opening": "Decrypting on this phone…",
     "play": "Play",
@@ -867,7 +866,7 @@
     "byYou": "You",
     "byKeeplas": "Keeplas",
     "shareTitle": "Who can see it",
-    "shareBody": "Choose the trusted contacts who can open this item. Keeplas encrypts it for each of them on this phone.",
+    "shareBody": "Choose the trusted contacts who can open this item, or none to keep it for all of them. Keeplas encrypts it for each of them on this phone.",
     "throughFolder": "Through the folder {name}",
     "shareNobody": "No trusted contact has joined Keeplas yet. Invite someone first.",
     "addTrustedPerson": "Add a trusted person",
@@ -898,6 +897,10 @@
     "name": "Name",
     "email": "Email (optional)",
     "phone": "Phone number",
+    "fromContacts": "Choose from my contacts",
+    "orManual": "or enter manually",
+    "whichNumber": "Which number?",
+    "contactsDenied": "Keeplas can't read your contacts. Allow it in Settings, or enter their details below.",
     "sendInvite": "Send invitation",
     "status": {
       "pending": "Invited",
@@ -927,7 +930,13 @@
     "permissions": "Permissions summary",
     "permRecovery": "Can help you recover access and confirm a death.",
     "permReceive": "Receives only the folders you share with them, after you're gone.",
-    "permNoFiles": "Cannot read anything you don't share with them."
+    "permNoFiles": "Cannot read anything you don't share with them.",
+    "editTitle": "Edit contact",
+    "editReinvite": "Changing their email or phone number sends them a new invitation.",
+    "save": "Save",
+    "saved": "Contact updated.",
+    "saveFailed": "Your changes couldn't be saved. Check your connection and try again.",
+    "notFound": "This contact no longer exists."
   },
   "folders": {
     "title": "Folder",
@@ -1144,6 +1153,7 @@
       "folder_access_granted": "Folder shared",
       "folder_access_revoked": "Folder access revoked",
       "trusted_contact_invited": "Contact invited",
+      "trusted_contact_updated": "Contact updated",
       "trusted_contact_accepted": "Contact joined",
       "trusted_contact_revoked": "Contact removed",
       "recovery_request_started": "Recovery requested",

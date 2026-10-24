@@ -649,12 +649,28 @@ export const updateItem = auditedMutation({
 });
 
 /**
- * Owner items that have at least one deferred (`pendingRecipients`) contact
- * whose encryption key is now published. Drives the client-side re-wrap
- * backfill (useBackfillPendingShares): for each item it returns the
- * `ownerWrappedDek` (so the client can unwrap the DEK) plus the key material of
- * every pending contact ready to receive a wrap. The actual unwrap/verify/wrap
- * happens on the owner's device — the server stays zero-access.
+ * An item for every trusted contact ("default" recipients, not private) with
+ * its own DEK. Each of the owner's contacts is owed a wrap, including ones
+ * added after the item was saved. Legacy items open with the master key
+ * itself and are never wrapped to anyone.
+ */
+function sharedWithEveryone(item: Doc<"vault_items">): boolean {
+  return (
+    item.accessLevel !== "private" &&
+    (item.recipientMode ?? "default") === "default" &&
+    item.ownerWrappedDek !== undefined
+  );
+}
+
+/**
+ * Owner items with a contact owed a wrap whose encryption key is now
+ * published: a deferred (`pendingRecipients`) contact, or, on an item shared
+ * with everyone, any contact without a wrap yet (e.g. added later). Drives
+ * the client-side re-wrap backfill (useBackfillPendingShares): for each item
+ * it returns the `ownerWrappedDek` (so the client can unwrap the DEK) plus
+ * the key material of every contact ready to receive a wrap. The actual
+ * unwrap/verify/wrap happens on the owner's device — the server stays
+ * zero-access.
  */
 export const getItemsNeedingRewrap = query({
   args: {},
@@ -667,52 +683,68 @@ export const getItemsNeedingRewrap = query({
       .filter((q) => q.neq(q.field("status"), "archived"))
       .collect();
 
+    // Only contacts that have fully published their key material can be
+    // wrapped to; the rest wait until they do.
+    const ready = (
+      await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect()
+    ).filter(
+      (c) =>
+        c.invitationStatus !== "revoked" &&
+        c.contactPublicKey &&
+        c.contactIdentityPublicKey &&
+        c.contactPublicKeySignature,
+    );
+    if (ready.length === 0) return [];
+
+    // Items each ready contact already holds a wrap for (a handful of
+    // contacts, so one indexed read each).
+    const wrapped = new Map<Id<"trusted_contacts">, Set<Id<"vault_items">>>();
+    for (const contact of ready) {
+      const keys = await ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_contact", (q) => q.eq("contactId", contact._id))
+        .collect();
+      wrapped.set(contact._id, new Set(keys.map((k) => k.itemId)));
+    }
+
     const result = [];
     for (const item of items) {
-      const pending = item.pendingRecipients ?? [];
-      // No deferred recipients, or no owner envelope to unwrap the DEK from.
-      if (pending.length === 0 || !item.ownerWrappedDek) continue;
-
-      const readyContacts = [];
-      for (const contactId of pending) {
-        const c = await ctx.db.get(contactId);
-        if (!c || c.invitationStatus === "revoked") continue;
-        // Only contacts that have fully published their key material can be
-        // re-wrapped; the rest stay pending until they do.
-        if (
-          c.contactPublicKey &&
-          c.contactIdentityPublicKey &&
-          c.contactPublicKeySignature
-        ) {
-          readyContacts.push({
-            _id: c._id,
-            name: c.name,
-            contactPublicKey: c.contactPublicKey,
-            contactIdentityPublicKey: c.contactIdentityPublicKey,
-            contactPublicKeySignature: c.contactPublicKeySignature,
-            pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
-          });
-        }
-      }
-
-      if (readyContacts.length > 0) {
-        result.push({
-          itemId: item._id,
-          ownerWrappedDek: item.ownerWrappedDek,
-          encryptionType: item.encryptionType,
-          readyContacts,
-        });
-      }
+      if (!item.ownerWrappedDek) continue;
+      const pending = new Set(item.pendingRecipients ?? []);
+      const everyone = sharedWithEveryone(item);
+      const owed = ready.filter(
+        (c) =>
+          pending.has(c._id) ||
+          (everyone && !wrapped.get(c._id)?.has(item._id)),
+      );
+      if (owed.length === 0) continue;
+      result.push({
+        itemId: item._id,
+        ownerWrappedDek: item.ownerWrappedDek,
+        encryptionType: item.encryptionType,
+        readyContacts: owed.map((c) => ({
+          _id: c._id,
+          name: c.name,
+          contactPublicKey: c.contactPublicKey!,
+          contactIdentityPublicKey: c.contactIdentityPublicKey!,
+          contactPublicKeySignature: c.contactPublicKeySignature!,
+          pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
+        })),
+      });
     }
     return result;
   },
 });
 
 /**
- * Add wrapped DEKs for contacts that were deferred at save time (their key
- * wasn't published yet — see `pendingRecipients`). Insert-only and idempotent:
- * unlike `updateItem`, existing recipient-key rows are left untouched, and a
- * contact is only backfilled if it is genuinely pending on this item (so this
+ * Add wrapped DEKs for contacts owed one: deferred at save time (their key
+ * wasn't published yet — see `pendingRecipients`), or added after an item
+ * shared with everyone was saved. Insert-only and idempotent: unlike
+ * `updateItem`, existing recipient-key rows are left untouched, and a contact
+ * is only backfilled if it is genuinely owed a wrap on this item (so this
  * mutation can't be used to smuggle in an arbitrary recipient). Each contact
  * successfully added is removed from `pendingRecipients`. Owner-only.
  */
@@ -731,33 +763,41 @@ export const addRecipientKeys = auditedMutation({
     if (args.recipientKeys.length === 0) return;
 
     const pending = new Set(item.pendingRecipients ?? []);
+    const everyone = sharedWithEveryone(item);
     const now = Date.now();
     const added = new Set<Id<"trusted_contacts">>();
 
     for (const rk of args.recipientKeys) {
-      // Only backfill a contact that was actually deferred on this item.
-      if (!pending.has(rk.contactId)) continue;
+      // Only a contact owed a wrap: deferred on this item, or any of the
+      // owner's live contacts when the item is shared with everyone.
+      if (!pending.has(rk.contactId)) {
+        if (!everyone) continue;
+        const contact = await ctx.db.get(rk.contactId);
+        if (
+          !contact ||
+          contact.userId !== userId ||
+          contact.invitationStatus === "revoked"
+        )
+          continue;
+      }
       const existing = await ctx.db
         .query("vault_item_recipient_keys")
         .withIndex("by_item_contact", (q) =>
           q.eq("itemId", args.itemId).eq("contactId", rk.contactId),
         )
         .first();
-      if (existing) {
-        // Already wrapped — just clear it from pending below.
-        added.add(rk.contactId);
-        continue;
+      if (!existing) {
+        await ctx.db.insert("vault_item_recipient_keys", {
+          itemId: args.itemId,
+          contactId: rk.contactId,
+          wrappedDek: rk.wrappedDek,
+          createdAt: now,
+        });
       }
-      await ctx.db.insert("vault_item_recipient_keys", {
-        itemId: args.itemId,
-        contactId: rk.contactId,
-        wrappedDek: rk.wrappedDek,
-        createdAt: now,
-      });
       added.add(rk.contactId);
     }
 
-    if (added.size > 0) {
+    if ([...added].some((cid) => pending.has(cid))) {
       await ctx.db.patch(args.itemId, {
         pendingRecipients: [...pending].filter((cid) => !added.has(cid)),
         updatedAt: now,

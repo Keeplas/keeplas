@@ -75,6 +75,11 @@ async function seedPendingItem(
   userId: Id<"users">,
   vaultId: Id<"vaults">,
   pending: Id<"trusted_contacts">[],
+  sharing: {
+    accessLevel?: "private" | "trusted_only";
+    recipientMode?: "default" | "explicit";
+    ownerWrappedDek?: string;
+  } = { recipientMode: "explicit" },
 ): Promise<Id<"vault_items">> {
   const now = Date.now();
   return await t.run((ctx) =>
@@ -89,6 +94,7 @@ async function seedPendingItem(
       pendingRecipients: pending,
       ownerWrappedDek: OWNER_WRAP,
       accessLevel: "trusted_only",
+      ...sharing,
       status: "active",
       createdAt: now,
       updatedAt: now,
@@ -223,5 +229,128 @@ describe("deferred shares re-wrap", () => {
         _audit: await signedAudit(),
       }),
     ).rejects.toThrow("Item not found");
+  });
+});
+
+// Items shared with every trusted contact (recipientMode "default") are owed
+// a wrap for contacts added after they were saved, not just deferred ones.
+describe("shared-with-everyone re-wrap", () => {
+  const EVERYONE = {
+    accessLevel: "trusted_only",
+    recipientMode: "default",
+  } as const;
+
+  async function wrapsOf(t: TestConvex, itemId: Id<"vault_items">) {
+    return await t.run((ctx) =>
+      ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_item", (q) => q.eq("itemId", itemId))
+        .collect(),
+    );
+  }
+
+  it("surfaces a contact added after the item was saved", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const itemId = await seedPendingItem(t, userId, vaultId, [], EVERYONE);
+    const later = await seedContact(t, userId, true);
+
+    const rows = await asUser(t, userId).query(
+      api.vault_items.getItemsNeedingRewrap,
+      {},
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].itemId).toBe(itemId);
+    expect(rows[0].readyContacts.map((c) => c._id)).toEqual([later]);
+  });
+
+  it("skips contacts that already hold a wrap", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const itemId = await seedPendingItem(t, userId, vaultId, [], EVERYONE);
+    const contactId = await seedContact(t, userId, true);
+    await t.run((ctx) =>
+      ctx.db.insert("vault_item_recipient_keys", {
+        itemId,
+        contactId,
+        wrappedDek: WRAPPED_DEK,
+        createdAt: Date.now(),
+      }),
+    );
+
+    const rows = await asUser(t, userId).query(
+      api.vault_items.getItemsNeedingRewrap,
+      {},
+    );
+
+    expect(rows).toHaveLength(0);
+  });
+
+  it("leaves private, explicit and legacy (no DEK) items alone", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    await seedPendingItem(t, userId, vaultId, [], {
+      accessLevel: "private",
+      recipientMode: "default",
+    });
+    await seedPendingItem(t, userId, vaultId, [], {
+      accessLevel: "trusted_only",
+      recipientMode: "explicit",
+    });
+    await seedPendingItem(t, userId, vaultId, [], {
+      ...EVERYONE,
+      ownerWrappedDek: undefined,
+    });
+    await seedContact(t, userId, true);
+
+    const rows = await asUser(t, userId).query(
+      api.vault_items.getItemsNeedingRewrap,
+      {},
+    );
+
+    expect(rows).toHaveLength(0);
+  });
+
+  it("addRecipientKeys accepts any of the owner's contacts on such an item", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const itemId = await seedPendingItem(t, userId, vaultId, [], EVERYONE);
+    const later = await seedContact(t, userId, true);
+    const before = await t.run((ctx) => ctx.db.get(itemId));
+
+    await asUser(t, userId).mutation(api.vault_items.addRecipientKeys, {
+      itemId,
+      recipientKeys: [{ contactId: later, wrappedDek: WRAPPED_DEK }],
+      _audit: await signedAudit(),
+    });
+
+    const keys = await wrapsOf(t, itemId);
+    expect(keys.map((k) => k.contactId)).toEqual([later]);
+    // A background re-wrap is not an edit: the item stays where it was in
+    // "recent" lists.
+    const after = await t.run((ctx) => ctx.db.get(itemId));
+    expect(after?.updatedAt).toBe(before?.updatedAt);
+  });
+
+  it("addRecipientKeys refuses someone else's contact", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const other = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const itemId = await seedPendingItem(t, userId, vaultId, [], EVERYONE);
+    const foreign = await seedContact(t, other, true);
+
+    await asUser(t, userId).mutation(api.vault_items.addRecipientKeys, {
+      itemId,
+      recipientKeys: [{ contactId: foreign, wrappedDek: WRAPPED_DEK }],
+      _audit: await signedAudit(),
+    });
+
+    expect(await wrapsOf(t, itemId)).toHaveLength(0);
   });
 });

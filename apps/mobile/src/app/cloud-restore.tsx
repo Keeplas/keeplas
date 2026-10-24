@@ -12,9 +12,9 @@ import {
   useCloudRestore,
   useRestorableBackup,
 } from "@/features/cloud-backup";
+import { OtherOptions } from "@/features/other-options";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
 import * as CloudKey from "../../modules/cloud-key";
 
 /**
@@ -27,7 +27,6 @@ import * as CloudKey from "../../modules/cloud-key";
 export default function CloudRestore() {
   const router = useRouter();
   const { t } = useI18n();
-  const { signOut } = useSession();
   const restorable = useRestorableBackup();
   const ensurePhoneProof = useEnsurePhoneProof();
   const restore = useCloudRestore();
@@ -76,12 +75,16 @@ export default function CloudRestore() {
         onPress={run}
       />
       <Note icon="whatsapp" text={t("cloudRestore.note")} />
-      <Button
-        variant="secondary"
-        label={t("cloudRestore.otherWays")}
-        onPress={() => router.push("/lost-access")}
+      <OtherOptions
+        options={[
+          {
+            icon: "lifebuoy",
+            title: t("cloudRestore.otherWays"),
+            description: t("unlock.lostBody"),
+            onPress: () => router.push("/lost-access"),
+          },
+        ]}
       />
-      <Button variant="text" label={t("settings.signOut")} onPress={signOut} />
     </Screen>
   );
 }

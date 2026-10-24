@@ -1,7 +1,11 @@
 import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { categoryValidator, accessLevelValidator } from "./validators";
+import {
+  categoryValidator,
+  accessLevelValidator,
+  contactRoleValidator,
+} from "./validators";
 import { planValidator } from "./lib/plans";
 
 export default defineSchema({
@@ -845,13 +849,7 @@ export default defineSchema({
     // inviteContact); a contact can be invited by either channel or both.
     email: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
-    role: v.union(
-      v.literal("family"),
-      v.literal("friend"),
-      v.literal("lawyer"),
-      v.literal("doctor"),
-      v.literal("other"),
-    ),
+    role: contactRoleValidator,
 
     // Legacy: contacts used to be "trust" or "recipient_only". Every contact
     // is now a trust contact; `migrations:migrateContactTypes` clears this
