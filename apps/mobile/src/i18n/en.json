@@ -1262,7 +1262,13 @@
     "cameraChip": "Camera",
     "historyNote": "The current version is kept in the history, with its files. Nothing is lost.",
     "failedTitle": "Changes not saved",
-    "failedBody": "Keeplas could not save your changes. Check your connection and try again."
+    "failedBody": "Keeplas could not save your changes. Check your connection and try again.",
+    "pending": "You have unsaved changes on this item.",
+    "resume": "Pick up the changes",
+    "discard": "Discard changes",
+    "discardTitle": "Discard the changes?",
+    "discardBody": "Your unsaved changes and added files will be removed from this phone. The item stays as it is saved.",
+    "resumed": "You are picking up unsaved changes."
   },
   "itemHistory": {
     "title": "History",

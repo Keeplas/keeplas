@@ -1246,7 +1246,13 @@
     "cameraChip": "Appareil photo",
     "historyNote": "La version actuelle est conservée dans l'historique, avec ses fichiers. Rien n'est perdu.",
     "failedTitle": "Modification non enregistrée",
-    "failedBody": "Keeplas n'a pas pu enregistrer vos changements. Vérifiez votre connexion et réessayez."
+    "failedBody": "Keeplas n'a pas pu enregistrer vos changements. Vérifiez votre connexion et réessayez.",
+    "pending": "Vous avez des modifications non enregistrées sur cet élément.",
+    "resume": "Reprendre les modifications",
+    "discard": "Annuler les modifications",
+    "discardTitle": "Annuler les modifications ?",
+    "discardBody": "Vos changements non enregistrés et les fichiers ajoutés seront retirés de ce téléphone. L'élément reste tel qu'il est enregistré.",
+    "resumed": "Vous reprenez des modifications non enregistrées."
   },
   "itemHistory": {
     "title": "Historique",

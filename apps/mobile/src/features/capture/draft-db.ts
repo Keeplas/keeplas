@@ -1,5 +1,6 @@
 import { Directory, File, Paths } from "expo-file-system";
 
+import type { FormDraftDb } from "@/lib/form-drafts";
 import { secureDb } from "@/lib/secure-db";
 import type { Draft, DraftDb, DraftFiles } from "./draft-store";
 
@@ -64,5 +65,35 @@ export const deviceDraftFiles: DraftFiles = {
   dropAll() {
     const dir = root();
     if (dir.exists) dir.delete();
+  },
+};
+
+export const sqliteFormDraftDb: FormDraftDb = {
+  async list(userId) {
+    const { rows } = await (
+      await secureDb()
+    ).execute("SELECT key, body FROM form_drafts WHERE user_id = ?", [userId]);
+    return rows.map((row) => ({
+      key: String(row.key),
+      value: JSON.parse(String(row.body)) as unknown,
+    }));
+  },
+  async put(userId, key, value) {
+    await (
+      await secureDb()
+    ).execute(
+      "INSERT OR REPLACE INTO form_drafts (key, user_id, updated_at, body) VALUES (?, ?, ?, ?)",
+      [key, userId, Date.now(), JSON.stringify(value)],
+    );
+  },
+  async remove(key) {
+    await (
+      await secureDb()
+    ).execute("DELETE FROM form_drafts WHERE key = ?", [key]);
+  },
+  async removeAll(userId) {
+    await (
+      await secureDb()
+    ).execute("DELETE FROM form_drafts WHERE user_id = ?", [userId]);
   },
 };
