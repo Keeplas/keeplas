@@ -277,11 +277,7 @@ function AddFileForm({
           folders={folders}
         />
       </div>
-      <AccessField
-        value={contactIds}
-        onChange={setContactIds}
-        folder={folders.find((folder) => folder.id === folderId)}
-      />
+      <AccessField value={contactIds} onChange={setContactIds} />
       <EncryptionNote>{t("encrypted")}</EncryptionNote>
 
       <div className="flex items-center gap-[12px]">

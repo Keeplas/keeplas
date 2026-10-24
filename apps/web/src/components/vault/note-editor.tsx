@@ -119,18 +119,9 @@ export function NoteEditor({
   const [removed, setRemoved] = useState<Id<"vault_item_files">[]>([]);
   const [error, setError] = useState("");
 
-  const folder = folders.find((candidate) => candidate.id === folderId);
-  const people = [
-    ...new Map([
-      ...(folder?.grants ?? []).map((grant) => [
-        grant.contactId,
-        grant.contactName,
-      ]),
-      ...contacts
-        .filter((contact) => contactIds.includes(contact._id))
-        .map((contact) => [contact._id, contact.name]),
-    ] as [string, string][]).values(),
-  ];
+  const people = contacts
+    .filter((contact) => contactIds.includes(contact._id))
+    .map((contact) => contact.name);
   const kept = saved.filter((file) => !removed.includes(file.id));
   const count = kept.length + added.length;
 
@@ -343,7 +334,6 @@ export function NoteEditor({
             <AccessField
               value={contactIds}
               onChange={setContactIds}
-              folder={folder}
               emptyLabel={welcome ? t("everyone") : undefined}
             />
           ) : (

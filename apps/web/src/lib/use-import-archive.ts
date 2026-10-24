@@ -54,7 +54,6 @@ export interface ImportResult {
 
 export interface ImportLabels {
   untitled: string;
-  folderSuffix: (name: string) => string;
 }
 
 export class NotKeeplasArchive extends Error {}
@@ -139,23 +138,18 @@ export function useImportArchive() {
       ]);
       if (!vault) throw new Error("No vault");
       const folderIds = new Map<string, Id<"folders">>();
-      const takenNames = new Set<string>();
+      // An archive folder is a custom category: reuse one of that name.
       for (const folder of folders) {
         const name = await decryptContent(folder.encryptedName).catch(() => "");
-        takenNames.add(name);
-        if (name && folder.grants.length === 0) folderIds.set(name, folder._id);
+        if (name) folderIds.set(name, folder._id);
       }
       async function folderFor(name: string): Promise<Id<"folders">> {
         const known = folderIds.get(name);
         if (known) return known;
-        const finalName = takenNames.has(name)
-          ? labels.folderSuffix(name)
-          : name;
         const id = (await createFolder({
-          encryptedName: await encryptContent(finalName),
+          encryptedName: await encryptContent(name),
         })) as Id<"folders">;
         folderIds.set(name, id);
-        takenNames.add(finalName);
         return id;
       }
 

@@ -824,7 +824,6 @@
       "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
       "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
       "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
-      "folderSuffix": "{name} (import)",
       "untitled": "Sans titre",
       "keepOpen": "Gardez cet onglet ouvert jusqu’à la fin."
     }
@@ -955,6 +954,12 @@
     }
   },
   "sharedWithMe": {
+    "title": "Partagé avec moi",
+    "subtitle": "Les coffres des personnes qui vous ont choisi comme contact de confiance.",
+    "empty": {
+      "title": "Rien n'a encore été partagé avec vous",
+      "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
+    },
     "list": {
       "title": "Coffres que vous protégez"
     },
@@ -1053,26 +1058,6 @@
       "open": "Ouvrir",
       "enlarge": "Agrandir",
       "close": "Fermer"
-    },
-    "folders": {
-      "title": "Partagé avec moi",
-      "subtitle": "Les documents partagés avec vous par des personnes qui vous font confiance.",
-      "sharedBy": "Partagé par {name}",
-      "permission": "Autorisation",
-      "view": "Consultation",
-      "name": "Nom",
-      "size": "Taille",
-      "updated": "Mis à jour",
-      "download": "Télécharger",
-      "locked": {
-        "title": "Accès après vérification",
-        "body": "{name}, de {owner}. Après 2 confirmations et un délai de grâce de 72 heures."
-      },
-      "empty": {
-        "title": "Rien n'a encore été partagé avec vous",
-        "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
-      },
-      "downloadFailed": "Impossible de télécharger ce fichier. Réessayez."
     }
   },
   "trustedContacts": {
@@ -2402,7 +2387,6 @@
       "body": "Choisissez les contacts de confiance qui pourront ouvrir cet élément. Il est chiffré pour chacun d'eux dans ce navigateur.",
       "nobody": "Aucun contact de confiance n'a encore rejoint Keeplas.",
       "addContact": "Inviter quelqu'un",
-      "throughFolder": "Via le dossier {name}",
       "saving": "Enregistrement…"
     },
     "history": {

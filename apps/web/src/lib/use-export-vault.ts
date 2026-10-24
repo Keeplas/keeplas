@@ -77,7 +77,6 @@ export function useExportVault() {
                   name: await decryptContent(folder.encryptedName).catch(
                     () => labels.noFolder,
                   ),
-                  people: folder.grants.map((grant) => grant.contactName),
                 },
               ] as const,
           ),
@@ -125,7 +124,6 @@ export function useExportVault() {
               .map((id) => contactName.get(id))
               .filter((name): name is string => Boolean(name)),
           );
-          for (const name of folder?.people ?? []) people.add(name);
           opened.push({
             id: raw._id,
             title,

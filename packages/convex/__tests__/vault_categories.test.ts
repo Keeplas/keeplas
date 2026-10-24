@@ -40,4 +40,25 @@ describe("vault categories", () => {
       }),
     );
   });
+
+  it("deletes only the owner's own category", async () => {
+    const t = makeT();
+    const owner = asUser(t, await seedUser(t));
+    const other = asUser(t, await seedUser(t));
+    const categoryId = await owner.mutation(api.vault_categories.create, {
+      encryptedName: SEALED,
+      _audit: await signedAudit(),
+    });
+    await expect(
+      other.mutation(api.vault_categories.remove, {
+        categoryId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Category not found");
+    await owner.mutation(api.vault_categories.remove, {
+      categoryId,
+      _audit: await signedAudit(),
+    });
+    expect(await owner.query(api.vault_categories.list, {})).toEqual([]);
+  });
 });

@@ -54,11 +54,7 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useSortedCategories, useCategoryLabel } from "@/lib/use-categories";
 import { useDecryptedFiles } from "@/lib/use-decrypted-files";
 import { useItemLabels } from "@/lib/use-item-labels";
-import {
-  sharingFields,
-  useItemSharing,
-  useMoveToFolder,
-} from "@/lib/use-item-sharing";
+import { sharingFields, useItemSharing } from "@/lib/use-item-sharing";
 import { summaryOf, useOpenedItem } from "@/lib/use-opened-item";
 import type { OpenedFile } from "@/lib/use-opened-files";
 import { useVaultCrypto } from "@/lib/use-vault-crypto";
@@ -89,7 +85,7 @@ export default function VaultItemPage() {
   const { decryptContent, decryptContentWithKey, encryptContentWithKey } =
     useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
-  const moveToFolder = useMoveToFolder();
+  const moveItem = useAuditedMutation(api.folders.moveItem);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   const unarchiveItem = useAuditedMutation(api.vault_items.unarchiveItem);
@@ -190,11 +186,6 @@ export default function VaultItemPage() {
   }
 
   const archived = raw.status === "archived";
-  const folder = folders?.find((candidate) => candidate.id === raw.folderId);
-  const grantees = (folder?.grants ?? []).map((grant) => ({
-    contactId: grant.contactId,
-    contactName: grant.contactName,
-  }));
   const recipients = labels.recipients(summary);
   const list: VaultListKey = bucketOf(summary);
   const access = labels.access(summary);
@@ -209,10 +200,7 @@ export default function VaultItemPage() {
     ) {
       return;
     }
-    const wraps = await wrap(
-      [...contactIds, ...grantees.map((grantee) => grantee.contactId)],
-      opened!.key,
-    );
+    const wraps = await wrap(contactIds, opened!.key);
     if (!wraps) throw new Error("Sharing cancelled");
     await updateItem({
       itemId,
@@ -580,10 +568,13 @@ export default function VaultItemPage() {
                     <DropdownMenuRadioGroup
                       value={raw.folderId ?? NO_FOLDER}
                       onValueChange={(value) =>
-                        void moveToFolder(
-                          raw,
-                          value === NO_FOLDER ? null : (value as Id<"folders">),
-                        ).catch(() =>
+                        void moveItem({
+                          itemId: raw._id,
+                          folderId:
+                            value === NO_FOLDER
+                              ? null
+                              : (value as Id<"folders">),
+                        }).catch(() =>
                           toast({
                             variant: "error",
                             title: t("details.moveFailed"),
@@ -625,8 +616,6 @@ export default function VaultItemPage() {
         open={sharing}
         onOpenChange={setSharing}
         initial={recipients}
-        inherited={grantees}
-        folderName={folder?.name ?? undefined}
         onSave={share}
       />
       <HistorySheet

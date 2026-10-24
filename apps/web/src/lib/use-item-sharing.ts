@@ -5,10 +5,8 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { toast } from "@keeplas/ui";
 import { useTranslations } from "./i18n";
 import { useMasterKey } from "./master-key-context";
-import { useAuditedMutation } from "./use-audited-mutation";
 import { useBlockedWrapAlert } from "./use-blocked-wrap-alert";
 import { useRecipientCrypto } from "./use-recipient-crypto";
-import { useVaultData } from "./vault-data";
 import { toWrapRecipient, type BlockedContact } from "./verify-contact-key";
 
 type ContactId = Id<"trusted_contacts">;
@@ -133,36 +131,4 @@ export function useItemSharing() {
   );
 
   return { wrap, announcePending };
-}
-
-/**
- * Move an item into a folder (or out with null): its DEK is wrapped to the
- * folder's grantees, whose access to the previous folder's items drops.
- * Returns false when the owner cancelled a blocked wrap.
- */
-export function useMoveToFolder() {
-  const { itemKey, folders } = useVaultData();
-  const { wrap } = useItemSharing();
-  const moveItem = useAuditedMutation(api.folders.moveItem);
-
-  return useCallback(
-    async (
-      item: { _id: Id<"vault_items">; ownerWrappedDek?: string },
-      folderId: Id<"folders"> | null,
-    ): Promise<boolean> => {
-      const grantees = (
-        folders?.find((folder) => folder.id === folderId)?.grants ?? []
-      ).map((grant) => grant.contactId);
-      const wraps =
-        grantees.length > 0 ? await wrap(grantees, await itemKey(item)) : null;
-      if (grantees.length > 0 && !wraps) return false;
-      await moveItem({
-        itemId: item._id,
-        folderId,
-        recipientKeys: wraps?.recipientKeys ?? [],
-      });
-      return true;
-    },
-    [folders, itemKey, wrap, moveItem],
-  );
 }

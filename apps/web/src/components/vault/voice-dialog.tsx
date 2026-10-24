@@ -245,11 +245,7 @@ function VoiceForm({
                 onChange={setFolderId}
                 folders={folders}
               />
-              <AccessField
-                value={contactIds}
-                onChange={setContactIds}
-                folder={folders.find((folder) => folder.id === folderId)}
-              />
+              <AccessField value={contactIds} onChange={setContactIds} />
             </div>
           </>
         )

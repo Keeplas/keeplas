@@ -45,8 +45,6 @@ export interface CaptureDraft {
   category?: VaultCategory;
   categoryId?: string;
   icon?: string;
-  /** Set when the capture starts from a folder screen. */
-  folderId?: string;
   /**
    * New items are for every trusted contact: the DEK is wrapped to each
    * verified key; contacts without a published key wait in `pending`.
@@ -105,7 +103,6 @@ export async function sealCapture(
       dek,
     ),
     encryptedContent: await encryptText(noteToHtml(draft.note), dek),
-    ...(draft.folderId && !draft.attachTo ? { folderId: draft.folderId } : {}),
     ...(draft.share && !draft.attachTo
       ? await shareFields(dek, draft.share)
       : {}),

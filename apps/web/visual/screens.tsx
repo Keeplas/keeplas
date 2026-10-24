@@ -3,10 +3,7 @@ import { DevicesView } from "@/app/(dashboard)/devices/devices-view";
 import { HubView, VaultEmptyMessage } from "@/app/(dashboard)/hub/hub-view";
 import { RecoveryCenterView } from "@/app/(dashboard)/settings/recovery/recovery-center-view";
 import { SettingsView } from "@/app/(dashboard)/settings/settings-view";
-import {
-  NothingSharedMessage,
-  SharedWithMeView,
-} from "@/app/(dashboard)/shared-with-me/shared-with-me-view";
+import { NothingSharedMessage } from "@/app/(dashboard)/shared-with-me/shared-vault-list";
 import { TravelModeOnMessage } from "@/app/(dashboard)/life-check/sections/travel-mode-on";
 import { NoContactsMessage } from "@/app/(dashboard)/trusted-contacts/no-contacts-message";
 import {
@@ -30,15 +27,7 @@ import {
   securingItem,
   videoPreview,
 } from "./item-screens";
-import {
-  devices,
-  hub,
-  noop,
-  recovery,
-  settings,
-  sharedFolders,
-  vaultList,
-} from "./fixtures";
+import { devices, hub, noop, recovery, settings, vaultList } from "./fixtures";
 
 export interface HarnessScreen {
   /** Route the shell sees (active sidebar item). */
@@ -72,12 +61,6 @@ export const SCREENS: Record<string, HarnessScreen> = {
   "W04-3": shell("/hub", () => <HubView {...hub} />),
   "W04-3b": shell("/hub", () => <HubView {...hub} addMenuOpen />),
   "W04-3-empty": shell("/hub", () => <HubView {...hub} recentItems={[]} />),
-  "W04-4": shell("/shared-with-me", () => (
-    <SharedWithMeView folders={sharedFolders} onDownload={noop} />
-  )),
-  "W04-4-empty": shell("/shared-with-me", () => (
-    <SharedWithMeView folders={[]} onDownload={noop} />
-  )),
   "W04-5": shell("/settings/recovery", () => (
     <RecoveryCenterView {...recovery} />
   )),

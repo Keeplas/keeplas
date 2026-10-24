@@ -58,7 +58,7 @@ export default function CategoryDetails() {
           <>
             <Text variant="h1">{name}</Text>
             <Text color="text.muted">
-              {t("folders.items", { n: categoryItems.length })}
+              {t("categories.items", { n: categoryItems.length })}
             </Text>
             <Button
               label={t("vaultList.addItem")}

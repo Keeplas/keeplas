@@ -11,7 +11,11 @@ import {
 } from "@keeplas/export";
 
 import { encryptText } from "@/crypto/envelope";
-import { fileKindOf, type VaultCategory } from "@/crypto/item-meta";
+import {
+  CUSTOM_FALLBACK,
+  fileKindOf,
+  type VaultCategory,
+} from "@/crypto/item-meta";
 import type { CaptureFile } from "@/features/capture/seal";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { useVaultData } from "@/features/vault/vault-data";
@@ -69,9 +73,9 @@ function noteWithLinks(item: ImportItem, label: string): string {
 export function useImportArchive() {
   const { t } = useI18n();
   const { capture } = useOutbox();
-  const { folders } = useVaultData();
+  const { categories } = useVaultData();
   const { masterKey } = useVault();
-  const createFolder = useAuditedMutation(api.folders.create);
+  const createCategory = useAuditedMutation(api.vault_categories.create);
 
   return useCallback(
     async (
@@ -99,26 +103,18 @@ export function useImportArchive() {
           throw new NotKeeplasArchive();
         }
 
-        const folderIds = new Map<string, string>();
-        for (const folder of folders ?? []) {
-          if (folder.name && folder.grants.length === 0) {
-            folderIds.set(folder.name, folder.id);
-          }
+        // An archive folder is a user-made category: reuse one of that name.
+        const categoryIds = new Map<string, string>();
+        for (const category of categories ?? []) {
+          if (category.name) categoryIds.set(category.name, category.id);
         }
-        const takenNames = new Set(
-          (folders ?? []).map((folder) => folder.name ?? ""),
-        );
-        async function folderFor(name: string): Promise<string> {
-          const known = folderIds.get(name);
+        async function categoryFor(name: string): Promise<string> {
+          const known = categoryIds.get(name);
           if (known) return known;
-          const finalName = takenNames.has(name)
-            ? t("importArchive.folderSuffix", { name })
-            : name;
-          const id = (await createFolder({
-            encryptedName: await encryptText(finalName, masterKey!),
-          })) as string;
-          folderIds.set(name, id);
-          takenNames.add(finalName);
+          const id = await createCategory({
+            encryptedName: await encryptText(name, masterKey!),
+          });
+          categoryIds.set(name, id);
           return id;
         }
 
@@ -155,9 +151,17 @@ export function useImportArchive() {
             await capture({
               title: item.title || t("capture.untitled"),
               note: noteWithLinks(item, t("importArchive.links")),
-              category: isCategory(item.category) ? item.category : "other",
+              ...(item.folder
+                ? {
+                    category: CUSTOM_FALLBACK,
+                    categoryId: await categoryFor(item.folder),
+                  }
+                : {
+                    category: isCategory(item.category)
+                      ? item.category
+                      : "other",
+                  }),
               files: extracted,
-              folderId: item.folder ? await folderFor(item.folder) : undefined,
             });
           } finally {
             for (const file of extracted) {
@@ -173,6 +177,6 @@ export function useImportArchive() {
         if (work.exists) work.delete();
       }
     },
-    [capture, folders, masterKey, createFolder, t],
+    [capture, categories, masterKey, createCategory, t],
   );
 }

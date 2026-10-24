@@ -143,41 +143,24 @@ export function peopleSummary(
   });
 }
 
-/**
- * "Who can see it": a select-like box that opens the contact checklist.
- * The folder's grantees can always see it (shown, locked).
- */
+/** "Who can see it": a select-like box that opens the contact checklist. */
 export function AccessField({
   value,
   onChange,
-  folder,
   emptyLabel,
   className,
 }: {
   value: ContactId[];
   onChange: (contacts: ContactId[]) => void;
-  /** The chosen folder: its grantees can see the item too. */
-  folder: FolderSummary | undefined;
   /** What nobody picked means, when not "Only you" (welcome message). */
   emptyLabel?: string;
   className?: string;
 }) {
   const t = useTranslations("vaultItem.form");
   const contacts = useShareableContacts();
-  const inherited = (folder?.grants ?? []).map((grant) => ({
-    contactId: grant.contactId,
-    contactName: grant.contactName,
-  }));
-  const names = [
-    ...inherited.map((grantee) => grantee.contactName),
-    ...contacts
-      .filter((contact) => value.includes(contact._id))
-      .filter(
-        (contact) =>
-          !inherited.some((grantee) => grantee.contactId === contact._id),
-      )
-      .map((contact) => contact.name),
-  ];
+  const names = contacts
+    .filter((contact) => value.includes(contact._id))
+    .map((contact) => contact.name);
   return (
     <Field label={t("whoCanSee")} className={className}>
       {(id) => (
@@ -200,12 +183,7 @@ export function AccessField({
             align="start"
             className="w-[var(--radix-popover-trigger-width)] min-w-[280px] rounded-md border border-border-default bg-bg-surface p-[8px] shadow-menu"
           >
-            <ContactChecklist
-              selected={value}
-              onChange={onChange}
-              inherited={inherited}
-              folderName={folder?.name ?? undefined}
-            />
+            <ContactChecklist selected={value} onChange={onChange} />
           </PopoverContent>
         </Popover>
       )}

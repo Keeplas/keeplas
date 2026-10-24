@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { query } from "./_generated/server";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireFullAuth } from "./helpers";
@@ -34,4 +34,23 @@ export const create = auditedMutation({
     });
   },
   getResourceId: (_args, categoryId) => categoryId,
+});
+
+/**
+ * Delete a category. Its items keep their sealed metadata; the apps show an
+ * item whose category no longer exists in the Inbox.
+ */
+export const remove = auditedMutation({
+  action: "vault_category.deleted",
+  resourceType: "vault_category",
+  args: { categoryId: v.id("vault_categories") },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const category = await ctx.db.get(args.categoryId);
+    if (!category || category.userId !== userId) {
+      throw new ConvexError("Category not found");
+    }
+    await ctx.db.delete(args.categoryId);
+  },
+  getResourceId: (args) => args.categoryId,
 });

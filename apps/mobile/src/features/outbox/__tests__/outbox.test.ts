@@ -184,7 +184,6 @@ describe("capture sealing + outbox upload", () => {
         title: "Family plan",
         note: "",
         files: [],
-        folderId: "folder1",
         share: {
           recipients: [
             {
@@ -215,7 +214,6 @@ describe("capture sealing + outbox upload", () => {
 
     const [args] = server.created;
     expect(args).toMatchObject({
-      folderId: "folder1",
       accessLevel: "trusted_only",
       recipientMode: "default",
       pendingRecipients: ["lea"],
@@ -332,10 +330,9 @@ describe("capture sealing + outbox upload", () => {
     expect(server.created[0].captureHandoffId).toBe("handoff1");
   });
 
-  it("adds no folder or extra keys when none is chosen", async () => {
+  it("adds no extra keys when nobody is chosen", async () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);
-    expect(entry.item.folderId).toBeUndefined();
     expect(entry.item.accessLevel).toBeUndefined();
     expect(entry.item.recipientKeys).toBeUndefined();
     expect(entry.item.captureHandoffId).toBeUndefined();

@@ -239,7 +239,7 @@ const policy = new File(
   { type: "application/pdf" },
 );
 const FOLDERS = [
-  { id: "family" as Id<"folders">, name: "Family", itemCount: 4, grants: [] },
+  { id: "family" as Id<"folders">, name: "Family", itemCount: 4 },
 ];
 
 export const addDocument = () => (
@@ -355,7 +355,7 @@ export const recordVoice = () => (
                 onChange={noop}
                 folders={FOLDERS}
               />
-              <AccessField value={[]} onChange={noop} folder={FOLDERS[0]} />
+              <AccessField value={[]} onChange={noop} />
             </div>
           </>
         }

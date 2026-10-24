@@ -28,7 +28,6 @@ export interface SealedItem {
   encryptedMeta: string;
   encryptedContent: string;
   ownerWrappedDek: string;
-  folderId?: string;
   /** "trusted_only" when shared with every trusted contact; else private. */
   accessLevel?: "private" | "trusted_only";
   recipientKeys?: { contactId: string; wrappedDek: string }[];

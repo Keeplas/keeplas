@@ -28,7 +28,6 @@ export default function ImportPage() {
         file,
         {
           untitled: t("untitled"),
-          folderSuffix: (name) => t("folderSuffix", { name }),
         },
         (progress) => setPhase({ kind: "running", progress }),
       );

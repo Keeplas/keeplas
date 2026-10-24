@@ -19,17 +19,12 @@ import { useRecipientCrypto } from "./use-recipient-crypto";
 import { useVaultCrypto } from "./use-vault-crypto";
 import type { VaultItemSummary } from "./vault-list";
 
+/** A custom category (stored as a folder). */
 export interface FolderSummary {
   id: Id<"folders">;
   /** null when the name cannot be decrypted in this browser. */
   name: string | null;
   itemCount: number;
-  grants: {
-    grantId: Id<"folder_grants">;
-    contactId: Id<"trusted_contacts">;
-    contactName: string;
-    timing: "now" | "after_verification";
-  }[];
 }
 
 type ItemDoc = FunctionReturnType<
@@ -186,7 +181,6 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
         id: folder._id,
         name: await decryptContent(folder.encryptedName).catch(() => null),
         itemCount: folder.itemCount,
-        grants: folder.grants,
       })),
     ).then((out) => alive && setFolders(out));
     return () => {

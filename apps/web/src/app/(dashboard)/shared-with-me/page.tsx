@@ -1,16 +1,12 @@
-import { Loader } from "@keeplas/ui";
+import { ShellPage } from "@/components/shell/shell-page";
+import { useTranslations } from "@/lib/i18n";
 import { SharedVaultList } from "./shared-vault-list";
-import { SharedWithMeView } from "./shared-with-me-view";
-import { useSharedFolders } from "./use-shared-folders";
 
 export default function SharedWithMePage() {
-  const { folders, download } = useSharedFolders();
-  if (!folders) return <Loader />;
+  const t = useTranslations("sharedWithMe");
   return (
-    <SharedWithMeView
-      folders={folders}
-      onDownload={(folderId, fileId) => void download(folderId, fileId)}
-      footer={<SharedVaultList />}
-    />
+    <ShellPage title={t("title")} subtitle={t("subtitle")}>
+      <SharedVaultList />
+    </ShellPage>
   );
 }

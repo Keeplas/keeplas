@@ -47,16 +47,7 @@ export function useItemLabels() {
     const folderOf = (item: VaultItemSummary) =>
       folders?.find((folder) => folder.id === item.folderId);
 
-    function people(item: VaultItemSummary): AccessPeople {
-      return {
-        contactNames,
-        groupMembers,
-        allContacts,
-        folderGrantees: (folderOf(item)?.grants ?? []).map(
-          (grant) => grant.contactId,
-        ),
-      };
-    }
+    const people: AccessPeople = { contactNames, groupMembers, allContacts };
 
     return {
       /** Contacts, groups and folders loaded: access labels are final. */
@@ -116,19 +107,15 @@ export function useItemLabels() {
       },
 
       /**
-       * Who the item itself is shared with (one by one, by group, or every
-       * trusted contact), without its folder's grantees: what the sharing
-       * pickers start from.
+       * Who the item is shared with (one by one, by group, or every trusted
+       * contact): what the sharing pickers start from.
        */
       recipients(item: VaultItemSummary): Id<"trusted_contacts">[] {
-        return sharedWith(item.sharing, {
-          ...people(item),
-          folderGrantees: [],
-        });
+        return sharedWith(item.sharing, people);
       },
 
       access(item: VaultItemSummary): ItemAccess {
-        const contactIds = sharedWith(item.sharing, people(item));
+        const contactIds = sharedWith(item.sharing, people);
         if (contactIds.length === 0) {
           return { icon: "lock", label: t("access.onlyYou"), contactIds };
         }

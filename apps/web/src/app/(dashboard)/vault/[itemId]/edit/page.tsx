@@ -18,11 +18,7 @@ import { useParams, useRouter } from "@/lib/navigation";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useItemLabels } from "@/lib/use-item-labels";
-import {
-  sharingFields,
-  useItemSharing,
-  useMoveToFolder,
-} from "@/lib/use-item-sharing";
+import { sharingFields, useItemSharing } from "@/lib/use-item-sharing";
 import {
   summaryOf,
   useOpenedItem,
@@ -85,15 +81,15 @@ function EditItem({
   const contacts = useQuery(api.trusted_contacts.getContacts);
   const { encryptContentWithKey } = useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
-  const moveToFolder = useMoveToFolder();
+  const moveItem = useAuditedMutation(api.folders.moveItem);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const { enqueueAttachments } = useUploadQueue();
   const voice = useVoiceAttach();
   // "Scan with phone": the scan is saved as its own item (W06-7).
   const capture = useVaultCapture();
   const [saving, setSaving] = useState(false);
-  // Who it is shared with when the form opened (also through v1 groups),
-  // folder grantees aside: sharing is rewritten only if the owner changes it.
+  // Who it is shared with when the form opened (also through v1 groups):
+  // sharing is rewritten only if the owner changes it.
   const [recipients] = useState(() => labels.recipients(summary));
 
   const saved = useMemo<SavedAttachment[]>(
@@ -119,26 +115,21 @@ function EditItem({
     try {
       const key = opened.key;
       const folderChanged = values.folderId !== initialFolder;
-      if (folderChanged && !(await moveToFolder(raw, values.folderId))) return;
+      if (folderChanged) {
+        await moveItem({ itemId: raw._id, folderId: values.folderId });
+      }
 
       // Sharing is rewritten only when it changed: v1 group and "every
-      // trusted contact" shares stay as they are otherwise. A folder move
-      // alone is done: moveItem wraps the key to the new folder's grantees.
+      // trusted contact" shares stay as they are otherwise.
       let sharing: Partial<Parameters<typeof updateItem>[0]> = {};
       if (!sameIds(values.contactIds, recipients)) {
-        const grantees = (
-          folders?.find((folder) => folder.id === values.folderId)?.grants ?? []
-        ).map((grant) => grant.contactId);
         const everyone = welcome && values.contactIds.length === 0;
         const wraps = opened.legacy
           ? null
           : await wrap(
-              [
-                ...(everyone
-                  ? (contacts ?? []).map((contact) => contact._id)
-                  : values.contactIds),
-                ...grantees,
-              ],
+              everyone
+                ? (contacts ?? []).map((contact) => contact._id)
+                : values.contactIds,
               key,
             );
         if (!opened.legacy && !wraps) return;

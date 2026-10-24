@@ -26,11 +26,16 @@ import {
   type OwnerKeys,
 } from "@/crypto/owner-keys";
 import { isIconName, type IconName } from "@/components/icon";
-import { contentKind, type ContentKind } from "@/features/home/vault-groups";
+import {
+  contentKind,
+  shownFiling,
+  type ContentKind,
+} from "@/features/home/vault-groups";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import type { OutboxEntry } from "@/features/outbox/outbox";
 import { useViewer } from "@/providers/session-provider";
 import { useVault } from "@/providers/vault-provider";
+import { useAdoptFolders } from "./adopt-folders";
 import { loadItemSummaries, saveItemSummaries } from "./summary-cache";
 
 export interface VaultItemSummary {
@@ -49,18 +54,6 @@ export interface VaultItemSummary {
   updatedAt: number;
 }
 
-export interface FolderSummary {
-  id: Id<"folders">;
-  name: string | null;
-  itemCount: number;
-  grants: {
-    grantId: Id<"folder_grants">;
-    contactId: Id<"trusted_contacts">;
-    contactName: string;
-    timing: "now" | "after_verification";
-  }[];
-}
-
 export interface CategorySummary {
   id: Id<"vault_categories">;
   name: string | null;
@@ -73,7 +66,6 @@ export interface PendingSummary {
 
 interface VaultDataValue {
   items: VaultItemSummary[] | undefined;
-  folders: FolderSummary[] | undefined;
   /** User-made categories (the built-in ones are fixed). */
   categories: CategorySummary[] | undefined;
   /** Captures still on this phone (outbox), newest first. */
@@ -101,7 +93,6 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const { masterKey } = useVault();
   const { entries } = useOutbox();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
-  const rawFolders = useQuery(api.folders.list);
   const rawCategories = useQuery(api.vault_categories.list);
   const cache = useRef(new Map<string, Promise<VaultItemSummary>>());
   // ML-KEM decapsulation is the expensive step of opening an item; keep the
@@ -110,7 +101,6 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   const dekCache = useRef(new Map<string, Promise<CryptoKey>>());
   const pendingCache = useRef(new Map<string, Promise<string | null>>());
   const [items, setItems] = useState<VaultItemSummary[]>();
-  const [folders, setFolders] = useState<FolderSummary[]>();
   const [categories, setCategories] = useState<CategorySummary[]>();
   const [pending, setPending] = useState<PendingSummary[]>([]);
 
@@ -256,24 +246,6 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
   }, [rawItems, summarize, viewer._id]);
 
   useEffect(() => {
-    if (!rawFolders || !masterKey) return;
-    let alive = true;
-    Promise.all(
-      rawFolders.map(async (folder) => ({
-        id: folder._id,
-        name: await decryptText(folder.encryptedName, masterKey).catch(
-          () => null,
-        ),
-        itemCount: folder.itemCount,
-        grants: folder.grants,
-      })),
-    ).then((out) => alive && setFolders(out));
-    return () => {
-      alive = false;
-    };
-  }, [rawFolders, masterKey]);
-
-  useEffect(() => {
     if (!rawCategories || !masterKey) return;
     let alive = true;
     Promise.all(
@@ -313,17 +285,25 @@ export function VaultDataProvider({ children }: { children: ReactNode }) {
     };
   }, [entries, itemKey]);
 
+  useAdoptFolders(rawItems, itemKey, Boolean(masterKey));
+
+  // Items of a category the user deleted show in the Inbox.
+  const hidden = viewer.hiddenCategoryGroups;
+  const shownItems = useMemo(() => {
+    const ids = categories?.map((category) => category.id as string);
+    return items?.map((item) => shownFiling(item, hidden ?? [], ids));
+  }, [items, hidden, categories]);
+
   const value = useMemo<VaultDataValue>(
     () => ({
-      items,
-      folders,
+      items: shownItems,
       categories,
       pending,
       ownerKeys,
       itemKey,
       summarize,
     }),
-    [items, folders, categories, pending, ownerKeys, itemKey, summarize],
+    [shownItems, categories, pending, ownerKeys, itemKey, summarize],
   );
   return (
     <VaultDataContext.Provider value={value}>

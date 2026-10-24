@@ -165,6 +165,12 @@ export default function Settings() {
         onPress={() => router.push("/backup")}
       />
       <ListRow
+        icon="folder"
+        title={t("categories.title")}
+        description={t("categories.rowBody")}
+        onPress={() => router.push("/categories")}
+      />
+      <ListRow
         icon="inbox"
         title={t("archives.title")}
         description={t("archives.rowBody")}
