@@ -866,7 +866,7 @@
     "shareFailedBody": "Keeplas n'a pas pu chiffrer cet élément pour tous les contacts choisis. Vérifiez votre connexion, ou que le code de sécurité de chaque contact est vérifié, puis réessayez.",
     "downloading": "Téléchargement… {pct} %",
     "edit": "Modifier",
-    "history": "Historique des modifications",
+    "history": "Historique",
     "historyCount": "{n} versions précédentes",
     "historyEmpty": "Aucune modification pour l'instant",
     "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne."

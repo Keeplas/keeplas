@@ -875,7 +875,7 @@
     "shareFailedBody": "Keeplas could not encrypt this item for everyone you chose. Check your connection, or check that each contact's security code is verified, then try again.",
     "downloading": "Downloading… {pct}%",
     "edit": "Edit",
-    "history": "Edit history",
+    "history": "History",
     "historyCount": "{n} earlier versions",
     "historyEmpty": "No changes yet",
     "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
