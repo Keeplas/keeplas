@@ -64,7 +64,8 @@ export default function SharedItem() {
     fileUrl,
   );
   const [selected, setSelected] = useState(0);
-  const file = attachments[selected];
+  const current = Math.min(selected, Math.max(0, attachments.length - 1));
+  const file = attachments[current];
   const photos = useMemo(
     () => attachments.filter((attachment) => attachment.kind === "image"),
     [attachments],
@@ -188,22 +189,27 @@ export default function SharedItem() {
         </View>
       ) : null}
 
-      {attachments.length > 1
-        ? attachments.map((attachment, index) => (
+      {attachments.length > 1 ? (
+        <>
+          <Text variant="label">
+            {t("capture.attachments", { n: attachments.length })}
+          </Text>
+          {attachments.map((attachment, index) => (
             <ListRow
               key={attachment.id}
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
               trailing={
-                index === selected ? (
+                index === current ? (
                   <Icon name="check" size={18} color="status.active" />
                 ) : undefined
               }
               onPress={() => setSelected(index)}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
 
       {file ? (
         <Button
