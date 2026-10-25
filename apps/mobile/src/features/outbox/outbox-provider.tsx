@@ -30,6 +30,7 @@ import { draftStore } from "@/features/capture/draft-store";
 import {
   pendingEntries,
   requeue,
+  unpark,
   uploadEntry,
   type OutboxDeps,
   type OutboxEntry,
@@ -178,16 +179,30 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     }
   }, [userId, online, deps, reload, reportProgress]);
 
-  const retry = useCallback(() => {
-    if (!userId) return;
-    void (async () => {
-      for (const entry of requeue(await sqliteStore.list(userId))) {
-        await sqliteStore.put(entry);
-      }
-      await reload();
-      await flush();
-    })();
-  }, [userId, reload, flush]);
+  const resume = useCallback(
+    (pick: (entries: OutboxEntry[]) => OutboxEntry[]) => {
+      if (!userId) return;
+      void (async () => {
+        for (const entry of pick(await sqliteStore.list(userId))) {
+          await sqliteStore.put(entry);
+        }
+        await reload();
+        await flush();
+      })();
+    },
+    [userId, reload, flush],
+  );
+  const retry = useCallback(() => resume(requeue), [resume]);
+
+  // Parked over quota: a plan change (Lifetime bought) makes room, so try
+  // again; uploadEntry re-checks the room left before sending anything.
+  const plan = viewer?.plan;
+  const lastPlan = useRef(plan);
+  useEffect(() => {
+    if (lastPlan.current === plan) return;
+    lastPlan.current = plan;
+    resume(unpark);
+  }, [plan, resume]);
 
   // Load on sign-in; requeue and upload whenever the phone is (back) online.
   useEffect(() => {

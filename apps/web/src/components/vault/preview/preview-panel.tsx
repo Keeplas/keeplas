@@ -147,7 +147,7 @@ export function PreviewPanel({
         <span className="flex-1" />
         {tools}
         <ToolbarButton
-          icon={ICON_PATHS.eye}
+          icon={hidden ? ICON_PATHS.eyeOff : ICON_PATHS.eye}
           label={hidden ? t("show") : t("hide")}
           pressed={hidden}
           onClick={onToggleHidden}
