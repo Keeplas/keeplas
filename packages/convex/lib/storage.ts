@@ -89,6 +89,16 @@ export async function deleteBlob(
   if (owner) await ctx.db.delete(owner._id);
 }
 
+export async function discardUnclaimedBlob(
+  ctx: MutationCtx,
+  ref: StorageRef,
+): Promise<boolean> {
+  if (await blobOwner(ctx, ref)) return false;
+  if (!(await ctx.db.system.get(ref))) return false;
+  await ctx.storage.delete(ref);
+  return true;
+}
+
 /** Delete every stored blob — full deployment wipe only. Returns the count. */
 export async function deleteAllBlobs(ctx: MutationCtx): Promise<number> {
   const blobs = await ctx.db.system.query("_storage").collect();

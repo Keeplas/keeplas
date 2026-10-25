@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNetworkState } from "expo-network";
-import { useMutation } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
@@ -69,6 +69,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
   );
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
+  const discardUploads = useAuditedMutation(api.vault_items.discardUploads);
+  const convex = useConvex();
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [progress, setProgress] = useState<Record<string, Progress>>({});
@@ -127,8 +129,22 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
         });
       },
       deleteLocalFile: deleteFile,
+      canStore: async (bytes) =>
+        (await convex.query(api.vaults.canStore, { bytes })).fits,
+      discardUploads: async (storageIds) => {
+        await discardUploads({
+          storageIds: storageIds.map((id) => id as StorageRef),
+        });
+      },
     }),
-    [getOrCreateVault, generateUploadUrl, createItem, addItemFiles],
+    [
+      getOrCreateVault,
+      generateUploadUrl,
+      createItem,
+      addItemFiles,
+      discardUploads,
+      convex,
+    ],
   );
 
   const flush = useCallback(async () => {
@@ -147,8 +163,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
               reportProgress(entry.id, p),
             );
             setCreated((all) => ({ ...all, [entry.id]: itemId }));
-          } catch {
-            // Kept as failed / quota; the list shows it.
+          } catch (error) {
+            if (__DEV__) console.warn(`[outbox ${entry.id}]`, error);
           }
           await reload();
         }
