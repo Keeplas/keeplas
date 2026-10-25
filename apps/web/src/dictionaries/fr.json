@@ -199,23 +199,15 @@
       "evening": "Bonsoir, {name}"
     },
     "subtitle": "Vos informations importantes sont en sécurité et prêtes pour demain.",
-    "setup": {
-      "complete": "Configuration requise terminée",
-      "incomplete": "Terminez la configuration requise",
-      "progress": "{done} sur {total} terminées",
-      "completeBody": "Votre compte est protégé et prêt à l'emploi.",
-      "incompleteBody": "Terminez-la dans l'app Keeplas sur votre téléphone."
+    "recovery": {
+      "title": "Santé de récupération",
+      "covered": "Récupération prête",
+      "notCovered": "Aucun moyen de récupération"
     },
-    "optional": {
-      "title": "Protection facultative",
-      "trustContacts": {
-        "title": "Ajouter des contacts de confiance",
-        "description": "Choisissez jusqu'à 3 personnes qui peuvent vous aider à récupérer votre compte."
-      },
-      "recoveryKit": {
-        "title": "Exporter le kit de récupération",
-        "description": "Gardez votre kit facultatif de 24 mots en lieu sûr. Depuis votre téléphone."
-      }
+    "upgrade": {
+      "title": "Passer à Lifetime · 99 $",
+      "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
+      "cta": "Mettre à niveau"
     },
     "tiles": {
       "inbox": "À classer",
@@ -590,45 +582,35 @@
       }
     },
     "subscription": {
-      "title": "Une architecture de continuité. Sécurisée pour toujours.",
-      "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
-      "popular": "Populaire",
-      "currentPlan": "Forfait actuel",
-      "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
-      "priceSuffix": {
-        "forever": "/pour toujours",
-        "oneTime": "paiement unique"
-      },
+      "title": "Votre offre",
+      "description": "Toutes les offres chiffrent votre coffre de la même façon. Lifetime ajoute de l'espace et toutes les fonctionnalités, en un seul paiement.",
+      "currentPlan": "Offre actuelle",
       "plans": {
         "free": {
-          "name": "Gratuit",
-          "tagline": "Le stockage numérique essentiel.",
-          "cta": "Commencer gratuitement"
+          "name": "Gratuite",
+          "price": "0 $",
+          "priceNote": "Gratuite pour toujours",
+          "perks": {
+            "storage": "100 Mo de stockage chiffré",
+            "contacts": "Jusqu'à 3 contacts de confiance",
+            "lifeCheck": "Life check"
+          }
         },
         "lifetime": {
-          "name": "À vie",
-          "tagline": "Tout ce dont vous avez besoin, pour toujours, en un seul paiement.",
-          "inApp": "Achetez l'offre À vie dans l'app mobile Keeplas : Réglages → Passer à Lifetime."
+          "name": "Keeplas Lifetime",
+          "price": "99 $",
+          "priceNote": "Paiement unique",
+          "perks": {
+            "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
+            "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
+            "noSubscription": "Un seul paiement. Sans abonnement, rien ne se renouvelle",
+            "newPhone": "Retrouvé sur chaque nouveau téléphone, il suffit de vous connecter"
+          }
         }
       },
-      "features": {
-        "freeVault": "Coffre à connaissance nulle de 100 Mo",
-        "basicLifeCheck": "Life Check de base (mensuel)",
-        "oneEmergencyContact": "1 contact d'urgence",
-        "emergencyCardDigital": "Carte d'urgence (numérique)",
-        "dataHostingCountry": "Choix du pays d'hébergement des données (bientôt disponible)",
-        "notarialCompliance": "Conformité notariale et juridique (bientôt disponible)",
-        "lifetimeVault": "Coffre à connaissance nulle de 10 Go",
-        "moreStorageAddon": "Stockage supplémentaire disponible en option",
-        "fullScenarioEngine": "Moteur de scénarios complet",
-        "fiveEmergencyContacts": "5 contacts d'urgence",
-        "prioritySocialRecovery": "Récupération sociale prioritaire",
-        "emergencyCardPhysical": "Carte d'urgence (physique)",
-        "videoLegacyMessages": "Messages vidéo de continuité",
-        "weeklyLifeCheck": "Life Check hebdomadaire",
-        "earlyAdopterBadge": "Badge des premiers adoptants",
-        "prioritySupport": "Support prioritaire"
-      }
+      "inApp": "Achetez Lifetime dans l'app Keeplas sur votre téléphone : Réglages → Passer à Lifetime.",
+      "paidWith": "Payé avec votre compte Apple ou Google. Keeplas ne voit jamais votre carte, et votre offre se met à jour ici toute seule.",
+      "footer": "L'app affiche le prix dans votre devise locale. Changer d'offre ne supprime jamais votre coffre."
     },
     "identity": {
       "updateError": "Échec de la mise à jour du profil",

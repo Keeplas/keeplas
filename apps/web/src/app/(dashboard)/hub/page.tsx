@@ -11,33 +11,31 @@ import { HubView } from "./hub-view";
 
 const RECENT_LIMIT = 5;
 
-// Required setup (BUSINESS-RULES): verified number, passkey, vault.
-const SETUP_ACTIONS = ["verify_whatsapp", "two_factor"];
-
 export default function HubPage() {
   const viewer = useQuery(api.users.viewer);
-  const hub = useQuery(api.hub.getHubData);
   const health = useQuery(api.recovery.getHealth);
+  const backup = useQuery(api.cloud_backup.status);
+  const contactsReady = useQuery(api.trusted_contacts.getContactsReady);
   const { items } = useVaultData();
   const labels = useItemLabels();
   const capture = useVaultCapture();
 
   const counts = useMemo(() => listCounts(items ?? []), [items]);
 
-  if (!viewer || !hub || health === undefined) return <Loader />;
+  if (!viewer || health === undefined || backup === undefined) {
+    return <Loader />;
+  }
 
-  const setupDone =
-    hub.priorityActions.filter(
-      (action) => SETUP_ACTIONS.includes(action.key) && action.done,
-    ).length + (hub.hasVault ? 1 : 0);
+  // Same ways back in as the mobile Home: one is enough.
+  const recoveryCovered =
+    !!backup?.enabled || !!contactsReady || !!health?.recoveryKit;
 
   return (
     <>
       <HubView
         firstName={viewer.name?.split(" ")[0] ?? ""}
-        setupDone={setupDone}
-        trustContactsReady={!!health?.trustContacts.configured}
-        recoveryKitReady={!!health?.recoveryKit}
+        recoveryCovered={recoveryCovered}
+        plan={viewer.plan ?? "free"}
         counts={{
           inbox: counts.inbox,
           documents: counts.documents,
