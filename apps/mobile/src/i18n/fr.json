@@ -907,6 +907,7 @@
     },
     "ready": "{n} prêt(s)",
     "readyBody": "2 de vos contacts suffisent pour récupérer votre compte.",
+    "quorumWarning": "Rien ne peut encore être transmis : {required} personnes de confiance doivent confirmer, et {available} ont accepté pour l'instant. Ajoutez quelqu'un de confiance.",
     "replace": "Remplacer",
     "replaceTitle": "Remplacer {name} ?",
     "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte. Vous pourrez ensuite inviter quelqu'un d'autre.",
@@ -1088,6 +1089,17 @@
       "yours": "Vous ne voyez que ce qui vous est destiné",
       "yoursBody": "Uniquement les éléments qu'il vous a laissés, en lecture seule, déchiffrés sur ce téléphone.",
       "note": "Si trop peu de contacts confirment à temps, le coffre reste verrouillé."
+    },
+    "unreachable": {
+      "detail": "N'a pas répondu à son Life check",
+      "body": "Si vous non plus n'arrivez pas à le joindre, confirmez-le. Une fois assez de confirmations ({n} nécessaires), il aura encore 72 heures pour annuler.",
+      "action": "Je n'arrive pas à le joindre",
+      "confirmTitle": "Confirmer que {name} est injoignable ?",
+      "confirmBody": "Ne confirmez qu'après avoir essayé de l'appeler ou de lui écrire. C'est définitif, mais rien ne s'ouvre sans assez de confirmations et 72 heures sans annulation.",
+      "confirm": "Oui, confirmer",
+      "done": "Merci. Nous vous tiendrons informé.",
+      "confirmed": "Vous avez confirmé qu'il est injoignable",
+      "waiting": "En attente des autres contacts de confiance. {name} peut encore annuler à tout moment avant toute ouverture."
     }
   },
   "passkeys": {

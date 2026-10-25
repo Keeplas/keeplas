@@ -303,3 +303,72 @@ describe("getVaultsWhereIAmContact", () => {
     expect(vault?.ownerPhone).toBeNull();
   });
 });
+
+describe("getVaultsWhereIAmContact unreachability vote", () => {
+  it("reports whether I already confirmed the owner can't be reached", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactUser = await seedUser(t);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    const now = Date.now();
+    await t.run(async (ctx) => {
+      await ctx.db.patch(contactId, { contactUserId: contactUser });
+      const configId = await ctx.db.insert("life_check_configs", {
+        userId: owner,
+        frequency: "monthly",
+        activeChannels: [],
+        travelModeEnabled: false,
+        isActive: true,
+        nextCheckAt: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await ctx.db.insert("life_check_cycles", {
+        userId: owner,
+        configId,
+        status: "awaiting_confirmation",
+        channelsAttempted: [],
+        scheduledAt: now,
+        startedAt: now,
+      });
+    });
+    const vaults = () =>
+      asUser(t, contactUser).query(
+        api.trusted_contacts.getVaultsWhereIAmContact,
+        {},
+      );
+
+    expect((await vaults())[0]?.unreachableConfirmed).toBe(false);
+
+    await asUser(t, contactUser).mutation(
+      api.access_requests.markUserUnreachable,
+      { contactId, _audit: await signedAudit() },
+    );
+
+    expect((await vaults())[0]?.unreachableConfirmed).toBe(true);
+  });
+});
+
+describe("getReleaseQuorum", () => {
+  it("counts distinct accepted people against the owner's threshold", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const person = await seedUser(t);
+    // The same person invited twice (email + phone) is one confirmation.
+    for (const n of [1, 2]) {
+      const id = await seedTrustContact(t, owner, { n });
+      await t.run((ctx) => ctx.db.patch(id, { contactUserId: person }));
+    }
+    // Still pending: cannot confirm anything yet.
+    const pending = await seedTrustContact(t, owner, { n: 3 });
+    await t.run((ctx) =>
+      ctx.db.patch(pending, { invitationStatus: "pending" }),
+    );
+
+    const quorum = await asUser(t, owner).query(
+      api.trusted_contacts.getReleaseQuorum,
+      {},
+    );
+    expect(quorum).toEqual({ required: 2, available: 1 });
+  });
+});

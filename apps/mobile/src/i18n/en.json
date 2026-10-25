@@ -916,6 +916,7 @@
     },
     "ready": "{n} ready",
     "readyBody": "Any 2 of your contacts can help you recover your account.",
+    "quorumWarning": "Nothing can be passed on yet: {required} trusted people must confirm, and {available} accepted so far. Add someone you trust.",
     "replace": "Replace",
     "replaceTitle": "Replace {name}?",
     "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
@@ -1104,6 +1105,17 @@
       "yours": "You see only what's for you",
       "yoursBody": "Only the items they left you, read-only, decrypted on this phone.",
       "note": "If not enough contacts confirm in time, the vault stays locked."
+    },
+    "unreachable": {
+      "detail": "Hasn't answered their Life check",
+      "body": "If you can't reach them either, confirm it. Once enough trusted contacts confirm ({n} needed), they still have 72 hours to cancel.",
+      "action": "I can't reach them",
+      "confirmTitle": "Confirm you can't reach {name}?",
+      "confirmBody": "Only confirm after trying to call or message them. You can't undo it, but nothing opens unless enough contacts confirm and 72 hours pass without them cancelling.",
+      "confirm": "Yes, confirm",
+      "done": "Thanks. We'll keep you posted.",
+      "confirmed": "You confirmed you can't reach them",
+      "waiting": "Waiting for the other trusted contacts. {name} can still cancel at any time before anything opens."
     }
   },
   "passkeys": {

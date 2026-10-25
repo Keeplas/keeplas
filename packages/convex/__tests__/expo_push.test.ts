@@ -93,7 +93,7 @@ describe("Expo push", () => {
       { url: "/recovery" },
       { url: "/recovery" },
       { url: "/life-check" },
-      { url: "/people" },
+      { url: "/shared" },
       { url: "/shared" },
     ]);
   });
