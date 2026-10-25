@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { useSyncExternalStore } from "react";
 import {
   startRegistration as browserStartRegistration,
@@ -80,6 +81,37 @@ export async function registerPasskey(
 }
 
 /** Discoverable-credential sign-in: the passkey identifies the account. */
+export const UNKNOWN_PASSKEY = "UNKNOWN_PASSKEY";
+
+export function isUnknownPasskey(err: unknown): boolean {
+  return (
+    (err instanceof ConvexError &&
+      (err.data as { code?: string } | null)?.code === UNKNOWN_PASSKEY) ||
+    (err instanceof Error && err.message.includes("Unknown passkey"))
+  );
+}
+
+type SignalingCredential = typeof PublicKeyCredential & {
+  signalUnknownCredential?: (options: {
+    rpId: string;
+    credentialId: string;
+  }) => Promise<void>;
+};
+
+export async function forgetUnknownPasskey(
+  rpId: string | undefined,
+  credentialId: string,
+): Promise<void> {
+  const credential =
+    typeof PublicKeyCredential === "undefined"
+      ? undefined
+      : (PublicKeyCredential as SignalingCredential);
+  if (!rpId || !credential?.signalUnknownCredential) return;
+  await credential
+    .signalUnknownCredential({ rpId, credentialId })
+    .catch(() => undefined);
+}
+
 export async function loginWithPasskey(
   api: AuthenticateOptions,
 ): Promise<void> {
@@ -88,7 +120,17 @@ export async function loginWithPasskey(
   }
   const options = await api.startAuthentication({});
   const response = await browserStartAuthentication({ optionsJSON: options });
-  await api.signInWithPasskey(response);
+  try {
+    await api.signInWithPasskey(response);
+  } catch (err) {
+    if (isUnknownPasskey(err)) {
+      await forgetUnknownPasskey(
+        options.rpId ?? window.location.hostname,
+        response.id,
+      );
+    }
+    throw err;
+  }
 }
 
 export function getPasskeyErrorMessage(err: unknown, fallback: string): string {

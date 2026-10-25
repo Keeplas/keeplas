@@ -563,7 +563,7 @@
     "addedOn": "Ajouté le {date}",
     "remove": "Retirer",
     "removeTitle": "Retirer {label} ?",
-    "removeBody": "Il est déconnecté et ne pourra plus se reconnecter sans une nouvelle association depuis ce téléphone.",
+    "removeBody": "Il est déconnecté et ne pourra plus se reconnecter sans une nouvelle association depuis ce téléphone. La passkey créée sur cet appareil est aussi supprimée : si elle est synchronisée (iCloud, Google), elle ne marchera plus sur vos autres appareils, qui devront en créer une nouvelle.",
     "linkComputer": "Associer un navigateur ou un téléphone"
   },
   "scan": {

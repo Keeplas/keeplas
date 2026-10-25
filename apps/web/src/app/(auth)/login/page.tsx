@@ -14,7 +14,11 @@ import {
 } from "@keeplas/ui";
 import { Link } from "@/lib/navigation";
 import { ICON_PATHS } from "@/lib/icons";
-import { getPasskeyErrorMessage, loginWithPasskey } from "@/lib/passkey";
+import {
+  getPasskeyErrorMessage,
+  isUnknownPasskey,
+  loginWithPasskey,
+} from "@/lib/passkey";
 import { useTranslations } from "@/lib/i18n";
 import { AuthScreen, authCardClass } from "@/components/auth-screen";
 
@@ -38,7 +42,11 @@ export default function SignInPage() {
           signIn("passkey", { response: response as never }),
       });
     } catch (err) {
-      setError(getPasskeyErrorMessage(err, t("passkeyFailed")));
+      setError(
+        isUnknownPasskey(err)
+          ? t("unknownPasskey")
+          : getPasskeyErrorMessage(err, t("passkeyFailed")),
+      );
       setBusy(false);
     }
   }
