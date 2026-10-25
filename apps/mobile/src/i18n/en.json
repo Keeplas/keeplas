@@ -419,8 +419,36 @@
     "body": "10 GB of storage and every feature. One payment, no subscription.",
     "cta": "Upgrade",
     "restore": "Restore purchase",
-    "activating": "Purchase confirmed. Your Lifetime plan is being activated.",
-    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account."
+    "activating": "Your Lifetime plan is being activated. It only takes a few seconds, and any upload waiting for space resumes on its own.",
+    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account.",
+    "planName": "Keeplas Lifetime",
+    "oneTime": "One-time payment",
+    "perks": {
+      "storage": "10 GB of encrypted storage, instead of 100 MB",
+      "features": "Every feature, for as long as you keep Keeplas",
+      "noSubscription": "One payment. No subscription, nothing renews",
+      "newPhone": "Yours on every new phone: just sign in"
+    },
+    "paidWith": "Paid securely through your {account} account. Keeplas never sees your card, and your files stay encrypted.",
+    "pay": "Pay {price}",
+    "payNoPrice": "Continue to payment",
+    "paidTitle": "Purchase confirmed",
+    "errorCode": "(code {code})",
+    "errors": {
+      "unavailable": "Lifetime can't be bought from {store} right now. Nothing was charged. Try again later.",
+      "network": "Can't reach {store}. Nothing was charged. Check your connection and try again.",
+      "notAllowed": "Purchases are turned off on this phone (Screen Time or parental controls). Nothing was charged.",
+      "pending": "Your payment is waiting for approval. Lifetime turns on as soon as {store} confirms it.",
+      "failed": "The payment couldn't be completed by {store}. Nothing was charged. Try again."
+    },
+    "store": {
+      "ios": "the App Store",
+      "android": "Google Play"
+    },
+    "account": {
+      "ios": "Apple",
+      "android": "Google"
+    }
   },
   "settings": {
     "title": "Settings",
@@ -728,7 +756,8 @@
       "uploadedBody": "The encrypted copy is in your Keeplas storage.",
       "offlineBody": "You're offline. The encrypted copy is safe on this phone and uploads as soon as you're back online.",
       "failedBody": "The upload stopped for an unexpected reason. Your encrypted copy is still safe on this phone. Try again.",
-      "quotaBody": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Free up space or upgrade to Lifetime, then try again.",
+      "quotaBody": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Upgrade to Lifetime and the upload resumes on its own.",
+      "quotaBodyLifetime": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Free up space in Settings to make room.",
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",

@@ -236,6 +236,13 @@ export function requeue(entries: OutboxEntry[]): OutboxEntry[] {
     .map((e) => ({ ...e, status: "waiting" as const }));
 }
 
+/** The plan changed (e.g. upgraded to Lifetime): quota entries try again. */
+export function unpark(entries: OutboxEntry[]): OutboxEntry[] {
+  return entries
+    .filter((e) => e.status === "quota")
+    .map((e) => ({ ...e, status: "waiting" as const }));
+}
+
 /** In-memory store (tests). */
 export function memoryStore(): OutboxStore & {
   entries: Map<string, OutboxEntry>;

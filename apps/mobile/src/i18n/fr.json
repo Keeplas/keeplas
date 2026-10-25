@@ -411,8 +411,36 @@
     "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
     "cta": "Mettre à niveau",
     "restore": "Restaurer un achat",
-    "activating": "Achat confirmé. Votre forfait Lifetime est en cours d'activation.",
-    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google."
+    "activating": "Votre forfait Lifetime est en cours d'activation. Cela ne prend que quelques secondes, et tout envoi en attente d'espace reprend tout seul.",
+    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google.",
+    "planName": "Keeplas Lifetime",
+    "oneTime": "Paiement unique",
+    "perks": {
+      "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
+      "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
+      "noSubscription": "Un seul paiement. Sans abonnement, rien ne se renouvelle",
+      "newPhone": "Retrouvé sur chaque nouveau téléphone, il suffit de vous connecter"
+    },
+    "paidWith": "Payé en toute sécurité avec votre compte {account}. Keeplas ne voit jamais votre carte, et vos fichiers restent chiffrés.",
+    "pay": "Payer {price}",
+    "payNoPrice": "Continuer vers le paiement",
+    "paidTitle": "Achat confirmé",
+    "errorCode": "(code {code})",
+    "errors": {
+      "unavailable": "Lifetime ne peut pas être acheté sur {store} pour le moment. Rien n'a été débité. Réessayez plus tard.",
+      "network": "Impossible de joindre {store}. Rien n'a été débité. Vérifiez votre connexion et réessayez.",
+      "notAllowed": "Les achats sont désactivés sur ce téléphone (Temps d'écran ou contrôle parental). Rien n'a été débité.",
+      "pending": "Votre paiement attend une approbation. Lifetime s'active dès que {store} le confirme.",
+      "failed": "Le paiement n'a pas pu être finalisé par {store}. Rien n'a été débité. Réessayez."
+    },
+    "store": {
+      "ios": "l'App Store",
+      "android": "Google Play"
+    },
+    "account": {
+      "ios": "Apple",
+      "android": "Google"
+    }
   },
   "settings": {
     "title": "Réglages",
@@ -719,7 +747,8 @@
       "uploadedBody": "La copie chiffrée est dans votre stockage Keeplas.",
       "offlineBody": "Vous êtes hors ligne. La copie chiffrée est en sécurité sur ce téléphone et sera envoyée dès votre retour en ligne.",
       "failedBody": "L'envoi s'est arrêté pour une raison inattendue. Votre copie chiffrée est toujours en sécurité sur ce téléphone. Réessayez.",
-      "quotaBody": "Votre stockage est plein : cet élément ({size}) ne rentre pas dans votre espace. Rien n'a été perdu. Libérez de l'espace ou passez à l'offre Lifetime, puis réessayez.",
+      "quotaBody": "Votre stockage est plein : cet élément ({size}) ne rentre pas dans votre espace. Rien n'a été perdu. Passez à Lifetime et l'envoi reprend tout seul.",
+      "quotaBodyLifetime": "Votre stockage est plein : cet élément ({size}) ne rentre pas dans votre espace. Rien n'a été perdu. Libérez de l'espace dans Réglages.",
       "protected": "Protégé",
       "protectedWaiting": "En attente de vérification…",
       "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
