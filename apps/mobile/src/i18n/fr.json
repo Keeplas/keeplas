@@ -1061,7 +1061,8 @@
     "emptyTitle": "Rien n'a encore été partagé avec vous",
     "emptyBody": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici.",
     "trusted": "Vous êtes contact de confiance",
-    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance.",
+    "laterOne": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, qu'1 contact de confiance le confirme et que 72 heures passent sans annulation.",
+    "later": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, que {n} contacts de confiance le confirment et que 72 heures passent sans annulation.",
     "oneItem": "1 élément laissé pour vous",
     "items": "{n} éléments laissés pour vous",
     "accessNow": "Accéder maintenant",
@@ -1071,7 +1072,22 @@
     "nothingLeft": "Aucun élément lisible ne vous a été laissé.",
     "notReleasedTitle": "Pas encore disponible",
     "notReleasedBody": "Il s'ouvrira dès que ce coffre vous sera transmis.",
-    "leftBy": "Laissé pour vous par {name}"
+    "leftBy": "Laissé pour vous par {name}",
+    "help": {
+      "link": "Quand verrai-je ce qu'on m'a laissé ?",
+      "title": "Quand un coffre s'ouvre-t-il ?",
+      "checkIn": "La personne confirme régulièrement",
+      "checkInBody": "Le propriétaire répond à un Life check chaque semaine, mois ou trimestre. Tant qu'il répond, son coffre reste privé, même pour vous.",
+      "silent": "Elle ne répond plus",
+      "silentBody": "Après 15 jours sans réponse, malgré les rappels, nous alertons ses contacts de confiance, vous compris.",
+      "confirm": "Les contacts de confiance confirment",
+      "confirmBody": "Deux d'entre eux doivent confirmer que le propriétaire est injoignable, sauf s'il a choisi un autre nombre.",
+      "grace": "Délai de sécurité de 72 heures",
+      "graceBody": "Le propriétaire est prévenu et peut encore annuler. Rien ne s'ouvre avant la fin de ce délai.",
+      "yours": "Vous ne voyez que ce qui vous est destiné",
+      "yoursBody": "Uniquement les éléments qu'il vous a laissés, en lecture seule, déchiffrés sur ce téléphone.",
+      "note": "Si trop peu de contacts confirment à temps, le coffre reste verrouillé."
+    }
   },
   "passkeys": {
     "subtitle": "Les clés d'accès vous connectent avec votre visage, votre empreinte ou le code du téléphone. Touchez-en une pour la supprimer.",

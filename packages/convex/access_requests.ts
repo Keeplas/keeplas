@@ -5,6 +5,7 @@ import { internal } from "./_generated/api";
 import { createNotification, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
+import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 
 /**
  * Count the number of DISTINCT humans behind a set of trusted-contact rows.
@@ -136,7 +137,8 @@ export const markUserUnreachable = auditedMutation({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", contact.userId))
       .first();
-    const threshold = ownerConfig?.confirmationThreshold ?? 2;
+    const threshold =
+      ownerConfig?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD;
     const GRACE_MS = 72 * 60 * 60 * 1000;
     const now = Date.now();
 

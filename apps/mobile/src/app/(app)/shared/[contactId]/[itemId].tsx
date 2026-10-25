@@ -30,6 +30,7 @@ import {
 import { useOpenedSharedItem } from "@/features/vault/use-opened-item";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
 import { formatBytes } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -157,7 +158,7 @@ export default function SharedItem() {
         </View>
       )}
       <Text variant="body-sm" color="text.muted" align="center">
-        {t("shared.leftBy", { name: shared.owner.name })}
+        {t("shared.leftBy", { name: formatPhone(shared.owner.name) })}
       </Text>
 
       {file?.kind === "image" ? (
