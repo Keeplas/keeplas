@@ -3,7 +3,6 @@ import type { Doc } from "@keeplas/backend/_generated/dataModel";
 import {
   DeviceUnlockEntry,
   DeviceUnlockError,
-  DeviceUnlockOwner,
   EnrollOptions,
   enrollMethod as enrollMethodImpl,
   deleteMethod as deleteMethodImpl,
@@ -11,21 +10,12 @@ import {
   unlockWith,
 } from "./device-unlock";
 
-type DeviceUnlockUser = Pick<Doc<"users">, "_id" | "email" | "phoneNumber">;
-
-/** Owner of this browser's device-unlock entries for `user`. */
-export function deviceUnlockOwner(user: DeviceUnlockUser): DeviceUnlockOwner {
-  return {
-    userId: user._id,
-    accountName: user.email ?? user.phoneNumber ?? "Keeplas",
-  };
-}
+type DeviceUnlockUser = Pick<Doc<"users">, "_id" | "email">;
 
 /** Device-unlock entries of the signed-in user (`users.viewer`). */
 export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
   const userId = user?._id ?? null;
   const legacyEmail = user?.email;
-  const accountName = user ? deviceUnlockOwner(user).accountName : null;
   const [entries, setEntries] = useState<DeviceUnlockEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<DeviceUnlockError | null>(null);
@@ -62,18 +52,14 @@ export function useDeviceUnlock(user: DeviceUnlockUser | null | undefined) {
 
   const enroll = useCallback(
     async (masterKey: CryptoKey, options: EnrollOptions) => {
-      if (!userId || !accountName) {
+      if (!userId) {
         throw new DeviceUnlockError("No signed-in user", "io");
       }
-      const entry = await enrollMethodImpl(
-        { userId, accountName },
-        masterKey,
-        options,
-      );
+      const entry = await enrollMethodImpl(userId, masterKey, options);
       await refresh();
       return entry;
     },
-    [userId, accountName, refresh],
+    [userId, refresh],
   );
 
   const unlock = useCallback(

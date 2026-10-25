@@ -1,34 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import { Button, Icon, Loader, Spinner, useConfirm } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
 import { formatTimeAgo } from "@/lib/format";
-import {
-  DeviceUnlockEntry,
-  isPlatformAuthenticatorAvailable,
-  isWebAuthnSupported,
-} from "@/lib/device-unlock";
+import { DeviceUnlockEntry } from "@/lib/device-unlock";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { EnrollDeviceUnlockDialog } from "@/components/enroll-device-unlock-dialog";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
-const METHOD_LABEL_KEY: Record<DeviceUnlockEntry["method"], string> = {
-  pin: "deviceUnlock.method.pin",
-  biometric: "deviceUnlock.method.biometric",
-  "hardware-key": "deviceUnlock.method.hardwareKey",
-};
-
-const METHOD_ICON: Record<DeviceUnlockEntry["method"], string> = {
-  pin: ICON_PATHS.lock,
-  biometric: ICON_PATHS.fingerprint,
-  "hardware-key": ICON_PATHS.key,
-};
-
 /**
- * Unlock methods of this browser (PIN, biometric, hardware key). `onChange`
+ * PIN unlock entries of this browser. `onChange`
  * tells the page, which shows the PIN toggle from the same storage.
  */
 export function DeviceUnlockManager({ onChange }: { onChange: () => void }) {
@@ -38,14 +22,8 @@ export function DeviceUnlockManager({ onChange }: { onChange: () => void }) {
   const { entries, loading, remove, refresh } = useDeviceUnlock(user);
   const confirm = useConfirm();
   const [showEnroll, setShowEnroll] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [hardwareSupported] = useState(() => isWebAuthnSupported());
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    isPlatformAuthenticatorAvailable().then(setBiometricAvailable);
-  }, []);
 
   if (user === undefined || loading) {
     return (
@@ -125,26 +103,10 @@ export function DeviceUnlockManager({ onChange }: { onChange: () => void }) {
         <ul className="space-y-3">
           {entries.map((entry) => {
             const removing = busyId === entry.id;
-            const methodLabel = t(METHOD_LABEL_KEY[entry.method]);
-            const subtitle =
-              entry.method === "pin"
-                ? t("deviceUnlock.subtitlePin", {
-                    label: methodLabel,
-                    time: formatTimeAgo(entry.createdAt),
-                  })
-                : entry.method === "biometric"
-                  ? t("deviceUnlock.subtitleBiometric", {
-                      label: methodLabel,
-                      state: biometricAvailable
-                        ? t("deviceUnlock.biometricReady")
-                        : t("deviceUnlock.biometricUnavailable"),
-                    })
-                  : t("deviceUnlock.subtitleHardware", {
-                      label: methodLabel,
-                      state: hardwareSupported
-                        ? t("deviceUnlock.hardwareReady")
-                        : t("deviceUnlock.hardwareUnsupported"),
-                    });
+            const subtitle = t("deviceUnlock.subtitlePin", {
+              label: t("deviceUnlock.method.pin"),
+              time: formatTimeAgo(entry.createdAt),
+            });
             return (
               <li
                 key={entry.id}
@@ -152,10 +114,7 @@ export function DeviceUnlockManager({ onChange }: { onChange: () => void }) {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xs bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
-                    <Icon
-                      path={METHOD_ICON[entry.method]}
-                      className="w-5 h-5"
-                    />
+                    <Icon path={ICON_PATHS.lock} className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-body-md font-bold text-primary truncate">

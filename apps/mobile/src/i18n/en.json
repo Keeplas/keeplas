@@ -572,7 +572,7 @@
     "addedOn": "Added {date}",
     "remove": "Remove",
     "removeTitle": "Remove {label}?",
-    "removeBody": "It's signed out and can't sign in again without a new link from this phone.",
+    "removeBody": "It is signed out and can only sign in again after a new pairing from this phone. The passkey created on this device is deleted too: if it is synced (iCloud, Google), it will stop working on your other devices, which will need a new one.",
     "linkComputer": "Link a browser or phone"
   },
   "scan": {

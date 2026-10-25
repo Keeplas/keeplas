@@ -12,8 +12,6 @@ interface AuthScreenProps {
   body: string;
   /** Hero width at 1440 px: 760 (W04-1, D-01) by default, 640 on W04-2. */
   heroClassName?: string;
-  /** Pinned to the bottom of the hero (W04-2 "Use a passkey instead"). */
-  heroFooter?: ReactNode;
   children: ReactNode;
 }
 
@@ -35,7 +33,6 @@ export function AuthScreen({
   title,
   body,
   heroClassName = "lg:w-[52.8%]",
-  heroFooter,
   children,
 }: AuthScreenProps) {
   return (
@@ -61,11 +58,6 @@ export function AuthScreen({
           src="/assets/illustrations/desktop-landscape-night.svg"
           className="pointer-events-none absolute -bottom-[20px] -left-[40px] hidden w-[calc(100%+80px)] max-w-none dark:block"
         />
-        {heroFooter ? (
-          <div className="absolute bottom-[60px] left-[64px] z-10">
-            {heroFooter}
-          </div>
-        ) : null}
       </section>
 
       <section className="relative flex flex-1 flex-col items-center justify-center px-[24px] py-[96px]">

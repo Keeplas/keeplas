@@ -51,14 +51,11 @@
       "heroTitle": "Votre vie,\nbien gardée",
       "heroBody": "Un espace privé pour vos documents importants, vos comptes, vos instructions et plus encore. Pour que vous et vos proches soyez prêts, aujourd'hui comme demain.",
       "title": "Se connecter à Keeplas",
-      "body": "Utilisez votre clé d'accès pour accéder à votre compte en toute sécurité. Aucun mot de passe nécessaire.",
-      "continueWithPasskey": "Continuer avec une clé d'accès",
-      "or": "ou",
+      "body": "Ouvrez Keeplas sur votre téléphone et scannez le code pour accéder à votre compte en toute sécurité. Aucun mot de passe nécessaire.",
       "linkWithPhone": "Associer avec mon téléphone",
       "lostAccess": "Accès perdu ?",
       "newVisitor": "Nouveau sur Keeplas ?",
       "getTheApp": "Obtenir l'application",
-      "passkeyFailed": "Connexion avec la clé d'accès impossible.",
       "lostAccessDialog": {
         "title": "Accès perdu ?",
         "body": "La récupération du compte se fait dans l'application Keeplas. Ouvrez-la sur votre téléphone, ou installez-la sur un nouveau téléphone, puis choisissez « Accès perdu ? » pour retrouver votre coffre.",
@@ -68,7 +65,6 @@
     "connect": {
       "heroTitle": "Me connecter avec\nmon téléphone",
       "heroBody": "Scannez le QR code avec l'application Keeplas pour vous connecter. C'est rapide, sûr et sans mot de passe.",
-      "usePasskey": "Utiliser plutôt une clé d'accès",
       "step1": "Ouvrez Keeplas",
       "step1Detail": "sur votre téléphone",
       "step2": "Scannez le QR code",
@@ -83,14 +79,7 @@
       "rejected": "Votre téléphone a bloqué cette connexion car le code ne correspondait pas à ce navigateur. Actualisez la page pour obtenir un nouveau code.",
       "error": "Un problème est survenu pendant l'association de ce navigateur.",
       "retry": "Réessayer",
-      "linking": "Association de ce navigateur…",
-      "passkey": {
-        "title": "Créer une clé d'accès pour ce navigateur",
-        "body": "La prochaine fois, connectez-vous et déverrouillez votre coffre avec votre empreinte, votre visage ou le code de l'appareil. Sans téléphone.",
-        "create": "Créer la clé d'accès",
-        "skip": "Plus tard",
-        "failed": "Impossible de créer la clé d'accès."
-      }
+      "linking": "Association de ce navigateur…"
     }
   },
   "chrome": {
@@ -125,7 +114,6 @@
       "unlockingVault": "Déverrouillage du coffre",
       "checkingDeviceUnlock": "Vérification du déverrouillage de l'appareil",
       "couldNotUnlock": "Déverrouillage impossible",
-      "authCancelled": "Authentification annulée",
       "heading": "Déverrouiller votre coffre",
       "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez comment le déverrouiller.",
       "noDeviceUnlock": "Ce navigateur ne peut pas encore déverrouiller votre coffre seul. Associez-le avec votre téléphone pour continuer.",
@@ -134,10 +122,7 @@
       "back": "Retour",
       "legacyTitle": "Le compte doit être migré",
       "legacyBody": "Votre coffre a été sécurisé avec un ancien format de clé qui n'est plus pris en charge. Pour rétablir l'accès à connaissance nulle, votre compte doit être rechiffré avec vos 24 mots de récupération. Veuillez contacter le support pour migrer ce compte.",
-      "unavailableSuffix": "(indisponible sur cet appareil)",
       "methodPin": "Code PIN",
-      "methodBiometric": "Biométrie",
-      "methodHardwareKey": "Clé matérielle",
       "contact": "Nous contacter",
       "logout": "Se déconnecter",
       "heroTitle": "Votre vie,\nbien gardée",
@@ -214,23 +199,15 @@
       "evening": "Bonsoir, {name}"
     },
     "subtitle": "Vos informations importantes sont en sécurité et prêtes pour demain.",
-    "setup": {
-      "complete": "Configuration requise terminée",
-      "incomplete": "Terminez la configuration requise",
-      "progress": "{done} sur {total} terminées",
-      "completeBody": "Votre compte est protégé et prêt à l'emploi.",
-      "incompleteBody": "Terminez-la dans l'app Keeplas sur votre téléphone."
+    "recovery": {
+      "title": "Santé de récupération",
+      "covered": "Récupération prête",
+      "notCovered": "Aucun moyen de récupération"
     },
-    "optional": {
-      "title": "Protection facultative",
-      "trustContacts": {
-        "title": "Ajouter des contacts de confiance",
-        "description": "Choisissez jusqu'à 3 personnes qui peuvent vous aider à récupérer votre compte."
-      },
-      "recoveryKit": {
-        "title": "Exporter le kit de récupération",
-        "description": "Gardez votre kit facultatif de 24 mots en lieu sûr. Depuis votre téléphone."
-      }
+    "upgrade": {
+      "title": "Passer à Lifetime · 99 $",
+      "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
+      "cta": "Mettre à niveau"
     },
     "tiles": {
       "inbox": "À classer",
@@ -605,45 +582,35 @@
       }
     },
     "subscription": {
-      "title": "Une architecture de continuité. Sécurisée pour toujours.",
-      "description": "Choisissez le niveau de protection adapté à votre plan de continuité. Les deux offres reposent sur le même chiffrement à connaissance nulle — seule l'étendue change.",
-      "popular": "Populaire",
-      "currentPlan": "Forfait actuel",
-      "footer": "Tarifs affichés en USD. Changer de forfait ne supprime jamais votre coffre.",
-      "priceSuffix": {
-        "forever": "/pour toujours",
-        "oneTime": "paiement unique"
-      },
+      "title": "Votre offre",
+      "description": "Toutes les offres chiffrent votre coffre de la même façon. Lifetime ajoute de l'espace et toutes les fonctionnalités, en un seul paiement.",
+      "currentPlan": "Offre actuelle",
       "plans": {
         "free": {
-          "name": "Gratuit",
-          "tagline": "Le stockage numérique essentiel.",
-          "cta": "Commencer gratuitement"
+          "name": "Gratuite",
+          "price": "0 $",
+          "priceNote": "Gratuite pour toujours",
+          "perks": {
+            "storage": "100 Mo de stockage chiffré",
+            "contacts": "Jusqu'à 3 contacts de confiance",
+            "lifeCheck": "Life check"
+          }
         },
         "lifetime": {
-          "name": "À vie",
-          "tagline": "Tout ce dont vous avez besoin, pour toujours, en un seul paiement.",
-          "inApp": "Achetez l'offre À vie dans l'app mobile Keeplas : Réglages → Passer à Lifetime."
+          "name": "Keeplas Lifetime",
+          "price": "99 $",
+          "priceNote": "Paiement unique",
+          "perks": {
+            "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
+            "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
+            "noSubscription": "Un seul paiement. Sans abonnement, rien ne se renouvelle",
+            "newPhone": "Retrouvé sur chaque nouveau téléphone, il suffit de vous connecter"
+          }
         }
       },
-      "features": {
-        "freeVault": "Coffre à connaissance nulle de 100 Mo",
-        "basicLifeCheck": "Life Check de base (mensuel)",
-        "oneEmergencyContact": "1 contact d'urgence",
-        "emergencyCardDigital": "Carte d'urgence (numérique)",
-        "dataHostingCountry": "Choix du pays d'hébergement des données (bientôt disponible)",
-        "notarialCompliance": "Conformité notariale et juridique (bientôt disponible)",
-        "lifetimeVault": "Coffre à connaissance nulle de 10 Go",
-        "moreStorageAddon": "Stockage supplémentaire disponible en option",
-        "fullScenarioEngine": "Moteur de scénarios complet",
-        "fiveEmergencyContacts": "5 contacts d'urgence",
-        "prioritySocialRecovery": "Récupération sociale prioritaire",
-        "emergencyCardPhysical": "Carte d'urgence (physique)",
-        "videoLegacyMessages": "Messages vidéo de continuité",
-        "weeklyLifeCheck": "Life Check hebdomadaire",
-        "earlyAdopterBadge": "Badge des premiers adoptants",
-        "prioritySupport": "Support prioritaire"
-      }
+      "inApp": "Achetez Lifetime dans l'app Keeplas sur votre téléphone : Réglages → Passer à Lifetime.",
+      "paidWith": "Payé avec votre compte Apple ou Google. Keeplas ne voit jamais votre carte, et votre offre se met à jour ici toute seule.",
+      "footer": "L'app affiche le prix dans votre devise locale. Changer d'offre ne supprime jamais votre coffre."
     },
     "identity": {
       "updateError": "Échec de la mise à jour du profil",
@@ -864,30 +831,18 @@
       "pinMismatch": "Les codes PIN ne correspondent pas",
       "pinTooShort": "Le code PIN doit comporter au moins {min} chiffres",
       "pinError": "Impossible d'enregistrer le code PIN",
-      "authenticatorError": "Impossible d'enregistrer l'authentificateur",
       "title": "Accélérez vos prochains déverrouillages",
-      "description": "Choisissez au moins une méthode pour ne pas avoir à saisir vos 24 mots sur cet appareil la prochaine fois.",
-      "pinOption": "Code PIN",
-      "pinOptionHint": "Un code d'au moins {min} chiffres conservé uniquement sur cet appareil",
-      "biometricOption": "Biométrie (Face ID / Touch ID / Windows Hello)",
-      "biometricAvailable": "Utilisez l'authentificateur de votre appareil",
-      "biometricUnavailable": "Indisponible sur cet appareil",
-      "hardwareOption": "Clé de sécurité matérielle",
-      "hardwareAvailable": "YubiKey ou autre authentificateur amovible",
-      "hardwareUnavailable": "WebAuthn non pris en charge",
+      "description": "Créez un code PIN pour ne pas avoir à associer à nouveau ce navigateur la prochaine fois.",
       "skip": "Ignorer pour l'instant",
       "newPinLabel": "Nouveau code PIN",
       "pinPlaceholder": "Au moins {min} chiffres",
       "confirmPinLabel": "Confirmer le code PIN",
-      "savePin": "Enregistrer le code PIN",
-      "back": "Retour"
+      "savePin": "Enregistrer le code PIN"
     },
     "deviceUnlock": {
       "loading": "Chargement du déverrouillage de l'appareil",
       "method": {
-        "pin": "Code PIN",
-        "biometric": "Biométrie",
-        "hardwareKey": "Clé matérielle"
+        "pin": "Code PIN"
       },
       "removeLastTitle": "Supprimer le seul déverrouillage de cet appareil ?",
       "removeTitle": "Supprimer {label} ?",
@@ -900,33 +855,8 @@
       "locked": "Le coffre est verrouillé. Déverrouillez-le d'abord pour ajouter ou modifier les méthodes de déverrouillage de l'appareil.",
       "empty": "Aucun déverrouillage d'appareil pour l'instant — vos 24 mots sont requis à chaque connexion sur cet appareil.",
       "subtitlePin": "{label} · ajouté {time}",
-      "subtitleBiometric": "{label} · {state}",
-      "subtitleHardware": "{label} · {state}",
-      "biometricReady": "prête",
-      "biometricUnavailable": "indisponible sur cet appareil",
-      "hardwareReady": "WebAuthn prêt",
-      "hardwareUnsupported": "non pris en charge",
       "addMethod": "Ajouter une méthode",
       "footer": "Le déverrouillage de l'appareil est local à ce navigateur. Les autres appareils nécessitent leur propre configuration. Si vous perdez l'appareil, vos 24 mots permettent toujours de tout récupérer."
-    },
-    "passkey": {
-      "loading": "Chargement des clés d'accès",
-      "addError": "Impossible d'ajouter la clé d'accès.",
-      "removeTitle": "Supprimer cette clé d'accès ?",
-      "removeDescription": "Il vous faudra un autre moyen de vous connecter.",
-      "removeConfirm": "Supprimer",
-      "removeError": "Impossible de supprimer la clé d'accès.",
-      "title": "Accès biométrique",
-      "subtitle": "Connectez-vous avec Face ID, Touch ID ou la biométrie de votre appareil.",
-      "unsupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur. Utilisez une version récente de Chrome, Safari ou Edge sur un appareil doté d'un capteur biométrique.",
-      "lastUsed": "Dernière utilisation {time}",
-      "synced": " · Synchronisée",
-      "thisDeviceOnly": " · Cet appareil uniquement",
-      "removeAria": "Supprimer {name}",
-      "empty": "Aucune clé d'accès enregistrée pour l'instant.",
-      "addAnother": "Ajouter une autre clé d'accès",
-      "addFirst": "Ajouter une clé d'accès",
-      "footer": "La biométrie est pratique, mais elle ne doit jamais être votre seule méthode de récupération. Assurez-vous que votre kit physique est imprimé."
     },
     "totp": {
       "loading": "Chargement de l'application d'authentification",
@@ -977,52 +907,40 @@
       "title": "Rien n'a encore été partagé avec vous",
       "body": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici."
     },
-    "list": {
-      "title": "Coffres que vous protégez"
-    },
     "card": {
-      "phase": {
-        "released": "Ouvert",
-        "actionNeeded": "Action requise",
-        "guarding": "En garde"
-      },
-      "relative": {
-        "justNow": "à l'instant",
-        "minutes": "il y a {count} min",
-        "hours": "il y a {count} h",
-        "days": "il y a {count} j",
-        "months": "il y a {count} mois",
-        "years": "il y a {count} ans"
-      },
-      "role": {
-        "family": "Famille",
-        "friend": "Ami",
-        "lawyer": "Juridique",
-        "doctor": "Médical",
-        "other": "Autre",
-        "contact": "Contact"
-      },
-      "guarding": {
-        "trust": "Rien à faire pour le moment — on ne vous sollicitera que si {ownerName} cesse de répondre à ses vérifications d'activité."
-      },
-      "released": {
-        "cta": "Voir le coffre mémoriel",
-        "itemCountOne": "{count} élément",
-        "itemCountOther": "{count} éléments"
-      },
-      "actionNeeded": {
-        "prompt": "{ownerName} a cessé de répondre à ses vérifications d'activité. Si vous ne parvenez vraiment pas à le/la joindre, confirmez-le.",
-        "hint": "Deux contacts de confiance doivent confirmer avant l'ouverture d'une fenêtre de grâce de 72 heures. Pendant cette fenêtre, le propriétaire peut encore annuler en se manifestant. Ce n'est qu'une fois écoulée que les éléments assignés par le propriétaire sont transmis à leurs destinataires.",
-        "confirm": "Confirmer — cette personne est injoignable",
-        "cancel": "Annuler",
-        "done": "Confirmation enregistrée. Les autres contacts de confiance seront prévenus.",
-        "submitting": "Envoi…",
-        "mark": "Signaler comme injoignable",
-        "error": "Impossible de confirmer l'impossibilité de joindre la personne."
-      },
-      "availableAt": "Disponible · confirmé {relative}",
-      "confirmingAvailability": "Confirmation de votre disponibilité…",
-      "availabilityHint": "Ouvrir cette page confirme au propriétaire que vous pouvez toujours agir comme contact de confiance. Vous ne détenez aucune clé de son coffre et ne pouvez pas lire ses données."
+      "trusted": "Vous êtes contact de confiance",
+      "laterOne": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, qu'1 contact de confiance le confirme et que 72 heures passent sans annulation.",
+      "later": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, que {n} contacts de confiance le confirment et que 72 heures passent sans annulation.",
+      "oneItem": "1 élément laissé pour vous",
+      "items": "{n} éléments laissés pour vous",
+      "accessNow": "Accéder maintenant",
+      "unreachable": {
+        "detail": "N'a pas répondu à son Life check",
+        "body": "Si vous non plus n'arrivez pas à le joindre, confirmez-le. Une fois assez de confirmations ({n} nécessaires), il aura encore 72 heures pour annuler.",
+        "action": "Je n'arrive pas à le joindre",
+        "confirmTitle": "Confirmer que {name} est injoignable ?",
+        "confirmBody": "Ne confirmez qu'après avoir essayé de l'appeler ou de lui écrire. C'est définitif, mais rien ne s'ouvre sans assez de confirmations et 72 heures sans annulation.",
+        "confirm": "Oui, confirmer",
+        "done": "Merci. Nous vous tiendrons informé.",
+        "error": "Impossible d'enregistrer votre confirmation.",
+        "confirmed": "Vous avez confirmé qu'il est injoignable",
+        "waiting": "En attente des autres contacts de confiance. {name} peut encore annuler à tout moment avant toute ouverture."
+      }
+    },
+    "help": {
+      "link": "Quand verrai-je ce qu'on m'a laissé ?",
+      "title": "Quand un coffre s'ouvre-t-il ?",
+      "checkIn": "La personne confirme régulièrement",
+      "checkInBody": "Le propriétaire répond à un Life check chaque semaine, mois ou trimestre. Tant qu'il répond, son coffre reste privé, même pour vous.",
+      "silent": "Elle ne répond plus",
+      "silentBody": "Après 15 jours sans réponse, malgré les rappels, nous alertons ses contacts de confiance, vous compris.",
+      "confirm": "Les contacts de confiance confirment",
+      "confirmBody": "Deux d'entre eux doivent confirmer que le propriétaire est injoignable, sauf s'il a choisi un autre nombre.",
+      "grace": "Délai de sécurité de 72 heures",
+      "graceBody": "Le propriétaire est prévenu et peut encore annuler. Rien ne s'ouvre avant la fin de ce délai.",
+      "yours": "Vous ne voyez que ce qui vous est destiné",
+      "yoursBody": "Uniquement les éléments qu'il vous a laissés, en lecture seule, déchiffrés sur votre appareil.",
+      "note": "Si trop peu de contacts confirment à temps, le coffre reste verrouillé."
     },
     "memorial": {
       "noAccess": {
@@ -2010,12 +1928,11 @@
       "device": {
         "badge": "Pilier 3",
         "title": "Déverrouillage de l'appareil",
-        "intro": "Saisir 24 mots à chaque connexion est pénible. Après votre première connexion sur un appareil, vous pouvez enregistrer un déverrouillage local plus rapide — choisissez n'importe quelle combinaison. Chaque méthode reste sur cet appareil uniquement et ne se synchronise jamais.",
+        "intro": "Saisir 24 mots à chaque connexion est pénible. Après votre première connexion sur un appareil, vous pouvez enregistrer un déverrouillage local plus rapide. Il reste sur cet appareil uniquement et ne se synchronise jamais.",
         "bullets": [
-          "Code PIN (6 chiffres ou plus) protégé par Argon2id avec verrouillage anti-force brute.",
-          "Biométrie — Face ID, Touch ID, Windows Hello — via WebAuthn + extension PRF.",
-          "Clé de sécurité matérielle — YubiKey ou tout authentificateur FIDO2 avec PRF.",
-          "Les trois peuvent coexister. Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
+          "Navigateur : code PIN (6 chiffres ou plus) protégé par Argon2id avec verrouillage anti-force brute.",
+          "Téléphone : Face ID ou empreinte, via le trousseau sécurisé de l'appareil.",
+          "Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
           "Verrouillage auto en cas d'inactivité : après une heure sans activité, le coffre se verrouille et efface les clés en mémoire et sur l'appareil jusqu'au prochain déverrouillage."
         ]
       },
@@ -2252,8 +2169,8 @@
       "done": "Compte sécurisé. Terminez sur votre téléphone."
     },
     "pin": {
-      "title": "Code PIN (après la biométrie)",
-      "description": "Demander un PIN après Face ID ou l'empreinte.",
+      "title": "Code PIN",
+      "description": "Déverrouiller ce navigateur avec un code PIN.",
       "removeTitle": "Désactiver le PIN sur ce navigateur ?",
       "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
       "removeConfirm": "Désactiver",

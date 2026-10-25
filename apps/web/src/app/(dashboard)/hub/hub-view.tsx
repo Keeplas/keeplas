@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
-import { Button } from "@keeplas/ui";
+import { Button, buttonVariants, cn } from "@keeplas/ui";
 import { ShellPage } from "@/components/shell/shell-page";
 import { StateMessage } from "@/components/state-message";
 import { ItemTable } from "@/components/v2/item-table";
 import { ListRow } from "@/components/v2/list-row";
-import { IconTile } from "@/components/v2/surface";
+import { IconTile, Panel, RowText } from "@/components/v2/surface";
 import { formatRelative } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
 import { useLocale, useTranslations } from "@/lib/i18n";
-import { useRouter } from "@/lib/navigation";
+import { Link, useRouter } from "@/lib/navigation";
 import { AddItemMenu, type AddKind } from "@/components/vault/add-item-menu";
 
 export interface HubRecentItem {
@@ -21,11 +21,10 @@ export interface HubRecentItem {
 
 export interface HubViewProps {
   firstName: string;
-  /** Required setup (verify the number, passkey, vault): steps done of 3. */
-  setupDone: number;
-  /** Optional protection already in place (hides its row). */
-  trustContactsReady: boolean;
-  recoveryKitReady: boolean;
+  /** At least one way back in besides this device (backup, contacts, kit). */
+  recoveryCovered: boolean;
+  /** Free accounts get the Lifetime upgrade card. */
+  plan: "free" | "lifetime";
   counts: Record<"inbox" | "documents" | "accounts", number>;
   recentItems: HubRecentItem[];
   onAdd: (kind: AddKind) => void;
@@ -34,8 +33,6 @@ export interface HubViewProps {
   notice?: ReactNode;
   addMenuOpen?: boolean;
 }
-
-const SETUP_TOTAL = 3;
 
 /** Section 10 "Your vault is empty". */
 export function VaultEmptyMessage({ onAdd }: { onAdd: () => void }) {
@@ -55,12 +52,11 @@ function greetingKey(hour: number) {
   return "evening";
 }
 
-/** W04-3 dashboard: setup status, optional protection, tiles, recent items. */
+/** W04-3 dashboard: recovery health, upgrade, tiles, recent items. */
 export function HubView({
   firstName,
-  setupDone,
-  trustContactsReady,
-  recoveryKitReady,
+  recoveryCovered,
+  plan,
   counts,
   recentItems,
   onAdd,
@@ -71,7 +67,6 @@ export function HubView({
   const t = useTranslations("hub");
   const locale = useLocale();
   const router = useRouter();
-  const setupComplete = setupDone >= SETUP_TOTAL;
   const greeting = t(`greeting.${greetingKey(new Date().getHours())}`, {
     name: firstName,
   });
@@ -82,51 +77,35 @@ export function HubView({
     <ShellPage title={greeting} subtitle={t("subtitle")}>
       {notice}
 
-      <section className="flex flex-wrap items-center gap-[16px] rounded-[16px] bg-bg-info p-[20px]">
-        <div className="flex min-w-[240px] flex-1 items-center gap-[12px]">
-          <IconTile
-            icon={setupComplete ? ICON_PATHS.check : ICON_PATHS.shieldAlert}
-            className="bg-action-primary text-text-inverse"
-          />
-          <div className="flex flex-col gap-[2px]">
-            <p className="text-label text-text-primary">
-              {setupComplete ? t("setup.complete") : t("setup.incomplete")}
-            </p>
-            <p className="text-body-sm text-text-muted">
-              {t("setup.progress", { done: setupDone, total: SETUP_TOTAL })}
-            </p>
-          </div>
-        </div>
-        <p className="text-body text-text-muted">
-          {setupComplete ? t("setup.completeBody") : t("setup.incompleteBody")}
-        </p>
-      </section>
+      <ListRow
+        href="/settings/recovery"
+        icon={ICON_PATHS.shieldCheck}
+        title={t("recovery.title")}
+        description={t(
+          recoveryCovered ? "recovery.covered" : "recovery.notCovered",
+        )}
+      />
 
-      {trustContactsReady && recoveryKitReady ? null : (
-        <>
-          <h2 className="text-label text-text-primary">
-            {t("optional.title")}
-          </h2>
-          <div className="grid gap-[16px] lg:grid-cols-2">
-            {trustContactsReady ? null : (
-              <ListRow
-                href="/trusted-contacts"
-                icon={ICON_PATHS.people}
-                title={t("optional.trustContacts.title")}
-                description={t("optional.trustContacts.description")}
-              />
-            )}
-            {recoveryKitReady ? null : (
-              <ListRow
-                href="/settings/recovery"
-                icon={ICON_PATHS.document}
-                title={t("optional.recoveryKit.title")}
-                description={t("optional.recoveryKit.description")}
-              />
-            )}
+      {plan === "free" ? (
+        <Panel className="flex flex-wrap items-center gap-[16px] p-[20px]">
+          <div className="flex min-w-[240px] flex-1 items-center gap-[14px]">
+            <IconTile
+              icon={ICON_PATHS.flash}
+              className="bg-bg-info text-text-link"
+            />
+            <RowText
+              title={t("upgrade.title")}
+              description={t("upgrade.body")}
+            />
           </div>
-        </>
-      )}
+          <Link
+            href="/settings/subscription"
+            className={cn(buttonVariants({ variant: "primary", size: "cta" }))}
+          >
+            {t("upgrade.cta")}
+          </Link>
+        </Panel>
+      ) : null}
 
       <div className="grid gap-[16px] md:grid-cols-3">
         <ListRow

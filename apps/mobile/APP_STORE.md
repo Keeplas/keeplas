@@ -1,6 +1,6 @@
 # iOS: App Store Connect & TestFlight
 
-How the Keeplas iOS app gets from this repo to TestFlight and the App Store. Builds and uploads go through EAS; App Store Connect (ASC) handles testers, review and release. General EAS profiles and environment variables: [`README.md`](./README.md).
+How the Keeplas iOS app gets from this repo to TestFlight and the App Store. iOS builds run with Xcode on a Mac and upload straight to App Store Connect (ASC), not through EAS Build (the free plan caps iOS builds per month). ASC handles testers, review and release. Android builds and the EAS environment variables: [`README.md`](./README.md).
 
 ## Identifiers
 
@@ -32,7 +32,7 @@ developer.apple.com → Certificates, Identifiers & Profiles → Identifiers →
 
 Face ID, camera, microphone and photos are `Info.plist` permissions (set by the config plugins in `app.json`), not capabilities.
 
-`app.json` must keep the App Attest entitlement (`com.apple.developer.devicecheck.appattest-environment: "production"`). EAS syncs capabilities from the entitlements on every build. Without that line it turns App Attest **off** on the App ID (`Synced capabilities: Disabled: App Attest` in the build log). The server always accepts production attestations, so dev builds still work.
+`app.json` must keep the App Attest entitlement (`com.apple.developer.devicecheck.appattest-environment: "production"`). Automatic signing syncs capabilities from the entitlements on every build. Without that line App Attest was turned **off** on the App ID (`Synced capabilities: Disabled: App Attest` in the EAS build log). The server always accepts production attestations, so dev builds still work.
 
 ### 2. Create the app in App Store Connect
 
@@ -53,30 +53,25 @@ The web host serves `/.well-known/apple-app-site-association` (`apps/web/src/lib
 
 Never set `APP_ATTEST_ALLOW_DEVELOPMENT` on production. It belongs only on the dev deployment (see `.env.example`).
 
-### 4. EAS environment and credentials
+### 4. Build environment and credentials
 
-- The `production` EAS environment needs the `EXPO_PUBLIC_*` values and `GOOGLE_SERVICES_JSON` (see [`README.md`](./README.md#eas-builds)). Check with `npx eas-cli env:list --environment production`.
-- The **first** iOS build is interactive. Log in with the Apple Developer account (2FA) and answer **Yes** to these prompts:
-  - generate the distribution certificate;
-  - generate the provisioning profile;
-  - set up the push key;
-  - create an App Store Connect API key.
-
-  EAS stores all of these, so later builds and submits need no Apple login.
-
-- Inspect or rotate the credentials with `npx eas-cli credentials --platform ios`.
+- The `EXPO_PUBLIC_*` production values live in the EAS `production` environment (see [`README.md`](./README.md#eas-builds)). The release script pulls them with `eas env:pull`, which does not use the EAS build quota. Check with `npx eas-cli env:list --environment production`.
+- The App Store Connect API key lives in Infisical `prod` → `/keeplas_mobile` (`ASC_API_KEY_ID`, `ASC_API_ISSUER_ID`, `ASC_API_KEY_P8`). Xcode uses it to fetch the cloud-managed distribution certificate and the provisioning profile, and to upload the build. No Apple login, no certificate in the keychain.
+- The Mac needs Xcode, CocoaPods, `infisical login` and `npx eas-cli login`.
+- The APNs push key stays on EAS (Expo push service): `npx eas-cli credentials --platform ios`.
 
 ## Build and upload to TestFlight
 
-Run this from `apps/mobile`:
+Run this from the repo root, on the commit to ship:
 
 ```bash
-npx eas-cli build --platform ios --profile production --auto-submit
+pnpm --filter @keeplas/mobile release:ios
 ```
 
-- The build runs on EAS servers (about 15–30 min), then uploads to ASC.
+- `scripts/release-ios.sh` regenerates `ios/` (`expo prebuild --clean`), archives a Release build with Xcode into `ios/build/Keeplas.xcarchive`, then uploads it to ASC.
+- Xcode picks the next free build number at upload (`manageAppVersionAndBuildNumber`).
 - ASC processes the build for another 5–15 min, then sends an email.
-- To submit a build that already exists: `npx eas-cli submit --platform ios --profile production --latest`.
+- To retry only the upload: open the archive in Xcode (Window → Organizer) → **Distribute App** → App Store Connect.
 
 Export compliance: `app.json` sets `ITSAppUsesNonExemptEncryption: false`, so ASC no longer asks about it on each build. **Review this before external testing or an App Store release.** Keeplas ships its own cryptography (AES-GCM, ML-KEM, ML-DSA), so "exempt" is probably wrong. A French distribution also needs an ANSSI declaration. Fix the value and the declaration together.
 
@@ -107,7 +102,7 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 
 1. **Backend first.** Deploy Convex with `pnpm deploy:convex` before the app that calls new functions. Older app versions keep running against the same backend, so keep functions backward-compatible until they are gone from users' phones.
 2. **Version.**
-   - **Build number**: EAS manages it (`appVersionSource: remote`, `autoIncrement` on `production`). Never set `ios.buildNumber` by hand.
+   - **Build number**: Xcode sets it at upload. Never set `ios.buildNumber` by hand. The EAS remote counter no longer moves for iOS: before an iOS build on EAS again, raise it above the latest ASC build with `npx eas-cli build:version:set --platform ios`.
    - **Marketing version**: `expo.version` in `app.json`, shown as "Version" in ASC. Several builds can share a version while it is in TestFlight. Once a version is released on the App Store, bump `expo.version` (e.g. `0.1.0` → `0.2.0`) before the next upload, or ASC rejects the build.
 3. **Build and submit.** Run the [build command](#build-and-upload-to-testflight). Internal testers get the build once ASC has processed it.
 4. **Release.** When the build is validated, follow [Release to the App Store](#release-to-the-app-store).
@@ -129,13 +124,13 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 
 ## Troubleshooting
 
-| Symptom                                              | Cause / fix                                                                                           |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| AASA URL returns `404`                               | `APPLE_TEAM_ID` or `IOS_BUNDLE_ID` is empty in Infisical `/keeplas_app`, or Vercel was not redeployed |
-| Passkeys / universal links fail after the AASA fix   | The app was installed before the fix: delete it and reinstall                                         |
-| Sign-up fails at attestation (`environment`)         | A development build against a deployment without `APP_ATTEST_ALLOW_DEVELOPMENT=true` (dev only)       |
-| Sign-up fails at attestation on a TestFlight build   | App Attest is disabled on the App ID: check that the entitlement is still in `app.json`, rebuild      |
-| Convex error `APPLE_TEAM_ID` missing                 | Run `pnpm sync:convex-env` after setting it in Infisical `/keeplas_app`                               |
-| ASC rejects the upload: version already released     | Bump `expo.version` in `app.json`                                                                     |
-| `eas submit` asks which ASC app to use / fails in CI | Add `"ios": { "ascAppId": "6825985002" }` under `submit.production` in `eas.json`                     |
-| No push notifications on iOS                         | Push key missing: `npx eas-cli credentials --platform ios` → Push Notifications                       |
+| Symptom                                            | Cause / fix                                                                                                                                    |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| AASA URL returns `404`                             | `APPLE_TEAM_ID` or `IOS_BUNDLE_ID` is empty in Infisical `/keeplas_app`, or Vercel was not redeployed                                          |
+| Passkeys / universal links fail after the AASA fix | The app was installed before the fix: delete it and reinstall                                                                                  |
+| Sign-up fails at attestation (`environment`)       | A development build against a deployment without `APP_ATTEST_ALLOW_DEVELOPMENT=true` (dev only)                                                |
+| Sign-up fails at attestation on a TestFlight build | App Attest is disabled on the App ID: check that the entitlement is still in `app.json`, rebuild                                               |
+| Convex error `APPLE_TEAM_ID` missing               | Run `pnpm sync:convex-env` after setting it in Infisical `/keeplas_app`                                                                        |
+| ASC rejects the upload: version already released   | Bump `expo.version` in `app.json`                                                                                                              |
+| Archive fails: `Your team has no devices`          | Automatic signing needs one registered iPhone: plug it into the Mac (unlocked, trusted) once, or add its UDID in developer.apple.com → Devices |
+| No push notifications on iOS                       | Push key missing: `npx eas-cli credentials --platform ios` → Push Notifications                                                                |

@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.keeplas.app",
+      "appleTeamId": "67T9Q44562",
       "associatedDomains": [
         "webcredentials:app.keeplas.com",
         "applinks:app.keeplas.com"
