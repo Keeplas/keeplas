@@ -1453,7 +1453,7 @@ export const notifyConfirmationRequest = internalAction({
       bodyName: args.ownerName,
       copy: TC_CONFIRM_COPY,
       path: "/shared-with-me",
-      appPath: "/people",
+      appPath: "/shared",
       templateEnv: process.env.WHATSAPP_TC_UNREACHABLE_TEMPLATE_NAME,
       templateBase: "keeplas_tc_unreachable",
     }),

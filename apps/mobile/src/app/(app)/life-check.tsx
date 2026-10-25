@@ -13,6 +13,7 @@ import { Screen } from "@/components/screen";
 import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { Countdown } from "@/features/life-check/countdown";
+import { ReleaseQuorumWarning } from "@/features/people/release-quorum-warning";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -222,6 +223,7 @@ export default function LifeCheck() {
           onPress={toggleTravel}
         />
       ) : null}
+      <ReleaseQuorumWarning />
       <Callout icon="shield-check" text={t("lifeCheck.note")} />
     </Screen>
   );

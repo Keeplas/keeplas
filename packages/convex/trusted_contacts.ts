@@ -108,6 +108,32 @@ export const getContactsReady = query({
 });
 
 /**
+ * How many distinct people must confirm the owner can't be reached before
+ * their vault is released, and how many accepted people could. Below the
+ * threshold nothing can ever be released, so the owner is warned.
+ */
+export const getReleaseQuorum = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const config = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    // Distinct humans, like the quorum count in markUserUnreachable.
+    const people = new Set(
+      (await acceptedContacts(ctx, userId)).flatMap((c) =>
+        c.contactUserId ? [c.contactUserId] : [],
+      ),
+    );
+    return {
+      required: config?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
+      available: people.size,
+    };
+  },
+});
+
+/**
  * Get a single contact by ID.
  */
 export const getContact = query({
@@ -1008,6 +1034,16 @@ export const getVaultsWhereIAmContact = query({
       const releaseReq = approvedReqs.find((r) =>
         r.sectionsRequested.some((s) => s.startsWith("item:")),
       );
+      // Whether I already confirmed the owner can't be reached (one vote per
+      // contact row), so the contact UI swaps the action for a waiting state.
+      const unreachableConfirmed = (
+        await ctx.db
+          .query("access_requests")
+          .withIndex("by_status", (q) =>
+            q.eq("vaultUserId", contact.userId).eq("status", "pending"),
+          )
+          .collect()
+      ).some((r) => r.contactsInitiated?.includes(contact._id));
       const releasedItemCount = releaseReq
         ? releaseReq.sectionsRequested.filter((s) => s.startsWith("item:"))
             .length
@@ -1023,6 +1059,7 @@ export const getVaultsWhereIAmContact = query({
         ownerCycleStatus: activeCycle?.status ?? null,
         released: !!releaseReq,
         releasedItemCount,
+        unreachableConfirmed,
       });
     }
     return result;

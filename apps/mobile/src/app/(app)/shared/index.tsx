@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
@@ -11,14 +12,21 @@ import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
-import { StateMessage } from "@/components/state-message";
+import { StateMessage, StateSheet } from "@/components/state-message";
 import { IconTile, InfoRow, ListRow, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { VaultSwitch } from "@/features/vault/vault-switch";
+import { errorText } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
+import { toast } from "@/lib/toast";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
+
+type SharedVault = FunctionReturnType<
+  typeof api.trusted_contacts.getVaultsWhereIAmContact
+>[number];
 
 /** How a vault opens to a trusted contact, in order (help sheet). */
 const RELEASE_STEPS = [
@@ -61,6 +69,76 @@ function OwnerIdentity({
 }
 
 /**
+ * A vault not released to me. While the owner's Life check waits for their
+ * trusted contacts, I can confirm I can't reach them either (once).
+ */
+function LockedVaultCard({
+  vault,
+  onUnreachable,
+}: {
+  vault: SharedVault;
+  onUnreachable: () => void;
+}) {
+  const { t } = useI18n();
+  const { colors } = useTheme();
+  const name = formatPhone(vault.ownerName);
+  const n = vault.confirmationThreshold;
+  const actionNeeded =
+    vault.ownerCycleStatus === "awaiting_confirmation" &&
+    !vault.unreachableConfirmed;
+
+  let detail = t("shared.trusted");
+  let body =
+    n === 1 ? t("shared.laterOne", { name }) : t("shared.later", { name, n });
+  if (actionNeeded) {
+    detail = t("shared.unreachable.detail");
+    body = t("shared.unreachable.body", { n });
+  } else if (vault.unreachableConfirmed) {
+    detail = t("shared.unreachable.confirmed");
+    body = t("shared.unreachable.waiting", { name });
+  }
+
+  return (
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor:
+            colors[actionNeeded ? "status.pending.bg" : "bg.warm"],
+        },
+      ]}
+    >
+      <View style={styles.row}>
+        {actionNeeded ? (
+          <IconTile
+            icon="alert-triangle"
+            size={44}
+            background={colors["bg.surface"]}
+            color="status.pending"
+          />
+        ) : (
+          <IconTile icon="lock" size={44} background={colors["bg.subtle"]} />
+        )}
+        <OwnerIdentity
+          name={vault.ownerName}
+          phone={vault.ownerPhone}
+          detail={detail}
+        />
+      </View>
+      <Text variant="body-sm" color="text.muted">
+        {body}
+      </Text>
+      {actionNeeded ? (
+        <Button
+          label={t("shared.unreachable.action")}
+          onPress={onUnreachable}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+/**
  * M03-1 Shared with me: the people who chose me as a trusted contact. What
  * they left me opens once their vault is released to me.
  */
@@ -70,6 +148,26 @@ export default function SharedWithMe() {
   const { colors } = useTheme();
   const vaults = useQuery(api.trusted_contacts.getVaultsWhereIAmContact);
   const [helpOpen, setHelpOpen] = useState(false);
+  // Kept after closing so the sheet keeps its title while it slides out.
+  const [confirming, setConfirming] = useState<SharedVault | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const markUnreachable = useAuditedMutation(
+    api.access_requests.markUserUnreachable,
+  );
+
+  async function confirmUnreachable(vault: SharedVault) {
+    setConfirmOpen(false);
+    try {
+      await markUnreachable({ contactId: vault._id });
+      toast({ variant: "success", title: t("shared.unreachable.done") });
+    } catch (error) {
+      toast({
+        variant: "error",
+        title: t("common.genericError"),
+        description: errorText(error),
+      });
+    }
+  }
 
   const open = (contactId: Id<"trusted_contacts">) =>
     router.push({ pathname: "/shared/[contactId]", params: { contactId } });
@@ -124,31 +222,14 @@ export default function SharedWithMe() {
             />
           </View>
         ) : (
-          <View
+          <LockedVaultCard
             key={vault._id}
-            style={[styles.card, { backgroundColor: colors["bg.warm"] }]}
-          >
-            <View style={styles.row}>
-              <IconTile
-                icon="lock"
-                size={44}
-                background={colors["bg.subtle"]}
-              />
-              <OwnerIdentity
-                name={vault.ownerName}
-                phone={vault.ownerPhone}
-                detail={t("shared.trusted")}
-              />
-            </View>
-            <Text variant="body-sm" color="text.muted">
-              {vault.confirmationThreshold === 1
-                ? t("shared.laterOne", { name: formatPhone(vault.ownerName) })
-                : t("shared.later", {
-                    name: formatPhone(vault.ownerName),
-                    n: vault.confirmationThreshold,
-                  })}
-            </Text>
-          </View>
+            vault={vault}
+            onUnreachable={() => {
+              setConfirming(vault);
+              setConfirmOpen(true);
+            }}
+          />
         ),
       )}
       <ListRow
@@ -173,6 +254,24 @@ export default function SharedWithMe() {
         </View>
         <Note icon="lock" text={t("shared.help.note")} />
       </BottomSheet>
+      <StateSheet
+        visible={confirmOpen}
+        onDismiss={() => setConfirmOpen(false)}
+        icon="alert-triangle"
+        tone="warning"
+        title={t("shared.unreachable.confirmTitle", {
+          name: formatPhone(confirming?.ownerName ?? ""),
+        })}
+        body={t("shared.unreachable.confirmBody")}
+        primary={{
+          label: t("shared.unreachable.confirm"),
+          onPress: () => confirming && void confirmUnreachable(confirming),
+        }}
+        secondary={{
+          label: t("common.cancel"),
+          onPress: () => setConfirmOpen(false),
+        }}
+      />
     </Screen>
   );
 }
