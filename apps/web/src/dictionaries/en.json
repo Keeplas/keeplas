@@ -51,14 +51,11 @@
       "heroTitle": "Your life,\nwell kept",
       "heroBody": "A private place for your important documents, accounts, instructions and more. So you and the people you care about are prepared, today and tomorrow.",
       "title": "Sign in to Keeplas",
-      "body": "Use your passkey to safely access your account. No password needed.",
-      "continueWithPasskey": "Continue with passkey",
-      "or": "or",
+      "body": "Open Keeplas on your phone and scan the code to reach your account securely. No password needed.",
       "linkWithPhone": "Link with my phone",
       "lostAccess": "Lost access?",
       "newVisitor": "New to Keeplas?",
       "getTheApp": "Get the app",
-      "passkeyFailed": "Could not sign in with your passkey.",
       "lostAccessDialog": {
         "title": "Lost access?",
         "body": "Account recovery happens in the Keeplas app. Open it on your phone, or install it on a new phone, then choose “Lost access?” to get back into your vault.",
@@ -68,7 +65,6 @@
     "connect": {
       "heroTitle": "Log in with\nmy phone",
       "heroBody": "Scan the QR code with the Keeplas app to log in. It's fast, secure and password-free.",
-      "usePasskey": "Use a passkey instead",
       "step1": "Open Keeplas",
       "step1Detail": "on your phone",
       "step2": "Scan the QR code",
@@ -83,14 +79,7 @@
       "rejected": "Your phone blocked this login because the code didn't match this browser. Refresh the page to get a new code.",
       "error": "Something went wrong while linking this browser.",
       "retry": "Try again",
-      "linking": "Linking this browser…",
-      "passkey": {
-        "title": "Create a passkey for this browser",
-        "body": "Next time, sign in and unlock your vault with your fingerprint, face or device PIN. No phone needed.",
-        "create": "Create passkey",
-        "skip": "Not now",
-        "failed": "Could not create the passkey."
-      }
+      "linking": "Linking this browser…"
     }
   },
   "chrome": {
@@ -125,7 +114,6 @@
       "unlockingVault": "Unlocking vault",
       "checkingDeviceUnlock": "Checking device unlock",
       "couldNotUnlock": "Could not unlock",
-      "authCancelled": "Authentication cancelled",
       "heading": "Unlock your vault",
       "subheading": "Your vault is encrypted on this device. Choose how to unlock it.",
       "noDeviceUnlock": "This browser can't unlock your vault on its own yet. Link it with your phone to continue.",
@@ -134,10 +122,7 @@
       "back": "Back",
       "legacyTitle": "Account needs re-keying",
       "legacyBody": "Your vault was secured with a legacy key format that is no longer supported. To restore zero-knowledge access, your account must be re-keyed with your 24 recovery words. Please contact support to migrate this account.",
-      "unavailableSuffix": "(unavailable on this device)",
       "methodPin": "PIN",
-      "methodBiometric": "Biometric",
-      "methodHardwareKey": "Hardware key",
       "contact": "Contact us",
       "logout": "Log out",
       "heroTitle": "Your life,\nwell kept",
@@ -846,30 +831,18 @@
       "pinMismatch": "PINs do not match",
       "pinTooShort": "PIN must be at least {min} digits",
       "pinError": "Could not enroll PIN",
-      "authenticatorError": "Could not enroll authenticator",
       "title": "Speed up future unlocks",
-      "description": "Choose at least one method so you don't have to type your 24 words on this device next time.",
-      "pinOption": "PIN",
-      "pinOptionHint": "A {min}+ digit code stored only on this device",
-      "biometricOption": "Biometric (Face ID / Touch ID / Windows Hello)",
-      "biometricAvailable": "Use your platform authenticator",
-      "biometricUnavailable": "Not available on this device",
-      "hardwareOption": "Hardware security key",
-      "hardwareAvailable": "YubiKey or other roaming authenticator",
-      "hardwareUnavailable": "WebAuthn not supported",
+      "description": "Create a PIN so you don't have to link this browser again next time.",
       "skip": "Skip for now",
       "newPinLabel": "New PIN",
       "pinPlaceholder": "At least {min} digits",
       "confirmPinLabel": "Confirm PIN",
-      "savePin": "Save PIN",
-      "back": "Back"
+      "savePin": "Save PIN"
     },
     "deviceUnlock": {
       "loading": "Loading device unlock",
       "method": {
-        "pin": "PIN",
-        "biometric": "Biometric",
-        "hardwareKey": "Hardware key"
+        "pin": "PIN"
       },
       "removeLastTitle": "Remove the only unlock on this device?",
       "removeTitle": "Remove {label}?",
@@ -882,33 +855,8 @@
       "locked": "Vault is locked. Unlock first to add or change device unlock methods.",
       "empty": "No device unlock yet — your 24 words are required at every login on this device.",
       "subtitlePin": "{label} · added {time}",
-      "subtitleBiometric": "{label} · {state}",
-      "subtitleHardware": "{label} · {state}",
-      "biometricReady": "ready",
-      "biometricUnavailable": "unavailable on this device",
-      "hardwareReady": "WebAuthn ready",
-      "hardwareUnsupported": "unsupported",
       "addMethod": "Add a method",
       "footer": "Device unlock is local to this browser. Other devices need their own setup. If you lose the device, your 24 words still recover everything."
-    },
-    "passkey": {
-      "loading": "Loading passkeys",
-      "addError": "Could not add passkey.",
-      "removeTitle": "Remove this passkey?",
-      "removeDescription": "You will need another way to sign in.",
-      "removeConfirm": "Remove",
-      "removeError": "Could not remove passkey.",
-      "title": "Biometric Access",
-      "subtitle": "Sign in with Face ID, Touch ID, or your device biometrics.",
-      "unsupported": "Passkeys are not supported on this browser. Use a recent version of Chrome, Safari, or Edge on a device with a biometric sensor.",
-      "lastUsed": "Last used {time}",
-      "synced": " · Synced",
-      "thisDeviceOnly": " · This device only",
-      "removeAria": "Remove {name}",
-      "empty": "No passkeys registered yet.",
-      "addAnother": "Add another passkey",
-      "addFirst": "Add a passkey",
-      "footer": "Biometrics are convenient but should never be your only recovery method. Ensure your physical kit is printed."
     },
     "totp": {
       "loading": "Loading authenticator app",
@@ -959,52 +907,40 @@
       "title": "Nothing shared with you yet",
       "body": "When someone makes you a trusted contact, their shared items appear here."
     },
-    "list": {
-      "title": "Vaults you protect"
-    },
     "card": {
-      "phase": {
-        "released": "Released",
-        "actionNeeded": "Action needed",
-        "guarding": "Guarding"
-      },
-      "relative": {
-        "justNow": "just now",
-        "minutes": "{count}m ago",
-        "hours": "{count}h ago",
-        "days": "{count}d ago",
-        "months": "{count}mo ago",
-        "years": "{count}y ago"
-      },
-      "role": {
-        "family": "Family",
-        "friend": "Friend",
-        "lawyer": "Legal",
-        "doctor": "Medical",
-        "other": "Other",
-        "contact": "Contact"
-      },
-      "guarding": {
-        "trust": "Nothing to do for now — you'll be asked to help only if {ownerName} stops responding to their check-ins."
-      },
-      "released": {
-        "cta": "View memorial vault",
-        "itemCountOne": "{count} item",
-        "itemCountOther": "{count} items"
-      },
-      "actionNeeded": {
-        "prompt": "{ownerName} stopped responding to their check-ins. If you genuinely can't reach them, confirm it.",
-        "hint": "Two trust contacts must confirm before a 72-hour grace window opens. During that window the owner can still cancel by checking in. Only after it passes are the items the owner assigned released to their recipients.",
-        "confirm": "Confirm — they are unreachable",
-        "cancel": "Cancel",
-        "done": "Confirmation recorded. Other trust contacts will be notified.",
-        "submitting": "Submitting…",
-        "mark": "Mark as unreachable",
-        "error": "Could not confirm unreachability."
-      },
-      "availableAt": "Available · confirmed {relative}",
-      "confirmingAvailability": "Confirming your availability…",
-      "availabilityHint": "Opening this page confirms to the owner that you can still act as their trusted contact. You never hold a key to their vault and can't read their data."
+      "trusted": "You are a trusted contact",
+      "laterOne": "Locked. It opens only if {name} stops answering their Life check, 1 trusted contact confirms it, and 72 hours pass with no cancellation.",
+      "later": "Locked. It opens only if {name} stops answering their Life check, {n} trusted contacts confirm it, and 72 hours pass with no cancellation.",
+      "oneItem": "1 item left for you",
+      "items": "{n} items left for you",
+      "accessNow": "Access now",
+      "unreachable": {
+        "detail": "Hasn't answered their Life check",
+        "body": "If you can't reach them either, confirm it. Once enough trusted contacts confirm ({n} needed), they still have 72 hours to cancel.",
+        "action": "I can't reach them",
+        "confirmTitle": "Confirm you can't reach {name}?",
+        "confirmBody": "Only confirm after trying to call or message them. You can't undo it, but nothing opens unless enough contacts confirm and 72 hours pass without them cancelling.",
+        "confirm": "Yes, confirm",
+        "done": "Thanks. We'll keep you posted.",
+        "error": "Could not record your confirmation.",
+        "confirmed": "You confirmed you can't reach them",
+        "waiting": "Waiting for the other trusted contacts. {name} can still cancel at any time before anything opens."
+      }
+    },
+    "help": {
+      "link": "When will I see what they left me?",
+      "title": "When does a vault open?",
+      "checkIn": "They check in regularly",
+      "checkInBody": "The owner answers a Life check every week, month or quarter. While they answer, their vault stays private, even to you.",
+      "silent": "They stop answering",
+      "silentBody": "After 15 days without an answer, despite reminders, we alert their trusted contacts, you included.",
+      "confirm": "Trusted contacts confirm",
+      "confirmBody": "Two of them must confirm the owner can't be reached, unless the owner chose another number.",
+      "grace": "72-hour safety window",
+      "graceBody": "The owner is warned and can still cancel. Nothing opens before it ends.",
+      "yours": "You see only what's for you",
+      "yoursBody": "Only the items they left you, read-only, decrypted on your device.",
+      "note": "If not enough contacts confirm in time, the vault stays locked."
     },
     "memorial": {
       "noAccess": {
@@ -1992,12 +1928,11 @@
       "device": {
         "badge": "Pillar 3",
         "title": "Device Unlock",
-        "intro": "Typing 24 words at every login is brutal. After your first login on a device, you can save a faster local unlock — choose any combination. Each method stays on this device only and never syncs.",
+        "intro": "Typing 24 words at every login is brutal. After your first login on a device, you can save a faster local unlock. It stays on this device only and never syncs.",
         "bullets": [
-          "PIN (6+ digits) protected by Argon2id with brute-force lockout.",
-          "Biometric — Face ID, Touch ID, Windows Hello — via WebAuthn + PRF extension.",
-          "Hardware security key — YubiKey or any FIDO2 authenticator with PRF.",
-          "All three can coexist. Lose the device? Re-enter your 24 words on a new one.",
+          "Browser: PIN (6+ digits) protected by Argon2id with brute-force lockout.",
+          "Phone: Face ID or fingerprint, through the device's secure keychain.",
+          "Lose the device? Re-enter your 24 words on a new one.",
           "Inactivity auto-lock: after one hour with no activity the vault locks itself, wiping the in-memory and on-device keys until you unlock again."
         ]
       },
@@ -2234,8 +2169,8 @@
       "done": "Account secured. Finish on your phone."
     },
     "pin": {
-      "title": "PIN code (after biometrics)",
-      "description": "Ask for a PIN after Face ID or fingerprint.",
+      "title": "PIN code",
+      "description": "Unlock this browser with a PIN code.",
       "removeTitle": "Turn off the PIN on this browser?",
       "removeBody": "You'll unlock this browser with your other methods, or link it again from your phone.",
       "removeConfirm": "Turn off",

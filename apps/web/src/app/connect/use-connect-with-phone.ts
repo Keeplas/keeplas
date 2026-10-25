@@ -2,20 +2,16 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import type { Id } from "@keeplas/backend/_generated/dataModel";
 import {
   buildPairingQr,
   generateBrowserPairingKeys,
   openPairingEnvelope,
   pairingKeyHash,
 } from "@keeplas/crypto/pairing";
-import { enrollMethod } from "@/lib/device-unlock";
 import { importMasterKey } from "@/lib/device-unlock/key-import";
 import { useMasterKey } from "@/lib/master-key-context";
 import { initialPairingState, pairingReducer } from "@/lib/pairing-flow";
-import { registerPasskey } from "@/lib/passkey";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
-import { deviceUnlockOwner } from "@/lib/use-device-unlock";
 import { useRequestContext } from "@/lib/use-request-context";
 import { deviceLabelFromUserAgent } from "@/lib/user-agent";
 
@@ -34,13 +30,9 @@ interface PairingSecrets {
 /**
  * W04-2 side effects around `pairingReducer` (ARCHITECTURE.md § 8): open a
  * pairing session, follow its status, then sign in, open the MasterKey
- * envelope, register this browser and offer a passkey.
+ * envelope and register this browser.
  */
-export function useConnectWithPhone({
-  passkeySupported,
-}: {
-  passkeySupported: boolean;
-}) {
+export function useConnectWithPhone() {
   const [state, dispatch] = useReducer(pairingReducer, initialPairingState);
   const [trusted, setTrusted] = useState(false);
   const secrets = useRef<PairingSecrets | null>(null);
@@ -51,12 +43,10 @@ export function useConnectWithPhone({
   const viewer = useQuery(api.users.viewer);
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
   const { signIn, signOut } = useAuthActions();
-  const { masterKey, setMasterKey } = useMasterKey();
+  const { setMasterKey } = useMasterKey();
   const createSession = useMutation(api.pairing.create);
   const readEnvelope = useAuditedMutation(api.pairing.readEnvelope);
   const registerDevice = useAuditedMutation(api.devices.register);
-  const startRegistration = useMutation(api.webauthn.startRegistration);
-  const finishRegistration = useMutation(api.webauthn.finishRegistration);
   const status = useQuery(
     api.pairing.status,
     state.phase === "waiting" ? { sessionId: state.sessionId } : "skip",
@@ -162,18 +152,12 @@ export function useConnectWithPhone({
           raw.fill(0);
         }
         wipeSecrets();
-        // auditedMutation erases the handler's return type.
-        const deviceId = (await registerDevice({
+        await registerDevice({
           kind: "web",
           label: deviceLabelFromUserAgent(navigator.userAgent),
           trusted,
-        })) as Id<"devices">;
-        // A passkey keeps a wrapped key on this device: trusted browsers only.
-        dispatch({
-          type: "linked",
-          deviceId,
-          offerPasskey: trusted && passkeySupported,
         });
+        dispatch({ type: "linked" });
       } catch {
         dispatch({ type: "failed" });
       }
@@ -182,7 +166,6 @@ export function useConnectWithPhone({
     state,
     viewer,
     trusted,
-    passkeySupported,
     runOnce,
     wipeSecrets,
     readEnvelope,
@@ -202,27 +185,6 @@ export function useConnectWithPhone({
   }, [state.phase, wipeSecrets]);
   useEffect(() => wipeSecrets, [wipeSecrets]);
 
-  /** One passkey both signs in (server) and unlocks (PRF wrap) next time. */
-  const createPasskey = useCallback(async () => {
-    if (state.phase !== "passkey" || !viewer || !masterKey) return;
-    const label = deviceLabelFromUserAgent(navigator.userAgent);
-    await enrollMethod(deviceUnlockOwner(viewer), masterKey, {
-      method: "biometric",
-      attachment: "platform",
-      label,
-      createCredential: () =>
-        registerPasskey(
-          {
-            startRegistration: (args) => startRegistration(args),
-            finishRegistration: (args) => finishRegistration(args),
-          },
-          label,
-          state.deviceId,
-        ),
-    });
-    dispatch({ type: "finished" });
-  }, [state, viewer, masterKey, startRegistration, finishRegistration]);
-
   return {
     state,
     trusted,
@@ -232,7 +194,5 @@ export function useConnectWithPhone({
       dispatch({ type: "restart" });
     },
     expire: () => dispatch({ type: "status", status: "expired" }),
-    createPasskey,
-    skipPasskey: () => dispatch({ type: "finished" }),
   };
 }

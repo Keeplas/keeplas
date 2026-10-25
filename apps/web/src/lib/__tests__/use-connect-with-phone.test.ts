@@ -31,16 +31,13 @@ vi.mock("@keeplas/crypto/pairing", () => ({
   buildPairingQr: () => "https://example.test/link",
   openPairingEnvelope: vi.fn(),
 }));
-vi.mock("@/lib/device-unlock", () => ({ enrollMethod: vi.fn() }));
 vi.mock("@/lib/device-unlock/key-import", () => ({ importMasterKey: vi.fn() }));
 vi.mock("@/lib/master-key-context", () => ({
   useMasterKey: () => ({ masterKey: null, setMasterKey: vi.fn() }),
 }));
-vi.mock("@/lib/passkey", () => ({ registerPasskey: vi.fn() }));
 vi.mock("@/lib/use-audited-mutation", () => ({
   useAuditedMutation: () => vi.fn(),
 }));
-vi.mock("@/lib/use-device-unlock", () => ({ deviceUnlockOwner: vi.fn() }));
 vi.mock("@/lib/use-request-context", () => ({
   useRequestContext: () => ({ ip: "1.1.1.1", country: "BE", sig: "s" }),
 }));
@@ -55,9 +52,7 @@ describe("useConnectWithPhone", () => {
 
   it("signs out a stale session before opening the pairing session", async () => {
     auth.isAuthenticated = true;
-    const { result } = renderHook(() =>
-      useConnectWithPhone({ passkeySupported: false }),
-    );
+    const { result } = renderHook(() => useConnectWithPhone());
 
     await waitFor(() => expect(result.current.state.phase).toBe("waiting"));
     expect(calls).toEqual(["signOut", "createSession"]);
@@ -65,9 +60,7 @@ describe("useConnectWithPhone", () => {
 
   it("opens the pairing session directly when signed out", async () => {
     auth.isAuthenticated = false;
-    const { result } = renderHook(() =>
-      useConnectWithPhone({ passkeySupported: false }),
-    );
+    const { result } = renderHook(() => useConnectWithPhone());
 
     await waitFor(() => expect(result.current.state.phase).toBe("waiting"));
     expect(calls).toEqual(["createSession"]);

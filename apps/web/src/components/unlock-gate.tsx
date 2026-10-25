@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -11,13 +11,7 @@ import {
   Loader,
   Spinner,
 } from "@keeplas/ui";
-import {
-  DeviceUnlockEntry,
-  DeviceUnlockError,
-  PIN_MIN_LENGTH,
-  isWebAuthnSupported,
-  isPlatformAuthenticatorAvailable,
-} from "@/lib/device-unlock";
+import { DeviceUnlockEntry, PIN_MIN_LENGTH } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
@@ -33,7 +27,7 @@ interface UnlockGateProps {
 
 /**
  * Shown while the vault key is not in memory: unlock with a method of this
- * device (PIN, biometric, hardware key), or link this browser again from the
+ * device (PIN), or link this browser again from the
  * phone (W04-2). The 24-word phrase is never entered on the web.
  */
 export function UnlockGate({ children }: UnlockGateProps) {
@@ -89,11 +83,7 @@ export function UnlockGate({ children }: UnlockGateProps) {
       setMasterKey(await unlock(entry.id, secret));
       setPin("");
     } catch (err) {
-      setError(
-        err instanceof DeviceUnlockError && err.code === "cancelled"
-          ? t("unlock.authCancelled")
-          : getErrorMessage(err, t("unlock.couldNotUnlock")),
-      );
+      setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
     } finally {
       setBusy(false);
     }
@@ -174,12 +164,8 @@ export function UnlockGate({ children }: UnlockGateProps) {
                   entry={entry}
                   disabled={busy}
                   onClick={() => {
-                    if (entry.method === "pin") {
-                      setPinEntry(entry);
-                      setError("");
-                    } else {
-                      void handleUnlock(entry);
-                    }
+                    setPinEntry(entry);
+                    setError("");
                   }}
                 />
               ))}
@@ -253,40 +239,16 @@ function UnlockMethodButton({
   onClick: () => void;
 }) {
   const t = useTranslations("chrome");
-  const [available, setAvailable] = useState(true);
-  useEffect(() => {
-    let cancelled = false;
-    const probe =
-      entry.method === "biometric"
-        ? isPlatformAuthenticatorAvailable()
-        : entry.method === "hardware-key"
-          ? Promise.resolve(isWebAuthnSupported())
-          : Promise.resolve(true);
-    probe.then((value) => {
-      if (!cancelled) setAvailable(value);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [entry.method]);
-
-  const method =
-    entry.method === "pin"
-      ? t("unlock.methodPin")
-      : entry.method === "biometric"
-        ? t("unlock.methodBiometric")
-        : t("unlock.methodHardwareKey");
-
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled || !available}
+      disabled={disabled}
       className="w-full rounded-sm border border-border-default bg-bg-surface p-[16px] text-left transition-colors hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus disabled:opacity-60"
     >
       <span className="block text-label text-text-primary">{entry.label}</span>
       <span className="mt-[4px] block text-body-sm text-text-muted">
-        {available ? method : `${method} ${t("unlock.unavailableSuffix")}`}
+        {t("unlock.methodPin")}
       </span>
     </button>
   );

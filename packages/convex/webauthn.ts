@@ -5,7 +5,7 @@ import {
   verifyAuthenticationResponse,
   type AuthenticatorTransportFuture,
 } from "@simplewebauthn/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import {
   internalMutation,
   internalQuery,
@@ -300,7 +300,7 @@ export async function verifyAssertionAndGetUserId(
     internal.webauthn.findCredentialById,
     { credentialId: response.id },
   );
-  if (!credential) throw new Error("Unknown passkey");
+  if (!credential) throw new ConvexError({ code: "UNKNOWN_PASSKEY" });
 
   if (stored.userId && stored.userId !== credential.userId) {
     throw new Error("Credential does not match challenge");

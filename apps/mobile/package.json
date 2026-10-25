@@ -7,6 +7,7 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "android": "expo run:android",
+    "release:ios": "infisical run --domain=https://app.infisical.com --env=prod --path=/keeplas_mobile --silent -- ./scripts/release-ios.sh",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest",

@@ -59,6 +59,9 @@ const CASES: Case[] = [
     figma: "W04-5_Recovery_center_status_only_.png",
     ...SHELL,
   },
+  // Figma's W04-4 draws a released folder, not the trusted-contact cards.
+  { id: "W04-4", figma: null, ...SHELL },
+  { id: "W04-4-help", figma: null, ...SHELL, prepare: blurAutoFocus },
   { id: "W04-6", figma: "W04-6_Sessions_and_security.png", ...SHELL },
   { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
   { id: "W04-7-plan", figma: null, ...SHELL },

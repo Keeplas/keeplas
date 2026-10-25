@@ -1,4 +1,4 @@
-export type DeviceUnlockMethod = "pin" | "biometric" | "hardware-key";
+export type DeviceUnlockMethod = "pin";
 
 export interface DeviceUnlockEntryBase {
   id: string;
@@ -19,58 +19,20 @@ export interface PinEntryData {
   lockedUntil?: number;
 }
 
-export interface WebAuthnPrfEntryData {
-  kind: "webauthn-prf";
-  attachment: "platform" | "cross-platform";
-  credentialId: string;
-  prfSalt: string;
-  iv: string;
-  wrappedMasterKey: string;
-}
-
-export type DeviceUnlockEntry = DeviceUnlockEntryBase &
-  ({ data: PinEntryData } | { data: WebAuthnPrfEntryData });
+export type DeviceUnlockEntry = DeviceUnlockEntryBase & { data: PinEntryData };
 
 export interface EnrollPinOptions {
   pin: string;
   label?: string;
 }
 
-/**
- * Creates a PRF-capable WebAuthn credential and returns its raw id. Defaults
- * to a local-only credential; the QR link flow passes one that also registers
- * the credential as a server passkey, so a single passkey signs in and unlocks.
- */
-export type CreatePrfCredential = (prfSalt: Uint8Array) => Promise<Uint8Array>;
-
-export interface EnrollWebAuthnOptions {
-  attachment: "platform" | "cross-platform";
-  label?: string;
-  createCredential?: CreatePrfCredential;
-}
-
-/** The account an entry belongs to. */
-export interface DeviceUnlockOwner {
-  userId: string;
-  /** Account name shown by the OS passkey manager for local credentials. */
-  accountName: string;
-}
-
-export type EnrollOptions =
-  | ({ method: "pin" } & EnrollPinOptions)
-  | ({ method: "biometric" | "hardware-key" } & EnrollWebAuthnOptions);
+export type EnrollOptions = { method: "pin" } & EnrollPinOptions;
 
 export class DeviceUnlockError extends Error {
   constructor(
     message: string,
     public code:
-      | "wrong-secret"
-      | "locked"
-      | "wiped"
-      | "unsupported"
-      | "cancelled"
-      | "not-found"
-      | "io",
+      "wrong-secret" | "locked" | "wiped" | "unsupported" | "not-found" | "io",
     options?: { cause?: unknown },
   ) {
     super(message, options);
