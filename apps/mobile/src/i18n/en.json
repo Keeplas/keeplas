@@ -54,6 +54,7 @@
     "chooseCountry": "Choose your country",
     "searchCountry": "Search",
     "invalid": "Enter a valid phone number.",
+    "nameRequired": "Enter your first name.",
     "accountExists": "An account already uses this number. Sign in instead.",
     "noAccount": "No account uses this number. Get started to create one.",
     "createAccount": "Create an account with this number",

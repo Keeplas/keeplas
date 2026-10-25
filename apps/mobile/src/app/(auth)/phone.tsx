@@ -9,6 +9,7 @@ import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { TextField } from "@/components/text-field";
 import { errorText } from "@/lib/errors";
 import { openSitePage } from "@/lib/site";
 import { attestationReference } from "@/lib/attestation";
@@ -29,12 +30,16 @@ export default function PhoneScreen() {
   const params = useLocalSearchParams<{ intent?: PhoneIntent }>();
   const intent: PhoneIntent = params.intent === "signin" ? "signin" : "signup";
   const phone = usePhoneField();
+  const [name, setName] = useState("");
   const requestCode = useRequestPhoneCode();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [switchTo, setSwitchTo] = useState<PhoneIntent | null>(null);
 
   async function submit() {
+    const firstName = name.trim();
+    if (intent === "signup" && !firstName)
+      return setError(t("phone.nameRequired"));
     const phoneNumber = phone.validate();
     if (!phoneNumber) return setError(t("phone.invalid"));
     setBusy(true);
@@ -44,7 +49,11 @@ export default function PhoneScreen() {
       await requestCode(phoneNumber, intent);
       router.push({
         pathname: "/verify",
-        params: { phone: phoneNumber, intent },
+        params: {
+          phone: phoneNumber,
+          intent,
+          ...(intent === "signup" ? { name: firstName } : {}),
+        },
       });
     } catch (err) {
       if (err instanceof AttestationFailed) {
@@ -92,7 +101,20 @@ export default function PhoneScreen() {
       <Text variant="body-lg" color="text.muted">
         {t(intent === "signup" ? "phone.subtitle" : "phone.signInSubtitle")}
       </Text>
-      {intent === "signup" ? <RequiredSteps completed={0} /> : null}
+      {intent === "signup" ? (
+        <>
+          <RequiredSteps completed={0} />
+          <TextField
+            label={t("home.firstName")}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            autoComplete="given-name"
+            textContentType="givenName"
+            returnKeyType="next"
+          />
+        </>
+      ) : null}
       <Text variant="label">{t("phone.label")}</Text>
       <PhoneInput {...phone.inputProps} onSubmit={submit} />
       {error ? (
