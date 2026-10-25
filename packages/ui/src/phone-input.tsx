@@ -108,6 +108,11 @@ export function normalizePhone(value: string | undefined): string | undefined {
   return parsed?.isValid() ? parsed.number : undefined;
 }
 
+/** "+254708684899" → "+254 708 684899"; anything else is returned as is. */
+export function formatPhone(value: string): string {
+  return safeParse(value)?.formatInternational() ?? value;
+}
+
 export function isValidPhone(value: string | undefined): boolean {
   if (!value) return true;
   return safeParse(value)?.isValid() ?? false;

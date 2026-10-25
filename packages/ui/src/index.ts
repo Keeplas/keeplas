@@ -67,6 +67,7 @@ export {
   type CountryCode,
   normalizePhone,
   isValidPhone,
+  formatPhone,
 } from "./phone-input";
 export { Progress } from "./progress";
 export {
