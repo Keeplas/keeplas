@@ -566,10 +566,6 @@
         "vaultAccessAlerts": {
           "label": "Vault Access Alerts",
           "description": "Instant push notification on login."
-        },
-        "newsletterUpdates": {
-          "label": "Newsletter & Updates",
-          "description": "Occasional legacy planning insights."
         }
       },
       "saved": "Preferences saved ✓",
