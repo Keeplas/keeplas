@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
   requireFullAuth,
@@ -7,7 +8,7 @@ import {
   getStorageUsage,
 } from "./helpers";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
-import { storedFileBytes } from "./lib/storage";
+import { sizeBucket, storedFileBytes } from "./lib/storage";
 
 /**
  * Get or create the user's vault.
@@ -79,6 +80,23 @@ export const getUsageStats = query({
       activeItemsCount: items.length,
       plan,
       quotaBytes: PLAN_QUOTA_BYTES[plan],
+    };
+  },
+});
+
+export const canStore = query({
+  args: { bytes: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await requireFullAuth(ctx);
+    const user = await ctx.db.get(userId);
+    const quotaBytes =
+      PLAN_QUOTA_BYTES[getUserPlan(user ?? { plan: undefined })];
+    const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
+    const usedBytes = activeBytes + archiveBytes;
+    return {
+      fits: usedBytes + sizeBucket(args.bytes) <= quotaBytes,
+      usedBytes,
+      quotaBytes,
     };
   },
 });

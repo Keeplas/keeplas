@@ -75,9 +75,19 @@ function SecuringSheet({
   const uploadBody = itemId
     ? t("capture.securing.uploadedBody")
     : entry?.status === "quota"
-      ? t("capture.securing.quotaBody")
+      ? t("capture.securing.quotaBody", {
+          size: formatBytes(seen?.bytes ?? 0, language),
+        })
       : failed
-        ? t("capture.securing.failedBody")
+        ? t(
+            `capture.securing.${
+              entry?.errorKind === "offline"
+                ? "offlineFailedBody"
+                : entry?.errorKind === "server"
+                  ? "serverBody"
+                  : "failedBody"
+            }`,
+          )
         : !online
           ? t("capture.securing.offlineBody")
           : t("capture.securing.uploadingBody", {

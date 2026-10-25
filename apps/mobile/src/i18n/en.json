@@ -385,7 +385,9 @@
       "waiting": "Waiting to upload",
       "uploading": "Uploading encrypted copy",
       "failed": "Upload failed — tap to retry",
-      "quota": "Storage full"
+      "quota": "Storage full",
+      "offline": "Waiting for a connection",
+      "server": "Upload refused — tap to see why"
     },
     "updated": "Updated {when}",
     "itemWord": "item",
@@ -724,13 +726,15 @@
       "uploadingBody": "Sending a secure copy to your Keeplas storage… {pct}%",
       "uploadedBody": "The encrypted copy is in your Keeplas storage.",
       "offlineBody": "You're offline. The encrypted copy is safe on this phone and uploads as soon as you're back online.",
-      "failedBody": "The upload stopped. Your encrypted copy is still safe on this phone. Check your connection, then try again.",
-      "quotaBody": "Your storage is full. Free up space, then try again.",
+      "failedBody": "The upload stopped for an unexpected reason. Your encrypted copy is still safe on this phone. Try again.",
+      "quotaBody": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Free up space or upgrade to Lifetime, then try again.",
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",
       "manageStorage": "Manage storage",
-      "background": "Continue in background"
+      "background": "Continue in background",
+      "offlineFailedBody": "The connection was lost. Your encrypted copy is safe on this phone and will upload on its own as soon as you are back online.",
+      "serverBody": "The server refused the upload. Your encrypted copy is safe on this phone. Try again in a moment; if it happens again, contact support."
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",

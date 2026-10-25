@@ -1,6 +1,7 @@
 /**
  * @jest-environment node
  */
+import { ConvexError } from "convex/values";
 import {
   generateRecipientKeyPair,
   serializePublicKey,
@@ -20,6 +21,7 @@ import {
   memoryStore,
   pendingEntries,
   QUOTA_ERROR,
+  classifyUploadError,
   requeue,
   uploadEntry,
   type CreateItemArgs,
@@ -54,6 +56,7 @@ function fakeServer(failUploadAt?: number) {
   const created: CreateItemArgs[] = [];
   const attached: { itemId: string; files: CreateItemArgs["files"] }[] = [];
   const deleted: string[] = [];
+  const discarded: string[][] = [];
   let calls = 0;
   const deps: OutboxDeps = {
     vaultId: async () => "vault1",
@@ -73,8 +76,12 @@ function fakeServer(failUploadAt?: number) {
       attached.push({ itemId, files });
     },
     deleteLocalFile: (path) => deleted.push(path),
+    canStore: async () => true,
+    discardUploads: async (storageIds) => {
+      discarded.push(storageIds);
+    },
   };
-  return { deps, uploads, created, attached, deleted };
+  return { deps, uploads, created, attached, deleted, discarded };
 }
 
 async function sealedEntry(owner: ReturnType<typeof generateRecipientKeyPair>) {
@@ -412,18 +419,66 @@ describe("capture sealing + outbox upload", () => {
     ]);
   });
 
-  it("parks entries when the plan is full", async () => {
+  it("parks entries when the plan is full and drops the refused uploads", async () => {
     const owner = generateRecipientKeyPair();
     const { entry } = await sealedEntry(owner);
     const store = memoryStore();
     const server = fakeServer();
     server.deps.createItem = async () => {
-      throw new Error(`Uncaught Error: ${QUOTA_ERROR}`);
+      throw new ConvexError({ code: QUOTA_ERROR });
     };
     await expect(uploadEntry(entry, store, server.deps)).rejects.toThrow();
     const parked = store.entries.get("e1")!;
     expect(parked.status).toBe("quota");
+    expect(parked.errorKind).toBe("quota");
     expect(requeue([parked])).toEqual([]);
+    expect(server.discarded).toEqual([["storage-1", "storage-2"]]);
+    expect(parked.files.every((f) => !f.storageId)).toBe(true);
+  });
+
+  it("checks the room left before uploading anything", async () => {
+    const owner = generateRecipientKeyPair();
+    const { entry } = await sealedEntry(owner);
+    const store = memoryStore();
+    const server = fakeServer();
+    server.deps.canStore = async () => false;
+    await expect(uploadEntry(entry, store, server.deps)).rejects.toThrow();
+    expect(server.uploads).toEqual([]);
+    expect(store.entries.get("e1")!.status).toBe("quota");
+  });
+
+  it("keeps uploaded files when only the connection dropped", async () => {
+    const owner = generateRecipientKeyPair();
+    const { entry } = await sealedEntry(owner);
+    const store = memoryStore();
+    const server = fakeServer();
+    server.deps.createItem = async () => {
+      throw new Error("Network request failed");
+    };
+    await expect(uploadEntry(entry, store, server.deps)).rejects.toThrow();
+    const failed = store.entries.get("e1")!;
+    expect(failed.errorKind).toBe("offline");
+    expect(server.discarded).toEqual([]);
+    expect(failed.files.every((f) => f.storageId)).toBe(true);
+  });
+
+  it("names the cause of a failed upload", () => {
+    expect(classifyUploadError(new ConvexError({ code: QUOTA_ERROR }))).toBe(
+      "quota",
+    );
+    expect(
+      classifyUploadError(new Error(`Uncaught Error: ${QUOTA_ERROR}`)),
+    ).toBe("quota");
+    expect(classifyUploadError(new Error("Network request failed"))).toBe(
+      "offline",
+    );
+    expect(classifyUploadError(new Error("Upload failed (413)"))).toBe(
+      "server",
+    );
+    expect(classifyUploadError(new ConvexError({ code: "OTHER" }))).toBe(
+      "server",
+    );
+    expect(classifyUploadError(new Error("boom"))).toBe("unknown");
   });
 
   it("sends waiting entries oldest first", () => {

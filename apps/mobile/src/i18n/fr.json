@@ -376,7 +376,9 @@
       "waiting": "En attente d'envoi",
       "uploading": "Envoi de la copie chiffrée",
       "failed": "Échec de l'envoi",
-      "quota": "Stockage plein"
+      "quota": "Stockage plein",
+      "offline": "En attente de connexion",
+      "server": "Envoi refusé — touchez pour voir"
     },
     "updated": "Mis à jour {when}",
     "greetingNamed": "{greeting}, {name}",
@@ -715,13 +717,15 @@
       "uploadingBody": "Envoi d'une copie sécurisée vers votre stockage Keeplas… {pct} %",
       "uploadedBody": "La copie chiffrée est dans votre stockage Keeplas.",
       "offlineBody": "Vous êtes hors ligne. La copie chiffrée est en sécurité sur ce téléphone et sera envoyée dès votre retour en ligne.",
-      "failedBody": "L'envoi s'est arrêté. Votre copie chiffrée est toujours en sécurité sur ce téléphone. Vérifiez votre connexion, puis réessayez.",
-      "quotaBody": "Votre stockage est plein. Libérez de l'espace, puis réessayez.",
+      "failedBody": "L'envoi s'est arrêté pour une raison inattendue. Votre copie chiffrée est toujours en sécurité sur ce téléphone. Réessayez.",
+      "quotaBody": "Votre stockage est plein : cet élément ({size}) ne rentre pas dans votre espace. Rien n'a été perdu. Libérez de l'espace ou passez à l'offre Lifetime, puis réessayez.",
       "protected": "Protégé",
       "protectedWaiting": "En attente de vérification…",
       "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
       "manageStorage": "Gérer le stockage",
-      "background": "Continuer en arrière-plan"
+      "background": "Continuer en arrière-plan",
+      "offlineFailedBody": "La connexion a été perdue. Votre copie chiffrée est en sécurité sur ce téléphone, l'envoi reprendra tout seul dès votre retour en ligne.",
+      "serverBody": "Le serveur a refusé l'envoi. Votre copie chiffrée est en sécurité sur ce téléphone. Réessayez dans un instant ; si cela se reproduit, contactez le support."
     },
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",
