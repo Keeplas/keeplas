@@ -205,7 +205,7 @@
       "notCovered": "Aucun moyen de récupération"
     },
     "upgrade": {
-      "title": "Passer à Lifetime · 99 $",
+      "title": "Passer à Lifetime · 99 $ HT",
       "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
       "cta": "Mettre à niveau"
     },
@@ -599,7 +599,7 @@
         "lifetime": {
           "name": "Keeplas Lifetime",
           "price": "99 $",
-          "priceNote": "Paiement unique",
+          "priceNote": "Paiement unique, hors taxes. Le store affiche le prix de votre pays.",
           "perks": {
             "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
             "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
@@ -713,7 +713,7 @@
           "name": "À vie",
           "summary": "Coffre de 10 Go · Jusqu'à 3 contacts de confiance · Life check"
         },
-        "upgrade": "Passer à l'offre À vie · 99 $",
+        "upgrade": "Passer à l'offre À vie · 99 $ HT",
         "upgradeNote": "Coffre de 10 Go. Paiement unique."
       },
       "preferences": {

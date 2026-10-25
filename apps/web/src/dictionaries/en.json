@@ -205,7 +205,7 @@
       "notCovered": "No way back in yet"
     },
     "upgrade": {
-      "title": "Upgrade to Lifetime · $99",
+      "title": "Upgrade to Lifetime · $99 excl. tax",
       "body": "10 GB of storage and every feature. One payment, no subscription.",
       "cta": "Upgrade"
     },
@@ -599,7 +599,7 @@
         "lifetime": {
           "name": "Keeplas Lifetime",
           "price": "$99",
-          "priceNote": "One-time payment",
+          "priceNote": "One-time payment, excl. tax. The store shows your local price.",
           "perks": {
             "storage": "10 GB of encrypted storage, instead of 100 MB",
             "features": "Every feature, for as long as you keep Keeplas",
@@ -713,7 +713,7 @@
           "name": "Lifetime",
           "summary": "10 GB vault · Up to 3 trust contacts · Life check"
         },
-        "upgrade": "Upgrade to Lifetime · $99",
+        "upgrade": "Upgrade to Lifetime · $99 excl. tax",
         "upgradeNote": "10 GB vault. Paid once."
       },
       "preferences": {

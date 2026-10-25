@@ -205,7 +205,11 @@ function SecuringSheet({
         ) : null}
       </View>
       {/* Nested in the sheet so iOS presents it over this modal. */}
-      <UpgradeSheet visible={upgrading} onDismiss={() => setUpgrading(false)} />
+      <UpgradeSheet
+        visible={upgrading}
+        onDismiss={() => setUpgrading(false)}
+        onLeave={onDismiss}
+      />
     </BottomSheet>
   );
 }

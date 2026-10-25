@@ -422,7 +422,7 @@
     "activating": "Your Lifetime plan is being activated. It only takes a few seconds, and any upload waiting for space resumes on its own.",
     "nothingToRestore": "No Lifetime purchase found for this Apple or Google account.",
     "planName": "Keeplas Lifetime",
-    "oneTime": "One-time payment",
+    "oneTime": "One-time payment, VAT included where it applies",
     "perks": {
       "storage": "10 GB of encrypted storage, instead of 100 MB",
       "features": "Every feature, for as long as you keep Keeplas",
