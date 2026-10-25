@@ -167,6 +167,7 @@ export function HubView({
             id: item.id,
             name: item.title,
             details: [item.type, formatRelative(item.updatedAt, locale)],
+            onOpen: () => router.push(`/vault/${item.id}`),
             actions: [
               {
                 label: t("recent.open"),

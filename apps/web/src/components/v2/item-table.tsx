@@ -14,6 +14,7 @@ export interface ItemTableRow {
   name: string;
   /** Second and third columns (type / size, then date). */
   details: [string, string];
+  onOpen: () => void;
   actions: Array<{ label: string; onSelect: () => void }>;
 }
 
@@ -58,22 +59,26 @@ export function ItemTable({
               key={row.id}
               className={cn(
                 grid,
-                "border-b border-border-default py-[14px] text-body last:border-b-0",
+                "relative border-b border-border-default py-[14px] text-body last:border-b-0 hover:bg-bg-subtle",
               )}
             >
-              <span className="flex min-h-[24px] min-w-0 items-center gap-[10px] pr-[16px]">
+              <button
+                type="button"
+                onClick={row.onOpen}
+                className="flex min-h-[24px] min-w-0 items-center gap-[10px] pr-[16px] text-left after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-border-focus"
+              >
                 <Icon
                   path={ICON_PATHS.document}
                   className={cn("size-[20px] shrink-0", iconClassName)}
                 />
                 <span className="truncate text-text-primary">{row.name}</span>
-              </span>
+              </button>
               <span className="truncate text-text-body">{row.details[0]}</span>
               <span className="truncate text-text-body">{row.details[1]}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label={t("moreActions", { name: row.name })}
-                  className="-m-[6px] w-fit rounded-xs p-[6px] text-icon-subtle hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+                  className="relative z-10 -m-[6px] w-fit rounded-xs p-[6px] text-icon-subtle hover:bg-bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
                 >
                   <Icon
                     path={ICON_PATHS.more}
