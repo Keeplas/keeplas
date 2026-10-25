@@ -35,7 +35,6 @@ export const TIMEZONES = [
 export interface NotificationPrefs {
   lifeCheckReminders: boolean;
   vaultAccessAlerts: boolean;
-  newsletterUpdates: boolean;
 }
 
 export interface SecurityPrefs {
@@ -46,7 +45,6 @@ export interface SecurityPrefs {
 export const DEFAULT_NOTIFICATIONS: NotificationPrefs = {
   lifeCheckReminders: true,
   vaultAccessAlerts: true,
-  newsletterUpdates: false,
 };
 
 export const DEFAULT_SECURITY: SecurityPrefs = {

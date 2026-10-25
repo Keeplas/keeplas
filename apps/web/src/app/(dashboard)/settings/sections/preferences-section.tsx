@@ -26,11 +26,7 @@ interface PreferencesSectionProps {
 
 const NOTIFICATION_ITEMS: Array<{
   key: keyof NotificationPrefs;
-}> = [
-  { key: "lifeCheckReminders" },
-  { key: "vaultAccessAlerts" },
-  { key: "newsletterUpdates" },
-];
+}> = [{ key: "lifeCheckReminders" }, { key: "vaultAccessAlerts" }];
 
 export function PreferencesSection({ user, onError }: PreferencesSectionProps) {
   const updatePreferences = useAuditedMutation(api.users.updatePreferences);

@@ -566,10 +566,6 @@
         "vaultAccessAlerts": {
           "label": "Alertes d'accès au coffre",
           "description": "Notification push instantanée à la connexion."
-        },
-        "newsletterUpdates": {
-          "label": "Newsletter et actualités",
-          "description": "Conseils occasionnels sur la planification de votre continuité."
         }
       },
       "saved": "Préférences enregistrées ✓",
