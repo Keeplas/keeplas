@@ -414,7 +414,7 @@
     "activating": "Votre forfait Lifetime est en cours d'activation. Cela ne prend que quelques secondes, et tout envoi en attente d'espace reprend tout seul.",
     "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google.",
     "planName": "Keeplas Lifetime",
-    "oneTime": "Paiement unique",
+    "oneTime": "Paiement unique, TVA incluse si elle s'applique",
     "perks": {
       "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
       "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
