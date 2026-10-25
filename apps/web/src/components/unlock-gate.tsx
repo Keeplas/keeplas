@@ -6,7 +6,7 @@ import {
   Button,
   buttonVariants,
   cn,
-  Input,
+  PasswordInput,
   Label,
   Loader,
   Spinner,
@@ -38,6 +38,7 @@ interface UnlockGateProps {
  */
 export function UnlockGate({ children }: UnlockGateProps) {
   const t = useTranslations("chrome");
+  const common = useTranslations("common");
   const { signOut } = useAuthActions();
   const { masterKey, setMasterKey, restoring } = useMasterKey();
   const user = useQuery(api.users.viewer);
@@ -128,9 +129,10 @@ export function UnlockGate({ children }: UnlockGateProps) {
               className="flex flex-col gap-[14px]"
             >
               <Label htmlFor="unlock-pin">{pinEntry.label}</Label>
-              <Input
+              <PasswordInput
                 id="unlock-pin"
-                type="password"
+                showLabel={common("showSecret")}
+                hideLabel={common("hideSecret")}
                 inputMode="numeric"
                 pattern="[0-9]*"
                 autoComplete="off"
