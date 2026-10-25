@@ -16,3 +16,15 @@ export function formatSenderIdentity(
   if (name) return `${name}${suffix}`;
   return ids.length ? ids.join(" · ") : fallback;
 }
+
+// How a vault owner is named to their trusted contacts: their name, else the
+// email local part, else their phone (phone-only accounts may have no name).
+export function ownerDisplay(
+  owner: { name?: string; email?: string; phoneNumber?: string } | null,
+) {
+  const email = owner?.email ?? "";
+  const phone = owner?.phoneNumber ?? null;
+  const name =
+    owner?.name?.trim() || email.split("@")[0] || phone || "Keeplas user";
+  return { name, email, phone };
+}

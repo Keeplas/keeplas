@@ -7,6 +7,7 @@ import {
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 
 /**
  * Dev / QA helpers to exercise the Life Check check-in and the full Escalation
@@ -164,7 +165,8 @@ export const seedQuorum = internalMutation({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
-    const threshold = config?.confirmationThreshold ?? 2;
+    const threshold =
+      config?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD;
     const initiated = contacts
       .slice(0, Math.max(threshold, 1))
       .map((c) => c._id);

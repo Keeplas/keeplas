@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { approvedReleaseRequest, requireFullAuth } from "./helpers";
 import { getBlobDownloadUrl } from "./lib/storage";
+import { ownerDisplay } from "./lib/identity";
 
 /**
  * Memorial vault — read-only access for a trusted contact to the items a
@@ -54,13 +55,6 @@ async function resolveApprovedRelease(
     .map((s) => s.slice(ITEM_PREFIX.length) as Id<"vault_items">);
 
   return { contact, itemIds };
-}
-
-function ownerDisplay(owner: { name?: string; email?: string } | null) {
-  const trimmedName = owner?.name?.trim() || "";
-  const email = owner?.email ?? "";
-  const localPart = email.split("@")[0] ?? "";
-  return { name: trimmedName || localPart || "Keeplas user", email };
 }
 
 /**

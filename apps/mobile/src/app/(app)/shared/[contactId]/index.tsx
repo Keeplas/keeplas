@@ -15,6 +15,7 @@ import { Text } from "@/components/text";
 import { unwrapOwnerDek } from "@/crypto/owner-keys";
 import { openTitle } from "@/features/vault/open-sealed-item";
 import { useVaultData } from "@/features/vault/vault-data";
+import { formatPhone } from "@/lib/phone";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 
@@ -74,7 +75,7 @@ export default function SharedVault() {
 
   const header = (
     <NavBar
-      title={vault?.owner.name ?? t("shared.title")}
+      title={vault ? formatPhone(vault.owner.name) : t("shared.title")}
       onBack={router.back}
       right={<LanguageDropdown />}
     />
@@ -101,13 +102,15 @@ export default function SharedVault() {
     );
   }
 
-  const { owner, items, introductions } = vault;
+  const { items, introductions } = vault;
+  // A nameless owner is named by their phone (backend fallback).
+  const ownerName = formatPhone(vault.owner.name);
   return (
     <Screen header={header} gap={14}>
-      <Text variant="h1">{owner.name}</Text>
-      <Callout icon="lock" text={t("shared.readOnly", { name: owner.name })} />
+      <Text variant="h1">{ownerName}</Text>
+      <Callout icon="lock" text={t("shared.readOnly", { name: ownerName })} />
       {introductions.length > 0 ? (
-        <SectionHeader title={t("shared.messageFrom", { name: owner.name })} />
+        <SectionHeader title={t("shared.messageFrom", { name: ownerName })} />
       ) : null}
       {introductions.map((intro) => (
         <ListRow

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
@@ -9,13 +10,55 @@ import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
+import { BottomSheet } from "@/components/sheet";
 import { StateMessage } from "@/components/state-message";
-import { IconTile } from "@/components/surfaces";
+import { IconTile, InfoRow, ListRow, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { VaultSwitch } from "@/features/vault/vault-switch";
+import { formatPhone } from "@/lib/phone";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { radius } from "@/theme";
+
+/** How a vault opens to a trusted contact, in order (help sheet). */
+const RELEASE_STEPS = [
+  { icon: "activity", key: "checkIn" },
+  { icon: "bell", key: "silent" },
+  { icon: "people", key: "confirm" },
+  { icon: "clock", key: "grace" },
+  { icon: "eye", key: "yours" },
+] as const;
+
+/**
+ * Who chose me: their name and phone, so a homonym or a first name alone is
+ * still recognisable. A nameless owner is named by their phone (backend
+ * fallback), shown once.
+ */
+function OwnerIdentity({
+  name,
+  phone,
+  detail,
+}: {
+  name: string;
+  phone: string | null;
+  detail?: string;
+}) {
+  return (
+    <View style={styles.text}>
+      <Text variant="label">{formatPhone(name)}</Text>
+      {phone && phone !== name ? (
+        <Text variant="body-sm" color="text.muted">
+          {formatPhone(phone)}
+        </Text>
+      ) : null}
+      {detail ? (
+        <Text variant="body-sm" color="text.muted">
+          {detail}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
 
 /**
  * M03-1 Shared with me: the people who chose me as a trusted contact. What
@@ -26,6 +69,7 @@ export default function SharedWithMe() {
   const { t } = useI18n();
   const { colors } = useTheme();
   const vaults = useQuery(api.trusted_contacts.getVaultsWhereIAmContact);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const open = (contactId: Id<"trusted_contacts">) =>
     router.push({ pathname: "/shared/[contactId]", params: { contactId } });
@@ -63,14 +107,15 @@ export default function SharedWithMe() {
               style={styles.row}
             >
               <IconTile icon="folder" size={44} />
-              <View style={styles.text}>
-                <Text variant="label">{vault.ownerName}</Text>
-                <Text variant="body-sm" color="text.muted">
-                  {vault.releasedItemCount === 1
+              <OwnerIdentity
+                name={vault.ownerName}
+                phone={vault.ownerPhone}
+                detail={
+                  vault.releasedItemCount === 1
                     ? t("shared.oneItem")
-                    : t("shared.items", { n: vault.releasedItemCount })}
-                </Text>
-              </View>
+                    : t("shared.items", { n: vault.releasedItemCount })
+                }
+              />
               <Icon name="chevron-right" size={20} color="text.muted" />
             </Pressable>
             <Button
@@ -89,19 +134,45 @@ export default function SharedWithMe() {
                 size={44}
                 background={colors["bg.subtle"]}
               />
-              <View style={styles.text}>
-                <Text variant="label">{vault.ownerName}</Text>
-                <Text variant="body-sm" color="text.muted">
-                  {t("shared.trusted")}
-                </Text>
-              </View>
+              <OwnerIdentity
+                name={vault.ownerName}
+                phone={vault.ownerPhone}
+                detail={t("shared.trusted")}
+              />
             </View>
             <Text variant="body-sm" color="text.muted">
-              {t("shared.later")}
+              {vault.confirmationThreshold === 1
+                ? t("shared.laterOne", { name: formatPhone(vault.ownerName) })
+                : t("shared.later", {
+                    name: formatPhone(vault.ownerName),
+                    n: vault.confirmationThreshold,
+                  })}
             </Text>
           </View>
         ),
       )}
+      <ListRow
+        icon="help"
+        title={t("shared.help.link")}
+        onPress={() => setHelpOpen(true)}
+      />
+      <BottomSheet
+        visible={helpOpen}
+        onDismiss={() => setHelpOpen(false)}
+        title={t("shared.help.title")}
+      >
+        <View style={styles.steps}>
+          {RELEASE_STEPS.map((step) => (
+            <InfoRow
+              key={step.key}
+              leading={<IconTile icon={step.icon} size={36} iconSize={20} />}
+              title={t(`shared.help.${step.key}`)}
+              description={t(`shared.help.${step.key}Body`)}
+            />
+          ))}
+        </View>
+        <Note icon="lock" text={t("shared.help.note")} />
+      </BottomSheet>
     </Screen>
   );
 }
@@ -116,4 +187,5 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   text: { flex: 1, gap: 2 },
+  steps: { gap: 16, paddingVertical: 6 },
 });

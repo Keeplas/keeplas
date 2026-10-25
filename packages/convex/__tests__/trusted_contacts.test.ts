@@ -232,3 +232,74 @@ describe("updateContact", () => {
     ).rejects.toThrow(/not found/);
   });
 });
+
+describe("getVaultsWhereIAmContact", () => {
+  async function seedLink(
+    t: ReturnType<typeof makeT>,
+    owner: Partial<{ name: string; phoneNumber: string }>,
+  ) {
+    const ownerId = await t.run((ctx) => ctx.db.insert("users", owner));
+    const contactUser = await seedUser(t);
+    const contactId = await seedTrustContact(t, ownerId, { n: 1 });
+    await t.run((ctx) =>
+      ctx.db.patch(contactId, { contactUserId: contactUser }),
+    );
+    return { ownerId, contactUser };
+  }
+
+  it("identifies a phone-only owner by their phone, not 'Keeplas user'", async () => {
+    const t = makeT();
+    const { contactUser } = await seedLink(t, { phoneNumber: "+33612345678" });
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    expect(vault?.ownerName).toBe("+33612345678");
+    expect(vault?.ownerPhone).toBe("+33612345678");
+  });
+
+  it("returns the owner's name, phone and confirmation threshold", async () => {
+    const t = makeT();
+    const { ownerId, contactUser } = await seedLink(t, {
+      name: "Ada",
+      phoneNumber: "+33612345678",
+    });
+    const now = Date.now();
+    await t.run((ctx) =>
+      ctx.db.insert("life_check_configs", {
+        userId: ownerId,
+        frequency: "monthly",
+        activeChannels: [],
+        travelModeEnabled: false,
+        isActive: true,
+        nextCheckAt: now,
+        confirmationThreshold: 3,
+        createdAt: now,
+        updatedAt: now,
+      }),
+    );
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    expect(vault).toMatchObject({
+      ownerName: "Ada",
+      ownerPhone: "+33612345678",
+      confirmationThreshold: 3,
+    });
+  });
+
+  it("defaults the confirmation threshold to 2", async () => {
+    const t = makeT();
+    const { contactUser } = await seedLink(t, { name: "Ada" });
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    expect(vault?.confirmationThreshold).toBe(2);
+    expect(vault?.ownerPhone).toBeNull();
+  });
+});

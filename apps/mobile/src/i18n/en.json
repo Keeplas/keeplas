@@ -1077,7 +1077,8 @@
     "emptyTitle": "Nothing shared with you yet",
     "emptyBody": "When someone makes you a trusted contact, their shared items appear here.",
     "trusted": "You are a trusted contact",
-    "later": "Access after verification. Requires two trust-contact confirmations.",
+    "laterOne": "Locked. It opens only if {name} stops answering their Life check, 1 trusted contact confirms it, and 72 hours pass with no cancellation.",
+    "later": "Locked. It opens only if {name} stops answering their Life check, {n} trusted contacts confirm it, and 72 hours pass with no cancellation.",
     "oneItem": "1 item left for you",
     "items": "{n} items left for you",
     "accessNow": "Access now",
@@ -1087,7 +1088,22 @@
     "nothingLeft": "No readable items were left for you.",
     "notReleasedTitle": "Not available yet",
     "notReleasedBody": "It opens once this vault is released to you.",
-    "leftBy": "Left for you by {name}"
+    "leftBy": "Left for you by {name}",
+    "help": {
+      "link": "When will I see what they left me?",
+      "title": "When does a vault open?",
+      "checkIn": "They check in regularly",
+      "checkInBody": "The owner answers a Life check every week, month or quarter. While they answer, their vault stays private, even to you.",
+      "silent": "They stop answering",
+      "silentBody": "After 15 days without an answer, despite reminders, we alert their trusted contacts, you included.",
+      "confirm": "Trusted contacts confirm",
+      "confirmBody": "Two of them must confirm the owner can't be reached, unless the owner chose another number.",
+      "grace": "72-hour safety window",
+      "graceBody": "The owner is warned and can still cancel. Nothing opens before it ends.",
+      "yours": "You see only what's for you",
+      "yoursBody": "Only the items they left you, read-only, decrypted on this phone.",
+      "note": "If not enough contacts confirm in time, the vault stays locked."
+    }
   },
   "passkeys": {
     "subtitle": "Passkeys let you sign in with your face, fingerprint or phone PIN. Tap one to remove it.",
