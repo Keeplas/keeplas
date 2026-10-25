@@ -4,11 +4,10 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
  * W04-2 "Connect with my phone" state machine (ARCHITECTURE.md § 8). Pure, so
  * the transitions are unit-tested; side effects live in `useConnectWithPhone`.
  *
- *   creating → waiting ─approved→ signingIn → unlocking → passkey → done
- *                 │                                   └──────────→ done
+ *   creating → waiting ─approved→ signingIn → unlocking → done
  *                 ├─rejected→ rejected ┐
  *                 └─expired──→ expired ├─restart→ creating
- *   any step before passkey ─failed→ error ┘
+ *   any step before done ─failed→ error ┘
  */
 
 export type PairingSessionId = Id<"pairing_sessions">;
@@ -27,7 +26,6 @@ export type PairingState =
     }
   | { phase: "signingIn"; sessionId: PairingSessionId }
   | { phase: "unlocking"; sessionId: PairingSessionId }
-  | { phase: "passkey"; deviceId: Id<"devices"> }
   | { phase: "done" }
   | { phase: "expired" }
   | { phase: "rejected" }
@@ -42,8 +40,7 @@ export type PairingEvent =
     }
   | { type: "status"; status: PairingStatus }
   | { type: "signedIn" }
-  | { type: "linked"; deviceId: Id<"devices">; offerPasskey: boolean }
-  | { type: "finished" }
+  | { type: "linked" }
   | { type: "failed" }
   | { type: "restart" };
 
@@ -85,18 +82,9 @@ export function pairingReducer(
         ? { phase: "unlocking", sessionId: state.sessionId }
         : state;
     case "linked":
-      if (state.phase !== "unlocking") return state;
-      return event.offerPasskey
-        ? { phase: "passkey", deviceId: event.deviceId }
-        : { phase: "done" };
-    case "finished":
-      return state.phase === "passkey" ? { phase: "done" } : state;
+      return state.phase === "unlocking" ? { phase: "done" } : state;
     case "failed":
-      // Once linked, a failure (e.g. passkey creation) is shown in place: the
-      // browser is signed in and unlocked, so restarting would be wrong.
-      return state.phase === "passkey" || state.phase === "done"
-        ? state
-        : { phase: "error" };
+      return state.phase === "done" ? state : { phase: "error" };
     case "restart":
       return state.phase === "expired" ||
         state.phase === "rejected" ||

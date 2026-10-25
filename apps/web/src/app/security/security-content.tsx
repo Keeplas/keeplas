@@ -98,27 +98,10 @@ const PILLARS: Array<{
     icon: ICON_PATHS.fingerprint,
     technicalLines: [
       "PIN · Argon2id(secret, deviceSalt) → wrapKey → AES-GCM(MasterKey)",
-      "Biometric / Hardware key · WebAuthn createCredential with prf:{eval:{first:salt}} extension",
-      "PRF output → AES-256-GCM wrapKey → wraps MasterKey · stored in IndexedDB",
+      "Phone app · Face ID / fingerprint release the device vault from the iOS Keychain / Android Keystore",
       "Lockout · 5 wrong PIN attempts → 60s freeze · 10 → entry wiped, 24-word re-entry required",
     ],
-    references: [
-      {
-        label: "W3C WebAuthn Level 3",
-        url: "https://www.w3.org/TR/webauthn-3/",
-        note: "The browser API behind passkeys and security keys",
-      },
-      {
-        label: "WebAuthn PRF extension",
-        url: "https://www.w3.org/TR/webauthn-3/#prf-extension",
-        note: "Lets a passkey deterministically derive an unlock key without exposing the credential",
-      },
-      {
-        label: "FIDO2",
-        url: "https://fidoalliance.org/fido2/",
-        note: "The alliance behind the hardware-key standards we support",
-      },
-    ],
+    references: [],
   },
   {
     key: "recovery",
