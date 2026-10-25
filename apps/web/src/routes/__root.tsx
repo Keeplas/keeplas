@@ -21,7 +21,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Keeplas — Life Continuity Platform" },
+      { title: "Keeplas | Life Continuity Platform" },
       {
         name: "description",
         content:
@@ -34,7 +34,7 @@ export const Route = createRootRoute({
       // crawlers can resolve it regardless of the shared path.
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Keeplas" },
-      { property: "og:title", content: "Keeplas — Life Continuity Platform" },
+      { property: "og:title", content: "Keeplas | Life Continuity Platform" },
       {
         property: "og:description",
         content:
@@ -46,10 +46,10 @@ export const Route = createRootRoute({
       {
         property: "og:image:alt",
         content:
-          "Keeplas — If something happens to you, your loved ones know exactly what to do",
+          "Keeplas | If something happens to you, your loved ones know exactly what to do",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Keeplas — Life Continuity Platform" },
+      { name: "twitter:title", content: "Keeplas | Life Continuity Platform" },
       {
         name: "twitter:description",
         content:

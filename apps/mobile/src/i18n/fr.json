@@ -379,7 +379,7 @@
       "failed": "Échec de l'envoi",
       "quota": "Stockage plein",
       "offline": "En attente de connexion",
-      "server": "Envoi refusé — touchez pour voir"
+      "server": "Envoi refusé. Touchez pour voir"
     },
     "updated": "Mis à jour {when}",
     "greetingNamed": "{greeting}, {name}",

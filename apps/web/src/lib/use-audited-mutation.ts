@@ -30,7 +30,7 @@ export function useAuditedMutation<
     async (args) => {
       if (!ctx) {
         throw new Error(
-          "Audit context unavailable — refresh the page or check that KEEPLAS_CTX_SECRET is configured.",
+          "Audit context unavailable. Refresh the page or check that KEEPLAS_CTX_SECRET is configured.",
         );
       }
       return await fn({

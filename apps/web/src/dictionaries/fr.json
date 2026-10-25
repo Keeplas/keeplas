@@ -15,7 +15,7 @@
       "eyebrow": "Le Curateur Numérique",
       "titleLine1": "Pour le jour",
       "titleLine2": "de votre départ.",
-      "body": "La mort ne prévient pas. Les comptes, les mots de passe et les derniers mots que vous n'avez jamais transmis meurent avec vous — sauf s'ils sont scellés ici, chiffrés de bout en bout, en attente des personnes que vous avez choisies.",
+      "body": "La mort ne prévient pas. Les comptes, les mots de passe et les derniers mots que vous n'avez jamais transmis meurent avec vous, sauf s'ils sont scellés ici, chiffrés de bout en bout, en attente des personnes que vous avez choisies.",
       "encryptionStandard": "Norme de chiffrement",
       "architecture": "Architecture",
       "quantumSafe": "Résistant au quantique (FIPS 203)"
@@ -138,8 +138,8 @@
       "couldNotResend": "Impossible de renvoyer le code.",
       "titleChange": "Modifier votre e-mail",
       "titleAdd": "Ajouter un e-mail",
-      "descChange": "Nous enverrons un code à 6 chiffres à votre nouvelle adresse. Confirmez-le pour remplacer votre e-mail actuel — les connexions via l'ancienne adresse cesseront de fonctionner.",
-      "descAdd": "Nous vous enverrons un code à 6 chiffres par e-mail. Confirmez-le pour ajouter cet e-mail — vous pourrez ensuite vous connecter avec un code envoyé par e-mail, sans mot de passe.",
+      "descChange": "Nous enverrons un code à 6 chiffres à votre nouvelle adresse. Confirmez-le pour remplacer votre e-mail actuel. Les connexions via l'ancienne adresse cesseront de fonctionner.",
+      "descAdd": "Nous vous enverrons un code à 6 chiffres par e-mail. Confirmez-le pour ajouter cet e-mail. Vous pourrez ensuite vous connecter avec un code envoyé par e-mail, sans mot de passe.",
       "emailLabel": "Adresse e-mail",
       "cancel": "Annuler",
       "sending": "Envoi…",
@@ -160,7 +160,7 @@
       "couldNotResend": "Impossible de renvoyer le code.",
       "titleChange": "Modifier votre numéro WhatsApp",
       "titleAdd": "Vérifier votre numéro WhatsApp",
-      "descChange": "Nous enverrons un code à 6 chiffres à votre nouveau numéro sur WhatsApp. Confirmez-le pour remplacer votre numéro actuel — les connexions via l'ancien cesseront de fonctionner.",
+      "descChange": "Nous enverrons un code à 6 chiffres à votre nouveau numéro sur WhatsApp. Confirmez-le pour remplacer votre numéro actuel. Les connexions via l'ancien cesseront de fonctionner.",
       "descAdd": "Nous enverrons un code à 6 chiffres sur votre WhatsApp. Saisissez-le ci-dessous pour confirmer que ce numéro vous appartient.",
       "phoneLabel": "Numéro WhatsApp",
       "cancel": "Annuler",
@@ -282,7 +282,7 @@
     },
     "activeCycle": {
       "title": "Vérification requise",
-      "runningDescription": "Confirmez que vous allez bien — appuyez ci-dessous, cliquez sur le bouton dans votre e-mail ou répondez sur WhatsApp. Nous continuerons à vous le rappeler jusqu'à la fermeture de la fenêtre.",
+      "runningDescription": "Confirmez que vous allez bien : appuyez ci-dessous, cliquez sur le bouton dans votre e-mail ou répondez sur WhatsApp. Nous continuerons à vous le rappeler jusqu'à la fermeture de la fenêtre.",
       "escalatingDescription": "Nous confirmons votre statut auprès de vos contacts de confiance.",
       "imWell": "Je vais bien",
       "postpone48h": "Reporter de 48 h"
@@ -304,7 +304,7 @@
     },
     "channels": {
       "title": "Canaux de vérification",
-      "help": "Les canaux que Keeplas utilise pour vous joindre lors d'une vérification — tous envoyés ensemble, pas l'un après l'autre. Désactivez ceux que vous n'utilisez pas. À noter : seuls le bouton de l'e-mail et une réponse sur WhatsApp permettent de confirmer que vous allez bien.",
+      "help": "Les canaux que Keeplas utilise pour vous joindre lors d'une vérification, tous envoyés ensemble, pas l'un après l'autre. Désactivez ceux que vous n'utilisez pas. À noter : seuls le bouton de l'e-mail et une réponse sur WhatsApp permettent de confirmer que vous allez bien.",
       "comingSoon": "Bientôt disponible",
       "notVerified": "Non vérifié",
       "noEmail": "Aucun e-mail",
@@ -317,7 +317,7 @@
         },
         "push": {
           "label": "Notification push de l'application",
-          "description": "Ping mobile chiffré — appuyez pour confirmer"
+          "description": "Ping mobile chiffré : appuyez pour confirmer"
         },
         "email": {
           "label": "Vérification par e-mail",
@@ -334,7 +334,7 @@
     "frequency": {
       "title": "Fréquence des vérifications",
       "help": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Plus court = des vérifications plus fréquentes ; plus long = moins d'interruptions mais une transmission plus lente.",
-      "description": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Seule une réponse explicite — depuis l'application, le bouton de l'e-mail ou WhatsApp — réinitialise le compte à rebours ; utiliser l'application ne suffit pas.",
+      "description": "À quelle fréquence Keeplas vous demande de confirmer que vous allez bien. Seule une réponse explicite (depuis l'application, le bouton de l'e-mail ou WhatsApp) réinitialise le compte à rebours ; utiliser l'application ne suffit pas.",
       "unit": {
         "weekly": "Jours",
         "monthly": "Jours",
@@ -353,7 +353,7 @@
     },
     "timeline": {
       "title": "Protocole d'escalade",
-      "help": "À chaque période de fréquence, Keeplas vous demande de confirmer que vous allez bien. Vous disposez ensuite d'une fenêtre de 15 jours, avec des rappels, pour répondre — en appuyant dans l'application, en cliquant sur le bouton de l'e-mail ou en répondant sur WhatsApp. Seule une réponse explicite réinitialise le compte à rebours ; utiliser l'application ne suffit pas. Si toute la fenêtre s'écoule sans réponse, Keeplas demande à vos contacts de confiance de confirmer votre indisponibilité avant toute transmission.",
+      "help": "À chaque période de fréquence, Keeplas vous demande de confirmer que vous allez bien. Vous disposez ensuite d'une fenêtre de 15 jours, avec des rappels, pour répondre, en appuyant dans l'application, en cliquant sur le bouton de l'e-mail ou en répondant sur WhatsApp. Seule une réponse explicite réinitialise le compte à rebours ; utiliser l'application ne suffit pas. Si toute la fenêtre s'écoule sans réponse, Keeplas demande à vos contacts de confiance de confirmer votre indisponibilité avant toute transmission.",
       "subtitle": "Ce qui se passe après une vérification manquée.",
       "cadence": "Keeplas vous demande de confirmer tous les {cadence}.",
       "cadenceFallback": "30 jours",
@@ -362,23 +362,23 @@
       "contactsPlural": "{count} contacts",
       "trustedContactsSingular": "{count} contact de confiance",
       "trustedContactsPlural": "{count} contacts de confiance",
-      "travelPaused": "Protocole en pause — le mode voyage est activé. Aucune vérification n'est envoyée tant qu'il est actif.",
-      "travelPausedUntil": "Protocole en pause — le mode voyage est activé jusqu'au {date}. Aucune vérification n'est envoyée tant qu'il est actif.",
-      "footer": "Keeplas utilise un chiffrement à connaissance nulle. Seule une réponse explicite de votre part — appui, bouton de l'e-mail ou WhatsApp — met le protocole en pause.",
+      "travelPaused": "Protocole en pause : le mode voyage est activé. Aucune vérification n'est envoyée tant qu'il est actif.",
+      "travelPausedUntil": "Protocole en pause : le mode voyage est activé jusqu'au {date}. Aucune vérification n'est envoyée tant qu'il est actif.",
+      "footer": "Keeplas utilise un chiffrement à connaissance nulle. Seule une réponse explicite de votre part (appui, bouton de l'e-mail ou WhatsApp) met le protocole en pause.",
       "steps": {
         "sent": {
           "title": "Vérification envoyée",
           "description": "{channels} sont envoyés ensemble. Confirmez d'un seul appui, via le bouton de l'e-mail ou par une réponse sur WhatsApp.",
-          "descriptionNoChannel": "Aucun canal activé — activez-en un pour que nous puissions vous joindre."
+          "descriptionNoChannel": "Aucun canal activé. Activez-en un pour que nous puissions vous joindre."
         },
         "reminder": {
           "title": "Rappel",
           "titleFinal": "Dernier rappel",
-          "description": "Toujours pas de réponse — Keeplas vous recontacte sur chaque canal."
+          "description": "Toujours pas de réponse : Keeplas vous recontacte sur chaque canal."
         },
         "protocolBegins": {
           "title": "Début du protocole de continuité",
-          "description": "Aucune réponse sur l'ensemble de la fenêtre. Keeplas demande désormais à vos contacts de confiance de confirmer votre indisponibilité — rien n'est encore transmis.",
+          "description": "Aucune réponse sur l'ensemble de la fenêtre. Keeplas demande désormais à vos contacts de confiance de confirmer votre indisponibilité. Rien n'est encore transmis.",
           "help": "La fenêtre de vérification s'est entièrement écoulée sans réponse de votre part. Vos contacts de confiance sont désormais invités à confirmer votre indisponibilité. Rien n'est déchiffré ni transmis à ce stade.",
           "badge": "Contacts de confiance notifiés"
         },
@@ -391,7 +391,7 @@
         "lastChance": {
           "title": "Dernière chance d'annuler",
           "description": "Une fois le nombre requis atteint, il vous reste {hours} heures pour annuler avant toute transmission.",
-          "help": "Une fenêtre de sécurité fixe de {hours} heures — ce n'est PAS le réglage « Jours dont ils disposent pour confirmer ». Elle débute dès qu'un nombre suffisant de contacts confirme, et confirmer que vous allez bien (appui, e-mail ou WhatsApp) pendant ce délai annule la transmission."
+          "help": "Une fenêtre de sécurité fixe de {hours} heures. Ce n'est PAS le réglage « Jours dont ils disposent pour confirmer ». Elle débute dès qu'un nombre suffisant de contacts confirme, et confirmer que vous allez bien (appui, e-mail ou WhatsApp) pendant ce délai annule la transmission."
         },
         "released": {
           "dayLabel": "Résultat",
@@ -476,7 +476,7 @@
         "activeLabel": "Actif",
         "activeText": "Les vérifications se déroulent selon le calendrier prévu.",
         "pausedLabel": "En pause",
-        "pausedText": "Suspension indéfinie — rien ne s'exécute jusqu'à ce que vous repreniez.",
+        "pausedText": "Suspension indéfinie : rien ne s'exécute jusqu'à ce que vous repreniez.",
         "travelLabel": "Mode voyage",
         "travelText": "Identique à En pause, mais avec une date de retour qui relance tout automatiquement. Appuyez sur le badge pour gérer."
       }
@@ -528,7 +528,7 @@
       },
       "interfaceLanguage": "Langue de l'interface",
       "chooseLanguage": "Choisir une langue",
-      "languageUpcoming": "{label} — à venir",
+      "languageUpcoming": "{label} (à venir)",
       "timezone": "Fuseau horaire",
       "chooseTimezone": "Choisir un fuseau horaire",
       "currencyDisplay": "Affichage de la devise",
@@ -643,8 +643,8 @@
         "change": "Changer l'e-mail",
         "add": "Ajouter un e-mail",
         "none": "Aucun e-mail lié",
-        "hintVerified": "Connectez-vous avec cet e-mail et un code à usage unique. Changez-le à tout moment — nous vérifierons la nouvelle adresse avec un code.",
-        "hintOnFile": "Enregistré depuis votre invitation — vérifiez-le pour vous connecter avec un code envoyé par e-mail.",
+        "hintVerified": "Connectez-vous avec cet e-mail et un code à usage unique. Changez-le à tout moment, nous vérifierons la nouvelle adresse avec un code.",
+        "hintOnFile": "Enregistré depuis votre invitation. Vérifiez-le pour vous connecter avec un code envoyé par e-mail.",
         "hintNone": "Ajoutez un e-mail pour vous connecter aussi avec un code envoyé par e-mail."
       },
       "phone": {
@@ -656,7 +656,7 @@
       },
       "legal": {
         "title": "Identité légale",
-        "description": "Enregistrée lors de l'intégration comme votre déclaration d'identité signée. La date de naissance est figée ; la résidence peut changer si vous changez de juridiction. Chaque mise à jour est ajoutée à la chaîne d'audit — votre déclaration d'origine n'est jamais écrasée.",
+        "description": "Enregistrée lors de l'intégration comme votre déclaration d'identité signée. La date de naissance est figée ; la résidence peut changer si vous changez de juridiction. Chaque mise à jour est ajoutée à la chaîne d'audit : votre déclaration d'origine n'est jamais écrasée.",
         "updateResidence": "Mettre à jour la résidence",
         "residenceNotSet": "Résidence non définie",
         "residenceNotSetHint": "La juridiction successorale ne peut pas être déterminée tant que vous n'avez pas déclaré votre pays de résidence. Définissez-le maintenant pour que votre plan de succession reste recevable.",
@@ -820,7 +820,7 @@
     "residence": {
       "error": "Échec de la mise à jour de la résidence légale",
       "title": "Mettre à jour la résidence légale",
-      "description": "Changez le pays dont la juridiction successorale s'applique à votre coffre. Votre déclaration initiale est conservée intacte dans le journal d'audit — cette mise à jour est enregistrée comme une nouvelle entrée infalsifiable.",
+      "description": "Changez le pays dont la juridiction successorale s'applique à votre coffre. Votre déclaration initiale est conservée intacte dans le journal d'audit, et cette mise à jour est enregistrée comme une nouvelle entrée infalsifiable.",
       "countryLabel": "Nouveau pays de résidence",
       "countryHint": "Choisissez le pays où vous résidez actuellement. La date de naissance ne peut pas être modifiée.",
       "cancel": "Annuler",
@@ -853,7 +853,7 @@
       "title": "Déverrouillage de l'appareil",
       "subtitle": "Méthodes conservées uniquement sur cet appareil. Elles déverrouillent votre coffre ici sans ressaisir vos 24 mots.",
       "locked": "Le coffre est verrouillé. Déverrouillez-le d'abord pour ajouter ou modifier les méthodes de déverrouillage de l'appareil.",
-      "empty": "Aucun déverrouillage d'appareil pour l'instant — vos 24 mots sont requis à chaque connexion sur cet appareil.",
+      "empty": "Aucun déverrouillage d'appareil pour l'instant : vos 24 mots sont requis à chaque connexion sur cet appareil.",
       "subtitlePin": "{label} · ajouté {time}",
       "addMethod": "Ajouter une méthode",
       "footer": "Le déverrouillage de l'appareil est local à ce navigateur. Les autres appareils nécessitent leur propre configuration. Si vous perdez l'appareil, vos 24 mots permettent toujours de tout récupérer."
@@ -875,7 +875,7 @@
       "verified": "Vérifié",
       "disableAria": "Désactiver l'application d'authentification",
       "recoveryOn": "Récupération par phrase de récupération : ACTIVÉE",
-      "recoveryOff": "Récupération par phrase de récupération : DÉSACTIVÉE — vous ne pourrez pas réinitialiser la 2FA si vous perdez votre téléphone.",
+      "recoveryOff": "Récupération par phrase de récupération : DÉSACTIVÉE. Vous ne pourrez pas réinitialiser la 2FA si vous perdez votre téléphone.",
       "setUp": "Configurer",
       "empty": "Aucune application d'authentification configurée.",
       "active": "Authentificateur actif",
@@ -894,7 +894,7 @@
       "bindDescriptionEnrollment": "Authentificateur activé. Vous pouvez, en option, lier votre phrase de récupération afin de pouvoir désactiver la 2FA si vous perdez un jour votre téléphone.",
       "bindDescriptionPostHoc": "Liez votre phrase de récupération afin de pouvoir désactiver la 2FA si vous perdez un jour votre téléphone.",
       "recoveryPhraseLabel": "Phrase de récupération",
-      "phraseHint": "La phrase ne quitte jamais votre appareil — seul un vérificateur dérivé est envoyé.",
+      "phraseHint": "La phrase ne quitte jamais votre appareil : seul un vérificateur dérivé est envoyé.",
       "skip": "Ignorer",
       "bindButton": "Lier la récupération",
       "skipHint": "Ignorer est sans risque. Sans liaison, perdre votre téléphone signifie que vous devrez contacter le support pour réinitialiser la 2FA."
@@ -960,7 +960,7 @@
       "unavailableLegacy": "Indisponible (format hérité)"
     },
     "item": {
-      "decryptFailedLegacy": "[Déchiffrement impossible — cet élément a été stocké dans un format hérité]",
+      "decryptFailedLegacy": "[Déchiffrement impossible : cet élément a été stocké dans un format hérité]",
       "decryptFailed": "[Déchiffrement impossible]",
       "notAvailable": {
         "title": "Élément indisponible",
@@ -972,13 +972,13 @@
       "linkedUrls": "URL associées"
     },
     "introCard": {
-      "decryptFailedLegacy": "[Déchiffrement impossible — format hérité]",
+      "decryptFailedLegacy": "[Déchiffrement impossible : format hérité]",
       "decryptFailed": "[Déchiffrement impossible]",
       "decrypting": "Déchiffrement du message…"
     },
     "introDialog": {
       "title": "Un message de {ownerName}",
-      "description": "Prenez un instant — ceci vous a été laissé.",
+      "description": "Prenez un instant, ceci vous a été laissé.",
       "continue": "Accéder au coffre"
     },
     "attachments": {
@@ -989,7 +989,7 @@
       "encrypted": "Chiffré",
       "download": "Télécharger",
       "decrypting": "Déchiffrement…",
-      "documentReady": "Document prêt — ouvrez-le ou téléchargez-le pour le consulter.",
+      "documentReady": "Document prêt. Ouvrez-le ou téléchargez-le pour le consulter.",
       "open": "Ouvrir",
       "enlarge": "Agrandir",
       "close": "Fermer"
@@ -1000,7 +1000,7 @@
       "title": "Personnes de confiance",
       "subtitle": "Désignez les personnes qui protègent votre héritage et décidez qui reçoit quels éléments du coffre lors d'un déclenchement. Gérez ici vos contacts de confiance, puis regroupez-les en groupes de transmission.",
       "howItWorks": "Comment fonctionnent les contacts de confiance",
-      "medicalIdCallout": "Pour les urgences aiguës (accident, malaise soudain), configurez l'ID médical intégré à votre téléphone — les secouristes le consultent en premier.",
+      "medicalIdCallout": "Pour les urgences aiguës (accident, malaise soudain), configurez l'ID médical intégré à votre téléphone : les secouristes le consultent en premier.",
       "learnHow": "Découvrir comment →"
     },
     "tabs": {
@@ -1030,18 +1030,18 @@
       "quorum": "quorum",
       "stepLabel": "Confirmations nécessaires pour lancer la transmission",
       "state": {
-        "unprotected": "Non protégé — invitez votre premier gardien",
-        "atRisk": "À risque — {count} de plus pour atteindre le quorum",
-        "quorumMet": "Quorum atteint — ajoutez-en pour plus de redondance",
-        "resilientOne": "Résilient — {count} gardien de marge",
-        "resilientMany": "Résilient — {count} gardiens de marge"
+        "unprotected": "Non protégé : invitez votre premier gardien",
+        "atRisk": "À risque : {count} de plus pour atteindre le quorum",
+        "quorumMet": "Quorum atteint : ajoutez-en pour plus de redondance",
+        "resilientOne": "Résilient : {count} gardien de marge",
+        "resilientMany": "Résilient : {count} gardiens de marge"
       },
       "accepted": "Acceptés",
       "pendingInvites": "Invitations en attente"
     },
     "oneGuardianWarning": {
       "title": "Un seul gardien ne suffit pas",
-      "body": "Seul {name} a accepté pour l'instant — invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
+      "body": "Seul {name} a accepté pour l'instant. Invitez-en au moins un autre. Au moins 2 contacts de confiance doivent confirmer que vous êtes injoignable avant l'ouverture de la fenêtre de grâce : un gardien seul ne peut jamais lancer la transmission."
     },
     "emptyState": {
       "title": "Aucun contact de confiance",
@@ -1066,7 +1066,7 @@
     },
     "accessRequests": {
       "heading": "Accès d'urgence",
-      "help": "Les contacts de confiance ouvrent cette demande lorsque Life Check a épuisé tous les canaux et que vous ne pouvez plus être joint. Une fois que le quorum confirme votre indisponibilité, une fenêtre de grâce de 72 heures s'ouvre — connectez-vous et cliquez sur Je vais bien pour l'annuler. Passé ce délai, chaque bénéficiaire reçoit uniquement les éléments que vous lui avez attribués.",
+      "help": "Les contacts de confiance ouvrent cette demande lorsque Life Check a épuisé tous les canaux et que vous ne pouvez plus être joint. Une fois que le quorum confirme votre indisponibilité, une fenêtre de grâce de 72 heures s'ouvre : connectez-vous et cliquez sur Je vais bien pour l'annuler. Passé ce délai, chaque bénéficiaire reçoit uniquement les éléments que vous lui avez attribués.",
       "status": {
         "pending": "En attente",
         "approved": "Approuvé",
@@ -1081,7 +1081,7 @@
       "unlockWindowOpen": "La fenêtre de déverrouillage du coffre est ouverte. Annulez maintenant si vous allez bien.",
       "gracePeriodEnds": "Fin de la période de grâce : {date}",
       "cancelling": "Annulation…",
-      "cancelButton": "Je vais bien — annuler l'accès d'urgence",
+      "cancelButton": "Je vais bien, annuler l'accès d'urgence",
       "history": "Historique"
     },
     "contactCard": {
@@ -1097,8 +1097,8 @@
       "accepted": "Accepté",
       "recoveryRole": "Rôle de récupération",
       "awaitingKey": "Clé de chiffrement en attente",
-      "awaitingKeyHelp": "Ce contact a accepté l'invitation mais n'a pas encore publié sa clé de chiffrement. Il obtiendra l'accès automatiquement dès qu'il aura terminé la configuration de son compte — aucune action requise de votre part.",
-      "verificationHelp": "Confirmé chaque fois que ce contact ouvre Keeplas et que sa propre clé se déverrouille sur son appareil — la preuve qu'il peut toujours agir comme contact de confiance. Cela ne lui donne jamais accès à votre coffre.",
+      "awaitingKeyHelp": "Ce contact a accepté l'invitation mais n'a pas encore publié sa clé de chiffrement. Il obtiendra l'accès automatiquement dès qu'il aura terminé la configuration de son compte, sans aucune action requise de votre part.",
+      "verificationHelp": "Confirmé chaque fois que ce contact ouvre Keeplas et que sa propre clé se déverrouille sur son appareil. C'est la preuve qu'il peut toujours agir comme contact de confiance. Cela ne lui donne jamais accès à votre coffre.",
       "lastVerified": "Dernière confirmation {relative} ({date}).",
       "itemsReleased": "Éléments libérés vers ce contact",
       "noItemsRouted": "Aucun élément du coffre n'est encore acheminé vers ce contact.",
@@ -1158,7 +1158,7 @@
       "fullNamePlaceholder": "Saisissez son nom complet",
       "emailLabel": "E-mail",
       "phoneLabel": "Téléphone",
-      "contactHint": "Ajoutez un e-mail, un numéro de téléphone, ou les deux — au moins un est requis.",
+      "contactHint": "Ajoutez un e-mail, un numéro de téléphone, ou les deux. Au moins un est requis.",
       "roleLabel": "Rôle",
       "roleHelp": "Sa relation avec vous. Keeplas l'utilise pour faire ressortir le bon contact selon les scénarios (médical, juridique, familial) et dans l'accueil.",
       "rolePlaceholder": "Sélectionnez un rôle",
@@ -1213,8 +1213,8 @@
       "encrypting": "{label} : chiffrement dans ce navigateur…",
       "progress": "{done} sur {totalBytes} envoyés",
       "savedTitle": "Pièces jointes enregistrées",
-      "savedDescription": "{label} — {count} fichier chiffré et téléversé",
-      "savedDescriptionPlural": "{label} — {count} fichiers chiffrés et téléversés",
+      "savedDescription": "{label} : {count} fichier chiffré et téléversé",
+      "savedDescriptionPlural": "{label} : {count} fichiers chiffrés et téléversés",
       "state": {
         "failed": {
           "title": "Échec de l'envoi",
@@ -1264,11 +1264,11 @@
     "hub": {
       "eyebrow": "Documentation",
       "title": "Comment Keeplas protège votre héritage.",
-      "intro": "Keeplas est une plateforme de continuité de vie. Nous combinons un coffre à connaissance nulle, une vérification de vie multicanale et un réseau de récupération sociale pour que votre héritage numérique vous survive — selon vos conditions.",
+      "intro": "Keeplas est une plateforme de continuité de vie. Nous combinons un coffre à connaissance nulle, une vérification de vie multicanale et un réseau de récupération sociale pour que votre héritage numérique vous survive, selon vos conditions.",
       "hero": {
         "badge": "À connaissance nulle par conception",
         "title": "Votre clé ne quitte jamais votre appareil.",
-        "body": "La clé maîtresse qui déverrouille votre coffre est générée et stockée uniquement sur vos appareils. Les serveurs Keeplas ne détiennent que des données chiffrées et les métadonnées publiques nécessaires à l'orchestration des vérifications de vie — rien de plus. Même nous ne pouvons pas lire votre coffre.",
+        "body": "La clé maîtresse qui déverrouille votre coffre est générée et stockée uniquement sur vos appareils. Les serveurs Keeplas ne détiennent que des données chiffrées et les métadonnées publiques nécessaires à l'orchestration des vérifications de vie, rien de plus. Même nous ne pouvons pas lire votre coffre.",
         "exportKit": "Exporter le kit de récupération",
         "securityCenter": "Centre de sécurité"
       },
@@ -1283,11 +1283,11 @@
         },
         "lifeCheck": {
           "title": "Life Check",
-          "description": "Preuve de vie automatisée via WhatsApp et e-mail — vérifiez chaque canal une fois pour que nous puissions vous joindre (notification dans l'application bientôt disponible). Cadence configurable, fenêtre de réponse de 15 jours avec rappels, et un mode voyage pour mettre en pause pendant vos déplacements."
+          "description": "Preuve de vie automatisée via WhatsApp et e-mail : vérifiez chaque canal une fois pour que nous puissions vous joindre (notification dans l'application bientôt disponible). Cadence configurable, fenêtre de réponse de 15 jours avec rappels, et un mode voyage pour mettre en pause pendant vos déplacements."
         },
         "letters": {
           "title": "Lettres & Messages",
-          "description": "Lettres scellées libérées par des événements de vie ou des dates précises. Composez-les comme un élément Lettre / Message depuis votre coffre — les bénéficiaires les reçoivent une fois le déclencheur validé par vos curateurs."
+          "description": "Lettres scellées libérées par des événements de vie ou des dates précises. Composez-les comme un élément Lettre / Message depuis votre coffre. Les bénéficiaires les reçoivent une fois le déclencheur validé par vos curateurs."
         },
         "emergency": {
           "title": "Urgences aiguës",
@@ -1303,7 +1303,7 @@
         },
         "insights": {
           "title": "Réfléchir & Préparer",
-          "description": "Neuf cas honnêtes — questions de réflexion, points de douleur réels, essentiels d'urgence, et les fondations cryptographiques de Keeplas. ~10 minutes de lecture."
+          "description": "Neuf cas honnêtes : questions de réflexion, points de douleur réels, essentiels d'urgence, et les fondations cryptographiques de Keeplas. ~10 minutes de lecture."
         }
       },
       "securityModel": {
@@ -1324,7 +1324,7 @@
         },
         "recoveryKit": {
           "title": "Kit de récupération sur papier",
-          "body": "Exportez un document imprimable contenant votre phrase de 24 mots. Stockage à froid uniquement — Keeplas ne stocke ni la phrase ni aucun de ses hachages. La phrase dérive votre clé racine localement via Argon2id."
+          "body": "Exportez un document imprimable contenant votre phrase de 24 mots. Stockage à froid uniquement. Keeplas ne stocke ni la phrase ni aucun de ses hachages. La phrase dérive votre clé racine localement via Argon2id."
         }
       },
       "lifecycle": {
@@ -1334,7 +1334,7 @@
           "cadence": {
             "value": "La cadence expire",
             "title": "Une vérification s'ouvre",
-            "body": "Votre cadence s'écoule sans un « Je vais bien » explicite. Keeplas ouvre un cycle Life Check et démarre une fenêtre de réponse de 15 jours. Utiliser l'application ne compte pas — seule une réponse explicite compte."
+            "body": "Votre cadence s'écoule sans un « Je vais bien » explicite. Keeplas ouvre un cycle Life Check et démarre une fenêtre de réponse de 15 jours. Utiliser l'application ne compte pas, seule une réponse explicite compte."
           },
           "window": {
             "value": "Jours 0–15",
@@ -1344,12 +1344,12 @@
           "confirmation": {
             "value": "Jour 15 · Confirmation",
             "title": "Les contacts de confiance confirment l'injoignabilité",
-            "body": "Aucune réponse sur toute la fenêtre. Vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre — dans la fenêtre que vous avez fixée (7 jours par défaut) et selon le nombre que vous exigez. Rien n'est encore libéré."
+            "body": "Aucune réponse sur toute la fenêtre. Vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre, dans la fenêtre que vous avez fixée (7 jours par défaut) et selon le nombre que vous exigez. Rien n'est encore libéré."
           },
           "grace": {
             "value": "Délai de grâce 72 h",
             "title": "Dernière chance de revenir",
-            "body": "Une fois que suffisamment de contacts confirment, un délai de grâce fixe de 72 heures s'ouvre — distinct de la fenêtre de confirmation. Connectez-vous et cliquez sur Je vais bien : le cycle est annulé. Rien ne quitte le coffre."
+            "body": "Une fois que suffisamment de contacts confirment, un délai de grâce fixe de 72 heures s'ouvre, distinct de la fenêtre de confirmation. Connectez-vous et cliquez sur Je vais bien : le cycle est annulé. Rien ne quitte le coffre."
           },
           "release": {
             "value": "Libération",
@@ -1360,19 +1360,19 @@
       },
       "quickLinks": {
         "heading": "Accéder à une fonctionnalité",
-        "subtitle": "Toute la documentation est intégrée au produit — chaque écran a son propre état vide guidé et ses info-bulles.",
+        "subtitle": "Toute la documentation est intégrée au produit : chaque écran a son propre état vide guidé et ses info-bulles.",
         "items": {
           "hub": "Accueil",
           "security": "Centre de sécurité",
           "subscription": "Abonnement"
         }
       },
-      "footer": "Keeplas — Protocole de continuité de vie · Version 0.1"
+      "footer": "Keeplas · Protocole de continuité de vie · Version 0.1"
     },
     "vault": {
       "title": "Coffre numérique",
       "eyebrow": "Stockage chiffré",
-      "intro": "Stockage à connaissance nulle pour vos documents, identifiants, actifs financiers et votre héritage numérique. Tout est chiffré sur votre appareil avant même de le quitter — Keeplas ne détient jamais que du texte chiffré.",
+      "intro": "Stockage à connaissance nulle pour vos documents, identifiants, actifs financiers et votre héritage numérique. Tout est chiffré sur votre appareil avant même de le quitter. Keeplas ne détient jamais que du texte chiffré.",
       "encryption": {
         "heading": "Comment fonctionne le chiffrement",
         "onDevice": {
@@ -1392,7 +1392,7 @@
         "heading": "Ce que vous pouvez stocker",
         "documents": {
           "title": "Documents",
-          "body": "Papiers d'identité, contrats, testaments, polices d'assurance — tout fichier qui compte pour votre succession."
+          "body": "Papiers d'identité, contrats, testaments, polices d'assurance : tout fichier qui compte pour votre succession."
         },
         "credentials": {
           "title": "Identifiants",
@@ -1435,7 +1435,7 @@
         },
         "reply": {
           "title": "Une réponse explicite réinitialise",
-          "body": "Une touche dans l'e-mail, ou une réponse WhatsApp, réinitialise le compte à rebours. Naviguer dans l'application ne compte pas — seul un « Je vais bien » explicite compte."
+          "body": "Une touche dans l'e-mail, ou une réponse WhatsApp, réinitialise le compte à rebours. Naviguer dans l'application ne compte pas, seul un « Je vais bien » explicite compte."
         },
         "travel": {
           "title": "Mode voyage",
@@ -1448,7 +1448,7 @@
       },
       "afterInactivity": {
         "heading": "Que se passe-t-il si vous ne répondez pas",
-        "body": "Si toute la fenêtre de 15 jours s'écoule sans réponse, vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre. Ce n'est qu'alors — après une fenêtre de confirmation supplémentaire et un délai de grâce de 72 heures — que la récupération commence. Vous pouvez annuler à tout moment en vous connectant et en cliquant sur Je vais bien.",
+        "body": "Si toute la fenêtre de 15 jours s'écoule sans réponse, vos contacts de confiance sont invités à confirmer qu'ils ne peuvent pas vous joindre. Ce n'est qu'alors, après une fenêtre de confirmation supplémentaire et un délai de grâce de 72 heures, que la récupération commence. Vous pouvez annuler à tout moment en vous connectant et en cliquant sur Je vais bien.",
         "readMore": "Lire le déroulé complet de récupération & héritage"
       },
       "goToLifeCheck": "Aller à Life Check",
@@ -1457,7 +1457,7 @@
     "letters": {
       "title": "Lettres & Messages",
       "eyebrow": "Messages à libération différée",
-      "intro": "Des lettres scellées libérées à une date précise ou par un événement de vie. Vous les composez comme un élément du coffre — chiffré comme tout le reste — et les bénéficiaires ne les reçoivent qu'une fois le déclencheur validé par vos curateurs.",
+      "intro": "Des lettres scellées libérées à une date précise ou par un événement de vie. Vous les composez comme un élément du coffre, chiffré comme tout le reste, et les bénéficiaires ne les reçoivent qu'une fois le déclencheur validé par vos curateurs.",
       "howItWorks": "Comment ça marche",
       "details": {
         "compose": {
@@ -1474,12 +1474,12 @@
         },
         "validated": {
           "title": "Libérée après validation",
-          "body": "Les bénéficiaires reçoivent la lettre une fois que vos curateurs confirment que le déclencheur est rempli — jamais avant."
+          "body": "Les bénéficiaires reçoivent la lettre une fois que vos curateurs confirment que le déclencheur est rempli, jamais avant."
         }
       },
       "privacy": {
         "heading": "Scellée jusqu'au moment voulu",
-        "body": "Une lettre reste chiffrée dans votre coffre jusqu'au déclenchement. Les serveurs Keeplas ne détiennent que du texte chiffré, donc personne — ni nous, ni le bénéficiaire, ni vos curateurs — ne peut la lire à l'avance.",
+        "body": "Une lettre reste chiffrée dans votre coffre jusqu'au déclenchement. Les serveurs Keeplas ne détiennent que du texte chiffré, donc personne (ni nous, ni le bénéficiaire, ni vos curateurs) ne peut la lire à l'avance.",
         "link": "Comment les curateurs valident les déclencheurs"
       },
       "openVault": "Ouvrir votre coffre",
@@ -1488,7 +1488,7 @@
     "trustedContacts": {
       "title": "Contacts de confiance",
       "eyebrow": "Réseau de récupération",
-      "intro": "Les personnes que vous désignez pour protéger votre coffre — de votre vivant (en cas de perte d'accès) et après (pour votre succession numérique). Un rôle unifié, un seul modèle mental.",
+      "intro": "Les personnes que vous désignez pour protéger votre coffre, de votre vivant (en cas de perte d'accès) et après (pour votre succession numérique). Un rôle unifié, un seul modèle mental.",
       "roles": {
         "heading": "Un seul rôle",
         "trust": {
@@ -1496,7 +1496,7 @@
           "body": "Vous aide à récupérer l'accès si vous perdez votre téléphone, confirme que vous êtes injoignable, et reçoit les éléments que vous lui avez attribués une fois votre coffre ouvert. Ne détient jamais de clé de votre coffre.",
           "bullets": {
             "min": "Minimum 2 contacts de confiance pour la récupération",
-            "noCap": "Aucune limite — invitez-en autant que nécessaire",
+            "noCap": "Aucune limite : invitez-en autant que nécessaire",
             "receives": "Reçoit uniquement les éléments que vous lui attribuez, après l'ouverture du coffre",
             "moments": "Rôle actif à trois moments : invitation, escalade, récupération"
           }
@@ -1510,15 +1510,15 @@
         },
         "receive": {
           "title": "Reçoit sa part (silencieusement)",
-          "body": "Lorsque vous cliquez sur Distribuer maintenant, votre client chiffre sa part Shamir pour sa clé publique et stocke le texte chiffré sur le serveur. La prochaine fois qu'il ouvre /shared-with-me, son navigateur la déchiffre sur l'appareil, conserve les octets bruts dans son IndexedDB et inscrit lastVerifiedAt comme preuve cryptographique que le déchiffrement a réussi. Aucun clic manuel, aucun copier-coller — et les serveurs Keeplas ne voient jamais la part brute."
+          "body": "Lorsque vous cliquez sur Distribuer maintenant, votre client chiffre sa part Shamir pour sa clé publique et stocke le texte chiffré sur le serveur. La prochaine fois qu'il ouvre /shared-with-me, son navigateur la déchiffre sur l'appareil, conserve les octets bruts dans son IndexedDB et inscrit lastVerifiedAt comme preuve cryptographique que le déchiffrement a réussi. Aucun clic manuel, aucun copier-coller, et les serveurs Keeplas ne voient jamais la part brute."
         },
         "confirm": {
           "title": "Confirme l'injoignabilité (si nécessaire)",
-          "body": "Si votre Life Check s'intensifie et que vous cessez de répondre, tous vos contacts de confiance sont notifiés. Chacun peut vous marquer comme injoignable depuis son accueil. Une fois le seuil atteint, un délai de grâce de 72 heures s'ouvre — pendant lequel vous pouvez encore annuler en vous connectant."
+          "body": "Si votre Life Check s'intensifie et que vous cessez de répondre, tous vos contacts de confiance sont notifiés. Chacun peut vous marquer comme injoignable depuis son accueil. Une fois le seuil atteint, un délai de grâce de 72 heures s'ouvre, pendant lequel vous pouvez encore annuler en vous connectant."
         },
         "submit": {
           "title": "Soumet sa part lors de la récupération",
-          "body": "Après l'expiration du délai de grâce (ou si vous déclenchez manuellement la récupération sociale), les contacts ouvrent /shared-with-me et cliquent sur Soumettre ma part. Leur navigateur récupère leur part depuis l'IndexedDB, chiffre une copie pour la clé publique de chaque pair et envoie les enveloppes — le contact ne voit, ne saisit ni n'exporte jamais les octets bruts. Une fois le seuil atteint, n'importe quel soumetteur peut cliquer sur Reconstruire la clé maîtresse : son appareil récupère les enveloppes qui lui sont destinées, les déchiffre, les combine avec sa propre part brute et reconstruit la clé maîtresse entièrement sur l'appareil. Les serveurs ne voient que du texte chiffré tout du long."
+          "body": "Après l'expiration du délai de grâce (ou si vous déclenchez manuellement la récupération sociale), les contacts ouvrent /shared-with-me et cliquent sur Soumettre ma part. Leur navigateur récupère leur part depuis l'IndexedDB, chiffre une copie pour la clé publique de chaque pair et envoie les enveloppes : le contact ne voit, ne saisit ni n'exporte jamais les octets bruts. Une fois le seuil atteint, n'importe quel soumetteur peut cliquer sur Reconstruire la clé maîtresse : son appareil récupère les enveloppes qui lui sont destinées, les déchiffre, les combine avec sa propre part brute et reconstruit la clé maîtresse entièrement sur l'appareil. Les serveurs ne voient que du texte chiffré tout du long."
         }
       },
       "threshold": {
@@ -1532,13 +1532,13 @@
     "emergencyInfo": {
       "eyebrow": "Urgences aiguës",
       "title": "Utilisez l'ID médical intégré de votre téléphone.",
-      "intro": "Keeplas se concentre sur la continuité à long terme — héritage, vérification de vie, récupération par parts. Pour les accidents et maladies soudaines, l'outil le plus rapide et le plus fiable est déjà sur l'écran de verrouillage de votre téléphone, fonctionne hors ligne et est reconnu par les secouristes formés. Deux minutes pour le configurer.",
+      "intro": "Keeplas se concentre sur la continuité à long terme : héritage, vérification de vie, récupération par parts. Pour les accidents et maladies soudaines, l'outil le plus rapide et le plus fiable est déjà sur l'écran de verrouillage de votre téléphone, fonctionne hors ligne et est reconnu par les secouristes formés. Deux minutes pour le configurer.",
       "why": {
         "heading": "Pourquoi pas une carte Keeplas ?",
-        "body": "Une carte QR avec vos informations médicales devrait être lisible sans clé — donc non chiffrée sur nos serveurs. Cela contredit notre promesse de connaissance nulle. Apple et Google ont déjà résolu cela sur l'appareil lui-même : les données vivent sur votre téléphone, accessibles depuis l'écran de verrouillage sans le déverrouiller, et n'atteignent jamais un serveur tiers."
+        "body": "Une carte QR avec vos informations médicales devrait être lisible sans clé, donc non chiffrée sur nos serveurs. Cela contredit notre promesse de connaissance nulle. Apple et Google ont déjà résolu cela sur l'appareil lui-même : les données vivent sur votre téléphone, accessibles depuis l'écran de verrouillage sans le déverrouiller, et n'atteignent jamais un serveur tiers."
       },
       "ios": {
-        "heading": "iPhone — ID médical",
+        "heading": "iPhone : ID médical",
         "steps": {
           "open": {
             "title": "Ouvrez l'application Santé",
@@ -1550,11 +1550,11 @@
           },
           "fill": {
             "title": "Renseignez les informations essentielles",
-            "body": "Nom, date de naissance, groupe sanguin, allergies, médicaments, pathologies, taille, poids, statut de donneur d'organes. Ajoutez au moins un contact d'urgence (avec le lien — Mère, Conjoint…)."
+            "body": "Nom, date de naissance, groupe sanguin, allergies, médicaments, pathologies, taille, poids, statut de donneur d'organes. Ajoutez au moins un contact d'urgence (avec le lien : Mère, Conjoint…)."
           },
           "showLocked": {
             "title": "Activez Afficher si verrouillé",
-            "body": "Activez Afficher si verrouillé — c'est l'étape clé. Sans cela, les données restent derrière votre code et sont inutiles pour un premier intervenant."
+            "body": "Activez Afficher si verrouillé : c'est l'étape clé. Sans cela, les données restent derrière votre code et sont inutiles pour un premier intervenant."
           },
           "shareCall": {
             "title": "Activez Partager pendant un appel d'urgence",
@@ -1564,13 +1564,13 @@
         "verify": {
           "p1": "Pour vérifier : verrouillez votre téléphone, puis sur l'écran de verrouillage maintenez le bouton latéral + un bouton de volume. Vous devriez voir un curseur ",
           "em1": "Urgence",
-          "p2": " — faites-le glisser, puis touchez ",
+          "p2": ". Faites-le glisser, puis touchez ",
           "em2": "ID médical",
           "p3": " en bas à gauche. Vos informations devraient apparaître sans déverrouillage."
         }
       },
       "android": {
-        "heading": "Android — Informations d'urgence",
+        "heading": "Android : Informations d'urgence",
         "intro": "La formulation varie légèrement selon le fabricant (Samsung, Pixel, Xiaomi…), mais l'emplacement reste cohérent.",
         "steps": {
           "open": {
@@ -1587,7 +1587,7 @@
           },
           "lockScreen": {
             "title": "Activez l'accès depuis l'écran de verrouillage",
-            "body": "La plupart des téléphones Android exposent les infos d'urgence via le bouton Urgence de l'écran de verrouillage par défaut — aucun réglage nécessaire. Sur Samsung, vérifiez que Paramètres → Écran de verrouillage → Coordonnées / Infos médicales est activé."
+            "body": "La plupart des téléphones Android exposent les infos d'urgence via le bouton Urgence de l'écran de verrouillage par défaut, sans aucun réglage nécessaire. Sur Samsung, vérifiez que Paramètres → Écran de verrouillage → Coordonnées / Infos médicales est activé."
           },
           "sos": {
             "title": "Activez SOS d'urgence (optionnel)",
@@ -1604,7 +1604,7 @@
       },
       "covers": {
         "heading": "Ce que Keeplas couvre, donc",
-        "body": "L'ID médical natif résout le cas aigu. Keeplas résout le cas plus lent : ce qu'il advient de vos documents, comptes, messages et actifs lorsque vous devenez injoignable pendant des jours, des semaines ou définitivement. Deux problèmes différents, deux outils différents — les deux valent la peine d'être configurés.",
+        "body": "L'ID médical natif résout le cas aigu. Keeplas résout le cas plus lent : ce qu'il advient de vos documents, comptes, messages et actifs lorsque vous devenez injoignable pendant des jours, des semaines ou définitivement. Deux problèmes différents, deux outils différents, et les deux valent la peine d'être configurés.",
         "trustedLink": "Configurer les contacts de confiance",
         "lifeCheckLink": "Configurer Life Check"
       }
@@ -1612,7 +1612,7 @@
     "recovery": {
       "title": "Récupération & Héritage",
       "eyebrow": "Continuité",
-      "intro": "Deux scénarios, deux voies. Vous perdez l'accès de votre vivant — votre phrase de 24 mots ou vos contacts de confiance vous y ramènent. Vous devenez définitivement injoignable — vos contacts de confiance ouvrent le coffre pour vos bénéficiaires.",
+      "intro": "Deux scénarios, deux voies. Vous perdez l'accès de votre vivant : votre phrase de 24 mots ou vos contacts de confiance vous y ramènent. Vous devenez définitivement injoignable : vos contacts de confiance ouvrent le coffre pour vos bénéficiaires.",
       "paths": {
         "alive": {
           "title": "Vous êtes en vie",
@@ -1626,13 +1626,13 @@
       },
       "words": {
         "heading": "Les 24 mots : ce qu'ils sont vraiment",
-        "p1": "Lors de l'intégration, votre appareil génère une nouvelle phrase BIP-39 de 24 mots. Ces mots ne sont jamais envoyés à Keeplas — pas même hachés. Ils n'existent qu'à trois endroits : dans votre tête, sur votre kit de récupération imprimé, et (brièvement) dans la mémoire de votre navigateur pendant l'intégration.",
-        "p2": "La phrase alimente Argon2id (une dérivation de clé gourmande en mémoire) avec un sel propre à chaque utilisateur, produisant votre clé racine. La clé racine chiffre votre clé maîtresse, qui est ce qui déchiffre réellement votre coffre. La clé maîtresse chiffrée (encryptedKeyBundle) est la seule partie que Keeplas stocke — et sans votre phrase, c'est un bloc opaque.",
-        "callout": "Si vous perdez vos 24 mots, vos contacts de confiance ne peuvent pas les récupérer — Keeplas non plus. Ce que les contacts peuvent faire, c'est reconstruire directement votre clé maîtresse via le quorum Shamir. Ensuite, vous générez 24 nouveaux mots et le coffre continue, inchangé, avec une nouvelle phrase."
+        "p1": "Lors de l'intégration, votre appareil génère une nouvelle phrase BIP-39 de 24 mots. Ces mots ne sont jamais envoyés à Keeplas, pas même hachés. Ils n'existent qu'à trois endroits : dans votre tête, sur votre kit de récupération imprimé, et (brièvement) dans la mémoire de votre navigateur pendant l'intégration.",
+        "p2": "La phrase alimente Argon2id (une dérivation de clé gourmande en mémoire) avec un sel propre à chaque utilisateur, produisant votre clé racine. La clé racine chiffre votre clé maîtresse, qui est ce qui déchiffre réellement votre coffre. La clé maîtresse chiffrée (encryptedKeyBundle) est la seule partie que Keeplas stocke, et sans votre phrase, c'est un bloc opaque.",
+        "callout": "Si vous perdez vos 24 mots, vos contacts de confiance ne peuvent pas les récupérer, Keeplas non plus. Ce que les contacts peuvent faire, c'est reconstruire directement votre clé maîtresse via le quorum Shamir. Ensuite, vous générez 24 nouveaux mots et le coffre continue, inchangé, avec une nouvelle phrase."
       },
       "threshold": {
         "heading": "Le seuil de récupération",
-        "intro": "Lors de l'intégration, vous divisez votre clé maîtresse en 4 parts Shamir : une part appareil et jusqu'à trois parts de contacts de confiance. Vous choisissez le seuil — le nombre minimum qui doit collaborer pour la reconstruire. Avec 2 contacts de confiance, gardez le seuil à 2 ; un seuil de 3 nécessite 3 contacts prêts.",
+        "intro": "Lors de l'intégration, vous divisez votre clé maîtresse en 4 parts Shamir : une part appareil et jusqu'à trois parts de contacts de confiance. Vous choisissez le seuil : le nombre minimum qui doit collaborer pour la reconstruire. Avec 2 contacts de confiance, gardez le seuil à 2 ; un seuil de 3 nécessite 3 contacts prêts.",
         "options": {
           "two": {
             "label": "Le plus simple",
@@ -1643,7 +1643,7 @@
             "body": "Nécessite trois contacts prêts. Plus solide contre une paire qui colluderait, mais moins indulgent."
           }
         },
-        "note": "La valeur par défaut est 2 contacts de confiance — la voie de récupération la plus simple tout en exigeant au moins deux personnes distinctes. Si vos contacts présentent un risque de collusion plus élevé (par ex. tous de la même famille ou du même lieu de travail), n'utilisez le seuil 3 qu'une fois 3 contacts prêts."
+        "note": "La valeur par défaut est 2 contacts de confiance : c'est la voie de récupération la plus simple tout en exigeant au moins deux personnes distinctes. Si vos contacts présentent un risque de collusion plus élevé (par ex. tous de la même famille ou du même lieu de travail), n'utilisez le seuil 3 qu'une fois 3 contacts prêts."
       },
       "postmortem": {
         "heading": "Déroulé post-mortem, étape par étape",
@@ -1651,7 +1651,7 @@
           "detection": {
             "stage": "Détection",
             "title": "Le Life Check épuise tous les canaux",
-            "body": "Les signaux passifs échouent (aucune activité dans l'application, aucun déverrouillage d'appareil, aucun signe de vie tiers). Les canaux actifs que vous avez configurés se déclenchent un par un — notification, e-mail, WhatsApp, SMS, appel vocal — avec les délais que vous avez fixés. Le statut du cycle passe à « en escalade »."
+            "body": "Les signaux passifs échouent (aucune activité dans l'application, aucun déverrouillage d'appareil, aucun signe de vie tiers). Les canaux actifs que vous avez configurés se déclenchent un par un (notification, e-mail, WhatsApp, SMS, appel vocal) avec les délais que vous avez fixés. Le statut du cycle passe à « en escalade »."
           },
           "confirmation": {
             "stage": "Confirmation",
@@ -1666,7 +1666,7 @@
           "reconstruction": {
             "stage": "Reconstruction",
             "title": "Les contacts soumettent leurs parts",
-            "body": "À l'expiration du délai de grâce, les contacts soumettent les parts qu'ils détiennent. La reconstruction a lieu entièrement sur l'appareil — les serveurs Keeplas ne voient que des parts chiffrées, jamais la clé maîtresse. Le coffre s'ouvre en mode mémorial en lecture seule."
+            "body": "À l'expiration du délai de grâce, les contacts soumettent les parts qu'ils détiennent. La reconstruction a lieu entièrement sur l'appareil : les serveurs Keeplas ne voient que des parts chiffrées, jamais la clé maîtresse. Le coffre s'ouvre en mode mémorial en lecture seule."
           },
           "distribution": {
             "stage": "Distribution",
@@ -1677,7 +1677,7 @@
       },
       "zk": {
         "heading": "Pourquoi cela reste à connaissance nulle",
-        "intro": "Tout au long du cycle de vie — distribution, réception, vérification, récupération — les serveurs Keeplas ne voient jamais une part brute ni votre clé maîtresse. Ils ne stockent que des blocs chiffrés pour des clés publiques précises, plus des métadonnées publiques (horodatages, journaux d'audit, valeurs de seuil).",
+        "intro": "Tout au long du cycle de vie (distribution, réception, vérification, récupération), les serveurs Keeplas ne voient jamais une part brute ni votre clé maîtresse. Ils ne stockent que des blocs chiffrés pour des clés publiques précises, plus des métadonnées publiques (horodatages, journaux d'audit, valeurs de seuil).",
         "bullets": {
           "distribution": {
             "label": "Distribution",
@@ -1693,7 +1693,7 @@
           },
           "submission": {
             "label": "Soumission de récupération",
-            "body": "lorsque les contacts soumettent leur part, chacun chiffre une copie pour la clé publique de chaque pair (fan-out). Le serveur stocke les enveloppes du fan-out — toujours uniquement du texte chiffré."
+            "body": "lorsque les contacts soumettent leur part, chacun chiffre une copie pour la clé publique de chaque pair (fan-out). Le serveur stocke les enveloppes du fan-out, toujours uniquement du texte chiffré."
           },
           "reconstruction": {
             "label": "Reconstruction",
@@ -1733,7 +1733,7 @@
         "intro": "Un contact de confiance qui change de téléphone, réinitialise son appareil, ouvre une fenêtre de navigation privée ou se connecte sur un nouvel ordinateur ne perd pas sa part. L'architecture gère cela sans aucun export manuel, copier-coller ni action particulière.",
         "keypair": {
           "label": "La paire de clés ML-KEM du contact est portable.",
-          "body": "Sa clé privée est stockée sur le serveur, chiffrée en AES-GCM sous sa propre clé maîtresse. Dès qu'il déverrouille son coffre sur le nouvel appareil — avec sa phrase de 24 mots ou via le déverrouillage d'appareil — la clé privée est déchiffrée dans son navigateur, prête à l'emploi."
+          "body": "Sa clé privée est stockée sur le serveur, chiffrée en AES-GCM sous sa propre clé maîtresse. Dès qu'il déverrouille son coffre sur le nouvel appareil, avec sa phrase de 24 mots ou via le déverrouillage d'appareil, la clé privée est déchiffrée dans son navigateur, prête à l'emploi."
         },
         "shard": {
           "label": "La part chiffrée est toujours sur le serveur.",
@@ -1745,7 +1745,7 @@
         },
         "failure": {
           "title": "Le seul mode d'échec : un contact perd À LA FOIS son appareil ET sa phrase de 24 mots.",
-          "body": "Sans la phrase, il ne peut pas déverrouiller sa clé maîtresse — donc il ne peut pas déchiffrer sa clé privée ML-KEM — donc il ne peut pas déchiffrer sa part. Son emplacement devient un poids mort permanent. En tant que propriétaire du coffre, vous devriez le révoquer, inviter un remplaçant, puis cliquer sur Distribuer maintenant pour émettre de nouvelles parts à tous les contacts de confiance actuels."
+          "body": "Sans la phrase, il ne peut pas déverrouiller sa clé maîtresse, donc il ne peut pas déchiffrer sa clé privée ML-KEM, donc il ne peut pas déchiffrer sa part. Son emplacement devient un poids mort permanent. En tant que propriétaire du coffre, vous devriez le révoquer, inviter un remplaçant, puis cliquer sur Distribuer maintenant pour émettre de nouvelles parts à tous les contacts de confiance actuels."
         }
       },
       "trustedLink": "Les contacts de confiance en détail"
@@ -1753,7 +1753,7 @@
     "insights": {
       "eyebrow": "Réfléchir & Préparer",
       "title": "Neuf cas honnêtes pour la continuité numérique.",
-      "intro": "Trois réflexions, un point de douleur, deux essentiels d'urgence et trois fondations. Parcourez la table des matières ou lisez de haut en bas — chaque section se suffit à elle-même.",
+      "intro": "Trois réflexions, un point de douleur, deux essentiels d'urgence et trois fondations. Parcourez la table des matières ou lisez de haut en bas : chaque section se suffit à elle-même.",
       "toc": "Dans ce guide",
       "toneLabels": {
         "warning": "Réflexion",
@@ -1790,8 +1790,8 @@
         }
       },
       "diedToday": {
-        "p1": "Prenez quatre-vingt-dix secondes. Imaginez chaque compte, fichier et clé de votre vie — puis imaginez-les disparus. Le code de votre téléphone. La clé maîtresse de votre gestionnaire de mots de passe. Le disque avec les photos des enfants. La phrase de récupération crypto que vous avez notée quelque part « en sécurité ». L'accès à la petite messagerie professionnelle redirigée vers votre domicile. La plupart des adultes gèrent plus d'une centaine de comptes en ligne, et presque aucun n'est cartographié, nommé ou transmissible.",
-        "p2": "Le but de cette question n'est pas d'être morbide — c'est de transformer une inquiétude vague en une liste concrète. Vous ne pouvez pas protéger ce que vous n'avez pas nommé. Alors avant toute chose, notez les catégories qui comptent pour votre vie :",
+        "p1": "Prenez quatre-vingt-dix secondes. Imaginez chaque compte, fichier et clé de votre vie, puis imaginez-les disparus. Le code de votre téléphone. La clé maîtresse de votre gestionnaire de mots de passe. Le disque avec les photos des enfants. La phrase de récupération crypto que vous avez notée quelque part « en sécurité ». L'accès à la petite messagerie professionnelle redirigée vers votre domicile. La plupart des adultes gèrent plus d'une centaine de comptes en ligne, et presque aucun n'est cartographié, nommé ou transmissible.",
+        "p2": "Le but de cette question n'est pas d'être morbide, c'est de transformer une inquiétude vague en une liste concrète. Vous ne pouvez pas protéger ce que vous n'avez pas nommé. Alors avant toute chose, notez les catégories qui comptent pour votre vie :",
         "items": {
           "identity": "Documents d'identité & juridiques (passeport, pièce d'identité, actes de naissance)",
           "money": "Argent (banques, courtage, portefeuilles crypto, retraite)",
@@ -1799,56 +1799,56 @@
           "people": "Personnes (qui doit être contacté, qui prendrait le relais)",
           "wishes": "Volontés (directives médicales, statut de donneur d'organes, notes funéraires)"
         },
-        "p3": "Cartographier est l'acte. Choisir qui reçoit quoi est le cadeau. Le reste de ce guide explique comment Keeplas — et quelques habitudes en dehors de Keeplas — rendent ce cadeau durable."
+        "p3": "Cartographier est l'acte. Choisir qui reçoit quoi est le cadeau. Le reste de ce guide explique comment Keeplas (et quelques habitudes en dehors de Keeplas) rendent ce cadeau durable."
       },
       "secrets": {
-        "p1": "Quand quelqu'un meurt sans plan numérique, trois schémas se répètent. Le compte iCloud se gèle discrètement — Apple propose désormais un Contact légataire, mais seulement s'il est configuré avant le décès ; sinon, la famille fait face à une décision de justice ou à un verrouillage définitif. Les portefeuilles crypto deviennent des tombeaux dès qu'une phrase de récupération manque — pas de service client, pas de « mot de passe oublié », pas de récupération. Les photos et documents d'un téléphone protégé par Face ID et un code inconnu sont de fait perdus.",
+        "p1": "Quand quelqu'un meurt sans plan numérique, trois schémas se répètent. Le compte iCloud se gèle discrètement : Apple propose désormais un Contact légataire, mais seulement s'il est configuré avant le décès ; sinon, la famille fait face à une décision de justice ou à un verrouillage définitif. Les portefeuilles crypto deviennent des tombeaux dès qu'une phrase de récupération manque : pas de service client, pas de « mot de passe oublié », pas de récupération. Les photos et documents d'un téléphone protégé par Face ID et un code inconnu sont de fait perdus.",
         "p2": "Aucun de ces échecs ne nécessite un attaquant sophistiqué. Ils surviennent parce que les systèmes dont nous dépendons chaque jour sont conçus pour un seul utilisateur vivant, pas pour la transmission. Le remède est modeste : une phrase que vous pouvez noter, un contact qui sait où elle se trouve, et un outil capable de la libérer aux bonnes conditions.",
         "p3": "C'est la version en dix minutes de ce que fait Keeplas. Ajoutez les quelques choses que vous ne voudriez pas perdre, désignez un ou deux contacts de confiance, et la falaise devient une pente.",
         "link": "Ouvrir votre coffre"
       },
       "probate": {
-        "p1": "La succession — le processus légal qui confère à quelqu'un l'autorité sur le patrimoine d'une personne décédée — prend généralement six à dix-huit mois, selon la juridiction et la complexité du patrimoine. Dans certains pays c'est plus rapide, dans beaucoup c'est plus lent. Aucun de ces délais ne correspond au rythme de la vie.",
-        "p2": "Dans les trente premiers jours après un décès, la famille doit généralement : payer le prêt immobilier, maintenir les polices d'assurance à jour, contester ou confirmer des abonnements, déclarer le décès aux banques, et retrouver une douzaine de mots de passe de comptes que personne n'a notés. Sans accès préparé, tout cela retombe sur un proche épuisé ou attend — accumulant des pénalités de retard, laissant des couvertures expirer, verrouillant des comptes.",
-        "p3": "Documenter vos essentiels maintenant ne remplace pas un testament. C'est le pont qui aide votre famille à traverser le premier mois pendant que la machinerie juridique se met en marche. Keeplas libère les informations que vous avez sélectionnées — pas toute votre vie, juste ce que vous avez choisi — aux personnes que vous avez choisies, selon le calendrier que vous avez choisi.",
+        "p1": "La succession (le processus légal qui confère à quelqu'un l'autorité sur le patrimoine d'une personne décédée) prend généralement six à dix-huit mois, selon la juridiction et la complexité du patrimoine. Dans certains pays c'est plus rapide, dans beaucoup c'est plus lent. Aucun de ces délais ne correspond au rythme de la vie.",
+        "p2": "Dans les trente premiers jours après un décès, la famille doit généralement : payer le prêt immobilier, maintenir les polices d'assurance à jour, contester ou confirmer des abonnements, déclarer le décès aux banques, et retrouver une douzaine de mots de passe de comptes que personne n'a notés. Sans accès préparé, tout cela retombe sur un proche épuisé ou attend, accumulant des pénalités de retard, laissant des couvertures expirer, verrouillant des comptes.",
+        "p3": "Documenter vos essentiels maintenant ne remplace pas un testament. C'est le pont qui aide votre famille à traverser le premier mois pendant que la machinerie juridique se met en marche. Keeplas libère les informations que vous avez sélectionnées (pas toute votre vie, juste ce que vous avez choisi) aux personnes que vous avez choisies, selon le calendrier que vous avez choisi.",
         "link": "Lire le guide de récupération & héritage"
       },
       "medicalId": {
         "p1": "Pour les accidents et maladies soudaines, l'outil le plus rapide est déjà sur votre téléphone : l'ID médical intégré. Il vit sur votre écran de verrouillage, fonctionne hors ligne, ne nécessite aucune application, et c'est ce que les secouristes formés cherchent en premier. Deux minutes pour le configurer sur iPhone ou Android.",
-        "callout": "Nous ne reproduisons délibérément pas l'ID médical dans Keeplas — une carte QR lisible sans clé briserait notre promesse de connaissance nulle, et le système d'exploitation a déjà résolu ce problème sur l'appareil lui-même.",
+        "callout": "Nous ne reproduisons délibérément pas l'ID médical dans Keeplas : une carte QR lisible sans clé briserait notre promesse de connaissance nulle, et le système d'exploitation a déjà résolu ce problème sur l'appareil lui-même.",
         "link": "Configuration pas à pas pour iPhone & Android"
       },
       "card": {
         "p1": "L'ID médical est excellent. Le papier le surpasse encore dans quelques situations précises : une batterie de téléphone à plat, des urgences à l'étranger où les secouristes ne cherchent pas le flux de l'écran de verrouillage iOS, un téléphone laissé dans une autre pièce, un proche qui doit lire votre groupe sanguin à voix haute au téléphone.",
-        "p2": "Une carte d'urgence imprimée est le complément hors ligne. Elle ne contient que le strict minimum dont un premier intervenant ou une personne de confiance a besoin dans les dix premières minutes — et rien d'autre. À savoir :",
+        "p2": "Une carte d'urgence imprimée est le complément hors ligne. Elle ne contient que le strict minimum dont un premier intervenant ou une personne de confiance a besoin dans les dix premières minutes, et rien d'autre. À savoir :",
         "items": {
           "identity": "Votre nom, date de naissance, groupe sanguin",
           "medical": "Allergies, médicaments actuels, pathologies critiques",
           "contacts": "Deux contacts d'urgence avec leur lien de parenté avec vous",
           "directives": "Une phrase sur les directives anticipées ou le statut de donneur d'organes"
         },
-        "p3": "Surtout, rien de votre coffre — aucun document, aucun identifiant, aucune instruction d'héritage — n'apparaît sur cette carte. La carte ouvre la première porte ; le reste reste scellé derrière vos clés à connaissance nulle.",
+        "p3": "Surtout, rien de votre coffre (aucun document, aucun identifiant, aucune instruction d'héritage) n'apparaît sur cette carte. La carte ouvre la première porte ; le reste reste scellé derrière vos clés à connaissance nulle.",
         "link": "Choisir les contacts qui figurent sur votre carte"
       },
       "words": {
-        "p1": "Votre phrase de récupération de 24 mots n'est pas un mot de passe — c'est la graine mathématique dont chaque clé de chiffrement de votre compte est dérivée. Nous utilisons le standard BIP-39 que vous avez peut-être vu dans les portefeuilles crypto, associé à la dérivation de clé Argon2id qui transforme la phrase en votre clé racine localement, sur votre appareil. La phrase elle-même ne quitte jamais votre appareil, et les serveurs Keeplas ne la stockent jamais, ni aucun de ses hachages.",
-        "p2": "C'est là la force : le système n'a aucun recours qui contourne la phrase, ce qui est exactement ce qui rend impossible pour nous — ou pour quiconque nous serions contraints de partager — de lire vos données. C'est aussi la responsabilité : si vous perdez la phrase et que vous n'avez pas configuré de contacts de confiance, le coffre est perdu.",
-        "p3": "La bonne façon de conserver 24 mots est hors ligne, sur papier ou acier, idéalement dans deux lieux physiques distincts (une boîte ignifuge et une enveloppe scellée chez un proche, par exemple). Ne les stockez jamais dans une capture d'écran, une application de notes, un brouillon d'e-mail ou un gestionnaire de mots de passe — cela anéantit tout l'intérêt.",
+        "p1": "Votre phrase de récupération de 24 mots n'est pas un mot de passe : c'est la graine mathématique dont chaque clé de chiffrement de votre compte est dérivée. Nous utilisons le standard BIP-39 que vous avez peut-être vu dans les portefeuilles crypto, associé à la dérivation de clé Argon2id qui transforme la phrase en votre clé racine localement, sur votre appareil. La phrase elle-même ne quitte jamais votre appareil, et les serveurs Keeplas ne la stockent jamais, ni aucun de ses hachages.",
+        "p2": "C'est là la force : le système n'a aucun recours qui contourne la phrase, ce qui est exactement ce qui rend impossible pour nous (ou pour quiconque nous serions contraints de partager) de lire vos données. C'est aussi la responsabilité : si vous perdez la phrase et que vous n'avez pas configuré de contacts de confiance, le coffre est perdu.",
+        "p3": "La bonne façon de conserver 24 mots est hors ligne, sur papier ou acier, idéalement dans deux lieux physiques distincts (une boîte ignifuge et une enveloppe scellée chez un proche, par exemple). Ne les stockez jamais dans une capture d'écran, une application de notes, un brouillon d'e-mail ou un gestionnaire de mots de passe : cela anéantit tout l'intérêt.",
         "link": "Générer ou imprimer votre kit de récupération"
       },
       "zeroKnowledge": {
         "p1": "La connaissance nulle est la garantie cryptographique qu'un service peut stocker vos données sans jamais pouvoir les lire. Dans Keeplas, votre clé maîtresse est dérivée localement de votre phrase de 24 mots et ne quitte jamais votre appareil. Chaque élément du coffre est chiffré en AES-256-GCM sur votre appareil avant l'envoi. Ce que nous détenons sur nos serveurs est un texte chiffré mathématiquement opaque.",
-        "p2": "La comparaison pratique : avec le stockage cloud traditionnel (ou la plupart des gestionnaires de mots de passe grand public), le service détient une clé capable de déverrouiller vos données — sous une décision de justice, un identifiant fuité ou un employé malveillant, ces données deviennent lisibles. Avec la connaissance nulle, le texte chiffré reste chiffré jusqu'à ce que votre appareil le déverrouille.",
+        "p2": "La comparaison pratique : avec le stockage cloud traditionnel (ou la plupart des gestionnaires de mots de passe grand public), le service détient une clé capable de déverrouiller vos données. Sous une décision de justice, un identifiant fuité ou un employé malveillant, ces données deviennent lisibles. Avec la connaissance nulle, le texte chiffré reste chiffré jusqu'à ce que votre appareil le déverrouille.",
         "p3": "L'implication à bien comprendre : il n'existe aucune voie de « réinitialiser le mot de passe et récupérer ». Les deux vraies voies de récupération sont la phrase de 24 mots (en autonomie) et la récupération sociale Shamir via vos contacts de confiance (quand la phrase est perdue). C'est toute la forme du système."
       },
       "trustedContacts": {
-        "p1": "Les contacts de confiance sont les personnes qui peuvent collectivement débloquer votre continuité si vous perdez votre phrase ou devenez injoignable. Ils ne détiennent pas votre phrase — ils détiennent des parts cryptographiques de votre clé maîtresse, générées par le partage de secret Shamir. Un seuil configurable (2 contacts de confiance par défaut) doit être d'accord avant que la récupération ne se poursuive, et la reconstruction a toujours lieu sur leurs appareils, jamais sur les serveurs Keeplas.",
+        "p1": "Les contacts de confiance sont les personnes qui peuvent collectivement débloquer votre continuité si vous perdez votre phrase ou devenez injoignable. Ils ne détiennent pas votre phrase : ils détiennent des parts cryptographiques de votre clé maîtresse, générées par le partage de secret Shamir. Un seuil configurable (2 contacts de confiance par défaut) doit être d'accord avant que la récupération ne se poursuive, et la reconstruction a toujours lieu sur leurs appareils, jamais sur les serveurs Keeplas.",
         "p2": "Choisissez-en au moins deux. Un troisième contact ajoute de la résilience si vous optez pour le seuil plus strict. Choisissez des personnes de foyers différents, idéalement de villes différentes, qui décrocheraient vraiment le téléphone lors d'une semaine difficile.",
         "link": "Lire l'analyse approfondie des contacts de confiance"
       },
       "quantumSafe": {
-        "p1": "Le plus grand risque cryptographique pour les données d'héritage n'est pas celui des attaquants d'aujourd'hui — c'est celui de demain. Le schéma s'appelle « récolter maintenant, déchiffrer plus tard » : des adversaires bien financés enregistrent aujourd'hui le trafic chiffré et le texte chiffré stocké, pariant qu'un futur ordinateur quantique cassera les algorithmes sous-jacents et leur permettra de lire ce qui a été capté des années plus tôt.",
-        "p2": "Pour la messagerie grand public ou les sessions de courte durée, c'est surtout théorique. Pour les données d'héritage et de continuité — qui doivent rester confidentielles pendant des décennies — c'est un véritable horizon de planification. C'est pourquoi Keeplas chiffre chaque clé de chiffrement de données par bénéficiaire, et chaque part Shamir, avec ML-KEM-768 (NIST FIPS 203), le standard post-quantique d'encapsulation de clé ratifié en 2024. Il remplace RSA-OAEP sur la couche de chiffrement.",
+        "p1": "Le plus grand risque cryptographique pour les données d'héritage n'est pas celui des attaquants d'aujourd'hui, c'est celui de demain. Le schéma s'appelle « récolter maintenant, déchiffrer plus tard » : des adversaires bien financés enregistrent aujourd'hui le trafic chiffré et le texte chiffré stocké, pariant qu'un futur ordinateur quantique cassera les algorithmes sous-jacents et leur permettra de lire ce qui a été capté des années plus tôt.",
+        "p2": "Pour la messagerie grand public ou les sessions de courte durée, c'est surtout théorique. Pour les données d'héritage et de continuité, qui doivent rester confidentielles pendant des décennies, c'est un véritable horizon de planification. C'est pourquoi Keeplas chiffre chaque clé de chiffrement de données par bénéficiaire, et chaque part Shamir, avec ML-KEM-768 (NIST FIPS 203), le standard post-quantique d'encapsulation de clé ratifié en 2024. Il remplace RSA-OAEP sur la couche de chiffrement.",
         "p3": "L'impact visible pour l'utilisateur est essentiellement nul : mêmes flux, mêmes performances. L'impact visible dans le futur est que le texte chiffré capté aujourd'hui devrait rester illisible lorsque le déchiffrement post-quantique deviendra possible."
       },
       "footer": {
@@ -1864,7 +1864,7 @@
   },
   "lifeCheckConfirm": {
     "badge": "Life Check",
-    "okTitle": "Merci — vous êtes confirmé",
+    "okTitle": "Merci, vous êtes confirmé",
     "okBody": "Nous avons enregistré que vous allez bien et réinitialisé votre compte à rebours. Vous pouvez fermer cet onglet en toute sécurité.",
     "invalidTitle": "Ce lien est invalide ou expiré",
     "invalidBody": "Ce lien de confirmation est invalide ou a expiré. Ouvrez Keeplas pour confirmer depuis la page Life Check, ou attendez la prochaine vérification.",
@@ -1897,7 +1897,7 @@
     "badge1": "Sécurité & Confidentialité",
     "badge2": "Résistant au quantique, de bout en bout",
     "title": "Comment Keeplas protège votre coffre",
-    "intro": "Cinq piliers : comment vous vous connectez, comment vos données sont chiffrées, comment vous déverrouillez au quotidien, ce qu'il se passe si vous perdez l'accès, et le journal d'audit infalsifiable qui rend Keeplas utilisable comme preuve dans une procédure de succession. Nous voyons des octets chiffrés — jamais vos données. Chaque clé par bénéficiaire est chiffrée avec un KEM post-quantique du NIST, afin qu'un futur ordinateur quantique ne puisse pas casser rétroactivement ce que nous détenons aujourd'hui.",
+    "intro": "Cinq piliers : comment vous vous connectez, comment vos données sont chiffrées, comment vous déverrouillez au quotidien, ce qu'il se passe si vous perdez l'accès, et le journal d'audit infalsifiable qui rend Keeplas utilisable comme preuve dans une procédure de succession. Nous voyons des octets chiffrés, jamais vos données. Chaque clé par bénéficiaire est chiffrée avec un KEM post-quantique du NIST, afin qu'un futur ordinateur quantique ne puisse pas casser rétroactivement ce que nous détenons aujourd'hui.",
     "externalRefs": "Références externes",
     "technicalTitle": "Comment ça marche (technique)",
     "faqHeading": "Questions fréquentes",
@@ -1905,7 +1905,7 @@
       "auth": {
         "badge": "Pilier 1",
         "title": "Authentification",
-        "intro": "L'e-mail et le mot de passe vous connectent — rien de plus. L'authentification à deux facteurs optionnelle bloque le hameçonnage. Votre mot de passe ne participe jamais au chiffrement, donc le réinitialiser ne met pas vos données en danger.",
+        "intro": "L'e-mail et le mot de passe vous connectent, rien de plus. L'authentification à deux facteurs optionnelle bloque le hameçonnage. Votre mot de passe ne participe jamais au chiffrement, donc le réinitialiser ne met pas vos données en danger.",
         "bullets": [
           "E-mail + mot de passe pour se connecter.",
           "TOTP optionnel (Google Authenticator, 1Password, Authy…) pour la 2FA.",
@@ -1916,12 +1916,12 @@
       "zk": {
         "badge": "Pilier 2",
         "title": "Chiffrement à connaissance nulle",
-        "intro": "Votre coffre est chiffré sur votre appareil, avant que quoi que ce soit n'atteigne nos serveurs. Les clés sont dérivées de 24 mots de récupération que vous seul détenez — nous ne les voyons jamais, ne les stockons jamais et ne les transmettons jamais. Le partage par bénéficiaire utilise un KEM post-quantique du NIST, afin que même un futur adversaire quantique ne puisse pas déchiffrer rétroactivement ce que nous détenons.",
+        "intro": "Votre coffre est chiffré sur votre appareil, avant que quoi que ce soit n'atteigne nos serveurs. Les clés sont dérivées de 24 mots de récupération que vous seul détenez : nous ne les voyons jamais, ne les stockons jamais et ne les transmettons jamais. Le partage par bénéficiaire utilise un KEM post-quantique du NIST, afin que même un futur adversaire quantique ne puisse pas déchiffrer rétroactivement ce que nous détenons.",
         "bullets": [
           "24 mots BIP-39 générés localement lors de l'intégration.",
           "Argon2id dérive une clé racine de vos mots + un sel public propre à l'utilisateur.",
           "La clé racine chiffre une clé maîtresse par coffre (AES-256-GCM).",
-          "Le chiffrement des clés par bénéficiaire utilise ML-KEM-768 (NIST FIPS 203) — résistant aux futurs ordinateurs quantiques.",
+          "Le chiffrement des clés par bénéficiaire utilise ML-KEM-768 (NIST FIPS 203), résistant aux futurs ordinateurs quantiques.",
           "Nous ne voyons que des enveloppes chiffrées et le sel public. Même en cas de fuite de notre base de données, vos données restent opaques."
         ]
       },
@@ -1939,7 +1939,7 @@
       "recovery": {
         "badge": "Pilier 4",
         "title": "Récupération",
-        "intro": "Vos 24 mots sont le seul moyen de reconstituer votre clé maîtresse — il n'existe aucune réinitialisation côté serveur, et vos contacts de confiance n'en détiennent jamais aucune partie. Nous n'avons aucune clé maîtresse. Aucune porte dérobée.",
+        "intro": "Vos 24 mots sont le seul moyen de reconstituer votre clé maîtresse : il n'existe aucune réinitialisation côté serveur, et vos contacts de confiance n'en détiennent jamais aucune partie. Nous n'avons aucune clé maîtresse. Aucune porte dérobée.",
         "bullets": [
           "Mot de passe perdu → réinitialisez-le avec vos 24 mots. Coffre intact.",
           "2FA perdue → réinitialisez-la avec vos 24 mots.",
@@ -1951,12 +1951,12 @@
       "audit": {
         "badge": "Pilier 5",
         "title": "Journal d'audit à valeur juridique",
-        "intro": "Pour qu'un tribunal accepte Keeplas comme preuve dans une affaire de succession, il faut prouver qui a agi, quand et d'où — sans que nous puissions le falsifier ni le réécrire. Chaque action modifiant l'état est ajoutée à un journal immuable, chaîné par hachage, avec une IP et un pays attestés côté serveur ; la chaîne se brise dès que quiconque altère une seule entrée.",
+        "intro": "Pour qu'un tribunal accepte Keeplas comme preuve dans une affaire de succession, il faut prouver qui a agi, quand et d'où, sans que nous puissions le falsifier ni le réécrire. Chaque action modifiant l'état est ajoutée à un journal immuable, chaîné par hachage, avec une IP et un pays attestés côté serveur ; la chaîne se brise dès que quiconque altère une seule entrée.",
         "bullets": [
           "Chaque mutation produit une entrée d'audit avec action, ressource, horodatage, IP et pays.",
-          "L'IP et le pays sont signés côté serveur avec HMAC-SHA256 — les clients ne peuvent pas falsifier leur propre localisation.",
+          "L'IP et le pays sont signés côté serveur avec HMAC-SHA256 : les clients ne peuvent pas falsifier leur propre localisation.",
           "Chaque entrée porte le hachage de l'entrée précédente, de sorte que la chaîne peut être rejouée et vérifiée hors ligne.",
-          "À l'inscription, nous recueillons votre date de naissance (capacité juridique) et votre pays de résidence (droit successoral applicable) — tous deux stockés sur votre fiche utilisateur et consignés dans la chaîne d'audit.",
+          "À l'inscription, nous recueillons votre date de naissance (capacité juridique) et votre pays de résidence (droit successoral applicable), tous deux stockés sur votre fiche utilisateur et consignés dans la chaîne d'audit.",
           "Nous conservons les journaux d'audit même après la suppression du compte : la trace immuable survit à l'utilisateur, ce qui est exactement la propriété dont un tribunal des successions a besoin."
         ]
       }
@@ -1973,7 +1973,7 @@
       },
       {
         "q": "Que se passe-t-il si Keeplas ferme ?",
-        "a": "Votre coffre sur l'appareil contient votre clé maîtresse déchiffrée tant que vous êtes connecté — vous pouvez tout exporter. Nous publierons le format de chiffrement afin que n'importe quel développeur puisse déchiffrer votre paquet à partir de vos seuls 24 mots, sans aucune intervention de Keeplas."
+        "a": "Votre coffre sur l'appareil contient votre clé maîtresse déchiffrée tant que vous êtes connecté : vous pouvez tout exporter. Nous publierons le format de chiffrement afin que n'importe quel développeur puisse déchiffrer votre paquet à partir de vos seuls 24 mots, sans aucune intervention de Keeplas."
       },
       {
         "q": "Que se passe-t-il si je décède ou deviens incapable ?",
@@ -1985,7 +1985,7 @@
       },
       {
         "q": "Pourquoi ai-je besoin d'un mot de passe si mes données sont chiffrées par 24 mots ?",
-        "a": "Deux couches. Le mot de passe vous authentifie auprès de nos serveurs (pour que des attaquants ne puissent pas simplement deviner des e-mails pour accéder aux paquets chiffrés). Les 24 mots chiffrent les données elles-mêmes. Les deux sont nécessaires lors de la première connexion sur un nouvel appareil — ensuite, le déverrouillage de l'appareil prend le relais."
+        "a": "Deux couches. Le mot de passe vous authentifie auprès de nos serveurs (pour que des attaquants ne puissent pas simplement deviner des e-mails pour accéder aux paquets chiffrés). Les 24 mots chiffrent les données elles-mêmes. Les deux sont nécessaires lors de la première connexion sur un nouvel appareil ; ensuite, le déverrouillage de l'appareil prend le relais."
       },
       {
         "q": "Quels algorithmes de chiffrement utilisez-vous ?",
@@ -1993,14 +1993,14 @@
       },
       {
         "q": "Êtes-vous résistant au quantique ?",
-        "a": "Oui, de bout en bout. Les primitives symétriques (AES-256-GCM, Argon2id, SHA-256, partage de secret Shamir) sont toutes résistantes au quantique par construction. La couche asymétrique — utilisée pour chiffrer les clés par bénéficiaire et les parts des contacts de confiance — utilise ML-KEM-768, le KEM post-quantique normalisé par le NIST (FIPS 203, août 2024). Cela bloque la menace « récolter maintenant, déchiffrer plus tard » : les données que nous stockons aujourd'hui restent opaques même pour un futur adversaire exécutant l'algorithme de Shor sur un grand ordinateur quantique. La plupart des gestionnaires de mots de passe (Bitwarden, 1Password) n'ont pas encore migré ; nous avons conçu Keeplas post-quantique dès le premier jour, car les données d'un coffre doivent rester confidentielles pendant des décennies."
+        "a": "Oui, de bout en bout. Les primitives symétriques (AES-256-GCM, Argon2id, SHA-256, partage de secret Shamir) sont toutes résistantes au quantique par construction. La couche asymétrique, utilisée pour chiffrer les clés par bénéficiaire et les parts des contacts de confiance, repose sur ML-KEM-768, le KEM post-quantique normalisé par le NIST (FIPS 203, août 2024). Cela bloque la menace « récolter maintenant, déchiffrer plus tard » : les données que nous stockons aujourd'hui restent opaques même pour un futur adversaire exécutant l'algorithme de Shor sur un grand ordinateur quantique. La plupart des gestionnaires de mots de passe (Bitwarden, 1Password) n'ont pas encore migré ; nous avons conçu Keeplas post-quantique dès le premier jour, car les données d'un coffre doivent rester confidentielles pendant des décennies."
       },
       {
         "q": "Pourquoi demandez-vous ma date de naissance et mon pays ?",
-        "a": "Deux raisons juridiques. La date de naissance prouve la capacité civile (vous devez avoir au moins 18 ans pour engager votre patrimoine) et vous identifie dans les procédures de succession. Le pays de résidence détermine le droit successoral applicable — les règles de succession françaises, belges, québécoises et américaines diffèrent considérablement. Ces deux champs ne sont stockés que sur votre fiche utilisateur et dans la chaîne d'audit infalsifiable ; ils ne sont jamais utilisés à des fins marketing ni partagés avec des tiers."
+        "a": "Deux raisons juridiques. La date de naissance prouve la capacité civile (vous devez avoir au moins 18 ans pour engager votre patrimoine) et vous identifie dans les procédures de succession. Le pays de résidence détermine le droit successoral applicable : les règles de succession françaises, belges, québécoises et américaines diffèrent considérablement. Ces deux champs ne sont stockés que sur votre fiche utilisateur et dans la chaîne d'audit infalsifiable ; ils ne sont jamais utilisés à des fins marketing ni partagés avec des tiers."
       },
       {
-        "q": "J'ai été invité comme contact de confiance — pourquoi mon e-mail et mon téléphone sont-ils déjà remplis ?",
+        "q": "J'ai été invité comme contact de confiance. Pourquoi mon e-mail et mon téléphone sont-ils déjà remplis ?",
         "a": "Parce que la personne qui vous a invité les a saisis. Pour vous ajouter, elle fournit votre nom, votre e-mail et éventuellement votre numéro de téléphone afin que Keeplas puisse vous envoyer le lien d'invitation à usage unique et, plus tard, les alertes Life Check. Lorsque vous acceptez et créez votre propre coffre, ces identifiants sont pré-remplis et verrouillés sur le formulaire d'inscription afin que votre compte corresponde à l'identité enregistrée, ce qui évite un e-mail ou un numéro incohérent. C'est la seule information partagée à votre sujet ; rien de son coffre n'est exposé, et vous seul détenez vos 24 mots et vos clés."
       },
       {
@@ -2009,14 +2009,14 @@
       },
       {
         "q": "Et le RGPD ?",
-        "a": "Les entrées d'audit ne stockent que des métadonnées d'action — jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment, mais la chaîne d'audit elle-même est conservée (anonymisée vers votre identifiant utilisateur désormais supprimé) afin que la garantie d'immuabilité sur laquelle un futur tribunal des successions pourrait s'appuyer ne soit pas détruite rétroactivement. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime combiné à l'article 17.3.b obligation légale)."
+        "a": "Les entrées d'audit ne stockent que des métadonnées d'action, jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment, mais la chaîne d'audit elle-même est conservée (anonymisée vers votre identifiant utilisateur désormais supprimé) afin que la garantie d'immuabilité sur laquelle un futur tribunal des successions pourrait s'appuyer ne soit pas détruite rétroactivement. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime combiné à l'article 17.3.b obligation légale)."
       }
     ]
   },
   "roadmap": {
     "upcomingFeatures": {
       "heading": "Fonctionnalités à venir",
-      "description": "Pas de dates promises — uniquement les directions dans lesquelles nous investissons activement.",
+      "description": "Pas de dates promises, uniquement les directions dans lesquelles nous investissons activement.",
       "items": [
         {
           "title": "Notifications Telegram",
@@ -2032,7 +2032,7 @@
         },
         {
           "title": "Export du Vault",
-          "description": "Téléchargez à tout moment l'intégralité de votre Vault chiffré — portabilité totale, aucune dépendance, sans question."
+          "description": "Téléchargez à tout moment l'intégralité de votre Vault chiffré : portabilité totale, aucune dépendance, sans question."
         },
         {
           "title": "Conformité notariale et juridique",
@@ -2056,7 +2056,7 @@
         },
         {
           "title": "Personnalisation",
-          "description": "Adaptez certains aspects de Keeplas — thèmes, cadence des notifications, organisation du Vault, rythme des vérifications de vie — pour que l'app épouse votre quotidien."
+          "description": "Adaptez certains aspects de Keeplas (thèmes, cadence des notifications, organisation du Vault, rythme des vérifications de vie) pour que l'app épouse votre quotidien."
         },
         {
           "title": "Gestion des successions",
@@ -2064,7 +2064,7 @@
         },
         {
           "title": "Succession des cadres patrimoniaux, héritages et participations",
-          "description": "Pilotez la transmission des structures formelles — sociétés patrimoniales, dispositions successorales et participations en entreprise — avec des bénéficiaires définis et une exécution traçable."
+          "description": "Pilotez la transmission des structures formelles (sociétés patrimoniales, dispositions successorales et participations en entreprise) avec des bénéficiaires définis et une exécution traçable."
         },
         {
           "title": "Certification des documents",

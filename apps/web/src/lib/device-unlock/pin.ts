@@ -128,7 +128,7 @@ export async function unlockWithPin(
     if (newFail >= PIN_WIPE_THRESHOLD) {
       await deleteEntry(entry.id);
       throw new DeviceUnlockError(
-        "Too many wrong attempts — PIN entry wiped. Link this browser with your phone again.",
+        "Too many wrong attempts. PIN entry wiped. Link this browser with your phone again.",
         "wiped",
         { cause: err },
       );
