@@ -61,11 +61,12 @@ export async function uploadFile(
   url: string,
   path: string,
   onProgress: (sent: number) => void,
+  contentType = "application/octet-stream",
 ): Promise<string> {
   const task = new File(path).createUploadTask(url, {
     httpMethod: "POST",
     uploadType: UploadType.BINARY_CONTENT,
-    headers: { "Content-Type": "application/octet-stream" },
+    headers: { "Content-Type": contentType },
   });
   const subscription = task.addListener("progress", (p) =>
     onProgress(p.bytesSent),

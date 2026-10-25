@@ -616,8 +616,8 @@
       "updateError": "Failed to update profile",
       "unknown": "Unknown",
       "profileAlt": "Profile",
-      "unnamedCurator": "Unnamed Curator",
-      "curatorSince": "Curator since {date}",
+      "unnamedCurator": "No name",
+      "curatorSince": "Member since {date}",
       "verifiedIdentity": "Verified Identity",
       "recoverySet": "Recovery Set",
       "verified": "Verified",
@@ -656,17 +656,25 @@
       },
       "legal": {
         "title": "Legal identity",
-        "description": "Recorded during onboarding as your signed declaration of identity. Birthday is fixed; residence may change if you move jurisdictions. Every update is appended to the audit chain, so your original declaration is never overwritten.",
+        "description": "Your country of residence sets the inheritance jurisdiction that applies to your vault. Every change is appended to the audit chain.",
         "updateResidence": "Update residence",
         "residenceNotSet": "Residence not set",
         "residenceNotSetHint": "Inheritance jurisdiction can't be determined until you declare your country of residence. Set it now to keep your succession plan admissible.",
         "setResidence": "Set residence",
         "countryOfResidence": "Country of residence",
-        "dateOfBirth": "Date of birth",
-        "declaredOn": "Declared on",
         "notSet": "Not set",
-        "notDeclared": "Not declared"
-      }
+        "dateOfBirth": "Date of birth",
+        "age": "{age} years old",
+        "edit": "Edit",
+        "add": "Add",
+        "save": "Save",
+        "cancel": "Cancel",
+        "birthdayError": "Couldn't save the date of birth.",
+        "tooYoung": "You must be at least 18 to use Keeplas.",
+        "invalidDate": "This date of birth isn't valid."
+      },
+      "pageTitle": "My account",
+      "pageSubtitle": "Your profile, contact details and country of residence."
     },
     "overview": {
       "title": "Settings",
@@ -822,7 +830,7 @@
       "title": "Update legal residence",
       "description": "Change the country whose inheritance jurisdiction applies to your vault. Your original declaration is preserved unchanged in the audit log. This update is recorded as a new tamper-evident entry.",
       "countryLabel": "New country of residence",
-      "countryHint": "Pick the country where you currently reside. Birthday cannot be changed.",
+      "countryHint": "Pick the country where you currently reside.",
       "cancel": "Cancel",
       "saving": "Saving…",
       "confirm": "Confirm update"

@@ -616,8 +616,8 @@
       "updateError": "Échec de la mise à jour du profil",
       "unknown": "Inconnu",
       "profileAlt": "Profil",
-      "unnamedCurator": "Curateur sans nom",
-      "curatorSince": "Curateur depuis {date}",
+      "unnamedCurator": "Sans nom",
+      "curatorSince": "Membre depuis {date}",
       "verifiedIdentity": "Identité vérifiée",
       "recoverySet": "Récupération configurée",
       "verified": "Vérifié",
@@ -656,17 +656,25 @@
       },
       "legal": {
         "title": "Identité légale",
-        "description": "Enregistrée lors de l'intégration comme votre déclaration d'identité signée. La date de naissance est figée ; la résidence peut changer si vous changez de juridiction. Chaque mise à jour est ajoutée à la chaîne d'audit : votre déclaration d'origine n'est jamais écrasée.",
+        "description": "Votre pays de résidence détermine la juridiction successorale qui s'applique à votre coffre. Chaque modification est ajoutée à la chaîne d'audit.",
         "updateResidence": "Mettre à jour la résidence",
         "residenceNotSet": "Résidence non définie",
         "residenceNotSetHint": "La juridiction successorale ne peut pas être déterminée tant que vous n'avez pas déclaré votre pays de résidence. Définissez-le maintenant pour que votre plan de succession reste recevable.",
         "setResidence": "Définir la résidence",
         "countryOfResidence": "Pays de résidence",
-        "dateOfBirth": "Date de naissance",
-        "declaredOn": "Déclaré le",
         "notSet": "Non défini",
-        "notDeclared": "Non déclaré"
-      }
+        "dateOfBirth": "Date de naissance",
+        "age": "{age} ans",
+        "edit": "Modifier",
+        "add": "Ajouter",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "birthdayError": "Impossible d'enregistrer la date de naissance.",
+        "tooYoung": "Vous devez avoir au moins 18 ans pour utiliser Keeplas.",
+        "invalidDate": "Cette date de naissance n'est pas valide."
+      },
+      "pageTitle": "Mon compte",
+      "pageSubtitle": "Votre profil, vos coordonnées et votre pays de résidence."
     },
     "overview": {
       "title": "Paramètres",
@@ -822,7 +830,7 @@
       "title": "Mettre à jour la résidence légale",
       "description": "Changez le pays dont la juridiction successorale s'applique à votre coffre. Votre déclaration initiale est conservée intacte dans le journal d'audit, et cette mise à jour est enregistrée comme une nouvelle entrée infalsifiable.",
       "countryLabel": "Nouveau pays de résidence",
-      "countryHint": "Choisissez le pays où vous résidez actuellement. La date de naissance ne peut pas être modifiée.",
+      "countryHint": "Choisissez le pays où vous résidez actuellement.",
       "cancel": "Annuler",
       "saving": "Enregistrement…",
       "confirm": "Confirmer la mise à jour"
