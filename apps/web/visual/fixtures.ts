@@ -2,6 +2,7 @@ import type { DevicesViewProps } from "@/app/(dashboard)/devices/devices-view";
 import type { HubViewProps } from "@/app/(dashboard)/hub/hub-view";
 import type { RecoveryCenterViewProps } from "@/app/(dashboard)/settings/recovery/recovery-center-view";
 import type { SettingsViewProps } from "@/app/(dashboard)/settings/settings-view";
+import type { SharedVault } from "@/app/(dashboard)/shared-with-me/shared-vault-card";
 import type {
   VaultListRow,
   VaultListViewProps,
@@ -53,6 +54,52 @@ export const recovery: RecoveryCenterViewProps = {
   onCancel: noop,
   cancelling: false,
 };
+
+function sharedVault(
+  id: string,
+  owner: Pick<SharedVault, "ownerName" | "ownerPhone">,
+  state: Partial<SharedVault>,
+): SharedVault {
+  return {
+    _id: id as SharedVault["_id"],
+    _creationTime: NOW - 30 * DAY,
+    userId: `owner-${id}` as SharedVault["userId"],
+    name: "Alex",
+    role: "family",
+    invitationStatus: "accepted",
+    invitationToken: id,
+    invitedAt: NOW - 30 * DAY,
+    createdAt: NOW - 30 * DAY,
+    updatedAt: NOW - DAY,
+    ownerEmail: "",
+    confirmationThreshold: 2,
+    ownerCycleStatus: "running",
+    released: false,
+    releasedItemCount: 0,
+    unreachableConfirmed: false,
+    ...owner,
+    ...state,
+  };
+}
+
+/** W04-4: one vault per card state (locked, action needed, released). */
+export const sharedVaults: SharedVault[] = [
+  sharedVault(
+    "1",
+    { ownerName: "Marie Dupont", ownerPhone: "+33612345678" },
+    {},
+  ),
+  sharedVault(
+    "2",
+    { ownerName: "+254708684899", ownerPhone: "+254708684899" },
+    { ownerCycleStatus: "awaiting_confirmation" },
+  ),
+  sharedVault(
+    "3",
+    { ownerName: "Jordan Lee", ownerPhone: "+14155550123" },
+    { released: true, releasedItemCount: 3, ownerCycleStatus: "triggered" },
+  ),
+];
 
 export const devices: DevicesViewProps = {
   devices: [
