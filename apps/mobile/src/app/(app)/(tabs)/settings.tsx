@@ -10,8 +10,10 @@ import { Radio } from "@/components/controls";
 import { Screen } from "@/components/screen";
 import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { AccountAvatar } from "@/features/account/account-avatar";
 import { UpgradeCard } from "@/features/billing/upgrade-card";
 import { formatBytes } from "@/lib/format";
+import { formatPhone } from "@/lib/phone";
 import { openSitePage } from "@/lib/site";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -58,6 +60,22 @@ export default function Settings() {
       <Text variant="body-lg" color="text.muted">
         {t("settings.subtitle")}
       </Text>
+      <ListRow
+        leading={
+          <AccountAvatar
+            url={viewer.avatarUrl}
+            name={viewer.name || viewer.email || ""}
+            size={48}
+          />
+        }
+        title={viewer.name || t("account.cardFallback")}
+        description={
+          viewer.phoneNumber
+            ? formatPhone(viewer.phoneNumber)
+            : (viewer.email ?? t("account.title"))
+        }
+        onPress={() => router.push("/account")}
+      />
       <Text variant="label">{t("settings.storage")}</Text>
       {usage ? (
         <Card>

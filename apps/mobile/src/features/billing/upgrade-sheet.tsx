@@ -12,6 +12,7 @@ import {
   purchaseLifetime,
   restoreLifetime,
 } from "@/features/billing/purchases";
+import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 
@@ -39,20 +40,25 @@ export function useLifetimePrice(enabled = true): {
   return state;
 }
 
-type Notice = { tone: "danger" | "info"; text: string };
+/** `ref` (danger only) is sent with a support ticket so the team sees the store error. */
+type Notice = { tone: "danger" | "info"; text: string; ref?: string };
 
 /**
  * Confirmation before buying Lifetime: what the user gets, what it costs and
  * how it is paid, then the store sheet. Shows the store's error in place
  * (with its code) instead of a generic toast, and a confirmation once paid;
  * RevenueCat's webhook then flips the plan and the reactive viewer follows.
+ * When the store fails, "Contact support" opens a billing ticket carrying the
+ * error; `onLeave` lets a parent sheet close too so the form isn't hidden.
  */
 export function UpgradeSheet({
   visible,
   onDismiss,
+  onLeave,
 }: {
   visible: boolean;
   onDismiss: () => void;
+  onLeave?: () => void;
 }) {
   const { t } = useI18n();
   const viewer = useViewer();
@@ -65,10 +71,15 @@ export function UpgradeSheet({
 
   const errorNotice = (error: unknown): Notice => {
     const { kind, code } = describePurchaseError(error);
-    const text = t(`upgrade.errors.${kind}`, { store });
+    const message = t(`upgrade.errors.${kind}`, { store });
+    const text = code
+      ? `${message} ${t("upgrade.errorCode", { code })}`
+      : message;
+    if (kind === "pending") return { tone: "info", text };
     return {
-      tone: kind === "pending" ? "info" : "danger",
-      text: code ? `${text} ${t("upgrade.errorCode", { code })}` : text,
+      tone: "danger",
+      text,
+      ref: `Lifetime ${os}: ${kind}${code ? ` (code ${code})` : ""}`,
     };
   };
   const shown = notice ?? (priceError ? errorNotice(priceError) : null);
@@ -95,6 +106,12 @@ export function UpgradeSheet({
   const close = () => {
     setNotice(null);
     onDismiss();
+  };
+
+  const askSupport = (ref?: string) => {
+    close();
+    onLeave?.();
+    contactSupport(ref, "billing");
   };
 
   if (paid) {
@@ -126,7 +143,7 @@ export function UpgradeSheet({
                 {t("upgrade.oneTime")}
               </Text>
             </View>
-            <Text variant="h2">{price ?? "—"}</Text>
+            <Text variant="h2">{price ?? "…"}</Text>
           </View>
         </Card>
         <View style={styles.perks}>
@@ -166,6 +183,14 @@ export function UpgradeSheet({
           disabled={pending === "pay"}
           onPress={() => run("restore", restoreLifetime)}
         />
+        {shown?.tone === "danger" ? (
+          <Button
+            variant="text"
+            label={t("support.title")}
+            disabled={pending !== null}
+            onPress={() => askSupport(shown.ref)}
+          />
+        ) : null}
       </View>
     </BottomSheet>
   );

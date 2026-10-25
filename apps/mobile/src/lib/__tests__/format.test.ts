@@ -1,4 +1,10 @@
-import { countdownParts, countryName, placeName } from "../format";
+import {
+  ageInYears,
+  countdownParts,
+  countryName,
+  formatDate,
+  placeName,
+} from "../format";
 
 describe("countryName", () => {
   // Hermes ships without Intl.DisplayNames; names must not depend on it.
@@ -51,5 +57,20 @@ describe("countdownParts", () => {
       minutes: 0,
       seconds: 0,
     });
+  });
+});
+
+describe("formatDate", () => {
+  it("keeps a UTC calendar date on that day when asked", () => {
+    const birthday = Date.parse("1990-03-01T00:00:00Z");
+    expect(formatDate(birthday, "en-US", "UTC")).toBe("Mar 1, 1990");
+  });
+});
+
+describe("ageInYears", () => {
+  it("counts full years only", () => {
+    const now = Date.UTC(2026, 9, 25);
+    expect(ageInYears(Date.UTC(1990, 2, 1), now)).toBe(36);
+    expect(ageInYears(Date.UTC(2008, 9, 26), now)).toBe(17);
   });
 });
