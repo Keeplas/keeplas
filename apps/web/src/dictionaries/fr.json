@@ -63,7 +63,8 @@
         "title": "Accès perdu ?",
         "body": "La récupération du compte se fait dans l'application Keeplas. Ouvrez-la sur votre téléphone, ou installez-la sur un nouveau téléphone, puis choisissez « Accès perdu ? » pour retrouver votre coffre.",
         "close": "Fermer"
-      }
+      },
+      "unknownPasskey": "Cette passkey n'est plus valable pour Keeplas : l'appareil sur lequel elle a été créée a été retiré, ou elle appartient à un ancien compte. Connectez-vous avec « Lier avec mon téléphone », puis créez une nouvelle passkey."
     },
     "connect": {
       "heroTitle": "Me connecter avec\nmon téléphone",
@@ -2236,7 +2237,7 @@
     },
     "revokeDialog": {
       "title": "Révoquer {label} ?",
-      "body": "Il est déconnecté et ne pourra revenir qu'avec une nouvelle validation depuis votre téléphone.",
+      "body": "Il est déconnecté et ne pourra revenir qu'avec une nouvelle validation depuis votre téléphone. La passkey créée sur cet appareil est aussi supprimée : si elle est synchronisée (iCloud, Google), elle ne marchera plus sur vos autres appareils, qui devront en créer une nouvelle.",
       "done": "Appareil révoqué"
     },
     "alert": {

@@ -63,7 +63,8 @@
         "title": "Lost access?",
         "body": "Account recovery happens in the Keeplas app. Open it on your phone, or install it on a new phone, then choose “Lost access?” to get back into your vault.",
         "close": "Close"
-      }
+      },
+      "unknownPasskey": "This passkey no longer works for Keeplas: the device it was created on was removed, or it belongs to an old account. Sign in with \"Link with my phone\", then create a new passkey."
     },
     "connect": {
       "heroTitle": "Log in with\nmy phone",
@@ -2236,7 +2237,7 @@
     },
     "revokeDialog": {
       "title": "Revoke {label}?",
-      "body": "It is signed out and can only come back with a new approval from your phone.",
+      "body": "It is signed out and can only come back with a new approval from your phone. The passkey created on this device is deleted too: if it is synced (iCloud, Google), it will stop working on your other devices, which will need a new one.",
       "done": "Device revoked"
     },
     "alert": {
