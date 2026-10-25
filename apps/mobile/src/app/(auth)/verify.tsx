@@ -18,9 +18,14 @@ export default function VerifyScreen() {
   const { t, language } = useI18n();
   const { signIn } = useAuthActions();
   const requestCode = useRequestPhoneCode();
-  const { phone = "", intent = "signup" } = useLocalSearchParams<{
+  const {
+    phone = "",
+    intent = "signup",
+    name,
+  } = useLocalSearchParams<{
     phone: string;
     intent: PhoneIntent;
+    name?: string;
   }>();
 
   return (
@@ -36,6 +41,7 @@ export default function VerifyScreen() {
           code,
           flow: intent === "signup" ? "signUp" : "signIn",
           language: accountLanguageTag(language),
+          ...(name ? { name } : {}),
         });
       }}
       onResend={async () => {
