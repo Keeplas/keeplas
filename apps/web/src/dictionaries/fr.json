@@ -6,7 +6,9 @@
     "moreActions": "Plus d'actions pour {name}",
     "close": "Fermer",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "showSecret": "Afficher",
+    "hideSecret": "Masquer"
   },
   "auth": {
     "hero": {

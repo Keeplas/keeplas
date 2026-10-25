@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Button, Input, Label, Spinner } from "@keeplas/ui";
+import { Button, Label, PasswordInput, Spinner } from "@keeplas/ui";
 import {
   PIN_MIN_LENGTH,
   isPlatformAuthenticatorAvailable,
@@ -23,6 +23,7 @@ export function EnrollDeviceUnlockDialog({
   onClose,
 }: EnrollDeviceUnlockDialogProps) {
   const t = useTranslations("settingsSecurity");
+  const common = useTranslations("common");
   const { masterKey } = useMasterKey();
   const { enroll } = useDeviceUnlock(user);
   const [method, setMethod] = useState<Method | null>(null);
@@ -159,9 +160,10 @@ export function EnrollDeviceUnlockDialog({
           <form onSubmit={handlePinSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="enroll-pin">{t("enroll.newPinLabel")}</Label>
-              <Input
+              <PasswordInput
                 id="enroll-pin"
-                type="password"
+                showLabel={common("showSecret")}
+                hideLabel={common("hideSecret")}
                 inputMode="numeric"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
@@ -175,9 +177,10 @@ export function EnrollDeviceUnlockDialog({
               <Label htmlFor="enroll-pin-confirm">
                 {t("enroll.confirmPinLabel")}
               </Label>
-              <Input
+              <PasswordInput
                 id="enroll-pin-confirm"
-                type="password"
+                showLabel={common("showSecret")}
+                hideLabel={common("hideSecret")}
                 inputMode="numeric"
                 value={pinConfirm}
                 onChange={(e) =>

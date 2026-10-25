@@ -6,7 +6,9 @@
     "moreActions": "More actions for {name}",
     "close": "Close",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "showSecret": "Show",
+    "hideSecret": "Hide"
   },
   "auth": {
     "hero": {
