@@ -12,6 +12,8 @@ export interface ToastMessage {
   variant: ToastVariant;
   title: string;
   description?: string;
+  /** Stays until dismissed (e.g. a progress message), instead of timing out. */
+  persistent?: boolean;
 }
 
 export const TOAST_DURATION_MS = 4000;
@@ -24,7 +26,7 @@ const listeners = new Set<() => void>();
 function set(message: ToastMessage | null) {
   clearTimeout(timer);
   current = message;
-  if (message) {
+  if (message && !message.persistent) {
     timer = setTimeout(() => dismissToast(message.id), TOAST_DURATION_MS);
   }
   for (const listener of listeners) listener();
@@ -35,8 +37,9 @@ export function toast({
   variant = "default",
   title,
   description,
+  persistent,
 }: Omit<ToastMessage, "id" | "variant"> & { variant?: ToastVariant }) {
-  set({ id: ++nextId, variant, title, description });
+  set({ id: ++nextId, variant, title, description, persistent });
 }
 
 /** Hides the current message, or only message `id` if it is still shown. */
