@@ -42,7 +42,7 @@ export const DEFAULT_CHANNELS: ChannelConfig[] = [
   {
     type: "push",
     label: "App Push Notification",
-    description: "Encrypted mobile ping — tap to confirm",
+    description: "Encrypted mobile ping. Tap to confirm",
     iconPath: ICON_PATHS.bell,
     isEnabled: false,
     order: 2,

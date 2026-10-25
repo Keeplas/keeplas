@@ -92,7 +92,7 @@ export async function seedDefaults(
       userId,
       name: "Trusted Contacts",
       description:
-        "Default group — every trusted contact you invite is added here automatically.",
+        "Default group. Every trusted contact you invite is added here automatically.",
       memberContactIds: existingTrustContactIds,
       isDefault: true,
       createdAt: now,

@@ -126,7 +126,7 @@ export function UpgradeSheet({
                 {t("upgrade.oneTime")}
               </Text>
             </View>
-            <Text variant="h2">{price ?? "—"}</Text>
+            <Text variant="h2">{price ?? "…"}</Text>
           </View>
         </Card>
         <View style={styles.perks}>

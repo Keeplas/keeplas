@@ -385,10 +385,10 @@
     "outbox": {
       "waiting": "Waiting to upload",
       "uploading": "Uploading encrypted copy",
-      "failed": "Upload failed — tap to retry",
+      "failed": "Upload failed. Tap to retry",
       "quota": "Storage full",
       "offline": "Waiting for a connection",
-      "server": "Upload refused — tap to see why"
+      "server": "Upload refused. Tap to see why"
     },
     "updated": "Updated {when}",
     "itemWord": "item",

@@ -450,9 +450,9 @@ const EMAIL_OTP_COPY = {
 
 const LIFE_CHECK_EMAIL_COPY = {
   en: {
-    subject: "Keeplas — your scheduled check-in",
+    subject: "Keeplas: your scheduled check-in",
     greeting: (name: string | undefined) => (name ? `Hi ${name},` : "Hi,"),
-    body: "It's time for your scheduled Keeplas check-in. Tap the button below to confirm you're well and reset your countdown — no need to log in.",
+    body: "It's time for your scheduled Keeplas check-in. Tap the button below to confirm you're well and reset your countdown. No need to log in.",
     button: "I am well",
     fallback:
       "If you cannot use the button, open {{url}} in your browser. If you don't respond, Keeplas will keep reminding you, then begin your continuity protocol.",
@@ -460,7 +460,7 @@ const LIFE_CHECK_EMAIL_COPY = {
       `${name ? `Hi ${name},\n\n` : ""}It's time for your scheduled Keeplas check-in. Confirm you're well here: ${url}`,
   },
   fr: {
-    subject: "Keeplas — votre vérification programmée",
+    subject: "Keeplas : votre vérification programmée",
     greeting: (name: string | undefined) =>
       name ? `Bonjour ${name},` : "Bonjour,",
     body: "C'est le moment de votre vérification programmée Keeplas. Appuyez sur le bouton ci-dessous pour confirmer que vous allez bien et réinitialiser le compte à rebours, sans vous connecter.",
@@ -532,46 +532,46 @@ const WELCOME_HUB_URL = "https://app.keeplas.com/hub";
 
 const WELCOME_EMAIL_COPY = {
   en: {
-    subject: "Welcome to Keeplas — and a word about your 24 words",
+    subject: "Welcome to Keeplas, and a word about your 24 words",
     greeting: (name: string | undefined) =>
       name ? `Hi ${name},` : "Hi there,",
     thanks:
       "Thank you for joining Keeplas. Your vault is now sealed and yours alone.",
     wordsTitle: "First, take care of your 24 words.",
     wordsBody:
-      "Those 24 recovery words are the only key that encrypts your vault — we never see them, and we can't recover them for you. Your password only signs you in (and can be reset with these words); the words themselves can only ever be recovered through your trusted contacts. Write them down and keep them offline, somewhere safe — ideally two separate places.",
-    stepsTitle: "Then, finish setting up your continuity — 3 quick steps:",
+      "Those 24 recovery words are the only key that encrypts your vault. We never see them, and we can't recover them for you. Your password only signs you in (and can be reset with these words); the words themselves can only ever be recovered through your trusted contacts. Write them down and keep them offline, somewhere safe, ideally in two separate places.",
+    stepsTitle: "Then, finish setting up your continuity in 3 quick steps:",
     steps: [
-      "🔑 Secure your 24 words — store them offline, away from your screen.",
-      "👥 Invite a trusted contact — your safety net if you ever lose your words.",
-      "🗂️ Add your first vault item — a password, a document, a letter for later.",
+      "🔑 Secure your 24 words: store them offline, away from your screen.",
+      "👥 Invite a trusted contact: your safety net if you ever lose your words.",
+      "🗂️ Add your first vault item: a password, a document, a letter for later.",
     ],
     button: "Finish setting up",
     closing: "You're in control of everything, always.",
-    signoff: "— The Keeplas team",
+    signoff: "The Keeplas team",
     text: (name: string | undefined, url: string) =>
-      `${name ? `Hi ${name},` : "Hi there,"}\n\nThank you for joining Keeplas. Your vault is now sealed and yours alone.\n\nFirst, take care of your 24 words. Those 24 recovery words are the only key that encrypts your vault — we never see them, and we can't recover them for you. Keep them offline and safe.\n\nThen, finish setting up your continuity:\n1. Secure your 24 words.\n2. Invite a trusted contact.\n3. Add your first vault item.\n\nFinish setting up: ${url}\n\n— The Keeplas team`,
+      `${name ? `Hi ${name},` : "Hi there,"}\n\nThank you for joining Keeplas. Your vault is now sealed and yours alone.\n\nFirst, take care of your 24 words. Those 24 recovery words are the only key that encrypts your vault. We never see them, and we can't recover them for you. Keep them offline and safe.\n\nThen, finish setting up your continuity:\n1. Secure your 24 words.\n2. Invite a trusted contact.\n3. Add your first vault item.\n\nFinish setting up: ${url}\n\nThe Keeplas team`,
   },
   fr: {
-    subject: "Bienvenue sur Keeplas — un mot sur vos 24 mots",
+    subject: "Bienvenue sur Keeplas, et un mot sur vos 24 mots",
     greeting: (name: string | undefined) =>
       name ? `Bonjour ${name},` : "Bonjour,",
     thanks:
       "Merci d'avoir rejoint Keeplas. Votre coffre est désormais scellé, et n'appartient qu'à vous.",
     wordsTitle: "D'abord, prenez soin de vos 24 mots.",
     wordsBody:
-      "Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre — nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Votre mot de passe ne sert qu'à vous connecter (et peut être réinitialisé avec ces mots) ; les mots, eux, ne peuvent être récupérés que via vos contacts de confiance. Notez-les et conservez-les hors ligne, en lieu sûr — idéalement à deux endroits distincts.",
-    stepsTitle: "Ensuite, finalisez votre continuité — 3 étapes rapides :",
+      "Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre. Nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Votre mot de passe ne sert qu'à vous connecter (et peut être réinitialisé avec ces mots) ; les mots, eux, ne peuvent être récupérés que via vos contacts de confiance. Notez-les et conservez-les hors ligne, en lieu sûr, idéalement à deux endroits distincts.",
+    stepsTitle: "Ensuite, finalisez votre continuité en 3 étapes rapides :",
     steps: [
-      "🔑 Sécurisez vos 24 mots — conservez-les hors ligne, loin de votre écran.",
-      "👥 Invitez un contact de confiance — votre filet de sécurité si vous perdez vos mots.",
-      "🗂️ Ajoutez un premier élément au coffre — un mot de passe, un document, une lettre.",
+      "🔑 Sécurisez vos 24 mots : conservez-les hors ligne, loin de votre écran.",
+      "👥 Invitez un contact de confiance : votre filet de sécurité si vous perdez vos mots.",
+      "🗂️ Ajoutez un premier élément au coffre : un mot de passe, un document, une lettre.",
     ],
     button: "Finaliser ma configuration",
     closing: "Vous gardez le contrôle de tout, à tout moment.",
-    signoff: "— L'équipe Keeplas",
+    signoff: "L'équipe Keeplas",
     text: (name: string | undefined, url: string) =>
-      `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nMerci d'avoir rejoint Keeplas. Votre coffre est désormais scellé, et n'appartient qu'à vous.\n\nD'abord, prenez soin de vos 24 mots. Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre — nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Conservez-les hors ligne, en lieu sûr.\n\nEnsuite, finalisez votre continuité :\n1. Sécurisez vos 24 mots.\n2. Invitez un contact de confiance.\n3. Ajoutez un premier élément au coffre.\n\nFinaliser ma configuration : ${url}\n\n— L'équipe Keeplas`,
+      `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nMerci d'avoir rejoint Keeplas. Votre coffre est désormais scellé, et n'appartient qu'à vous.\n\nD'abord, prenez soin de vos 24 mots. Ces 24 mots de récupération sont la seule clé qui chiffre votre coffre. Nous ne les voyons jamais et nous ne pouvons pas les récupérer à votre place. Conservez-les hors ligne, en lieu sûr.\n\nEnsuite, finalisez votre continuité :\n1. Sécurisez vos 24 mots.\n2. Invitez un contact de confiance.\n3. Ajoutez un premier élément au coffre.\n\nFinaliser ma configuration : ${url}\n\nL'équipe Keeplas`,
   },
 } satisfies Record<
   Locale,
@@ -712,16 +712,16 @@ const SETUP_REMINDER_COPY = {
     intro: (urgent: boolean) =>
       urgent
         ? "It's been over a week, and your Keeplas vault still can't do its job. A few minutes now is all it takes to change that."
-        : "You set up your Keeplas vault a few days ago — but it isn't protecting anyone yet.",
+        : "You set up your Keeplas vault a few days ago, but it isn't protecting anyone yet.",
     stake:
       "None of us know when life will take a turn. The whole point of Keeplas is to be ready before that day, not after.",
     actionsTitle: "Here's what's left:",
     actionContacts:
-      "👥 Invite a trusted contact — without one, no one can ever recover your vault.",
+      "👥 Invite a trusted contact. Without one, no one can ever recover your vault.",
     actionItems:
-      "🗂️ Add your first vault item — a password, a document, instructions for the people you love.",
+      "🗂️ Add your first vault item: a password, a document, instructions for the people you love.",
     button: "Finish securing my vault",
-    signoff: "— The Keeplas team",
+    signoff: "The Keeplas team",
     text: (
       name: string | undefined,
       url: string,
@@ -730,11 +730,11 @@ const SETUP_REMINDER_COPY = {
     ) => {
       const lines = [
         missingContacts &&
-          "- Invite a trusted contact — without one, no one can ever recover your vault.",
+          "- Invite a trusted contact. Without one, no one can ever recover your vault.",
         missingItems &&
-          "- Add your first vault item — a password, a document, instructions for your loved ones.",
+          "- Add your first vault item: a password, a document, instructions for your loved ones.",
       ].filter(Boolean);
-      return `${name ? `Hi ${name},` : "Hi there,"}\n\nYour Keeplas vault isn't protecting anyone yet. None of us know when life will take a turn — the point of Keeplas is to be ready before that day.\n\nWhat's left:\n${lines.join("\n")}\n\nFinish now: ${url}\n\n— The Keeplas team`;
+      return `${name ? `Hi ${name},` : "Hi there,"}\n\nYour Keeplas vault isn't protecting anyone yet. None of us know when life will take a turn. The point of Keeplas is to be ready before that day.\n\nWhat's left:\n${lines.join("\n")}\n\nFinish now: ${url}\n\nThe Keeplas team`;
     },
   },
   fr: {
@@ -747,16 +747,16 @@ const SETUP_REMINDER_COPY = {
     intro: (urgent: boolean) =>
       urgent
         ? "Cela fait plus d'une semaine, et votre coffre Keeplas ne peut toujours pas remplir son rôle. Quelques minutes suffisent pour y remédier."
-        : "Vous avez créé votre coffre Keeplas il y a quelques jours — mais il ne protège encore personne.",
+        : "Vous avez créé votre coffre Keeplas il y a quelques jours, mais il ne protège encore personne.",
     stake:
       "Nul ne sait quand le malheur frappera. Tout l'intérêt de Keeplas est d'être prêt avant ce jour-là, pas après.",
     actionsTitle: "Voici ce qu'il reste à faire :",
     actionContacts:
-      "👥 Invitez un contact de confiance — sans lui, personne ne pourra jamais récupérer votre coffre.",
+      "👥 Invitez un contact de confiance. Sans lui, personne ne pourra jamais récupérer votre coffre.",
     actionItems:
-      "🗂️ Ajoutez un premier élément au coffre — un mot de passe, un document, des instructions pour vos proches.",
+      "🗂️ Ajoutez un premier élément au coffre : un mot de passe, un document, des instructions pour vos proches.",
     button: "Finaliser mon coffre",
-    signoff: "— L'équipe Keeplas",
+    signoff: "L'équipe Keeplas",
     text: (
       name: string | undefined,
       url: string,
@@ -765,11 +765,11 @@ const SETUP_REMINDER_COPY = {
     ) => {
       const lines = [
         missingContacts &&
-          "- Invitez un contact de confiance — sans lui, personne ne pourra récupérer votre coffre.",
+          "- Invitez un contact de confiance. Sans lui, personne ne pourra récupérer votre coffre.",
         missingItems &&
-          "- Ajoutez un premier élément au coffre — un mot de passe, un document, des instructions pour vos proches.",
+          "- Ajoutez un premier élément au coffre : un mot de passe, un document, des instructions pour vos proches.",
       ].filter(Boolean);
-      return `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nVotre coffre Keeplas ne protège encore personne. Nul ne sait quand le malheur frappera — l'intérêt de Keeplas est d'être prêt avant ce jour-là.\n\nCe qu'il reste :\n${lines.join("\n")}\n\nFinaliser : ${url}\n\n— L'équipe Keeplas`;
+      return `${name ? `Bonjour ${name},` : "Bonjour,"}\n\nVotre coffre Keeplas ne protège encore personne. Nul ne sait quand le malheur frappera. L'intérêt de Keeplas est d'être prêt avant ce jour-là.\n\nCe qu'il reste :\n${lines.join("\n")}\n\nFinaliser : ${url}\n\nL'équipe Keeplas`;
     },
   },
 } satisfies Record<
@@ -1036,7 +1036,7 @@ const TC_CONFIRM_COPY = {
     subject: "Action needed: confirm a Keeplas contact's status",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (owner?: string) =>
-      `${owner ?? "A Keeplas user"} has stopped responding to their Keeplas check-ins. If you cannot reach them either, confirm they are unavailable from your Keeplas account. Once enough trusted contacts confirm, ${owner ?? "they"} get a final 72-hour window to cancel — after that, you'll be invited to help unlock their vault.`,
+      `${owner ?? "A Keeplas user"} has stopped responding to their Keeplas check-ins. If you cannot reach them either, confirm they are unavailable from your Keeplas account. Once enough trusted contacts confirm, ${owner ?? "they"} get a final 72-hour window to cancel. After that, you'll be invited to help unlock their vault.`,
     button: "Open Keeplas",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
@@ -1044,7 +1044,7 @@ const TC_CONFIRM_COPY = {
     subject: "Action requise : confirmer le statut d'un contact Keeplas",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (owner?: string) =>
-      `${owner ?? "Un utilisateur Keeplas"} ne répond plus à ses vérifications Keeplas. Si vous ne parvenez pas à le/la joindre non plus, confirmez son indisponibilité depuis votre compte Keeplas. Une fois qu'assez de contacts de confiance ont confirmé, ${owner ?? "la personne"} dispose d'un dernier délai de 72 heures pour annuler — ensuite, vous serez invité à aider à déverrouiller son coffre.`,
+      `${owner ?? "Un utilisateur Keeplas"} ne répond plus à ses vérifications Keeplas. Si vous ne parvenez pas à le/la joindre non plus, confirmez son indisponibilité depuis votre compte Keeplas. Une fois qu'assez de contacts de confiance ont confirmé, ${owner ?? "la personne"} dispose d'un dernier délai de 72 heures pour annuler. Ensuite, vous serez invité à aider à déverrouiller son coffre.`,
     button: "Ouvrir Keeplas",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
@@ -1053,18 +1053,18 @@ const TC_CONFIRM_COPY = {
 
 const LC_GRACE_COPY = {
   en: {
-    subject: "Keeplas — you have 72 hours to cancel vault transmission",
+    subject: "Keeplas: you have 72 hours to cancel vault transmission",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: () =>
-      "Your trusted contacts have confirmed you are unreachable, so Keeplas has started your continuity protocol. If this is a mistake, you have 72 hours to cancel before your vault is transmitted. Open Keeplas to cancel the emergency access — or simply complete your next check-in.",
+      "Your trusted contacts have confirmed you are unreachable, so Keeplas has started your continuity protocol. If this is a mistake, you have 72 hours to cancel before your vault is transmitted. Open Keeplas to cancel the emergency access, or simply complete your next check-in.",
     button: "Cancel transmission",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — vous avez 72 heures pour annuler la transmission",
+    subject: "Keeplas : vous avez 72 heures pour annuler la transmission",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: () =>
-      "Vos contacts de confiance vous ont déclaré injoignable ; Keeplas a donc lancé votre protocole de continuité. S'il s'agit d'une erreur, vous avez 72 heures pour annuler avant la transmission de votre coffre. Ouvrez Keeplas pour annuler l'accès d'urgence — ou validez simplement votre prochaine vérification.",
+      "Vos contacts de confiance vous ont déclaré injoignable ; Keeplas a donc lancé votre protocole de continuité. S'il s'agit d'une erreur, vous avez 72 heures pour annuler avant la transmission de votre coffre. Ouvrez Keeplas pour annuler l'accès d'urgence, ou validez simplement votre prochaine vérification.",
     button: "Annuler la transmission",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
@@ -1241,7 +1241,7 @@ const alertArgs = {
 
 const NEW_DEVICE_COPY = {
   en: {
-    subject: "Keeplas — a new device was linked to your account",
+    subject: "Keeplas: a new device was linked to your account",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (device?: string) =>
       `${device ?? "A new device"} was just linked to your Keeplas account. If it was you, there is nothing to do. If not, open Keeplas on your phone and tap "It wasn't me": we remove the device, end its sessions and rotate your keys.`,
@@ -1249,7 +1249,7 @@ const NEW_DEVICE_COPY = {
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — un nouvel appareil a été associé à votre compte",
+    subject: "Keeplas : un nouvel appareil a été associé à votre compte",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (device?: string) =>
       `${device ?? "Un nouvel appareil"} vient d'être associé à votre compte Keeplas. Si c'était vous, rien à faire. Sinon, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » : nous retirons l'appareil, fermons ses sessions et changeons vos clés.`,
@@ -1285,7 +1285,7 @@ export const notifyNewDevice = internalAction({
 
 const DELETION_SCHEDULED_COPY = {
   en: {
-    subject: "Keeplas — your account will be deleted",
+    subject: "Keeplas: your account will be deleted",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (date?: string) =>
       `You asked to delete your Keeplas account. Everything in it will be erased for good on ${date ?? "the scheduled date"}. Changed your mind, or it wasn't you? Open Keeplas before then and cancel the deletion.`,
@@ -1293,7 +1293,7 @@ const DELETION_SCHEDULED_COPY = {
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — votre compte va être supprimé",
+    subject: "Keeplas : votre compte va être supprimé",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (date?: string) =>
       `Vous avez demandé la suppression de votre compte Keeplas. Tout son contenu sera définitivement effacé le ${date ?? "jour prévu"}. Vous avez changé d'avis, ou ce n'était pas vous ? Ouvrez Keeplas avant cette date et annulez la suppression.`,
@@ -1320,7 +1320,7 @@ export const notifyDeletionScheduled = internalAction({
 
 const RECOVERY_STARTED_COPY = {
   en: {
-    subject: "Keeplas — someone asked to recover your account",
+    subject: "Keeplas: someone asked to recover your account",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: () =>
       "A request to recover your Keeplas account was just made from a new phone. Your trust contacts are asked to confirm it by calling you. Nothing is released for 72 hours. If it wasn't you, open Keeplas on one of your devices and cancel the request.",
@@ -1328,7 +1328,7 @@ const RECOVERY_STARTED_COPY = {
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — une demande de récupération de votre compte",
+    subject: "Keeplas : une demande de récupération de votre compte",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: () =>
       "Une demande de récupération de votre compte Keeplas vient d'être faite depuis un nouveau téléphone. Vos contacts de confiance doivent la confirmer en vous appelant. Rien n'est libéré pendant 72 heures. Si ce n'est pas vous, ouvrez Keeplas sur l'un de vos appareils et annulez la demande.",
@@ -1357,7 +1357,7 @@ export const notifyRecoveryStarted = internalAction({
 
 const NUMBER_CHANGE_COPY = {
   en: {
-    subject: "Keeplas — someone asked to change your phone number",
+    subject: "Keeplas: someone asked to change your phone number",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: () =>
       "A request to move your Keeplas account to a new phone number was just made by someone who says they lost this one. Nothing changes for 72 hours, and our team checks the request. If it wasn't you, open Keeplas on your phone and tap \"It wasn't me\" to cancel it.",
@@ -1365,7 +1365,7 @@ const NUMBER_CHANGE_COPY = {
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — une demande de changement de votre numéro",
+    subject: "Keeplas : une demande de changement de votre numéro",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: () =>
       "Quelqu'un qui dit avoir perdu ce numéro vient de demander à déplacer votre compte Keeplas vers un nouveau numéro. Rien ne change pendant 72 heures, et notre équipe vérifie la demande. Si ce n'est pas vous, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » pour l'annuler.",
@@ -1397,7 +1397,7 @@ export const notifyNumberChangeRequested = internalAction({
 
 const RECOVERY_CONTACT_COPY = {
   en: {
-    subject: "Keeplas — someone needs your help",
+    subject: "Keeplas: someone needs your help",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (owner?: string) =>
       `${owner ?? "Someone"} is trying to get back into their Keeplas account and named you as a trust contact. Call them first and compare the 6-digit code shown in your Keeplas app. Approve only if you recognise them and the codes match. You will not see their files.`,
@@ -1405,7 +1405,7 @@ const RECOVERY_CONTACT_COPY = {
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
   fr: {
-    subject: "Keeplas — quelqu'un a besoin de votre aide",
+    subject: "Keeplas : quelqu'un a besoin de votre aide",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (owner?: string) =>
       `${owner ?? "Quelqu'un"} essaie de récupérer l'accès à son compte Keeplas et vous a désigné comme contact de confiance. Appelez-le d'abord et comparez le code à 6 chiffres affiché dans votre application Keeplas. N'approuvez que si vous le reconnaissez et que les codes correspondent. Vous ne verrez pas ses fichiers.`,

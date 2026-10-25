@@ -79,7 +79,7 @@ export function useBlockedWrapAlert(): (
       // explicit re-pin — never auto-update the pin.
       const accepted = await confirm({
         title: "A contact's encryption identity changed",
-        description: `The encryption identity for ${names(changed)} is different from the one you previously trusted. If they re-installed Keeplas or re-keyed, this is expected. If you did not expect this, it may be a sign of server tampering — do not continue. Re-trust this identity only if you recognise the change.`,
+        description: `The encryption identity for ${names(changed)} is different from the one you previously trusted. If they re-installed Keeplas or re-keyed, this is expected. If you did not expect this, it may be a sign of server tampering. Do not continue. Re-trust this identity only if you recognise the change.`,
         confirmLabel: "Re-trust and continue",
         cancelLabel: "Cancel",
         variant: "destructive",

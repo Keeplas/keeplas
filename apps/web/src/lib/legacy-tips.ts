@@ -16,7 +16,7 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "helpCircle",
     tone: "warning",
     title: "If you died today, who would access what?",
-    body: "Photos, password manager, business email, crypto wallets, the file with your kids' birth certificates. Most people don't know. Map it now — while the choice is still yours.",
+    body: "Photos, password manager, business email, crypto wallets, the file with your kids' birth certificates. Most people don't know. Map it now, while the choice is still yours.",
   },
   {
     slug: "secrets-die-with-you",
@@ -30,14 +30,14 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "lockClock",
     tone: "warning",
     title: "Probate moves in months. Families need days.",
-    body: "Mortgage payments, subscriptions, insurance claims — they don't pause for grief. Without a plan, loved ones can wait 6–18 months for legal access. Documenting essentials now keeps them out of court.",
+    body: "Mortgage payments, subscriptions, insurance claims: they don't pause for grief. Without a plan, loved ones can wait 6–18 months for legal access. Documenting essentials now keeps them out of court.",
   },
   {
     slug: "medical-id",
     iconKey: "medicalInformation",
     tone: "success",
     title: "Set up your phone's Medical ID today",
-    body: "Paramedics check the lock screen first. iOS: Health → Medical ID. Android: Settings → Safety & emergency. Add allergies, conditions, and emergency contacts — accessible without unlocking your phone.",
+    body: "Paramedics check the lock screen first. iOS: Health → Medical ID. Android: Settings → Safety & emergency. Add allergies, conditions, and emergency contacts, accessible without unlocking your phone.",
     learnHref: "/docs/emergency-info",
   },
   {
@@ -45,14 +45,14 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "contactPage",
     tone: "success",
     title: "Carry an Emergency Card",
-    body: "First responders need allergies, blood type, and a trusted contact in seconds — not your whole vault. Keeplas can generate a printable card with the bare minimum, leaving the rest sealed.",
+    body: "First responders need allergies, blood type, and a trusted contact in seconds, not your whole vault. Keeplas can generate a printable card with the bare minimum, leaving the rest sealed.",
   },
   {
     slug: "twenty-four-words",
     iconKey: "key",
     tone: "info",
     title: "Your 24 words are the root key",
-    body: "They derive every encryption key on your account. Write them on paper, store them offline. Lose them and no one — not even Keeplas — can recover your vault.",
+    body: "They derive every encryption key on your account. Write them on paper, store them offline. Lose them and no one (not even Keeplas) can recover your vault.",
   },
   {
     slug: "zero-knowledge",
@@ -66,7 +66,7 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "group",
     tone: "info",
     title: "Trusted contacts unlock continuity",
-    body: "Add at least 2 trusted contacts. They confirm if something happens to you, so your vault reaches the right people — without ever holding a key to it.",
+    body: "Add at least 2 trusted contacts. They confirm if something happens to you, so your vault reaches the right people, without ever holding a key to it.",
     learnHref: "/docs/trusted-contacts",
   },
   {
@@ -74,7 +74,7 @@ export const LEGACY_TIPS: ReadonlyArray<LegacyTip> = [
     iconKey: "fingerprint",
     tone: "info",
     title: "Quantum-safe encryption",
-    body: "We wrap your encryption keys with ML-KEM-768 (NIST FIPS 203), a post-quantum algorithm — your secrets stay safe even against future quantum computers.",
+    body: "We wrap your encryption keys with ML-KEM-768 (NIST FIPS 203), a post-quantum algorithm, so your secrets stay safe even against future quantum computers.",
   },
 ];
 
