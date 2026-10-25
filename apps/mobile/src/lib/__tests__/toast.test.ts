@@ -33,6 +33,14 @@ describe("toast", () => {
     expect(toastStore.get()).toBeNull();
   });
 
+  it("keeps a persistent message until it is dismissed", () => {
+    toast({ title: "Preparing", persistent: true });
+    jest.advanceTimersByTime(TOAST_DURATION_MS * 10);
+    expect(toastStore.get()?.title).toBe("Preparing");
+    dismissToast();
+    expect(toastStore.get()).toBeNull();
+  });
+
   it("restarts the timer when a new message replaces the current one", () => {
     toast({ title: "First" });
     jest.advanceTimersByTime(TOAST_DURATION_MS - 1);
