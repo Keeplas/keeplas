@@ -725,7 +725,11 @@
       "manageStorage": "Gérer le stockage",
       "background": "Continuer en arrière-plan",
       "offlineFailedBody": "La connexion a été perdue. Votre copie chiffrée est en sécurité sur ce téléphone, l'envoi reprendra tout seul dès votre retour en ligne.",
-      "serverBody": "Le serveur a refusé l'envoi. Votre copie chiffrée est en sécurité sur ce téléphone. Réessayez dans un instant ; si cela se reproduit, contactez le support."
+      "serverBody": "Le serveur a refusé l'envoi. Votre copie chiffrée est en sécurité sur ce téléphone. Réessayez dans un instant ; si cela se reproduit, contactez le support.",
+      "editFirst": "Modifier avant de renvoyer",
+      "remove": "Supprimer l'envoi",
+      "removeTitle": "Supprimer cet envoi ?",
+      "removeBody": "L'élément n'a pas été enregistré. Son texte et ses fichiers seront retirés de ce téléphone. Cette action est définitive."
     },
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",
@@ -874,7 +878,8 @@
     "history": "Historique",
     "historyCount": "{n} versions précédentes",
     "historyEmpty": "Aucune modification pour l'instant",
-    "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne."
+    "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne.",
+    "uploadingFiles": "Envoi en cours"
   },
   "people": {
     "title": "Contacts",

@@ -42,6 +42,7 @@ import {
   type EditDraft,
 } from "@/features/vault/edit-draft";
 import { usePrepareMedia } from "@/features/capture/use-prepare-media";
+import { useShowSecuring } from "@/features/capture/securing-sheet";
 
 const KIND_ICON = {
   document: "document",
@@ -91,6 +92,7 @@ function EditForm({
 }) {
   const { t, language } = useI18n();
   const { capture } = useOutbox();
+  const showSecuring = useShowSecuring();
   const prepare = usePrepareMedia();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const [draft, updateDraft, clearDraft] = useFormDraft<EditDraft>(
@@ -158,12 +160,16 @@ function EditForm({
         await updateItem({ itemId, ...changes });
       }
       if (added.length) {
-        await capture({
+        const entryId = await capture({
           title: nextTitle,
           note: "",
           files: added,
           attachTo: { itemId, dek: opened.key, ownerWrappedDek },
         });
+        forgetDraft();
+        onDone();
+        showSecuring(entryId);
+        return;
       }
       forgetDraft();
       onDone();

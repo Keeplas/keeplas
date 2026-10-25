@@ -26,6 +26,7 @@ import {
 } from "@/lib/files";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useSession } from "@/providers/session-provider";
+import { draftStore } from "@/features/capture/draft-store";
 import {
   pendingEntries,
   requeue,
@@ -46,6 +47,7 @@ interface OutboxValue {
   capture: (draft: CaptureDraft) => Promise<string>;
   /** "Tap to retry": failed entries go back to the queue. */
   retry: () => void;
+  discard: (entryId: string) => Promise<void>;
 }
 
 const OutboxContext = createContext<OutboxValue | null>(null);
@@ -163,6 +165,7 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
               reportProgress(entry.id, p),
             );
             setCreated((all) => ({ ...all, [entry.id]: itemId }));
+            draftStore.finishSending(entry.id);
           } catch (error) {
             if (__DEV__) console.warn(`[outbox ${entry.id}]`, error);
           }
@@ -225,9 +228,28 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     [userId, ownerPublicKey, reload, flush],
   );
 
+  const discard = useCallback(
+    async (entryId: string) => {
+      if (!userId) return;
+      const entry = (await sqliteStore.list(userId)).find(
+        (candidate) => candidate.id === entryId,
+      );
+      if (!entry) return;
+      const uploaded = entry.files.flatMap((f) =>
+        f.storageId ? [f.storageId] : [],
+      );
+      if (uploaded.length)
+        await deps.discardUploads(uploaded).catch(() => undefined);
+      for (const file of entry.files) deleteFile(file.path);
+      await sqliteStore.remove(entryId);
+      await reload();
+    },
+    [userId, deps, reload],
+  );
+
   const value = useMemo<OutboxValue>(
-    () => ({ entries, progress, online, created, capture, retry }),
-    [entries, progress, online, created, capture, retry],
+    () => ({ entries, progress, online, created, capture, retry, discard }),
+    [entries, progress, online, created, capture, retry, discard],
   );
   return (
     <OutboxContext.Provider value={value}>{children}</OutboxContext.Provider>
