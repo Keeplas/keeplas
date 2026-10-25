@@ -21,6 +21,8 @@ export function usePrepareMedia() {
           variant: "info",
           title: t("capture.preparingVideo"),
           description: t("capture.preparingVideoPct", { pct }),
+          // Compressing can take far longer than a toast's timeout.
+          persistent: true,
         });
       };
       try {

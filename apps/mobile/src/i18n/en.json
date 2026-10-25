@@ -54,6 +54,7 @@
     "chooseCountry": "Choose your country",
     "searchCountry": "Search",
     "invalid": "Enter a valid phone number.",
+    "nameRequired": "Enter your first name.",
     "accountExists": "An account already uses this number. Sign in instead.",
     "noAccount": "No account uses this number. Get started to create one.",
     "createAccount": "Create an account with this number",
@@ -385,7 +386,9 @@
       "waiting": "Waiting to upload",
       "uploading": "Uploading encrypted copy",
       "failed": "Upload failed — tap to retry",
-      "quota": "Storage full"
+      "quota": "Storage full",
+      "offline": "Waiting for a connection",
+      "server": "Upload refused — tap to see why"
     },
     "updated": "Updated {when}",
     "itemWord": "item",
@@ -724,13 +727,19 @@
       "uploadingBody": "Sending a secure copy to your Keeplas storage… {pct}%",
       "uploadedBody": "The encrypted copy is in your Keeplas storage.",
       "offlineBody": "You're offline. The encrypted copy is safe on this phone and uploads as soon as you're back online.",
-      "failedBody": "The upload stopped. Your encrypted copy is still safe on this phone. Check your connection, then try again.",
-      "quotaBody": "Your storage is full. Free up space, then try again.",
+      "failedBody": "The upload stopped for an unexpected reason. Your encrypted copy is still safe on this phone. Try again.",
+      "quotaBody": "Your storage is full: this item ({size}) does not fit in your space. Nothing was lost. Free up space or upgrade to Lifetime, then try again.",
       "protected": "Protected",
       "protectedWaiting": "Waiting for verification…",
       "protectedBody": "Your item is encrypted and safely stored.",
       "manageStorage": "Manage storage",
-      "background": "Continue in background"
+      "background": "Continue in background",
+      "offlineFailedBody": "The connection was lost. Your encrypted copy is safe on this phone and will upload on its own as soon as you are back online.",
+      "serverBody": "The server refused the upload. Your encrypted copy is safe on this phone. Try again in a moment; if it happens again, contact support.",
+      "editFirst": "Edit before sending again",
+      "remove": "Delete this upload",
+      "removeTitle": "Delete this upload?",
+      "removeBody": "The item was not saved. Its text and files will be removed from this phone. This cannot be undone."
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",
@@ -879,7 +888,8 @@
     "history": "History",
     "historyCount": "{n} earlier versions",
     "historyEmpty": "No changes yet",
-    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
+    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone.",
+    "uploadingFiles": "Uploading"
   },
   "people": {
     "title": "Trusted people",
@@ -906,6 +916,7 @@
     },
     "ready": "{n} ready",
     "readyBody": "Any 2 of your contacts can help you recover your account.",
+    "quorumWarning": "Nothing can be passed on yet: {required} trusted people must confirm, and {available} accepted so far. Add someone you trust.",
     "replace": "Replace",
     "replaceTitle": "Replace {name}?",
     "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
@@ -1068,7 +1079,8 @@
     "emptyTitle": "Nothing shared with you yet",
     "emptyBody": "When someone makes you a trusted contact, their shared items appear here.",
     "trusted": "You are a trusted contact",
-    "later": "Access after verification. Requires two trust-contact confirmations.",
+    "laterOne": "Locked. It opens only if {name} stops answering their Life check, 1 trusted contact confirms it, and 72 hours pass with no cancellation.",
+    "later": "Locked. It opens only if {name} stops answering their Life check, {n} trusted contacts confirm it, and 72 hours pass with no cancellation.",
     "oneItem": "1 item left for you",
     "items": "{n} items left for you",
     "accessNow": "Access now",
@@ -1078,7 +1090,33 @@
     "nothingLeft": "No readable items were left for you.",
     "notReleasedTitle": "Not available yet",
     "notReleasedBody": "It opens once this vault is released to you.",
-    "leftBy": "Left for you by {name}"
+    "leftBy": "Left for you by {name}",
+    "help": {
+      "link": "When will I see what they left me?",
+      "title": "When does a vault open?",
+      "checkIn": "They check in regularly",
+      "checkInBody": "The owner answers a Life check every week, month or quarter. While they answer, their vault stays private, even to you.",
+      "silent": "They stop answering",
+      "silentBody": "After 15 days without an answer, despite reminders, we alert their trusted contacts, you included.",
+      "confirm": "Trusted contacts confirm",
+      "confirmBody": "Two of them must confirm the owner can't be reached, unless the owner chose another number.",
+      "grace": "72-hour safety window",
+      "graceBody": "The owner is warned and can still cancel. Nothing opens before it ends.",
+      "yours": "You see only what's for you",
+      "yoursBody": "Only the items they left you, read-only, decrypted on this phone.",
+      "note": "If not enough contacts confirm in time, the vault stays locked."
+    },
+    "unreachable": {
+      "detail": "Hasn't answered their Life check",
+      "body": "If you can't reach them either, confirm it. Once enough trusted contacts confirm ({n} needed), they still have 72 hours to cancel.",
+      "action": "I can't reach them",
+      "confirmTitle": "Confirm you can't reach {name}?",
+      "confirmBody": "Only confirm after trying to call or message them. You can't undo it, but nothing opens unless enough contacts confirm and 72 hours pass without them cancelling.",
+      "confirm": "Yes, confirm",
+      "done": "Thanks. We'll keep you posted.",
+      "confirmed": "You confirmed you can't reach them",
+      "waiting": "Waiting for the other trusted contacts. {name} can still cancel at any time before anything opens."
+    }
   },
   "passkeys": {
     "subtitle": "Passkeys let you sign in with your face, fingerprint or phone PIN. Tap one to remove it.",

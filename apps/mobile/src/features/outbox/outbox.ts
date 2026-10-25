@@ -9,7 +9,11 @@
  * so a crash or a lost connection never uploads a file twice.
  */
 
+import { ConvexError } from "convex/values";
+
 export type OutboxStatus = "waiting" | "uploading" | "failed" | "quota";
+
+export type UploadErrorKind = "quota" | "offline" | "server" | "unknown";
 
 export interface OutboxFile {
   /** Ciphertext on this phone (file:// URI). */
@@ -49,6 +53,7 @@ export interface OutboxEntry {
   status: OutboxStatus;
   attempts: number;
   error?: string;
+  errorKind?: UploadErrorKind;
 }
 
 export interface OutboxStore {
@@ -80,6 +85,8 @@ export interface OutboxDeps {
     files: CreateItemArgs["files"],
   ) => Promise<void>;
   deleteLocalFile: (path: string) => void;
+  canStore: (bytes: number) => Promise<boolean>;
+  discardUploads: (storageIds: string[]) => Promise<void>;
 }
 
 export interface Progress {
@@ -91,6 +98,25 @@ export const QUOTA_ERROR = "STORAGE_QUOTA_EXCEEDED";
 
 export const totalBytes = (entry: OutboxEntry): number =>
   entry.files.reduce((sum, f) => sum + f.bytes, 0);
+
+const OFFLINE =
+  /network|offline|internet|timed? ?out|connection|could not connect|request failed/i;
+
+export function classifyUploadError(error: unknown): UploadErrorKind {
+  if (
+    error instanceof ConvexError &&
+    (error.data as { code?: string } | null)?.code === QUOTA_ERROR
+  ) {
+    return "quota";
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes(QUOTA_ERROR)) return "quota";
+  if (error instanceof ConvexError || /Upload failed \(\d+\)/.test(message)) {
+    return "server";
+  }
+  if (OFFLINE.test(message)) return "offline";
+  return "unknown";
+}
 
 /**
  * Upload one entry: files first (each storageId persisted as soon as it is
@@ -106,7 +132,14 @@ export async function uploadEntry(
   const total = totalBytes(entry);
   let current: OutboxEntry = { ...entry, status: "uploading" };
   await store.put(current);
+  let attaching = false;
   try {
+    const missing = current.files
+      .filter((f) => !f.storageId)
+      .reduce((sum, f) => sum + f.bytes, 0);
+    if (missing > 0 && !(await deps.canStore(total))) {
+      throw new ConvexError({ code: QUOTA_ERROR });
+    }
     let done = current.files
       .filter((f) => f.storageId)
       .reduce((sum, f) => sum + f.bytes, 0);
@@ -133,6 +166,7 @@ export async function uploadEntry(
       encryptedMeta: f.encryptedMeta,
     }));
     let itemId: string;
+    attaching = true;
     if (current.attachTo) {
       await deps.addItemFiles(current.attachTo, uploaded);
       itemId = current.attachTo;
@@ -152,14 +186,36 @@ export async function uploadEntry(
     return itemId;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const errorKind = classifyUploadError(error);
+    if (attaching && errorKind !== "offline") {
+      const uploaded = current.files.flatMap((f) =>
+        f.storageId ? [f.storageId] : [],
+      );
+      await deps.discardUploads(uploaded).catch(() => undefined);
+      current = {
+        ...current,
+        files: current.files.map(({ storageId: _, ...f }) => f),
+      };
+    }
     await store.put({
       ...current,
-      status: message.includes(QUOTA_ERROR) ? "quota" : "failed",
+      status: errorKind === "quota" ? "quota" : "failed",
       attempts: current.attempts + 1,
       error: message,
+      errorKind,
     });
     throw error;
   }
+}
+
+export function outboxLabel(
+  entry: Pick<OutboxEntry, "status" | "errorKind">,
+): "waiting" | "uploading" | "quota" | "offline" | "server" | "failed" {
+  if (entry.status !== "failed") return entry.status;
+  if (entry.errorKind === "offline" || entry.errorKind === "server") {
+    return entry.errorKind;
+  }
+  return "failed";
 }
 
 /** Entries to send now: waiting ones, oldest first. */

@@ -30,10 +30,13 @@ import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius, withAlpha } from "@/theme";
 import { useDrafts } from "@/features/capture/draft-store";
+import { outboxLabel } from "@/features/outbox/outbox";
+import { useShowSecuring } from "@/features/capture/securing-sheet";
 
 /** M08-5 Home. Counts are computed on the device from the decrypted vault. */
 export default function Home() {
   const { t, language } = useI18n();
+  const showSecuring = useShowSecuring();
   const router = useRouter();
   const viewer = useViewer();
   const deletion = useQuery(api.account_deletion.getStatus);
@@ -177,7 +180,8 @@ export default function Home() {
               key={entry.id}
               icon="cloud-upload"
               title={title ?? t("capture.untitled")}
-              description={t(`home.outbox.${entry.status}`)}
+              description={t(`home.outbox.${outboxLabel(entry)}`)}
+              onPress={() => showSecuring(entry.id)}
             />
           ))}
           {recent.map((item) => (

@@ -27,6 +27,8 @@ import { accessIcon, itemVisual, styleOf } from "./item-visual";
 import { useVaultData, type VaultItemSummary } from "./vault-data";
 import { filterPreset, inFilter } from "./vault-filter";
 import { VaultListRow } from "./vault-list-row";
+import { outboxLabel } from "@/features/outbox/outbox";
+import { useShowSecuring } from "@/features/capture/securing-sheet";
 
 const TITLE_KEY: Record<VaultListKey, string> = {
   all: "vaultList.all",
@@ -71,6 +73,7 @@ export function VaultItemList({
   header?: ReactNode;
 }) {
   const { t } = useI18n();
+  const showSecuring = useShowSecuring();
   const categoryLabel = useCategoryLabel();
   const { colors } = useTheme();
   const openAdd = useOpenAddSheet();
@@ -203,7 +206,8 @@ export function VaultItemList({
                   key={entry.id}
                   icon="cloud-upload"
                   title={pendingTitle ?? t("capture.untitled")}
-                  description={t(`home.outbox.${entry.status}`)}
+                  description={t(`home.outbox.${outboxLabel(entry)}`)}
+                  onPress={() => showSecuring(entry.id)}
                 />
               ))}
             </>

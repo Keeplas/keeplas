@@ -3,6 +3,7 @@ import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { BootSplash } from "@/components/boot-splash";
 import { Toaster } from "@/components/toaster";
 import { OutboxProvider } from "@/features/outbox/outbox-provider";
 import { isResumable } from "@/lib/resume-point";
@@ -15,7 +16,8 @@ import { VaultProvider } from "@/providers/vault-provider";
 
 // Fonts are embedded natively (expo-font config plugin in app.json), so the
 // first frame renders with the final type scale. Keep the native splash up
-// until the session stage resolves, instead of a blank screen + spinner.
+// until <BootSplash> takes over with the same logo, animated, until the
+// session stage resolves.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -60,73 +62,74 @@ function ResumeTracker() {
  * `index`, which redirects to the current stage's first screen.
  */
 function Routes() {
-  const { stage, settingUp } = useSession();
+  const { stage, settingUp, resumeReady } = useSession();
   const { colors } = useTheme();
-
-  useEffect(() => {
-    if (stage !== "loading") SplashScreen.hideAsync();
-  }, [stage]);
+  // Same wait as `index`, so the logo hands straight over to the first screen.
+  const booting = stage === "loading" || (stage === "ready" && !resumeReady);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors["bg.app"] },
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="invite/[token]" />
-      <Stack.Screen name="migrated" />
-      {/* Development only: native crypto checks, reachable signed out too. */}
-      <Stack.Protected guard={__DEV__}>
-        <Stack.Screen name="self-test" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "signedOut"}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      {/* Lost number: signed out, or stuck before the vault opens. */}
-      <Stack.Protected
-        guard={
-          stage === "signedOut" || stage === "totp" || stage === "needsKit"
-        }
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors["bg.app"] },
+        }}
       >
-        <Stack.Screen name="lost-number" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "newNumber"}>
-        <Stack.Screen name="new-number" />
-        <Stack.Screen name="new-number-verify" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "loginOtp"}>
-        <Stack.Screen name="login-otp" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "totp"}>
-        <Stack.Screen name="login-totp" />
-        <Stack.Screen name="totp-recovery" />
-      </Stack.Protected>
-      <Stack.Protected
-        guard={stage === "totp" || stage === "needsKit" || stage === "locked"}
-      >
-        <Stack.Screen name="phone-proof" />
-      </Stack.Protected>
-      <Stack.Protected guard={settingUp}>
-        <Stack.Screen name="(setup)" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "needsKit" || stage === "locked"}>
-        <Stack.Screen name="recovery-kit" />
-        <Stack.Screen name="cloud-restore" />
-        <Stack.Screen name="contact-recovery" />
-        <Stack.Screen name="lost-access" />
-        <Stack.Screen name="link-from-device" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "locked"}>
-        <Stack.Screen name="unlock" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "migration"}>
-        <Stack.Screen name="(migration)" />
-      </Stack.Protected>
-      <Stack.Protected guard={stage === "ready"}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="invite/[token]" />
+        <Stack.Screen name="migrated" />
+        {/* Development only: native crypto checks, reachable signed out too. */}
+        <Stack.Protected guard={__DEV__}>
+          <Stack.Screen name="self-test" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "signedOut"}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        {/* Lost number: signed out, or stuck before the vault opens. */}
+        <Stack.Protected
+          guard={
+            stage === "signedOut" || stage === "totp" || stage === "needsKit"
+          }
+        >
+          <Stack.Screen name="lost-number" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "newNumber"}>
+          <Stack.Screen name="new-number" />
+          <Stack.Screen name="new-number-verify" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "loginOtp"}>
+          <Stack.Screen name="login-otp" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "totp"}>
+          <Stack.Screen name="login-totp" />
+          <Stack.Screen name="totp-recovery" />
+        </Stack.Protected>
+        <Stack.Protected
+          guard={stage === "totp" || stage === "needsKit" || stage === "locked"}
+        >
+          <Stack.Screen name="phone-proof" />
+        </Stack.Protected>
+        <Stack.Protected guard={settingUp}>
+          <Stack.Screen name="(setup)" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "needsKit" || stage === "locked"}>
+          <Stack.Screen name="recovery-kit" />
+          <Stack.Screen name="cloud-restore" />
+          <Stack.Screen name="contact-recovery" />
+          <Stack.Screen name="lost-access" />
+          <Stack.Screen name="link-from-device" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "locked"}>
+          <Stack.Screen name="unlock" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "migration"}>
+          <Stack.Screen name="(migration)" />
+        </Stack.Protected>
+        <Stack.Protected guard={stage === "ready"}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+      </Stack>
+      <BootSplash visible={booting} />
+    </>
   );
 }

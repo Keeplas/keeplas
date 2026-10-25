@@ -23,6 +23,7 @@ import { completeHandoff } from "./capture_handoffs";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
   claimBlob,
+  discardUnclaimedBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
   getBlobSize,
@@ -294,6 +295,21 @@ export const generateUploadUrl = auditedMutation({
   handler: async (ctx) => {
     await requireFullAuth(ctx);
     return await generateBlobUploadUrl(ctx);
+  },
+});
+
+export const discardUploads = auditedMutation({
+  action: "vault.uploads_discarded",
+  resourceType: "vault",
+  getMetadata: (args) => ({ count: args.storageIds.length }),
+  args: { storageIds: v.array(storageRefValidator) },
+  handler: async (ctx, args) => {
+    await requireFullAuth(ctx);
+    let discarded = 0;
+    for (const ref of args.storageIds) {
+      if (await discardUnclaimedBlob(ctx, ref)) discarded += 1;
+    }
+    return { discarded };
   },
 });
 

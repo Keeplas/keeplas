@@ -38,6 +38,8 @@ const CHECK_IN_WINDOW_DAYS = 15;
 /** Reminder day offsets within the window. J+0 is the initial fan-out. */
 const REMINDER_DAYS = [3, 7, 10] as const;
 
+/** Stage-2: how many trusted contacts must confirm, unless the owner set it. */
+export const DEFAULT_CONFIRMATION_THRESHOLD = 2;
 /** Stage-2: how long trusted contacts have to confirm before the fallback. */
 const CONFIRMATION_WINDOW_DAYS = 7;
 

@@ -60,6 +60,9 @@ import {
   type EditDraft,
 } from "@/features/vault/edit-draft";
 import { removeFormDraft, useStoredFormDraft } from "@/lib/form-drafts";
+import { useShowSecuring } from "@/features/capture/securing-sheet";
+import { outboxLabel } from "@/features/outbox/outbox";
+import { usePendingAttachments } from "@/features/vault/use-pending-attachments";
 
 export default function ItemDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -69,6 +72,8 @@ export default function ItemDetails() {
   const categoryLabel = useCategoryLabel();
   const { lock } = useVault();
   const { raw, opened, failure, retry: reopen } = useOpenedItem(itemId);
+  const pendingFiles = usePendingAttachments(itemId, opened?.key);
+  const showSecuring = useShowSecuring();
   const pendingEdit = useStoredFormDraft<EditDraft>(editDraftKey(itemId));
   const versions = useQuery(api.vault_items.getItemVersions, { itemId });
   const contacts = useQuery(api.trusted_contacts.getContacts);
@@ -348,6 +353,30 @@ export default function ItemDetails() {
     router.push({ pathname: "/item/edit", params: { id: itemId } });
   }
 
+  const pendingBlock = pendingFiles.length ? (
+    <>
+      <Text variant="label">
+        {t("item.uploadingFiles")} · {pendingFiles.length}
+      </Text>
+      {pendingFiles.map(({ entry, meta, index, ratio }) => (
+        <ListRow
+          key={`${entry.id}-${index}`}
+          icon={meta ? FILE_ICON[meta.kind] : "cloud-upload"}
+          title={meta?.name ?? t("item.decrypting")}
+          description={
+            entry.status === "uploading" || entry.status === "waiting"
+              ? t("capture.securing.uploadingBody", {
+                  pct: Math.round(ratio * 100),
+                })
+              : t(`home.outbox.${outboxLabel(entry)}`)
+          }
+          trailing={<Icon name="cloud-upload" size={18} color="text.muted" />}
+          onPress={() => showSecuring(entry.id)}
+        />
+      ))}
+    </>
+  ) : null;
+
   const historyRow = (
     <ListRow
       icon="clock"
@@ -528,6 +557,8 @@ export default function ItemDetails() {
           description={t("item.addPeopleBody")}
           onPress={share}
         />
+        {pendingBlock}
+        {pendingBlock}
         {historyRow}
         {categorySheet}
         {sheets}

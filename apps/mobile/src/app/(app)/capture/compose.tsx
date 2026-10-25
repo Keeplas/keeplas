@@ -198,7 +198,7 @@ export default function ComposeCapture() {
         files,
       });
       if (pdf) deleteFile(pdf.uri);
-      draftStore.reset();
+      draftStore.markSending(entryId);
       // Back to where the capture started; the upload goes on behind the sheet.
       router.dismiss(
         captureDepth(navigation.getState()?.routes.map((r) => r.name) ?? []),

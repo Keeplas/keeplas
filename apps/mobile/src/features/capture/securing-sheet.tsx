@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 
 import { Button } from "@/components/button";
@@ -19,6 +19,8 @@ import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
+import { draftStore } from "./draft-store";
+import { draftHref } from "./draft-route";
 
 type StepState = "done" | "active" | "waiting" | "error";
 
@@ -40,9 +42,11 @@ function SecuringSheet({
   const pathname = usePathname();
   const { t, language } = useI18n();
   const { colors } = useTheme();
-  const { entries, progress, online, created, retry } = useOutbox();
+  const { entries, progress, online, created, retry, discard } = useOutbox();
   const { pending } = useVaultData();
   const entry = entries.find((candidate) => candidate.id === entryId);
+  const editable =
+    !!entry && !entry.attachTo && !!draftStore.sendingDraft(entry.id);
   const itemId = created[entryId];
   const pendingTitle = pending.find((p) => p.entry.id === entryId)?.title;
   const [seen, setSeen] = useState<{ title: string; bytes: number }>();
@@ -75,9 +79,19 @@ function SecuringSheet({
   const uploadBody = itemId
     ? t("capture.securing.uploadedBody")
     : entry?.status === "quota"
-      ? t("capture.securing.quotaBody")
+      ? t("capture.securing.quotaBody", {
+          size: formatBytes(seen?.bytes ?? 0, language),
+        })
       : failed
-        ? t("capture.securing.failedBody")
+        ? t(
+            `capture.securing.${
+              entry?.errorKind === "offline"
+                ? "offlineFailedBody"
+                : entry?.errorKind === "server"
+                  ? "serverBody"
+                  : "failedBody"
+            }`,
+          )
         : !online
           ? t("capture.securing.offlineBody")
           : t("capture.securing.uploadingBody", {
@@ -136,7 +150,47 @@ function SecuringSheet({
           />
         ) : failed ? (
           <Button label={t("common.tryAgain")} onPress={retry} />
-        ) : !itemId ? (
+        ) : null}
+        {failed && editable ? (
+          <Button
+            variant="secondary"
+            label={t("capture.securing.editFirst")}
+            onPress={() => {
+              void discard(entryId).then(() => {
+                if (!draftStore.reopenSending(entryId)) return;
+                onDismiss();
+                router.push(draftHref("/capture/compose"));
+              });
+            }}
+          />
+        ) : null}
+        {failed ? (
+          <Button
+            variant="text"
+            label={t("capture.securing.remove")}
+            onPress={() =>
+              Alert.alert(
+                t("capture.securing.removeTitle"),
+                t("capture.securing.removeBody"),
+                [
+                  { text: t("common.cancel"), style: "cancel" },
+                  {
+                    text: t("capture.securing.remove"),
+                    style: "destructive",
+                    onPress: () => {
+                      const draft = draftStore.sendingDraft(entryId);
+                      void discard(entryId).then(() => {
+                        if (draft) draftStore.remove(draft.id);
+                        onDismiss();
+                      });
+                    },
+                  },
+                ],
+              )
+            }
+          />
+        ) : null}
+        {!failed && !itemId ? (
           <Button
             variant="secondary"
             label={t("capture.securing.background")}

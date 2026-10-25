@@ -33,18 +33,25 @@ export function Toaster() {
   const insets = useSafeAreaInsets();
   const [shown] = useState(() => new Animated.Value(0));
 
+  // Slide in only when a toast appears: a replacement (e.g. a progress
+  // update) swaps its text in place instead of blinking.
+  const visible = message !== null;
   useEffect(() => {
-    if (!message) return;
+    if (!visible) return;
     shown.setValue(0);
     Animated.timing(shown, {
       toValue: 1,
       duration: 200,
       useNativeDriver: true,
     }).start();
+  }, [visible, shown]);
+
+  useEffect(() => {
+    if (!message) return;
     AccessibilityInfo.announceForAccessibility(
       [message.title, message.description].filter(Boolean).join(". "),
     );
-  }, [message, shown]);
+  }, [message]);
 
   if (!message) return null;
   const icon = VARIANT_ICONS[message.variant];

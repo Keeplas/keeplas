@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNetworkState } from "expo-network";
-import { useMutation } from "convex/react";
+import { useConvex, useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 import type { StorageRef } from "@keeplas/backend/lib/storage";
@@ -26,6 +26,7 @@ import {
 } from "@/lib/files";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useSession } from "@/providers/session-provider";
+import { draftStore } from "@/features/capture/draft-store";
 import {
   pendingEntries,
   requeue,
@@ -46,6 +47,7 @@ interface OutboxValue {
   capture: (draft: CaptureDraft) => Promise<string>;
   /** "Tap to retry": failed entries go back to the queue. */
   retry: () => void;
+  discard: (entryId: string) => Promise<void>;
 }
 
 const OutboxContext = createContext<OutboxValue | null>(null);
@@ -69,6 +71,8 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
   );
   const createItem = useAuditedMutation(api.vault_items.createItem);
   const addItemFiles = useAuditedMutation(api.vault_items.addItemFiles);
+  const discardUploads = useAuditedMutation(api.vault_items.discardUploads);
+  const convex = useConvex();
 
   const [entries, setEntries] = useState<OutboxEntry[]>([]);
   const [progress, setProgress] = useState<Record<string, Progress>>({});
@@ -127,8 +131,22 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
         });
       },
       deleteLocalFile: deleteFile,
+      canStore: async (bytes) =>
+        (await convex.query(api.vaults.canStore, { bytes })).fits,
+      discardUploads: async (storageIds) => {
+        await discardUploads({
+          storageIds: storageIds.map((id) => id as StorageRef),
+        });
+      },
     }),
-    [getOrCreateVault, generateUploadUrl, createItem, addItemFiles],
+    [
+      getOrCreateVault,
+      generateUploadUrl,
+      createItem,
+      addItemFiles,
+      discardUploads,
+      convex,
+    ],
   );
 
   const flush = useCallback(async () => {
@@ -147,8 +165,9 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
               reportProgress(entry.id, p),
             );
             setCreated((all) => ({ ...all, [entry.id]: itemId }));
-          } catch {
-            // Kept as failed / quota; the list shows it.
+            draftStore.finishSending(entry.id);
+          } catch (error) {
+            if (__DEV__) console.warn(`[outbox ${entry.id}]`, error);
           }
           await reload();
         }
@@ -209,9 +228,28 @@ export function OutboxProvider({ children }: { children: ReactNode }) {
     [userId, ownerPublicKey, reload, flush],
   );
 
+  const discard = useCallback(
+    async (entryId: string) => {
+      if (!userId) return;
+      const entry = (await sqliteStore.list(userId)).find(
+        (candidate) => candidate.id === entryId,
+      );
+      if (!entry) return;
+      const uploaded = entry.files.flatMap((f) =>
+        f.storageId ? [f.storageId] : [],
+      );
+      if (uploaded.length)
+        await deps.discardUploads(uploaded).catch(() => undefined);
+      for (const file of entry.files) deleteFile(file.path);
+      await sqliteStore.remove(entryId);
+      await reload();
+    },
+    [userId, deps, reload],
+  );
+
   const value = useMemo<OutboxValue>(
-    () => ({ entries, progress, online, created, capture, retry }),
-    [entries, progress, online, created, capture, retry],
+    () => ({ entries, progress, online, created, capture, retry, discard }),
+    [entries, progress, online, created, capture, retry, discard],
   );
   return (
     <OutboxContext.Provider value={value}>{children}</OutboxContext.Provider>

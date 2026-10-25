@@ -11,6 +11,7 @@ import { LanguageDropdown } from "@/components/language";
 import { Screen } from "@/components/screen";
 import { IconTile, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { ReleaseQuorumWarning } from "@/features/people/release-quorum-warning";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -124,6 +125,7 @@ export default function People() {
           </Text>
         </View>
       </View>
+      <ReleaseQuorumWarning />
       {(contacts ?? []).map((contact, index) => {
         const invited = contact.invitationStatus === "pending";
         return (

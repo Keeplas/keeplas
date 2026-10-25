@@ -275,6 +275,13 @@ export const layout = {
   headerHeight: 52,
 } as const;
 
+/** Native splash backgrounds (app.json `expo-splash-screen`), per system scheme. */
+export const splash = {
+  light: colors.ivory["50"],
+  dark: colors.navy["900"],
+  logoWidth: 160,
+} as const;
+
 /** M08-1 night sky: an illustration, identical in both themes. */
 export const welcomeSky = {
   colors: ["#0E1F3D", "#20395C", "#4E6684", "#708194", "#05132B", "#030E22"],

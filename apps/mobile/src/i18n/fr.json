@@ -48,6 +48,7 @@
     "chooseCountry": "Choisissez votre pays",
     "searchCountry": "Rechercher",
     "invalid": "Saisissez un numéro de téléphone valide.",
+    "nameRequired": "Saisissez votre prénom.",
     "accountExists": "Un compte utilise déjà ce numéro. Connectez-vous plutôt.",
     "noAccount": "Aucun compte n'utilise ce numéro. Commencez pour en créer un.",
     "createAccount": "Créer un compte avec ce numéro",
@@ -376,7 +377,9 @@
       "waiting": "En attente d'envoi",
       "uploading": "Envoi de la copie chiffrée",
       "failed": "Échec de l'envoi",
-      "quota": "Stockage plein"
+      "quota": "Stockage plein",
+      "offline": "En attente de connexion",
+      "server": "Envoi refusé — touchez pour voir"
     },
     "updated": "Mis à jour {when}",
     "greetingNamed": "{greeting}, {name}",
@@ -715,13 +718,19 @@
       "uploadingBody": "Envoi d'une copie sécurisée vers votre stockage Keeplas… {pct} %",
       "uploadedBody": "La copie chiffrée est dans votre stockage Keeplas.",
       "offlineBody": "Vous êtes hors ligne. La copie chiffrée est en sécurité sur ce téléphone et sera envoyée dès votre retour en ligne.",
-      "failedBody": "L'envoi s'est arrêté. Votre copie chiffrée est toujours en sécurité sur ce téléphone. Vérifiez votre connexion, puis réessayez.",
-      "quotaBody": "Votre stockage est plein. Libérez de l'espace, puis réessayez.",
+      "failedBody": "L'envoi s'est arrêté pour une raison inattendue. Votre copie chiffrée est toujours en sécurité sur ce téléphone. Réessayez.",
+      "quotaBody": "Votre stockage est plein : cet élément ({size}) ne rentre pas dans votre espace. Rien n'a été perdu. Libérez de l'espace ou passez à l'offre Lifetime, puis réessayez.",
       "protected": "Protégé",
       "protectedWaiting": "En attente de vérification…",
       "protectedBody": "Votre élément est chiffré et stocké en sécurité.",
       "manageStorage": "Gérer le stockage",
-      "background": "Continuer en arrière-plan"
+      "background": "Continuer en arrière-plan",
+      "offlineFailedBody": "La connexion a été perdue. Votre copie chiffrée est en sécurité sur ce téléphone, l'envoi reprendra tout seul dès votre retour en ligne.",
+      "serverBody": "Le serveur a refusé l'envoi. Votre copie chiffrée est en sécurité sur ce téléphone. Réessayez dans un instant ; si cela se reproduit, contactez le support.",
+      "editFirst": "Modifier avant de renvoyer",
+      "remove": "Supprimer l'envoi",
+      "removeTitle": "Supprimer cet envoi ?",
+      "removeBody": "L'élément n'a pas été enregistré. Son texte et ses fichiers seront retirés de ce téléphone. Cette action est définitive."
     },
     "recordVideo": "Filmer une vidéo",
     "noCameraTitle": "Aucun appareil photo sur cet appareil",
@@ -870,7 +879,8 @@
     "history": "Historique",
     "historyCount": "{n} versions précédentes",
     "historyEmpty": "Aucune modification pour l'instant",
-    "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne."
+    "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne.",
+    "uploadingFiles": "Envoi en cours"
   },
   "people": {
     "title": "Contacts",
@@ -897,6 +907,7 @@
     },
     "ready": "{n} prêt(s)",
     "readyBody": "2 de vos contacts suffisent pour récupérer votre compte.",
+    "quorumWarning": "Rien ne peut encore être transmis : {required} personnes de confiance doivent confirmer, et {available} ont accepté pour l'instant. Ajoutez quelqu'un de confiance.",
     "replace": "Remplacer",
     "replaceTitle": "Remplacer {name} ?",
     "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte. Vous pourrez ensuite inviter quelqu'un d'autre.",
@@ -1052,7 +1063,8 @@
     "emptyTitle": "Rien n'a encore été partagé avec vous",
     "emptyBody": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici.",
     "trusted": "Vous êtes contact de confiance",
-    "later": "Accès après vérification. Nécessite la confirmation de deux contacts de confiance.",
+    "laterOne": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, qu'1 contact de confiance le confirme et que 72 heures passent sans annulation.",
+    "later": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, que {n} contacts de confiance le confirment et que 72 heures passent sans annulation.",
     "oneItem": "1 élément laissé pour vous",
     "items": "{n} éléments laissés pour vous",
     "accessNow": "Accéder maintenant",
@@ -1062,7 +1074,33 @@
     "nothingLeft": "Aucun élément lisible ne vous a été laissé.",
     "notReleasedTitle": "Pas encore disponible",
     "notReleasedBody": "Il s'ouvrira dès que ce coffre vous sera transmis.",
-    "leftBy": "Laissé pour vous par {name}"
+    "leftBy": "Laissé pour vous par {name}",
+    "help": {
+      "link": "Quand verrai-je ce qu'on m'a laissé ?",
+      "title": "Quand un coffre s'ouvre-t-il ?",
+      "checkIn": "La personne confirme régulièrement",
+      "checkInBody": "Le propriétaire répond à un Life check chaque semaine, mois ou trimestre. Tant qu'il répond, son coffre reste privé, même pour vous.",
+      "silent": "Elle ne répond plus",
+      "silentBody": "Après 15 jours sans réponse, malgré les rappels, nous alertons ses contacts de confiance, vous compris.",
+      "confirm": "Les contacts de confiance confirment",
+      "confirmBody": "Deux d'entre eux doivent confirmer que le propriétaire est injoignable, sauf s'il a choisi un autre nombre.",
+      "grace": "Délai de sécurité de 72 heures",
+      "graceBody": "Le propriétaire est prévenu et peut encore annuler. Rien ne s'ouvre avant la fin de ce délai.",
+      "yours": "Vous ne voyez que ce qui vous est destiné",
+      "yoursBody": "Uniquement les éléments qu'il vous a laissés, en lecture seule, déchiffrés sur ce téléphone.",
+      "note": "Si trop peu de contacts confirment à temps, le coffre reste verrouillé."
+    },
+    "unreachable": {
+      "detail": "N'a pas répondu à son Life check",
+      "body": "Si vous non plus n'arrivez pas à le joindre, confirmez-le. Une fois assez de confirmations ({n} nécessaires), il aura encore 72 heures pour annuler.",
+      "action": "Je n'arrive pas à le joindre",
+      "confirmTitle": "Confirmer que {name} est injoignable ?",
+      "confirmBody": "Ne confirmez qu'après avoir essayé de l'appeler ou de lui écrire. C'est définitif, mais rien ne s'ouvre sans assez de confirmations et 72 heures sans annulation.",
+      "confirm": "Oui, confirmer",
+      "done": "Merci. Nous vous tiendrons informé.",
+      "confirmed": "Vous avez confirmé qu'il est injoignable",
+      "waiting": "En attente des autres contacts de confiance. {name} peut encore annuler à tout moment avant toute ouverture."
+    }
   },
   "passkeys": {
     "subtitle": "Les clés d'accès vous connectent avec votre visage, votre empreinte ou le code du téléphone. Touchez-en une pour la supprimer.",

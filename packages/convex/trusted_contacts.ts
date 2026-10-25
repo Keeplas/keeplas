@@ -23,7 +23,8 @@ import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 import { isNotificationsPaused } from "./lib/pause";
 import { resolveLocale, type Locale } from "./lib/locale";
-import { formatSenderIdentity } from "./lib/identity";
+import { formatSenderIdentity, ownerDisplay } from "./lib/identity";
+import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 /**
@@ -103,6 +104,32 @@ export const getContactsReady = query({
     const userId = await optionalAuth(ctx);
     if (userId === null) return false;
     return hasReadyTrustQuorum(await acceptedContacts(ctx, userId));
+  },
+});
+
+/**
+ * How many distinct people must confirm the owner can't be reached before
+ * their vault is released, and how many accepted people could. Below the
+ * threshold nothing can ever be released, so the owner is warned.
+ */
+export const getReleaseQuorum = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireFullAuth(ctx);
+    const config = await ctx.db
+      .query("life_check_configs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    // Distinct humans, like the quorum count in markUserUnreachable.
+    const people = new Set(
+      (await acceptedContacts(ctx, userId)).flatMap((c) =>
+        c.contactUserId ? [c.contactUserId] : [],
+      ),
+    );
+    return {
+      required: config?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
+      available: people.size,
+    };
   },
 });
 
@@ -979,10 +1006,15 @@ export const getVaultsWhereIAmContact = query({
       .collect();
 
     // Enrich with vault owner info + most recent active life-check cycle
-    // status, so the contact UI can gate "Mark as unreachable" on escalation.
+    // status, so the contact UI can gate "Mark as unreachable" on escalation,
+    // and the owner's confirmation threshold, so it can explain the release.
     const result = [];
     for (const contact of contacts) {
-      const owner = await ctx.db.get(contact.userId);
+      const owner = ownerDisplay(await ctx.db.get(contact.userId));
+      const ownerConfig = await ctx.db
+        .query("life_check_configs")
+        .withIndex("by_user", (q) => q.eq("userId", contact.userId))
+        .first();
 
       const activeCycle = await ctx.db
         .query("life_check_cycles")
@@ -1002,23 +1034,32 @@ export const getVaultsWhereIAmContact = query({
       const releaseReq = approvedReqs.find((r) =>
         r.sectionsRequested.some((s) => s.startsWith("item:")),
       );
+      // Whether I already confirmed the owner can't be reached (one vote per
+      // contact row), so the contact UI swaps the action for a waiting state.
+      const unreachableConfirmed = (
+        await ctx.db
+          .query("access_requests")
+          .withIndex("by_status", (q) =>
+            q.eq("vaultUserId", contact.userId).eq("status", "pending"),
+          )
+          .collect()
+      ).some((r) => r.contactsInitiated?.includes(contact._id));
       const releasedItemCount = releaseReq
         ? releaseReq.sectionsRequested.filter((s) => s.startsWith("item:"))
             .length
         : 0;
 
-      const trimmedName = owner?.name?.trim() || "";
-      const email = owner?.email ?? "";
-      const localPart = email.split("@")[0] ?? "";
-      const displayName = trimmedName || localPart || "Keeplas user";
-
       result.push({
         ...contact,
-        ownerName: displayName,
-        ownerEmail: email,
+        ownerName: owner.name,
+        ownerEmail: owner.email,
+        ownerPhone: owner.phone,
+        confirmationThreshold:
+          ownerConfig?.confirmationThreshold ?? DEFAULT_CONFIRMATION_THRESHOLD,
         ownerCycleStatus: activeCycle?.status ?? null,
         released: !!releaseReq,
         releasedItemCount,
+        unreachableConfirmed,
       });
     }
     return result;
