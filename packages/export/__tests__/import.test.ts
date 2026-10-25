@@ -39,19 +39,24 @@ describe("readZipEntries", () => {
     expect(entryDataStart(read, entries[0])).toBe(30 + "README.txt".length);
   });
 
-  it("reads a ZIP64 directory (65 535 entries and more)", () => {
-    const zip = new ZipBuilder();
-    const when = new Date();
-    const parts: Uint8Array[] = [];
-    for (let i = 0; i < 65_536; i++) {
-      parts.push(zip.file(`f${i}`, new Uint8Array(0), when));
-    }
-    parts.push(zip.finish());
-    const archive = concat(parts);
-    const entries = readZipEntries(reader(archive), archive.length);
-    expect(entries).toHaveLength(65_536);
-    expect(entries[65_535].name).toBe("f65535");
-  });
+  // Builds 65 536 entries: ~1.5s on CI, but a busy runner has hit 15s.
+  it(
+    "reads a ZIP64 directory (65 535 entries and more)",
+    { timeout: 30_000 },
+    () => {
+      const zip = new ZipBuilder();
+      const when = new Date();
+      const parts: Uint8Array[] = [];
+      for (let i = 0; i < 65_536; i++) {
+        parts.push(zip.file(`f${i}`, new Uint8Array(0), when));
+      }
+      parts.push(zip.finish());
+      const archive = concat(parts);
+      const entries = readZipEntries(reader(archive), archive.length);
+      expect(entries).toHaveLength(65_536);
+      expect(entries[65_535].name).toBe("f65535");
+    },
+  );
 
   it("rejects an entry whose size runs past its data", () => {
     const zip = new ZipBuilder();
