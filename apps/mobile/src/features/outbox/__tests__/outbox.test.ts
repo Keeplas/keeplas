@@ -23,6 +23,7 @@ import {
   QUOTA_ERROR,
   classifyUploadError,
   requeue,
+  unpark,
   uploadEntry,
   type CreateItemArgs,
   type OutboxDeps,
@@ -434,6 +435,16 @@ describe("capture sealing + outbox upload", () => {
     expect(requeue([parked])).toEqual([]);
     expect(server.discarded).toEqual([["storage-1", "storage-2"]]);
     expect(parked.files.every((f) => !f.storageId)).toBe(true);
+  });
+
+  it("unparks quota entries once the plan changes", async () => {
+    const owner = generateRecipientKeyPair();
+    const { entry } = await sealedEntry(owner);
+    const parked = { ...entry, status: "quota" as const };
+    const failed = { ...entry, id: "e2", status: "failed" as const };
+    expect(unpark([parked, failed])).toEqual([
+      { ...parked, status: "waiting" },
+    ]);
   });
 
   it("checks the room left before uploading anything", async () => {

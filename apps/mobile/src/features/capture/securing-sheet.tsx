@@ -14,10 +14,12 @@ import { Icon } from "@/components/icon";
 import { BottomSheet } from "@/components/sheet";
 import { IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { UpgradeSheet } from "@/features/billing/upgrade-sheet";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes } from "@/lib/format";
 import { useI18n } from "@/providers/i18n-provider";
+import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { draftStore } from "./draft-store";
 import { draftHref } from "./draft-route";
@@ -50,6 +52,8 @@ function SecuringSheet({
   const itemId = created[entryId];
   const pendingTitle = pending.find((p) => p.entry.id === entryId)?.title;
   const [seen, setSeen] = useState<{ title: string; bytes: number }>();
+  const [upgrading, setUpgrading] = useState(false);
+  const lifetime = useViewer().plan === "lifetime";
 
   if (entry && pendingTitle !== undefined && seen?.title !== pendingTitle) {
     setSeen({
@@ -79,7 +83,7 @@ function SecuringSheet({
   const uploadBody = itemId
     ? t("capture.securing.uploadedBody")
     : entry?.status === "quota"
-      ? t("capture.securing.quotaBody", {
+      ? t(`capture.securing.${lifetime ? "quotaBodyLifetime" : "quotaBody"}`, {
           size: formatBytes(seen?.bytes ?? 0, language),
         })
       : failed
@@ -140,7 +144,9 @@ function SecuringSheet({
           }
           ratio={itemId ? 1 : 0}
         />
-        {entry?.status === "quota" ? (
+        {entry?.status === "quota" && !lifetime ? (
+          <Button label={t("upgrade.cta")} onPress={() => setUpgrading(true)} />
+        ) : entry?.status === "quota" ? (
           <Button
             label={t("capture.securing.manageStorage")}
             onPress={() => {
@@ -198,6 +204,8 @@ function SecuringSheet({
           />
         ) : null}
       </View>
+      {/* Nested in the sheet so iOS presents it over this modal. */}
+      <UpgradeSheet visible={upgrading} onDismiss={() => setUpgrading(false)} />
     </BottomSheet>
   );
 }
