@@ -9,6 +9,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { accountErrorKey } from "@/features/account/errors";
 import { CodeVerification } from "@/features/code-verification";
 import { errorText } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
@@ -26,10 +27,12 @@ export function PhoneNumberStep({
   title,
   body,
   verifyPath,
+  beforeRequest,
 }: {
   title: string;
   body?: string;
   verifyPath: Href & string;
+  beforeRequest?: () => Promise<void>;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -46,6 +49,7 @@ export function PhoneNumberStep({
     setBusy(true);
     setError(null);
     try {
+      await beforeRequest?.();
       await requestVerification({ phoneNumber });
       router.push({ pathname: verifyPath, params: { phone: phoneNumber } });
     } catch (err) {
@@ -55,7 +59,7 @@ export function PhoneNumberStep({
           ? t("codeErrors.tooManyBody")
           : text.includes("already linked")
             ? t("lostNumber.newTaken")
-            : t("common.genericError"),
+            : t(accountErrorKey(err)),
       );
     } finally {
       setBusy(false);

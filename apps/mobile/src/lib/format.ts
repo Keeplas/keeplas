@@ -29,11 +29,16 @@ export function formatTime(timestamp: number, locale: string): string {
 }
 
 /** Local date, e.g. "Oct 11, 2026". */
-export function formatDate(timestamp: number, locale: string): string {
+export function formatDate(
+  timestamp: number,
+  locale: string,
+  timeZone?: string,
+): string {
   return new Date(timestamp).toLocaleDateString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone,
   });
 }
 
@@ -109,4 +114,8 @@ export function placeName(
   const country = place.country ? countryName(place.country, locale) : null;
   if (place.city && country) return `${place.city}, ${country}`;
   return place.city ?? country;
+}
+
+export function ageInYears(birthday: number, now = Date.now()): number {
+  return Math.floor((now - birthday) / (365.25 * 24 * 60 * 60 * 1000));
 }

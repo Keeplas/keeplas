@@ -213,6 +213,19 @@ export const removeAvatar = auditedMutation({
   },
 });
 
+function assertAdultBirthday(birthday: number, now: number) {
+  if (!Number.isFinite(birthday)) {
+    throw new Error("Invalid birthday");
+  }
+  const ageMs = now - birthday;
+  if (ageMs < EIGHTEEN_YEARS_MS) {
+    throw new Error("You must be at least 18 years old to use Keeplas");
+  }
+  if (ageMs > MAX_AGE_MS) {
+    throw new Error("Birthday is implausibly old");
+  }
+}
+
 /**
  * Persist the legal identity collected during the `legal_info` onboarding
  * step. Birthday is validated server-side (>= 18 years, plausible upper
@@ -232,16 +245,7 @@ export const completeLegalInfo = auditedMutation({
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
-    if (!Number.isFinite(args.birthday)) {
-      throw new Error("Invalid birthday");
-    }
-    const ageMs = now - args.birthday;
-    if (ageMs < EIGHTEEN_YEARS_MS) {
-      throw new Error("You must be at least 18 years old to use Keeplas");
-    }
-    if (ageMs > MAX_AGE_MS) {
-      throw new Error("Birthday is implausibly old");
-    }
+    assertAdultBirthday(args.birthday, now);
 
     const country = args.country.trim().toUpperCase();
     if (!/^[A-Z]{2}$/.test(country)) {
@@ -261,6 +265,21 @@ export const completeLegalInfo = auditedMutation({
     // Store year-of-birth only (not full timestamp) in metadata to keep the
     // audit entry's PII surface minimal — the full birthday lives on the
     // user record itself.
+    birthYear: new Date(args.birthday).getUTCFullYear(),
+  }),
+});
+
+export const updateBirthday = auditedMutation({
+  action: "user.birthday.updated",
+  resourceType: "user",
+  args: { birthday: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+    assertAdultBirthday(args.birthday, now);
+    await ctx.db.patch(userId, { birthday: args.birthday, updatedAt: now });
+  },
+  getMetadata: (args) => ({
     birthYear: new Date(args.birthday).getUTCFullYear(),
   }),
 });

@@ -1382,5 +1382,73 @@
     "resume": "Reprendre",
     "emptyTitle": "Aucun brouillon",
     "emptyBody": "Ce que vous commencez sans l'enregistrer est gardé ici, sur ce téléphone, pour le reprendre plus tard."
+  },
+  "account": {
+    "title": "Mon compte",
+    "cardFallback": "Votre compte",
+    "photo": "Photo de profil",
+    "changePhoto": "Changer la photo",
+    "addPhoto": "Ajouter une photo",
+    "removePhoto": "Retirer",
+    "removePhotoTitle": "Retirer votre photo ?",
+    "removePhotoBody": "Votre initiale s'affichera à la place.",
+    "takePhoto": "Prendre une photo",
+    "chooseLibrary": "Choisir dans la photothèque",
+    "photoUpdated": "Photo mise à jour",
+    "photoRemoved": "Photo retirée",
+    "uploading": "Envoi…",
+    "name": "Nom affiché",
+    "namePlaceholder": "Votre nom",
+    "saveName": "Enregistrer",
+    "nameSaved": "Nom enregistré",
+    "contact": "Identifiants de connexion",
+    "email": "E-mail",
+    "noEmail": "Aucun e-mail",
+    "phone": "Numéro WhatsApp",
+    "noPhone": "Aucun numéro",
+    "verified": "Vérifié",
+    "unverified": "Non vérifié",
+    "add": "Ajouter",
+    "change": "Changer",
+    "legal": {
+      "title": "Identité légale",
+      "body": "Votre pays de résidence et votre date de naissance. Ils se modifient depuis l'app web.",
+      "country": "Pays de résidence",
+      "notSet": "Non défini",
+      "birthday": "Date de naissance",
+      "age": "{age} ans"
+    },
+    "emailStep": {
+      "titleAdd": "Ajouter un e-mail",
+      "titleChange": "Changer votre e-mail",
+      "bodyAdd": "Nous vous enverrons un code à 6 chiffres par e-mail. Confirmez-le pour vous connecter aussi avec un code envoyé par e-mail.",
+      "bodyChange": "Nous enverrons un code à 6 chiffres à votre nouvelle adresse. Les connexions avec l'ancienne adresse cesseront de fonctionner.",
+      "label": "Adresse e-mail",
+      "placeholder": "vous@exemple.com",
+      "cta": "Envoyer le code"
+    },
+    "emailVerify": {
+      "title": "Vérifiez vos e-mails",
+      "body": "Nous avons envoyé un code à 6 chiffres à {email}.",
+      "confirm": "Confirmer l'e-mail",
+      "done": "E-mail vérifié"
+    },
+    "phoneStep": {
+      "title": "Changer votre numéro",
+      "body": "Nous enverrons un code sur WhatsApp au nouveau numéro. Les connexions avec l'ancien numéro cesseront de fonctionner."
+    },
+    "phoneDone": "Numéro vérifié",
+    "errors": {
+      "invalidEmail": "Saisissez une adresse e-mail valide.",
+      "invalidPhone": "Saisissez un numéro de téléphone valide.",
+      "sameEmail": "C'est déjà votre e-mail.",
+      "samePhone": "C'est déjà votre numéro.",
+      "emailTaken": "Cet e-mail est déjà lié à un autre compte.",
+      "phoneTaken": "Ce numéro est déjà lié à un autre compte.",
+      "tooMany": "Trop de tentatives. Réessayez plus tard.",
+      "proof": "Impossible de confirmer votre coffre sur ce téléphone. Réessayez.",
+      "uploadFailed": "La photo n'a pas pu être envoyée. Réessayez.",
+      "imageTooLarge": "Cette image est trop lourde. Choisissez-en une de moins de 5 Mo."
+    }
   }
 }

@@ -1398,5 +1398,73 @@
     "resume": "Pick up",
     "emptyTitle": "No drafts",
     "emptyBody": "Anything you start without saving is kept here, on this phone, to pick up later."
+  },
+  "account": {
+    "title": "My account",
+    "cardFallback": "Your account",
+    "photo": "Profile photo",
+    "changePhoto": "Change photo",
+    "addPhoto": "Add a photo",
+    "removePhoto": "Remove",
+    "removePhotoTitle": "Remove your photo?",
+    "removePhotoBody": "Your initial will be shown instead.",
+    "takePhoto": "Take a photo",
+    "chooseLibrary": "Choose from library",
+    "photoUpdated": "Photo updated",
+    "photoRemoved": "Photo removed",
+    "uploading": "Uploading…",
+    "name": "Display name",
+    "namePlaceholder": "Your name",
+    "saveName": "Save",
+    "nameSaved": "Name saved",
+    "contact": "Sign-in details",
+    "email": "Email",
+    "noEmail": "No email",
+    "phone": "WhatsApp number",
+    "noPhone": "No number",
+    "verified": "Verified",
+    "unverified": "Not verified",
+    "add": "Add",
+    "change": "Change",
+    "legal": {
+      "title": "Legal identity",
+      "body": "Your country of residence and date of birth. You can change them from the web app.",
+      "country": "Country of residence",
+      "notSet": "Not set",
+      "birthday": "Date of birth",
+      "age": "{age} years old"
+    },
+    "emailStep": {
+      "titleAdd": "Add an email",
+      "titleChange": "Change your email",
+      "bodyAdd": "We'll email you a 6-digit code. Confirm it to sign in with an emailed code too.",
+      "bodyChange": "We'll email a 6-digit code to your new address. Sign-ins with the old address will stop working.",
+      "label": "Email address",
+      "placeholder": "you@example.com",
+      "cta": "Send code"
+    },
+    "emailVerify": {
+      "title": "Check your email",
+      "body": "We sent a 6-digit code to {email}.",
+      "confirm": "Confirm email",
+      "done": "Email verified"
+    },
+    "phoneStep": {
+      "title": "Change your number",
+      "body": "We'll send a code on WhatsApp to the new number. Sign-ins with the old number will stop working."
+    },
+    "phoneDone": "Number verified",
+    "errors": {
+      "invalidEmail": "Enter a valid email address.",
+      "invalidPhone": "Enter a valid phone number.",
+      "sameEmail": "This is already your email.",
+      "samePhone": "This is already your number.",
+      "emailTaken": "This email is already linked to another account.",
+      "phoneTaken": "This number is already linked to another account.",
+      "tooMany": "Too many attempts. Try again later.",
+      "proof": "We couldn't confirm your vault on this phone. Try again.",
+      "uploadFailed": "The photo couldn't be uploaded. Try again.",
+      "imageTooLarge": "This image is too large. Choose one under 5 MB."
+    }
   }
 }

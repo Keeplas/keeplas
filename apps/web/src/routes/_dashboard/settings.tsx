@@ -10,7 +10,11 @@ export const Route = createFileRoute("/_dashboard/settings")({
 
 // Full v2 screens (W04-7, W04-5) carry their own header; the other settings
 // pages get a way back to Settings.
-const V2_SCREENS = new Set(["/settings", "/settings/recovery"]);
+const V2_SCREENS = new Set([
+  "/settings",
+  "/settings/recovery",
+  "/settings/account",
+]);
 
 function SettingsLayout() {
   const t = useTranslations("settings.overview");
