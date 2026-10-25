@@ -3,6 +3,7 @@ import { DevicesView } from "@/app/(dashboard)/devices/devices-view";
 import { HubView, VaultEmptyMessage } from "@/app/(dashboard)/hub/hub-view";
 import { RecoveryCenterView } from "@/app/(dashboard)/settings/recovery/recovery-center-view";
 import { SettingsView } from "@/app/(dashboard)/settings/settings-view";
+import { SubscriptionView } from "@/app/(dashboard)/settings/subscription/subscription-view";
 import { NothingSharedMessage } from "@/app/(dashboard)/shared-with-me/shared-vault-list";
 import { TravelModeOnMessage } from "@/app/(dashboard)/life-check/sections/travel-mode-on";
 import { NoContactsMessage } from "@/app/(dashboard)/trusted-contacts/no-contacts-message";
@@ -66,6 +67,9 @@ export const SCREENS: Record<string, HarnessScreen> = {
   )),
   "W04-6": shell("/devices", () => <DevicesView {...devices} />),
   "W04-7": shell("/settings", () => <SettingsView {...settings} />),
+  "W04-7-plan": shell("/settings/subscription", () => (
+    <SubscriptionView currentPlan="free" />
+  )),
   "W06-1": shell("/vault", () => <VaultListView {...vaultList} />),
   "W06-2": shell("/vault", documentViewer),
   "W06-3": shell("/hub", addDocument),

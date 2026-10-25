@@ -214,23 +214,15 @@
       "evening": "Good evening, {name}"
     },
     "subtitle": "Your important information is safe and ready for tomorrow.",
-    "setup": {
-      "complete": "Required setup complete",
-      "incomplete": "Finish your required setup",
-      "progress": "{done} of {total} complete",
-      "completeBody": "Your account is protected and ready to use.",
-      "incompleteBody": "Finish it in the Keeplas app on your phone."
+    "recovery": {
+      "title": "Recovery health",
+      "covered": "Recovery ready",
+      "notCovered": "No way back in yet"
     },
-    "optional": {
-      "title": "Optional protection",
-      "trustContacts": {
-        "title": "Add trust contacts",
-        "description": "Choose up to 3 people who can help you recover your account."
-      },
-      "recoveryKit": {
-        "title": "Export recovery kit",
-        "description": "Keep your optional 24-word recovery kit safe. Done from your phone."
-      }
+    "upgrade": {
+      "title": "Upgrade to Lifetime · $99",
+      "body": "10 GB of storage and every feature. One payment, no subscription.",
+      "cta": "Upgrade"
     },
     "tiles": {
       "inbox": "To sort",
@@ -605,45 +597,35 @@
       }
     },
     "subscription": {
-      "title": "Legacy Architecture. Secured Forever.",
-      "description": "Choose the protection level that fits your continuity plan. Both tiers run the same zero-knowledge encryption — only the surface area changes.",
-      "popular": "Popular",
+      "title": "Your plan",
+      "description": "Every plan encrypts your vault the same way. Lifetime adds space and every feature, for one payment.",
       "currentPlan": "Current plan",
-      "footer": "Pricing displayed in USD. Switching plans never deletes your vault.",
-      "priceSuffix": {
-        "forever": "/forever",
-        "oneTime": "one-time"
-      },
       "plans": {
         "free": {
           "name": "Free",
-          "tagline": "Essential digital storage.",
-          "cta": "Start Free"
+          "price": "$0",
+          "priceNote": "Free forever",
+          "perks": {
+            "storage": "100 MB of encrypted storage",
+            "contacts": "Up to 3 trusted contacts",
+            "lifeCheck": "Life check"
+          }
         },
         "lifetime": {
-          "name": "Lifetime",
-          "tagline": "Everything you need, forever, in a single payment.",
-          "inApp": "Buy Lifetime in the Keeplas mobile app: Settings → Upgrade to Lifetime."
+          "name": "Keeplas Lifetime",
+          "price": "$99",
+          "priceNote": "One-time payment",
+          "perks": {
+            "storage": "10 GB of encrypted storage, instead of 100 MB",
+            "features": "Every feature, for as long as you keep Keeplas",
+            "noSubscription": "One payment. No subscription, nothing renews",
+            "newPhone": "Yours on every new phone: just sign in"
+          }
         }
       },
-      "features": {
-        "freeVault": "100 MB Zero-Knowledge Vault",
-        "basicLifeCheck": "Basic Life Check (Monthly)",
-        "oneEmergencyContact": "1 Emergency Contact",
-        "emergencyCardDigital": "Emergency Card (Digital)",
-        "dataHostingCountry": "Data Hosting Country Choice (Coming Soon)",
-        "notarialCompliance": "Notarial & Legal Compliance (Coming Soon)",
-        "lifetimeVault": "10 GB Zero-Knowledge Vault",
-        "moreStorageAddon": "More Storage Available as Add-on",
-        "fullScenarioEngine": "Full Scenario Engine",
-        "fiveEmergencyContacts": "5 Emergency Contacts",
-        "prioritySocialRecovery": "Priority Social Recovery",
-        "emergencyCardPhysical": "Emergency Card (Physical)",
-        "videoLegacyMessages": "Video Legacy Messages",
-        "weeklyLifeCheck": "Weekly Life Check",
-        "earlyAdopterBadge": "Early Adopter Badge",
-        "prioritySupport": "Priority Support"
-      }
+      "inApp": "Buy Lifetime in the Keeplas app on your phone: Settings → Upgrade to Lifetime.",
+      "paidWith": "Paid through your Apple or Google account. Keeplas never sees your card, and your plan updates here on its own.",
+      "footer": "The app shows the price in your local currency. Changing plans never deletes your vault."
     },
     "identity": {
       "updateError": "Failed to update profile",

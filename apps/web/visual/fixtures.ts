@@ -17,9 +17,8 @@ export const noop = () => {};
 
 export const hub: HubViewProps = {
   firstName: "Alex",
-  setupDone: 3,
-  trustContactsReady: false,
-  recoveryKitReady: false,
+  recoveryCovered: true,
+  plan: "free",
   counts: { inbox: 3, documents: 12, accounts: 8 },
   recentItems: [
     {

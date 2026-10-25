@@ -41,11 +41,14 @@ const SHELL = { width: 1440, height: 900 };
 const blurAutoFocus = (page: Page) =>
   page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 
+// The dashboard follows the mobile Home (recovery health row, upgrade card),
+// not the Figma W04-3 "Required setup" card, so the screens drawn on it are
+// checked against their own baselines.
 const CASES: Case[] = [
-  { id: "W04-3", figma: "W04-3_Dashboard.png", ...SHELL },
+  { id: "W04-3", figma: null, ...SHELL },
   {
     id: "W04-3b",
-    figma: "W04-3b_Dashboard_Add_item_menu.png",
+    figma: null,
     ...SHELL,
     // Figma draws the first entry highlighted.
     prepare: (page) => page.keyboard.press("ArrowDown"),
@@ -58,6 +61,7 @@ const CASES: Case[] = [
   },
   { id: "W04-6", figma: "W04-6_Sessions_and_security.png", ...SHELL },
   { id: "W04-7", figma: "W04-7_Settings.png", ...SHELL },
+  { id: "W04-7-plan", figma: null, ...SHELL },
   {
     id: "W05-3",
     figma: "W05-3_Life_check_modal_EN_.png",
@@ -92,7 +96,7 @@ const CASES: Case[] = [
   },
   {
     id: "W06-4",
-    figma: "W06-4_Securing_your_item_upload_progress_.png",
+    figma: null,
     ...SHELL,
     prepare: blurAutoFocus,
   },
@@ -105,7 +109,7 @@ const CASES: Case[] = [
   },
   {
     id: "W06-7",
-    figma: "W06-7_Scan_with_my_phone_QR_handoff_.png",
+    figma: null,
     ...SHELL,
     prepare: blurAutoFocus,
   },
