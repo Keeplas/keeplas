@@ -7,7 +7,6 @@ import {
 } from "../pairing-flow";
 
 const sessionId = "session1" as Id<"pairing_sessions">;
-const deviceId = "device1" as Id<"devices">;
 const waiting: PairingState = {
   phase: "waiting",
   sessionId,
@@ -35,20 +34,9 @@ describe("pairingReducer", () => {
     expect(signingIn).toEqual({ phase: "signingIn", sessionId });
     const unlocking = pairingReducer(signingIn, { type: "signedIn" });
     expect(unlocking).toEqual({ phase: "unlocking", sessionId });
-    expect(
-      pairingReducer(unlocking, {
-        type: "linked",
-        deviceId,
-        offerPasskey: true,
-      }),
-    ).toEqual({ phase: "passkey", deviceId });
-    expect(
-      pairingReducer(unlocking, {
-        type: "linked",
-        deviceId,
-        offerPasskey: false,
-      }),
-    ).toEqual({ phase: "done" });
+    expect(pairingReducer(unlocking, { type: "linked" })).toEqual({
+      phase: "done",
+    });
   });
 
   it("ends on the phone's decline or the session expiry", () => {
@@ -80,11 +68,8 @@ describe("pairingReducer", () => {
     expect(pairingReducer(waiting, { type: "failed" })).toEqual({
       phase: "error",
     });
-    const passkey: PairingState = { phase: "passkey", deviceId };
-    expect(pairingReducer(passkey, { type: "failed" })).toBe(passkey);
-    expect(pairingReducer(passkey, { type: "finished" })).toEqual({
-      phase: "done",
-    });
+    const done: PairingState = { phase: "done" };
+    expect(pairingReducer(done, { type: "failed" })).toBe(done);
   });
 
   it("restarts only from a terminal failure", () => {

@@ -1,52 +1,32 @@
-import {
-  DeviceUnlockEntry,
-  DeviceUnlockError,
-  DeviceUnlockOwner,
-  EnrollOptions,
-} from "./types";
+import { DeviceUnlockEntry, DeviceUnlockError, EnrollOptions } from "./types";
 import { enrollPin, unlockWithPin } from "./pin";
-import {
-  enrollWebAuthnPrf,
-  isWebAuthnSupported,
-  unlockWithWebAuthnPrf,
-} from "./webauthn-prf";
 import { deleteEntry, getEntry, listEntriesForUser } from "./storage";
 
 export type {
-  CreatePrfCredential,
   DeviceUnlockEntry,
   DeviceUnlockMethod,
-  DeviceUnlockOwner,
   EnrollOptions,
   PinEntryData,
-  WebAuthnPrfEntryData,
 } from "./types";
 export { DeviceUnlockError, PIN_MIN_LENGTH } from "./types";
-export { fromBase64Url, isWebAuthnSupported } from "./webauthn-prf";
 export { validatePin } from "./pin";
 
 export async function listMethods(
   userId: string,
   legacyEmail?: string,
 ): Promise<DeviceUnlockEntry[]> {
-  return listEntriesForUser(userId, legacyEmail);
+  const entries = await listEntriesForUser(userId, legacyEmail);
+  const retired = entries.filter((entry) => entry.method !== "pin");
+  await Promise.all(retired.map((entry) => deleteEntry(entry.id)));
+  return entries.filter((entry) => entry.method === "pin");
 }
 
 export async function enrollMethod(
-  owner: DeviceUnlockOwner,
+  userId: string,
   masterKey: CryptoKey,
   options: EnrollOptions,
 ): Promise<DeviceUnlockEntry> {
-  if (options.method === "pin") {
-    return enrollPin(owner.userId, masterKey, options.pin, options.label);
-  }
-  return enrollWebAuthnPrf(
-    owner,
-    masterKey,
-    options.attachment,
-    options.label,
-    options.createCredential,
-  );
+  return enrollPin(userId, masterKey, options.pin, options.label);
 }
 
 export async function unlockWith(
@@ -57,28 +37,12 @@ export async function unlockWith(
   if (!entry) {
     throw new DeviceUnlockError("Entry not found", "not-found");
   }
-  if (entry.data.kind === "pin") {
-    if (typeof secret !== "string") {
-      throw new DeviceUnlockError("PIN required", "wrong-secret");
-    }
-    return unlockWithPin(entry, secret);
+  if (typeof secret !== "string") {
+    throw new DeviceUnlockError("PIN required", "wrong-secret");
   }
-  return unlockWithWebAuthnPrf(entry);
+  return unlockWithPin(entry, secret);
 }
 
 export async function deleteMethod(entryId: string): Promise<void> {
   await deleteEntry(entryId);
-}
-
-export function isPlatformAuthenticatorAvailable(): Promise<boolean> {
-  if (
-    !isWebAuthnSupported() ||
-    typeof window.PublicKeyCredential
-      .isUserVerifyingPlatformAuthenticatorAvailable !== "function"
-  ) {
-    return Promise.resolve(false);
-  }
-  return window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(
-    () => false,
-  );
 }

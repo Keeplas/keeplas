@@ -51,14 +51,11 @@
       "heroTitle": "Votre vie,\nbien gardée",
       "heroBody": "Un espace privé pour vos documents importants, vos comptes, vos instructions et plus encore. Pour que vous et vos proches soyez prêts, aujourd'hui comme demain.",
       "title": "Se connecter à Keeplas",
-      "body": "Utilisez votre clé d'accès pour accéder à votre compte en toute sécurité. Aucun mot de passe nécessaire.",
-      "continueWithPasskey": "Continuer avec une clé d'accès",
-      "or": "ou",
+      "body": "Ouvrez Keeplas sur votre téléphone et scannez le code pour accéder à votre compte en toute sécurité. Aucun mot de passe nécessaire.",
       "linkWithPhone": "Associer avec mon téléphone",
       "lostAccess": "Accès perdu ?",
       "newVisitor": "Nouveau sur Keeplas ?",
       "getTheApp": "Obtenir l'application",
-      "passkeyFailed": "Connexion avec la clé d'accès impossible.",
       "lostAccessDialog": {
         "title": "Accès perdu ?",
         "body": "La récupération du compte se fait dans l'application Keeplas. Ouvrez-la sur votre téléphone, ou installez-la sur un nouveau téléphone, puis choisissez « Accès perdu ? » pour retrouver votre coffre.",
@@ -68,7 +65,6 @@
     "connect": {
       "heroTitle": "Me connecter avec\nmon téléphone",
       "heroBody": "Scannez le QR code avec l'application Keeplas pour vous connecter. C'est rapide, sûr et sans mot de passe.",
-      "usePasskey": "Utiliser plutôt une clé d'accès",
       "step1": "Ouvrez Keeplas",
       "step1Detail": "sur votre téléphone",
       "step2": "Scannez le QR code",
@@ -83,14 +79,7 @@
       "rejected": "Votre téléphone a bloqué cette connexion car le code ne correspondait pas à ce navigateur. Actualisez la page pour obtenir un nouveau code.",
       "error": "Un problème est survenu pendant l'association de ce navigateur.",
       "retry": "Réessayer",
-      "linking": "Association de ce navigateur…",
-      "passkey": {
-        "title": "Créer une clé d'accès pour ce navigateur",
-        "body": "La prochaine fois, connectez-vous et déverrouillez votre coffre avec votre empreinte, votre visage ou le code de l'appareil. Sans téléphone.",
-        "create": "Créer la clé d'accès",
-        "skip": "Plus tard",
-        "failed": "Impossible de créer la clé d'accès."
-      }
+      "linking": "Association de ce navigateur…"
     }
   },
   "chrome": {
@@ -125,7 +114,6 @@
       "unlockingVault": "Déverrouillage du coffre",
       "checkingDeviceUnlock": "Vérification du déverrouillage de l'appareil",
       "couldNotUnlock": "Déverrouillage impossible",
-      "authCancelled": "Authentification annulée",
       "heading": "Déverrouiller votre coffre",
       "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez comment le déverrouiller.",
       "noDeviceUnlock": "Ce navigateur ne peut pas encore déverrouiller votre coffre seul. Associez-le avec votre téléphone pour continuer.",
@@ -134,10 +122,7 @@
       "back": "Retour",
       "legacyTitle": "Le compte doit être migré",
       "legacyBody": "Votre coffre a été sécurisé avec un ancien format de clé qui n'est plus pris en charge. Pour rétablir l'accès à connaissance nulle, votre compte doit être rechiffré avec vos 24 mots de récupération. Veuillez contacter le support pour migrer ce compte.",
-      "unavailableSuffix": "(indisponible sur cet appareil)",
       "methodPin": "Code PIN",
-      "methodBiometric": "Biométrie",
-      "methodHardwareKey": "Clé matérielle",
       "contact": "Nous contacter",
       "logout": "Se déconnecter",
       "heroTitle": "Votre vie,\nbien gardée",
@@ -864,30 +849,18 @@
       "pinMismatch": "Les codes PIN ne correspondent pas",
       "pinTooShort": "Le code PIN doit comporter au moins {min} chiffres",
       "pinError": "Impossible d'enregistrer le code PIN",
-      "authenticatorError": "Impossible d'enregistrer l'authentificateur",
       "title": "Accélérez vos prochains déverrouillages",
-      "description": "Choisissez au moins une méthode pour ne pas avoir à saisir vos 24 mots sur cet appareil la prochaine fois.",
-      "pinOption": "Code PIN",
-      "pinOptionHint": "Un code d'au moins {min} chiffres conservé uniquement sur cet appareil",
-      "biometricOption": "Biométrie (Face ID / Touch ID / Windows Hello)",
-      "biometricAvailable": "Utilisez l'authentificateur de votre appareil",
-      "biometricUnavailable": "Indisponible sur cet appareil",
-      "hardwareOption": "Clé de sécurité matérielle",
-      "hardwareAvailable": "YubiKey ou autre authentificateur amovible",
-      "hardwareUnavailable": "WebAuthn non pris en charge",
+      "description": "Créez un code PIN pour ne pas avoir à associer à nouveau ce navigateur la prochaine fois.",
       "skip": "Ignorer pour l'instant",
       "newPinLabel": "Nouveau code PIN",
       "pinPlaceholder": "Au moins {min} chiffres",
       "confirmPinLabel": "Confirmer le code PIN",
-      "savePin": "Enregistrer le code PIN",
-      "back": "Retour"
+      "savePin": "Enregistrer le code PIN"
     },
     "deviceUnlock": {
       "loading": "Chargement du déverrouillage de l'appareil",
       "method": {
-        "pin": "Code PIN",
-        "biometric": "Biométrie",
-        "hardwareKey": "Clé matérielle"
+        "pin": "Code PIN"
       },
       "removeLastTitle": "Supprimer le seul déverrouillage de cet appareil ?",
       "removeTitle": "Supprimer {label} ?",
@@ -900,33 +873,8 @@
       "locked": "Le coffre est verrouillé. Déverrouillez-le d'abord pour ajouter ou modifier les méthodes de déverrouillage de l'appareil.",
       "empty": "Aucun déverrouillage d'appareil pour l'instant — vos 24 mots sont requis à chaque connexion sur cet appareil.",
       "subtitlePin": "{label} · ajouté {time}",
-      "subtitleBiometric": "{label} · {state}",
-      "subtitleHardware": "{label} · {state}",
-      "biometricReady": "prête",
-      "biometricUnavailable": "indisponible sur cet appareil",
-      "hardwareReady": "WebAuthn prêt",
-      "hardwareUnsupported": "non pris en charge",
       "addMethod": "Ajouter une méthode",
       "footer": "Le déverrouillage de l'appareil est local à ce navigateur. Les autres appareils nécessitent leur propre configuration. Si vous perdez l'appareil, vos 24 mots permettent toujours de tout récupérer."
-    },
-    "passkey": {
-      "loading": "Chargement des clés d'accès",
-      "addError": "Impossible d'ajouter la clé d'accès.",
-      "removeTitle": "Supprimer cette clé d'accès ?",
-      "removeDescription": "Il vous faudra un autre moyen de vous connecter.",
-      "removeConfirm": "Supprimer",
-      "removeError": "Impossible de supprimer la clé d'accès.",
-      "title": "Accès biométrique",
-      "subtitle": "Connectez-vous avec Face ID, Touch ID ou la biométrie de votre appareil.",
-      "unsupported": "Les clés d'accès ne sont pas prises en charge par ce navigateur. Utilisez une version récente de Chrome, Safari ou Edge sur un appareil doté d'un capteur biométrique.",
-      "lastUsed": "Dernière utilisation {time}",
-      "synced": " · Synchronisée",
-      "thisDeviceOnly": " · Cet appareil uniquement",
-      "removeAria": "Supprimer {name}",
-      "empty": "Aucune clé d'accès enregistrée pour l'instant.",
-      "addAnother": "Ajouter une autre clé d'accès",
-      "addFirst": "Ajouter une clé d'accès",
-      "footer": "La biométrie est pratique, mais elle ne doit jamais être votre seule méthode de récupération. Assurez-vous que votre kit physique est imprimé."
     },
     "totp": {
       "loading": "Chargement de l'application d'authentification",
@@ -2010,12 +1958,11 @@
       "device": {
         "badge": "Pilier 3",
         "title": "Déverrouillage de l'appareil",
-        "intro": "Saisir 24 mots à chaque connexion est pénible. Après votre première connexion sur un appareil, vous pouvez enregistrer un déverrouillage local plus rapide — choisissez n'importe quelle combinaison. Chaque méthode reste sur cet appareil uniquement et ne se synchronise jamais.",
+        "intro": "Saisir 24 mots à chaque connexion est pénible. Après votre première connexion sur un appareil, vous pouvez enregistrer un déverrouillage local plus rapide. Il reste sur cet appareil uniquement et ne se synchronise jamais.",
         "bullets": [
-          "Code PIN (6 chiffres ou plus) protégé par Argon2id avec verrouillage anti-force brute.",
-          "Biométrie — Face ID, Touch ID, Windows Hello — via WebAuthn + extension PRF.",
-          "Clé de sécurité matérielle — YubiKey ou tout authentificateur FIDO2 avec PRF.",
-          "Les trois peuvent coexister. Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
+          "Navigateur : code PIN (6 chiffres ou plus) protégé par Argon2id avec verrouillage anti-force brute.",
+          "Téléphone : Face ID ou empreinte, via le trousseau sécurisé de l'appareil.",
+          "Appareil perdu ? Ressaisissez vos 24 mots sur un nouvel appareil.",
           "Verrouillage auto en cas d'inactivité : après une heure sans activité, le coffre se verrouille et efface les clés en mémoire et sur l'appareil jusqu'au prochain déverrouillage."
         ]
       },
@@ -2252,8 +2199,8 @@
       "done": "Compte sécurisé. Terminez sur votre téléphone."
     },
     "pin": {
-      "title": "Code PIN (après la biométrie)",
-      "description": "Demander un PIN après Face ID ou l'empreinte.",
+      "title": "Code PIN",
+      "description": "Déverrouiller ce navigateur avec un code PIN.",
       "removeTitle": "Désactiver le PIN sur ce navigateur ?",
       "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
       "removeConfirm": "Désactiver",
