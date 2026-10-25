@@ -6,7 +6,9 @@
     "moreActions": "Plus d'actions pour {name}",
     "close": "Fermer",
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "showSecret": "Afficher",
+    "hideSecret": "Masquer"
   },
   "auth": {
     "hero": {
@@ -566,10 +568,6 @@
         "vaultAccessAlerts": {
           "label": "Alertes d'accès au coffre",
           "description": "Notification push instantanée à la connexion."
-        },
-        "newsletterUpdates": {
-          "label": "Newsletter et actualités",
-          "description": "Conseils occasionnels sur la planification de votre continuité."
         }
       },
       "saved": "Préférences enregistrées ✓",

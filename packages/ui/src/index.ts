@@ -58,6 +58,7 @@ export { isValidEmail } from "./email";
 export { ErrorAlert } from "./error-alert";
 export { Icon, type IconProps } from "./icon";
 export { Input } from "./input";
+export { PasswordInput } from "./password-input";
 export { Label } from "./label";
 export { LegacyCard, LegacyCardTitle } from "./legacy-card";
 export {

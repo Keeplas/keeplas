@@ -6,7 +6,9 @@
     "moreActions": "More actions for {name}",
     "close": "Close",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "showSecret": "Show",
+    "hideSecret": "Hide"
   },
   "auth": {
     "hero": {
@@ -566,10 +568,6 @@
         "vaultAccessAlerts": {
           "label": "Vault Access Alerts",
           "description": "Instant push notification on login."
-        },
-        "newsletterUpdates": {
-          "label": "Newsletter & Updates",
-          "description": "Occasional legacy planning insights."
         }
       },
       "saved": "Preferences saved ✓",
