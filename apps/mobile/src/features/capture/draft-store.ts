@@ -31,6 +31,7 @@ export interface Draft {
   /** Scanned page images, bound into one PDF when saved. */
   pages: string[];
   files: CaptureFile[];
+  sendingEntryId?: string;
 }
 
 export interface DraftDb {
@@ -74,12 +75,18 @@ const empty = (kind: CaptureKind): Draft => ({
 let io: { userId: string; db: DraftDb; files: DraftFiles } | null = null;
 let draft: Draft = empty("note");
 let saved: Draft[] = [];
+let visible: Draft[] = [];
 let timer: ReturnType<typeof setTimeout> | null = null;
 let pending: Promise<void> = Promise.resolve();
 const listeners = new Set<() => void>();
 
 function emit() {
+  visible = saved.filter((row) => !row.sendingEntryId);
   for (const listener of listeners) listener();
+}
+
+function sendingDraft(entryId: string) {
+  return saved.find((row) => row.sendingEntryId === entryId);
 }
 
 function persist(current: Draft) {
@@ -134,7 +141,8 @@ function forget(id: string) {
 
 export const draftStore = {
   get: () => draft,
-  list: () => saved,
+  list: () => visible,
+  sendingDraft,
   async attach(userId: string, db: DraftDb, files: DraftFiles) {
     flush();
     io = { userId, db, files };
@@ -202,6 +210,28 @@ export const draftStore = {
     forget(draft.id);
     draft = empty("note");
     emit();
+  },
+  markSending(entryId: string) {
+    cancelSave();
+    persist({ ...draft, sendingEntryId: entryId });
+    draft = empty("note");
+    emit();
+  },
+  finishSending(entryId: string) {
+    const sent = sendingDraft(entryId);
+    if (!sent) return;
+    forget(sent.id);
+    emit();
+  },
+  reopenSending(entryId: string): boolean {
+    const sent = sendingDraft(entryId);
+    if (!sent) return false;
+    flush();
+    const { sendingEntryId: _, ...reopened } = sent;
+    persist(reopened);
+    draft = reopened;
+    emit();
+    return true;
   },
   async detach(userId: string) {
     cancelSave();

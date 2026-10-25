@@ -140,6 +140,40 @@ describe("capture drafts", () => {
     expect(db.rows.size).toBe(0);
   });
 
+  it("keeps a sent draft out of sight until its upload succeeds", async () => {
+    draftStore.start("photo", { files: [photo("a.jpg")] });
+    const id = draftStore.get().id;
+    draftStore.update({ title: "Loan" });
+    draftStore.markSending("entry-1");
+    await draftStore.settled();
+
+    expect(draftStore.list()).toEqual([]);
+    expect(draftStore.sendingDraft("entry-1")?.id).toBe(id);
+    expect(db.rows.get(id)?.draft.sendingEntryId).toBe("entry-1");
+    expect(draftStore.get().id).not.toBe(id);
+
+    draftStore.finishSending("entry-1");
+    await draftStore.settled();
+    expect(draftStore.sendingDraft("entry-1")).toBeUndefined();
+    expect(db.rows.size).toBe(0);
+    expect(files.kept.size).toBe(0);
+  });
+
+  it("reopens a failed upload's draft to edit it", async () => {
+    draftStore.start("photo", { files: [photo("a.jpg")] });
+    const id = draftStore.get().id;
+    draftStore.update({ title: "Too big" });
+    draftStore.markSending("entry-2");
+    await draftStore.settled();
+
+    expect(draftStore.reopenSending("entry-2")).toBe(true);
+    await draftStore.settled();
+    expect(draftStore.get().id).toBe(id);
+    expect(draftStore.get().files).toHaveLength(1);
+    expect(draftStore.list().map((d) => d.id)).toEqual([id]);
+    expect(db.rows.get(id)?.draft.sendingEntryId).toBeUndefined();
+  });
+
   it("clears every draft on sign-out", async () => {
     draftStore.start("photo", { files: [photo("a.jpg")] });
     await settle();

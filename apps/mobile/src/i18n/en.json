@@ -734,7 +734,11 @@
       "manageStorage": "Manage storage",
       "background": "Continue in background",
       "offlineFailedBody": "The connection was lost. Your encrypted copy is safe on this phone and will upload on its own as soon as you are back online.",
-      "serverBody": "The server refused the upload. Your encrypted copy is safe on this phone. Try again in a moment; if it happens again, contact support."
+      "serverBody": "The server refused the upload. Your encrypted copy is safe on this phone. Try again in a moment; if it happens again, contact support.",
+      "editFirst": "Edit before sending again",
+      "remove": "Delete this upload",
+      "removeTitle": "Delete this upload?",
+      "removeBody": "The item was not saved. Its text and files will be removed from this phone. This cannot be undone."
     },
     "recordVideo": "Record a video",
     "noCameraTitle": "No camera on this device",
@@ -883,7 +887,8 @@
     "history": "History",
     "historyCount": "{n} earlier versions",
     "historyEmpty": "No changes yet",
-    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone."
+    "archivedOn": "Archived on {date}. It is no longer in your vault or passed on to anyone.",
+    "uploadingFiles": "Uploading"
   },
   "people": {
     "title": "Trusted people",
