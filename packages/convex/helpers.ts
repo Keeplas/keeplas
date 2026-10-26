@@ -166,6 +166,14 @@ export async function approvedReleaseRequest(
 /**
  * Get the user's vault by userId.
  */
+/** The account registered with this E.164 phone number, if any. */
+export async function getUserByPhone(ctx: QueryCtx, phoneNumber: string) {
+  return await ctx.db
+    .query("users")
+    .withIndex("by_phone", (q) => q.eq("phoneNumber", phoneNumber))
+    .first();
+}
+
 export async function getUserVault(ctx: QueryCtx, userId: Id<"users">) {
   return await ctx.db
     .query("vaults")
