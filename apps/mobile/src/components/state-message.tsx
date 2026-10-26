@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { Button, type ButtonVariant } from "./button";
@@ -10,6 +11,7 @@ export interface StateAction {
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
+  disabled?: boolean;
 }
 
 export interface StateMessageProps {
@@ -19,6 +21,8 @@ export interface StateMessageProps {
   body?: string;
   primary?: StateAction;
   secondary?: StateAction;
+  /** Extra content between the body and the buttons (a checkbox, a note). */
+  children?: ReactNode;
 }
 
 /**
@@ -32,6 +36,7 @@ export function StateMessage({
   body,
   primary,
   secondary,
+  children,
 }: StateMessageProps) {
   return (
     <View style={styles.message}>
@@ -45,12 +50,14 @@ export function StateMessage({
           {body}
         </Text>
       ) : null}
+      {children ? <View style={styles.full}>{children}</View> : null}
       <View style={styles.spacer8} />
       {primary ? (
         <Button
           variant={primary.variant}
           label={primary.label}
           onPress={primary.onPress}
+          disabled={primary.disabled}
           style={styles.full}
         />
       ) : null}

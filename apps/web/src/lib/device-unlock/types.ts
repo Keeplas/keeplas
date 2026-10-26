@@ -40,7 +40,8 @@ export class DeviceUnlockError extends Error {
   }
 }
 
-export const PIN_MIN_LENGTH = 6;
+/** Digits of a new PIN. PINs saved before (6+ digits) still unlock. */
+export const PIN_LENGTH = 4;
 export const PIN_LOCKOUT_THRESHOLD = 5;
 export const PIN_LOCKOUT_MS = 60_000;
 export const PIN_WIPE_THRESHOLD = 10;

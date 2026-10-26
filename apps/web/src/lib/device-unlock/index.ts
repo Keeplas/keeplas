@@ -8,7 +8,7 @@ export type {
   EnrollOptions,
   PinEntryData,
 } from "./types";
-export { DeviceUnlockError, PIN_MIN_LENGTH } from "./types";
+export { DeviceUnlockError, PIN_LENGTH } from "./types";
 export { validatePin } from "./pin";
 
 export async function listMethods(

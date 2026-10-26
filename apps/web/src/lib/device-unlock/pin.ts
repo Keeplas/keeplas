@@ -5,7 +5,7 @@ import {
   DeviceUnlockError,
   PIN_LOCKOUT_MS,
   PIN_LOCKOUT_THRESHOLD,
-  PIN_MIN_LENGTH,
+  PIN_LENGTH,
   PIN_WIPE_THRESHOLD,
   PinEntryData,
 } from "./types";
@@ -32,13 +32,25 @@ function detectDeviceLabel(): string {
   return "Device PIN";
 }
 
-export function validatePin(pin: string): void {
+/** Any PIN this browser may hold: digits only, 4 or more (older ones: 6+). */
+export function assertPinShape(pin: string): void {
   if (!/^\d+$/.test(pin)) {
     throw new DeviceUnlockError("PIN must contain digits only", "wrong-secret");
   }
-  if (pin.length < PIN_MIN_LENGTH) {
+  if (pin.length < PIN_LENGTH) {
     throw new DeviceUnlockError(
-      `PIN must be at least ${PIN_MIN_LENGTH} digits`,
+      `PIN must be at least ${PIN_LENGTH} digits`,
+      "wrong-secret",
+    );
+  }
+}
+
+/** A new PIN: exactly PIN_LENGTH digits. */
+export function validatePin(pin: string): void {
+  assertPinShape(pin);
+  if (pin.length !== PIN_LENGTH) {
+    throw new DeviceUnlockError(
+      `PIN must be ${PIN_LENGTH} digits`,
       "wrong-secret",
     );
   }
@@ -99,7 +111,7 @@ export async function unlockWithPin(
     );
   }
 
-  validatePin(pin);
+  assertPinShape(pin);
   const deviceSaltB64 = data.deviceSalt;
   const deviceSalt = Uint8Array.from(atob(deviceSaltB64), (c) =>
     c.charCodeAt(0),
