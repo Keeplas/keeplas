@@ -1,6 +1,62 @@
 # App Store & Google Play review
 
-How store reviewers get into Keeplas, how to prepare their accounts, and what to fill in App Store Connect (ASC) and the Play Console before a submission. Building and uploading: [`APP_STORE.md`](./APP_STORE.md) (iOS) and [`README.md`](./README.md) (Android).
+Everything about getting Keeplas through store review:
+
+- what is done and what is left;
+- what the stores check;
+- how reviewers get in, and how to prepare their accounts;
+- what to fill in App Store Connect (ASC) and the Play Console;
+- how support handles deletion requests made on the website.
+
+Building and uploading: [`APP_STORE.md`](./APP_STORE.md) (iOS) and [`README.md`](./README.md) (Android).
+
+## Status
+
+As of 26 October 2026.
+
+**Done**
+
+- **Review system** ([#327](https://github.com/Keeplas/keeplas/pull/327)), live on prod Convex (`energetic-pony-179`):
+  - the review code works for sign-in and sign-up on the review numbers;
+  - `pnpm review:status` and `pnpm review:reset`;
+  - `scheduleForPhone`, for deletion requests made on the website.
+- **Prod config:** `REVIEW_PHONES` (the four [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
+- **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
+- **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
+- **Website:** the deletion page shows the in-app steps and ends with the support form ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21)).
+
+**Left to do**
+
+- [ ] Seed the demo accounts on a real phone ([steps](#seed-the-demo-accounts)) until `pnpm review:status` says **Ready for review**.
+- [ ] Record the video of the multi-day flows and put its link in the review notes.
+- [ ] File the export documentation:
+  - US: confirm the route with counsel, either the BIS self-classification report or the open-source notification;
+  - France: file the ANSSI declaration, or leave France out of the availability until it is filed.
+- [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it.
+- [ ] Android: upload the launch AAB, then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
+- [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
+
+## What the stores check
+
+Both stores can reject a version. A rejection cites the rule: fix the problem and resubmit, or appeal.
+
+| Check                               | Rule                                                                                                         | Keeplas                                                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reviewers can sign in               | Apple 2.1; Play **App access**                                                                               | Review numbers and code, with notes to paste (below)                                                                                                          |
+| The app works without another app   | Apple 4.2.3(i): "Your app should work on its own without requiring installation of another app to function." | Users get their codes on WhatsApp, but reviewers don't need it. If Apple still cites this rule, the fix is an SMS fallback for codes, which isn't built.      |
+| Encryption is declared              | Apple export compliance; France (ANSSI)                                                                      | `ITSAppUsesNonExemptEncryption: true`; answers and filings in [`APP_STORE.md`](./APP_STORE.md#export-compliance)                                              |
+| Paid features use in-app purchase   | Apple 3.1.1                                                                                                  | Lifetime is the in-app product `keeplas_lifetime` (RevenueCat), with Restore. The iOS app shows no web price and no link to pay elsewhere.                    |
+| Users can delete their account      | Apple 5.1.1(v); Play also asks for a web link                                                                | Settings → Delete my account; on the web, `https://www.keeplas.com/delete-account`                                                                            |
+| Privacy is disclosed                | Apple 5.1.1(i) and App Privacy; Play Data safety                                                             | The app links the privacy policy at sign-up and in Settings; add its URL to both listings. Proposed answers: [Store privacy answers](#store-privacy-answers). |
+| Contacts access is declared         | Play Data safety                                                                                             | On Android the app asks for `READ_CONTACTS`, but only reads the contact the user picks. Declare it as Contacts.                                               |
+| Testing before production (Android) | Play: personal developer accounts created after 13 Nov 2023                                                  | A closed test with at least 12 testers for 14 days in a row. An organization account is exempt.                                                               |
+| Target API (Android)                | Play: Android 16 (API 36) since 31 Aug 2026                                                                  | React Native 0.86 (Expo SDK 57) targets API 36                                                                                                                |
+
+Not a problem:
+
+- Death and inheritance are accepted subjects on both stores.
+- Sign in with Apple (4.8) is only required when an app offers a third-party login, and Keeplas has none.
+- A phone number used as the login is accepted.
 
 ## How reviewers sign in
 
@@ -28,7 +84,9 @@ Use numbers nobody can own, so no message ever reaches a real person. In North A
 
 WhatsApp messages to these numbers fail quietly. Push notifications still reach the device you seed the accounts on.
 
-## One-time setup
+## Setup
+
+Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deployment needs all five.
 
 1. **Pick the code**: 6 random digits.
 
@@ -39,6 +97,8 @@ WhatsApp messages to these numbers fail quietly. Push notifications still reach 
 2. **Store the values** in Infisical `prod` → `/keeplas_app`:
    - `REVIEW_PHONES=+12025550101,+12025550102,+12025550103,+12025550104`
    - `REVIEW_CODE=<the 6 digits>`
+
+   Infisical also copies them to Vercel. The web app doesn't read them, so Vercel needs no redeploy.
 
 3. **Push them to the prod Convex deployment.** The prod env sync skips empty keys and never unsets them.
 
@@ -96,7 +156,7 @@ Use a real iPhone or Android phone with the production app (a TestFlight or inte
    - Never answer "It wasn't me": that revokes the reviewer's session.
    - Never rotate the demo account's keys.
 4. After the review, run `pnpm review:reset +12025550104` if a reviewer created an account on it.
-5. Rotate `REVIEW_CODE`: it sits in the review notes, and with the attestation it can create accounts on the listed numbers. Change it in Infisical and on Convex (setup step 3); the next submission's notes use the new one.
+5. Rotate `REVIEW_CODE`: it sits in the review notes, and with the attestation it can create accounts on the listed numbers. Change it in Infisical and on Convex ([setup](#setup) steps 1 to 3); the next submission's notes use the new one.
 
 `pnpm review:status` and `pnpm review:reset` run on prod through `pnpm with-env --env=prod` ([`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)). `reset` asks you to type the number again; `--yes` skips that.
 
@@ -200,3 +260,16 @@ Payment records and the security log stay after deletion. The page says so.
 - [ ] Android: if the Play developer account is a personal one created after 13 Nov 2023, a closed test ran with at least 12 testers opted in for 14 days in a row before production access.
 
 Your own testers (TestFlight, Play closed and internal tracks) need none of this: they sign up with their real number and WhatsApp, like any user.
+
+## Where it lives
+
+| What                                                                       | Where                                                                                                                           |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| The review code in place of the WhatsApp code                              | `packages/convex/phone_auth.ts` (`fixedCode`)                                                                                   |
+| Readiness check (never returns the code) and reset (refuses other numbers) | `packages/convex/store_review.ts`                                                                                               |
+| `pnpm review:status` and `pnpm review:reset`                               | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)                                                              |
+| Deletion of an account after a confirmed web request                       | `packages/convex/account_deletion.ts` (`scheduleForPhone`)                                                                      |
+| Tests                                                                      | `packages/convex/__tests__/`: `store_review.test.ts`, `phone_auth.test.ts`, `account_deletion.test.ts`                          |
+| Env vars                                                                   | [`.env.example`](../../.env.example) (`REVIEW_PHONES`, `REVIEW_CODE`)                                                           |
+| Encryption declaration                                                     | `apps/mobile/app.json` (`ITSAppUsesNonExemptEncryption`)                                                                        |
+| Website deletion page                                                      | keeplas-website: `apps/web/src/pages/[...lang]/delete-account.astro`, text in `apps/web/src/dictionaries/en.json` and `fr.json` |
