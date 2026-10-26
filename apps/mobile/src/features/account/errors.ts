@@ -14,6 +14,8 @@ const RULES: [needle: string, key: string][] = [
   ["(413)", "imageTooLarge"],
   ["upload failed", "uploadFailed"],
   ["could not be resolved", "uploadFailed"],
+  ["at least 18", "tooYoung"],
+  ["implausibly old", "invalidBirthday"],
 ];
 
 export function accountErrorKey(

@@ -1399,7 +1399,7 @@
     "uploading": "Envoi…",
     "name": "Nom affiché",
     "namePlaceholder": "Votre nom",
-    "saveName": "Enregistrer",
+    "save": "Enregistrer",
     "nameSaved": "Nom enregistré",
     "contact": "Identifiants de connexion",
     "email": "E-mail",
@@ -1412,10 +1412,11 @@
     "change": "Changer",
     "legal": {
       "title": "Identité légale",
-      "body": "Votre pays de résidence et votre date de naissance. Ils se modifient depuis l'app web.",
+      "body": "Votre pays de résidence et votre date de naissance. Le pays se modifie depuis l'app web.",
       "country": "Pays de résidence",
       "notSet": "Non défini",
       "birthday": "Date de naissance",
+      "birthdaySaved": "Date de naissance enregistrée",
       "age": "{age} ans"
     },
     "emailStep": {
@@ -1448,7 +1449,9 @@
       "tooMany": "Trop de tentatives. Réessayez plus tard.",
       "proof": "Impossible de confirmer votre coffre sur ce téléphone. Réessayez.",
       "uploadFailed": "La photo n'a pas pu être envoyée. Réessayez.",
-      "imageTooLarge": "Cette image est trop lourde. Choisissez-en une de moins de 5 Mo."
+      "imageTooLarge": "Cette image est trop lourde. Choisissez-en une de moins de 5 Mo.",
+      "tooYoung": "Vous devez avoir au moins 18 ans pour utiliser Keeplas.",
+      "invalidBirthday": "Cette date de naissance n'est pas valide."
     }
   }
 }

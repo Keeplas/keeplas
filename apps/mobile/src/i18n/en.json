@@ -1415,7 +1415,7 @@
     "uploading": "Uploading…",
     "name": "Display name",
     "namePlaceholder": "Your name",
-    "saveName": "Save",
+    "save": "Save",
     "nameSaved": "Name saved",
     "contact": "Sign-in details",
     "email": "Email",
@@ -1428,10 +1428,11 @@
     "change": "Change",
     "legal": {
       "title": "Legal identity",
-      "body": "Your country of residence and date of birth. You can change them from the web app.",
+      "body": "Your country of residence and date of birth. You can change your country from the web app.",
       "country": "Country of residence",
       "notSet": "Not set",
       "birthday": "Date of birth",
+      "birthdaySaved": "Date of birth saved",
       "age": "{age} years old"
     },
     "emailStep": {
@@ -1464,7 +1465,9 @@
       "tooMany": "Too many attempts. Try again later.",
       "proof": "We couldn't confirm your vault on this phone. Try again.",
       "uploadFailed": "The photo couldn't be uploaded. Try again.",
-      "imageTooLarge": "This image is too large. Choose one under 5 MB."
+      "imageTooLarge": "This image is too large. Choose one under 5 MB.",
+      "tooYoung": "You must be at least 18 to use Keeplas.",
+      "invalidBirthday": "This date of birth isn't valid."
     }
   }
 }
