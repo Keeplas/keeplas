@@ -11,7 +11,7 @@ import { Alert, StyleSheet, View } from "react-native";
 import { OtpInput } from "@/components/otp-input";
 import { BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
-import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
+import { DevicePinError, devicePinLength } from "@/crypto/device-vault";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 
@@ -58,7 +58,8 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const viewer = useViewer();
   const { refreshDeviceVault } = useSession();
-  const [open, setOpen] = useState(false);
+  // Digits of the PIN asked for; 0 while the sheet is closed.
+  const [length, setLength] = useState(0);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -66,7 +67,8 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
 
   const withPin = useCallback(
     async <T,>(run: (pin?: string) => Promise<T>): Promise<T> => {
-      if (!(await hasDevicePin(viewer._id))) return run(undefined);
+      const pinLength = await devicePinLength(viewer._id);
+      if (!pinLength) return run(undefined);
       return new Promise<T>((resolve, reject) => {
         pending.current = {
           run,
@@ -75,7 +77,7 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
         };
         setPin("");
         setError(null);
-        setOpen(true);
+        setLength(pinLength);
       });
     },
     [viewer._id],
@@ -88,13 +90,13 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
     try {
       const result = await current.run(code);
       pending.current = null;
-      setOpen(false);
+      setLength(0);
       current.resolve(result);
     } catch (caught) {
       setPin("");
       if (caught instanceof DevicePinError && caught.code === "wiped") {
         pending.current = null;
-        setOpen(false);
+        setLength(0);
         current.reject(caught);
         Alert.alert(t("pin.wipedTitle"), t("pin.wipedBody"));
         refreshDeviceVault();
@@ -102,7 +104,7 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
         setError(pinErrorText(caught, t));
       } else {
         pending.current = null;
-        setOpen(false);
+        setLength(0);
         current.reject(caught);
       }
     } finally {
@@ -113,16 +115,21 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
   function cancel() {
     pending.current?.reject(new PinCancelled());
     pending.current = null;
-    setOpen(false);
+    setLength(0);
   }
 
   const sheet = (
-    <BottomSheet visible={open} onDismiss={cancel} title={t("pin.sheetTitle")}>
+    <BottomSheet
+      visible={length > 0}
+      onDismiss={cancel}
+      title={t("pin.sheetTitle")}
+    >
       <View style={styles.body}>
         <Text variant="body" color="text.muted">
-          {t("pin.sheetBody")}
+          {t("pin.sheetBody", { n: length })}
         </Text>
         <OtpInput
+          length={length}
           value={pin}
           onChange={setPin}
           onComplete={(code) => void submit(code)}

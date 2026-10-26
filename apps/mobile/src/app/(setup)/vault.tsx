@@ -26,7 +26,7 @@ export default function VaultScreen() {
     setFailed(false);
     try {
       await createVault(viewer._id, setPhase);
-      router.replace("/contacts");
+      router.replace("/pin");
     } catch {
       setFailed(true);
     } finally {

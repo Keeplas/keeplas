@@ -86,6 +86,36 @@ export function Note({ icon, text }: { icon: IconName; text: string }) {
   );
 }
 
+/** Card with a titled list of checked points ("Why it matters"). */
+export function BulletCard({
+  icon,
+  title,
+  items,
+}: {
+  icon: IconName;
+  title: string;
+  items: string[];
+}) {
+  return (
+    <Card gap={10}>
+      <View style={styles.bulletHeader}>
+        <Icon name={icon} size={18} color="accent" />
+        <Text variant="label">{title}</Text>
+      </View>
+      {items.map((item) => (
+        <View key={item} style={styles.bullet}>
+          <View style={styles.noteIcon}>
+            <Icon name="check" size={16} color="status.active" />
+          </View>
+          <Text variant="body-sm" color="text.body" style={styles.flex}>
+            {item}
+          </Text>
+        </View>
+      ))}
+    </Card>
+  );
+}
+
 /** Round tinted badge holding an icon (M09 headers, State Message). */
 export function IconBadge({
   icon,
@@ -287,4 +317,6 @@ const styles = StyleSheet.create({
   },
   rowText: { flex: 1, gap: 2 },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  bulletHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  bullet: { flexDirection: "row", gap: 10 },
 });

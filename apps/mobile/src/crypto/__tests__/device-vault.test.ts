@@ -7,7 +7,7 @@ import * as DeviceLock from "../../../modules/device-lock";
 import {
   DevicePinError,
   forgetDeviceVault,
-  hasDevicePin,
+  devicePinLength,
   hasDeviceVault,
   readDeviceRootKey,
   saveDeviceVault,
@@ -131,18 +131,35 @@ describe("device vault PIN", () => {
       { masterKey: masterKey(), rootKey: rootKey() },
       "Unlock",
     );
-    expect(await hasDevicePin("p1")).toBe(false);
-    await setDevicePin("p1", "Unlock", undefined, "123456");
+    expect(await devicePinLength("p1")).toBeNull();
+    await setDevicePin("p1", "Unlock", undefined, "1234");
 
-    expect(await hasDevicePin("p1")).toBe(true);
+    expect(await devicePinLength("p1")).toBe(4);
     expect((await pinError(unlockDeviceVault("p1", "Unlock"))).code).toBe(
       "required",
     );
-    expect(await unlockDeviceVault("p1", "Unlock", "123456")).toEqual(
+    expect(await unlockDeviceVault("p1", "Unlock", "1234")).toEqual(
       masterKey(),
     );
-    expect(await readDeviceRootKey("p1", "Back up", "123456")).toEqual(
-      rootKey(),
+    expect(await readDeviceRootKey("p1", "Back up", "1234")).toEqual(rootKey());
+  });
+
+  it("keeps opening a 6-digit PIN saved before PINs had a stored length", async () => {
+    await saveDeviceVault(
+      "p6",
+      { masterKey: masterKey(), rootKey: null },
+      "Unlock",
+      "123456",
+    );
+    const stored = JSON.parse(
+      (await SecureStore.getItemAsync("keeplas.mk.p6"))!,
+    ) as { pin: { length?: number } };
+    delete stored.pin.length;
+    await SecureStore.setItemAsync("keeplas.mk.p6", JSON.stringify(stored));
+
+    expect(await devicePinLength("p6")).toBe(6);
+    expect(await unlockDeviceVault("p6", "Unlock", "123456")).toEqual(
+      masterKey(),
     );
   });
 
@@ -221,7 +238,7 @@ describe("device vault PIN", () => {
       masterKey(),
     );
     await setDevicePin("p4", "Unlock", "654321", undefined);
-    expect(await hasDevicePin("p4")).toBe(false);
+    expect(await devicePinLength("p4")).toBeNull();
     expect(await unlockDeviceVault("p4", "Unlock")).toEqual(masterKey());
   });
 });

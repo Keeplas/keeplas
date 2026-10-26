@@ -1,10 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@keeplas/backend/_generated/api";
 import { Button, Checkbox, cn, Spinner } from "@keeplas/ui";
 import { useRouter } from "@/lib/navigation";
 import { formatCountdown } from "@/lib/format";
 import { useTranslations } from "@/lib/i18n";
 import { AuthScreen, authCardClass } from "@/components/auth-screen";
+import { EnrollDeviceUnlockDialog } from "@/components/enroll-device-unlock-dialog";
 import { QRCodeSVG } from "@/components/qr-code-svg";
+import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { useConnectWithPhone } from "./use-connect-with-phone";
 
 const QR_SIZE = 240;
@@ -15,10 +19,15 @@ export default function ConnectWithPhonePage() {
   const router = useRouter();
   const flow = useConnectWithPhone();
   const { state } = flow;
+  const viewer = useQuery(api.users.viewer);
+  const { entries, loading } = useDeviceUnlock(viewer);
+  const linked = state.phase === "done";
+  // A trusted browser without a PIN gets the optional Keeplas code step.
+  const offerPin = linked && flow.trusted && !!viewer && entries.length === 0;
 
   useEffect(() => {
-    if (state.phase === "done") router.replace("/hub");
-  }, [state.phase, router]);
+    if (linked && !loading && !offerPin) router.replace("/hub");
+  }, [linked, loading, offerPin, router]);
 
   return (
     <AuthScreen
@@ -89,6 +98,12 @@ export default function ConnectWithPhonePage() {
           )}
         </div>
       </div>
+      {viewer && offerPin && !loading ? (
+        <EnrollDeviceUnlockDialog
+          user={viewer}
+          onClose={() => router.replace("/hub")}
+        />
+      ) : null}
     </AuthScreen>
   );
 }

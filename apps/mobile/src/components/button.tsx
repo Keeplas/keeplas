@@ -9,7 +9,7 @@ import {
 
 import { useTheme } from "@/providers/theme-provider";
 import { radius, type, welcomeSky } from "@/theme";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 
 /**
  * Figma `Button`: 52 pt high, radius 14, label Inter 600 16/20, optional
@@ -25,6 +25,8 @@ export interface ButtonProps {
   onPress?: () => void;
   variant?: ButtonVariant;
   chevron?: boolean;
+  /** Leading 18 pt icon. */
+  icon?: IconName;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -35,6 +37,7 @@ export function Button({
   onPress,
   variant = "primary",
   chevron = false,
+  icon,
   loading = false,
   disabled = false,
   style,
@@ -94,6 +97,7 @@ export function Button({
         <ActivityIndicator color={text} />
       ) : (
         <View style={styles.row}>
+          {icon ? <Icon name={icon} size={18} tint={text} /> : null}
           <Text style={[type.button, { color: text }]}>{label}</Text>
           {chevron && variant !== "glass" ? (
             <Icon name="chevron-right" size={20} tint={text} />

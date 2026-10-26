@@ -29,6 +29,8 @@ type Inner = Sealed & { rk?: Sealed };
 
 interface PinLayer {
   salt: string;
+  /** Digits of the PIN; absent on PINs saved before 4-digit PINs (all 6). */
+  length?: number;
   iv: string;
   ct: string;
   failCount: number;
@@ -37,7 +39,8 @@ interface PinLayer {
 
 type Stored = Inner | { pin: PinLayer };
 
-export const PIN_LENGTH = 6;
+export const PIN_LENGTH = 4;
+const LEGACY_PIN_LENGTH = 6;
 export const PIN_LOCKOUT_THRESHOLD = 5;
 export const PIN_LOCKOUT_MS = 60_000;
 export const PIN_WIPE_THRESHOLD = 10;
@@ -94,7 +97,14 @@ export async function saveDeviceVault(
       new TextEncoder().encode(JSON.stringify(inner)),
       pinKey,
     );
-    stored = { pin: { salt: uint8ToBase64(salt), ...layer, failCount: 0 } };
+    stored = {
+      pin: {
+        salt: uint8ToBase64(salt),
+        length: pin.length,
+        ...layer,
+        failCount: 0,
+      },
+    };
   }
   await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
   dwk.fill(0);
@@ -114,9 +124,11 @@ async function readStored(userId: string): Promise<Stored | null> {
   return stored ? (JSON.parse(stored) as Stored) : null;
 }
 
-export async function hasDevicePin(userId: string): Promise<boolean> {
+/** Digits of this phone's Keeplas PIN, or null when it has none. */
+export async function devicePinLength(userId: string): Promise<number | null> {
   const stored = await readStored(userId);
-  return Boolean(stored && "pin" in stored);
+  if (!stored || !("pin" in stored)) return null;
+  return stored.pin.length ?? LEGACY_PIN_LENGTH;
 }
 
 async function writeLayer(userId: string, layer: PinLayer): Promise<void> {

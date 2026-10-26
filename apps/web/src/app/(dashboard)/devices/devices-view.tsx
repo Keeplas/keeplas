@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button, cn, Icon, Switch } from "@keeplas/ui";
 import { ShellPage } from "@/components/shell/shell-page";
+import { PIN_LENGTH } from "@/lib/device-unlock/types";
 import { IconTile, Panel, RowText, StatusChip } from "@/components/v2/surface";
 import { formatRelative } from "@/lib/format";
 import { ICON_PATHS } from "@/lib/icons";
@@ -151,7 +152,7 @@ export function DevicesView({
             />
             <RowText
               title={t("pin.title")}
-              description={t("pin.description")}
+              description={t("pin.description", { n: PIN_LENGTH })}
             />
             <Switch
               checked={pinEnabled}
