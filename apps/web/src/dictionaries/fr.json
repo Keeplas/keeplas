@@ -570,7 +570,8 @@
         "seedWarning": "Ne partagez jamais votre phrase de récupération avec qui que ce soit, y compris notre équipe.",
         "sending": "Envoi…",
         "send": "Envoyer le message",
-        "responseTime": "Délai de réponse habituel : sous une heure."
+        "responseTime": "Délai de réponse habituel : sous une heure.",
+        "name": "Votre nom"
       },
       "topics": {
         "general": "Question générale",
@@ -578,6 +579,7 @@
         "billing": "Facturation et abonnement",
         "recovery": "Récupération et accès au coffre",
         "feature_request": "Demande de fonctionnalité",
+        "account_deletion": "Suppression du compte",
         "other": "Autre"
       }
     },
@@ -2523,6 +2525,26 @@
       "saved": "Votre document numérisé est protégé dans votre coffre.",
       "failed": "Keeplas n'a pas pu créer de code. Vérifiez votre connexion et réessayez.",
       "newCode": "Nouveau code"
+    }
+  },
+  "deleteAccount": {
+    "title": "Supprimer votre compte Keeplas",
+    "heroTitle": "Supprimer votre\ncompte Keeplas",
+    "heroBody": "Supprimez votre compte depuis l'app en quelques gestes. Vous n'avez plus l'app ? Envoyez-nous une demande sur cette page.",
+    "inApp": {
+      "title": "Depuis l'app Keeplas",
+      "step1": "Ouvrez Keeplas sur votre téléphone et allez dans Réglages.",
+      "step2": "Touchez Supprimer mon compte, puis saisissez SUPPRIMER pour confirmer.",
+      "step3": "Votre compte est effacé définitivement 7 jours plus tard. D'ici là, vous pouvez annuler depuis le même écran."
+    },
+    "erased": {
+      "title": "Ce qui est supprimé",
+      "body": "Tout votre compte : votre coffre (éléments, notes, fichiers et leur historique), vos contacts et ce que vous partagez avec eux, vos appareils, vos passkeys et vos données de connexion, votre Life check et votre plan de succession.",
+      "kept": "Deux traces restent après la suppression : les justificatifs de paiement, pour la comptabilité, et le journal infalsifiable des événements de sécurité du compte, pour des raisons légales et de prévention de la fraude. Keeplas n'a jamais pu lire le contenu de votre coffre."
+    },
+    "noApp": {
+      "title": "Vous n'avez plus l'app ?",
+      "body": "Envoyez-nous une demande avec le numéro de téléphone de votre compte et un moyen de vous joindre. Nous la confirmons avec vous, puis nous programmons la suppression : vous êtes prévenu et avez 7 jours pour l'annuler depuis l'app."
     }
   }
 }

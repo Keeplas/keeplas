@@ -10,7 +10,9 @@ const DEFAULT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * are pruned opportunistically so the table self-cleans without a cron.
  *
  * `ip` comes from the server-attested `_audit` envelope — never a
- * client-supplied value — so it can't be spoofed to dodge the limit.
+ * client-supplied value — so it can't be spoofed to dodge the limit. Other
+ * keys work the same way: support.ts caps signed-out tickets per reply-to
+ * contact and overall (key "all").
  */
 export async function enforceIpRateLimit(
   ctx: MutationCtx,

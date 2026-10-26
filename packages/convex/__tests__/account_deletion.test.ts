@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { DELETION_GRACE_MS } from "../account_deletion";
 import { getBlobDownloadUrl } from "../lib/storage";
@@ -295,5 +295,59 @@ describe("account deletion", () => {
     expect(left.numberChanges).toEqual([]);
     expect(left.sessionPhoneCodes).toEqual([]);
     expect(left.captureHandoffs).toEqual([]);
+  });
+});
+
+describe("deletion requested outside the app", () => {
+  const PHONE = "+33612345678";
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("schedules the same 7-day deletion for the number on file, once", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    await t.run((ctx) => ctx.db.patch(userId, { phoneNumber: PHONE }));
+
+    const first = await t.mutation(internal.account_deletion.scheduleForPhone, {
+      phoneNumber: PHONE,
+    });
+    expect(first.alreadyScheduled).toBe(false);
+    expect(first.scheduledAt - Date.now()).toBe(DELETION_GRACE_MS);
+    expect(
+      await asUser(t, userId).query(api.account_deletion.getStatus, {}),
+    ).toEqual({ scheduledAt: first.scheduledAt });
+
+    const again = await t.mutation(internal.account_deletion.scheduleForPhone, {
+      phoneNumber: PHONE,
+    });
+    expect(again).toEqual({
+      scheduledAt: first.scheduledAt,
+      alreadyScheduled: true,
+    });
+    const requests = await t.run(async (ctx) =>
+      (
+        await ctx.db
+          .query("audit_logs")
+          .withIndex("by_user", (q) => q.eq("userId", userId))
+          .collect()
+      ).filter((log) => log.action === "user.account.deletion_requested"),
+    );
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.actorId).toBe("support");
+  });
+
+  it("refuses a number with no account", async () => {
+    const t = makeT();
+    await expect(
+      t.mutation(internal.account_deletion.scheduleForPhone, {
+        phoneNumber: PHONE,
+      }),
+    ).rejects.toThrow("No account for this phone number");
   });
 });

@@ -570,7 +570,8 @@
         "seedWarning": "Never share your seed phrase with anyone, including our team.",
         "sending": "Sending...",
         "send": "Send Message",
-        "responseTime": "Typical response time: within one hour."
+        "responseTime": "Typical response time: within one hour.",
+        "name": "Your name"
       },
       "topics": {
         "general": "General question",
@@ -578,6 +579,7 @@
         "billing": "Billing & subscription",
         "recovery": "Recovery & vault access",
         "feature_request": "Feature request",
+        "account_deletion": "Account deletion",
         "other": "Other"
       }
     },
@@ -2523,6 +2525,26 @@
       "saved": "Your scan is protected in your vault.",
       "failed": "Keeplas couldn't make a code. Check your connection and try again.",
       "newCode": "New code"
+    }
+  },
+  "deleteAccount": {
+    "title": "Delete your Keeplas account",
+    "heroTitle": "Delete your\nKeeplas account",
+    "heroBody": "Delete your account from the app in a few taps. No longer have the app? Send us a request on this page.",
+    "inApp": {
+      "title": "From the Keeplas app",
+      "step1": "Open Keeplas on your phone and go to Settings.",
+      "step2": "Tap Delete my account, then type DELETE to confirm.",
+      "step3": "Your account is erased for good 7 days later. Until then, you can cancel from the same screen."
+    },
+    "erased": {
+      "title": "What is deleted",
+      "body": "Everything in your account: your vault (items, notes, files and their history), your contacts and what you share with them, your devices, passkeys and sign-in data, your Life check and your succession plan.",
+      "kept": "Two records stay after deletion: payment records, for accounting, and the tamper-evident log of security events on the account, for legal and fraud-prevention purposes. Keeplas never could read what was in your vault."
+    },
+    "noApp": {
+      "title": "No longer have the app?",
+      "body": "Send us a request with the phone number of your account and a way to reach you. We confirm it with you, then schedule the deletion: you are notified and have 7 days to cancel it from the app."
     }
   }
 }

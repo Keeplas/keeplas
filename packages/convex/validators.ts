@@ -44,3 +44,14 @@ export const contactRoleValidator = v.union(
   v.literal("doctor"),
   v.literal("other"),
 );
+
+/** Topic of a support ticket (support.submitTicket, support_tickets). */
+export const supportTopicValidator = v.union(
+  v.literal("general"),
+  v.literal("security"),
+  v.literal("billing"),
+  v.literal("recovery"),
+  v.literal("feature_request"),
+  v.literal("account_deletion"),
+  v.literal("other"),
+);
