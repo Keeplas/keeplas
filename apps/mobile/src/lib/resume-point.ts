@@ -9,7 +9,14 @@ export interface ResumePoint {
 
 export const RESUME_MAX_AGE_MS = 60 * 60 * 1000;
 
-const SETUP_ROUTES = ["/contacts", "/add-contact", "/kit", "/done", "/warning"];
+const SETUP_ROUTES = [
+  "/pin",
+  "/contacts",
+  "/add-contact",
+  "/kit",
+  "/done",
+  "/warning",
+];
 const SKIPPED = [
   "/",
   "/home",

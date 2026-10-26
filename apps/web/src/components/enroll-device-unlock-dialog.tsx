@@ -1,7 +1,18 @@
 import { useState } from "react";
 import type { Doc } from "@keeplas/backend/_generated/dataModel";
-import { Button, Label, PasswordInput, Spinner } from "@keeplas/ui";
-import { PIN_MIN_LENGTH } from "@/lib/device-unlock";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Icon,
+  Label,
+  PasswordInput,
+  Spinner,
+} from "@keeplas/ui";
+import { PIN_LENGTH } from "@/lib/device-unlock";
+import { ICON_PATHS } from "@/lib/icons";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { getErrorMessage } from "@/lib/utils";
@@ -12,6 +23,9 @@ interface EnrollDeviceUnlockDialogProps {
   onClose: () => void;
 }
 
+const REASONS = ["why1", "why2", "why3"] as const;
+
+/** Add a 4-digit Keeplas code to this browser, with why it matters. */
 export function EnrollDeviceUnlockDialog({
   user,
   onClose,
@@ -33,10 +47,6 @@ export function EnrollDeviceUnlockDialog({
       setError(t("enroll.pinMismatch"));
       return;
     }
-    if (pin.length < PIN_MIN_LENGTH) {
-      setError(t("enroll.pinTooShort", { min: PIN_MIN_LENGTH }));
-      return;
-    }
     setBusy(true);
     setError("");
     try {
@@ -49,45 +59,71 @@ export function EnrollDeviceUnlockDialog({
     }
   }
 
+  const digits = (value: string) =>
+    value.replace(/\D/g, "").slice(0, PIN_LENGTH);
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-surface rounded-sm p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
+      <DialogContent
+        overlayClassName="bg-scrim backdrop-blur-none"
+        className="flex max-h-[90vh] max-w-md flex-col gap-[16px] overflow-y-auto rounded-[20px] bg-bg-surface p-[24px]"
       >
-        <h2 className="text-headline-sm text-primary mb-2">
+        <DialogTitle className="text-h2 text-text-primary">
           {t("enroll.title")}
-        </h2>
-        <p className="text-body-md text-on-surface-variant mb-6">
-          {t("enroll.description")}
-        </p>
+        </DialogTitle>
+        <DialogDescription className="text-body text-text-muted">
+          {t("enroll.description", { n: PIN_LENGTH })}
+        </DialogDescription>
+
+        <section className="flex flex-col gap-[10px] rounded-[14px] border border-border-default p-[14px]">
+          <h3 className="flex items-center gap-[8px] text-label text-text-primary">
+            <Icon
+              path={ICON_PATHS.shieldCheck}
+              className="size-[18px] text-text-accent"
+            />
+            {t("enroll.whyTitle")}
+          </h3>
+          <ul className="flex flex-col gap-[8px]">
+            {REASONS.map((key) => (
+              <li
+                key={key}
+                className="flex gap-[10px] text-body-sm text-text-body"
+              >
+                <Icon
+                  path={ICON_PATHS.check}
+                  className="mt-[1px] size-[16px] shrink-0 text-status-active"
+                />
+                {t(`enroll.${key}`, { n: PIN_LENGTH })}
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {error ? (
-          <div className="mb-4 p-3 bg-error-container rounded-xs text-sm text-on-error-container">
+          <p role="alert" className="text-body-sm text-action-danger">
             {error}
-          </div>
+          </p>
         ) : null}
 
-        <form onSubmit={handlePinSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="enroll-pin">{t("enroll.newPinLabel")}</Label>
+        <form onSubmit={handlePinSubmit} className="flex flex-col gap-[14px]">
+          <div className="flex flex-col gap-[8px]">
+            <Label htmlFor="enroll-pin">
+              {t("enroll.newPinLabel", { n: PIN_LENGTH })}
+            </Label>
             <PasswordInput
               id="enroll-pin"
               showLabel={common("showSecret")}
               hideLabel={common("hideSecret")}
               inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              maxLength={PIN_LENGTH}
               value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              placeholder={t("enroll.pinPlaceholder", {
-                min: PIN_MIN_LENGTH,
-              })}
+              onChange={(e) => setPin(digits(e.target.value))}
               required
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-[8px]">
             <Label htmlFor="enroll-pin-confirm">
               {t("enroll.confirmPinLabel")}
             </Label>
@@ -96,30 +132,38 @@ export function EnrollDeviceUnlockDialog({
               showLabel={common("showSecret")}
               hideLabel={common("hideSecret")}
               inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              maxLength={PIN_LENGTH}
               value={pinConfirm}
-              onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => setPinConfirm(digits(e.target.value))}
               required
             />
           </div>
           <Button
             type="submit"
-            variant="vault"
-            size="md"
-            disabled={busy || pin.length < PIN_MIN_LENGTH}
+            variant="primary"
+            size="cta"
+            disabled={
+              busy ||
+              pin.length !== PIN_LENGTH ||
+              pinConfirm.length !== PIN_LENGTH
+            }
             className="w-full"
           >
             {busy ? <Spinner size="sm" /> : t("enroll.savePin")}
           </Button>
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={onClose}
             disabled={busy}
-            className="w-full text-sm text-on-surface-variant hover:underline"
+            className="text-button"
           >
             {t("enroll.skip")}
-          </button>
+          </Button>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

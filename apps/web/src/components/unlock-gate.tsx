@@ -11,7 +11,7 @@ import {
   Loader,
   Spinner,
 } from "@keeplas/ui";
-import { DeviceUnlockEntry, PIN_MIN_LENGTH } from "@/lib/device-unlock";
+import { DeviceUnlockEntry, PIN_LENGTH } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
 import { useDeviceUnlock } from "@/lib/use-device-unlock";
 import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
@@ -128,16 +128,14 @@ export function UnlockGate({ children }: UnlockGateProps) {
                 autoComplete="off"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                placeholder={t("unlock.pinPlaceholder", {
-                  min: PIN_MIN_LENGTH,
-                })}
+                placeholder={t("unlock.pinPlaceholder")}
                 required
               />
               <Button
                 type="submit"
                 variant="primary"
                 size="cta"
-                disabled={busy || pin.length < PIN_MIN_LENGTH}
+                disabled={busy || pin.length < PIN_LENGTH}
                 className="w-full"
               >
                 {busy ? <Spinner size="sm" /> : t("unlock.unlockButton")}

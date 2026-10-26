@@ -5,10 +5,10 @@ import { useRouter } from "expo-router";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
-import { OtpInput, OTP_LENGTH } from "@/components/otp-input";
+import { OtpInput } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
-import { DevicePinError, hasDevicePin } from "@/crypto/device-vault";
+import { DevicePinError, devicePinLength } from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
 import { useEnsureCloudBackup } from "@/features/cloud-backup";
 import { OtherOptions } from "@/features/other-options";
@@ -33,13 +33,15 @@ export default function Unlock() {
   const { colors } = useTheme();
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
-  const [needsPin, setNeedsPin] = useState(false);
+  // Digits of this phone's Keeplas PIN, null when it has none.
+  const [pinLength, setPinLength] = useState<number | null>(null);
+  const needsPin = pinLength !== null;
   const [pin, setPin] = useState("");
 
   useEffect(() => {
     let alive = true;
-    void hasDevicePin(viewer._id).then((has) => {
-      if (alive) setNeedsPin(has);
+    void devicePinLength(viewer._id).then((length) => {
+      if (alive) setPinLength(length);
     });
     return () => {
       alive = false;
@@ -81,7 +83,7 @@ export default function Unlock() {
     refreshDeviceVault,
   ]);
 
-  const ready = !needsPin || pin.length === OTP_LENGTH;
+  const ready = !needsPin || pin.length === pinLength;
 
   return (
     <Screen
@@ -114,7 +116,7 @@ export default function Unlock() {
         disabled={!ready}
         onPress={attempt}
       />
-      {needsPin ? (
+      {pinLength !== null ? (
         <View
           style={[
             styles.code,
@@ -129,11 +131,12 @@ export default function Unlock() {
             <View style={styles.flex}>
               <Text variant="label">{t("pin.unlockTitle")}</Text>
               <Text variant="body-sm" color="text.muted">
-                {t("pin.unlockBody")}
+                {t("pin.unlockBody", { n: pinLength })}
               </Text>
             </View>
           </View>
           <OtpInput
+            length={pinLength}
             value={pin}
             onChange={setPin}
             invalid={failed !== null}

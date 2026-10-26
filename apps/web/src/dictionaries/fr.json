@@ -117,7 +117,7 @@
       "heading": "Déverrouiller votre coffre",
       "subheading": "Votre coffre est chiffré sur cet appareil. Choisissez comment le déverrouiller.",
       "noDeviceUnlock": "Ce navigateur ne peut pas encore déverrouiller votre coffre seul. Associez-le avec votre téléphone pour continuer.",
-      "pinPlaceholder": "Au moins {min} chiffres",
+      "pinPlaceholder": "Votre code Keeplas",
       "unlockButton": "Déverrouiller",
       "back": "Retour",
       "legacyTitle": "Le compte doit être migré",
@@ -837,15 +837,17 @@
     },
     "enroll": {
       "pinMismatch": "Les codes PIN ne correspondent pas",
-      "pinTooShort": "Le code PIN doit comporter au moins {min} chiffres",
       "pinError": "Impossible d'enregistrer le code PIN",
-      "title": "Accélérez vos prochains déverrouillages",
-      "description": "Créez un code PIN pour ne pas avoir à associer à nouveau ce navigateur la prochaine fois.",
+      "title": "Ajoutez un code Keeplas",
+      "description": "Un code à {n} chiffres qui déverrouille Keeplas dans ce navigateur.",
       "skip": "Ignorer pour l'instant",
-      "newPinLabel": "Nouveau code PIN",
-      "pinPlaceholder": "Au moins {min} chiffres",
-      "confirmPinLabel": "Confirmer le code PIN",
-      "savePin": "Enregistrer le code PIN"
+      "newPinLabel": "Choisissez un code à {n} chiffres",
+      "confirmPinLabel": "Saisissez le même code une seconde fois",
+      "savePin": "Enregistrer mon code",
+      "whyTitle": "Pourquoi c'est important",
+      "why1": "Sans code, vous associez à nouveau ce navigateur depuis votre téléphone à chaque verrouillage de Keeplas.",
+      "why2": "La clé de votre coffre reste chiffrée dans ce navigateur : seuls ces {n} chiffres l'ouvrent.",
+      "why3": "Après 10 essais incorrects, Keeplas retire la clé de ce navigateur. Votre coffre reste protégé."
     },
     "deviceUnlock": {
       "loading": "Chargement du déverrouillage de l'appareil",
@@ -2178,7 +2180,7 @@
     },
     "pin": {
       "title": "Code PIN",
-      "description": "Déverrouiller ce navigateur avec un code PIN.",
+      "description": "Déverrouiller ce navigateur avec un code à {n} chiffres.",
       "removeTitle": "Désactiver le PIN sur ce navigateur ?",
       "removeBody": "Vous déverrouillerez ce navigateur avec vos autres méthodes, ou en l'associant à nouveau depuis votre téléphone.",
       "removeConfirm": "Désactiver",

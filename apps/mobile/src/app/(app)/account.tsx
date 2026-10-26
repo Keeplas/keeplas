@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -18,6 +18,7 @@ import {
   uploadAvatar,
   type AvatarSource,
 } from "@/features/account/avatar";
+import { useBirthdayEditor } from "@/features/account/birthday-editor";
 import { accountErrorKey } from "@/features/account/errors";
 import { PermissionSheet } from "@/features/capture/add-sheet";
 import {
@@ -40,6 +41,7 @@ export default function Account() {
   const generateUploadUrl = useMutation(api.users.generateAvatarUploadUrl);
   const setAvatarImage = useAuditedMutation(api.users.setAvatarImage);
   const removeAvatar = useAuditedMutation(api.users.removeAvatar);
+  const birthdayEditor = useBirthdayEditor(viewer.birthday);
   const [name, setName] = useState(viewer.name ?? "");
   const [savingName, setSavingName] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -129,12 +131,19 @@ export default function Account() {
       gap={12}
     >
       <View style={styles.photo}>
-        <AccountAvatar
-          url={viewer.avatarUrl}
-          name={viewer.name || viewer.email || ""}
-          size={96}
-          busy={uploading}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("account.photo")}
+          disabled={uploading}
+          onPress={choosePhoto}
+        >
+          <AccountAvatar
+            url={viewer.avatarUrl}
+            name={viewer.name || viewer.email || ""}
+            size={96}
+            busy={uploading}
+          />
+        </Pressable>
         <View style={styles.photoActions}>
           <Button
             variant="text"
@@ -172,7 +181,7 @@ export default function Account() {
         }}
       />
       <Button
-        label={t("account.saveName")}
+        label={t("account.save")}
         loading={savingName}
         disabled={!nameChanged}
         onPress={saveName}
@@ -228,9 +237,11 @@ export default function Account() {
                   { age: ageInYears(viewer.birthday) },
                 )}`
               : t("account.legal.notSet"),
+            onPress: birthdayEditor.edit,
           },
         ]}
       />
+      {birthdayEditor.sheet}
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
     </Screen>
   );

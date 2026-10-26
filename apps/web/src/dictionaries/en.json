@@ -117,7 +117,7 @@
       "heading": "Unlock your vault",
       "subheading": "Your vault is encrypted on this device. Choose how to unlock it.",
       "noDeviceUnlock": "This browser can't unlock your vault on its own yet. Link it with your phone to continue.",
-      "pinPlaceholder": "At least {min} digits",
+      "pinPlaceholder": "Your Keeplas code",
       "unlockButton": "Unlock",
       "back": "Back",
       "legacyTitle": "Account needs re-keying",
@@ -837,15 +837,17 @@
     },
     "enroll": {
       "pinMismatch": "PINs do not match",
-      "pinTooShort": "PIN must be at least {min} digits",
       "pinError": "Could not enroll PIN",
-      "title": "Speed up future unlocks",
-      "description": "Create a PIN so you don't have to link this browser again next time.",
+      "title": "Add a Keeplas code",
+      "description": "A {n}-digit code that unlocks Keeplas in this browser.",
       "skip": "Skip for now",
-      "newPinLabel": "New PIN",
-      "pinPlaceholder": "At least {min} digits",
-      "confirmPinLabel": "Confirm PIN",
-      "savePin": "Save PIN"
+      "newPinLabel": "Choose a {n}-digit code",
+      "confirmPinLabel": "Enter the same code again",
+      "savePin": "Save my code",
+      "whyTitle": "Why it matters",
+      "why1": "Without a code, you link this browser again from your phone each time Keeplas locks.",
+      "why2": "Your vault key stays encrypted in this browser: only these {n} digits open it.",
+      "why3": "After 10 wrong tries, Keeplas removes the key from this browser. Your vault stays safe."
     },
     "deviceUnlock": {
       "loading": "Loading device unlock",
@@ -2178,7 +2180,7 @@
     },
     "pin": {
       "title": "PIN code",
-      "description": "Unlock this browser with a PIN code.",
+      "description": "Unlock this browser with a {n}-digit code.",
       "removeTitle": "Turn off the PIN on this browser?",
       "removeBody": "You'll unlock this browser with your other methods, or link it again from your phone.",
       "removeConfirm": "Turn off",

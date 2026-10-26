@@ -10,9 +10,11 @@ import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import {
   DevicePinError,
-  hasDevicePin,
+  devicePinLength,
+  PIN_LENGTH,
   setDevicePin,
 } from "@/crypto/device-vault";
+import { ChoosePin, PinReasons } from "@/features/pin/choose-pin";
 import { pinErrorText } from "@/features/pin/use-pin-gate";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
@@ -20,15 +22,15 @@ import { useSession, useViewer } from "@/providers/session-provider";
 type Step =
   | { kind: "overview" }
   | { kind: "current"; next: "change" | "off" }
-  | { kind: "new"; current?: string }
-  | { kind: "confirm"; current?: string; first: string };
+  | { kind: "choose"; current?: string };
 
 export default function PinCode() {
   const router = useRouter();
   const { t } = useI18n();
   const viewer = useViewer();
   const { refreshDeviceVault } = useSession();
-  const [enabled, setEnabled] = useState<boolean | null>(null);
+  // Digits of the current PIN, null without one, undefined while loading.
+  const [pinLength, setPinLength] = useState<number | null>();
   const [step, setStep] = useState<Step>({ kind: "overview" });
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,8 +39,8 @@ export default function PinCode() {
 
   useEffect(() => {
     let alive = true;
-    void hasDevicePin(viewer._id).then((has) => {
-      if (alive) setEnabled(has);
+    void devicePinLength(viewer._id).then((length) => {
+      if (alive) setPinLength(length);
     });
     return () => {
       alive = false;
@@ -55,7 +57,7 @@ export default function PinCode() {
     setBusy(true);
     try {
       await setDevicePin(viewer._id, t("pin.auth"), current, next);
-      setEnabled(Boolean(next));
+      setPinLength(next ? next.length : null);
       setDone(
         next
           ? current
@@ -86,64 +88,58 @@ export default function PinCode() {
     }
   }
 
-  function complete(value: string) {
-    if (busy) return;
-    if (step.kind === "current") {
-      if (step.next === "off") void save(value, undefined);
-      else go({ kind: "new", current: value });
-    } else if (step.kind === "new") {
-      go({ kind: "confirm", current: step.current, first: value });
-    } else if (step.kind === "confirm") {
-      if (value !== step.first) {
-        go({ kind: "new", current: step.current });
-        setError(t("pin.mismatch"));
-        return;
-      }
-      void save(step.current, value);
-    }
+  function completeCurrent(value: string) {
+    if (busy || step.kind !== "current") return;
+    if (step.next === "off") void save(value, undefined);
+    else go({ kind: "choose", current: value });
   }
 
-  const prompt =
-    step.kind === "current"
-      ? t("pin.enterCurrent")
-      : step.kind === "new"
-        ? t("pin.enterNew")
-        : step.kind === "confirm"
-          ? t("pin.enterConfirm")
-          : null;
+  const cancel = {
+    label: t("common.cancel"),
+    onPress: () => go({ kind: "overview" }),
+  };
 
   return (
     <Screen header={<AppHeader onBack={router.back} />} gap={14}>
       <Text variant="h1">{t("privacy.pin")}</Text>
       <Text variant="body-lg" color="text.muted">
-        {t("pin.body")}
+        {t("pin.body", { n: PIN_LENGTH })}
       </Text>
 
-      {prompt ? (
+      {step.kind === "current" && pinLength ? (
         <View style={styles.entry}>
-          <Text variant="label">{prompt}</Text>
+          <Text variant="label" align="center">
+            {t("pin.enterCurrent")}
+          </Text>
           <OtpInput
-            key={step.kind}
+            length={pinLength}
             value={code}
             onChange={setCode}
-            onComplete={complete}
+            onComplete={completeCurrent}
             invalid={error !== null}
-            label={prompt}
+            label={t("pin.enterCurrent")}
             secure
           />
           {error ? (
-            <Text variant="body-sm" color="status.revoked">
+            <Text variant="body-sm" color="status.revoked" align="center">
               {error}
             </Text>
           ) : null}
           <Button
             variant="text"
-            label={t("common.cancel")}
+            label={cancel.label}
             disabled={busy}
-            onPress={() => go({ kind: "overview" })}
+            onPress={cancel.onPress}
           />
         </View>
-      ) : enabled === null ? null : (
+      ) : step.kind === "choose" ? (
+        <ChoosePin
+          onChosen={(next) => void save(step.current, next)}
+          secondary={cancel}
+          error={error}
+          busy={busy}
+        />
+      ) : pinLength === undefined ? null : (
         <View style={styles.entry}>
           {done ? (
             <Callout tone="success" icon="check-circle" text={done} />
@@ -151,11 +147,17 @@ export default function PinCode() {
           {error ? (
             <Callout tone="danger" icon="alert-triangle" text={error} />
           ) : null}
-          <Callout
-            icon="shield-check"
-            text={enabled ? t("pin.statusOn") : t("pin.statusOff")}
-          />
-          {enabled ? (
+          {pinLength ? (
+            <Callout icon="shield-check" text={t("pin.statusOn")} />
+          ) : (
+            <Callout
+              tone="warning"
+              icon="alert-triangle"
+              text={t("pin.statusOff")}
+            />
+          )}
+          <PinReasons />
+          {pinLength ? (
             <>
               <Button
                 label={t("pin.change")}
@@ -170,7 +172,7 @@ export default function PinCode() {
           ) : (
             <Button
               label={t("pin.turnOn")}
-              onPress={() => go({ kind: "new" })}
+              onPress={() => go({ kind: "choose" })}
             />
           )}
           <Text variant="body-sm" color="text.muted">

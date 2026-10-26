@@ -8,7 +8,7 @@ import { Text } from "./text";
 export const OTP_LENGTH = 6;
 
 /**
- * Six Figma `OTP Box`es (52×56, radius 12, 8 pt gap) over one hidden input,
+ * Six (or `length`) Figma `OTP Box`es (52×56, radius 12, 8 pt gap) over one hidden input,
  * so iOS / Android one-time-code autofill and paste work. Boxes shrink to
  * fit narrow screens (iPhone SE: 335 pt of content for 352 pt of boxes).
  */
@@ -20,6 +20,7 @@ export function OtpInput({
   label,
   secure = false,
   autoFocus = true,
+  length = OTP_LENGTH,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -28,21 +29,22 @@ export function OtpInput({
   label: string;
   secure?: boolean;
   autoFocus?: boolean;
+  length?: number;
 }) {
   const { colors } = useTheme();
   const input = useRef<TextInput>(null);
   const [focused, setFocused] = useState(autoFocus);
-  const active = Math.min(value.length, OTP_LENGTH - 1);
+  const active = Math.min(value.length, length - 1);
 
   function handleChange(text: string) {
-    const digits = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
+    const digits = text.replace(/\D/g, "").slice(0, length);
     onChange(digits);
-    if (digits.length === OTP_LENGTH) onComplete?.(digits);
+    if (digits.length === length) onComplete?.(digits);
   }
 
   return (
     <Pressable onPress={() => input.current?.focus()} style={styles.row}>
-      {Array.from({ length: OTP_LENGTH }, (_, index) => {
+      {Array.from({ length }, (_, index) => {
         const isActive = focused && index === active;
         const borderColor = invalid
           ? colors["status.revoked"]
@@ -91,7 +93,7 @@ export function OtpInput({
         textContentType={secure ? "none" : "oneTimeCode"}
         autoComplete={secure ? "off" : "sms-otp"}
         secureTextEntry={secure}
-        maxLength={OTP_LENGTH}
+        maxLength={length}
         caretHidden
         style={styles.hidden}
       />
@@ -103,6 +105,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignSelf: "stretch",
+    justifyContent: "center",
     gap: 2,
     marginHorizontal: -3,
   },

@@ -23,6 +23,7 @@
     "@keeplas/crypto": "workspace:^",
     "@keeplas/export": "workspace:^",
     "@op-engineering/op-sqlite": "^18.2.5",
+    "@react-native-community/datetimepicker": "9.1.0",
     "convex": "^1.48.0",
     "expo": "~57.0.29",
     "expo-asset": "~57.0.20",
@@ -67,6 +68,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "react-native-view-shot": "5.1.0",
     "react-native-webview": "13.16.1",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
