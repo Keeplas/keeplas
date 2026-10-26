@@ -16,13 +16,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
 export type Topic =
-  | "general"
-  | "security"
-  | "billing"
-  | "recovery"
-  | "feature_request"
-  | "account_deletion"
-  | "other";
+  "general" | "security" | "billing" | "recovery" | "feature_request" | "other";
 
 export const TOPIC_VALUES: Topic[] = [
   "general",
@@ -30,7 +24,6 @@ export const TOPIC_VALUES: Topic[] = [
   "billing",
   "recovery",
   "feature_request",
-  "account_deletion",
   "other",
 ];
 
@@ -121,21 +114,6 @@ export function ContactForm({ initialTopic = "general" }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <ErrorAlert message={error} />
-
-      {/* Signed-out visitors (the public /delete-account page) and accounts
-          without a name have nothing to seed it from, and the ticket needs one. */}
-      {(user === null || (user && !user.name)) && (
-        <div className="space-y-2">
-          <Label htmlFor="contact-name">{t("contact.form.name")}</Label>
-          <Input
-            id="contact-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoComplete="name"
-            required
-          />
-        </div>
-      )}
 
       <div className="space-y-2">
         <Label htmlFor="contact-reply">{t("contact.form.replyTo")}</Label>

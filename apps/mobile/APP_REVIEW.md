@@ -170,13 +170,13 @@ Vault content (items, notes, files, voice notes) is end-to-end encrypted: Keepla
 - **Google: encrypted in transit**: Yes.
 - **Google: users can request deletion**: Yes.
   - In the app: Settings → Delete my account.
-  - On the web: `https://app.keeplas.com/delete-account`. Paste this URL in the Data safety form's delete-account field.
+  - On the web: `https://www.keeplas.com/delete-account` (French: `/fr/delete-account`). Paste this URL in the Data safety form's delete-account field.
 
 ## Account deletion requests from the web
 
-The public page `https://app.keeplas.com/delete-account` explains in-app deletion. It also files an `account_deletion` support ticket for people who no longer have the app; the ticket lands in the support inbox.
+The website page `https://www.keeplas.com/delete-account` (keeplas-website repo) shows the in-app steps with the app screens. At the end, people who can't open the app send the support form; it reaches the support inbox by email with the subject "Delete my Keeplas account" ("Supprimer mon compte Keeplas" in French).
 
-1. **Confirm the request.** The page asks for the account's phone number. Message that number on WhatsApp and wait for a reply from it; if the ticket came without a number, ask for it first.
+1. **Confirm the request.** The form asks for the account's phone number or email address. Message the account's number on WhatsApp and wait for a reply from it; if the request gave only an email address, find the account by that email (Convex dashboard, `users` table), confirm by writing to that address, and use the account's phone number below.
 2. **Schedule the deletion:**
 
    ```bash

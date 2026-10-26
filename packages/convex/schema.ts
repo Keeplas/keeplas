@@ -5,7 +5,6 @@ import {
   categoryValidator,
   accessLevelValidator,
   contactRoleValidator,
-  supportTopicValidator,
   vaultGroupValidator,
 } from "./validators";
 import { planValidator } from "./lib/plans";
@@ -1127,7 +1126,14 @@ export default defineSchema({
     // whatsapp). Both optional so either channel can be omitted.
     email: v.optional(v.string()),
     whatsapp: v.optional(v.string()),
-    topic: supportTopicValidator,
+    topic: v.union(
+      v.literal("general"),
+      v.literal("security"),
+      v.literal("billing"),
+      v.literal("recovery"),
+      v.literal("feature_request"),
+      v.literal("other"),
+    ),
     subject: v.string(),
     message: v.string(),
 

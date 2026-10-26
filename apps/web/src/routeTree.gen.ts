@@ -15,7 +15,6 @@ import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
 import { Route as CaptureIndexRouteImport } from './routes/capture/index'
 import { Route as ConnectIndexRouteImport } from './routes/connect/index'
-import { Route as DeleteAccountIndexRouteImport } from './routes/delete-account/index'
 import { Route as DownloadIndexRouteImport } from './routes/download/index'
 import { Route as GetTheAppIndexRouteImport } from './routes/get-the-app/index'
 import { Route as LinkIndexRouteImport } from './routes/link/index'
@@ -83,11 +82,6 @@ const CaptureIndexRoute = CaptureIndexRouteImport.update({
 const ConnectIndexRoute = ConnectIndexRouteImport.update({
   id: '/connect/',
   path: '/connect/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeleteAccountIndexRoute = DeleteAccountIndexRouteImport.update({
-  id: '/delete-account/',
-  path: '/delete-account/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DownloadIndexRoute = DownloadIndexRouteImport.update({
@@ -317,7 +311,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof DashboardSettingsRouteWithChildren
   '/capture/': typeof CaptureIndexRoute
   '/connect/': typeof ConnectIndexRoute
-  '/delete-account/': typeof DeleteAccountIndexRoute
   '/download/': typeof DownloadIndexRoute
   '/get-the-app/': typeof GetTheAppIndexRoute
   '/link/': typeof LinkIndexRoute
@@ -363,7 +356,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/capture': typeof CaptureIndexRoute
   '/connect': typeof ConnectIndexRoute
-  '/delete-account': typeof DeleteAccountIndexRoute
   '/download': typeof DownloadIndexRoute
   '/get-the-app': typeof GetTheAppIndexRoute
   '/link': typeof LinkIndexRoute
@@ -413,7 +405,6 @@ export interface FileRoutesById {
   '/_dashboard/settings': typeof DashboardSettingsRouteWithChildren
   '/capture/': typeof CaptureIndexRoute
   '/connect/': typeof ConnectIndexRoute
-  '/delete-account/': typeof DeleteAccountIndexRoute
   '/download/': typeof DownloadIndexRoute
   '/get-the-app/': typeof GetTheAppIndexRoute
   '/link/': typeof LinkIndexRoute
@@ -462,7 +453,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/capture/'
     | '/connect/'
-    | '/delete-account/'
     | '/download/'
     | '/get-the-app/'
     | '/link/'
@@ -508,7 +498,6 @@ export interface FileRouteTypes {
     | '/'
     | '/capture'
     | '/connect'
-    | '/delete-account'
     | '/download'
     | '/get-the-app'
     | '/link'
@@ -557,7 +546,6 @@ export interface FileRouteTypes {
     | '/_dashboard/settings'
     | '/capture/'
     | '/connect/'
-    | '/delete-account/'
     | '/download/'
     | '/get-the-app/'
     | '/link/'
@@ -606,7 +594,6 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   CaptureIndexRoute: typeof CaptureIndexRoute
   ConnectIndexRoute: typeof ConnectIndexRoute
-  DeleteAccountIndexRoute: typeof DeleteAccountIndexRoute
   DownloadIndexRoute: typeof DownloadIndexRoute
   GetTheAppIndexRoute: typeof GetTheAppIndexRoute
   LinkIndexRoute: typeof LinkIndexRoute
@@ -660,13 +647,6 @@ declare module '@tanstack/react-router' {
       path: '/connect'
       fullPath: '/connect/'
       preLoaderRoute: typeof ConnectIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/delete-account/': {
-      id: '/delete-account/'
-      path: '/delete-account'
-      fullPath: '/delete-account/'
-      preLoaderRoute: typeof DeleteAccountIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/download/': {
@@ -1054,7 +1034,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   CaptureIndexRoute: CaptureIndexRoute,
   ConnectIndexRoute: ConnectIndexRoute,
-  DeleteAccountIndexRoute: DeleteAccountIndexRoute,
   DownloadIndexRoute: DownloadIndexRoute,
   GetTheAppIndexRoute: GetTheAppIndexRoute,
   LinkIndexRoute: LinkIndexRoute,

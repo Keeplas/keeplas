@@ -73,11 +73,11 @@ export const request = auditedMutation({
 });
 
 /**
- * Schedule a deletion asked for outside the app: the public /delete-account
- * page files an `account_deletion` support ticket, and support runs this
- * after confirming the request with the number on file
- * (apps/mobile/APP_REVIEW.md). Same grace period and notice as the in-app
- * request, so a real owner who did not ask can still cancel from the app.
+ * Schedule a deletion asked for outside the app: the website's deletion page
+ * (keeplas.com/delete-account) emails the request to support, who run this
+ * after confirming it with the number on file (apps/mobile/APP_REVIEW.md).
+ * Same grace period and notice as the in-app request, so a real owner who
+ * did not ask can still cancel from the app.
  */
 export const scheduleForPhone = internalMutation({
   args: { phoneNumber: v.string() },

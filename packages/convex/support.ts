@@ -5,14 +5,18 @@ import { optionalAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 import { requireEnv } from "./lib/require_env";
 import { isE164 } from "./lib/phone";
-import { enforceIpRateLimit } from "./lib/rate_limit";
-import { supportTopicValidator } from "./validators";
 
 const CHANNEL = v.union(v.literal("email"), v.literal("whatsapp"));
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Per rolling hour, for tickets sent while signed out.
-const ANONYMOUS_TICKETS_PER_CONTACT = 3;
-const ANONYMOUS_TICKETS_PER_HOUR = 30;
+
+const TOPIC = v.union(
+  v.literal("general"),
+  v.literal("security"),
+  v.literal("billing"),
+  v.literal("recovery"),
+  v.literal("feature_request"),
+  v.literal("other"),
+);
 
 const TOPIC_LABELS: Record<string, string> = {
   general: "General question",
@@ -20,13 +24,12 @@ const TOPIC_LABELS: Record<string, string> = {
   billing: "Billing & subscription",
   recovery: "Recovery & vault access",
   feature_request: "Feature request",
-  account_deletion: "Account deletion request",
   other: "Other",
 };
 
 /**
  * Submit a contact/support ticket. Authentication is optional so logged-out
- * visitors can reach out too, e.g. from the public /delete-account page.
+ * visitors can reach out too (not currently exposed, but the mutation tolerates it).
  */
 export const submitTicket = mutation({
   args: {
@@ -34,7 +37,7 @@ export const submitTicket = mutation({
     // Reply-to contact: an email address or a WhatsApp number (E.164). The
     // channel is inferred from its shape.
     contact: v.string(),
-    topic: supportTopicValidator,
+    topic: TOPIC,
     subject: v.string(),
     message: v.string(),
   },
@@ -67,22 +70,6 @@ export const submitTicket = mutation({
     // (logged-out visitors may submit a ticket), so it stays on optionalAuth.
     // It writes only a support ticket — no vault content / metadata is read.
     const userId = await optionalAuth(ctx);
-    if (!userId) {
-      // Signed-out tickets come from public pages (/delete-account) and each
-      // one emails the team: cap them per reply-to contact and overall.
-      await enforceIpRateLimit(
-        ctx,
-        "support_ticket_contact",
-        email ?? whatsapp!,
-        ANONYMOUS_TICKETS_PER_CONTACT,
-      );
-      await enforceIpRateLimit(
-        ctx,
-        "support_ticket_anonymous",
-        "all",
-        ANONYMOUS_TICKETS_PER_HOUR,
-      );
-    }
     const now = Date.now();
 
     const ticketId = await ctx.db.insert("support_tickets", {
@@ -132,7 +119,7 @@ export const notifySupportInbox = internalAction({
     name: v.string(),
     contact: v.string(),
     channel: CHANNEL,
-    topic: supportTopicValidator,
+    topic: TOPIC,
     subject: v.string(),
     message: v.string(),
   },
