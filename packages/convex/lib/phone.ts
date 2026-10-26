@@ -23,6 +23,17 @@ export function isE164(value: string): boolean {
   return E164.test(value.trim());
 }
 
+/**
+ * The numbers of a comma-separated env list (DEV_TEST_PHONES, REVIEW_PHONES),
+ * spaces removed so "+1 202 555 0101" matches the stored "+12025550101".
+ */
+export function listedPhones(list: string | undefined): string[] {
+  return (list ?? "")
+    .split(",")
+    .map((entry) => entry.replace(/\s+/g, ""))
+    .filter(Boolean);
+}
+
 /** E.164 for display to its owner: country-ish prefix + last 2 digits. */
 export function maskPhone(phone: string): string {
   return `${phone.slice(0, 3)}•••${phone.slice(-2)}`;

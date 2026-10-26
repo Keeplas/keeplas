@@ -7,7 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
-import { normalizeE164 } from "./lib/phone";
+import { listedPhones, normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { consumeSignupGrant } from "./attestation";
@@ -21,27 +21,25 @@ const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
 const DEV_TEST_CODE = "000000";
 
-function isListed(list: string | undefined, phone: string): boolean {
-  return (list ?? "")
-    .split(",")
-    .some((entry: string) => entry.trim() === phone);
-}
-
 /**
  * The fixed code a number may use instead of a WhatsApp one, if any:
  * - DEV_TEST_PHONES → 000000 (dev deployments only; the prod deploy guard
  *   refuses it).
- * - REVIEW_PHONES → the secret 6-digit REVIEW_CODE, sign-in only, so App
- *   Store / Play reviewers can reach the demo account given in the review
- *   notes. Safe on prod: the code is a secret and nobody can sign up with it.
+ * - REVIEW_PHONES → the secret 6-digit REVIEW_CODE, so App Store / Play
+ *   reviewers can sign in to the demo account given in the review notes and
+ *   try sign-up on a spare listed number (`pnpm review:reset` frees it again).
+ *   Safe on prod: the code is a secret, only listed numbers accept it, and
+ *   sign-up still needs the app's attestation grant (consumeSignupGrant), so
+ *   only the genuine app on a real device can create one of these accounts.
  */
-function fixedCode(phone: string, intent: "signup" | "signin"): string | null {
-  if (isListed(process.env.DEV_TEST_PHONES, phone)) return DEV_TEST_CODE;
+function fixedCode(phone: string): string | null {
+  if (listedPhones(process.env.DEV_TEST_PHONES).includes(phone)) {
+    return DEV_TEST_CODE;
+  }
   const reviewCode = process.env.REVIEW_CODE ?? "";
   if (
-    intent === "signin" &&
     /^\d{6}$/.test(reviewCode) &&
-    isListed(process.env.REVIEW_PHONES, phone)
+    listedPhones(process.env.REVIEW_PHONES).includes(phone)
   ) {
     return reviewCode;
   }
@@ -102,7 +100,7 @@ export const requestPhoneAuthOtp = mutation({
         await ctx.db.patch(stale._id, { expiresAt: now });
     }
 
-    const fixed = fixedCode(phone, args.intent);
+    const fixed = fixedCode(phone);
     const code = fixed ?? generateOtp();
     const codeHash = await sha256Hex(code);
     await ctx.db.insert("phone_auth_codes", {
