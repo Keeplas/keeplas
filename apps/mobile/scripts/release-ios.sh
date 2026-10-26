@@ -2,8 +2,12 @@
 # Builds the iOS app with Xcode on this Mac and uploads it to App Store Connect
 # (TestFlight), instead of EAS Build. Run it through `pnpm release:ios`, which
 # injects the App Store Connect API key from Infisical prod /keeplas_mobile.
-# Signing is automatic: Xcode fetches the distribution certificate and profile
-# with that key, and picks the next free build number on upload.
+# The archive is signed automatically for development (needs >=1 registered
+# device on the team). The export re-signs manually with the "Apple Distribution"
+# certificate (private key in this Mac's login keychain) and the
+# "Keeplas App Store (Xcode)" profile: the API key has no access to Apple's
+# cloud-managed distribution certificates, and the team's other distribution
+# certificate belongs to EAS. Xcode picks the next free build number on upload.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -51,6 +55,17 @@ cat >"$tmp/ExportOptions.plist" <<'PLIST'
   <string>app-store-connect</string>
   <key>destination</key>
   <string>upload</string>
+  <key>teamID</key>
+  <string>67T9Q44562</string>
+  <key>signingStyle</key>
+  <string>manual</string>
+  <key>signingCertificate</key>
+  <string>Apple Distribution</string>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>com.keeplas.app</key>
+    <string>Keeplas App Store (Xcode)</string>
+  </dict>
   <key>manageAppVersionAndBuildNumber</key>
   <true/>
 </dict>
