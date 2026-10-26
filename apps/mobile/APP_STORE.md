@@ -73,7 +73,30 @@ pnpm --filter @keeplas/mobile release:ios
 - ASC processes the build for another 5–15 min, then sends an email.
 - To retry only the upload: open the archive in Xcode (Window → Organizer) → **Distribute App** → App Store Connect.
 
-Export compliance: `app.json` sets `ITSAppUsesNonExemptEncryption: false`, so ASC no longer asks about it on each build. **Review this before external testing or an App Store release.** Keeplas ships its own cryptography (AES-GCM, ML-KEM, ML-DSA), so "exempt" is probably wrong. A French distribution also needs an ANSSI declaration. Fix the value and the declaration together.
+Export compliance: `app.json` declares non-exempt encryption, so ASC asks the encryption questions on each build until it has an export compliance code. See [Export compliance](#export-compliance).
+
+## Export compliance
+
+Keeplas encrypts data itself with standard algorithms, on top of the TLS that iOS provides, so it is not exempt: `app.json` sets `ITSAppUsesNonExemptEncryption: true`. Each new build shows "Missing Compliance" in ASC until the encryption questions are answered. Two things to know before answering:
+
+- **United States (EAR).** Answer that the app uses standard encryption algorithms instead of, or in addition to, the operating system's. Mass-market encryption items usually need a self-classification report to BIS; publicly available open-source encryption code can follow a different route. Confirm which one applies with counsel, then upload the documentation ASC asks for.
+- **France (ANSSI).** Apple names "Secure Storage" among the encryption uses France controls. Distributing in France needs a declaration of the cryptology means to ANSSI, whose acknowledgment ASC asks for. Until it is filed, either attach it later or leave France out of the availability.
+
+Once ASC approves the documentation, it gives an export compliance code. Add it to `app.json` as `ITSEncryptionExportComplianceCode` (in `expo.ios.infoPlist`), so later builds skip the questions.
+
+Technical annex for these declarations (all in `packages/crypto/`, used by the web and mobile apps):
+
+| Function                                                | Algorithm                          | Standard        | Where                       |
+| ------------------------------------------------------- | ---------------------------------- | --------------- | --------------------------- |
+| Item, file and key-bundle encryption                    | AES-256-GCM                        | NIST SP 800-38D | `src/aes/`                  |
+| Wrapping item keys to each recipient                    | ML-KEM-768                         | FIPS 203        | `src/kem/`                  |
+| Signing public keys (identity, key authenticity)        | ML-DSA-65                          | FIPS 204        | `src/sig/`                  |
+| Key derivation from the 24-word phrase                  | Argon2id                           | RFC 9106        | `src/kdf/`, `src/recovery/` |
+| Social-recovery envelope key                            | HKDF with SHA-256                  | RFC 5869        | `src/social/`               |
+| Splitting the recovery secret between contacts (2 of 3) | Shamir secret sharing over GF(256) | —               | `src/shamir/`               |
+| Hashing                                                 | SHA-256                            | FIPS 180-4      | throughout                  |
+
+The purpose is confidentiality of the data users store and share with the people they choose. Keeplas holds no key that decrypts it on its own.
 
 ## TestFlight
 
@@ -85,9 +108,9 @@ Export compliance: `app.json` sets `ITSAppUsesNonExemptEncryption: false`, so AS
 
 ### External testing (Beta App Review)
 
-1. Fix the export compliance value first (see above).
+1. Answer export compliance for the build first (see [Export compliance](#export-compliance)).
 2. ASC → TestFlight → **+** next to External Testing → create a group, then add testers by email or enable a public link.
-3. Fill in Test Information: what to test, a feedback email, and a demo account with notes, since sign-up requires a real device.
+3. Fill in Test Information: what to test, a feedback email, and the demo account with its notes from [`APP_REVIEW.md`](./APP_REVIEW.md).
 4. The first build of each version goes through Beta App Review, which usually takes about a day. Later builds of the same version are often approved straight away.
 
 ### Good to know
@@ -119,7 +142,7 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
    - the data collection questionnaire. Vault content is end-to-end encrypted, but phone number and device data are still collected.
 4. **Build**: select the TestFlight build to ship.
 5. **In-App Purchases**: add `keeplas_lifetime` to the version. Apple requires the first in-app purchase to ship with an app version. Before that, replace its review screenshot, a blank placeholder uploaded by RevenueCat, with the Settings screen showing the Upgrade to Lifetime card.
-6. **App Review Information**: give the reviewer a demo account and short notes on the sign-in flow (code, PIN). Without these, review is usually rejected for an app gated by sign-in.
+6. **App Review Information**: sign-in details, notes and the video link from [`APP_REVIEW.md`](./APP_REVIEW.md). Run `pnpm review:status` first. Without a working demo account, review is usually rejected for an app gated by sign-in.
 7. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
 
 ## Troubleshooting
