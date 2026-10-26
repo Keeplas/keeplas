@@ -23,6 +23,7 @@
     "@keeplas/crypto": "workspace:^",
     "@keeplas/export": "workspace:^",
     "@op-engineering/op-sqlite": "^18.2.5",
+    "@react-native-community/datetimepicker": "9.1.0",
     "convex": "^1.48.0",
     "expo": "~57.0.29",
     "expo-asset": "~57.0.20",

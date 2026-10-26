@@ -37,6 +37,11 @@ const CASES: [message: string, key: string][] = [
   ["Upload failed (500)", "account.errors.uploadFailed"],
   ["Upload failed (413)", "account.errors.imageTooLarge"],
   ["Uploaded image could not be resolved", "account.errors.uploadFailed"],
+  [
+    "You must be at least 18 years old to use Keeplas",
+    "account.errors.tooYoung",
+  ],
+  ["Birthday is implausibly old", "account.errors.invalidBirthday"],
 ];
 
 describe("accountErrorKey", () => {
