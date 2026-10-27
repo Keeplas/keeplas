@@ -23,15 +23,14 @@ As of 27 October 2026.
 - **Prod config:** `REVIEW_PHONES` (the six [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
 - **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
+- **France (ANSSI):** the cryptology declaration was filed on 27 October 2026 and accepted (dossier 34982065). Attach the filing receipt in App Store Connect when it asks for the French declaration; it is kept outside the repo.
 - **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)).
 - **[Demo accounts](#demo-accounts)**, seeded with `pnpm review:seed` on 27 October 2026: the owner, two accepted contacts and six items. The command opens each account again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
 
 **Left to do**
 
 - [ ] Record the video of the multi-day flows and put its link in the review notes.
-- [ ] File the export documentation:
-  - US: confirm the route with counsel, either the BIS self-classification report or the open-source notification;
-  - France: file the ANSSI declaration, or leave France out of the availability until it is filed.
+- [ ] US export documentation: confirm the route with counsel, either the BIS self-classification report or the open-source notification.
 - [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix.
 - [ ] Android: upload the launch AAB (it must include the UK review numbers fix), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
