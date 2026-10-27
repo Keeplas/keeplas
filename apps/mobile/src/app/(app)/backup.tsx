@@ -15,6 +15,7 @@ import { readDeviceRootKey } from "@/crypto/device-vault";
 import { cloudKeyName, useSealCloudBackup } from "@/features/cloud-backup";
 import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 import { KitWords, useCreateKit } from "@/features/recovery-kit";
+import { serverMessage } from "@/lib/errors";
 import { writePreference } from "@/lib/preferences";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -63,7 +64,7 @@ export default function CloudBackup() {
       toast({
         variant: "error",
         title: t("common.genericError"),
-        description: error instanceof Error ? error.message : undefined,
+        description: serverMessage(error),
       });
     } finally {
       setBusy(false);

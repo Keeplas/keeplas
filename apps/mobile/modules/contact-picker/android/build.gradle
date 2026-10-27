@@ -1,0 +1,17 @@
+// Gradle build for the local KeeplasContactPicker Expo module: the system
+// phone-number picker, read without the READ_CONTACTS permission.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.keeplas'
+version = '0.1.0'
+
+android {
+  namespace "com.keeplas.contactpicker"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}

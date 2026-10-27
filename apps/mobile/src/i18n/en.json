@@ -18,10 +18,8 @@
   },
   "languageNames": {
     "en": "English",
-    "fr": "Français",
-    "es": "Español"
+    "fr": "Français"
   },
-  "languageSoon": "{name} (coming soon)",
   "nav": {
     "home": "Home",
     "vault": "Vault",
@@ -45,7 +43,7 @@
   },
   "phone": {
     "title": "Set up your account",
-    "subtitle": "Your phone number and WhatsApp will get you started. No email needed.",
+    "subtitle": "Sign up with your phone number. No email, no password.",
     "signInTitle": "Welcome back",
     "signInSubtitle": "Enter the number of your Keeplas account. We'll send you a code on WhatsApp.",
     "label": "Phone number",
@@ -67,23 +65,23 @@
     "noCode": "Didn't get the code?",
     "resend": "Resend code",
     "resent": "We sent you a new code.",
-    "note": "We only use WhatsApp for notifications. Nothing from your vault is sent there."
+    "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there."
   },
   "codeErrors": {
     "wrongTitle": "That code isn't right",
-    "wrongBody": "Check the 6 digits in WhatsApp and try again. {count} tries left.",
+    "wrongBody": "Check the 6 digits and try again. {count} tries left.",
     "expiredTitle": "This code has expired",
     "expiredBody": "Codes work for 10 minutes. We can send you a new one.",
     "expiredCta": "Send a new code",
     "tooManyTitle": "Too many tries",
     "tooManyBody": "For your safety, sign-in is paused for this number. Try again in an hour.",
     "notArrivingTitle": "Code not arriving?",
-    "notArrivingBody": "Check that WhatsApp is set up on {phone}, then ask for a new code.",
+    "notArrivingBody": "Codes can take a minute to arrive. Check that {phone} is right, then ask for a new code.",
     "changeNumber": "Change number"
   },
   "passkey": {
     "title": "Create your passkey",
-    "body": "Use your face, fingerprint or phone passcode to get into your account securely. Your passkey syncs with your iCloud or Google keychain, so it comes back on a new phone.",
+    "body": "Use your face, fingerprint or phone passcode to get into your account securely. Your passkey syncs with your {provider} keychain, so it comes back on a new phone.",
     "cta": "Create passkey",
     "failedTitle": "Passkey not created",
     "failedBody": "The prompt closed before you finished. You need a passkey to keep your vault on this phone.",
@@ -96,12 +94,12 @@
     "title": "Create your private vault",
     "body": "Your vault is created securely on this device and encrypted. Only you can access it.",
     "cta": "Create my vault",
-    "note": "Your vault is encrypted on this phone. Its key is also backed up, encrypted, with your Apple or Google account, so you can get back in on a new phone.",
+    "note": "Your vault is encrypted on this phone. Its key is also backed up, encrypted, with your {provider} account, so you can get back in on a new phone.",
     "generating": "Creating your keys…",
     "saving": "Saving your encrypted vault…"
   },
   "contacts": {
-    "title": "Add trust contacts",
+    "title": "Add trusted contacts",
     "body": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death. They only see what you share with them.",
     "invite": "Invite contacts",
     "skip": "Skip for now",
@@ -111,7 +109,7 @@
     "title": "Setup complete",
     "body": "Your account is ready. Your information is safe and ready for tomorrow.",
     "optional": "Optional protection",
-    "contactsTitle": "Add trust contacts",
+    "contactsTitle": "Add trusted contacts",
     "contactsBody": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death.",
     "open": "Open my vault",
     "backupBody": "Your vault comes back on a new phone with your {account} account."
@@ -296,8 +294,8 @@
         "answer": "Install Keeplas on the new phone and sign in with your number and the WhatsApp code. Tap \"Restore from iCloud\" (or Google): a WhatsApp code confirms it's you and your vault opens. Keep the old phone until then, then remove it in Settings › Devices."
       },
       "platform": {
-        "question": "I'm moving from Android to iPhone, or the reverse",
-        "answer": "A Google backup doesn't reach iCloud, and the other way round. Keep the old phone: on the new one, choose \"Another signed-in device\" and approve from the old one. Otherwise, use your 24-word kit or your trusted contacts. The backup then turns on again on the new phone."
+        "question": "My new phone is another brand",
+        "answer": "The cloud backup stays with the old phone's brand: it doesn't reach the new one. Keep the old phone: on the new one, choose \"Another signed-in device\" and approve from the old one. Otherwise, use your 24-word kit or your trusted contacts. The backup then turns on again on the new phone."
       },
       "lostPhone": {
         "question": "I lost my phone",
@@ -364,7 +362,7 @@
     "restore": "Restore my vault",
     "cancel": "Cancel request",
     "requestTitle": "Recovery request",
-    "requestBody": "Your trust contacts are reviewing your request. You'll be notified when the approvals are received and the protection window ends.",
+    "requestBody": "Your trusted contacts are reviewing your request. You'll be notified when the approvals are received and the protection window ends.",
     "approvals": "{n} of 2 approvals received",
     "approvalsLeft": "{n} more approval needed to restore your vault.",
     "approvalsDone": "Both approvals are in.",
@@ -430,16 +428,15 @@
   "upgrade": {
     "title": "Upgrade to Lifetime",
     "titleWithPrice": "Upgrade to Lifetime · {price}",
-    "body": "10 GB of storage and every feature. One payment, no subscription.",
+    "body": "10 GB of encrypted storage instead of 100 MB. One payment, no subscription.",
     "cta": "Upgrade",
     "restore": "Restore purchase",
     "activating": "Your Lifetime plan is being activated. It only takes a few seconds, and any upload waiting for space resumes on its own.",
-    "nothingToRestore": "No Lifetime purchase found for this Apple or Google account.",
+    "nothingToRestore": "No Lifetime purchase found for this {account} account.",
     "planName": "Keeplas Lifetime",
     "oneTime": "One-time payment, VAT included where it applies",
     "perks": {
       "storage": "10 GB of encrypted storage, instead of 100 MB",
-      "features": "Every feature, for as long as you keep Keeplas",
       "noSubscription": "One payment. No subscription, nothing renews",
       "newPhone": "Yours on every new phone: just sign in"
     },
@@ -447,7 +444,6 @@
     "pay": "Pay {price}",
     "payNoPrice": "Continue to payment",
     "paidTitle": "Purchase confirmed",
-    "errorCode": "(code {code})",
     "errors": {
       "unavailable": "Lifetime can't be bought from {store} right now. Nothing was charged. Try again later.",
       "network": "Can't reach {store}. Nothing was charged. Check your connection and try again.",
@@ -962,7 +958,6 @@
     "fromContacts": "Choose from my contacts",
     "orManual": "or enter manually",
     "whichNumber": "Which number?",
-    "contactsDenied": "Keeplas can't read your contacts. Allow it in Settings, or enter their details below.",
     "sendInvite": "Send invitation",
     "status": {
       "pending": "Invited",
@@ -981,7 +976,7 @@
     "remove": "Remove",
     "removeTitle": "Remove {name}?",
     "removeBody": "{name} will no longer be able to help you recover your account.",
-    "addTrust": "Add a trust contact",
+    "addTrust": "Add a trusted contact",
     "emailInvalid": "Enter a valid email address, like name@example.com.",
     "alreadyInvited": "This person is already one of your contacts.",
     "inviteFailed": "The invitation couldn't be sent. Check your connection and try again.",
@@ -1219,7 +1214,7 @@
   "lostAccess": {
     "title": "Lost access to your vault?",
     "body": "You can safely recover your vault using one of the options below.",
-    "contacts": "Ask trust contacts",
+    "contacts": "Ask trusted contacts",
     "contactsBody": "Request approval from your trusted contacts (if configured).",
     "kit": "Use recovery kit",
     "kitBody": "Enter your 24 words if you exported a recovery kit.",
@@ -1233,12 +1228,12 @@
     "cta": "Set up succession plan",
     "reminders": "Owner reminders",
     "remindersBody": "We'll remind you periodically to keep your information up to date.",
-    "contacts": "2 trust contacts confirm death",
+    "contacts": "2 trusted contacts confirm death",
     "contactsBody": "Both contacts must confirm before any access is granted.",
     "grace": "72-hour grace period",
     "graceBody": "A waiting period gives you time to respond if needed.",
     "assigned": "Only assigned content released",
-    "assignedBody": "Your trust contacts can access only the content you've assigned to them."
+    "assignedBody": "Your trusted contacts can access only the content you've assigned to them."
   },
   "itemActions": {
     "open": "Open",
@@ -1299,7 +1294,7 @@
       "items": "Every item, note and file in your vault",
       "shares": "What you share with your trusted contacts, and what they can open",
       "succession": "Your succession plan, Life check and contact recovery",
-      "plan": "Your plan. A Lifetime purchase is not refunded"
+      "plan": "Your plan. Deleting your account doesn't refund a Lifetime purchase"
     },
     "exportFirst": "Export my data first",
     "exportHint": "to keep a copy of everything before it is erased.",

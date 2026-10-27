@@ -16,7 +16,7 @@ import { StateMessage, StateSheet } from "@/components/state-message";
 import { IconTile, InfoRow, ListRow, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { VaultSwitch } from "@/features/vault/vault-switch";
-import { errorText } from "@/lib/errors";
+import { serverMessage } from "@/lib/errors";
 import { formatPhone } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -164,7 +164,7 @@ export default function SharedWithMe() {
       toast({
         variant: "error",
         title: t("common.genericError"),
-        description: errorText(error),
+        description: serverMessage(error),
       });
     }
   }
