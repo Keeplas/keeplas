@@ -2,7 +2,6 @@ import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
-import { createSocialRecovery } from "@keeplas/crypto/social";
 
 import { Button } from "@/components/button";
 import { ProgressBar } from "@/components/controls";
@@ -17,70 +16,29 @@ import {
   StatusChip,
 } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
+import { useSealSocialRecovery } from "@/features/social-recovery";
 import { toast } from "@/lib/toast";
-import { useAuditedAction } from "@/lib/use-audited-action";
-import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
-import { useViewer } from "@/providers/session-provider";
-import { useVault } from "@/providers/vault-provider";
 
 /** W04-5 mobile twin: configure social recovery and answer requests. */
 export default function RecoveryCenter() {
   const router = useRouter();
   const { t } = useI18n();
-  const viewer = useViewer();
-  const { exportRawMasterKey } = useVault();
   const health = useQuery(api.recovery.getHealth);
-  const targets = useQuery(api.recovery.getSetupTargets);
+  const { targets, seal } = useSealSocialRecovery();
   const requests = useQuery(api.recovery.getRequestsForMe);
-  const myRequest = useQuery(api.recovery.getMyRequest);
   const ways = useRecoveryWays();
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
-  const setup = useAuditedAction(api.recovery_node.setup);
 
   async function configure() {
-    if (!targets) return;
-    const masterKey = await exportRawMasterKey();
     try {
-      const contacts = await Promise.all(
-        targets.contacts.map(async (contact) => ({
-          contactId: contact.contactId,
-          publicKey: await requireVerifiedKey(
-            contactKeyMaterial({ _id: contact.contactId, ...contact }),
-            (contactId, fingerprint) =>
-              pin({
-                contactId: contactId as typeof contact.contactId,
-                fingerprint,
-              }),
-          ),
-        })),
-      );
-      const material = await createSocialRecovery({
-        masterKey,
-        userId: viewer._id,
-        generation: targets.nextGeneration,
-        contacts,
-      });
-      await setup({
-        ...material,
-        shares: material.shares.map((share) => ({
-          ...share,
-          contactId:
-            share.contactId as (typeof targets.contacts)[number]["contactId"],
-        })),
-        completesRequestId:
-          myRequest?.status === "released" ? myRequest.requestId : undefined,
-      });
+      await seal();
     } catch (error) {
       toast({
         variant: "error",
         title: t("common.genericError"),
         description: error instanceof Error ? error.message : undefined,
       });
-    } finally {
-      masterKey.fill(0);
     }
   }
 
