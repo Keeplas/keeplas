@@ -1,10 +1,6 @@
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import {
-  presentContactPickerAsync,
-  requestPermissionsAsync,
-} from "expo-contacts/legacy";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
@@ -22,14 +18,15 @@ import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
-import { fromDeviceContact, type ContactPhone } from "./device-contact";
+import type { ContactPhone } from "./device-contact";
 import { PersonFields, usePersonForm } from "./person-form";
+import { pickContact } from "./pick-contact";
 
 /**
  * M06-2 Add trusted person: details, then what they can do. Mounted from
  * People and from setup (M01-5), so it returns with `router.back()`.
  * The details can be prefilled from a contact picked in the phone's
- * address book, then edited.
+ * address book (no contacts permission on either platform), then edited.
  */
 export function AddPerson() {
   const router = useRouter();
@@ -53,7 +50,6 @@ export function AddPerson() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [phoneChoices, setPhoneChoices] = useState<ContactPhone[]>([]);
-  const [contactsDenied, setContactsDenied] = useState(false);
 
   function fillPhone(country: CountryCode, number: string) {
     form.phone.inputProps.onCountryChange(country);
@@ -61,20 +57,9 @@ export function AddPerson() {
     setPhoneChoices([]);
   }
 
-  async function pickContact() {
-    setContactsDenied(false);
-    // The iOS picker hands over the picked contact without any permission;
-    // Android needs READ_CONTACTS to read its details.
-    if (
-      Platform.OS === "android" &&
-      !(await requestPermissionsAsync()).granted
-    ) {
-      setContactsDenied(true);
-      return;
-    }
-    const contact = await presentContactPickerAsync();
-    if (!contact) return;
-    const picked = fromDeviceContact(contact, phoneCountry);
+  async function fillFromContacts() {
+    const picked = await pickContact(phoneCountry);
+    if (!picked) return;
     form.updateDraft({ name: picked.name, email: picked.email });
     form.setEmailError(false);
     const [first] = picked.phones;
@@ -139,13 +124,8 @@ export function AddPerson() {
         <Button
           variant="secondary"
           label={t("people.fromContacts")}
-          onPress={pickContact}
+          onPress={fillFromContacts}
         />
-        {contactsDenied ? (
-          <Text variant="body-sm" color="status.revoked">
-            {t("people.contactsDenied")}
-          </Text>
-        ) : null}
         <View style={styles.divider}>
           <View
             style={[styles.line, { backgroundColor: colors["border.default"] }]}
