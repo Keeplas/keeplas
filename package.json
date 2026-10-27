@@ -31,6 +31,7 @@
     "life-check:escalate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/escalation-trigger.mjs",
     "review:status": "pnpm with-env --env=prod -- node scripts/review-accounts.mjs status",
     "review:reset": "pnpm with-env --env=prod -- node scripts/review-accounts.mjs reset",
+    "review:seed": "pnpm with-env --env=prod -- tsx --tsconfig apps/mobile/tsconfig.json apps/mobile/scripts/review-seed.ts",
     "sync:convex-env": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --env-file-if-exists=.env.convex.local scripts/sync-convex-env.mjs",
     "link:env": "node scripts/link-env.mjs",
     "predeploy:convex": "pnpm with-env --env=prod -- node scripts/check-convex-deploy.mjs",
@@ -49,6 +50,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.3",
+    "tsx": "^4.23.15",
     "turbo": "^2.9.16",
     "typescript": "^6.0.3"
   },

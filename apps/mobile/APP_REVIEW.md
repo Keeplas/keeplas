@@ -24,7 +24,7 @@ As of 27 October 2026.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
 - **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
 - **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)).
-- **[Demo accounts](#demo-accounts)**, seeded on 27 October 2026: the owner, two accepted contacts and six items. Opened again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
+- **[Demo accounts](#demo-accounts)**, seeded with `pnpm review:seed` on 27 October 2026: the owner, two accepted contacts and six items. The command opens each account again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
 
 **Left to do**
 
@@ -114,7 +114,15 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 
 ## Demo accounts
 
-The owner and the two contacts were created on 27 October 2026 by a one-off operator script (not kept in the repo) that runs the app's own code: vault keys (`crypto/vault-keys.ts`), items (`features/capture/seal.ts` and the outbox), contact key checks (`crypto/contact-keys.ts`). The sign-up attestation came from the internal `attestation:grantSignup`, so no phone was needed. The accounts have no devices yet: the first reviewer's phone becomes the first one.
+`pnpm review:seed` ([`scripts/review-seed.ts`](./scripts/review-seed.ts)) creates the owner and the two contacts on prod; it last ran on 27 October 2026.
+
+- **It runs the app's own code:**
+  - vault keys (`crypto/vault-keys.ts`);
+  - items (`features/capture/seal.ts` and the outbox);
+  - contact key checks (`crypto/contact-keys.ts`).
+- **No phone needed:** the sign-up attestation comes from the internal `attestation:grantSignup`, run with your Convex login.
+- **Proof:** it ends by opening each account again like a new phone.
+- **No devices:** the accounts have none yet, so the first reviewer's phone becomes the first one.
 
 | Account                     | Number          | 24 words (Infisical `prod` → `/keeplas_mobile`) |
 | --------------------------- | --------------- | ----------------------------------------------- |
@@ -127,7 +135,7 @@ The owner's vault holds no real personal data:
 | Item                     | Category  | File                  | After a confirmed death |
 | ------------------------ | --------- | --------------------- | ----------------------- |
 | Summer at the lake       | Family    | Photo (JPEG)          | Alex                    |
-| Message for the family   | Family    | Voice note (m4a)      | Alex                    |
+| A tune for the kids      | Family    | Audio (m4a)           | Alex                    |
 | Where the house keys are | Family    | (note)                | Alex                    |
 | Home insurance policy    | Paperwork | PDF stamped SAMPLE    | Alex and Sam            |
 | Insurance contacts       | Paperwork | (note)                | Alex and Sam            |
@@ -142,23 +150,17 @@ The owner's vault holds no real personal data:
   - they accepted, and their keys are pinned on the owner's side.
 - **Never create another kit on the owner account.** A new kit replaces the old one, and the words in the review notes stop working.
 
-To seed again by hand, use a real iPhone or Android phone with the production app (a TestFlight or internal-track build), since App Attest and Play Integrity reject simulators on prod. First run `pnpm review:reset` on each of the three numbers.
+The files come from `scripts/review-seed/`:
 
-1. **Owner.**
-   1. Tap **Get started**, enter **+1 202 555 0101** and the review code.
-   2. Name the account "Demo Owner" and finish setup (passkey; skip the Keeplas code).
-2. **Recovery kit.** Settings → Privacy and security → Recovery kit → **Create my kit**. Store the 24 words as `REVIEW_DEMO_KIT`.
-3. **Contacts.** Add "Alex Demo" (+1 202 555 0102) and "Sam Demo" (+1 202 555 0103).
-   - Give each an email address you read, such as a team alias. WhatsApp can't reach these numbers, so the invitation link arrives by email.
-   - Sign out, open the invitation email on the phone, then sign up as the contact with the review code and accept.
-   - Store the contact's 24 words as `REVIEW_CONTACT_1_KIT` or `REVIEW_CONTACT_2_KIT`.
-   - Repeat for the second contact, then sign back in as the owner.
-4. **Content.** Add the items above to two categories, "Family" and "Paperwork" (Settings → Categories). On each Family item, open **Share** and pick Alex only. The other items go to every contact by default.
-5. **Settings.**
-   - Life check: **quarterly**, and travel mode on.
-   - Backup: off.
-   - Plan: **Free**.
-6. **Check.** `pnpm review:status` ends with **Ready for review**.
+- the photo is the app's landscape illustration;
+- the PDF is a made-up certificate;
+- the audio is a public-domain melody, synthesized for this, with no recorded or licensed voice.
+
+To seed again, for example after a reviewer changed the demo vault:
+
+1. `pnpm review:reset <number>` on each of the three numbers. They are free once `pnpm review:status` lists them with no account.
+2. `pnpm review:seed`. Like `pnpm deploy:convex`, it needs `infisical login` and `npx convex login`.
+3. The 24 words are new: paste the new `REVIEW_DEMO_KIT` into the review notes.
 
 ## Every submission
 
@@ -282,6 +284,7 @@ Your own testers (TestFlight, Play closed and internal tracks) need none of this
 | The review code in place of the WhatsApp code                              | `packages/convex/phone_auth.ts` (`fixedCode`)                                                                                                                                                                                              |
 | Readiness check (never returns the code) and reset (refuses other numbers) | `packages/convex/store_review.ts`                                                                                                                                                                                                          |
 | `pnpm review:status` and `pnpm review:reset`                               | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)                                                                                                                                                                         |
+| Demo accounts (`pnpm review:seed`) and their files                         | [`apps/mobile/scripts/review-seed.ts`](./scripts/review-seed.ts), `apps/mobile/scripts/review-seed/`                                                                                                                                       |
 | Deletion of an account after a confirmed web request                       | `packages/convex/account_deletion.ts` (`scheduleForPhone`)                                                                                                                                                                                 |
 | Tests                                                                      | `packages/convex/__tests__/`: `store_review.test.ts`, `phone_auth.test.ts`, `account_deletion.test.ts`                                                                                                                                     |
 | Env vars                                                                   | [`.env.example`](../../.env.example) (`REVIEW_PHONES`, `REVIEW_CODE`)                                                                                                                                                                      |
