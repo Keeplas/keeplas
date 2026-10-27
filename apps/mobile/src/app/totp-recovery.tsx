@@ -8,13 +8,13 @@ import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
 import {
   CloudKeyMissing,
   useCloudRestore,
   useRestorableBackup,
 } from "@/features/cloud-backup";
 import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
+import { KitWordsField } from "@/features/kit-words-field";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import { useProveVault } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
@@ -75,16 +75,7 @@ export default function TotpRecovery() {
           }}
         />
       ) : null}
-      <TextField
-        label={t("oneWay.kit")}
-        value={words}
-        onChangeText={setWords}
-        placeholder={t("recoveryKit.placeholder")}
-        multiline
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-      />
+      <KitWordsField value={words} onChangeText={setWords} />
       {error ? (
         <Callout tone="danger" icon="alert-circle" text={error} />
       ) : null}
