@@ -172,7 +172,9 @@
     "body": "Ce téléphone ne détient pas encore la clé de votre coffre. Saisissez les 24 mots de votre kit de récupération, séparés par des espaces.",
     "cta": "Ouvrir mon coffre",
     "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
-    "contactsCta": "Demander à mes contacts"
+    "contactsCta": "Demander à mes contacts",
+    "lastTimeIcloud": "Vous n’aurez besoin de vos mots que cette fois. Dès que votre coffre s’ouvre, Keeplas garde sa clé dans votre trousseau iCloud : votre prochain iPhone l’ouvrira sans eux.",
+    "lastTimeGoogle": "Vous n’aurez besoin de vos mots que cette fois. Dès que votre coffre s’ouvre, Keeplas garde sa clé dans votre sauvegarde Google. Configurez votre prochain téléphone Android à partir de cette sauvegarde : il ouvrira votre coffre sans eux."
   },
   "cloudRestore": {
     "title": "Restaurer depuis {provider}",
@@ -365,7 +367,9 @@
     "windowOver": "Période terminée",
     "windowBody": "Votre coffre sera restauré après 2 validations et la fin de la période de 72 heures.",
     "expired": "Votre dernière demande a expiré avant d'être validée. Vous pouvez en lancer une nouvelle.",
-    "rejected": "{name} a refusé votre demande, la récupération est donc arrêtée. Appelez cette personne pour confirmer que c'était bien vous, puis lancez une nouvelle demande."
+    "rejected": "{name} a refusé votre demande, la récupération est donc arrêtée. Appelez cette personne pour confirmer que c'était bien vous, puis lancez une nouvelle demande.",
+    "notReady": "Vous n’avez pas encore 2 contacts de confiance prêts : ils ne peuvent pas ouvrir votre coffre. Utilisez plutôt votre kit de récupération.",
+    "useKit": "Utiliser mon kit de récupération"
   },
   "home": {
     "greetingMorning": "Bonjour",
@@ -1063,7 +1067,8 @@
     "enable": "Activer la sauvegarde",
     "disable": "Désactiver la sauvegarde",
     "on": "Activée",
-    "off": "Désactivée"
+    "off": "Désactivée",
+    "notEncrypted": "Google ne peut pas chiffrer cette sauvegarde de bout en bout sur ce téléphone. Activez un verrouillage d’écran et connectez-vous à votre compte Google, puis réessayez."
   },
   "invite": {
     "title": "Vous avez été invité",
