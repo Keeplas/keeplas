@@ -1,17 +1,24 @@
-import { memo, useEffect, useRef, type ReactNode } from "react";
 import {
-  Keyboard,
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Keyboard, StyleSheet, View, type ViewStyle } from "react-native";
+import {
   KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-  type ViewStyle,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+  type KeyboardAwareScrollViewRef,
+} from "react-native-keyboard-controller";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { useIsFocused } from "expo-router";
 
 import Branch from "../../assets/illustrations/branch.svg";
 import LandscapeNight from "../../assets/illustrations/landscape-night.svg";
@@ -24,6 +31,10 @@ import { layout } from "@/theme";
 export type ScreenDecor = "branches" | "landscape" | "lake";
 
 const KEYBOARD_GAP = 24;
+
+const RevealContext = createContext<(view: View | null) => void>(() => {});
+
+export const useRevealAboveKeyboard = () => useContext(RevealContext);
 
 // Footer art per decor: [light, night]. `lake` is the website landscape
 // (foliage, pines, lake) with its ambient motion; `landscape` the flat one.
@@ -59,39 +70,36 @@ export function Screen({
 }) {
   const { colors, scheme } = useTheme();
   const tabBar = useTabBarVisible();
-  const scrollRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  const [footerHeight, setFooterHeight] = useState(0);
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
   const offset = useRef(0);
-  const focused = useRef(true);
-  const isFocused = useIsFocused();
-
-  useEffect(() => {
-    focused.current = isFocused;
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (!scroll) return;
-    const subscription = Keyboard.addListener("keyboardDidShow", () => {
-      const input = TextInput.State.currentlyFocusedInput();
-      const view = scrollRef.current;
-      const frame = view?.getNativeScrollRef();
-      if (!focused.current || !input || !view || !frame) return;
-      frame.measureInWindow((_fx, frameTop, _fw, frameHeight) => {
-        input.measureInWindow((_x, top, _width, height) => {
-          const below = top + height + KEYBOARD_GAP - (frameTop + frameHeight);
-          const above = frameTop + KEYBOARD_GAP - top;
+  const reveal = useCallback(
+    (view: View | null) => {
+      const run = () => {
+        const keyboard = Keyboard.metrics();
+        const frame = scrollRef.current;
+        if (!view || !keyboard || !frame) return;
+        view.measureInWindow((_x, top, _width, height) => {
+          const limit =
+            keyboard.screenY - KEYBOARD_GAP - (footer ? footerHeight : 0);
+          const below = top + height - limit;
           if (below > 0) {
-            view.scrollTo({ y: offset.current + below, animated: true });
-          } else if (above > 0) {
-            view.scrollTo({
-              y: Math.max(0, offset.current - above),
-              animated: true,
-            });
+            frame.scrollTo({ y: offset.current + below, animated: true });
           }
         });
+      };
+      if (Keyboard.isVisible()) {
+        run();
+        return;
+      }
+      const subscription = Keyboard.addListener("keyboardDidShow", () => {
+        subscription.remove();
+        run();
       });
-    });
-    return () => subscription.remove();
-  }, [scroll]);
+    },
+    [footer, footerHeight],
+  );
   const content: ViewStyle[] = [
     styles.content,
     { gap },
@@ -106,14 +114,13 @@ export function Screen({
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
       {decor ? <Decor kind={decor} night={scheme === "dark"} /> : null}
       {header}
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        {scroll ? (
-          <ScrollView
+      {scroll ? (
+        <RevealContext.Provider value={reveal}>
+          <KeyboardAwareScrollView
             ref={scrollRef}
+            style={styles.flex}
             contentContainerStyle={content}
+            bottomOffset={KEYBOARD_GAP + (footer ? footerHeight : 0)}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
@@ -123,14 +130,30 @@ export function Screen({
             }}
           >
             {children}
-          </ScrollView>
-        ) : (
+          </KeyboardAwareScrollView>
+          {footer ? (
+            <KeyboardStickyView
+              offset={{ opened: tabBar ? 0 : insets.bottom }}
+              onLayout={(event) =>
+                setFooterHeight(event.nativeEvent.layout.height)
+              }
+              style={[
+                styles.footer,
+                decor ? null : { backgroundColor: colors["bg.app"] },
+              ]}
+            >
+              {footer}
+            </KeyboardStickyView>
+          ) : null}
+        </RevealContext.Provider>
+      ) : (
+        <KeyboardAvoidingView behavior="padding" style={styles.flex}>
           <View style={[styles.flex, ...content, styles.listOwnsBottom]}>
             {children}
           </View>
-        )}
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
-      </KeyboardAvoidingView>
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 }
