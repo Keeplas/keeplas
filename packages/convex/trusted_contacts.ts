@@ -26,6 +26,7 @@ import { resolveLocale, type Locale } from "./lib/locale";
 import { formatSenderIdentity, ownerDisplay } from "./lib/identity";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
+import { trustContactsHealth } from "./recovery";
 
 /**
  * Minimum trust contacts for a working continuity setup. A single guardian is
@@ -103,7 +104,10 @@ export const getContactsReady = query({
   handler: async (ctx) => {
     const userId = await optionalAuth(ctx);
     if (userId === null) return false;
-    return hasReadyTrustQuorum(await acceptedContacts(ctx, userId));
+    const user = await ctx.db.get(userId);
+    if (!user) return false;
+    const health = await trustContactsHealth(ctx, user);
+    return health.configured && !health.renewalRequired;
   },
 });
 

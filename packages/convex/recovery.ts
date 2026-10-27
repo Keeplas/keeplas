@@ -655,6 +655,25 @@ export const getReleasePackage = query({
   },
 });
 
+export async function trustContactsHealth(ctx: QueryCtx, user: Doc<"users">) {
+  const envelope = await currentEnvelope(ctx, user._id);
+  const shares = envelope
+    ? await sharesOf(ctx, user._id, envelope.generation)
+    : [];
+  const eligible = await eligibleTrustContacts(ctx, user._id);
+  const shared = new Set(shares.map((s) => s.contactId as string));
+  const contactsChanged =
+    eligible.length >= RECOVERY_THRESHOLD &&
+    (eligible.length !== shares.length ||
+      eligible.some((c) => !shared.has(c._id)));
+  return {
+    configured: shares.length >= RECOVERY_THRESHOLD,
+    contactCount: shares.length,
+    eligibleCount: eligible.length,
+    renewalRequired: !!user.socialRecoveryRenewalRequired || contactsChanged,
+  };
+}
+
 /** Recovery health for M09-10 / W04-5: which ways back in are set up. */
 export const getHealth = query({
   args: {},
@@ -662,29 +681,14 @@ export const getHealth = query({
     const userId = await optionalAuth(ctx);
     if (!userId) return null;
     const user = await ctx.db.get(userId);
-    const envelope = await currentEnvelope(ctx, userId);
-    const shares = envelope
-      ? await sharesOf(ctx, userId, envelope.generation)
-      : [];
-    const eligible = await eligibleTrustContacts(ctx, userId);
-    const shared = new Set(shares.map((s) => s.contactId as string));
-    const contactsChanged =
-      eligible.length >= RECOVERY_THRESHOLD &&
-      (eligible.length !== shares.length ||
-        eligible.some((c) => !shared.has(c._id)));
+    if (!user) return null;
     const devices = await ctx.db
       .query("devices")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
     return {
-      trustContacts: {
-        configured: shares.length >= RECOVERY_THRESHOLD,
-        contactCount: shares.length,
-        eligibleCount: eligible.length,
-        renewalRequired:
-          !!user?.socialRecoveryRenewalRequired || contactsChanged,
-      },
-      recoveryKit: !!user?.recoveryVerified,
+      trustContacts: await trustContactsHealth(ctx, user),
+      recoveryKit: !!user.recoveryVerified,
       activeDevices: devices.filter((d) => d.revokedAt === undefined).length,
     };
   },
