@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import {
   makeT,
+  runDueJobs,
   seedTrustContact,
   seedUser,
   type TestConvex,
@@ -121,7 +122,7 @@ describe("store review reset", () => {
     await expect(
       t.mutation(internal.store_review.reset, { phoneNumber: SIGNUP_PHONE }),
     ).resolves.toEqual({ reset: true });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await runDueJobs(t);
 
     const left = await t.run(async (ctx) => ({
       user: await ctx.db.get(userId),

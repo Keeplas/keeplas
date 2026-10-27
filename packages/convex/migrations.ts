@@ -3,6 +3,7 @@ import type { PaginationResult } from "convex/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, type MutationCtx } from "./_generated/server";
+import { SECURITY_LOG_RETENTION_MS, WIPE_ACTION } from "./account_deletion";
 import { folderItems } from "./folders";
 import { resolveItemRecipients } from "./helpers";
 import { claimBlob, deleteAllBlobs, type StorageRef } from "./lib/storage";
@@ -332,6 +333,40 @@ export const backfillBlobOwners = internalMutation({
         0,
         internal.migrations.backfillBlobOwners,
         next,
+      );
+    }
+  },
+});
+
+/**
+ * One-shot backfill for accounts erased before the security-log purge
+ * existed: finds each erasure entry in `audit_logs` and schedules that
+ * account's purge 30 days after it (now, if that date has passed). Walks the
+ * table a page at a time, rescheduling itself until done. Idempotent — the
+ * purge skips living accounts and a second purge of the same account is a
+ * no-op. Run once after deploying:
+ *   npx convex run migrations:purgeErasedAccountsSecurityLogs        # dev
+ *   npx convex run migrations:purgeErasedAccountsSecurityLogs --prod # prod
+ */
+export const purgeErasedAccountsSecurityLogs = internalMutation({
+  args: { cursor: v.optional(v.union(v.string(), v.null())) },
+  handler: async (ctx, { cursor = null }) => {
+    const { page, isDone, continueCursor } = await ctx.db
+      .query("audit_logs")
+      .paginate({ cursor, numItems: 500 });
+    for (const log of page) {
+      if (log.action !== WIPE_ACTION) continue;
+      await ctx.scheduler.runAt(
+        log.createdAt + SECURITY_LOG_RETENTION_MS,
+        internal.account_deletion.purgeSecurityLog,
+        { userId: log.userId },
+      );
+    }
+    if (!isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.purgeErasedAccountsSecurityLogs,
+        { cursor: continueCursor },
       );
     }
   },
