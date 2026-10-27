@@ -20,13 +20,12 @@ As of 27 October 2026.
   - the review code works for sign-in and sign-up on the review numbers;
   - `pnpm review:status` and `pnpm review:reset`;
   - `scheduleForPhone`, for deletion requests made on the website.
-- **Prod config:** `REVIEW_PHONES` (the six [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
+- **Prod config:** `REVIEW_PHONES` (the five [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
 - **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
 - **France (ANSSI):** the declaration of the cryptology means was filed and accepted on 27 October 2026 (dossier 34982065 on demarche.numerique.gouv.fr). Its attestation is the document ASC asks for when the app is available in France. Keep the PDF out of this public repo: it holds personal details.
-- **France (ANSSI):** the cryptology declaration was filed on 27 October 2026 and accepted (dossier 34982065). Attach the filing receipt in App Store Connect when it asks for the French declaration; it is kept outside the repo.
 - **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)).
-- **[Demo accounts](#demo-accounts)**, seeded with `pnpm review:seed` on 27 October 2026: the owner, two accepted contacts and six items. The command opens each account again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
+- **[Demo accounts](#demo-accounts)**, seeded with `pnpm review:seed` on 27 October 2026: the owner and two accepted contacts, all on UK numbers and all opened with the same 24 words. The owner's vault holds six items, each contact's two. The command opens each account again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
 
 **Left to do**
 
@@ -34,8 +33,6 @@ As of 27 October 2026.
 - [ ] US export documentation: confirm the route with counsel, either the BIS self-classification report or the open-source notification.
 - [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix and the store review fixes (Android contact picker, copy, error messages).
 - [ ] Android: upload the launch AAB (it must include the same fixes), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
-- [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix.
-- [ ] Android: upload the launch AAB (it must include the UK review numbers fix), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
 - [ ] Website, before submitting (reviewers open these pages):
   - merge [keeplas-website#26](https://github.com/Keeplas/keeplas-website/pull/26) first: every server-rendered route returns 500 on prod, including the support and delete-account forms (`POST /api/contact`);
@@ -80,16 +77,15 @@ Both stores accept this:
 
 ## Review numbers
 
-Use numbers nobody can own, so no message ever reaches a real person. In North America, 555-0100 to 555-0199 are reserved for fiction and never assigned. In the UK, Ofcom keeps 07700 900000 to 900999 for drama. The app's phone check accepts both (`toE164` in `apps/mobile/src/lib/phone.ts` lets the UK range through, since libphonenumber rejects it).
+All the review numbers are British, from the range Ofcom keeps for drama (07700 900000 to 900999): nobody can own them, so no message ever reaches a real person. The app's phone check accepts them (`toE164` in `apps/mobile/src/lib/phone.ts` lets the range through, since libphonenumber rejects it).
 
-| Number          | Role            | Account                                                      |
-| --------------- | --------------- | ------------------------------------------------------------ |
-| +1 202 555 0101 | Demo owner      | Seeded vault, recovery kit, 2 accepted contacts, Free plan   |
-| +1 202 555 0102 | Demo contact 1  | Accepts the owner's invitation                               |
-| +1 202 555 0103 | Demo contact 2  | Accepts the owner's invitation                               |
-| +1 202 555 0104 | Sign-up test    | No account: reviewers create one; reset it after each review |
-| +44 7700 900101 | UK sign-up test | Same, for a reviewer who tries a UK number                   |
-| +44 7700 900102 | UK sign-up test | Same, spare                                                  |
+| Number          | Role           | Account                                                      |
+| --------------- | -------------- | ------------------------------------------------------------ |
+| +44 7700 900101 | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan   |
+| +44 7700 900102 | Demo contact 1 | Seeded vault, recovery kit; accepted the owner's invitation  |
+| +44 7700 900103 | Demo contact 2 | Seeded vault, recovery kit; accepted the owner's invitation  |
+| +44 7700 900104 | Sign-up test   | No account: reviewers create one; reset it after each review |
+| +44 7700 900105 | Sign-up test   | Same, spare                                                  |
 
 WhatsApp messages to these numbers fail quietly. Push notifications reach the phones signed in to the account, such as a reviewer's.
 
@@ -104,7 +100,7 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
    ```
 
 2. **Store the values** in Infisical `prod` → `/keeplas_app`:
-   - `REVIEW_PHONES=+12025550101,+12025550102,+12025550103,+12025550104,+447700900101,+447700900102`
+   - `REVIEW_PHONES=+447700900101,+447700900102,+447700900103,+447700900104,+447700900105`
    - `REVIEW_CODE=<the 6 digits>`
 
    Infisical also copies them to Vercel. The web app doesn't read them, so Vercel needs no redeploy.
@@ -117,7 +113,7 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 
 4. **Deploy the backend** that accepts review sign-ups (`pnpm deploy:convex`), if the current prod deploy predates it.
 
-5. **Check**: `pnpm review:status` lists the six numbers and says `REVIEW_CODE: set`.
+5. **Check**: `pnpm review:status` lists the five numbers and says `REVIEW_CODE: set`.
 
 ## Demo accounts
 
@@ -131,11 +127,13 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 - **Proof:** it ends by opening each account again like a new phone.
 - **No devices:** the accounts have none yet, so the first reviewer's phone becomes the first one.
 
-| Account                     | Number          | 24 words (Infisical `prod` → `/keeplas_mobile`) |
-| --------------------------- | --------------- | ----------------------------------------------- |
-| Demo Owner                  | +1 202 555 0101 | `REVIEW_DEMO_KIT`                               |
-| Alex Demo (owner's contact) | +1 202 555 0102 | `REVIEW_CONTACT_1_KIT`                          |
-| Sam Demo (owner's contact)  | +1 202 555 0103 | `REVIEW_CONTACT_2_KIT`                          |
+| Account                     | Number          |
+| --------------------------- | --------------- |
+| Demo Owner                  | +44 7700 900101 |
+| Alex Demo (owner's contact) | +44 7700 900102 |
+| Sam Demo (owner's contact)  | +44 7700 900103 |
+
+- **One set of 24 words for all three**: `REVIEW_KIT` in Infisical `prod` → `/keeplas_mobile`. A new seed keeps it, so the review notes stay valid. Each vault still has its own salt and MasterKey.
 
 The owner's vault holds no real personal data:
 
@@ -148,6 +146,15 @@ The owner's vault holds no real personal data:
 | Insurance contacts       | Paperwork | (note)                | Alex and Sam            |
 | Email account            | Accounts  | (note, made-up login) | Alex and Sam            |
 
+The contacts have vaults of their own, shared with nobody (they have no trusted contacts):
+
+| Account | Item                    | Category | File            |
+| ------- | ----------------------- | -------- | --------------- |
+| Alex    | Holiday photo           | Other    | Photo (JPEG)    |
+| Alex    | Bank account            | Accounts | (note, made up) |
+| Sam     | Birthday message        | Other    | Audio (m4a)     |
+| Sam     | Streaming subscriptions | Accounts | (note, made up) |
+
 - **Settings:**
   - Free plan, so reviewers can try the Lifetime purchase in the sandbox;
   - Life check quarterly, with travel mode on until 26 November 2026;
@@ -155,7 +162,7 @@ The owner's vault holds no real personal data:
 - **Contacts:**
   - invited by phone only, so no message reached anyone;
   - they accepted, and their keys are pinned on the owner's side.
-- **Never create another kit on the owner account.** A new kit replaces the old one, and the words in the review notes stop working.
+- **Never create another kit on a demo account.** A new kit replaces that account's words, and the ones in the review notes stop opening it.
 
 The files come from `scripts/review-seed/`:
 
@@ -167,12 +174,12 @@ To seed again, for example after a reviewer changed the demo vault:
 
 1. `pnpm review:reset <number>` on each of the three numbers. They are free once `pnpm review:status` lists them with no account.
 2. `pnpm review:seed`. Like `pnpm deploy:convex`, it needs `infisical login` and `npx convex login`.
-3. The 24 words are new: paste the new `REVIEW_DEMO_KIT` into the review notes.
+3. The 24 words stay the same. For new ones, delete `REVIEW_KIT` in Infisical before seeding, then paste the new words into the review notes.
 
 ## Every submission
 
 1. `pnpm review:status` → **Ready for review**.
-   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +12025550104` (or the UK one).
+   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +447700900104` (or `+447700900105`).
    - The owner's travel mode pauses the Life check, so no check-in or escalation runs during the review. It lasts 30 days: after 26 November 2026, sign in to the demo account and turn it on again (Settings → Life check).
 2. Paste the notes below into ASC and the Play Console, with the current code and words from Infisical.
 3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's.
@@ -186,7 +193,7 @@ To seed again, for example after a reviewer changed the demo vault:
 ### App Store Connect: App Review Information
 
 - **Sign-in required**: on.
-- **User name**: `+12025550101`.
+- **User name**: `+447700900101`.
 - **Password**: the review code.
 - **Notes**:
 
@@ -195,18 +202,18 @@ Keeplas has no email and password: an account is a phone number verified with a 
 
 SIGN IN TO THE DEMO ACCOUNT
 1. Tap "I already have an account".
-2. Choose United States and enter (202) 555-0101, then tap "Verify with WhatsApp".
+2. Choose United Kingdom and enter 07700 900101, then tap "Verify with WhatsApp".
 3. Enter the code <REVIEW_CODE>, then tap "Confirm number".
 4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault". If the app first offers to restore from iCloud or Google, tap "Other ways back in", then "Use recovery kit".
    <24 WORDS>
 5. The vault opens on Home. If the app asks to turn on security alerts, either answer works.
 
 TRY SIGN-UP
-Tap "Get started" and use (202) 555-0104, or United Kingdom 07700 900101, with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
+Tap "Get started" and use United Kingdom 07700 900104 (or 07700 900105) with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
-- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both.
+- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both. Both contacts can sign in too, with the same code and the same 24 words: Alex on 07700 900102, Sam on 07700 900103.
 - In-app purchase: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). The demo account is on the Free plan.
 - Account deletion: Settings > Delete my account (erased 7 days later, can be cancelled).
 
@@ -220,7 +227,7 @@ The Life check (a periodic "are you OK?" check), succession (two contacts confir
 
 - **All or some functionality in my app is restricted**.
 - **Instruction name**: "Demo account (phone number and code)".
-- **Username**: `+12025550101`.
+- **Username**: `+447700900101`.
 - **Password**: the review code.
 - **Any other instructions**: the same notes as above.
 
