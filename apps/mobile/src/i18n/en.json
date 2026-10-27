@@ -99,7 +99,7 @@
     "saving": "Saving your encrypted vault…"
   },
   "contacts": {
-    "title": "Add trust contacts",
+    "title": "Add trusted contacts",
     "body": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death. They only see what you share with them.",
     "invite": "Invite contacts",
     "skip": "Skip for now",
@@ -109,7 +109,7 @@
     "title": "Setup complete",
     "body": "Your account is ready. Your information is safe and ready for tomorrow.",
     "optional": "Optional protection",
-    "contactsTitle": "Add trust contacts",
+    "contactsTitle": "Add trusted contacts",
     "contactsBody": "Invite people you trust. Any 2 of them can help you recover your account and confirm a death.",
     "open": "Open my vault",
     "backupBody": "Your vault comes back on a new phone with your {account} account."
@@ -359,7 +359,7 @@
     "restore": "Restore my vault",
     "cancel": "Cancel request",
     "requestTitle": "Recovery request",
-    "requestBody": "Your trust contacts are reviewing your request. You'll be notified when the approvals are received and the protection window ends.",
+    "requestBody": "Your trusted contacts are reviewing your request. You'll be notified when the approvals are received and the protection window ends.",
     "approvals": "{n} of 2 approvals received",
     "approvalsLeft": "{n} more approval needed to restore your vault.",
     "approvalsDone": "Both approvals are in.",
@@ -971,7 +971,7 @@
     "remove": "Remove",
     "removeTitle": "Remove {name}?",
     "removeBody": "{name} will no longer be able to help you recover your account.",
-    "addTrust": "Add a trust contact",
+    "addTrust": "Add a trusted contact",
     "emailInvalid": "Enter a valid email address, like name@example.com.",
     "alreadyInvited": "This person is already one of your contacts.",
     "inviteFailed": "The invitation couldn't be sent. Check your connection and try again.",
@@ -1208,7 +1208,7 @@
   "lostAccess": {
     "title": "Lost access to your vault?",
     "body": "You can safely recover your vault using one of the options below.",
-    "contacts": "Ask trust contacts",
+    "contacts": "Ask trusted contacts",
     "contactsBody": "Request approval from your trusted contacts (if configured).",
     "kit": "Use recovery kit",
     "kitBody": "Enter your 24 words if you exported a recovery kit.",
@@ -1222,12 +1222,12 @@
     "cta": "Set up succession plan",
     "reminders": "Owner reminders",
     "remindersBody": "We'll remind you periodically to keep your information up to date.",
-    "contacts": "2 trust contacts confirm death",
+    "contacts": "2 trusted contacts confirm death",
     "contactsBody": "Both contacts must confirm before any access is granted.",
     "grace": "72-hour grace period",
     "graceBody": "A waiting period gives you time to respond if needed.",
     "assigned": "Only assigned content released",
-    "assignedBody": "Your trust contacts can access only the content you've assigned to them."
+    "assignedBody": "Your trusted contacts can access only the content you've assigned to them."
   },
   "itemActions": {
     "open": "Open",
