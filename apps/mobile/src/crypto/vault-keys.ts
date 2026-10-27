@@ -175,12 +175,14 @@ export interface KitMaterial {
 /**
  * New 24 words + salt → RootKey → bundle sealing `rawMasterKey`. Used at
  * vault creation and to replace a lost kit (after a recovery): storing it
- * makes the previous words useless.
+ * makes the previous words useless. `words` reuses given ones instead (the
+ * store review demo accounts share one kit); the salt is always new.
  */
 export async function createKitMaterial(
   rawMasterKey: Uint8Array,
+  words?: string[],
 ): Promise<KitMaterial> {
-  const phrase = await generatePhrase();
+  const phrase = words ?? (await generatePhrase());
   const salt = generatePhraseVerifierSalt();
   const phraseSalt = uint8ToBase64(salt);
   const recoveryPhraseHash = await derivePhraseVerifier(phrase, salt);
@@ -235,10 +237,12 @@ export async function createPublicKeyMaterial(
 }
 
 /** Everything M01-4 "Create my vault" needs, generated on the device. */
-export async function createVaultMaterial(): Promise<VaultMaterial> {
+export async function createVaultMaterial(
+  words?: string[],
+): Promise<VaultMaterial> {
   const masterKey = await generateMasterKey();
   const rawMasterKey = await exportRawKey(masterKey);
-  const kit = await createKitMaterial(rawMasterKey);
+  const kit = await createKitMaterial(rawMasterKey, words);
   const { publicKeys, identitySecretKey } =
     await createPublicKeyMaterial(masterKey);
   return { ...kit, publicKeys, rawMasterKey, identitySecretKey };
