@@ -2,8 +2,8 @@
 // App Store / Google Play review accounts (runbook: apps/mobile/APP_REVIEW.md).
 //
 //   pnpm review:status                 # is every REVIEW_PHONES number ready?
-//   pnpm review:reset +12025550104     # erase that review account now
-//   pnpm review:reset +12025550104 --yes   # same, without the prompt
+//   pnpm review:reset +447700900104     # erase that review account now
+//   pnpm review:reset +447700900104 --yes   # same, without the prompt
 //
 // Both run the internal `store_review` functions on the PROD deployment, where
 // the reviewers sign in: the root scripts wrap this file in
@@ -131,7 +131,7 @@ if (command === "status") {
 }
 
 if (command === "reset") {
-  if (!phoneArg) fail("Give the review number to reset, e.g. +12025550104.");
+  if (!phoneArg) fail("Give the review number to reset, e.g. +447700900104.");
   const phone = phoneArg.replace(/\s+/g, "");
   // Show what would be erased first: a typo between the demo owner and the
   // spare sign-up number must not go unnoticed.

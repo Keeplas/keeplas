@@ -146,4 +146,14 @@ describe("vault material matches the web onboarding format", () => {
       ),
     ).rejects.toThrow("Unsupported");
   });
+
+  it("seals given words into separate vaults, each with its own salt", async () => {
+    const first = await createVaultMaterial();
+    const second = await createVaultMaterial(first.phrase);
+    expect(second.phrase).toEqual(first.phrase);
+    expect(second.phraseSalt).not.toBe(first.phraseSalt);
+    expect(second.rawMasterKey).not.toEqual(first.rawMasterKey);
+    const opened = await openKeyBundle(second.encryptedKeyBundle, first.phrase);
+    expect(opened.masterKey).toEqual(second.rawMasterKey);
+  });
 });
