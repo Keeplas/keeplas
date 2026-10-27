@@ -9,15 +9,21 @@ export interface ContactPhone {
   number: string;
 }
 
+/** What Add person prefills from a contact picked in the address book. */
+export interface PickedContact {
+  name: string;
+  email: string;
+  phones: ContactPhone[];
+}
+
 /**
- * The details Add person prefills from a contact picked in the phone's
- * address book. Numbers without a dial code are read in the contact's
- * region, else in `country` (the Phone Input's current one).
+ * Reads a contact from the iOS picker. Numbers without a dial code are read
+ * in the contact's region, else in `country` (the Phone Input's current one).
  */
 export function fromDeviceContact(
   contact: ExistingContact,
   country: CountryCode,
-): { name: string; email: string; phones: ContactPhone[] } {
+): PickedContact {
   return {
     // Typed as a string, but the iOS picker never sends it: rebuild it.
     name:
