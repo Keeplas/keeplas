@@ -9,6 +9,7 @@ import { Card, InfoRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { providerName } from "@/features/cloud-backup";
 import { readPreference } from "@/lib/preferences";
+import { contactsCanRecover } from "@/lib/social-recovery-policy";
 import { useI18n } from "@/providers/i18n-provider";
 import * as CloudKey from "../../modules/cloud-key";
 
@@ -20,7 +21,7 @@ import * as CloudKey from "../../modules/cloud-key";
  */
 export function useRecoveryWays() {
   const backup = useQuery(api.cloud_backup.status);
-  const contacts = useQuery(api.trusted_contacts.getContactsReady) ?? false;
+  const contacts = contactsCanRecover(useQuery(api.recovery.getHealth));
   const [kit, setKit] = useState(false);
 
   useFocusEffect(

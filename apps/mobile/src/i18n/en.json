@@ -133,7 +133,8 @@
     "pdfSaved": "PDF saved",
     "imageSaved": "Image saved",
     "exportFailed": "Keeplas could not create the file. Try again.",
-    "fileWarning": "Anyone with these words can open your vault. Best: print the PDF, then delete the file. A copy in your photos or cloud drive can be read by anyone who gets into that account."
+    "fileWarning": "Anyone with these words can open your vault. Best: print the PDF, then delete the file. A copy in your photos or cloud drive can be read by anyone who gets into that account.",
+    "qr": "Scan this code with the Keeplas app to open your vault without typing the words. Keep it as private as the words."
   },
   "oneWay": {
     "title": "If you lose this phone, you lose your vault",
@@ -1522,5 +1523,14 @@
     "understand": "I saved my 24 words and I understand Keeplas can't recover my vault.",
     "confirm": "Turn off and delete backup",
     "done": "Cloud backup turned off"
+  },
+  "kitScan": {
+    "scan": "Scan QR code",
+    "image": "From an image",
+    "title": "Scan your kit’s QR code",
+    "body": "Point the camera at the QR code on your printed kit or on the kit image.",
+    "invalid": "This QR code isn’t a Keeplas recovery kit.",
+    "noQr": "No QR code found in this image.",
+    "paperHint": "Kit without a QR code? Tap the field, then use your keyboard’s Scan Text to read the words."
   }
 }

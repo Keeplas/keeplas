@@ -23,6 +23,7 @@ import {
 } from "@10play/tentap-editor";
 
 import { Icon } from "@/components/icon";
+import { useRevealAboveKeyboard } from "@/components/screen";
 import { Text } from "@/components/text";
 import { interFontCss } from "./inter-font";
 import { useI18n } from "@/providers/i18n-provider";
@@ -81,10 +82,16 @@ export function NoteEditor({
   const state = useBridgeState(editor);
   const content = useEditorContent(editor, { type: "html" });
   const report = useRef(onChange);
+  const box = useRef<View>(null);
+  const reveal = useRevealAboveKeyboard();
 
   useEffect(() => {
     report.current = onChange;
   }, [onChange]);
+
+  useEffect(() => {
+    if (state.isFocused) reveal(box.current);
+  }, [state.isFocused, reveal]);
 
   useEffect(() => {
     if (!state.isReady) return;
@@ -183,6 +190,7 @@ export function NoteEditor({
 
   return (
     <View
+      ref={box}
       style={[
         styles.box,
         {

@@ -9,10 +9,14 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { File } from "expo-file-system";
 import { captureRef } from "react-native-view-shot";
+import QRCode from "qrcode";
+
+import { encodeKitQr } from "./kit-qr";
 
 export interface KitLabels {
   title: string;
   created: string;
+  qr: string;
   rules: string[];
 }
 
@@ -26,7 +30,11 @@ const escapeHtml = (text: string) =>
   );
 
 /** Printable A4 page: title, date, the numbered words in two columns, rules. */
-export function kitPdfHtml(phrase: string[], labels: KitLabels): string {
+export function kitPdfHtml(
+  phrase: string[],
+  labels: KitLabels,
+  qrSvg: string,
+): string {
   const words = phrase
     .map(
       (word, index) =>
@@ -46,11 +54,15 @@ export function kitPdfHtml(phrase: string[], labels: KitLabels): string {
     .w { font-size: 17px; font-weight: 600; }
     .w small { display: inline-block; width: 28px; color: #8A97A8; font-weight: 400; font-size: 13px; }
     li { color: #3A4A60; font-size: 13px; line-height: 20px; }
+    .qr { display: flex; align-items: center; gap: 20px; margin: 0 0 24px; }
+    .qr svg { width: 120px; height: 120px; flex: none; }
+    .qr p { color: #3A4A60; font-size: 13px; line-height: 20px; margin: 0; }
   </style></head><body>
     <div class="brand">Keeplas</div>
     <h1>${escapeHtml(labels.title)}</h1>
     <div class="meta">${escapeHtml(labels.created)}</div>
     <div class="grid">${words}</div>
+    <div class="qr">${qrSvg}<p>${escapeHtml(labels.qr)}</p></div>
     <ul>${rules}</ul>
   </body></html>`;
 }
@@ -71,8 +83,13 @@ export async function shareKitPdf(
   phrase: string[],
   labels: KitLabels,
 ): Promise<void> {
+  const qrSvg = await QRCode.toString(encodeKitQr(phrase), {
+    type: "svg",
+    margin: 0,
+    errorCorrectionLevel: "M",
+  });
   const { uri } = await Print.printToFileAsync({
-    html: kitPdfHtml(phrase, labels),
+    html: kitPdfHtml(phrase, labels, qrSvg),
     width: 595,
     height: 842,
   });

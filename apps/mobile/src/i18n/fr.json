@@ -126,7 +126,8 @@
     "pdfSaved": "PDF enregistré",
     "imageSaved": "Image enregistrée",
     "exportFailed": "Keeplas n'a pas pu créer le fichier. Réessayez.",
-    "fileWarning": "Quiconque possède ces mots peut ouvrir votre coffre. Le mieux : imprimez le PDF, puis supprimez le fichier. Une copie dans vos photos ou votre cloud peut être lue par quiconque accède à ce compte."
+    "fileWarning": "Quiconque possède ces mots peut ouvrir votre coffre. Le mieux : imprimez le PDF, puis supprimez le fichier. Une copie dans vos photos ou votre cloud peut être lue par quiconque accède à ce compte.",
+    "qr": "Scannez ce code avec l’app Keeplas pour ouvrir votre coffre sans taper les mots. Gardez-le aussi secret que les mots."
   },
   "oneWay": {
     "title": "Si vous perdez ce téléphone, vous perdez votre coffre",
@@ -1506,5 +1507,14 @@
     "understand": "J'ai enregistré mes 24 mots et je comprends que Keeplas ne peut pas récupérer mon coffre.",
     "confirm": "Désactiver et supprimer la sauvegarde",
     "done": "Sauvegarde cloud désactivée"
+  },
+  "kitScan": {
+    "scan": "Scanner le QR code",
+    "image": "Depuis une image",
+    "title": "Scannez le QR code de votre kit",
+    "body": "Visez le QR code de votre kit imprimé ou de l’image du kit.",
+    "invalid": "Ce QR code n’est pas un kit de récupération Keeplas.",
+    "noQr": "Aucun QR code trouvé dans cette image.",
+    "paperHint": "Kit sans QR code ? Touchez le champ, puis utilisez « Scanner du texte » de votre clavier pour lire les mots."
   }
 }

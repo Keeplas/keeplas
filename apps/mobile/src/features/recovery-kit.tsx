@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 
 import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
@@ -14,6 +15,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { colors, radius } from "@/theme";
 import { shareKitImage, shareKitPdf } from "./kit-export";
+import { encodeKitQr } from "./kit-qr";
 
 /**
  * Create a new recovery kit: new 24 words for this vault (the previous ones
@@ -92,6 +94,7 @@ export function KitWords({
         await shareKitPdf(phrase, {
           title: t("kit.title"),
           created,
+          qr: t("kit.qr"),
           rules: [t("kit.rule1"), t("kit.warning"), t("kit.rule3")],
         });
       } else {
@@ -156,6 +159,14 @@ export function KitWords({
           <View style={styles.imageWords}>
             <WordGrid phrase={phrase} inverse />
           </View>
+          <View style={styles.imageQr}>
+            <View style={styles.qrTile}>
+              <QRCode value={encodeKitQr(phrase)} size={112} />
+            </View>
+            <Text variant="body-sm" style={[styles.inverseMuted, styles.flex]}>
+              {t("kit.qr")}
+            </Text>
+          </View>
           <Text variant="body-sm" style={styles.inverseMuted}>
             {t("kit.warning")}
           </Text>
@@ -183,6 +194,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.md,
     backgroundColor: colors.ivory["50"],
+  },
+  imageQr: { flexDirection: "row", alignItems: "center", gap: 16 },
+  qrTile: {
+    padding: 8,
+    borderRadius: radius.sm,
+    backgroundColor: colors.white,
   },
   inverse: { color: colors.white },
   inverseMuted: { color: colors.navy["200"] },
