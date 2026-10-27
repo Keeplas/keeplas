@@ -8,9 +8,9 @@ import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
 import { useRestorableBackup } from "@/features/cloud-backup";
 import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
+import { KitWordsField } from "@/features/kit-words-field";
 import { OtherOptions } from "@/features/other-options";
 import { needsCloudBackup } from "@/lib/backup-policy";
 import { useI18n } from "@/providers/i18n-provider";
@@ -79,16 +79,7 @@ export default function RecoveryKitEntry() {
           )}
         />
       ) : null}
-      <TextField
-        label={t("oneWay.kit")}
-        value={words}
-        onChangeText={setWords}
-        placeholder={t("recoveryKit.placeholder")}
-        multiline
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-      />
+      <KitWordsField value={words} onChangeText={setWords} />
       {invalid ? (
         <Text variant="body-sm" color="status.revoked">
           {t("recoveryKit.invalid")}

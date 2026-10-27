@@ -11,8 +11,8 @@ import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { TextField } from "@/components/text-field";
 import { isFullKit, rememberKit } from "@/features/kit-open";
+import { KitWordsField } from "@/features/kit-words-field";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { usePhoneField } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
@@ -71,16 +71,7 @@ export default function LostNumberKit() {
       </Text>
       <Text variant="label">{t("lostNumber.oldNumber")}</Text>
       <PhoneInput {...phone.inputProps} />
-      <TextField
-        label={t("oneWay.kit")}
-        value={words}
-        onChangeText={setWords}
-        placeholder={t("recoveryKit.placeholder")}
-        multiline
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-      />
+      <KitWordsField value={words} onChangeText={setWords} />
       {error ? (
         <Callout tone="danger" icon="alert-circle" text={error} />
       ) : null}
