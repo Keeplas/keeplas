@@ -34,6 +34,10 @@ As of 27 October 2026.
 - [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix and the store review fixes (Android contact picker, copy, error messages).
 - [ ] Android: upload the launch AAB (it must include the same fixes), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
+- [ ] Website, before submitting (reviewers open these pages):
+  - merge [keeplas-website#26](https://github.com/Keeplas/keeplas-website/pull/26) first: every server-rendered route returns 500 on prod, including the support and delete-account forms (`POST /api/contact`);
+  - merge [#25](https://github.com/Keeplas/keeplas-website/pull/25): the lost or new phone guide that Help → "Full guide on keeplas.com" opens (`/lost-phone`, a 500 today);
+  - review and merge [#27](https://github.com/Keeplas/keeplas-website/pull/27): the privacy policy and terms still start with "This document is a template" and contradict the app (5 GB, 30-day refund, Stripe, email sign-up).
 - [ ] Replace the `keeplas_lifetime` review screenshot in ASC: it is still the blank placeholder RevenueCat uploaded. Take it on a phone: Settings → Upgrade, with the sheet open.
 
 ## What the stores check
@@ -233,8 +237,8 @@ Vault content (items, notes, files, voice notes) is end-to-end encrypted: Keepla
 | Email Address · Personal info → Email address        | Optional, plus the email addresses of contacts you invite                                                     | Yes                |
 | Contacts · Contacts                                  | The name, phone and email of each trusted contact you add (only the contact you pick, never the address book) | Yes                |
 | Photos or Videos · Photos and videos → Photos        | Optional profile photo (not end-to-end encrypted)                                                             | Yes                |
-| Other Data Types · Personal info → Other info        | Date of birth, if the user adds it in My account                                                              | Yes                |
-| Coarse Location · Location → Approximate location    | Country derived from the IP address, kept with the IP in the security log                                     | Yes                |
+| Other Data Types · Personal info → Other info        | Date of birth and country of residence, when the user gives them (My account)                                 | Yes                |
+| Coarse Location · Location → Approximate location    | Country and city derived from the IP address, kept with the IP in the security log and the device list        | Yes                |
 | Customer Support · Messages → Other in-app messages  | Support requests: name, reply-to contact, message                                                             | Yes                |
 | User ID · Personal info → User IDs                   | Account ID, also given to RevenueCat for purchases                                                            | Yes                |
 | Device ID · Device or other IDs                      | Device registry, push tokens (Expo, APNs, FCM)                                                                | Yes                |
