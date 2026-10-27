@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { BootSplash } from "@/components/boot-splash";
@@ -23,22 +24,24 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <I18nProvider>
-          <ConvexProvider>
-            <VaultProvider>
-              <SessionProvider>
-                <OutboxProvider>
-                  <AccountLanguageSync />
-                  <ResumeTracker />
-                  <Routes />
-                  <Toaster />
-                </OutboxProvider>
-              </SessionProvider>
-            </VaultProvider>
-          </ConvexProvider>
-        </I18nProvider>
-      </ThemeProvider>
+      <KeyboardProvider>
+        <ThemeProvider>
+          <I18nProvider>
+            <ConvexProvider>
+              <VaultProvider>
+                <SessionProvider>
+                  <OutboxProvider>
+                    <AccountLanguageSync />
+                    <ResumeTracker />
+                    <Routes />
+                    <Toaster />
+                  </OutboxProvider>
+                </SessionProvider>
+              </VaultProvider>
+            </ConvexProvider>
+          </I18nProvider>
+        </ThemeProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useI18n } from "@/providers/i18n-provider";
@@ -41,13 +35,11 @@ export function BottomSheet({
       transparent
       visible={visible}
       animationType="slide"
+      statusBarTranslucent
+      navigationBarTranslucent
       onRequestClose={onDismiss}
     >
-      {/* Same as `Screen`: Android resizes the window for the keyboard. */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.scrim}
-      >
+      <KeyboardAvoidingView behavior="padding" style={styles.scrim}>
         <Pressable style={styles.backdrop} onPress={onDismiss}>
           <Pressable
             style={[
