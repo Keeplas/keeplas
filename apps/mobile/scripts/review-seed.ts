@@ -7,10 +7,13 @@
 // vault keys (crypto/vault-keys.ts), items (features/capture/seal.ts and the
 // outbox), contact key checks (crypto/contact-keys.ts). The sign-up
 // attestation comes from the internal `attestation:grantSignup`, run with
-// the operator's Convex login, so no phone is needed. Each account's 24
-// words go to Infisical prod /keeplas_mobile before its vault exists and are
-// never printed. The three numbers must be free: `pnpm review:reset <number>`.
-// It ends by opening every account again like a new phone.
+// the operator's Convex login, so no phone is needed. The three accounts
+// share one set of 24 words, REVIEW_KIT in Infisical prod /keeplas_mobile:
+// kept from the last run (so the review notes stay valid), or created and
+// stored before any vault exists. They are never printed. Each vault still
+// gets its own salt and MasterKey. The three numbers must be free:
+// `pnpm review:reset <number>`. It ends by opening every account again like
+// a new phone.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -48,22 +51,12 @@ import {
   type OutboxDeps,
 } from "@/features/outbox/outbox";
 import { openSealedItem } from "@/features/vault/open-sealed-item";
+import { generatePhrase } from "@keeplas/crypto/recovery";
 
-const OWNER = {
-  phone: "+12025550101",
-  name: "Demo Owner",
-  kit: "REVIEW_DEMO_KIT",
-};
-const ALEX = {
-  phone: "+12025550102",
-  name: "Alex Demo",
-  kit: "REVIEW_CONTACT_1_KIT",
-};
-const SAM = {
-  phone: "+12025550103",
-  name: "Sam Demo",
-  kit: "REVIEW_CONTACT_2_KIT",
-};
+const OWNER = { phone: "+447700900101", name: "Demo Owner" };
+const ALEX = { phone: "+447700900102", name: "Alex Demo" };
+const SAM = { phone: "+447700900103", name: "Sam Demo" };
+const KIT = "REVIEW_KIT";
 const ASSETS = resolve("apps/mobile/scripts/review-seed");
 const DAY_MS = 86_400_000;
 
@@ -107,17 +100,28 @@ function admin(fn: string, args: Record<string, unknown>): unknown {
 }
 
 const KIT_PATH = ["--env=prod", "--path=/keeplas_mobile", "--silent"];
-const storeKit = (secret: string, phrase: string[]) =>
+const readKit = () =>
+  run("infisical", ["secrets", "get", KIT, ...KIT_PATH, "--plain"])
+    .trim()
+    .split(/\s+/);
+
+/** REVIEW_KIT from the last run, or new words stored before any vault. */
+async function sharedKit(): Promise<string[]> {
+  try {
+    const words = readKit();
+    if (words.length === 24) return words;
+  } catch {
+    // Not stored yet.
+  }
+  const words = await generatePhrase();
   run("infisical", [
     "secrets",
     "set",
     ...KIT_PATH,
-    `${secret}=${phrase.join(" ")}`,
+    `${KIT}=${words.join(" ")}`,
   ]);
-const readKit = (secret: string) =>
-  run("infisical", ["secrets", "get", secret, ...KIT_PATH, "--plain"])
-    .trim()
-    .split(/\s+/);
+  return words;
+}
 
 if (!(process.env.CONVEX_DEPLOYMENT ?? "").startsWith("prod:")) {
   throw new Error("Not pointed at prod: run pnpm review:seed");
@@ -176,14 +180,13 @@ async function session(
 }
 
 /** Sign-up + "Create my vault" (lib/use-create-vault.ts), no device. */
-async function createAccount(person: Person): Promise<Account> {
+async function createAccount(person: Person, kit: string[]): Promise<Account> {
   admin("attestation:grantSignup", {
     phoneNumber: person.phone,
     platform: "ios",
   });
   const client = await session(person.phone, "signUp", person.name);
-  const material = await createVaultMaterial();
-  storeKit(person.kit, material.phrase);
+  const material = await createVaultMaterial(kit);
   await client.mutation(api.onboarding.storeRecoveryPhraseHash, {
     recoveryPhraseHash: material.recoveryPhraseHash,
     phraseSalt: material.phraseSalt,
@@ -254,11 +257,12 @@ async function verifiedKeys(owner: Account): Promise<Map<string, string>> {
 
 /** Seal + upload one capture through the phone's outbox code. */
 async function addItem(
-  owner: Account,
+  account: Account,
   userId: string,
   vaultId: string,
   draft: CaptureDraft,
 ) {
+  const { client } = account;
   const _audit = await auditContext();
   const written = new Map<string, Uint8Array>();
   const io: SealIO = {
@@ -283,13 +287,13 @@ async function addItem(
   const { item, files } = await sealCapture(
     entryId,
     draft,
-    owner.material.publicKeys.publicKey,
+    account.material.publicKeys.publicKey,
     io,
   );
   const deps: OutboxDeps = {
     vaultId: async () => vaultId,
     generateUploadUrl: () =>
-      owner.client.mutation(api.vault_items.generateUploadUrl, {
+      client.mutation(api.vault_items.generateUploadUrl, {
         _audit,
       }) as Promise<string>,
     upload: async (url, path, onProgress) => {
@@ -304,16 +308,16 @@ async function addItem(
       return ((await res.json()) as { storageId: string }).storageId;
     },
     createItem: (args) =>
-      owner.client.mutation(api.vault_items.createItem, {
+      client.mutation(api.vault_items.createItem, {
         ...(args as unknown as FunctionArgs<typeof api.vault_items.createItem>),
         _audit,
       }) as Promise<string>,
     addItemFiles: () => Promise.reject(new Error("Not used")),
     deleteLocalFile: (path) => written.delete(path),
     canStore: async (bytes) =>
-      (await owner.client.query(api.vaults.canStore, { bytes })).fits,
+      (await client.query(api.vaults.canStore, { bytes })).fits,
     discardUploads: async (storageIds) => {
-      await owner.client.mutation(api.vault_items.discardUploads, {
+      await client.mutation(api.vault_items.discardUploads, {
         storageIds: storageIds as Id<"_storage">[],
         _audit,
       });
@@ -334,6 +338,31 @@ async function addItem(
   );
 }
 
+async function fillVault(account: Account, drafts: CaptureDraft[]) {
+  const viewer = await account.client.query(api.users.viewer, {});
+  const vaultId = await account.client.mutation(
+    api.vaults.getOrCreateVault,
+    {},
+  );
+  for (const draft of drafts)
+    await addItem(account, viewer!._id, vaultId, draft);
+}
+
+/** A file from scripts/review-seed/, named as the reviewer will see it. */
+const file = (
+  name: string,
+  asset: string,
+  mimeType: string,
+  kind: "image" | "audio" | "document",
+  durationSec?: number,
+) => ({
+  uri: resolve(ASSETS, asset),
+  name,
+  mimeType,
+  kind,
+  durationSec,
+});
+
 async function seed() {
   const status = admin("store_review:status", {}) as {
     accounts: { phoneNumber: string; account: unknown }[];
@@ -353,9 +382,10 @@ async function seed() {
   }
 
   console.log("Creating the accounts…");
-  const alex = await createAccount(ALEX);
-  const sam = await createAccount(SAM);
-  const owner = await createAccount(OWNER);
+  const kit = await sharedKit();
+  const alex = await createAccount(ALEX, kit);
+  const sam = await createAccount(SAM, kit);
+  const owner = await createAccount(OWNER, kit);
 
   console.log("Adding and accepting the two contacts…");
   const alexId = await addContact(owner, alex);
@@ -377,8 +407,6 @@ async function seed() {
   };
 
   console.log("Adding categories and items…");
-  const viewer = await owner.client.query(api.users.viewer, {});
-  const vaultId = await owner.client.mutation(api.vaults.getOrCreateVault, {});
   const masterKey = await importAesKey(owner.material.rawMasterKey);
   const category = async (name: string) => ({
     category: CUSTOM_FALLBACK,
@@ -389,20 +417,7 @@ async function seed() {
   });
   const family = await category("Family");
   const paperwork = await category("Paperwork");
-  const file = (
-    name: string,
-    asset: string,
-    mimeType: string,
-    kind: "image" | "audio" | "document",
-    durationSec?: number,
-  ) => ({
-    uri: resolve(ASSETS, asset),
-    name,
-    mimeType,
-    kind,
-    durationSec,
-  });
-  const drafts: CaptureDraft[] = [
+  await fillVault(owner, [
     {
       title: "Summer at the lake",
       note: "",
@@ -442,7 +457,7 @@ async function seed() {
     },
     {
       title: "Insurance contacts",
-      note: "Home insurance: Example Mutual, policy DEMO-2026-0001, claims line +1 202 555 0199.\nCar insurance: Sample Auto Cover, policy DEMO-CAR-0002.\nAll names and numbers here are made up.",
+      note: "Home insurance: Example Mutual, policy DEMO-2026-0001, claims line +44 7700 900199.\nCar insurance: Sample Auto Cover, policy DEMO-CAR-0002.\nAll names and numbers here are made up.",
       files: [],
       ...paperwork,
       share: both,
@@ -454,8 +469,39 @@ async function seed() {
       category: "credential",
       share: both,
     },
-  ];
-  for (const draft of drafts) await addItem(owner, viewer!._id, vaultId, draft);
+  ]);
+  // The contacts' own vaults: a reviewer signed in as one sees a few items
+  // too. They have no trusted contacts, so nothing is shared.
+  await fillVault(alex, [
+    {
+      title: "Holiday photo",
+      note: "",
+      files: [file("Holiday photo.jpg", "photo.jpg", "image/jpeg", "image")],
+      category: "other",
+    },
+    {
+      title: "Bank account",
+      note: "Bank: Example Bank, current account ending 0000.\nThis is demo content: no real account.",
+      files: [],
+      category: "credential",
+    },
+  ]);
+  await fillVault(sam, [
+    {
+      title: "Birthday message",
+      note: "",
+      files: [
+        file("Birthday message.m4a", "tune.m4a", "audio/mp4", "audio", 7),
+      ],
+      category: "other",
+    },
+    {
+      title: "Streaming subscriptions",
+      note: "Music: Sample Music, monthly.\nFilms: Demo Flix, yearly.\nAll names here are made up.",
+      files: [],
+      category: "credential",
+    },
+  ]);
 
   console.log("Life check quarterly with travel mode, cloud backup off…");
   const _audit = await auditContext();
@@ -484,93 +530,92 @@ async function seed() {
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
-/** Open an account like a new phone: review code, then the stored words. */
-async function openLikeNewPhone(person: Person) {
+/** Open an account like a new phone: review code, then REVIEW_KIT. */
+async function openLikeNewPhone(person: Person, kit: string[]) {
   const client = await session(person.phone, "signIn");
   const viewer = await client.query(api.users.viewer, {});
   if (!viewer?.encryptedKeyBundle) throw new Error(`${person.name}: no vault`);
-  const { masterKey } = await openKeyBundle(
-    viewer.encryptedKeyBundle,
-    readKit(person.kit),
-  );
+  const { masterKey } = await openKeyBundle(viewer.encryptedKeyBundle, kit);
   const mk = await importMasterKey(masterKey);
   return { client, mk, keys: await loadOwnerKeys(viewer, mk) };
 }
 
+/** Opens each account and every item in it like a reviewer's new phone. */
 async function verify() {
   const originals = new Map(
     [
       ["Summer at the lake.jpg", "photo.jpg"],
       ["Voice note.m4a", "tune.m4a"],
       ["Home insurance policy.pdf", "insurance-policy.pdf"],
+      ["Holiday photo.jpg", "photo.jpg"],
+      ["Birthday message.m4a", "tune.m4a"],
     ].map(([name, asset]) => [
       name,
       sha256(readFileSync(resolve(ASSETS, asset))),
     ]),
   );
-  const owner = await openLikeNewPhone(OWNER);
-  const categories = new Map<string, string>();
-  for (const c of await owner.client.query(api.vault_categories.list, {})) {
-    categories.set(c._id, await decryptText(c.encryptedName, owner.mk));
-  }
-  const contacts = await owner.client.query(
-    api.trusted_contacts.getContactSummaries,
-    {},
-  );
-  const names = new Map(contacts.map((c) => [c._id as string, c.name]));
-  const accepted = contacts.filter(
-    (c) => c.invitationStatus === "accepted",
-  ).length;
-  console.log(
-    `\n${OWNER.name}: vault opened with ${OWNER.kit}; ${accepted} accepted contacts`,
-  );
-
+  const kit = readKit();
   let broken = 0;
-  for (const summary of await owner.client.query(
-    api.vault_items.getItemSummaries,
-    {},
-  )) {
-    const itemId = summary._id as Id<"vault_items">;
-    const dek = await unwrapOwnerDek(summary.ownerWrappedDek!, owner.keys);
-    const raw = await owner.client.query(api.vault_items.getItem, { itemId });
-    const files = await owner.client.query(api.vault_items.getItemFiles, {
-      itemId,
-    });
-    const opened = await openSealedItem(raw!, files, dek);
-    const checks = [];
-    for (const [i, row] of files.entries()) {
-      const url = await owner.client.query(api.vault_items.getItemFileUrl, {
-        fileId: row._id,
-      });
-      const sink = memorySink();
-      await decryptFile(
-        memorySource(new Uint8Array(await (await fetch(url!)).arrayBuffer())),
-        row.iv,
-        dek,
-        sink,
-      );
-      const same =
-        originals.get(opened.files[i]?.name ?? "") === sha256(sink.bytes());
-      if (!same) broken++;
-      checks.push(same ? "file intact" : "FILE MISMATCH");
+  for (const person of [OWNER, ALEX, SAM]) {
+    const account = await openLikeNewPhone(person, kit);
+    const { client } = account;
+    const categories = new Map<string, string>();
+    for (const c of await client.query(api.vault_categories.list, {})) {
+      categories.set(c._id, await decryptText(c.encryptedName, account.mk));
     }
-    const recipients = (await owner.client.query(
-      api.rotation.getItemRecipients,
-      { itemId },
-    )) as { contactId: string }[];
-    const filing = opened.categoryId
-      ? categories.get(opened.categoryId)
-      : opened.category;
-    console.log(
-      `  ${opened.title} · ${filing}${checks.length ? ` · ${checks.join(", ")}` : ""} · after a death: ${recipients.map((r) => names.get(r.contactId)).join(" and ")}`,
+    const contacts = await client.query(
+      api.trusted_contacts.getContactSummaries,
+      {},
     );
-  }
-  await owner.client.action(api.auth.signOut, {});
+    const names = new Map(contacts.map((c) => [c._id as string, c.name]));
+    const accepted = contacts.filter(
+      (c) => c.invitationStatus === "accepted",
+    ).length;
+    console.log(
+      `\n${person.name}: vault opened with ${KIT}; ${accepted} accepted contacts`,
+    );
 
-  for (const person of [ALEX, SAM]) {
-    const contact = await openLikeNewPhone(person);
-    console.log(`${person.name}: vault opened with ${person.kit}`);
-    await contact.client.action(api.auth.signOut, {});
+    for (const summary of await client.query(
+      api.vault_items.getItemSummaries,
+      {},
+    )) {
+      const itemId = summary._id as Id<"vault_items">;
+      const dek = await unwrapOwnerDek(summary.ownerWrappedDek!, account.keys);
+      const raw = await client.query(api.vault_items.getItem, { itemId });
+      const files = await client.query(api.vault_items.getItemFiles, {
+        itemId,
+      });
+      const opened = await openSealedItem(raw!, files, dek);
+      const details = [
+        opened.categoryId ? categories.get(opened.categoryId) : opened.category,
+      ];
+      for (const [i, row] of files.entries()) {
+        const url = await client.query(api.vault_items.getItemFileUrl, {
+          fileId: row._id,
+        });
+        const sink = memorySink();
+        await decryptFile(
+          memorySource(new Uint8Array(await (await fetch(url!)).arrayBuffer())),
+          row.iv,
+          dek,
+          sink,
+        );
+        const same =
+          originals.get(opened.files[i]?.name ?? "") === sha256(sink.bytes());
+        if (!same) broken++;
+        details.push(same ? "file intact" : "FILE MISMATCH");
+      }
+      const recipients = (await client.query(api.rotation.getItemRecipients, {
+        itemId,
+      })) as { contactId: string }[];
+      if (recipients.length) {
+        details.push(
+          `after a death: ${recipients.map((r) => names.get(r.contactId)).join(" and ")}`,
+        );
+      }
+      console.log(`  ${opened.title} · ${details.join(" · ")}`);
+    }
+    await client.action(api.auth.signOut, {});
   }
   if (broken)
     throw new Error(`${broken} file(s) did not decrypt to the original`);
@@ -580,7 +625,7 @@ seed()
   .then(verify)
   .then(() =>
     console.log(
-      `\nDone. The 24 words are in Infisical prod /keeplas_mobile (${OWNER.kit}, ${ALEX.kit}, ${SAM.kit}). Check with pnpm review:status.`,
+      `\nDone. The 24 words of all three accounts are ${KIT} in Infisical prod /keeplas_mobile. Check with pnpm review:status.`,
     ),
   )
   .catch((error: unknown) => {
