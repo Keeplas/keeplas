@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AccessibilityInfo, Animated, Easing } from "react-native";
-import { G } from "react-native-svg";
+import { G, type GProps } from "react-native-svg";
 
 /**
  * Ambient illustration motion, ported 1:1 from the keeplas-website SVGs
@@ -28,40 +28,59 @@ export function usePlayAmbient(): boolean {
   return reduce === false;
 }
 
-type Keyframes = { transform: [string, string]; opacity?: [number, number] };
+type Matrix = [number, number, number, number, number, number];
 
-// `from` / `to` of each website keyframe, as SVG transforms in view-box units.
+const rotate = (deg: number, x: number, y: number): Matrix => {
+  const rad = (deg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return [cos, sin, -sin, cos, x - cos * x + sin * y, y - sin * x - cos * y];
+};
+
+const scale = (k: number, x: number, y: number): Matrix => [
+  k,
+  0,
+  0,
+  k,
+  x - k * x,
+  y - k * y,
+];
+
+const translate = (tx: number): Matrix => [1, 0, 0, 1, tx, 0];
+
 const KEYFRAMES = {
-  sway: (x: number, y: number): Keyframes => ({
-    transform: [`rotate(-1.5 ${x} ${y})`, `rotate(1.5 ${x} ${y})`],
-  }),
-  glow: (x: number, y: number): Keyframes => ({
-    transform: [
-      `translate(${x} ${y}) scale(0.92) translate(${-x} ${-y})`,
-      `translate(${x} ${y}) scale(1.12) translate(${-x} ${-y})`,
-    ],
-    opacity: [0.7, 1],
-  }),
-  shimmer: (): Keyframes => ({
-    transform: ["translate(0 0)", "translate(4 0)"],
-    opacity: [1, 0.35],
-  }),
-  drift: (): Keyframes => ({
-    transform: ["translate(-10 0)", "translate(10 0)"],
-  }),
-} as const;
+  sway: { from: -1.5, to: 1.5, matrix: rotate },
+  glow: { from: 0.92, to: 1.12, matrix: scale, opacity: [0.7, 1] },
+  shimmer: { from: 0, to: 4, matrix: translate, opacity: [1, 0.35] },
+  drift: { from: -10, to: 10, matrix: translate },
+} satisfies Record<
+  string,
+  {
+    from: number;
+    to: number;
+    matrix: (value: number, x: number, y: number) => Matrix;
+    opacity?: [number, number];
+  }
+>;
 
 export type AmbientKind = keyof typeof KEYFRAMES;
 
-const AnimatedG = Animated.createAnimatedComponent(G);
 const EASE = Easing.inOut(Easing.ease);
 
-/**
- * One `.ill-*` group: `ease-in-out infinite alternate` over `duration`
- * seconds, started `delay` seconds into the cycle (the website's negative
- * animation-delay). SVG props can't use the native driver, so motion stays
- * on a handful of small groups. Still when `play` is false.
- */
+export function ambientFrame(
+  kind: AmbientKind,
+  [x, y]: readonly [number, number],
+  t: number,
+): { matrix: Matrix; opacity?: number } {
+  const frames = KEYFRAMES[kind];
+  const progress = t < 0.5 ? EASE(t * 2) : 1 - EASE(t * 2 - 1);
+  const mix = (from: number, to: number) => from + (to - from) * progress;
+  return {
+    matrix: frames.matrix(mix(frames.from, frames.to), x, y),
+    opacity: "opacity" in frames ? mix(...frames.opacity) : undefined,
+  };
+}
+
 export function Ambient({
   kind,
   origin = [0, 0],
@@ -71,18 +90,29 @@ export function Ambient({
   children,
 }: {
   kind: AmbientKind;
-  /** Pivot in view-box units (sway: stem base, glow: centre). */
   origin?: readonly [number, number];
   duration: number;
   delay?: number;
   play: boolean;
   children: ReactNode;
 }) {
-  const [clock] = useState(() => new Animated.Value(0));
+  const group = useRef<G<GProps>>(null);
   const [x, y] = origin;
 
   useEffect(() => {
     if (!play) return;
+    const clock = new Animated.Value(0);
+    const phase = (delay / (duration * 2)) % 1;
+    const listener = clock.addListener(({ value }) => {
+      const { matrix, opacity } = ambientFrame(
+        kind,
+        [x, y],
+        (value + phase) % 1,
+      );
+      group.current?.setNativeProps(
+        opacity === undefined ? { matrix } : { matrix, opacity },
+      );
+    });
     const loop = Animated.loop(
       Animated.timing(clock, {
         toValue: 1,
@@ -92,28 +122,12 @@ export function Ambient({
       }),
     );
     loop.start();
-    return () => loop.stop();
-  }, [play, clock, duration]);
-
-  const props = useMemo(() => {
-    const frames = KEYFRAMES[kind](x, y);
-    // One clock tick = there and back; the phase replays the website delay.
-    const t = Animated.modulo(
-      Animated.add(clock, (delay / (duration * 2)) % 1),
-      1,
-    );
-    const at = <T extends string | number>(from: T, to: T) =>
-      t.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: [from, to, from] as string[] | number[],
-        easing: EASE,
-      });
-    return {
-      transform: at(...frames.transform),
-      opacity: frames.opacity ? at(...frames.opacity) : undefined,
+    return () => {
+      loop.stop();
+      clock.removeListener(listener);
     };
-  }, [clock, kind, x, y, duration, delay]);
+  }, [play, kind, x, y, duration, delay]);
 
   if (!play) return <>{children}</>;
-  return <AnimatedG {...props}>{children}</AnimatedG>;
+  return <G ref={group}>{children}</G>;
 }
