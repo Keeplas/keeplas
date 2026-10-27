@@ -18,6 +18,7 @@ import { readDeviceRootKey, saveDeviceVault } from "@/crypto/device-vault";
 import { encryptText, exportRawKey } from "@/crypto/envelope";
 import { buildKeyBundle, createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { useVaultData } from "@/features/vault/vault-data";
+import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -147,7 +148,7 @@ export default function RotateKeys() {
       toast({
         variant: "error",
         title: t("rotation.failed"),
-        description: error instanceof Error ? error.message : undefined,
+        description: serverMessage(error),
       });
     } finally {
       rawNew?.fill(0);

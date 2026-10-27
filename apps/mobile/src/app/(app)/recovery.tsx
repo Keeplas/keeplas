@@ -18,6 +18,7 @@ import {
 import { Text } from "@/components/text";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
 import { useSealSocialRecovery } from "@/features/social-recovery";
+import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -37,7 +38,7 @@ export default function RecoveryCenter() {
       toast({
         variant: "error",
         title: t("common.genericError"),
-        description: error instanceof Error ? error.message : undefined,
+        description: serverMessage(error),
       });
     }
   }
