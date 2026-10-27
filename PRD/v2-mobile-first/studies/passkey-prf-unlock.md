@@ -89,6 +89,9 @@ The result of 1 and 2 decides go / no-go. 3 and 4 shape the migration.
 
 ## Decisions for the founders
 
-1. Go for the prototype (steps 1–4)?
-2. Keep Block Store as a second Android path, or plan to retire it once passkey coverage is known?
-3. On iPhone, should onboarding suggest Google Password Manager for users who may switch to Android, or stay neutral?
+1. **Go for the prototype (steps 1–4)?**
+   Recommendation: yes, now. It takes a few days with 2 iPhones and 2 Android phones, and it answers the only question that can stop the project (same PRF output after sync) before any crypto or migration code. Start with Android (step 2): that is where today's gap is, while iCloud Keychain already works on iPhone.
+2. **Keep Block Store as a second Android path, or plan to retire it?**
+   Recommendation: keep it, with no retirement date. It already ships, costs nothing to keep, and since PR #333 it never seals without end-to-end encryption. It stays the only automatic path for users the passkey won't cover (passkey without PRF, third-party provider on Android). Retiring it would cut a path existing accounts rely on, which the migration rule in `CLAUDE.md` forbids. Revisit once we measure passkey coverage (a server-side count of accounts with a passkey envelope).
+3. **On iPhone, should onboarding suggest Google Password Manager, or stay neutral?**
+   Recommendation: stay neutral. Most iPhone users stay on iPhone, and asking them to set Chrome as AutoFill provider and create a GPM PIN adds friction at sign-up, the most fragile moment. People who switch platform almost always have the old phone in hand, and "Another signed-in device" (`link-from-device`) already works across iPhone and Android. Make that path easy to find instead: a "Changing phone" entry in settings ("Keep your old phone, open Keeplas on the new one, approve from the old one"). The one case left, iPhone to Android after losing the iPhone, falls back to the kit or contacts, which is acceptable for a rare case.
