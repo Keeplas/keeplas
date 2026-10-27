@@ -39,11 +39,14 @@ export function useRestorableBackup(): string | null | undefined {
  * holding a key from older words never backs up a key that opens nothing.
  */
 export function useSealCloudBackup() {
+  const { t } = useI18n();
   const convex = useConvex();
   const save = useAuditedMutation(api.cloud_backup.save);
 
   return useCallback(
     async (rootKey: Uint8Array) => {
+      if (!(await CloudKey.isEndToEndEncrypted()))
+        throw new Error(t("backup.notEncrypted"));
       const user = await convex.query(api.users.viewer);
       if (!user?.encryptedKeyBundle || !user.phraseSalt)
         throw new Error("No vault to back up");
@@ -58,7 +61,7 @@ export function useSealCloudBackup() {
         phraseSalt: user.phraseSalt,
       });
     },
-    [convex, save],
+    [t, convex, save],
   );
 }
 

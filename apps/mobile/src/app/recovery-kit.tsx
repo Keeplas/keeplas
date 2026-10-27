@@ -1,16 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
+import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
-import { ListRow } from "@/components/surfaces";
+import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { useRestorableBackup } from "@/features/cloud-backup";
 import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
 import { OtherOptions } from "@/features/other-options";
+import { needsCloudBackup } from "@/lib/backup-policy";
 import { useI18n } from "@/providers/i18n-provider";
+import * as CloudKey from "../../modules/cloud-key";
 
 /**
  * This phone holds no vault key for an account that has a vault (signed in
@@ -22,9 +26,18 @@ export default function RecoveryKitEntry() {
   const { t } = useI18n();
   const kitOpen = useKitOpen();
   const cloud = useRestorableBackup();
+  const backup = useQuery(api.cloud_backup.status);
+  const health = useQuery(api.recovery.getHealth);
   const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
   const [invalid, setInvalid] = useState(false);
+  const [encrypted, setEncrypted] = useState(false);
+
+  useEffect(() => {
+    CloudKey.isEndToEndEncrypted()
+      .then(setEncrypted)
+      .catch(() => setEncrypted(false));
+  }, []);
 
   async function open() {
     setBusy(true);
@@ -56,6 +69,16 @@ export default function RecoveryKitEntry() {
           onPress={() => router.push("/cloud-restore")}
         />
       ) : null}
+      {encrypted && needsCloudBackup(backup) ? (
+        <Callout
+          icon="cloud-upload"
+          text={t(
+            CloudKey.provider === "icloud"
+              ? "recoveryKit.lastTimeIcloud"
+              : "recoveryKit.lastTimeGoogle",
+          )}
+        />
+      ) : null}
       <TextField
         label={t("oneWay.kit")}
         value={words}
@@ -79,14 +102,18 @@ export default function RecoveryKitEntry() {
         onPress={open}
       />
       <OtherOptions
-        options={[
-          {
-            icon: "people",
-            title: t("recoveryKit.contactsCta"),
-            description: t("lostAccess.contactsBody"),
-            onPress: () => router.push("/contact-recovery"),
-          },
-        ]}
+        options={
+          health?.trustContacts.configured
+            ? [
+                {
+                  icon: "people",
+                  title: t("recoveryKit.contactsCta"),
+                  description: t("lostAccess.contactsBody"),
+                  onPress: () => router.push("/contact-recovery"),
+                },
+              ]
+            : []
+        }
       />
     </Screen>
   );

@@ -1,5 +1,7 @@
 import { StyleSheet, View } from "react-native";
+import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
+import { api } from "@keeplas/backend/_generated/api";
 
 import VaultLaptop from "../../assets/illustrations/vault-laptop.svg";
 import { AppHeader } from "@/components/app-header";
@@ -14,6 +16,7 @@ export default function LostAccess() {
   const router = useRouter();
   const { t } = useI18n();
   const cloud = useRestorableBackup();
+  const health = useQuery(api.recovery.getHealth);
 
   return (
     <Screen
@@ -43,12 +46,14 @@ export default function LostAccess() {
         description={t("lostAccess.deviceBody")}
         onPress={() => router.push("/link-from-device")}
       />
-      <ListRow
-        icon="people"
-        title={t("lostAccess.contacts")}
-        description={t("lostAccess.contactsBody")}
-        onPress={() => router.push("/contact-recovery")}
-      />
+      {health?.trustContacts.configured ? (
+        <ListRow
+          icon="people"
+          title={t("lostAccess.contacts")}
+          description={t("lostAccess.contactsBody")}
+          onPress={() => router.push("/contact-recovery")}
+        />
+      ) : null}
       <ListRow
         icon="lifebuoy"
         title={t("lostAccess.kit")}

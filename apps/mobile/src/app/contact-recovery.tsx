@@ -39,6 +39,7 @@ export default function ContactRecovery() {
   const { colors } = useTheme();
   const viewer = useViewer();
   const request = useQuery(api.recovery.getMyRequest);
+  const health = useQuery(api.recovery.getHealth);
   const start = useAuditedMutation(api.recovery.start);
   const cancel = useAuditedMutation(api.recovery.cancel);
   const releasePackage = useQuery(
@@ -117,6 +118,7 @@ export default function ContactRecovery() {
   const closed =
     !request ||
     ["cancelled", "expired", "rejected", "rotated"].includes(request.status);
+  const notReady = closed && health?.trustContacts.configured === false;
   const approvals =
     request?.contacts.filter((contact) => contact.decision === "approve")
       .length ?? 0;
@@ -133,7 +135,12 @@ export default function ContactRecovery() {
       }
       gap={14}
       footer={
-        closed ? (
+        notReady ? (
+          <Button
+            label={t("socialRecovery.useKit")}
+            onPress={() => router.replace("/recovery-kit")}
+          />
+        ) : closed ? (
           <Button
             label={t("socialRecovery.start")}
             onPress={() => void begin()}
@@ -164,7 +171,13 @@ export default function ContactRecovery() {
           <Text variant="body-lg" color="text.muted">
             {t("socialRecovery.body")}
           </Text>
-          {request?.status === "expired" ? (
+          {notReady ? (
+            <Callout
+              tone="warning"
+              icon="people"
+              text={t("socialRecovery.notReady")}
+            />
+          ) : request?.status === "expired" ? (
             <Callout
               tone="warning"
               icon="clock"
