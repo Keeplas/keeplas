@@ -46,8 +46,9 @@ type Notice = { tone: "danger" | "info"; text: string; ref?: string };
 /**
  * Confirmation before buying Lifetime: what the user gets, what it costs and
  * how it is paid, then the store sheet. Shows the store's error in place
- * (with its code) instead of a generic toast, and a confirmation once paid;
- * RevenueCat's webhook then flips the plan and the reactive viewer follows.
+ * (its code goes to support only) instead of a generic toast, and a
+ * confirmation once paid; RevenueCat's webhook then flips the plan and the
+ * reactive viewer follows.
  * When the store fails, "Contact support" opens a billing ticket carrying the
  * error; `onLeave` lets a parent sheet close too so the form isn't hidden.
  */
@@ -71,10 +72,7 @@ export function UpgradeSheet({
 
   const errorNotice = (error: unknown): Notice => {
     const { kind, code } = describePurchaseError(error);
-    const message = t(`upgrade.errors.${kind}`, { store });
-    const text = code
-      ? `${message} ${t("upgrade.errorCode", { code })}`
-      : message;
+    const text = t(`upgrade.errors.${kind}`, { store });
     if (kind === "pending") return { tone: "info", text };
     return {
       tone: "danger",
@@ -93,7 +91,12 @@ export function UpgradeSheet({
     try {
       if (await task(viewer._id)) setPaid(true);
       else if (action === "restore") {
-        setNotice({ tone: "info", text: t("upgrade.nothingToRestore") });
+        setNotice({
+          tone: "info",
+          text: t("upgrade.nothingToRestore", {
+            account: t(`upgrade.account.${os}`),
+          }),
+        });
       }
     } catch (error) {
       if (__DEV__) console.warn("[billing]", error);
@@ -143,20 +146,20 @@ export function UpgradeSheet({
                 {t("upgrade.oneTime")}
               </Text>
             </View>
-            <Text variant="h2">{price ?? "…"}</Text>
+            {price || !priceError ? (
+              <Text variant="h2">{price ?? "…"}</Text>
+            ) : null}
           </View>
         </Card>
         <View style={styles.perks}>
-          {(["storage", "features", "noSubscription", "newPhone"] as const).map(
-            (perk) => (
-              <View key={perk} style={styles.perk}>
-                <Icon name="check" size={18} color="status.active" />
-                <Text variant="body" style={styles.flex}>
-                  {t(`upgrade.perks.${perk}`)}
-                </Text>
-              </View>
-            ),
-          )}
+          {(["storage", "noSubscription", "newPhone"] as const).map((perk) => (
+            <View key={perk} style={styles.perk}>
+              <Icon name="check" size={18} color="status.active" />
+              <Text variant="body" style={styles.flex}>
+                {t(`upgrade.perks.${perk}`)}
+              </Text>
+            </View>
+          ))}
         </View>
         <Callout
           icon="lock"

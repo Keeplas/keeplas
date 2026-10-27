@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
+import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -45,7 +46,7 @@ export default function Invite() {
       toast({
         variant: "error",
         title: t("common.genericError"),
-        description: error instanceof Error ? error.message : undefined,
+        description: serverMessage(error),
       });
       setBusy(false);
     }

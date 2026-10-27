@@ -80,7 +80,7 @@ Export compliance: `app.json` declares non-exempt encryption, so ASC asks the en
 Keeplas encrypts data itself with standard algorithms, on top of the TLS that iOS provides, so it is not exempt: `app.json` sets `ITSAppUsesNonExemptEncryption: true`. Each new build shows "Missing Compliance" in ASC until the encryption questions are answered. Two things to know before answering:
 
 - **United States (EAR).** Answer that the app uses standard encryption algorithms instead of, or in addition to, the operating system's. Mass-market encryption items usually need a self-classification report to BIS; publicly available open-source encryption code can follow a different route. Confirm which one applies with counsel, then upload the documentation ASC asks for.
-- **France (ANSSI).** Apple names "Secure Storage" among the encryption uses France controls. Distributing in France needs a declaration of the cryptology means to ANSSI, whose acknowledgment ASC asks for. Until it is filed, either attach it later or leave France out of the availability.
+- **France (ANSSI).** Apple names "Secure Storage" among the encryption uses France controls. Distributing in France needs a declaration of the cryptology means to ANSSI, whose acknowledgment ASC asks for. Filed and accepted on 27 October 2026 (dossier 34982065 on demarche.numerique.gouv.fr): answer that the app is available in France and upload the attestation PDF. The founders keep it; it isn't in this public repo.
 
 Once ASC approves the documentation, it gives an export compliance code. Add it to `app.json` as `ITSEncryptionExportComplianceCode` (in `expo.ios.infoPlist`), so later builds skip the questions.
 

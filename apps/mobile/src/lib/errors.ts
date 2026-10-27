@@ -12,6 +12,17 @@ export function errorText(error: unknown): string {
 }
 
 /**
+ * The server's own message (a ConvexError with string data), for a toast
+ * description. Undefined otherwise: native and unexpected errors carry
+ * request IDs or OS codes, which mean nothing to the user.
+ */
+export function serverMessage(error: unknown): string | undefined {
+  return error instanceof ConvexError && typeof error.data === "string"
+    ? error.data
+    : undefined;
+}
+
+/**
  * Sign-in code failures. The server reports "Invalid code", "Code expired
  * or not requested" and "Too many attempts. Request a new code." (as
  * ConvexError or a returned result, see packages/convex/lib/otp.ts); anything

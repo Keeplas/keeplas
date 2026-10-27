@@ -9,9 +9,11 @@ import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { BiometricRing } from "@/features/biometric-ring";
+import { providerName } from "@/features/cloud-backup";
 import { PasskeyButton } from "@/features/passkey-step";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
+import * as CloudKey from "../../../modules/cloud-key";
 
 /** M01-3 Create your passkey. Skipped when the account already has one. */
 export default function PasskeyScreen() {
@@ -28,7 +30,7 @@ export default function PasskeyScreen() {
       <RequiredSteps completed={1} />
       <Text variant="h1">{t("passkey.title")}</Text>
       <Text variant="body-lg" color="text.muted">
-        {t("passkey.body")}
+        {t("passkey.body", { provider: providerName(CloudKey.provider) })}
       </Text>
       <View style={styles.art}>
         <BiometricRing kind="face" size={208} />

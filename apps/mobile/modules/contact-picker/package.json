@@ -1,0 +1,10 @@
+{
+  "name": "keeplas-contact-picker",
+  "version": "0.1.0",
+  "description": "Android phone-number picker that needs no contacts permission, for adding a Keeplas trusted contact",
+  "private": true,
+  "main": "index.ts",
+  "license": "UNLICENSED",
+  "author": "Keeplas",
+  "homepage": "https://keeplas.com"
+}
