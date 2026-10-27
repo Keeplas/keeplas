@@ -15,7 +15,6 @@ export default function HubPage() {
   const viewer = useQuery(api.users.viewer);
   const health = useQuery(api.recovery.getHealth);
   const backup = useQuery(api.cloud_backup.status);
-  const contactsReady = useQuery(api.trusted_contacts.getContactsReady);
   const { items } = useVaultData();
   const labels = useItemLabels();
   const capture = useVaultCapture();
@@ -27,8 +26,10 @@ export default function HubPage() {
   }
 
   // Same ways back in as the mobile Home: one is enough.
+  const contactsCanRecover =
+    !!health?.trustContacts.configured && !health.trustContacts.renewalRequired;
   const recoveryCovered =
-    !!backup?.enabled || !!contactsReady || !!health?.recoveryKit;
+    !!backup?.enabled || contactsCanRecover || !!health?.recoveryKit;
 
   return (
     <>

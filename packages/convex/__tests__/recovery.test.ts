@@ -393,4 +393,22 @@ describe("owner recovery", () => {
       activeDevices: 0,
     });
   });
+
+  it("says contacts can help only once their recovery is sealed", async () => {
+    const t = makeT();
+    const unsealedId = await t.run((ctx) => ctx.db.insert("users", {}));
+    await seedContact(t, unsealedId, 10);
+    await seedContact(t, unsealedId, 11);
+    expect(
+      await asUser(t, unsealedId).query(
+        api.trusted_contacts.getContactsReady,
+        {},
+      ),
+    ).toBe(false);
+
+    const { owner } = await setupOwner(t, 2);
+    expect(await owner.query(api.trusted_contacts.getContactsReady, {})).toBe(
+      true,
+    );
+  });
 });
