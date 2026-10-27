@@ -19,6 +19,7 @@ import {
 import { Text } from "@/components/text";
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
+import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedAction } from "@/lib/use-audited-action";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -77,7 +78,7 @@ export default function RecoveryCenter() {
       toast({
         variant: "error",
         title: t("common.genericError"),
-        description: error instanceof Error ? error.message : undefined,
+        description: serverMessage(error),
       });
     } finally {
       masterKey.fill(0);

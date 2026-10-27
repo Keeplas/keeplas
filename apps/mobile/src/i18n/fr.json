@@ -15,7 +15,6 @@
     "language": "Langue",
     "genericError": "Une erreur est survenue. Réessayez."
   },
-  "languageSoon": "{name} (bientôt)",
   "nav": {
     "home": "Accueil",
     "vault": "Coffre",
@@ -39,7 +38,7 @@
   },
   "phone": {
     "title": "Configurer votre compte",
-    "subtitle": "Votre numéro de téléphone et WhatsApp suffisent pour commencer. Aucun e-mail requis.",
+    "subtitle": "Inscrivez-vous avec votre numéro de téléphone. Ni e-mail, ni mot de passe.",
     "signInTitle": "Bon retour",
     "signInSubtitle": "Saisissez le numéro de votre compte Keeplas. Nous vous enverrons un code sur WhatsApp.",
     "label": "Numéro de téléphone",
@@ -61,23 +60,23 @@
     "noCode": "Vous n'avez pas reçu le code ?",
     "resend": "Renvoyer le code",
     "resent": "Nous vous avons envoyé un nouveau code.",
-    "note": "WhatsApp sert uniquement aux notifications. Rien de votre coffre n'y est envoyé."
+    "note": "WhatsApp ne sert qu'à vos codes et alertes. Rien de votre coffre n'y est envoyé."
   },
   "codeErrors": {
     "wrongTitle": "Ce code n'est pas le bon",
-    "wrongBody": "Vérifiez les 6 chiffres dans WhatsApp et réessayez. {count} essais restants.",
+    "wrongBody": "Vérifiez les 6 chiffres et réessayez. {count} essais restants.",
     "expiredTitle": "Ce code a expiré",
     "expiredBody": "Les codes sont valables 10 minutes. Nous pouvons vous en envoyer un nouveau.",
     "expiredCta": "Envoyer un nouveau code",
     "tooManyTitle": "Trop d'essais",
     "tooManyBody": "Par sécurité, la connexion est suspendue pour ce numéro. Réessayez dans une heure.",
     "notArrivingTitle": "Le code n'arrive pas ?",
-    "notArrivingBody": "Vérifiez que WhatsApp est installé sur {phone}, puis demandez un nouveau code.",
+    "notArrivingBody": "Un code peut mettre une minute à arriver. Vérifiez que {phone} est correct, puis demandez un nouveau code.",
     "changeNumber": "Changer de numéro"
   },
   "passkey": {
     "title": "Créer votre passe-clé",
-    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé se synchronise avec votre trousseau iCloud ou Google : il revient sur un nouveau téléphone.",
+    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé se synchronise avec votre trousseau {provider} : il revient sur un nouveau téléphone.",
     "cta": "Créer le passe-clé",
     "failedTitle": "Passe-clé non créé",
     "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut un passe-clé pour garder votre coffre sur ce téléphone.",
@@ -89,7 +88,7 @@
     "title": "Créer votre coffre privé",
     "body": "Votre coffre est créé et chiffré sur cet appareil. Vous seul pouvez y accéder.",
     "cta": "Créer mon coffre",
-    "note": "Votre coffre est chiffré sur ce téléphone. Sa clé est aussi sauvegardée, chiffrée, avec votre compte Apple ou Google, pour que vous puissiez le rouvrir sur un nouveau téléphone.",
+    "note": "Votre coffre est chiffré sur ce téléphone. Sa clé est aussi sauvegardée, chiffrée, avec votre compte {provider}, pour que vous puissiez le rouvrir sur un nouveau téléphone.",
     "generating": "Création de vos clés…",
     "saving": "Enregistrement de votre coffre chiffré…"
   },
@@ -285,8 +284,8 @@
         "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
       },
       "platform": {
-        "question": "Je passe d'Android à iPhone, ou l'inverse",
-        "answer": "Une sauvegarde Google ne passe pas sur iCloud, et inversement. Gardez l'ancien téléphone : sur le nouveau, choisissez « Un autre appareil connecté » et approuvez depuis l'ancien. Sinon, utilisez votre kit de 24 mots ou vos contacts de confiance. La sauvegarde se réactive ensuite sur le nouveau téléphone."
+        "question": "Mon nouveau téléphone est d'une autre marque",
+        "answer": "La sauvegarde cloud reste liée à la marque de l'ancien téléphone : elle ne passe pas sur le nouveau. Gardez l'ancien téléphone : sur le nouveau, choisissez « Un autre appareil connecté » et approuvez depuis l'ancien. Sinon, utilisez votre kit de 24 mots ou vos contacts de confiance. La sauvegarde se réactive ensuite sur le nouveau téléphone."
       },
       "lostPhone": {
         "question": "J'ai perdu mon téléphone",
@@ -417,16 +416,15 @@
   "upgrade": {
     "title": "Passer à Lifetime",
     "titleWithPrice": "Passer à Lifetime · {price}",
-    "body": "10 Go de stockage et toutes les fonctionnalités. Un seul paiement, sans abonnement.",
+    "body": "10 Go de stockage chiffré au lieu de 100 Mo. Un seul paiement, sans abonnement.",
     "cta": "Mettre à niveau",
     "restore": "Restaurer un achat",
     "activating": "Votre forfait Lifetime est en cours d'activation. Cela ne prend que quelques secondes, et tout envoi en attente d'espace reprend tout seul.",
-    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte Apple ou Google.",
+    "nothingToRestore": "Aucun achat Lifetime trouvé pour ce compte {account}.",
     "planName": "Keeplas Lifetime",
     "oneTime": "Paiement unique, TVA incluse si elle s'applique",
     "perks": {
       "storage": "10 Go de stockage chiffré, au lieu de 100 Mo",
-      "features": "Toutes les fonctionnalités, tant que vous gardez Keeplas",
       "noSubscription": "Un seul paiement. Sans abonnement, rien ne se renouvelle",
       "newPhone": "Retrouvé sur chaque nouveau téléphone, il suffit de vous connecter"
     },
@@ -434,7 +432,6 @@
     "pay": "Payer {price}",
     "payNoPrice": "Continuer vers le paiement",
     "paidTitle": "Achat confirmé",
-    "errorCode": "(code {code})",
     "errors": {
       "unavailable": "Lifetime ne peut pas être acheté sur {store} pour le moment. Rien n'a été débité. Réessayez plus tard.",
       "network": "Impossible de joindre {store}. Rien n'a été débité. Vérifiez votre connexion et réessayez.",
@@ -948,7 +945,6 @@
     "fromContacts": "Choisir dans mes contacts",
     "orManual": "ou saisir manuellement",
     "whichNumber": "Quel numéro utiliser ?",
-    "contactsDenied": "Keeplas ne peut pas lire vos contacts. Autorisez-le dans les Réglages, ou saisissez ses coordonnées ci-dessous.",
     "sendInvite": "Envoyer l'invitation",
     "status": {
       "pending": "Invité",
@@ -1277,7 +1273,7 @@
       "items": "Tous les éléments, notes et fichiers de votre coffre",
       "shares": "Ce que vous partagez avec vos contacts de confiance, et ce qu’ils peuvent ouvrir",
       "succession": "Votre plan de succession, le Life check et la récupération par contacts",
-      "plan": "Votre offre. Un achat Lifetime n’est pas remboursé"
+      "plan": "Votre offre. Supprimer votre compte ne rembourse pas un achat Lifetime"
     },
     "exportFirst": "Exporter mes données d’abord",
     "exportHint": "pour garder une copie de tout avant l’effacement.",

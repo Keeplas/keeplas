@@ -9,9 +9,11 @@ import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { providerName } from "@/features/cloud-backup";
 import { useCreateVault } from "@/lib/use-create-vault";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
+import * as CloudKey from "../../../modules/cloud-key";
 
 /** M01-4 Create your private vault (keys generated on the phone). */
 export default function VaultScreen() {
@@ -60,7 +62,10 @@ export default function VaultScreen() {
         loading={phase !== null}
         onPress={create}
       />
-      <Callout icon="lock" text={t("vault.note")} />
+      <Callout
+        icon="lock"
+        text={t("vault.note", { provider: providerName(CloudKey.provider) })}
+      />
     </Screen>
   );
 }
