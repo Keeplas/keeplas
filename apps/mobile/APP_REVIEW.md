@@ -245,7 +245,7 @@ The website page `https://www.keeplas.com/delete-account` (keeplas-website repo)
 
    This works like the in-app request: the account is erased 7 days later, and the owner is notified on every channel and can cancel from the app.
 
-Payment records and the security log stay after deletion. The page says so.
+Payment records stay after deletion. The security log (with its IP addresses and countries) is kept for 30 days after the account is erased, then deleted (`account_deletion.purgeSecurityLog`). The website page must say the same.
 
 ## Before each submission
 

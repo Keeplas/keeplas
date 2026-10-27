@@ -1967,7 +1967,7 @@
           "IP and country are signed server-side with HMAC-SHA256, so clients cannot spoof their own location.",
           "Each entry carries the previous entry's hash, so the chain can be replayed and verified offline.",
           "At signup we collect your date of birth (legal capacity) and country of residence (applicable inheritance law). Both are stored on your user record and recorded in the audit chain.",
-          "We preserve audit logs even after account deletion: the immutable trail outlives the user, which is exactly the property a probate court needs."
+          "The security log of a deleted account is kept for 30 days after the account is erased, then deleted."
         ]
       }
     },
@@ -2019,7 +2019,7 @@
       },
       {
         "q": "What about GDPR?",
-        "a": "Audit entries store action metadata only, never the plaintext of your vault. You can request export or deletion of your account at any time, but the audit chain itself is preserved (anonymized to your now-deleted user ID) so that the immutability guarantee on which a future probate court might rely is not retroactively destroyed. See GDPR full text for the legal basis (Article 6.1.f legitimate interest combined with Article 17.3.b legal obligation)."
+        "a": "Audit entries store action metadata only, never the plaintext of your vault. You can request export or deletion of your account at any time. The security log of a deleted account is kept for 30 days after the account is erased, then deleted. See GDPR full text for the legal basis (Article 6.1.f legitimate interest)."
       }
     ]
   },

@@ -8,7 +8,15 @@ import { getUserByPhone, optionalAuth, requireFullAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
 import { deleteBlob } from "./lib/storage";
 
-export const DELETION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const DELETION_GRACE_MS = 7 * DAY_MS;
+/**
+ * The security log (`audit_logs`) of an erased account is kept this long after
+ * the erasure, then deleted. The privacy policy states this figure.
+ */
+export const SECURITY_LOG_RETENTION_MS = 30 * DAY_MS;
+/** Security-log action written when an account's erasure starts. */
+export const WIPE_ACTION = "account_wipe_executed";
 const BATCH = 200;
 
 export const getStatus = query({
@@ -130,7 +138,7 @@ export const execute = internalMutation({
       userId,
       actorType: "system",
       actorId: "account_deletion",
-      action: "account_wipe_executed",
+      action: WIPE_ACTION,
       resourceType: "user",
       resourceId: userId,
     });
@@ -158,10 +166,40 @@ export const wipeStep = internalMutation({
       }
     }
     const user = await ctx.db.get(userId);
-    if (user?.avatarStorageId) {
+    if (!user) return;
+    if (user.avatarStorageId) {
       await deleteBlob(ctx, user.avatarStorageId, userId);
     }
-    if (user) await ctx.db.delete(userId);
+    await ctx.db.delete(userId);
+    // Everything else is gone; the security log follows after the retention.
+    await ctx.scheduler.runAfter(
+      SECURITY_LOG_RETENTION_MS,
+      internal.account_deletion.purgeSecurityLog,
+      { userId },
+    );
+  },
+});
+
+/**
+ * Delete an erased account's security log, a batch at a time. Idempotent.
+ * Refuses a living account: its chain must stay whole.
+ */
+export const purgeSecurityLog = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    if (await ctx.db.get(userId)) return;
+    const logs = await ctx.db
+      .query("audit_logs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH);
+    for (const log of logs) await ctx.db.delete(log._id);
+    if (logs.length === BATCH) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.account_deletion.purgeSecurityLog,
+        { userId },
+      );
+    }
   },
 });
 

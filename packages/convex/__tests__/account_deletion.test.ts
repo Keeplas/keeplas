@@ -6,6 +6,7 @@ import { getBlobDownloadUrl } from "../lib/storage";
 import {
   asUser,
   makeT,
+  runDueJobs,
   seedSession,
   seedStorageRef,
   seedTrustContact,
@@ -82,6 +83,58 @@ async function seedVaultOwner(t: TestConvex) {
     return { vaultId, folderId, categoryId, itemId };
   });
   return { userId, storageId, contactId, ...ids };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+// The privacy policy promises this figure: keep it a literal, not the constant.
+const SECURITY_LOG_RETENTION_MS = 30 * DAY_MS;
+
+function securityLog(t: TestConvex, userId: Id<"users">) {
+  return t.run((ctx) =>
+    ctx.db
+      .query("audit_logs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect(),
+  );
+}
+
+async function pendingPurges(t: TestConvex) {
+  const jobs = await t.run((ctx) =>
+    ctx.db.system.query("_scheduled_functions").collect(),
+  );
+  return jobs
+    .filter(
+      (job) =>
+        job.name === "account_deletion:purgeSecurityLog" &&
+        job.state.kind === "pending",
+    )
+    .map(({ args, scheduledTime }) => ({ args, scheduledTime }));
+}
+
+async function seedLogs(
+  t: TestConvex,
+  userId: Id<"users">,
+  count: number,
+  action = "user.profile.updated",
+  createdAt = Date.now(),
+) {
+  await t.run(async (ctx) => {
+    for (let i = 0; i < count; i++) {
+      await ctx.db.insert("audit_logs", {
+        userId,
+        actorType: "user",
+        actorId: userId,
+        action,
+        resourceType: "user",
+        resourceId: userId,
+        ipAddress: "127.0.0.1",
+        country: "FR",
+        previousLogHash: "genesis",
+        logHash: `hash-${i}`,
+        createdAt,
+      });
+    }
+  });
 }
 
 async function requestDeletion(t: TestConvex, userId: Id<"users">) {
@@ -207,7 +260,7 @@ describe("account deletion", () => {
     expect(await t.run((ctx) => ctx.db.get(owner.userId))).not.toBeNull();
 
     vi.advanceTimersByTime(120_000);
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await runDueJobs(t);
 
     const left = await t.run(async (ctx) => ({
       user: await ctx.db.get(owner.userId),
@@ -295,6 +348,106 @@ describe("account deletion", () => {
     expect(left.numberChanges).toEqual([]);
     expect(left.sessionPhoneCodes).toEqual([]);
     expect(left.captureHandoffs).toEqual([]);
+  });
+
+  it("deletes the security log 30 days after the erasure, and only the erased account's", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const other = await seedUser(t);
+    // More entries than one purge batch, so the purge has to continue itself.
+    await seedLogs(t, owner, 450);
+
+    await requestDeletion(t, owner);
+    await requestDeletion(t, other);
+    await asUser(t, other).mutation(api.account_deletion.cancel, {
+      _audit: await signedAudit(),
+    });
+
+    vi.advanceTimersByTime(DELETION_GRACE_MS);
+    await runDueJobs(t);
+    const erasedAt = Date.now();
+    expect(await t.run((ctx) => ctx.db.get(owner))).toBeNull();
+    expect((await securityLog(t, owner)).map((log) => log.action)).toContain(
+      "account_wipe_executed",
+    );
+
+    // convex-test runs jobs on setTimeout, which fires any delay over ~24.8
+    // days after 1 ms; so check the job the scheduler holds, then run it.
+    const purges = await pendingPurges(t);
+    expect(purges).toEqual([
+      {
+        args: [{ userId: owner }],
+        scheduledTime: erasedAt + SECURITY_LOG_RETENTION_MS,
+      },
+    ]);
+    expect(await securityLog(t, owner)).toHaveLength(450 + 2);
+
+    await t.mutation(internal.account_deletion.purgeSecurityLog, {
+      userId: owner,
+    });
+    await runDueJobs(t);
+    expect(await securityLog(t, owner)).toEqual([]);
+    expect((await securityLog(t, other)).map((log) => log.action)).toEqual([
+      "user.account.deletion_requested",
+      "user.account.deletion_cancelled",
+    ]);
+    expect(await t.run((ctx) => ctx.db.get(other))).not.toBeNull();
+  });
+
+  it("never purges the security log of a living account", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    await seedLogs(t, userId, 3);
+    await t.mutation(internal.account_deletion.purgeSecurityLog, { userId });
+    expect(await securityLog(t, userId)).toHaveLength(3);
+  });
+});
+
+describe("security log of accounts erased before the purge existed", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("is deleted 30 days after each account's erasure", async () => {
+    const t = makeT();
+    const living = await seedUser(t);
+    const erasedLongAgo = await seedUser(t);
+    const erasedRecently = await seedUser(t);
+    await seedLogs(t, living, 2);
+    await seedLogs(t, erasedLongAgo, 3, "user.profile.updated", 0);
+    await seedLogs(
+      t,
+      erasedLongAgo,
+      1,
+      "account_wipe_executed",
+      Date.now() - 40 * DAY_MS,
+    );
+    await seedLogs(
+      t,
+      erasedRecently,
+      1,
+      "account_wipe_executed",
+      Date.now() - 10 * DAY_MS,
+    );
+    await t.run(async (ctx) => {
+      await ctx.db.delete(erasedLongAgo);
+      await ctx.db.delete(erasedRecently);
+    });
+
+    await t.mutation(internal.migrations.purgeErasedAccountsSecurityLogs, {});
+    await runDueJobs(t);
+    expect(await securityLog(t, erasedLongAgo)).toEqual([]);
+    expect(await securityLog(t, erasedRecently)).toHaveLength(1);
+    expect(await securityLog(t, living)).toHaveLength(2);
+
+    vi.advanceTimersByTime(20 * DAY_MS + 60_000);
+    await runDueJobs(t);
+    expect(await securityLog(t, erasedRecently)).toEqual([]);
+    expect(await securityLog(t, living)).toHaveLength(2);
   });
 });
 
