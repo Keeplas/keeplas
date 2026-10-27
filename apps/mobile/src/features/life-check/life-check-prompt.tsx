@@ -50,8 +50,9 @@ export function LifeCheckPrompt({ missed }: { missed: boolean }) {
                 onPress={() => void answer(() => validate({ method: "tap" }))}
               />
               {missed ? null : (
+                // Outlined, not a text link: it sits over the landscape decor.
                 <Button
-                  variant="text"
+                  variant="secondary"
                   label={t("lifeCheck.prompt.later")}
                   disabled={busy}
                   onPress={() =>
