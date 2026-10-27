@@ -209,6 +209,9 @@ describe("formatters", () => {
   it("validates and formats phone numbers", () => {
     expect(toE164("CA", "416 555 0123")).toBe("+14165550123");
     expect(toE164("CA", "123")).toBeNull();
+    // Ofcom drama range: never assigned, used for the UK review accounts.
+    expect(toE164("GB", "07700 900101")).toBe("+447700900101");
+    expect(toE164("GB", "7700 9001")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");
   });

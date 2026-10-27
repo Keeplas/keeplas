@@ -1,4 +1,5 @@
 import { convexTest } from "convex-test";
+import { vi } from "vitest";
 import schema from "../schema";
 import { storeBlob, type StorageRef } from "../lib/storage";
 import type { Id } from "../_generated/dataModel";
@@ -17,6 +18,14 @@ export type TestConvex = ReturnType<typeof convexTest>;
 
 export function makeT(): TestConvex {
   return convexTest(schema, modules);
+}
+
+/**
+ * Run the jobs that are due without moving the clock, and stop once nothing
+ * fires: later jobs (like the 30-day security-log purge) stay pending.
+ */
+export function runDueJobs(t: TestConvex) {
+  return t.finishAllScheduledFunctions(() => vi.advanceTimersByTime(0));
 }
 
 /** Insert a bare user (all user fields are optional) and return its id. */

@@ -79,10 +79,19 @@ export function isTooLong(country: CountryCode, input: string): boolean {
   return validatePhoneNumberLength(input, country) === "TOO_LONG";
 }
 
+/**
+ * Ofcom's drama range (07700 900000–900999): never assigned, so the UK
+ * store-review accounts use it, but libphonenumber rejects it as invalid.
+ */
+const UK_FICTION = /^\+447700900\d{3}$/;
+
 /** E.164 for a valid mobile number typed in `country`, else null. */
 export function toE164(country: CountryCode, input: string): string | null {
   const parsed = parsePhoneNumberFromString(input, country);
-  return parsed?.isValid() ? parsed.number : null;
+  if (!parsed) return null;
+  return parsed.isValid() || UK_FICTION.test(parsed.number)
+    ? parsed.number
+    : null;
 }
 
 /** "+14165550123" → "+1 416 555 0123" for display. */

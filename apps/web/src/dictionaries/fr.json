@@ -1967,7 +1967,7 @@
           "L'IP et le pays sont signés côté serveur avec HMAC-SHA256 : les clients ne peuvent pas falsifier leur propre localisation.",
           "Chaque entrée porte le hachage de l'entrée précédente, de sorte que la chaîne peut être rejouée et vérifiée hors ligne.",
           "À l'inscription, nous recueillons votre date de naissance (capacité juridique) et votre pays de résidence (droit successoral applicable), tous deux stockés sur votre fiche utilisateur et consignés dans la chaîne d'audit.",
-          "Nous conservons les journaux d'audit même après la suppression du compte : la trace immuable survit à l'utilisateur, ce qui est exactement la propriété dont un tribunal des successions a besoin."
+          "Le journal de sécurité d'un compte supprimé est conservé 30 jours après l'effacement du compte, puis supprimé."
         ]
       }
     },
@@ -2019,7 +2019,7 @@
       },
       {
         "q": "Et le RGPD ?",
-        "a": "Les entrées d'audit ne stockent que des métadonnées d'action, jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment, mais la chaîne d'audit elle-même est conservée (anonymisée vers votre identifiant utilisateur désormais supprimé) afin que la garantie d'immuabilité sur laquelle un futur tribunal des successions pourrait s'appuyer ne soit pas détruite rétroactivement. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime combiné à l'article 17.3.b obligation légale)."
+        "a": "Les entrées d'audit ne stockent que des métadonnées d'action, jamais le contenu en clair de votre coffre. Vous pouvez demander l'export ou la suppression de votre compte à tout moment. Le journal de sécurité d'un compte supprimé est conservé 30 jours après l'effacement du compte, puis supprimé. Voir le texte complet du RGPD pour la base légale (article 6.1.f intérêt légitime)."
       }
     ]
   },

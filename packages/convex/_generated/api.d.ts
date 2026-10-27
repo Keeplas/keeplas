@@ -76,6 +76,7 @@ import type * as rotation from "../rotation.js";
 import type * as session_proofs from "../session_proofs.js";
 import type * as session_proofs_node from "../session_proofs_node.js";
 import type * as shared_types from "../shared_types.js";
+import type * as store_review from "../store_review.js";
 import type * as support from "../support.js";
 import type * as testing from "../testing.js";
 import type * as totp from "../totp.js";
@@ -162,6 +163,7 @@ declare const fullApi: ApiFromModules<{
   session_proofs: typeof session_proofs;
   session_proofs_node: typeof session_proofs_node;
   shared_types: typeof shared_types;
+  store_review: typeof store_review;
   support: typeof support;
   testing: typeof testing;
   totp: typeof totp;

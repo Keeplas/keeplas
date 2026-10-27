@@ -83,6 +83,8 @@ The Convex backend sends through the Expo push service (`packages/convex/dispatc
 3. Play Console → App integrity: copy the SHA-256 of the **app signing** key and the **upload** key into `ANDROID_SHA256_CERT_FINGERPRINTS` (web host, assetlinks.json), and add the matching `android:apk-key-hash:` origin to `WEBAUTHN_ORIGIN` (native passkeys).
 4. Play Console → App integrity: link the Google Cloud project `keeplas-eb259` (`EXPO_PUBLIC_GCP_PROJECT_NUMBER`). Its `play-integrity` service account (no IAM role; manage with prince@prince-code.com, which owns the project) signs the Convex calls; its key is `GOOGLE_PLAY_INTEGRITY_SERVICE_ACCOUNT` in Infisical prod `/keeplas_mobile`, set on Convex with `npx convex env set` (not in `/keeplas_app`, which syncs to Vercel).
 
+5. Before the first production release, fill in App content: App access (the demo account), Data safety and the delete-account URL, following [`APP_REVIEW.md`](./APP_REVIEW.md). A personal developer account created after 13 Nov 2023 must first run a closed test with at least 12 testers opted in for 14 days in a row.
+
 ## App Store
 
-App Store Connect setup, TestFlight, updates and release: [`APP_STORE.md`](./APP_STORE.md).
+App Store Connect setup, TestFlight, updates and release: [`APP_STORE.md`](./APP_STORE.md). Review accounts and notes for both stores: [`APP_REVIEW.md`](./APP_REVIEW.md).

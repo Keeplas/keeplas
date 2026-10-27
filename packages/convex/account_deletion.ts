@@ -1,13 +1,22 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation, query, type MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
-import { optionalAuth, requireFullAuth } from "./helpers";
+import { getUserByPhone, optionalAuth, requireFullAuth } from "./helpers";
+import { normalizeE164 } from "./lib/phone";
 import { deleteBlob } from "./lib/storage";
 
-export const DELETION_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const DELETION_GRACE_MS = 7 * DAY_MS;
+/**
+ * The security log (`audit_logs`) of an erased account is kept this long after
+ * the erasure, then deleted. The privacy policy states this figure.
+ */
+export const SECURITY_LOG_RETENTION_MS = 30 * DAY_MS;
+/** Security-log action written when an account's erasure starts. */
+export const WIPE_ACTION = "account_wipe_executed";
 const BATCH = 200;
 
 export const getStatus = query({
@@ -22,6 +31,39 @@ export const getStatus = query({
   },
 });
 
+/**
+ * Start the grace period: the wipe runs DELETION_GRACE_MS from now and the
+ * owner is told on every channel, so they can still cancel from the app.
+ * Returns the existing date when a deletion is already scheduled.
+ */
+async function scheduleDeletion(
+  ctx: MutationCtx,
+  user: Doc<"users">,
+): Promise<{ scheduledAt: number; alreadyScheduled: boolean }> {
+  if (user.deletionScheduledAt) {
+    return { scheduledAt: user.deletionScheduledAt, alreadyScheduled: true };
+  }
+  const scheduledAt = Date.now() + DELETION_GRACE_MS;
+  const deletionJobId = await ctx.scheduler.runAt(
+    scheduledAt,
+    internal.account_deletion.execute,
+    { userId: user._id },
+  );
+  await ctx.db.patch(user._id, {
+    deletionScheduledAt: scheduledAt,
+    deletionJobId,
+  });
+  await ctx.scheduler.runAfter(0, internal.dispatch.notifyDeletionScheduled, {
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    ownerName: user.name,
+    language: user.language,
+    pushTokens: await activePushTokens(ctx, user._id),
+    date: new Date(scheduledAt).toISOString().slice(0, 10),
+  });
+  return { scheduledAt, alreadyScheduled: false };
+}
+
 export const request = auditedMutation({
   action: "user.account.deletion_requested",
   resourceType: "user",
@@ -33,28 +75,38 @@ export const request = auditedMutation({
     const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
-    if (user.deletionScheduledAt) {
-      return { scheduledAt: user.deletionScheduledAt };
-    }
-    const scheduledAt = Date.now() + DELETION_GRACE_MS;
-    const deletionJobId = await ctx.scheduler.runAt(
-      scheduledAt,
-      internal.account_deletion.execute,
-      { userId },
-    );
-    await ctx.db.patch(userId, {
-      deletionScheduledAt: scheduledAt,
-      deletionJobId,
-    });
-    await ctx.scheduler.runAfter(0, internal.dispatch.notifyDeletionScheduled, {
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      ownerName: user.name,
-      language: user.language,
-      pushTokens: await activePushTokens(ctx, userId),
-      date: new Date(scheduledAt).toISOString().slice(0, 10),
-    });
+    const { scheduledAt } = await scheduleDeletion(ctx, user);
     return { scheduledAt };
+  },
+});
+
+/**
+ * Schedule a deletion asked for outside the app: the website's deletion page
+ * (keeplas.com/delete-account) emails the request to support, who run this
+ * after confirming it with the number on file (apps/mobile/APP_REVIEW.md).
+ * Same grace period and notice as the in-app request, so a real owner who
+ * did not ask can still cancel from the app.
+ */
+export const scheduleForPhone = internalMutation({
+  args: { phoneNumber: v.string() },
+  handler: async (ctx, args) => {
+    const phone = normalizeE164(args.phoneNumber);
+    if (!phone) throw new ConvexError("Invalid phone number");
+    const user = await getUserByPhone(ctx, phone);
+    if (!user) throw new ConvexError("No account for this phone number");
+    const result = await scheduleDeletion(ctx, user);
+    if (!result.alreadyScheduled) {
+      await createAuditLog(ctx, {
+        userId: user._id,
+        actorType: "system",
+        actorId: "support",
+        action: "user.account.deletion_requested",
+        resourceType: "user",
+        resourceId: user._id,
+        metadata: JSON.stringify({ via: "support" }),
+      });
+    }
+    return result;
   },
 });
 
@@ -86,7 +138,7 @@ export const execute = internalMutation({
       userId,
       actorType: "system",
       actorId: "account_deletion",
-      action: "account_wipe_executed",
+      action: WIPE_ACTION,
       resourceType: "user",
       resourceId: userId,
     });
@@ -114,10 +166,40 @@ export const wipeStep = internalMutation({
       }
     }
     const user = await ctx.db.get(userId);
-    if (user?.avatarStorageId) {
+    if (!user) return;
+    if (user.avatarStorageId) {
       await deleteBlob(ctx, user.avatarStorageId, userId);
     }
-    if (user) await ctx.db.delete(userId);
+    await ctx.db.delete(userId);
+    // Everything else is gone; the security log follows after the retention.
+    await ctx.scheduler.runAfter(
+      SECURITY_LOG_RETENTION_MS,
+      internal.account_deletion.purgeSecurityLog,
+      { userId },
+    );
+  },
+});
+
+/**
+ * Delete an erased account's security log, a batch at a time. Idempotent.
+ * Refuses a living account: its chain must stay whole.
+ */
+export const purgeSecurityLog = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    if (await ctx.db.get(userId)) return;
+    const logs = await ctx.db
+      .query("audit_logs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH);
+    for (const log of logs) await ctx.db.delete(log._id);
+    if (logs.length === BATCH) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.account_deletion.purgeSecurityLog,
+        { userId },
+      );
+    }
   },
 });
 

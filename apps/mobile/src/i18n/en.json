@@ -180,7 +180,9 @@
     "placeholder": "word1 word2 word3 …",
     "cta": "Open my vault",
     "invalid": "These words don't open your vault. Check each word and their order.",
-    "contactsCta": "Ask my trusted contacts"
+    "contactsCta": "Ask my trusted contacts",
+    "lastTimeIcloud": "You need your words only this once. When your vault opens, Keeplas keeps its key in your iCloud Keychain, so your next iPhone opens it without them.",
+    "lastTimeGoogle": "You need your words only this once. When your vault opens, Keeplas keeps its key in your Google backup. Set up your next Android phone from that backup, and it opens your vault without them."
   },
   "cloudRestore": {
     "title": "Restore from {provider}",
@@ -373,7 +375,9 @@
     "windowOver": "Window complete",
     "windowBody": "Your vault will be restored after 2 approvals and the end of the 72-hour window.",
     "expired": "Your last request expired before it was approved. You can start a new one.",
-    "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request."
+    "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request.",
+    "notReady": "You don’t have 2 trusted contacts ready yet, so they can’t open your vault. Use your recovery kit instead.",
+    "useKit": "Use my recovery kit"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -1072,7 +1076,8 @@
     "enable": "Turn on backup",
     "disable": "Turn off backup",
     "on": "On",
-    "off": "Off"
+    "off": "Off",
+    "notEncrypted": "Google can’t encrypt this backup end to end on this phone. Set a screen lock and sign in to your Google account, then try again."
   },
   "invite": {
     "title": "You've been invited",
