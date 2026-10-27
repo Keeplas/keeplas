@@ -12,7 +12,7 @@ Building and uploading: [`APP_STORE.md`](./APP_STORE.md) (iOS) and [`README.md`]
 
 ## Status
 
-As of 26 October 2026.
+As of 27 October 2026.
 
 **Done**
 
@@ -20,7 +20,7 @@ As of 26 October 2026.
   - the review code works for sign-in and sign-up on the review numbers;
   - `pnpm review:status` and `pnpm review:reset`;
   - `scheduleForPhone`, for deletion requests made on the website.
-- **Prod config:** `REVIEW_PHONES` (the four [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
+- **Prod config:** `REVIEW_PHONES` (the six [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
 - **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
 - **Website:** the deletion page shows the in-app steps and ends with the support form ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21)).
@@ -32,8 +32,8 @@ As of 26 October 2026.
 - [ ] File the export documentation:
   - US: confirm the route with counsel, either the BIS self-classification report or the open-source notification;
   - France: file the ANSSI declaration, or leave France out of the availability until it is filed.
-- [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it.
-- [ ] Android: upload the launch AAB, then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
+- [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix.
+- [ ] Android: upload the launch AAB (it must include the UK review numbers fix), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
 
 ## What the stores check
@@ -73,14 +73,16 @@ Both stores accept this:
 
 ## Review numbers
 
-Use numbers nobody can own, so no message ever reaches a real person. In North America, 555-0100 to 555-0199 are reserved for fiction and never assigned, and the app's phone check accepts them. The UK drama range (+44 7700 900xxx) does **not** pass the app's phone check.
+Use numbers nobody can own, so no message ever reaches a real person. In North America, 555-0100 to 555-0199 are reserved for fiction and never assigned. In the UK, Ofcom keeps 07700 900000 to 900999 for drama. The app's phone check accepts both (`toE164` in `apps/mobile/src/lib/phone.ts` lets the UK range through, since libphonenumber rejects it).
 
-| Number          | Role           | Account                                                      |
-| --------------- | -------------- | ------------------------------------------------------------ |
-| +1 202 555 0101 | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan   |
-| +1 202 555 0102 | Demo contact 1 | Accepts the owner's invitation                               |
-| +1 202 555 0103 | Demo contact 2 | Accepts the owner's invitation                               |
-| +1 202 555 0104 | Sign-up test   | No account: reviewers create one; reset it after each review |
+| Number          | Role            | Account                                                      |
+| --------------- | --------------- | ------------------------------------------------------------ |
+| +1 202 555 0101 | Demo owner      | Seeded vault, recovery kit, 2 accepted contacts, Free plan   |
+| +1 202 555 0102 | Demo contact 1  | Accepts the owner's invitation                               |
+| +1 202 555 0103 | Demo contact 2  | Accepts the owner's invitation                               |
+| +1 202 555 0104 | Sign-up test    | No account: reviewers create one; reset it after each review |
+| +44 7700 900101 | UK sign-up test | Same, for a reviewer who tries a UK number                   |
+| +44 7700 900102 | UK sign-up test | Same, spare                                                  |
 
 WhatsApp messages to these numbers fail quietly. Push notifications still reach the device you seed the accounts on.
 
@@ -95,7 +97,7 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
    ```
 
 2. **Store the values** in Infisical `prod` → `/keeplas_app`:
-   - `REVIEW_PHONES=+12025550101,+12025550102,+12025550103,+12025550104`
+   - `REVIEW_PHONES=+12025550101,+12025550102,+12025550103,+12025550104,+447700900101,+447700900102`
    - `REVIEW_CODE=<the 6 digits>`
 
    Infisical also copies them to Vercel. The web app doesn't read them, so Vercel needs no redeploy.
@@ -108,7 +110,7 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 
 4. **Deploy the backend** that accepts review sign-ups (`pnpm deploy:convex`), if the current prod deploy predates it.
 
-5. **Check**: `pnpm review:status` lists the four numbers and says `REVIEW_CODE: set`.
+5. **Check**: `pnpm review:status` lists the six numbers and says `REVIEW_CODE: set`.
 
 ## Seed the demo accounts
 
@@ -149,13 +151,13 @@ Use a real iPhone or Android phone with the production app (a TestFlight or inte
 ## Every submission
 
 1. `pnpm review:status` → **Ready for review**.
-   - If a reviewer used the sign-up number last time, free it first: `pnpm review:reset +12025550104`.
+   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +12025550104` (or the UK one).
    - On the owner account, turn on travel mode (Settings → Life check). It pauses the Life check for 30 days, so no check-in or escalation runs during the review.
 2. Paste the notes below into ASC and the Play Console, with the current code and words from Infisical.
 3. While a review runs, sign-ins to the demo owner trigger a new-device alert on your phone.
    - Never answer "It wasn't me": that revokes the reviewer's session.
    - Never rotate the demo account's keys.
-4. After the review, run `pnpm review:reset +12025550104` if a reviewer created an account on it.
+4. After the review, run `pnpm review:reset <number>` on each sign-up number a reviewer created an account on.
 5. Rotate `REVIEW_CODE`: it sits in the review notes, and with the attestation it can create accounts on the listed numbers. Change it in Infisical and on Convex ([setup](#setup) steps 1 to 3); the next submission's notes use the new one.
 
 `pnpm review:status` and `pnpm review:reset` run on prod through `pnpm with-env --env=prod` ([`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)). `reset` asks you to type the number again; `--yes` skips that.
@@ -179,7 +181,7 @@ SIGN IN TO THE DEMO ACCOUNT
 5. Create the passkey when asked (Face ID or the device passcode). If asked to add a Keeplas code, skip it or choose any 4 digits.
 
 TRY SIGN-UP
-Tap "Get started" and use (202) 555-0104 with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
+Tap "Get started" and use (202) 555-0104, or United Kingdom 07700 900101, with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
