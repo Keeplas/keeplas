@@ -11,6 +11,7 @@ import { hasPendingLink } from "@/features/link/pending-link";
 import { LifeCheckPrompt } from "@/features/life-check/life-check-prompt";
 import { useConfirmAvailability } from "@/features/people/use-confirm-availability";
 import { PinGateProvider } from "@/features/pin/use-pin-gate";
+import { useEnsureSocialRecovery } from "@/features/social-recovery";
 import { useBackfillShares } from "@/features/vault/use-backfill-shares";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -96,5 +97,6 @@ export default function AppLayout() {
 function TrustUpkeep() {
   useBackfillShares();
   useConfirmAvailability();
+  useEnsureSocialRecovery();
   return null;
 }
