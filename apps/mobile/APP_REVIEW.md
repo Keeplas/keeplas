@@ -23,11 +23,11 @@ As of 27 October 2026.
 - **Prod config:** `REVIEW_PHONES` (the six [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
 - **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
-- **Website:** the deletion page shows the in-app steps and ends with the support form ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21)).
+- **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)).
+- **[Demo accounts](#demo-accounts)**, seeded on 27 October 2026: the owner, two accepted contacts and six items. Opened again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
 
 **Left to do**
 
-- [ ] Seed the demo accounts on a real phone ([steps](#seed-the-demo-accounts)) until `pnpm review:status` says **Ready for review**.
 - [ ] Record the video of the multi-day flows and put its link in the review notes.
 - [ ] File the export documentation:
   - US: confirm the route with counsel, either the BIS self-classification report or the open-source notification;
@@ -63,7 +63,7 @@ Not a problem:
 Keeplas has no email and password. An account is a phone number verified with a code sent on WhatsApp, then a passkey on the device. Reviewers can't receive those WhatsApp codes, so:
 
 - Numbers listed in `REVIEW_PHONES` accept the secret 6-digit `REVIEW_CODE` instead of a WhatsApp code, for sign-in and for sign-up (`packages/convex/phone_auth.ts`). No WhatsApp message is sent for them.
-- Nothing else is bypassed. Sign-up still needs the App Attest / Play Integrity attestation of the genuine app. A new device still needs the 24-word recovery kit to open the vault. The passkey is created on the reviewer's device.
+- Nothing else is bypassed. Sign-up still needs the App Attest / Play Integrity attestation of the genuine app. A new device still needs the 24-word recovery kit to open the vault.
 - The usual limits apply: 3 code requests per hour and 5 attempts per code. `pnpm review:reset` refuses any number outside `REVIEW_PHONES`.
 
 Both stores accept this:
@@ -84,7 +84,7 @@ Use numbers nobody can own, so no message ever reaches a real person. In North A
 | +44 7700 900101 | UK sign-up test | Same, for a reviewer who tries a UK number                   |
 | +44 7700 900102 | UK sign-up test | Same, spare                                                  |
 
-WhatsApp messages to these numbers fail quietly. Push notifications still reach the device you seed the accounts on.
+WhatsApp messages to these numbers fail quietly. Push notifications reach the phones signed in to the account, such as a reviewer's.
 
 ## Setup
 
@@ -112,50 +112,62 @@ Done on prod on 26 October 2026. Steps 1 to 3 also rotate the code. A new deploy
 
 5. **Check**: `pnpm review:status` lists the six numbers and says `REVIEW_CODE: set`.
 
-## Seed the demo accounts
+## Demo accounts
 
-Use a real iPhone or Android phone with the production app (a TestFlight or internal-track build). App Attest and Play Integrity reject simulators on prod.
+The owner and the two contacts were created on 27 October 2026 by a one-off operator script (not kept in the repo) that runs the app's own code: vault keys (`crypto/vault-keys.ts`), items (`features/capture/seal.ts` and the outbox), contact key checks (`crypto/contact-keys.ts`). The sign-up attestation came from the internal `attestation:grantSignup`, so no phone was needed. The accounts have no devices yet: the first reviewer's phone becomes the first one.
+
+| Account                     | Number          | 24 words (Infisical `prod` → `/keeplas_mobile`) |
+| --------------------------- | --------------- | ----------------------------------------------- |
+| Demo Owner                  | +1 202 555 0101 | `REVIEW_DEMO_KIT`                               |
+| Alex Demo (owner's contact) | +1 202 555 0102 | `REVIEW_CONTACT_1_KIT`                          |
+| Sam Demo (owner's contact)  | +1 202 555 0103 | `REVIEW_CONTACT_2_KIT`                          |
+
+The owner's vault holds no real personal data:
+
+| Item                     | Category  | File                  | After a confirmed death |
+| ------------------------ | --------- | --------------------- | ----------------------- |
+| Summer at the lake       | Family    | Photo (JPEG)          | Alex                    |
+| Message for the family   | Family    | Voice note (m4a)      | Alex                    |
+| Where the house keys are | Family    | (note)                | Alex                    |
+| Home insurance policy    | Paperwork | PDF stamped SAMPLE    | Alex and Sam            |
+| Insurance contacts       | Paperwork | (note)                | Alex and Sam            |
+| Email account            | Accounts  | (note, made-up login) | Alex and Sam            |
+
+- **Settings:**
+  - Free plan, so reviewers can try the Lifetime purchase in the sandbox;
+  - Life check quarterly, with travel mode on until 26 November 2026;
+  - cloud backup turned off, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit.
+- **Contacts:**
+  - invited by phone only, so no message reached anyone;
+  - they accepted, and their keys are pinned on the owner's side.
+- **Never create another kit on the owner account.** A new kit replaces the old one, and the words in the review notes stop working.
+
+To seed again by hand, use a real iPhone or Android phone with the production app (a TestFlight or internal-track build), since App Attest and Play Integrity reject simulators on prod. First run `pnpm review:reset` on each of the three numbers.
 
 1. **Owner.**
-   1. Tap **Get started**, then enter **+1 202 555 0101** and the review code.
+   1. Tap **Get started**, enter **+1 202 555 0101** and the review code.
    2. Name the account "Demo Owner" and finish setup (passkey; skip the Keeplas code).
-2. **Recovery kit.** Settings → Privacy and security → Recovery kit → **Create my kit**. Store the 24 words in Infisical `prod` → `/keeplas_mobile` as `REVIEW_DEMO_KIT`.
-   - Never create another kit on this account: a new kit replaces the old one, and the words in the review notes stop working.
-3. **Content.** Add 6 to 8 items with no real personal data:
-   - a scanned document (any page stamped SAMPLE);
-   - a photo;
-   - a voice note;
-   - a note ("Where the house keys are", "Insurance contacts");
-   - an account entry with a made-up login.
-
-   Sort them into two folders, for example "Family" and "Paperwork".
-
-4. **Contacts.** Add two contacts:
-   - Contact 1: name "Alex Demo", phone **+1 202 555 0102**.
-   - Contact 2: name "Sam Demo", phone **+1 202 555 0103**.
-   - Give each one an email address you read, such as a team alias. The invitation link arrives by email, since WhatsApp can't reach these numbers.
-5. **Accept the invitations.**
-   1. Sign out.
-   2. Open the invitation email on the phone and sign up as the contact with the review code.
-   3. Accept the invitation.
-
-   Repeat for the second contact, then sign back in as the owner.
-
-6. **Sharing.**
-   - Share "Family" with Alex now.
-   - Share "Paperwork" with both contacts for after a confirmed death.
-7. **Life check.** Settings → Life check: set it to **quarterly**.
-8. **Plan.** Stay on **Free**, so reviewers can try the Lifetime purchase in the sandbox.
-9. **Check.** `pnpm review:status` ends with **Ready for review**.
+2. **Recovery kit.** Settings → Privacy and security → Recovery kit → **Create my kit**. Store the 24 words as `REVIEW_DEMO_KIT`.
+3. **Contacts.** Add "Alex Demo" (+1 202 555 0102) and "Sam Demo" (+1 202 555 0103).
+   - Give each an email address you read, such as a team alias. WhatsApp can't reach these numbers, so the invitation link arrives by email.
+   - Sign out, open the invitation email on the phone, then sign up as the contact with the review code and accept.
+   - Store the contact's 24 words as `REVIEW_CONTACT_1_KIT` or `REVIEW_CONTACT_2_KIT`.
+   - Repeat for the second contact, then sign back in as the owner.
+4. **Content.** Add the items above to two categories, "Family" and "Paperwork" (Settings → Categories). On each Family item, open **Share** and pick Alex only. The other items go to every contact by default.
+5. **Settings.**
+   - Life check: **quarterly**, and travel mode on.
+   - Backup: off.
+   - Plan: **Free**.
+6. **Check.** `pnpm review:status` ends with **Ready for review**.
 
 ## Every submission
 
 1. `pnpm review:status` → **Ready for review**.
    - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset +12025550104` (or the UK one).
-   - On the owner account, turn on travel mode (Settings → Life check). It pauses the Life check for 30 days, so no check-in or escalation runs during the review.
+   - The owner's travel mode pauses the Life check, so no check-in or escalation runs during the review. It lasts 30 days: after 26 November 2026, sign in to the demo account and turn it on again (Settings → Life check).
 2. Paste the notes below into ASC and the Play Console, with the current code and words from Infisical.
-3. While a review runs, sign-ins to the demo owner trigger a new-device alert on your phone.
-   - Never answer "It wasn't me": that revokes the reviewer's session.
+3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's.
+   - If you sign in to the demo account yourself during a review, never answer "It wasn't me": that revokes the reviewer's session.
    - Never rotate the demo account's keys.
 4. After the review, run `pnpm review:reset <number>` on each sign-up number a reviewer created an account on.
 5. Rotate `REVIEW_CODE`: it sits in the review notes, and with the attestation it can create accounts on the listed numbers. Change it in Infisical and on Convex ([setup](#setup) steps 1 to 3); the next submission's notes use the new one.
@@ -176,16 +188,16 @@ SIGN IN TO THE DEMO ACCOUNT
 1. Tap "I already have an account".
 2. Choose United States and enter (202) 555-0101, then tap "Verify with WhatsApp".
 3. Enter the code <REVIEW_CODE>, then tap "Confirm number".
-4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault".
+4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault". If the app first offers to restore from iCloud or Google, tap "Other ways back in", then "Use recovery kit".
    <24 WORDS>
-5. Create the passkey when asked (Face ID or the device passcode). If asked to add a Keeplas code, skip it or choose any 4 digits.
+5. The vault opens on Home. If the app asks to turn on security alerts, either answer works.
 
 TRY SIGN-UP
 Tap "Get started" and use (202) 555-0104, or United Kingdom 07700 900101, with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
-- Contacts and sharing: the demo account has two trusted contacts and folders shared with them.
+- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both.
 - In-app purchase: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). The demo account is on the Free plan.
 - Account deletion: Settings > Delete my account (erased 7 days later, can be cancelled).
 
@@ -219,7 +231,7 @@ Vault content (items, notes, files, voice notes) is end-to-end encrypted: Keepla
 | Email Address · Personal info → Email address        | Optional, plus the email addresses of contacts you invite                                                     | Yes                |
 | Contacts · Contacts                                  | The name, phone and email of each trusted contact you add (only the contact you pick, never the address book) | Yes                |
 | Photos or Videos · Photos and videos → Photos        | Optional profile photo (not end-to-end encrypted)                                                             | Yes                |
-| Other Data Types · Personal info → Other info        | Date of birth and country of residence asked at sign-up                                                       | Yes                |
+| Other Data Types · Personal info → Other info        | Date of birth, if the user adds it in My account                                                              | Yes                |
 | Coarse Location · Location → Approximate location    | Country derived from the IP address, kept with the IP in the security log                                     | Yes                |
 | Customer Support · Messages → Other in-app messages  | Support requests: name, reply-to contact, message                                                             | Yes                |
 | User ID · Personal info → User IDs                   | Account ID, also given to RevenueCat for purchases                                                            | Yes                |
@@ -238,7 +250,7 @@ Vault content (items, notes, files, voice notes) is end-to-end encrypted: Keepla
 
 The website page `https://www.keeplas.com/delete-account` (keeplas-website repo) shows the in-app steps with the app screens. At the end, people who can't open the app send the support form; it reaches the support inbox by email with the subject "Delete my Keeplas account" ("Supprimer mon compte Keeplas" in French).
 
-1. **Confirm the request.** The form asks for the account's phone number or email address. Message the account's number on WhatsApp and wait for a reply from it; if the request gave only an email address, find the account by that email (Convex dashboard, `users` table), confirm by writing to that address, and use the account's phone number below.
+1. **Confirm the request.** The form asks for the account's phone number. Message that number on WhatsApp and wait for a reply from it. If someone writes to support@keeplas.com instead, ask them for the account's phone number first.
 2. **Schedule the deletion:**
 
    ```bash
@@ -265,13 +277,13 @@ Your own testers (TestFlight, Play closed and internal tracks) need none of this
 
 ## Where it lives
 
-| What                                                                       | Where                                                                                                                           |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| The review code in place of the WhatsApp code                              | `packages/convex/phone_auth.ts` (`fixedCode`)                                                                                   |
-| Readiness check (never returns the code) and reset (refuses other numbers) | `packages/convex/store_review.ts`                                                                                               |
-| `pnpm review:status` and `pnpm review:reset`                               | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)                                                              |
-| Deletion of an account after a confirmed web request                       | `packages/convex/account_deletion.ts` (`scheduleForPhone`)                                                                      |
-| Tests                                                                      | `packages/convex/__tests__/`: `store_review.test.ts`, `phone_auth.test.ts`, `account_deletion.test.ts`                          |
-| Env vars                                                                   | [`.env.example`](../../.env.example) (`REVIEW_PHONES`, `REVIEW_CODE`)                                                           |
-| Encryption declaration                                                     | `apps/mobile/app.json` (`ITSAppUsesNonExemptEncryption`)                                                                        |
-| Website deletion page                                                      | keeplas-website: `apps/web/src/pages/[...lang]/delete-account.astro`, text in `apps/web/src/dictionaries/en.json` and `fr.json` |
+| What                                                                       | Where                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The review code in place of the WhatsApp code                              | `packages/convex/phone_auth.ts` (`fixedCode`)                                                                                                                                                                                              |
+| Readiness check (never returns the code) and reset (refuses other numbers) | `packages/convex/store_review.ts`                                                                                                                                                                                                          |
+| `pnpm review:status` and `pnpm review:reset`                               | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)                                                                                                                                                                         |
+| Deletion of an account after a confirmed web request                       | `packages/convex/account_deletion.ts` (`scheduleForPhone`)                                                                                                                                                                                 |
+| Tests                                                                      | `packages/convex/__tests__/`: `store_review.test.ts`, `phone_auth.test.ts`, `account_deletion.test.ts`                                                                                                                                     |
+| Env vars                                                                   | [`.env.example`](../../.env.example) (`REVIEW_PHONES`, `REVIEW_CODE`)                                                                                                                                                                      |
+| Encryption declaration                                                     | `apps/mobile/app.json` (`ITSAppUsesNonExemptEncryption`)                                                                                                                                                                                   |
+| Website deletion page                                                      | keeplas-website: `apps/web/src/pages/[...lang]/delete-account.astro`, app screens in `apps/web/src/components/delete-account/`, text in `apps/web/src/dictionaries/en.json` and `fr.json`, form handler `apps/web/src/lib/contact/send.ts` |
