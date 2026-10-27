@@ -78,6 +78,27 @@ Before coding, turn the request into a check:
 
 Don't ship parallel pages for overlapping features — favor variants / categories when the data model overlaps.
 
+### Existing accounts & data — migration plan required
+
+Every change must keep working for accounts and data that already exist. Deleting an account and starting over is never an acceptable answer.
+
+Before coding, check: does this only work for accounts created after it ships? Typical triggers:
+
+- New or newly required field / table that old rows don't have (schema, user key material, envelopes, backups).
+- Data written only during onboarding or setup, which existing users already passed.
+- Changed encryption format, key type, or wrapping scheme.
+- A new server-side guard that old data can't satisfy.
+- Removed sign-in method, endpoint, or code path that existing users rely on.
+
+If yes, the same PR (or a linked one merged first) ships the migration plan:
+
+1. **Who is affected**: how to find the existing rows/accounts (the query).
+2. **How they get upgraded**: server backfill (`packages/convex/migrations.ts`, widen-migrate-narrow, see `/convex-migration-helper`), or a client-side upgrade when keys are needed (zero-knowledge: the server can't migrate encrypted data). Keep a clear in-app prompt that leads the user through the upgrade.
+3. **What they see until then**: a working fallback or a clear message that explains the next step. Never a generic error or a dead end.
+4. **Verify**: a test that seeds a legacy-shaped account and proves it still works or upgrades (`convex-test`).
+
+Flag it in the PR description. If a change truly needs no migration, say why in one line.
+
 ## Monorepo & tooling
 
 - Turborepo + pnpm. Apps: `apps/web` (TanStack Start + Vite), `apps/mobile` (Expo / React Native — scaffold only, see `PRD/v2-mobile-first/README.md`; run with `pnpm --filter @keeplas/mobile ios`). Packages: `packages/crypto` (RESTRICTED — founders only via CODEOWNERS), `packages/convex`, `packages/ui`.
