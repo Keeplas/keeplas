@@ -47,7 +47,7 @@ export function BottomSheet({
               {
                 backgroundColor: colors[background],
                 paddingTop: title ? 20 : 0,
-                paddingBottom: Math.max(insets.bottom, 32),
+                paddingBottom: insets.bottom + 20,
               },
             ]}
           >

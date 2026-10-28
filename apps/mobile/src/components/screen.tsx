@@ -112,7 +112,9 @@ export function Screen({
       style={[styles.root, { backgroundColor: colors["bg.app"] }]}
     >
       <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-      {decor ? <Decor kind={decor} night={scheme === "dark"} /> : null}
+      {decor && decor !== "branches" ? (
+        <Decor kind={decor} night={scheme === "dark"} />
+      ) : null}
       {header}
       {scroll ? (
         <RevealContext.Provider value={reveal}>
@@ -130,6 +132,9 @@ export function Screen({
             }}
           >
             {children}
+            {decor === "branches" ? (
+              <Decor kind={decor} night={scheme === "dark"} />
+            ) : null}
           </KeyboardAwareScrollView>
           {footer ? (
             <KeyboardStickyView
@@ -197,10 +202,9 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: layout.gutter, paddingBottom: 12, gap: 12 },
   landscape: { position: "absolute", left: 0, right: 0, bottom: 0 },
   branches: {
-    position: "absolute",
-    left: -10,
-    right: -10,
-    bottom: 20,
+    marginTop: "auto",
+    marginHorizontal: -layout.gutter - 10,
+    marginBottom: -24,
     flexDirection: "row",
     justifyContent: "space-between",
   },

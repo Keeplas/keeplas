@@ -273,5 +273,5 @@ function RowAction({
 const styles = StyleSheet.create({
   photo: { alignItems: "center", gap: 8, paddingVertical: 8 },
   photoActions: { flexDirection: "row", gap: 24 },
-  rowAction: { flexDirection: "row", alignItems: "center", gap: 8 },
+  rowAction: { alignItems: "flex-end", gap: 6 },
 });

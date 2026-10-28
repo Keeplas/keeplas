@@ -29,7 +29,7 @@ import { formatDuration } from "@/lib/format";
 import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
-import { radius, withAlpha } from "@/theme";
+import { colors as palette, radius, withAlpha } from "@/theme";
 import { documentKind, previewableOffice } from "./document-kind";
 import { officePage, sheetToHtml, wordToHtml } from "./office-html";
 import type { AttachmentState } from "./use-decrypted-attachment";
@@ -119,11 +119,16 @@ function PreviewStatus({
 
   if (state.status === "loading") {
     return (
-      <View style={styles.status}>
+      <View style={[styles.status, dark && styles.statusOnMedia]}>
         <ActivityIndicator
-          color={dark ? colors["text.inverse"] : colors["text.muted"]}
+          color={dark ? palette.white : colors["text.muted"]}
         />
-        <Text variant="body-sm" color={dark ? "text.inverse" : "text.muted"}>
+        <Text
+          variant="body-sm"
+          color="text.muted"
+          align="center"
+          style={dark ? { color: palette.white } : undefined}
+        >
           {state.progress !== undefined && state.progress < 1
             ? t("item.downloading", { pct: Math.floor(state.progress * 100) })
             : t("item.opening")}
@@ -632,6 +637,13 @@ const styles = StyleSheet.create({
   page: { alignSelf: "stretch", height: 296, borderRadius: 6 },
   office: { alignSelf: "stretch", height: 460, borderRadius: 6 },
   status: { alignItems: "center", gap: 10, alignSelf: "stretch" },
+  statusOnMedia: {
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: radius.md,
+    backgroundColor: withAlpha(palette.navy["950"], 0.6),
+  },
   errorOnDark: { margin: 14, padding: 16, borderRadius: radius.md },
   pager: { flexDirection: "row", alignItems: "center", gap: 6, height: 16 },
   dot: { width: 6, height: 6, borderRadius: 3 },

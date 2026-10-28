@@ -49,10 +49,12 @@ export default function RecoveryCenter() {
     >
       <Text variant="h1">{t("recoveryCenter.title")}</Text>
       <Text color="text.muted">{t("recoveryCenter.body")}</Text>
-      <StatusChip
-        label={t(ways.covered ? "waysBack.covered" : "waysBack.notCovered")}
-        tone={ways.covered ? "success" : "warning"}
-      />
+      <View style={styles.chip}>
+        <StatusChip
+          label={t(ways.covered ? "waysBack.covered" : "waysBack.notCovered")}
+          tone={ways.covered ? "success" : "warning"}
+        />
+      </View>
       <WaysBackCard ways={ways} />
       <Text variant="label">{t("recoveryCenter.trustContacts")}</Text>
       <Text variant="body-sm" color="text.muted">
@@ -126,5 +128,6 @@ export default function RecoveryCenter() {
 }
 
 const styles = StyleSheet.create({
+  chip: { alignItems: "flex-start" },
   between: { flexDirection: "row", justifyContent: "space-between" },
 });
