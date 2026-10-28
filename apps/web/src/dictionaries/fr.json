@@ -305,10 +305,7 @@
     "channels": {
       "title": "Canaux de vérification",
       "help": "Les canaux que Keeplas utilise pour vous joindre lors d'une vérification, tous envoyés ensemble, pas l'un après l'autre. Désactivez ceux que vous n'utilisez pas. À noter : seuls le bouton de l'e-mail et une réponse sur WhatsApp permettent de confirmer que vous allez bien.",
-      "comingSoon": "Bientôt disponible",
       "notVerified": "Non vérifié",
-      "noEmail": "Aucun e-mail",
-      "noEmailLinked": "Aucun e-mail n'est associé à ce compte.",
       "verify": "Vérifier",
       "items": {
         "whatsapp": {

@@ -373,3 +373,70 @@ describe("I'm okay", () => {
     expect(result.nextCheckAt).toBeGreaterThan(Date.now() + DAY_MS);
   });
 });
+
+describe("migrations.enableLifeCheckPush", () => {
+  async function seedConfig(
+    t: TestConvex,
+    activeChannels: {
+      type: "push" | "email" | "whatsapp";
+      order: number;
+      isEnabled: boolean;
+    }[],
+  ) {
+    const userId = await seedUser(t);
+    const now = Date.now();
+    return await t.run((ctx) =>
+      ctx.db.insert("life_check_configs", {
+        userId,
+        frequency: "monthly",
+        activeChannels,
+        travelModeEnabled: false,
+        isActive: true,
+        nextCheckAt: now,
+        createdAt: now,
+        updatedAt: now,
+      }),
+    );
+  }
+
+  it("turns push on for configs the web saved with push forced off", async () => {
+    const t = makeT();
+    // Legacy web shape: push marked "coming soon" and persisted disabled.
+    const legacy = await seedConfig(t, [
+      { type: "whatsapp", order: 1, isEnabled: true },
+      { type: "push", order: 2, isEnabled: false },
+      { type: "email", order: 3, isEnabled: false },
+    ]);
+    const missing = await seedConfig(t, [
+      { type: "email", order: 1, isEnabled: true },
+    ]);
+    const already = await seedConfig(t, [
+      { type: "push", order: 0, isEnabled: true },
+    ]);
+
+    expect(
+      await t.mutation(internal.migrations.enableLifeCheckPush, {}),
+    ).toEqual({ scanned: 3, migrated: 2 });
+
+    const channels = async (id: Id<"life_check_configs">) =>
+      (await t.run((ctx) => ctx.db.get(id)))!.activeChannels;
+    expect(await channels(legacy)).toEqual([
+      { type: "whatsapp", order: 1, isEnabled: true },
+      { type: "push", order: 2, isEnabled: true },
+      // Other channels keep the user's choice.
+      { type: "email", order: 3, isEnabled: false },
+    ]);
+    expect(await channels(missing)).toEqual([
+      { type: "email", order: 1, isEnabled: true },
+      { type: "push", order: 2, isEnabled: true },
+    ]);
+    expect(await channels(already)).toEqual([
+      { type: "push", order: 0, isEnabled: true },
+    ]);
+
+    // Idempotent.
+    expect(
+      await t.mutation(internal.migrations.enableLifeCheckPush, {}),
+    ).toEqual({ scanned: 3, migrated: 0 });
+  });
+});

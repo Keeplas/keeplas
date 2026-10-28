@@ -17,8 +17,7 @@ export interface ChannelConfig {
   iconPath: string;
   isEnabled: boolean;
   order: number;
-  isUpcoming?: boolean; // not yet available (e.g. no mobile app); shown disabled
-  isVerified?: boolean; // derived: contact proven (phone OTP); email is auth-verified
+  isVerified?: boolean; // derived: WhatsApp phone proven via OTP
 }
 
 const EMAIL_ICON_PATH =
@@ -44,9 +43,8 @@ export const DEFAULT_CHANNELS: ChannelConfig[] = [
     label: "App Push Notification",
     description: "Encrypted mobile ping. Tap to confirm",
     iconPath: ICON_PATHS.bell,
-    isEnabled: false,
+    isEnabled: true,
     order: 2,
-    isUpcoming: true,
   },
   {
     type: "email",
