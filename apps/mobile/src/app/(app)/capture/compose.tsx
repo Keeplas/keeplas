@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.md,
   },
-  titleInput: { flex: 1, paddingVertical: 0 },
+  titleInput: { flex: 1 },
   reviewNote: {
     minHeight: 84,
     padding: 14,
@@ -934,5 +934,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.md,
   },
-  searchInput: { flex: 1, paddingVertical: 0 },
+  searchInput: { flex: 1 },
 });

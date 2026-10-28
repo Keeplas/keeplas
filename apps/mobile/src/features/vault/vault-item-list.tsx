@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.md,
   },
-  input: { flex: 1, paddingVertical: 0 },
+  input: { flex: 1 },
   listHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
