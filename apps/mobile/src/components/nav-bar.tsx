@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  side: { width: 64, flexDirection: "row" },
+  side: { minWidth: 64, flexDirection: "row" },
   right: { justifyContent: "flex-end" },
   title: { flex: 1 },
 });
