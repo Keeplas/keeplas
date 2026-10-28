@@ -54,21 +54,6 @@ export default function Welcome() {
           ]}
         />
       ))}
-      <View pointerEvents="none" style={styles.landscape}>
-        <Image
-          source={paintedLandscape}
-          style={styles.painted}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={[welcomeSky.horizon, withAlpha(welcomeSky.horizon, 0)]}
-          style={styles.fadeTop}
-        />
-        <LinearGradient
-          colors={[withAlpha(welcomeSky.ground, 0), welcomeSky.ground]}
-          style={styles.fadeBottom}
-        />
-      </View>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <AppHeader inverse />
         <View style={styles.content}>
@@ -78,6 +63,21 @@ export default function Welcome() {
           <Text variant="lead" style={[styles.white, styles.lead]}>
             {t("welcome.body")}
           </Text>
+        </View>
+        <View pointerEvents="none" style={styles.landscape}>
+          <Image
+            source={paintedLandscape}
+            style={styles.painted}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={[welcomeSky.horizon, withAlpha(welcomeSky.horizon, 0)]}
+            style={styles.fadeTop}
+          />
+          <LinearGradient
+            colors={[withAlpha(welcomeSky.ground, 0), welcomeSky.ground]}
+            style={styles.fadeBottom}
+          />
         </View>
         <View style={styles.actions}>
           <Button
@@ -105,14 +105,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: welcomeSky.ground },
   safe: { flex: 1 },
   star: { position: "absolute", backgroundColor: welcomeSky.foreground },
-  // The landscape block is anchored to the bottom (852 pt frame: 470..702).
-  landscape: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 150,
-    height: 232,
-  },
+  landscape: { flex: 1, justifyContent: "flex-end", overflow: "hidden" },
   painted: { width: "100%", height: 232 },
   fadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
   fadeBottom: {
@@ -126,7 +119,6 @@ const styles = StyleSheet.create({
   white: { color: welcomeSky.foreground },
   lead: { opacity: 0.9 },
   actions: {
-    marginTop: "auto",
     paddingHorizontal: layout.gutter,
     paddingBottom: 24,
     gap: 12,

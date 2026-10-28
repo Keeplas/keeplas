@@ -723,7 +723,14 @@ function ActionTile({
       ]}
     >
       <Icon name={icon} size={22} color="text.primary" />
-      <Text variant="body-sm-strong">{label}</Text>
+      <Text
+        variant="body-sm-strong"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -743,6 +750,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     paddingVertical: 12,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderRadius: radius.md,
   },

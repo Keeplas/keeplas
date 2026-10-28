@@ -296,7 +296,14 @@ export const welcomeSky = {
 
 export function singleLine<T extends { lineHeight?: number }>(
   style: T,
-): Omit<T, "lineHeight"> & { paddingBottom?: number } {
+): Omit<T, "lineHeight"> & TextStyle {
   const { lineHeight: _lineHeight, ...rest } = style;
-  return Platform.OS === "ios" ? { ...rest, paddingBottom: 3.5 } : rest;
+  return Platform.OS === "ios"
+    ? { ...rest, paddingBottom: 3.5 }
+    : {
+        ...rest,
+        paddingVertical: 0,
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      };
 }

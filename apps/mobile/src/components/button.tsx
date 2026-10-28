@@ -98,7 +98,9 @@ export function Button({
       ) : (
         <View style={styles.row}>
           {icon ? <Icon name={icon} size={18} tint={text} /> : null}
-          <Text style={[type.button, { color: text }]}>{label}</Text>
+          <Text style={[type.button, styles.label, { color: text }]}>
+            {label}
+          </Text>
           {chevron && variant !== "glass" ? (
             <Icon name="chevron-right" size={20} tint={text} />
           ) : null}
@@ -115,13 +117,15 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    height: 52,
+    minHeight: 52,
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  textBox: { height: 24, paddingHorizontal: 0 },
-  row: { flexDirection: "row", alignItems: "center", gap: 8 },
+  textBox: { minHeight: 24, paddingHorizontal: 0, paddingVertical: 0 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 },
+  label: { flexShrink: 1, textAlign: "center" },
   glassChevron: { position: "absolute", right: 24 },
 });
