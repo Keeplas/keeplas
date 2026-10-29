@@ -100,3 +100,38 @@ describe("admin guard", () => {
     expect(segments).toHaveProperty("incompleteOnboarding");
   });
 });
+
+describe("analytics.track abuse limits", () => {
+  it.each([
+    ["an overlong route", `/${"a".repeat(200)}`],
+    ["a resolved path with odd characters", "/vault/<script>"],
+    ["a route without a leading slash", "vault"],
+  ])("refuses %s and stores nothing", async (_, route) => {
+    const t = makeT();
+    await expect(
+      t.mutation(api.analytics.track, {
+        eventType: "page_view",
+        route,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Invalid route");
+    const events = await t.run((ctx) =>
+      ctx.db.query("analytics_events").collect(),
+    );
+    expect(events).toEqual([]);
+  });
+
+  it("throttles events per IP", async () => {
+    const t = makeT();
+    const _audit = await signedAudit();
+    const track = () =>
+      t.mutation(api.analytics.track, {
+        eventType: "page_view",
+        route: "/_dashboard/vault/$itemId/",
+        _audit,
+      });
+    for (let i = 0; i < 300; i++) await track();
+
+    await expect(track()).rejects.toThrow("Too many requests");
+  });
+});

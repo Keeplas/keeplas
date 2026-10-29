@@ -1,12 +1,19 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { optionalAuth } from "./helpers";
 import { auditContextValidator, verifyAuditContext } from "./audit";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 // How stale `users.lastSeenAt` must be before a page view refreshes it. Keeps
 // the heartbeat to at most one write per user per window instead of one per
 // navigation.
 const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000;
+
+// Anyone can call `track` (logged-out pages too), so events are bounded per
+// server-attested IP, and `route` must look like a route template such as
+// "/_dashboard/vault/$itemId/" (the longest today is about 60 characters).
+const EVENTS_PER_HOUR = 300;
+const ROUTE_TEMPLATE = /^\/[A-Za-z0-9_$/-]{0,127}$/;
 
 /**
  * Record a product-analytics event (page view) emitted by the web app on
@@ -34,6 +41,10 @@ export const track = mutation({
   },
   handler: async (ctx, args) => {
     await verifyAuditContext(args._audit);
+    if (!ROUTE_TEMPLATE.test(args.route)) {
+      throw new ConvexError("Invalid route");
+    }
+    await enforceIpRateLimit(ctx, "analytics", args._audit.ip, EVENTS_PER_HOUR);
 
     const userId = await optionalAuth(ctx);
     const now = Date.now();
