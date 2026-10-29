@@ -27,6 +27,8 @@ const FREQUENCY_DAYS: Record<string, number> = {
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** How often a paused cycle re-checks whether it may resume its timeline. */
 const PAUSE_RECHECK_MS = DAY_MS;
+/** Longest travel mode: it suspends the dead-man's switch, so it must end. */
+const TRAVEL_MODE_MAX_MS = 180 * DAY_MS;
 
 /**
  * Stage-1 user check-in window: once the cadence elapses the user has this many
@@ -183,11 +185,14 @@ export const toggleTravelMode = auditedMutation({
     if (!config) throw new Error("Life Check not configured");
 
     const now = Date.now();
-    // Max 180 days
-    if (args.enabled && args.until) {
-      const maxUntil = now + 180 * DAY_MS;
-      if (args.until > maxUntil) {
-        throw new Error("Travel mode maximum is 180 days");
+    // Travel mode suspends the dead-man's switch, so it always ends: a return
+    // date is required, at most 180 days out.
+    if (args.enabled) {
+      if (args.until === undefined) {
+        throw new ConvexError("Choose a return date for travel mode");
+      }
+      if (args.until > now + TRAVEL_MODE_MAX_MS) {
+        throw new ConvexError("Travel mode maximum is 180 days");
       }
     }
 
@@ -788,10 +793,14 @@ export const evaluateAllConfigs = internalMutation({
 
     for (const config of configs) {
       if (config.travelModeEnabled) {
-        if (
-          config.travelModeUntil !== undefined &&
-          now >= config.travelModeUntil
-        ) {
+        if (config.travelModeUntil === undefined) {
+          // Legacy open-ended travel mode (before a return date was
+          // required): give it the 180-day maximum, counted from now.
+          await ctx.db.patch(config._id, {
+            travelModeUntil: now + TRAVEL_MODE_MAX_MS,
+            updatedAt: now,
+          });
+        } else if (now >= config.travelModeUntil) {
           // Travel mode expired — the user is presumed back. Clear it and
           // restart the clock so they get a full fresh window, then skip this
           // tick (no immediate cycle from a stale lastActivityAt).

@@ -361,6 +361,36 @@ describe("LIFE_CHECK_PAUSED kill switch freezes the counting", () => {
   });
 });
 
+describe("travel mode always ends (finding 38)", () => {
+  it("refuses travel mode without a return date", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedConfig(t, owner);
+
+    await expect(
+      asUser(t, owner).mutation(api.life_check.toggleTravelMode, {
+        enabled: true,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/return date/);
+  });
+
+  it("caps a legacy open-ended travel mode at 180 days from now", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner, { travelModeEnabled: true });
+
+    await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    const config = await t.run((ctx) => ctx.db.get(configId));
+    expect(config?.travelModeEnabled).toBe(true);
+    expect(config?.travelModeUntil).toBeGreaterThan(Date.now() + 179 * DAY_MS);
+    expect(config?.travelModeUntil).toBeLessThanOrEqual(
+      Date.now() + 180 * DAY_MS,
+    );
+  });
+});
+
 describe("NOTIFICATIONS_PAUSED also freezes the escalation (finding 37)", () => {
   // With notifications off the owner gets no check-in and no 72h grace
   // alert, so the timeline must not move toward a release either.
