@@ -3,7 +3,8 @@ import { mutation, query, type QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
-import { requireAuth } from "./helpers";
+import { requireAuth, requireFullAuth } from "./helpers";
+import { requireSessionProof } from "./session_proofs";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
@@ -44,11 +45,16 @@ async function assertEmailAvailable(
  * Rate-limited to 3 per rolling hour. Refuses if the user is trying to verify
  * the same address they already have, or if the address belongs to someone
  * else.
+ *
+ * The address becomes a login method and the login-OTP channel, so the
+ * session must clear every step-up gate first. Replacing a verified address
+ * also needs a "phone" or "vault" proof, like a number change
+ * (phone_verification.ts).
  */
 export const requestVerification = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new Error("Invalid email address");
 
@@ -57,6 +63,9 @@ export const requestVerification = mutation({
     const user = await ctx.db.get(userId);
     if (user?.emailVerificationTime && user.email === email) {
       throw new Error("New email is the same as the current one.");
+    }
+    if (user?.emailVerificationTime) {
+      await requireSessionProof(ctx, "phone", "vault");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -110,7 +119,7 @@ export const verifyCodeAndLink = auditedMutation({
   resourceType: "user",
   args: { code: v.string() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
     const candidates = await ctx.db
       .query("email_verification_codes")

@@ -8,7 +8,7 @@ import {
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
-import { requireAuth } from "./helpers";
+import { requireAuth, requireFullAuth } from "./helpers";
 import {
   grantCurrentSessionProof,
   requireSessionProof,
@@ -29,16 +29,18 @@ const RATE_LIMIT_MAX = 3;
  * the code row. Rate-limited to 3 requests per rolling hour. Refuses if the
  * number is identical to the user's current verified one.
  *
- * Replacing a verified number needs this session to have proved the current
- * one or opened the vault (session_proofs.ts): otherwise a synced passkey
- * could swap in a new number and pass for its owner on WhatsApp.
+ * The number becomes a login method, so the session must clear every step-up
+ * gate first (a password alone must not add one). Replacing a verified
+ * number also needs this session to have proved the current one or opened
+ * the vault (session_proofs.ts): otherwise a synced passkey could swap in a
+ * new number and pass for its owner on WhatsApp.
  */
 export const requestVerification = mutation({
   args: {
     phoneNumber: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new Error("A valid phone number is required");
 
@@ -176,7 +178,7 @@ export const verifyCode = auditedMutation({
     code: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const candidates = await ctx.db
       .query("phone_verification_codes")
       .withIndex("by_user", (q) => q.eq("userId", userId))

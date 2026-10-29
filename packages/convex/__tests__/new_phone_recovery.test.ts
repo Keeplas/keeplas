@@ -305,6 +305,20 @@ describe("I — attacker holding the owner's iCloud / Google account", () => {
     expect(user?.encryptedKeyBundle).toBe("owner-bundle");
   });
 
+  it("nor swap the account's email for their own", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(userId, { emailVerificationTime: Date.now() }),
+    );
+    const { as } = await passkeySession(t, userId);
+    await expect(
+      as.mutation(api.email_verification.requestVerification, {
+        email: "attacker@example.com",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+  });
+
   it("nor rotate in its own keys", async () => {
     const t = makeT();
     const { userId } = await seedOwner(t);

@@ -175,8 +175,8 @@ describe("requireFullAuth — onboarding/setup is NOT gated (d)", () => {
     const userId = await seedUser(t);
     await seedPasswordAccount(t, userId);
     const sessionId = await seedSession(t, userId);
-    // Deliberately NO cleared login-OTP row: onboarding runs before the gate
-    // is necessarily credited (creditSignupSession is best-effort + TTL-bound).
+    // Deliberately NO cleared login-OTP row: onboarding may run before the
+    // session clears the gate.
 
     await asUserSession(t, userId, sessionId).mutation(
       api.onboarding.initOnboarding,
