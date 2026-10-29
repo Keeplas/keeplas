@@ -1,17 +1,18 @@
 import { query } from "./_generated/server";
-import { optionalAuth, getUserVault, getActiveItems } from "./helpers";
+import { requireFullAuth, getUserVault, getActiveItems } from "./helpers";
 import { acceptedContacts, hasReadyTrustQuorum } from "./trusted_contacts";
 
 /**
  * Get all hub data in one query: continuity score, recent items, contact
  * count, feature status. Categories are encrypted (F4), so per-category
- * counts are computed on the client from the decrypted metadata.
+ * counts are computed on the client from the decrypted metadata. Item rows
+ * (legacy plaintext titles included) need every step-up gate, like
+ * `vault_items.getItemSummaries`.
  */
 export const getHubData = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await optionalAuth(ctx);
-    if (userId === null) return null;
+    const userId = await requireFullAuth(ctx);
 
     const vault = await getUserVault(ctx, userId);
     const items = await getActiveItems(ctx, userId);
