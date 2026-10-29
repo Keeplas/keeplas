@@ -30,7 +30,7 @@ developer.apple.com → Certificates, Identifiers & Profiles → Identifiers →
 | Associated Domains | Passkeys (`webcredentials:app.keeplas.com`) and universal links (`applinks:app.keeplas.com`)                         |
 | Push Notifications | `expo-notifications` (life checks, alerts)                                                                           |
 
-Face ID, camera, microphone and photos are `Info.plist` permissions (set by the config plugins in `app.json`), not capabilities.
+Face ID, camera, microphone, photos and contacts are `Info.plist` permissions, not capabilities. Their texts live in `locales/en.json` and `locales/fr.json` (`app.config.ts` puts the English ones in `Info.plist`, and `app.json` `locales` builds the French `InfoPlist.strings`).
 
 `app.json` must keep the App Attest entitlement (`com.apple.developer.devicecheck.appattest-environment: "production"`). Automatic signing syncs capabilities from the entitlements on every build. Without that line App Attest was turned **off** on the App ID (`Synced capabilities: Disabled: App Attest` in the EAS build log). The server always accepts production attestations, so dev builds still work.
 
@@ -126,7 +126,7 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 1. **Backend first.** Deploy Convex with `pnpm deploy:convex` before the app that calls new functions. Older app versions keep running against the same backend, so keep functions backward-compatible until they are gone from users' phones.
 2. **Version.**
    - **Build number**: Xcode sets it at upload. Never set `ios.buildNumber` by hand. The EAS remote counter no longer moves for iOS: before an iOS build on EAS again, raise it above the latest ASC build with `npx eas-cli build:version:set --platform ios`.
-   - **Marketing version**: `expo.version` in `app.json`, shown as "Version" in ASC. Several builds can share a version while it is in TestFlight. Once a version is released on the App Store, bump `expo.version` (e.g. `0.1.0` → `0.2.0`) before the next upload, or ASC rejects the build.
+   - **Marketing version**: `expo.version` in `app.json`, shown as "Version" in ASC. Several builds can share a version while it is in TestFlight. Once a version is released on the App Store, bump `expo.version` (e.g. `1.0.0` → `1.0.1`) before the next upload. The first App Store version is `1.0.0`, or ASC rejects the build.
 3. **Build and submit.** Run the [build command](#build-and-upload-to-testflight). Internal testers get the build once ASC has processed it.
 4. **Release.** When the build is validated, follow [Release to the App Store](#release-to-the-app-store).
 
@@ -134,7 +134,7 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 
 1. ASC → the app → iOS App → **+** (new version), or open the version that is waiting ("Prepare for Submission").
 2. Fill in the listing:
-   - Screenshots: the 6.9" iPhone size is required. `supportsTablet: false`, so no iPad screenshots. Generate them (and the Google Play set) with [`store-screenshots/render.sh`](store-screenshots/render.sh).
+   - Screenshots: the 6.9" iPhone size is required. `supportsTablet: false`, so no iPad screenshots. Capture them on a phone from the build being submitted, then frame them (and the Google Play set) with [`store-screenshots/render.sh`](store-screenshots/render.sh). Apple rejects screenshots that don't show the app in use (2.3.3).
    - Description, keywords, support URL, privacy policy URL.
    - "What's New" (from the second version on).
 3. App Information and App Privacy:
@@ -143,7 +143,8 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 4. **Build**: select the TestFlight build to ship.
 5. **In-App Purchases**: add `keeplas_lifetime` to the version. Apple requires the first in-app purchase to ship with an app version. Before that, replace its review screenshot, a blank placeholder uploaded by RevenueCat, with the Settings screen showing the Upgrade to Lifetime card.
 6. **App Review Information**: sign-in details, notes and the video link from [`APP_REVIEW.md`](./APP_REVIEW.md). Run `pnpm review:status` first. Without a working demo account, review is usually rejected for an app gated by sign-in.
-7. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
+7. **Pricing and Availability**: under "iPhone and iPad Apps on Apple Silicon Mac", clear "Make this app available", and check the Apple Vision Pro availability on the same page. Sign-up can't pass App Attest on a Mac.
+8. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
 
 ## Troubleshooting
 
