@@ -177,6 +177,40 @@ export const migrateTestCadence = internalMutation({
 });
 
 /**
+ * Push is now on by default for Life Check. The web app used to mark push as
+ * "coming soon" and save it disabled on every edit, so no user ever chose to
+ * turn it off: enable it (or add it when missing) on every config. Other
+ * channels keep the user's choice. Idempotent:
+ *   npx convex run migrations:enableLifeCheckPush        # dev
+ *   npx convex run migrations:enableLifeCheckPush --prod # prod
+ */
+export const enableLifeCheckPush = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const configs = await ctx.db.query("life_check_configs").collect();
+    let migrated = 0;
+    for (const config of configs) {
+      const channels = config.activeChannels;
+      const push = channels.find((c) => c.type === "push");
+      if (push?.isEnabled) continue;
+      const activeChannels = push
+        ? channels.map((c) => (c === push ? { ...c, isEnabled: true } : c))
+        : [
+            ...channels,
+            {
+              type: "push" as const,
+              order: Math.max(0, ...channels.map((c) => c.order)) + 1,
+              isEnabled: true,
+            },
+          ];
+      await ctx.db.patch(config._id, { activeChannels, updatedAt: Date.now() });
+      migrated++;
+    }
+    return { scanned: configs.length, migrated };
+  },
+});
+
+/**
  * One-shot migration that retires the trust / recipient-only split: every
  * contact is now a trust contact. Clears `contactType` on every row and adds
  * former recipient-only contacts to their owner's default group (trust
