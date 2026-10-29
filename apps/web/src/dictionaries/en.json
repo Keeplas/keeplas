@@ -305,10 +305,7 @@
     "channels": {
       "title": "Check-in channels",
       "help": "Channels Keeplas uses to reach you for a check-in, all sent together, not in sequence. Disable any you don't have. Note: only the email button and a WhatsApp reply can confirm you're well.",
-      "comingSoon": "Coming soon",
       "notVerified": "Not verified",
-      "noEmail": "No email",
-      "noEmailLinked": "No email is linked to this account.",
       "verify": "Verify",
       "items": {
         "whatsapp": {

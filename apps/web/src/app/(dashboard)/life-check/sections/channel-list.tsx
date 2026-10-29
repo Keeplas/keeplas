@@ -30,9 +30,9 @@ export function ChannelList({
       </h2>
       <div className="flex flex-col gap-[16px]">
         {sorted.map((ch) => {
-          const isUnverified = !ch.isUpcoming && ch.isVerified === false;
+          const isUnverified = ch.isVerified === false;
           // Highlight (no dimming) channels that need action; dim only the
-          // upcoming and the verified-but-disabled ones.
+          // verified-but-disabled ones.
           const dimmed = !isUnverified && !ch.isEnabled;
           return (
             <div
@@ -51,49 +51,28 @@ export function ChannelList({
                 title={
                   <span className="flex flex-wrap items-center gap-[8px]">
                     {t(`channels.items.${ch.type}.label`)}
-                    {ch.isUpcoming && (
-                      <StatusChip
-                        tone="neutral"
-                        label={t("channels.comingSoon")}
-                      />
-                    )}
                     {isUnverified && (
                       <StatusChip
                         tone="pending"
-                        label={
-                          ch.type === "whatsapp"
-                            ? t("channels.notVerified")
-                            : t("channels.noEmail")
-                        }
+                        label={t("channels.notVerified")}
                       />
                     )}
                   </span>
                 }
-                description={
-                  isUnverified && ch.type === "email"
-                    ? t("channels.noEmailLinked")
-                    : t(`channels.items.${ch.type}.description`)
-                }
+                description={t(`channels.items.${ch.type}.description`)}
               />
               {isUnverified ? (
-                // WhatsApp self-verifies via phone OTP, so offer that flow.
-                // Email has no in-app verify step (the auth provider sets it at
-                // login), so just show it locked off until an address exists.
-                ch.type === "whatsapp" ? (
-                  <Button
-                    variant="bordered"
-                    size="regular"
-                    onClick={() => setVerifyOpen(true)}
-                  >
-                    {t("channels.verify")}
-                  </Button>
-                ) : (
-                  <Switch checked={false} disabled />
-                )
+                // Only WhatsApp can be unverified: offer the phone OTP flow.
+                <Button
+                  variant="bordered"
+                  size="regular"
+                  onClick={() => setVerifyOpen(true)}
+                >
+                  {t("channels.verify")}
+                </Button>
               ) : (
                 <Switch
-                  checked={ch.isUpcoming ? false : ch.isEnabled}
-                  disabled={ch.isUpcoming}
+                  checked={ch.isEnabled}
                   onCheckedChange={() => onToggle(ch.type)}
                   aria-label={t(`channels.items.${ch.type}.label`)}
                 />
@@ -104,8 +83,7 @@ export function ChannelList({
       </div>
 
       {/* WhatsApp is the only channel with an in-app verify flow (phone
-          ownership via OTP). Email gates on a verified address too, but that is
-          set by the auth provider at login — there is no dialog for it here. */}
+          ownership via OTP). */}
       <PhoneVerificationDialog
         open={verifyOpen}
         onOpenChange={setVerifyOpen}
