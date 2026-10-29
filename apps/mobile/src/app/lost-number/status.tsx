@@ -129,7 +129,7 @@ export default function LostNumberStatus() {
       description: waited
         ? t("lostNumber.stepWaitDone")
         : t("lostNumber.stepWaitBody", {
-            n: hoursLeft,
+            count: hoursLeft,
             date: `${formatDate(request.windowEndsAt, language)} · ${formatTime(request.windowEndsAt, language)}`,
           }),
       done: waited,

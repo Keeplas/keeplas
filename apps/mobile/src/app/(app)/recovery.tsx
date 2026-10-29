@@ -87,7 +87,7 @@ export default function RecoveryCenter() {
             tone="warning"
             icon="alert-triangle"
             text={t("recoveryCenter.needTwo", {
-              n: targets.contacts.length,
+              count: targets.contacts.length,
             })}
           />
           <Button

@@ -17,7 +17,7 @@ export function ReleaseQuorumWarning() {
       tone="warning"
       icon="alert-triangle"
       text={t("people.quorumWarning", {
-        required: quorum.required,
+        count: quorum.required,
         available: quorum.available,
       })}
     />

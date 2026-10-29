@@ -132,7 +132,7 @@ export default function ExportData() {
         <Callout
           tone="warning"
           icon="alert-circle"
-          text={t("export.skipped", { n: phase.skipped })}
+          text={t("export.skipped", { count: phase.skipped })}
         />
       ) : null}
       {phase.kind === "failed" ? (

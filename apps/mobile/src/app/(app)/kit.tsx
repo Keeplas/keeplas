@@ -6,6 +6,7 @@ import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { cloudNames } from "@/features/cloud-backup";
 import { isPinAbort } from "@/features/pin/use-pin-gate";
 import { KitWords, useCreateKit } from "@/features/recovery-kit";
 import { writePreference } from "@/lib/preferences";
@@ -57,7 +58,7 @@ export default function KitScreen() {
       ) : (
         <>
           <Text variant="body-lg" color="text.muted">
-            {t("kit.intro")}
+            {t("kit.intro", cloudNames)}
           </Text>
           <Callout icon="info" text={t("kit.replaces")} />
           <Button label={t("kit.create")} loading={busy} onPress={create} />

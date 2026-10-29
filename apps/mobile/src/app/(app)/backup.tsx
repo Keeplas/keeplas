@@ -12,7 +12,11 @@ import { StateSheet } from "@/components/state-message";
 import { Callout, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { readDeviceRootKey } from "@/crypto/device-vault";
-import { cloudKeyName, useSealCloudBackup } from "@/features/cloud-backup";
+import {
+  cloudKeyName,
+  cloudNames,
+  useSealCloudBackup,
+} from "@/features/cloud-backup";
 import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 import { KitWords, useCreateKit } from "@/features/recovery-kit";
 import { serverMessage } from "@/lib/errors";
@@ -45,7 +49,7 @@ export default function CloudBackup() {
   const [phrase, setPhrase] = useState<string[] | null>(null);
   const [exported, setExported] = useState(false);
   const [understood, setUnderstood] = useState(false);
-  const account = CloudKey.provider === "icloud" ? "Apple" : "Google";
+  const { account } = cloudNames;
 
   async function enable() {
     setBusy(true);

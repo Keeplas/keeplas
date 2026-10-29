@@ -383,7 +383,7 @@ export default function ItemDetails() {
       title={t("item.history")}
       description={
         versions?.length
-          ? t("item.historyCount", { n: versions.length })
+          ? t("item.historyCount", { count: versions.length })
           : t("item.historyEmpty")
       }
       onPress={() =>
@@ -690,7 +690,7 @@ function summaryOf(
         .join(" · ");
     default:
       return pages > 0
-        ? `${extension} · ${pages === 1 ? t("item.onePage") : t("item.pages", { n: pages })}`
+        ? `${extension} · ${t("item.pages", { count: pages })}`
         : extension;
   }
 }

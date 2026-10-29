@@ -33,7 +33,7 @@ export function pinErrorText(
     return t("pin.locked", { seconds });
   }
   if (error.code === "wrong") {
-    return t("pin.wrong", { n: error.detail.remaining ?? 0 });
+    return t("pin.wrong", { count: error.detail.remaining ?? 0 });
   }
   return t("pin.required");
 }

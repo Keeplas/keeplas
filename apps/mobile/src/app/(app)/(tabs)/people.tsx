@@ -119,7 +119,7 @@ export default function People() {
       <View style={styles.ready}>
         <IconTile icon="people" size={48} />
         <View style={styles.flex}>
-          <Text variant="h3">{t("people.ready", { n: ready })}</Text>
+          <Text variant="h3">{t("people.ready", { count: ready })}</Text>
           <Text variant="body-sm" color="text.muted">
             {t("people.readyBody")}
           </Text>

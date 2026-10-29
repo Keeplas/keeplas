@@ -10,6 +10,7 @@ import { Screen } from "@/components/screen";
 import { ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { devicePinLength, PIN_LENGTH } from "@/crypto/device-vault";
+import { cloudNames } from "@/features/cloud-backup";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 
@@ -79,7 +80,10 @@ export default function Privacy() {
           key={row.key}
           icon={row.icon}
           title={t(`privacy.${row.key}`)}
-          description={t(`privacy.${row.key}Body`, { n: PIN_LENGTH })}
+          description={t(`privacy.${row.key}Body`, {
+            n: PIN_LENGTH,
+            ...cloudNames,
+          })}
           trailing={row.trailing}
           onPress={() => router.push(row.href)}
         />

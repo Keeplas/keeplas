@@ -231,9 +231,7 @@ export default function ScanDocument() {
           style={[styles.done, { opacity: pages === 0 ? 0.4 : 1 }]}
         >
           <Text style={[type.caption, styles.navy]}>
-            {pages === 1
-              ? t("capture.onePage")
-              : t("capture.pages", { n: pages })}
+            {t("capture.pages", { count: pages })}
           </Text>
           <Icon name="arrow-right" size={16} tint={palette.navy["900"]} />
         </Pressable>

@@ -33,7 +33,7 @@
     "required": "Étapes requises",
     "completed": "{done}/{total} terminées",
     "verifyPhone": "Vérifier le numéro",
-    "createPasskey": "Créer le passe-clé",
+    "createPasskey": "Créer la clé d'accès",
     "createVault": "Créer le coffre"
   },
   "phone": {
@@ -43,7 +43,7 @@
     "signInSubtitle": "Saisissez le numéro de votre compte Keeplas. Nous vous enverrons un code sur WhatsApp.",
     "label": "Numéro de téléphone",
     "cta": "Vérifier avec WhatsApp",
-    "reassure": "Votre numéro identifie votre compte. Les passe-clés protègent l'accès.",
+    "reassure": "Votre numéro identifie votre compte. Les clés d'accès le protègent.",
     "chooseCountry": "Choisissez votre pays",
     "searchCountry": "Rechercher",
     "invalid": "Saisissez un numéro de téléphone valide.",
@@ -64,6 +64,7 @@
   },
   "codeErrors": {
     "wrongTitle": "Ce code n'est pas le bon",
+    "wrongBody_one": "Vérifiez les 6 chiffres et réessayez. {count} essai restant.",
     "wrongBody": "Vérifiez les 6 chiffres et réessayez. {count} essais restants.",
     "expiredTitle": "Ce code a expiré",
     "expiredBody": "Les codes sont valables 10 minutes. Nous pouvons vous en envoyer un nouveau.",
@@ -75,12 +76,12 @@
     "changeNumber": "Changer de numéro"
   },
   "passkey": {
-    "title": "Créer votre passe-clé",
-    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre passe-clé se synchronise avec votre trousseau {provider} : il revient sur un nouveau téléphone.",
-    "cta": "Créer le passe-clé",
-    "failedTitle": "Passe-clé non créé",
-    "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut un passe-clé pour garder votre coffre sur ce téléphone.",
-    "errorBody": "Votre téléphone n'a pas pu créer le passe-clé. Réessayez, ou touchez « Obtenir de l'aide » pour nous envoyer les détails.",
+    "title": "Créer votre clé d'accès",
+    "body": "Utilisez votre visage, votre empreinte ou le code de votre téléphone pour accéder à votre compte en toute sécurité. Votre clé d'accès se synchronise avec votre trousseau {provider} : elle revient sur un nouveau téléphone.",
+    "cta": "Créer la clé d'accès",
+    "failedTitle": "Clé d'accès non créée",
+    "failedBody": "La fenêtre s'est fermée avant la fin. Il vous faut une clé d'accès pour garder votre coffre sur ce téléphone.",
+    "errorBody": "Votre téléphone n'a pas pu créer la clé d'accès. Réessayez, ou touchez « Obtenir de l'aide » pour nous envoyer les détails.",
     "screenLockTitle": "Activez le verrouillage de l'écran",
     "screenLockBody": "Keeplas utilise le verrouillage de votre téléphone (code, visage ou empreinte) pour protéger votre coffre. Activez-le dans les Réglages, puis revenez."
   },
@@ -97,7 +98,7 @@
     "body": "Invitez des personnes de confiance. 2 d'entre elles suffisent pour récupérer votre compte et confirmer un décès. Elles ne voient que ce que vous partagez avec elles.",
     "invite": "Inviter des contacts",
     "skip": "Passer pour l'instant",
-    "warning": "Sans contacts ni sauvegarde cloud, perdre tous vos appareils et votre passe-clé peut vous bloquer l'accès."
+    "warning": "Sans contacts ni sauvegarde cloud, perdre tous vos appareils et votre clé d'accès peut vous empêcher de rouvrir votre compte."
   },
   "setupDone": {
     "title": "Configuration terminée",
@@ -113,7 +114,7 @@
     "body": "Notez ces 24 mots dans l'ordre, ou enregistrez-les dans un fichier. Ils permettent d'ouvrir votre coffre si vous perdez ce téléphone.",
     "warning": "Quiconque possède ces mots peut ouvrir votre coffre. Gardez-les hors ligne et ne les partagez jamais, pas même avec Keeplas.",
     "saved": "J'ai enregistré mon kit",
-    "intro": "24 mots qui ouvrent votre coffre si vous ne pouvez pas le restaurer depuis votre compte Apple ou Google ni avec vos contacts. Vous n'en avez pas besoin pour vous connecter.",
+    "intro": "24 mots qui ouvrent votre coffre si vous ne pouvez pas le restaurer depuis votre compte {account} ni avec vos contacts. Vous n'en avez pas besoin pour vous connecter.",
     "replaces": "Créer un kit remplace le précédent : les anciens mots ne fonctionnent plus.",
     "create": "Créer mon kit",
     "auth": "Créer un kit de récupération",
@@ -158,7 +159,7 @@
   "unlock": {
     "title": "Déverrouiller mon coffre",
     "body": "Votre visage, votre empreinte ou le code de votre téléphone vous connecte et déverrouille votre coffre.",
-    "cta": "Continuer avec le passe-clé",
+    "cta": "Continuer avec la clé d'accès",
     "lost": "Accès perdu ?",
     "lostBody": "Votre sauvegarde, vos 24 mots ou vos contacts de confiance",
     "failed": "Impossible de déverrouiller votre coffre. Réessayez."
@@ -170,6 +171,7 @@
   "recoveryKit": {
     "title": "Ouvrir votre coffre avec votre kit",
     "body": "Ce téléphone ne détient pas encore la clé de votre coffre. Saisissez les 24 mots de votre kit de récupération, séparés par des espaces.",
+    "placeholder": "mot1 mot2 mot3 …",
     "cta": "Ouvrir mon coffre",
     "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
     "contactsCta": "Demander à mes contacts",
@@ -224,7 +226,8 @@
     "stepReview": "Notre équipe vérifie vos informations",
     "stepReviewBody": "Nous comparons ce que vous nous avez dit avec votre compte.",
     "stepWait": "72 heures d'attente de sécurité",
-    "stepWaitBody": "Environ {n} h restantes, jusqu'au {date}.",
+    "stepWaitBody_one": "Environ {count} h restante, jusqu'au {date}.",
+    "stepWaitBody": "Environ {count} h restantes, jusqu'au {date}.",
     "stepWaitDone": "L'attente est terminée.",
     "sendCode": "Envoyer le code au {phone}",
     "statusNote": "Revenez ici quand vous voulez : ce téléphone garde la trace de votre demande.",
@@ -284,7 +287,7 @@
     "q": {
       "newPhone": {
         "question": "Je change de téléphone",
-        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp. Touchez « Restaurer depuis iCloud » (ou Google) : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
+        "answer": "Installez Keeplas sur le nouveau téléphone et connectez-vous avec votre numéro et le code WhatsApp. Touchez « Restaurer depuis {provider} » : un code WhatsApp confirme que c'est vous et votre coffre s'ouvre. Gardez l'ancien téléphone jusque-là, puis retirez-le dans Réglages › Appareils."
       },
       "platform": {
         "question": "Mon nouveau téléphone est d'une autre marque",
@@ -292,7 +295,7 @@
       },
       "lostPhone": {
         "question": "J'ai perdu mon téléphone",
-        "answer": "Personne ne peut ouvrir votre coffre dessus : il est verrouillé par Face ID, l'empreinte ou le code du téléphone. Sur un nouveau téléphone, connectez-vous et restaurez depuis iCloud ou Google. Retirez ensuite le téléphone perdu dans Réglages › Appareils pour fermer sa session."
+        "answer": "Personne ne peut ouvrir votre coffre dessus : il est verrouillé par votre visage, votre empreinte ou le code du téléphone. Sur un nouveau téléphone, connectez-vous et restaurez depuis {provider}. Retirez ensuite le téléphone perdu dans Réglages › Appareils pour fermer sa session."
       },
       "lostNumber": {
         "question": "J'ai perdu mon numéro",
@@ -308,7 +311,7 @@
       },
       "backup": {
         "question": "À quoi sert la sauvegarde cloud ?",
-        "answer": "Keeplas garde une copie chiffrée de la clé de votre coffre, et ce qui l'ouvre reste dans votre trousseau iCloud ou Google. Ni Keeplas, ni Apple ou Google ne peuvent l'ouvrir seuls. La restaurer demande aussi un code WhatsApp."
+        "answer": "Keeplas garde une copie chiffrée de la clé de votre coffre, et ce qui l'ouvre reste dans votre trousseau {provider}. Ni Keeplas ni {account} ne peuvent l'ouvrir seuls. La restaurer demande aussi un code WhatsApp."
       },
       "kit": {
         "question": "Ai-je besoin des 24 mots ?",
@@ -356,14 +359,17 @@
     "cancel": "Annuler la demande",
     "requestTitle": "Demande de récupération",
     "requestBody": "Vos contacts de confiance examinent votre demande. Vous serez prévenu quand les validations seront reçues et que la période de protection sera terminée.",
-    "approvals": "{n} validation(s) sur 2 reçue(s)",
-    "approvalsLeft": "Encore {n} validation pour restaurer votre coffre.",
+    "approvals_one": "{count} validation reçue sur 2",
+    "approvals": "{count} validations reçues sur 2",
+    "approvalsLeft_one": "Encore {count} validation pour restaurer votre coffre.",
+    "approvalsLeft": "Encore {count} validations pour restaurer votre coffre.",
     "approvalsDone": "Les deux validations sont reçues.",
     "approved": "Validé",
     "declined": "Refusé",
     "windowTitle": "Période de protection de 72 heures",
     "windowStarted": "Commencée lors de votre demande.",
-    "hoursLeft": "{n} h restantes",
+    "hoursLeft_one": "{count} h restante",
+    "hoursLeft": "{count} h restantes",
     "windowOver": "Période terminée",
     "windowBody": "Votre coffre sera restauré après 2 validations et la fin de la période de 72 heures.",
     "expired": "Votre dernière demande a expiré avant d'être validée. Vous pouvez en lancer une nouvelle.",
@@ -383,7 +389,7 @@
     "instructions": "Instructions",
     "other": "Autres",
     "items": "{count} éléments",
-    "item": "1 élément",
+    "items_one": "{count} élément",
     "inbox": "À classer",
     "recent": "Éléments récents",
     "outbox": {
@@ -396,7 +402,7 @@
     },
     "updated": "Mis à jour {when}",
     "greetingNamed": "{greeting}, {name}",
-    "itemWord": "élément",
+    "itemsWord_one": "élément",
     "itemsWord": "éléments",
     "addName": "Comment doit-on vous appeler ?",
     "addNameTitle": "Votre prénom",
@@ -440,7 +446,7 @@
     "errors": {
       "unavailable": "Lifetime ne peut pas être acheté sur {store} pour le moment. Rien n'a été débité. Réessayez plus tard.",
       "network": "Impossible de joindre {store}. Rien n'a été débité. Vérifiez votre connexion et réessayez.",
-      "notAllowed": "Les achats sont désactivés sur ce téléphone (Temps d'écran ou contrôle parental). Rien n'a été débité.",
+      "notAllowed": "Les achats sont désactivés sur ce téléphone, par exemple par le contrôle parental. Rien n'a été débité.",
       "pending": "Votre paiement attend une approbation. Lifetime s'active dès que {store} le confirme.",
       "failed": "Le paiement n'a pas pu être finalisé par {store}. Rien n'a été débité. Réessayez."
     },
@@ -463,7 +469,7 @@
     "planFree": "Gratuit",
     "planLifetime": "Lifetime",
     "privacy": "Confidentialité et sécurité",
-    "privacyBody": "Passe-clé, code PIN, kit de récupération",
+    "privacyBody": "Clé d'accès, code PIN, kit de récupération",
     "appearance": "Apparence",
     "appearanceSystem": "Système",
     "appearanceLight": "Clair",
@@ -486,7 +492,7 @@
   "privacy": {
     "title": "Confidentialité et sécurité",
     "subtitle": "Gérez l'accès à votre coffre et la protection de vos informations.",
-    "passkey": "Passe-clé",
+    "passkey": "Clé d'accès",
     "passkeyBody": "Vous connecte avec votre visage ou votre empreinte. Obligatoire.",
     "pin": "Code PIN (facultatif)",
     "pinBody": "Un code à {n} chiffres après votre visage ou votre empreinte.",
@@ -498,10 +504,8 @@
     "activityBody": "Consultez les connexions et l'activité récente.",
     "rotation": "Renouveler les clés",
     "rotationBody": "De nouvelles clés après un appareil perdu ou douteux.",
-    "pinSheetTitle": "Votre téléphone protège déjà Keeplas",
-    "pinSheetBody": "Sur ce téléphone, Keeplas s'ouvre avec votre verrouillage d'écran : Face ID, empreinte ou code du téléphone. Un code PIN Keeplas distinct est disponible sur l'application web, pour les ordinateurs.",
     "backup": "Sauvegarde cloud",
-    "backupBody": "Votre coffre revient avec votre compte Apple ou Google."
+    "backupBody": "Votre coffre revient avec votre compte {account}."
   },
   "rotation": {
     "title": "Renouveler les clés de chiffrement",
@@ -519,7 +523,7 @@
     "whatTitle": "Ce qui se passe",
     "what1": "Ce téléphone crée de nouvelles clés et reverrouille chaque élément et chaque partage.",
     "what2": "Les anciennes clés ne peuvent plus ouvrir votre coffre.",
-    "what3": "Rien d'autre ne change : vos éléments, contacts, passe-clé, 24 mots et sauvegarde cloud restent les mêmes.",
+    "what3": "Rien d'autre ne change : vos éléments, contacts, clé d'accès, 24 mots et sauvegarde cloud restent les mêmes.",
     "confirmTitle": "Renouveler vos clés maintenant ?",
     "confirmBody": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total). Cela prend en général environ une minute.",
     "confirmBodyShared": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total) et ce que vous partagez avec vos contacts ({contacts}). Cela prend en général environ une minute.",
@@ -533,7 +537,8 @@
     "notReady": "Récupération non configurée",
     "configure": "Configurer la récupération",
     "renew": "Renouveler la configuration",
-    "needTwo": "Vous avez {n} contact de confiance avec un compte Keeplas. Avec moins de 2 contacts, ils ne peuvent pas vous aider à récupérer l'accès : la récupération par contacts est donc désactivée pour l'instant.",
+    "needTwo_one": "Vous avez {count} contact de confiance avec un compte Keeplas. Avec moins de 2 contacts, ils ne peuvent pas vous aider à récupérer l'accès : la récupération par contacts est donc désactivée pour l'instant.",
+    "needTwo": "Vous avez {count} contacts de confiance avec un compte Keeplas. Avec moins de 2 contacts, ils ne peuvent pas vous aider à récupérer l'accès : la récupération par contacts est donc désactivée pour l'instant.",
     "requests": "Demandes pour moi",
     "owner": "Propriétaire du coffre",
     "review": "Vérifier la demande",
@@ -587,7 +592,7 @@
     "addedOn": "Ajouté le {date}",
     "remove": "Retirer",
     "removeTitle": "Retirer {label} ?",
-    "removeBody": "Il est déconnecté et ne pourra plus se reconnecter sans une nouvelle association depuis ce téléphone. La passkey créée sur cet appareil est aussi supprimée : si elle est synchronisée (iCloud, Google), elle ne marchera plus sur vos autres appareils, qui devront en créer une nouvelle.",
+    "removeBody": "Il est déconnecté et ne pourra plus se reconnecter sans une nouvelle association depuis ce téléphone. La clé d'accès créée sur cet appareil est aussi supprimée : si elle est synchronisée, elle ne marchera plus sur vos autres appareils, qui devront en créer une nouvelle.",
     "linkComputer": "Associer un navigateur ou un téléphone"
   },
   "scan": {
@@ -657,7 +662,7 @@
     "body": "L'appareil inconnu n'a plus aucun accès. Voici ce que nous avons fait :",
     "deviceRemoved": "Appareil retiré",
     "sessionsEnded": "{count} sessions fermées",
-    "sessionEnded": "1 session fermée",
+    "sessionsEnded_one": "{count} session fermée",
     "keysRotated": "Clés renouvelées",
     "keysRotatedBody": "Coffre rechiffré sur ce téléphone",
     "keysPending": "Renouvellement des clés en attente",
@@ -667,11 +672,11 @@
   },
   "migration": {
     "title": "Transférez votre compte sur votre téléphone",
-    "body": "Keeplas vous connecte désormais avec votre téléphone et un passe-clé, sans mot de passe. Cela prend environ 3 minutes.",
+    "body": "Keeplas vous connecte désormais avec votre téléphone et une clé d'accès, sans mot de passe. Cela prend environ 3 minutes.",
     "phoneStep": "Ajoutez votre numéro",
     "verifyStep": "Vérifiez-le sur WhatsApp",
     "verifyStepBody": "Nous envoyons un code à 6 chiffres",
-    "passkeyStep": "Créez un passe-clé",
+    "passkeyStep": "Créez une clé d'accès",
     "passkeyStepBody": "Votre visage, votre empreinte ou le code de votre téléphone remplace votre mot de passe",
     "appStep": "Installez l'app Keeplas",
     "appStepBody": "Votre coffre passe sur ce téléphone",
@@ -679,14 +684,14 @@
     "offStepBody": "Nous le faisons pour vous une fois les étapes 1 à 4 terminées",
     "note": "Votre coffre et vos contacts de confiance restent exactement les mêmes.",
     "sendCode": "Envoyer le code WhatsApp",
-    "createPasskey": "Créer le passe-clé",
+    "createPasskey": "Créer la clé d'accès",
     "registerDevice": "Utiliser ce téléphone",
     "finish": "Désactiver le mot de passe",
     "later": "Me le rappeler plus tard",
     "doneTitle": "Tout est prêt",
     "doneBody": "Votre compte vit maintenant sur ce téléphone. Votre ancien mot de passe ne fonctionne plus nulle part.",
     "phoneVerified": "Numéro vérifié",
-    "passkeyCreated": "Passe-clé créé",
+    "passkeyCreated": "Clé d'accès créée",
     "passkeyOn": "Sur {device}",
     "appInstalled": "App installée",
     "appInstalledBody": "Coffre synchronisé sur ce téléphone",
@@ -735,8 +740,8 @@
     "shutter": "Prendre la photo",
     "encryptedTitle": "Chiffré sur ce téléphone",
     "scanEncryptedBody": "Rien n'est envoyé avant le chiffrement.",
-    "onePage": "1 page",
-    "pages": "{n} pages",
+    "pages_one": "{count} page",
+    "pages": "{count} pages",
     "page": "Page {n}",
     "voiceTitle": "Note vocale",
     "recording": "Enregistrement…",
@@ -803,8 +808,8 @@
     "reviewScanTitle": "Revue du scan",
     "noteTitlePlaceholder": "Donnez un titre à votre note",
     "noteBodyPlaceholder": "Écrivez quelque chose…",
-    "pagesMeta": "{n} pages · PDF",
-    "onePageMeta": "1 page · PDF",
+    "pagesMeta": "{count} pages · PDF",
+    "pagesMeta_one": "{count} page · PDF",
     "suggestedTitle": "Titre suggéré",
     "addNote": "Ajouter une note",
     "addNoteHint": "Vos proches de confiance verront cette note avec le document.",
@@ -867,7 +872,7 @@
     "missingTitle": "Cet élément n'est pas disponible",
     "missingBody": "Il a peut-être été supprimé sur un autre appareil, ou il appartient à un autre compte. Revenez à votre coffre pour voir ce qu'il contient.",
     "lockedTitle": "Cet élément ne peut pas être déverrouillé sur ce téléphone",
-    "lockedBody": "Sa clé ne correspond pas à la clé du coffre de ce téléphone, Keeplas ne peut donc pas le déchiffrer ici. Touchez Verrouiller le coffre, déverrouillez avec Face ID ou votre empreinte, puis rouvrez cet élément. Si le problème persiste, contactez le support avec la référence ci-dessous.",
+    "lockedBody": "Sa clé ne correspond pas à la clé du coffre de ce téléphone, Keeplas ne peut donc pas le déchiffrer ici. Touchez Verrouiller le coffre, déverrouillez avec votre visage ou votre empreinte, puis rouvrez cet élément. Si le problème persiste, contactez le support avec la référence ci-dessous.",
     "fileErrors": {
       "offline": {
         "title": "Vous êtes hors ligne",
@@ -906,8 +911,8 @@
     "fileSize": "Taille",
     "added": "Ajouté",
     "updated": "Modifié",
-    "onePage": "1 page",
-    "pages": "{n} pages",
+    "pages_one": "{count} page",
+    "pages": "{count} pages",
     "rotate": "Pivoter",
     "renameTitle": "Renommer",
     "titleRow": "Titre",
@@ -930,7 +935,8 @@
     "downloading": "Téléchargement… {pct} %",
     "edit": "Modifier",
     "history": "Historique",
-    "historyCount": "{n} versions précédentes",
+    "historyCount_one": "{count} version précédente",
+    "historyCount": "{count} versions précédentes",
     "historyEmpty": "Aucune modification pour l'instant",
     "archivedOn": "Archivé le {date}. Il n'est plus dans votre coffre ni transmis à personne.",
     "uploadingFiles": "Envoi en cours"
@@ -957,9 +963,11 @@
       "declined": "Refusé",
       "revoked": "Retiré"
     },
-    "ready": "{n} prêt(s)",
+    "ready_one": "{count} prêt",
+    "ready": "{count} prêts",
     "readyBody": "2 de vos contacts suffisent pour récupérer votre compte.",
-    "quorumWarning": "Rien ne peut encore être transmis : {required} personnes de confiance doivent confirmer, et {available} ont accepté pour l'instant. Ajoutez quelqu'un de confiance.",
+    "quorumWarning_one": "Rien ne peut encore être transmis : {count} personne de confiance doit confirmer. Ont accepté pour l'instant : {available}. Ajoutez quelqu'un de confiance.",
+    "quorumWarning": "Rien ne peut encore être transmis : {count} personnes de confiance doivent confirmer. Ont accepté pour l'instant : {available}. Ajoutez quelqu'un de confiance.",
     "replace": "Remplacer",
     "replaceTitle": "Remplacer {name} ?",
     "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte. Vous pourrez ensuite inviter quelqu'un d'autre.",
@@ -995,14 +1003,15 @@
     "body": "Classez votre coffre à votre façon. Supprimer une catégorie supprime aussi ses éléments : vous pouvez les restaurer depuis Archives.",
     "inboxBody": "Là où arrivent les nouveaux éléments. Elle ne peut pas être supprimée.",
     "rename": "Renommer la catégorie",
-    "items": "{n} éléments",
+    "items_one": "{count} élément",
+    "items": "{count} éléments",
     "move": "Changer de catégorie",
     "delete": "Supprimer",
     "deleteCategory": "Supprimer la catégorie",
     "deleteTitle": "Supprimer {name} ?",
     "deleteEmptyBody": "Cette catégorie est vide.",
-    "deleteItemsOne": "Son élément sera aussi supprimé. Vous pourrez toujours le restaurer depuis Réglages → Archives.",
-    "deleteItems": "Ses {n} éléments seront aussi supprimés. Vous pourrez toujours les restaurer depuis Réglages → Archives.",
+    "deleteItems_one": "Son élément sera aussi supprimé. Vous pourrez toujours le restaurer depuis Réglages → Archives.",
+    "deleteItems": "Ses {count} éléments seront aussi supprimés. Vous pourrez toujours les restaurer depuis Réglages → Archives.",
     "removed": "Catégories supprimées",
     "restore": "Touchez pour la restaurer",
     "search": "Rechercher dans {name}"
@@ -1094,8 +1103,8 @@
     "photo": "Photo",
     "video": "Vidéo",
     "voiceNote": "Note vocale",
-    "attachment": "1 pièce jointe",
-    "attachments": "{n} pièces jointes",
+    "attachments_one": "{count} pièce jointe",
+    "attachments": "{count} pièces jointes",
     "noResults": "Aucun élément ne correspond à votre recherche.",
     "time": {
       "today": "Aujourd’hui",
@@ -1116,10 +1125,10 @@
     "emptyTitle": "Rien n'a encore été partagé avec vous",
     "emptyBody": "Quand quelqu'un fait de vous un contact de confiance, ses éléments partagés apparaissent ici.",
     "trusted": "Vous êtes contact de confiance",
-    "laterOne": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, qu'1 contact de confiance le confirme et que 72 heures passent sans annulation.",
-    "later": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, que {n} contacts de confiance le confirment et que 72 heures passent sans annulation.",
-    "oneItem": "1 élément laissé pour vous",
-    "items": "{n} éléments laissés pour vous",
+    "later_one": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, qu'un contact de confiance le confirme et que 72 heures passent sans annulation.",
+    "later": "Verrouillé. Il ne s'ouvre que si {name} ne répond plus à son Life check, que {count} contacts de confiance le confirment et que 72 heures passent sans annulation.",
+    "items_one": "{count} élément laissé pour vous",
+    "items": "{count} éléments laissés pour vous",
     "accessNow": "Accéder maintenant",
     "readOnly": "Lecture seule : uniquement ce que {name} vous a laissé, déchiffré sur ce téléphone.",
     "messageFrom": "Un message de {name}",
@@ -1156,16 +1165,16 @@
     }
   },
   "passkeys": {
-    "subtitle": "Votre passe-clé vous connecte à Keeplas avec votre visage, votre empreinte ou le code du téléphone.",
+    "subtitle": "Votre clé d'accès vous connecte à Keeplas avec votre visage, votre empreinte ou le code du téléphone.",
     "none": "Aucune clé d'accès. Ajoutez-en une pour vous connecter sans code.",
     "lastUsed": "Utilisée le {date}",
     "addedOn": "Ajoutée le {date}",
-    "synced": "Synchronisé avec votre trousseau {account}",
+    "synced": "Synchronisée avec votre trousseau {account}",
     "add": "Ajouter une clé d'accès sur ce téléphone",
-    "whyTitle": "Pourquoi vous ne pouvez pas le supprimer",
-    "why1": "C'est lui qui vous connecte à Keeplas. Votre compte en a toujours besoin.",
-    "why2": "Il se synchronise avec votre compte {account} : sur un nouveau téléphone, vous vous connectez et votre coffre revient avec votre sauvegarde cloud.",
-    "why3": "Sans lui, un code envoyé sur votre WhatsApp suffirait pour se connecter.",
+    "whyTitle": "Pourquoi vous ne pouvez pas la supprimer",
+    "why1": "C'est elle qui vous connecte à Keeplas. Votre compte en a toujours besoin.",
+    "why2": "Elle se synchronise avec votre compte {account} : sur un nouveau téléphone, vous vous connectez et votre coffre revient avec votre sauvegarde cloud.",
+    "why3": "Sans elle, un code envoyé sur votre WhatsApp suffirait pour se connecter.",
     "stop": "Pour arrêter d'utiliser Keeplas, supprimez votre compte dans Réglages › Compte."
   },
   "activity": {
@@ -1268,7 +1277,8 @@
       "contacts": "Contacts de confiance",
       "contactsBody": "Noms et coordonnées seulement"
     },
-    "skipped": "{n} élément(s) n’ont pas pu être ouverts sur ce téléphone et ne sont pas dans l’archive. Essayez l’export depuis l’application web pour les inclure."
+    "skipped_one": "{count} élément n’a pas pu être ouvert sur ce téléphone et n’est pas dans l’archive. Essayez l’export depuis l’application web pour l’inclure.",
+    "skipped": "{count} éléments n’ont pas pu être ouverts sur ce téléphone et ne sont pas dans l’archive. Essayez l’export depuis l’application web pour les inclure."
   },
   "deleteAccount": {
     "title": "Supprimer mon compte",
@@ -1302,7 +1312,8 @@
     "unlockTitle": "Code Keeplas",
     "unlockBody": "Saisissez votre code à {n} chiffres, puis confirmez avec votre visage ou votre empreinte.",
     "required": "Saisissez votre code Keeplas.",
-    "wrong": "Code incorrect. Encore {n} essai(s) avant une pause d’une minute.",
+    "wrong_one": "Code incorrect. Encore {count} essai avant une pause d’une minute.",
+    "wrong": "Code incorrect. Encore {count} essais avant une pause d’une minute.",
     "locked": "Trop de codes incorrects. Réessayez dans {seconds} s.",
     "wipedTitle": "La clé de votre coffre a été retirée de ce téléphone",
     "wipedBody": "Après 10 codes incorrects, Keeplas retire la clé de ce téléphone pour la protéger. Votre coffre est intact : rouvrez-le depuis votre sauvegarde cloud ou avec vos 24 mots.",
@@ -1338,8 +1349,10 @@
     "choose": "Choisir une archive",
     "reading": "Lecture de l’archive…",
     "progress": "Ajout des éléments : {done} sur {total}",
-    "done": "{n} élément(s) ajouté(s). Leurs fichiers s’envoient en arrière-plan ; vous pouvez suivre l’envoi depuis l’accueil.",
-    "skippedFiles": "{n} fichier(s) n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
+    "done_one": "{count} élément ajouté. Ses fichiers s’envoient en arrière-plan ; vous pouvez suivre l’envoi depuis l’accueil.",
+    "done": "{count} éléments ajoutés. Leurs fichiers s’envoient en arrière-plan ; vous pouvez suivre l’envoi depuis l’accueil.",
+    "skippedFiles_one": "{count} fichier n’a pas pu être lu dans l’archive et a été laissé de côté.",
+    "skippedFiles": "{count} fichiers n’ont pas pu être lus dans l’archive et ont été laissés de côté.",
     "notKeeplas": "Ce fichier n’est pas un export Keeplas. Choisissez le ZIP créé avec « Exporter mes données », sans le décompresser puis recompresser.",
     "failed": "L’import s’est arrêté avant la fin. Les éléments déjà ajoutés restent dans votre coffre. Vérifiez votre espace de stockage et réessayez.",
     "openVault": "Ouvrir mon coffre",

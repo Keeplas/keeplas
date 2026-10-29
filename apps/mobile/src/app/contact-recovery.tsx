@@ -201,13 +201,15 @@ export default function ContactRecovery() {
           </Text>
           <Card>
             <Text variant="label">
-              {t("socialRecovery.approvals", { n: Math.min(approvals, 2) })}
+              {t("socialRecovery.approvals", {
+                count: Math.min(approvals, 2),
+              })}
             </Text>
             <ProgressBar value={Math.min(approvals, 2) / 2} />
             <Text variant="body-sm" color="text.muted">
               {approvals >= 2
                 ? t("socialRecovery.approvalsDone")
-                : t("socialRecovery.approvalsLeft", { n: 2 - approvals })}
+                : t("socialRecovery.approvalsLeft", { count: 2 - approvals })}
             </Text>
           </Card>
           <Card>
@@ -266,7 +268,7 @@ export default function ContactRecovery() {
             <Text variant="h2">
               {windowLeft > 0
                 ? t("socialRecovery.hoursLeft", {
-                    n: Math.ceil(windowLeft / 3_600_000),
+                    count: Math.ceil(windowLeft / 3_600_000),
                   })
                 : t("socialRecovery.windowOver")}
             </Text>

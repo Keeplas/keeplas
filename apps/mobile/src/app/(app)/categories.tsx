@@ -104,7 +104,7 @@ export default function Categories() {
             key={category.id}
             icon="document"
             title={name}
-            description={t("categories.items", { n: itemIds.length })}
+            description={t("categories.items", { count: itemIds.length })}
             trailing={trash({
               name,
               itemIds,

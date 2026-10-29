@@ -733,9 +733,7 @@ export default function ComposeCapture() {
       {draft.pages.length && !existing ? (
         <Text variant="body-sm" color="text.muted">
           {[
-            draft.pages.length === 1
-              ? t("capture.onePageMeta")
-              : t("capture.pagesMeta", { n: draft.pages.length }),
+            t("capture.pagesMeta", { count: draft.pages.length }),
             draft.title.trim() ? "" : t("capture.suggestedTitle"),
           ]
             .filter(Boolean)
