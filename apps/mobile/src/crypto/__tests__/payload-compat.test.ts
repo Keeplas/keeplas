@@ -11,13 +11,14 @@ import {
   wrapDek,
 } from "@keeplas/crypto/kem";
 import {
+  deriveContactTrust,
   generateIdentityKeyPair,
   identityKeyFingerprint,
-  signBytes,
+  signKemBinding,
+  type PinWrite,
 } from "@keeplas/crypto/sig";
-import { parsePublicKey } from "@keeplas/crypto/kem";
 
-import { verifyContactKey } from "../contact-keys";
+import { ContactKeyBlocked, requireVerifiedKey } from "../contact-keys";
 import {
   decryptFile,
   decryptText,
@@ -176,42 +177,84 @@ describe("owner keys and contact verification", () => {
     await expect(unwrapDek(fresh, current.secretKey)).resolves.toBeDefined();
   });
 
-  it("verifies the identity signature and the TOFU pin", async () => {
+  it("refuses a server-published owner key that is not the secret key's own", async () => {
+    const master = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"],
+    );
+    const own = generateRecipientKeyPair();
+    const user = {
+      _id: "u2",
+      publicKey: serializePublicKey(generateRecipientKeyPair().publicKey),
+      encryptedAsymmetricSecretKey: await encryptText(
+        serializeSecretKey(own.secretKey),
+        master,
+      ),
+    };
+    await expect(loadOwnerKeys(user, master)).rejects.toThrow(/does not match/);
+  });
+
+  it("verifies the key binding and the authenticated TOFU pin", async () => {
+    const master = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"],
+    );
+    const trust = await deriveContactTrust("owner", master);
     const kem = generateRecipientKeyPair();
     const identity = generateIdentityKeyPair();
     const contactPublicKey = serializePublicKey(kem.publicKey);
     const material = {
       contactId: "c1",
+      contactUserId: "contact-user",
       contactPublicKey,
       contactIdentityPublicKey: identity.publicKey,
-      contactPublicKeySignature: signBytes(
+      contactPublicKeySignature: await signKemBinding(
         identity.secretKey,
-        parsePublicKey(contactPublicKey),
+        "contact-user",
+        contactPublicKey,
       ),
+      hasWraps: false,
     };
-    const first = await verifyContactKey(material);
-    expect(first.status).toBe("ok");
-    const pin = await identityKeyFingerprint(identity.publicKey);
-    expect(first).toMatchObject({ pinFingerprint: pin });
-    expect(
-      (await verifyContactKey({ ...material, pinnedIdentityFingerprint: pin }))
-        .status,
-    ).toBe("ok");
-    expect(
-      (
-        await verifyContactKey({
-          ...material,
-          pinnedIdentityFingerprint: "other",
-        })
-      ).status,
-    ).toBe("fingerprint_changed");
+    const pins: PinWrite[] = [];
+    const pin = async (_: string, write: PinWrite) => pins.push(write);
+
+    // First use: the key is returned and a MACed pin persisted.
+    expect(await requireVerifiedKey(material, trust, pin)).toBe(
+      contactPublicKey,
+    );
+    expect(pins).toEqual([
+      {
+        fingerprint: await identityKeyFingerprint(identity.publicKey),
+        mac: expect.any(String),
+      },
+    ]);
+    const pinned = {
+      ...material,
+      pinnedIdentityFingerprint: pins[0].fingerprint,
+      pinnedIdentityMac: pins[0].mac,
+      hasWraps: true,
+    };
+    expect(await requireVerifiedKey(pinned, trust, pin)).toBe(contactPublicKey);
+    expect(pins).toHaveLength(1);
+
+    // A server that strips the pin of a contact already sealed to is refused.
+    await expect(
+      requireVerifiedKey(
+        {
+          ...pinned,
+          pinnedIdentityMac: undefined,
+          pinnedIdentityFingerprint: undefined,
+        },
+        trust,
+        pin,
+      ),
+    ).rejects.toMatchObject({ reason: "pin_unverified" });
     const swapped = serializePublicKey(generateRecipientKeyPair().publicKey);
-    expect(
-      (await verifyContactKey({ ...material, contactPublicKey: swapped }))
-        .status,
-    ).toBe("signature_invalid");
-    expect(
-      (await verifyContactKey({ contactId: "c2", contactPublicKey })).status,
-    ).toBe("unverifiable");
+    await expect(
+      requireVerifiedKey({ ...pinned, contactPublicKey: swapped }, trust, pin),
+    ).rejects.toBeInstanceOf(ContactKeyBlocked);
+    expect(pins).toHaveLength(1);
   });
 });

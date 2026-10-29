@@ -13,6 +13,7 @@ import { useConfirmAvailability } from "@/features/people/use-confirm-availabili
 import { PinGateProvider } from "@/features/pin/use-pin-gate";
 import { useEnsureSocialRecovery } from "@/features/social-recovery";
 import { useBackfillShares } from "@/features/vault/use-backfill-shares";
+import { useUpgradeLegacyPins } from "@/features/vault/use-upgrade-legacy-pins";
 import { VaultDataProvider } from "@/features/vault/vault-data";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useEnsureDevice } from "@/lib/use-register-passkey";
@@ -50,12 +51,12 @@ export default function AppLayout() {
   useEffect(() => {
     if (viewer.publicKey || !masterKey || publishing.current) return;
     publishing.current = true;
-    createPublicKeyMaterial(masterKey)
+    createPublicKeyMaterial(masterKey, viewer._id)
       .then(({ publicKeys }) => setPublicKey(publicKeys))
       .catch(() => {
         publishing.current = false;
       });
-  }, [viewer.publicKey, masterKey, setPublicKey]);
+  }, [viewer.publicKey, viewer._id, masterKey, setPublicKey]);
 
   useEffect(() => {
     const next = alerts?.find((d) => !shownAlerts.current.has(d._id));
@@ -91,10 +92,11 @@ export default function AppLayout() {
 
 /**
  * Trusted-contact upkeep under VaultDataProvider, whose unlocked keys it
- * reuses: wrap my items to contacts who joined since, and confirm I am still
- * available to the people who chose me.
+ * reuses: MAC legacy contact pins, wrap my items to contacts who joined since,
+ * and confirm I am still available to the people who chose me.
  */
 function TrustUpkeep() {
+  useUpgradeLegacyPins();
   useBackfillShares();
   useConfirmAvailability();
   useEnsureSocialRecovery();
