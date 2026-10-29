@@ -210,10 +210,10 @@ Full Docker workflow (provisioning Convex inside the container, running ad-hoc c
 
 All required variables are documented in [`.env.example`](./.env.example). High-level groups:
 
-- **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`, `NODE_ENV`
+- **Application** — `NEXT_PUBLIC_APP_URL`, `APP_URL`
 - **Convex** — `CONVEX_MODE` (`cloud` | `selfhosted`), `CONVEX_DEPLOYMENT`, `NEXT_PUBLIC_CONVEX_URL`, `SITE_URL`
 - **WebAuthn** — `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
-- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this)
+- **Audit context (required)** — `KEEPLAS_CTX_SECRET` (HMAC; the **same value** must exist in `.env.local` AND on the Convex deployment — `pnpm check:convex` enforces this); optional `KEEPLAS_TRUSTED_PROXY` (`vercel` | `cloudflare`) names the proxy whose client-IP headers are trusted
 - **Email — Resend (required for email auth)** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`; optional `SUPPORT_INBOX_EMAIL` for the contact form
 - **Native push — Expo (optional)** — `EXPO_ACCESS_TOKEN` — authenticates phone push (security alerts, Life Check) once Enhanced Push Security is on
 - **WhatsApp — Infobip (optional)** — `INFOBIP_*`, `WHATSAPP_*_TEMPLATE_NAME` — Life Check WhatsApp channel and WhatsApp OTP verification

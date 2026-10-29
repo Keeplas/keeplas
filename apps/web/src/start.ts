@@ -1,5 +1,11 @@
 import { createMiddleware, createStart } from "@tanstack/react-start";
 import { uint8ToBase64 } from "@keeplas/crypto/encoding";
+import {
+  buildSealCookie,
+  readFreshContext,
+  sealContext,
+} from "@/lib/audit-context";
+import { handleCspReport } from "@/lib/csp-report";
 import { buildSecurityHeaders } from "@/lib/security-headers";
 import { wellKnownResponse } from "@/lib/well-known";
 
@@ -7,153 +13,25 @@ import { wellKnownResponse } from "@/lib/well-known";
  * Server request pipeline for the Keeplas web app (TanStack Start).
  *
  * Replaces the old Next.js `middleware.ts` + `/api/*` route handlers:
- *  - issues the sealed `__keeplas_ctx` audit cookie (HMAC-SHA256 over
- *    `ip|country|ts`, re-verified server-side by Convex mutations),
+ *  - issues the sealed audit cookie (HMAC-SHA256 over `ip|country|ts`,
+ *    re-verified server-side by Convex mutations, see lib/audit-context.ts),
  *  - stamps every request/response with `x-request-id` for log correlation,
  *  - applies the full security-header set (CSP + hardening) to HTML documents,
- *    computing the SHA-256 hash of every inline `<script>` so the strict CSP
- *    needs no `'unsafe-inline'`,
+ *    with a per-response script nonce that only the router's own scripts carry
+ *    (src/router.tsx reads it from the request context),
  *  - serves the two tiny endpoints the client still calls over HTTP:
  *    `GET /api/context` (hand the sealed cookie back to the React tree) and
  *    `POST /api/csp-report` (CSP violation collector).
  */
 
-const COOKIE_NAME = "__keeplas_ctx";
-const COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60;
 const REQUEST_ID_HEADER = "x-request-id";
-const FALLBACK_IP = "0.0.0.0";
-const FALLBACK_COUNTRY = "XX";
 
 let warnedAboutMissingSecret = false;
-
-interface SealedContext {
-  ip: string;
-  country: string;
-  ts: number;
-  sig: string;
-  city?: string;
-}
-
-function extractIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return request.headers.get("x-real-ip") ?? FALLBACK_IP;
-}
-
-function extractCountry(request: Request): string {
-  // Vercel sets `x-vercel-ip-country`; Cloudflare sets `cf-ipcountry`. Honor
-  // whichever the host in front of us provides, else fall back.
-  const country =
-    request.headers.get("x-vercel-ip-country") ??
-    request.headers.get("cf-ipcountry");
-  if (country && /^[A-Z]{2}$/.test(country)) return country;
-  return FALLBACK_COUNTRY;
-}
-
-function extractCity(request: Request): string | undefined {
-  const raw =
-    request.headers.get("x-vercel-ip-city") ?? request.headers.get("cf-ipcity");
-  if (!raw) return undefined;
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    return undefined;
-  }
-  const clean = Array.from(decoded)
-    .filter((char) => char >= " " && char !== "\u007f" && char !== "|")
-    .join("")
-    .trim()
-    .slice(0, 80);
-  return clean || undefined;
-}
-
-function readCookie(request: Request, name: string): string | undefined {
-  const header = request.headers.get("cookie");
-  if (!header) return undefined;
-  for (const part of header.split(";")) {
-    const [k, ...v] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(v.join("="));
-  }
-  return undefined;
-}
-
-function isFreshSealed(raw: string): boolean {
-  try {
-    const parsed = JSON.parse(raw) as SealedContext;
-    if (typeof parsed.ts !== "number") return false;
-    const age = Date.now() - parsed.ts;
-    // Re-issue once per hour so the timestamp never goes stale enough to be
-    // rejected by Convex (which allows up to 24h).
-    return age >= 0 && age < 60 * 60 * 1000;
-  } catch {
-    return false;
-  }
-}
-
-async function sign(payload: string, secret: string): Promise<string> {
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    enc.encode(payload) as BufferSource,
-  );
-  return uint8ToBase64(new Uint8Array(sig));
-}
-
-/** SHA-256 (base64) of a string, formatted as a CSP `'sha256-...'` token. */
-async function sha256Token(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(text) as BufferSource,
-  );
-  return `'sha256-${uint8ToBase64(new Uint8Array(digest))}'`;
-}
-
-const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;
-const SCRIPT_WITHOUT_NONCE = /<script(?![^>]*\bnonce=)/gi;
-
-/** Hash every inline (src-less) <script> in the document for the CSP. */
-async function hashInlineScripts(html: string): Promise<string[]> {
-  const hashes: string[] = [];
-  for (const match of html.matchAll(INLINE_SCRIPT)) {
-    const body = match[1];
-    if (body && body.length > 0) hashes.push(await sha256Token(body));
-  }
-  return hashes;
-}
 
 function randomNonce(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
   return uint8ToBase64(bytes);
-}
-
-function addScriptNonce(html: string, nonce: string): string {
-  return html.replaceAll(SCRIPT_WITHOUT_NONCE, `<script nonce="${nonce}"`);
-}
-
-function buildSealCookie(sealed: SealedContext): string {
-  const value = encodeURIComponent(JSON.stringify(sealed));
-  const attrs = [
-    `${COOKIE_NAME}=${value}`,
-    "HttpOnly",
-    "SameSite=Strict",
-    "Path=/",
-    `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
-  ];
-  if (process.env.NODE_ENV === "production") attrs.push("Secure");
-  return attrs.join("; ");
 }
 
 const securityMiddleware = createMiddleware({ type: "request" }).server(
@@ -171,15 +49,11 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
     // Browsers get their cookie back; native apps (no cookie jar) get a
     // freshly sealed context for the request's IP and country.
     if (pathname === "/api/context" && method === "GET") {
-      const raw = readCookie(request, COOKIE_NAME);
       const secret = process.env.KEEPLAS_CTX_SECRET;
+      if (!secret) return new Response(null, { status: 204 });
       const sealed =
-        raw && isFreshSealed(raw)
-          ? (JSON.parse(raw) as SealedContext)
-          : secret
-            ? await sealContext(request, secret)
-            : null;
-      if (!sealed) return new Response(null, { status: 204 });
+        (await readFreshContext(request, secret)) ??
+        (await sealContext(request, secret));
       return Response.json(sealed, {
         headers: { "Cache-Control": "private, no-store" },
       });
@@ -187,61 +61,35 @@ const securityMiddleware = createMiddleware({ type: "request" }).server(
 
     // ── POST /api/csp-report — CSP violation collector (always 204). ──
     if (pathname === "/api/csp-report" && method === "POST") {
-      try {
-        const body = await request.json();
-        const reports = Array.isArray(body) ? body : [body];
-        for (const report of reports) {
-          console.warn("[csp-violation]", JSON.stringify(report));
-        }
-      } catch {
-        // Malformed / empty body — nothing to log, still ack.
-      }
-      return new Response(null, { status: 204 });
+      return handleCspReport(request);
     }
 
     const requestId =
       request.headers.get(REQUEST_ID_HEADER) ?? crypto.randomUUID();
 
-    const result = await next();
+    const cspNonce = randomNonce();
+    const result = await next({ context: { cspNonce } });
     const response = result.response;
     response.headers.set(REQUEST_ID_HEADER, requestId);
 
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("text/html")) {
-      // Assets / server-function responses: nothing inline to hash, no CSP.
+      // Assets / server-function responses: no inline script, no CSP.
       return result;
     }
 
+    // The document is left untouched (it may be a stream): only the scripts
+    // the router stamped with `cspNonce` run, so markup injected into the
+    // HTML never inherits an allow-listing.
+    for (const [name, value] of Object.entries(
+      buildSecurityHeaders(cspNonce),
+    )) {
+      response.headers.set(name, value);
+    }
     // Issue / refresh the sealed audit cookie on the document response.
     const cookie = await maybeSealCookie(request);
-
-    // In dev the SSR document is a per-request *stream* (chunked). Buffering it
-    // to hash inline scripts would break TanStack Start's progressive hydration
-    // protocol ($_TSR / $R.tsr stream lifecycle), so we only set headers on the
-    // streamed response. The dev CSP allows inline scripts (see
-    // buildContentSecurityPolicy). In production the SPA shell is a static
-    // prerender — safe to buffer and hash for a strict, inline-free CSP.
-    if (process.env.NODE_ENV !== "production") {
-      for (const [name, value] of Object.entries(buildSecurityHeaders())) {
-        response.headers.set(name, value);
-      }
-      if (cookie) response.headers.append("Set-Cookie", cookie);
-      return result;
-    }
-
-    const html = await response.text();
-    const scriptNonce = randomNonce();
-    const htmlWithNonce = addScriptNonce(html, scriptNonce);
-    const hashes = await hashInlineScripts(html);
-    const headers = new Headers(response.headers);
-    for (const [name, value] of Object.entries(
-      buildSecurityHeaders(hashes, [scriptNonce]),
-    )) {
-      headers.set(name, value);
-    }
-    if (cookie) headers.append("Set-Cookie", cookie);
-
-    return new Response(htmlWithNonce, { status: response.status, headers });
+    if (cookie) response.headers.append("Set-Cookie", cookie);
+    return result;
   },
 );
 
@@ -258,26 +106,8 @@ async function maybeSealCookie(request: Request): Promise<string | null> {
     }
     return null;
   }
-  const existing = readCookie(request, COOKIE_NAME);
-  if (existing && isFreshSealed(existing)) return null;
-  return buildSealCookie(await sealContext(request, secret));
-}
-
-/** HMAC-seal the request's IP + country for Convex's audited mutations. */
-async function sealContext(
-  request: Request,
-  secret: string,
-): Promise<SealedContext> {
-  const ip = extractIp(request);
-  const country = extractCountry(request);
-  const city = extractCity(request);
-  const ts = Date.now();
-  if (!city) {
-    const sig = await sign(`${ip}|${country}|${ts}`, secret);
-    return { ip, country, ts, sig };
-  }
-  const sig = await sign(`${ip}|${country}|${ts}|${city}`, secret);
-  return { ip, country, ts, sig, city };
+  if (await readFreshContext(request, secret)) return null;
+  return buildSealCookie(request, await sealContext(request, secret));
 }
 
 export const startInstance = createStart(() => ({

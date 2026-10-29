@@ -80,6 +80,15 @@ export default defineConfig(({ mode }) => {
         // function output. (Inlining via `noExternals` is not an option: it
         // breaks React's JSX dev-runtime CJS interop during prerender.)
         traceDeps: ["react", "react-dom"],
+        // SPA mode prerenders the shell to `/_shell.html` in the public dir.
+        // Static files skip the request middleware (src/start.ts), so that
+        // copy would boot the whole app with no CSP and no anti-framing.
+        // Every document is rendered by the function, which never needs the
+        // file: send the path there instead. Redirect rules are emitted ahead
+        // of the static-file handler (Vercel `config.json` routes included).
+        routeRules: {
+          "/_shell.html": { redirect: { to: "/", status: 308 } },
+        },
       }),
       viteReact(),
     ],
