@@ -5,6 +5,7 @@ export {
   parsePublicKey,
   serializeSecretKey,
   parseSecretKey,
+  verifiedOwnerPublicKey,
   wrapDek,
   wrapBytes,
   unwrapDek,

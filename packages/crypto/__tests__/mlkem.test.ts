@@ -14,6 +14,7 @@ import {
   unwrapDek,
   wrapBytes,
   unwrapBytes,
+  verifiedOwnerPublicKey,
 } from "../src/kem";
 
 async function generateTestDek(): Promise<CryptoKey> {
@@ -262,5 +263,23 @@ describe("ML-KEM engine injection", () => {
     // "Injected" engine (noble reference) must open a default-engine envelope.
     setMlKemImplementation({ ...nobleMlKemImplementation });
     expect(await unwrapBytes(envelope, secretKey)).toEqual(payload);
+  });
+});
+
+describe("verifiedOwnerPublicKey", () => {
+  it("reads the owner's public key back from their secret key", () => {
+    const { publicKey, secretKey } = generateRecipientKeyPair();
+    const published = serializePublicKey(publicKey);
+    expect(verifiedOwnerPublicKey(secretKey, published)).toBe(published);
+  });
+
+  it("refuses a published key that is not the secret key's own", () => {
+    const { secretKey } = generateRecipientKeyPair();
+    const substituted = serializePublicKey(
+      generateRecipientKeyPair().publicKey,
+    );
+    expect(() => verifiedOwnerPublicKey(secretKey, substituted)).toThrow(
+      /does not match/,
+    );
   });
 });
