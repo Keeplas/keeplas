@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -25,19 +26,72 @@ const STARS = [
   [120, 418, 2, 0.35],
 ] as const;
 
+const LANDSCAPE_RATIO = 1080 / 638;
+const ACTIONS_OVERLAP = 24;
+
+function skyLocations(top: number, height: number, screenHeight: number) {
+  const [, upper, middle, horizon] = welcomeSky.locations;
+  const horizonAt = top / screenHeight;
+  const scale = horizonAt / horizon;
+  return [
+    0,
+    upper * scale,
+    middle * scale,
+    horizonAt,
+    (top + height) / screenHeight,
+    1,
+  ] as const;
+}
+
 /** M08-1 Welcome: night sky over the painted landscape, same in both themes. */
 export default function Welcome() {
   const router = useRouter();
   const { t } = useI18n();
+  const [screen, setScreen] = useState({ width: 0, height: 0 });
+  const [contentBottom, setContentBottom] = useState(0);
+  const [actionsTop, setActionsTop] = useState(0);
+  const landscapeHeight = screen.width / LANDSCAPE_RATIO;
+  const landscapeTop = Math.max(
+    actionsTop + ACTIONS_OVERLAP - landscapeHeight,
+    contentBottom,
+  );
+  const measured = screen.height > 0 && actionsTop > 0;
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} onLayout={(e) => setScreen(e.nativeEvent.layout)}>
       <StatusBar style="light" />
       <LinearGradient
         colors={welcomeSky.colors}
-        locations={welcomeSky.locations}
+        locations={
+          measured
+            ? skyLocations(landscapeTop, landscapeHeight, screen.height)
+            : welcomeSky.locations
+        }
         style={StyleSheet.absoluteFill}
       />
+      {measured ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.landscape,
+            { top: landscapeTop, height: landscapeHeight },
+          ]}
+        >
+          <Image
+            source={paintedLandscape}
+            style={{ width: screen.width, height: landscapeHeight }}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={[welcomeSky.horizon, withAlpha(welcomeSky.horizon, 0)]}
+            style={styles.fadeTop}
+          />
+          <LinearGradient
+            colors={[withAlpha(welcomeSky.ground, 0), welcomeSky.ground]}
+            style={styles.fadeBottom}
+          />
+        </View>
+      ) : null}
       {STARS.map(([x, y, size, opacity]) => (
         <View
           key={`${x}-${y}`}
@@ -56,7 +110,13 @@ export default function Welcome() {
       ))}
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <AppHeader inverse />
-        <View style={styles.content}>
+        <View
+          style={styles.content}
+          onLayout={(e) => {
+            const { y, height } = e.nativeEvent.layout;
+            setContentBottom(y + height);
+          }}
+        >
           <Text variant="hero" style={styles.white}>
             {t("welcome.title")}
           </Text>
@@ -64,22 +124,10 @@ export default function Welcome() {
             {t("welcome.body")}
           </Text>
         </View>
-        <View pointerEvents="none" style={styles.landscape}>
-          <Image
-            source={paintedLandscape}
-            style={styles.painted}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={[welcomeSky.horizon, withAlpha(welcomeSky.horizon, 0)]}
-            style={styles.fadeTop}
-          />
-          <LinearGradient
-            colors={[withAlpha(welcomeSky.ground, 0), welcomeSky.ground]}
-            style={styles.fadeBottom}
-          />
-        </View>
-        <View style={styles.actions}>
+        <View
+          style={styles.actions}
+          onLayout={(e) => setActionsTop(e.nativeEvent.layout.y)}
+        >
           <Button
             variant="glass"
             label={t("welcome.getStarted")}
@@ -105,8 +153,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: welcomeSky.ground },
   safe: { flex: 1 },
   star: { position: "absolute", backgroundColor: welcomeSky.foreground },
-  landscape: { flex: 1, justifyContent: "flex-end", overflow: "hidden" },
-  painted: { width: "100%", height: 232 },
+  landscape: { position: "absolute", left: 0, right: 0 },
   fadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },
   fadeBottom: {
     position: "absolute",
@@ -119,6 +166,7 @@ const styles = StyleSheet.create({
   white: { color: welcomeSky.foreground },
   lead: { opacity: 0.9 },
   actions: {
+    marginTop: "auto",
     paddingHorizontal: layout.gutter,
     paddingBottom: 24,
     gap: 12,
