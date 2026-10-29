@@ -8,7 +8,7 @@ import {
 } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
-import { accessLevelValidator } from "./validators";
+import { writableAccessLevelValidator } from "./validators";
 import {
   requireFullAuth,
   getUserVault,
@@ -447,7 +447,7 @@ export const createItem = auditedMutation({
     encryptedTitle: v.string(),
     encryptedContent: v.string(),
     encryptedLinks: v.optional(v.string()),
-    accessLevel: accessLevelValidator,
+    accessLevel: writableAccessLevelValidator,
     encryptionType: v.optional(
       v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge")),
     ),
@@ -620,7 +620,7 @@ export const updateItem = auditedMutation({
     encryptedContent: v.optional(v.string()),
     encryptedLinks: v.optional(v.string()),
     encryptedMeta: v.optional(v.string()),
-    accessLevel: v.optional(accessLevelValidator),
+    accessLevel: v.optional(writableAccessLevelValidator),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),

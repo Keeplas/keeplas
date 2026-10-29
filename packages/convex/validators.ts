@@ -37,6 +37,12 @@ export const accessLevelValidator = v.union(
   v.literal("public"),
 );
 
+/** The access levels a mutation may write: never the legacy ones above. */
+export const writableAccessLevelValidator = v.union(
+  v.literal("private"),
+  v.literal("trusted_only"),
+);
+
 export const contactRoleValidator = v.union(
   v.literal("family"),
   v.literal("friend"),
