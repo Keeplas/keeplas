@@ -13,7 +13,13 @@ import { AppState, View } from "react-native";
 import { importMasterKey } from "@/crypto/vault-keys";
 import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
-import { IDLE_LOCK_MS, isLockHeld, shouldLockOnResume } from "@/lib/auto-lock";
+import {
+  IDLE_LOCK_MS,
+  instantNow,
+  isLockHeld,
+  shouldLockOnResume,
+  type Instant,
+} from "@/lib/auto-lock";
 import { clearDecryptedCache } from "@/lib/files";
 
 interface VaultValue {
@@ -53,7 +59,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const [masterKey, setMasterKey] = useState<CryptoKey | null>(null);
   const [finishingSetup, setFinishingSetup] = useState(false);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const backgroundedAt = useRef<number | null>(null);
+  const backgroundedAt = useRef<Instant | null>(null);
   const backgroundHeld = useRef(false);
 
   const lock = useCallback(() => {
@@ -105,13 +111,13 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         const held = backgroundHeld.current || isLockHeld();
-        if (shouldLockOnResume(backgroundedAt.current, Date.now(), held)) {
+        if (shouldLockOnResume(backgroundedAt.current, instantNow(), held)) {
           lock();
         }
         backgroundedAt.current = null;
         backgroundHeld.current = false;
       } else {
-        backgroundedAt.current ??= Date.now();
+        backgroundedAt.current ??= instantNow();
         backgroundHeld.current ||= isLockHeld();
       }
     });
