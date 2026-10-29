@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import paintedLandscape from "../../../assets/images/landscape-painted.jpg";
 import { AppHeader } from "@/components/app-header";
@@ -28,6 +28,9 @@ const STARS = [
 
 const LANDSCAPE_RATIO = 1080 / 638;
 const ACTIONS_OVERLAP = 24;
+// The hero is already display-sized: past this, accessibility text sizes
+// would leave room for little else.
+const HERO_MAX_SCALE = 1.5;
 
 function skyLocations(top: number, height: number, screenHeight: number) {
   const [, upper, middle, horizon] = welcomeSky.locations;
@@ -47,6 +50,7 @@ function skyLocations(top: number, height: number, screenHeight: number) {
 export default function Welcome() {
   const router = useRouter();
   const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const [screen, setScreen] = useState({ width: 0, height: 0 });
   const [contentBottom, setContentBottom] = useState(0);
   const [actionsTop, setActionsTop] = useState(0);
@@ -108,7 +112,16 @@ export default function Welcome() {
           ]}
         />
       ))}
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+      {/* Scrolls only when large text sizes push the buttons off-screen. */}
+      <ScrollView
+        style={styles.safe}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+        alwaysBounceVertical={false}
+        showsVerticalScrollIndicator={false}
+      >
         <AppHeader inverse />
         <View
           style={styles.content}
@@ -117,7 +130,11 @@ export default function Welcome() {
             setContentBottom(y + height);
           }}
         >
-          <Text variant="hero" style={styles.white}>
+          <Text
+            variant="hero"
+            style={styles.white}
+            maxFontSizeMultiplier={HERO_MAX_SCALE}
+          >
             {t("welcome.title")}
           </Text>
           <Text variant="lead" style={[styles.white, styles.lead]}>
@@ -144,7 +161,7 @@ export default function Welcome() {
             }
           />
         </View>
-      </SafeAreaView>
+      </ScrollView>
     </View>
   );
 }
@@ -152,6 +169,7 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: welcomeSky.ground },
   safe: { flex: 1 },
+  scroll: { flexGrow: 1 },
   star: { position: "absolute", backgroundColor: welcomeSky.foreground },
   landscape: { position: "absolute", left: 0, right: 0 },
   fadeTop: { position: "absolute", top: 0, left: 0, right: 0, height: 44 },

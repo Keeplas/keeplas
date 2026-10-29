@@ -16,6 +16,10 @@
     "language": "Language",
     "genericError": "Something went wrong. Try again."
   },
+  "crash": {
+    "title": "Something went wrong",
+    "body": "Keeplas stopped unexpectedly. Your vault and your data are safe. Try again."
+  },
   "languageNames": {
     "en": "English",
     "fr": "Français"
@@ -80,6 +84,11 @@
     "notArrivingTitle": "Code not arriving?",
     "notArrivingBody": "Codes can take a minute to arrive. Check that {phone} is right, then ask for a new code.",
     "changeNumber": "Change number"
+  },
+  "offline": {
+    "title": "You're offline",
+    "body": "Keeplas needs a connection to open your account. Connect to Wi-Fi or mobile data: Keeplas reconnects on its own.",
+    "submitBody": "No connection. Connect to Wi-Fi or mobile data, then try again."
   },
   "passkey": {
     "title": "Create your passkey",
@@ -180,7 +189,12 @@
   },
   "otherOptions": {
     "title": "Other options",
-    "signOutBody": "Forgets this phone. You'll sign in again with your number."
+    "signOutBody": "You'll sign in again with your number, then open your vault with your cloud backup, your 24 words or your trusted contacts."
+  },
+  "signOut": {
+    "confirmTitle": "Sign out on this phone?",
+    "confirmBody": "Drafts on this phone will be deleted, and this phone will forget your vault key. To open your vault next time, you'll need your cloud backup, your 24 words or your trusted contacts.",
+    "confirmBodyNoBackup": "Drafts on this phone will be deleted, and this phone will forget your vault key. Your cloud backup is off, so next time only your 24 words or your trusted contacts can open your vault. Without them, it can't be opened again."
   },
   "recoveryKit": {
     "title": "Open your vault with your kit",

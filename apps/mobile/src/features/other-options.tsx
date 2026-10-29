@@ -4,8 +4,8 @@ import { Button } from "@/components/button";
 import type { IconName } from "@/components/icon";
 import { BottomSheet } from "@/components/sheet";
 import { IconTile, ListRow } from "@/components/surfaces";
+import { useConfirmSignOut } from "@/features/sign-out";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 
 export interface OtherOption {
@@ -17,13 +17,13 @@ export interface OtherOption {
 
 /**
  * Keeps a getting-in screen to one strong action: a quiet "Other options"
- * link opens a sheet with the screen's fallbacks, then Sign out (explained,
- * since it forgets this phone's vault key).
+ * link opens a sheet with the screen's fallbacks, then Sign out (explained
+ * and confirmed, since it forgets this phone's vault key).
  */
 export function OtherOptions({ options = [] }: { options?: OtherOption[] }) {
   const { t } = useI18n();
   const { colors } = useTheme();
-  const { signOut } = useSession();
+  const { confirmSignOut, signingOut } = useConfirmSignOut();
   const [open, setOpen] = useState(false);
 
   const choose = (action: () => void) => () => {
@@ -36,10 +36,12 @@ export function OtherOptions({ options = [] }: { options?: OtherOption[] }) {
       <Button
         variant="text"
         label={t("otherOptions.title")}
+        loading={signingOut}
         onPress={() => setOpen(true)}
       />
       <BottomSheet
-        visible={open}
+        // The confirmation shows over the sheet, which closes once it's done.
+        visible={open && !signingOut}
         onDismiss={() => setOpen(false)}
         title={t("otherOptions.title")}
       >
@@ -62,7 +64,7 @@ export function OtherOptions({ options = [] }: { options?: OtherOption[] }) {
           }
           title={t("settings.signOut")}
           description={t("otherOptions.signOutBody")}
-          onPress={choose(() => void signOut())}
+          onPress={() => void confirmSignOut()}
         />
       </BottomSheet>
     </>

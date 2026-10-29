@@ -12,12 +12,13 @@ import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { AccountAvatar } from "@/features/account/account-avatar";
 import { UpgradeCard } from "@/features/billing/upgrade-card";
+import { useConfirmSignOut } from "@/features/sign-out";
 import { formatBytes } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { openSitePage } from "@/lib/site";
 import { useSecurityAlerts } from "@/lib/use-push-notifications";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession, useViewer } from "@/providers/session-provider";
+import { useViewer } from "@/providers/session-provider";
 import { APPEARANCES, useTheme } from "@/providers/theme-provider";
 import { colors as palette } from "@/theme";
 
@@ -33,7 +34,7 @@ export default function Settings() {
   const router = useRouter();
   const { t, language } = useI18n();
   const { appearance, setAppearance, colors } = useTheme();
-  const { signOut } = useSession();
+  const { confirmSignOut, signingOut } = useConfirmSignOut();
   const viewer = useViewer();
   // getUsageStats re-reads every item and file server-side on each vault
   // change; only subscribe while this tab is actually visible.
@@ -270,7 +271,8 @@ export default function Settings() {
       <Button
         variant="secondary"
         label={t("settings.signOut")}
-        onPress={signOut}
+        loading={signingOut}
+        onPress={() => void confirmSignOut()}
       />
     </Screen>
   );

@@ -54,6 +54,7 @@ const base: StageInputs = {
   migrationDeferred: false,
   hasDeviceVault: true,
   unlocked: true,
+  signingOut: false,
 };
 
 describe("resolveStage", () => {
@@ -76,6 +77,15 @@ describe("resolveStage", () => {
     [{}, "ready"],
   ])("%j → %s", (overrides, stage) => {
     expect(resolveStage({ ...base, ...overrides })).toBe(stage);
+  });
+
+  it("leaves at once on sign-out, before the server confirms it", () => {
+    expect(resolveStage({ ...base, signingOut: true, unlocked: false })).toBe(
+      "signedOut",
+    );
+    expect(resolveStage({ ...base, signingOut: true, authLoading: true })).toBe(
+      "signedOut",
+    );
   });
 
   it("asks for the login OTP before anything that needs full auth", () => {

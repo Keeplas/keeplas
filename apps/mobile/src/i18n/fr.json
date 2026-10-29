@@ -15,6 +15,10 @@
     "language": "Langue",
     "genericError": "Une erreur est survenue. Réessayez."
   },
+  "crash": {
+    "title": "Un problème est survenu",
+    "body": "Keeplas s'est arrêté de façon inattendue. Votre coffre et vos données sont en sécurité. Réessayez."
+  },
   "nav": {
     "home": "Accueil",
     "vault": "Coffre",
@@ -75,6 +79,11 @@
     "notArrivingTitle": "Le code n'arrive pas ?",
     "notArrivingBody": "Un code peut mettre une minute à arriver. Vérifiez que {phone} est correct, puis demandez un nouveau code.",
     "changeNumber": "Changer de numéro"
+  },
+  "offline": {
+    "title": "Vous êtes hors ligne",
+    "body": "Keeplas a besoin d'une connexion pour ouvrir votre compte. Connectez-vous au Wi-Fi ou aux données mobiles : Keeplas se reconnecte tout seul.",
+    "submitBody": "Pas de connexion. Connectez-vous au Wi-Fi ou aux données mobiles, puis réessayez."
   },
   "passkey": {
     "title": "Créer votre clé d'accès",
@@ -174,7 +183,12 @@
   },
   "otherOptions": {
     "title": "Autres options",
-    "signOutBody": "Oublie ce téléphone. Vous vous reconnecterez avec votre numéro."
+    "signOutBody": "Vous vous reconnecterez avec votre numéro, puis ouvrirez votre coffre avec votre sauvegarde cloud, vos 24 mots ou vos contacts de confiance."
+  },
+  "signOut": {
+    "confirmTitle": "Se déconnecter sur ce téléphone ?",
+    "confirmBody": "Les brouillons de ce téléphone seront supprimés, et ce téléphone oubliera la clé de votre coffre. Pour ouvrir votre coffre la prochaine fois, il vous faudra votre sauvegarde cloud, vos 24 mots ou vos contacts de confiance.",
+    "confirmBodyNoBackup": "Les brouillons de ce téléphone seront supprimés, et ce téléphone oubliera la clé de votre coffre. Votre sauvegarde cloud est désactivée : la prochaine fois, seuls vos 24 mots ou vos contacts de confiance pourront ouvrir votre coffre. Sans eux, il ne pourra plus être ouvert."
   },
   "recoveryKit": {
     "title": "Ouvrir votre coffre avec votre kit",

@@ -13,11 +13,17 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush, canGoBack: () => false }),
   useLocalSearchParams: () => mockParams,
 }));
+jest.mock("convex/react", () => ({
+  useConvex: () => ({
+    connectionState: () => ({ isWebSocketConnected: true }),
+    subscribeToConnectionState: () => () => undefined,
+  }),
+}));
 const mockSignIn = jest.fn();
 jest.mock("@convex-dev/auth/react", () => ({
   useAuthActions: () => ({ signIn: mockSignIn }),
 }));
-const mockRequestCode = jest.fn();
+const mockRequestCode = jest.fn(async () => undefined);
 jest.mock("@/lib/use-request-phone-code", () => ({
   AttestationFailed: class extends Error {},
   useRequestPhoneCode: () => mockRequestCode,

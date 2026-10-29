@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useConvex } from "convex/react";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -11,6 +12,7 @@ import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { errorText } from "@/lib/errors";
+import { failWhenOffline, OfflineError } from "@/lib/offline";
 import { openSitePage } from "@/lib/site";
 import { attestationReference } from "@/lib/attestation";
 import { usePhoneField } from "@/lib/use-phone-field";
@@ -32,6 +34,7 @@ export default function PhoneScreen() {
   const phone = usePhoneField();
   const [name, setName] = useState("");
   const requestCode = useRequestPhoneCode();
+  const convex = useConvex();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [switchTo, setSwitchTo] = useState<PhoneIntent | null>(null);
@@ -46,7 +49,7 @@ export default function PhoneScreen() {
     setError(null);
     setSwitchTo(null);
     try {
-      await requestCode(phoneNumber, intent);
+      await failWhenOffline(requestCode(phoneNumber, intent), convex);
       router.push({
         pathname: "/verify",
         params: {
@@ -63,6 +66,8 @@ export default function PhoneScreen() {
           pathname: "/device-check",
           params: { ref: attestationReference() },
         });
+      } else if (err instanceof OfflineError) {
+        setError(t("offline.submitBody"));
       } else {
         const text = errorText(err);
         setSwitchTo(

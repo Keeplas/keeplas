@@ -17,17 +17,23 @@ const SETUP_ROUTES = [
   "/done",
   "/warning",
 ];
+// Screens that only pass through, or that must not restart on their own after
+// an unlock (the recorder would record, the scanner would open the camera).
 const SKIPPED = [
   "/",
   "/home",
   "/unlock",
   "/capture/securing",
+  "/capture/voice",
+  "/capture/scan",
   "/new-device",
   "/passkey",
   "/vault",
 ];
 
 export function isResumable(pathname: string): boolean {
+  // A recovery approval may have closed while the vault was locked.
+  if (pathname.startsWith("/recovery-approval/")) return false;
   return !SKIPPED.includes(pathname);
 }
 
