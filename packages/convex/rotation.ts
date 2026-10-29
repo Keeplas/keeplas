@@ -4,6 +4,7 @@ import { Id } from "./_generated/dataModel";
 import { requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { requireProvenFullAuth } from "./session_proofs";
+import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 /**
  * Master-key rotation (return-after-release flow). When a vault owner comes
@@ -60,6 +61,14 @@ export const rotateKeyMaterial = auditedMutation({
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: args.encryptedAsymmetricSecretKeyPrev,
       updatedAt: Date.now(),
+    });
+    // Where this user is someone's trusted contact, the owner wraps to the
+    // key on their row: publish the new one, so owners review the identity
+    // change instead of sealing to a key whose secret finalize drops.
+    await publishContactKeyToOwnerRows(ctx, userId, {
+      contactPublicKey: args.publicKey,
+      contactIdentityPublicKey: args.identityPublicKey,
+      contactPublicKeySignature: args.publicKeySignature,
     });
     return { success: true };
   },

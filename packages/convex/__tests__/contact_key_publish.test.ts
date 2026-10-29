@@ -5,6 +5,7 @@ import {
   makeT,
   seedUser,
   asUser,
+  asPhoneProvenUser,
   signedAudit,
   type TestConvex,
 } from "./test.helpers";
@@ -105,5 +106,43 @@ describe("acceptInvitation", () => {
     expect(accepted?.contactIdentityPublicKey).toBe(
       REGISTERED.identityPublicKey,
     );
+  });
+});
+
+describe("rotation.rotateKeyMaterial", () => {
+  it("publishes the rotated key to the rows where the user is a contact", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contact = await seedContactUser(t);
+    const rowId = await seedRow(t, owner, {
+      invitationStatus: "accepted",
+      contactUserId: contact,
+    });
+    await t.run((ctx) =>
+      ctx.db.patch(rowId, {
+        contactPublicKey: REGISTERED.publicKey,
+        contactIdentityPublicKey: REGISTERED.identityPublicKey,
+        contactPublicKeySignature: REGISTERED.publicKeySignature,
+      }),
+    );
+
+    const as = await asPhoneProvenUser(t, contact);
+    await as.mutation(api.rotation.rotateKeyMaterial, {
+      encryptedKeyBundle: "new-bundle",
+      publicKey: "rotated-ml-kem",
+      publicKeySignature: "rotated-signature",
+      identityPublicKey: "rotated-ml-dsa",
+      encryptedIdentitySecretKey: "rotated-identity-secret",
+      encryptedAsymmetricSecretKey: "rotated-secret",
+      encryptedAsymmetricSecretKeyPrev: "old-secret-rewrapped",
+      _audit: await signedAudit(),
+    });
+
+    // Owners now see the new identity (fingerprint review) instead of
+    // sealing to a key whose secret finalizeRotation drops.
+    const row = await t.run((ctx) => ctx.db.get(rowId));
+    expect(row?.contactPublicKey).toBe("rotated-ml-kem");
+    expect(row?.contactIdentityPublicKey).toBe("rotated-ml-dsa");
+    expect(row?.contactPublicKeySignature).toBe("rotated-signature");
   });
 });
