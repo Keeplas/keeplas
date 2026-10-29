@@ -122,3 +122,14 @@ export async function putEntry(entry: DeviceUnlockEntry): Promise<void> {
 export async function deleteEntry(id: string): Promise<void> {
   await tx("readwrite", (store) => store.delete(id));
 }
+
+export async function listAllEntries(): Promise<DeviceUnlockEntry[]> {
+  return tx(
+    "readonly",
+    (store) => store.getAll() as IDBRequest<DeviceUnlockEntry[]>,
+  );
+}
+
+export async function clearEntries(): Promise<void> {
+  await tx("readwrite", (store) => store.clear());
+}

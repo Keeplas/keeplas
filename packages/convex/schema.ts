@@ -456,6 +456,26 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_push_token", ["pushToken"]),
 
+  // Server half of a browser's device PIN (device_pins.ts). The browser keeps
+  // the MasterKey wrapped under HKDF(Argon2id(PIN, deviceSalt), secret) and
+  // never sends the salt, so this row alone cannot open anything, and the
+  // browser's copy alone cannot be brute-forced offline: `secret` is released
+  // only to the enrolling session, after a correct PIN proof, and the row is
+  // deleted after PIN_WIPE_THRESHOLD wrong ones. Ends with its session.
+  device_pins: defineTable({
+    userId: v.id("users"),
+    sessionId: v.id("authSessions"),
+    // SHA-256 hex of the PIN proof (HKDF of Argon2id(PIN, deviceSalt)).
+    proofHash: v.string(),
+    // 32 random bytes (base64), mixed into the wrap key.
+    secret: v.string(),
+    failCount: v.number(),
+    lockedUntil: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_session", ["sessionId"]),
+
   // Short-lived QR handoff from a signed-in phone to a new browser. Convex
   // only relays ciphertext: the MasterKey envelope is sealed by the phone to
   // the browser's ephemeral ML-KEM key. Each row is purged at `expiresAt`

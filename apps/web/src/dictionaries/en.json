@@ -843,7 +843,7 @@
       "savePin": "Save my code",
       "whyTitle": "Why it matters",
       "why1": "Without a code, you link this browser again from your phone each time Keeplas locks.",
-      "why2": "Your vault key stays encrypted in this browser: only these {n} digits open it.",
+      "why2": "Your vault key stays encrypted in this browser. It opens only with these {n} digits, checked by Keeplas, so a copy of the browser alone can't open it.",
       "why3": "After 10 wrong tries, Keeplas removes the key from this browser. Your vault stays safe."
     },
     "deviceUnlock": {
@@ -2203,6 +2203,9 @@
         "device_revoked": "Device revoked",
         "device_not_me": "Unknown device blocked",
         "pairing_session_approved": "Browser linked",
+        "device_pin_enrolled": "PIN set up on a browser",
+        "device_pin_unlocked": "Unlocked with a PIN",
+        "device_pin_removed": "PIN removed from a browser",
         "passkey_registered": "Passkey added",
         "passkey_removed": "Passkey removed",
         "vault_item_created": "Item added",

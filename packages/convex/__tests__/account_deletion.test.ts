@@ -213,6 +213,14 @@ describe("account deletion", () => {
         expiresAt: 0,
         attempts: 0,
       });
+      await ctx.db.insert("device_pins", {
+        userId: owner.userId,
+        sessionId,
+        proofHash: "hash",
+        secret: "secret",
+        failCount: 0,
+        createdAt: 0,
+      });
       await ctx.db.insert("capture_handoffs", {
         userId: owner.userId,
         status: "completed",
@@ -321,6 +329,10 @@ describe("account deletion", () => {
         .query("capture_handoffs")
         .withIndex("by_user", (q) => q.eq("userId", owner.userId))
         .collect(),
+      devicePins: await ctx.db
+        .query("device_pins")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .collect(),
     }));
 
     expect(left.user).toBeNull();
@@ -348,6 +360,7 @@ describe("account deletion", () => {
     expect(left.numberChanges).toEqual([]);
     expect(left.sessionPhoneCodes).toEqual([]);
     expect(left.captureHandoffs).toEqual([]);
+    expect(left.devicePins).toEqual([]);
   });
 
   it("deletes the security log 30 days after the erasure, and only the erased account's", async () => {

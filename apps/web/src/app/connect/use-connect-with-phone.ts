@@ -8,18 +8,13 @@ import {
   openPairingEnvelope,
   pairingKeyHash,
 } from "@keeplas/crypto/pairing";
+import { clearMethods as clearDevicePins } from "@/lib/device-unlock";
 import { importMasterKey } from "@/lib/device-unlock/key-import";
 import { useMasterKey } from "@/lib/master-key-context";
 import { initialPairingState, pairingReducer } from "@/lib/pairing-flow";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useRequestContext } from "@/lib/use-request-context";
 import { deviceLabelFromUserAgent } from "@/lib/user-agent";
-
-/**
- * How long a browser linked without "Keep me logged in" stays unlocked, across
- * refreshes, before it must be linked again.
- */
-const UNTRUSTED_LINK_TTL_MS = 60 * 60 * 1000;
 
 /** Ephemeral pairing secrets: memory only, erased as soon as they are spent. */
 interface PairingSecrets {
@@ -70,6 +65,9 @@ export function useConnectWithPhone() {
     runOnce(`creating:${attempt.current}`, async () => {
       try {
         if (isAuthenticated) await signOut();
+        // PINs of this browser belong to the session being replaced: the
+        // new link offers to set one up again.
+        await clearDevicePins().catch(() => {});
         wipeSecrets();
         const keys = await generateBrowserPairingKeys();
         secrets.current = {
@@ -145,9 +143,7 @@ export function useConnectWithPhone() {
           userId: viewer._id,
         });
         try {
-          setMasterKey(await importMasterKey(raw), {
-            expiresAt: trusted ? undefined : Date.now() + UNTRUSTED_LINK_TTL_MS,
-          });
+          setMasterKey(await importMasterKey(raw), { trusted });
         } finally {
           raw.fill(0);
         }

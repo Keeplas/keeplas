@@ -843,7 +843,7 @@
       "savePin": "Enregistrer mon code",
       "whyTitle": "Pourquoi c'est important",
       "why1": "Sans code, vous associez à nouveau ce navigateur depuis votre téléphone à chaque verrouillage de Keeplas.",
-      "why2": "La clé de votre coffre reste chiffrée dans ce navigateur : seuls ces {n} chiffres l'ouvrent.",
+      "why2": "La clé de votre coffre reste chiffrée dans ce navigateur. Elle ne s'ouvre qu'avec ces {n} chiffres, vérifiés par Keeplas : une copie du navigateur seule ne suffit pas.",
       "why3": "Après 10 essais incorrects, Keeplas retire la clé de ce navigateur. Votre coffre reste protégé."
     },
     "deviceUnlock": {
@@ -2203,6 +2203,9 @@
         "device_revoked": "Appareil révoqué",
         "device_not_me": "Appareil inconnu bloqué",
         "pairing_session_approved": "Navigateur associé",
+        "device_pin_enrolled": "Code PIN configuré sur un navigateur",
+        "device_pin_unlocked": "Déverrouillé avec un code PIN",
+        "device_pin_removed": "Code PIN retiré d'un navigateur",
         "passkey_registered": "Clé d'accès ajoutée",
         "passkey_removed": "Clé d'accès supprimée",
         "vault_item_created": "Élément ajouté",
