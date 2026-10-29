@@ -1,0 +1,293 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: "Source Serif 4"; font-weight: 600; src: url("../assets/fonts/SourceSerif4-SemiBold.ttf"); }
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("../assets/fonts/Inter-Regular.ttf"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("../assets/fonts/Inter-Medium.ttf"); }
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("../assets/fonts/Inter-SemiBold.ttf"); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", sans-serif; -webkit-font-smoothing: antialiased; background: #000; }
+  #strip { position: relative; overflow: hidden; }
+  .layer { position: absolute; inset: 0; }
+  .panel { position: absolute; top: 0; overflow: hidden; }
+  .head { position: absolute; left: 0; right: 0; text-align: center; font-family: "Source Serif 4", serif; font-weight: 600; letter-spacing: -0.015em; }
+  .head .l { display: block; white-space: nowrap; }
+  .phone { position: absolute; border-radius: 50px; padding: 9px; background: #0b0b0c; }
+  .phone .scr { width: 100%; height: 100%; border-radius: 41px; overflow: hidden; container-type: inline-size; }
+  .phone .scr img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .phone .scr .sim-dark { filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(.92); }
+  .phone .island { position: absolute; top: 19px; left: 50%; width: 86px; height: 25px; margin-left: -43px; background: #000; border-radius: 14px; }
+  .card, .seg { z-index: 2; } /* callouts sit above the front decoration layer */
+  .card { position: absolute; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
+  .ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .ic svg { width: 22px; height: 22px; }
+  .t { font-weight: 600; font-size: 15px; line-height: 20px; }
+  .b { font-size: 13px; line-height: 18px; margin-top: 2px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 14px; flex: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .seg { display: flex; padding: 4px; border-radius: 14px; gap: 2px; }
+  .seg div { padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: 14px; }
+  .node { position: absolute; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; display: grid; place-items: center; }
+  .node svg { width: 34px; height: 34px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: "Source Serif 4"; font-size: 26px; }
+  .brand img { width: 40px; height: 40px; }
+</style>
+</head>
+<body>
+<div id="strip"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const DIR = q.get("d") || "horizon";
+const LANG = q.get("lang") || "en";
+const MODE = q.get("mode") || "strip"; // strip | fg (Play feature graphic)
+// CSS sizes; the render script applies the device scale factor.
+// ios: 430x932 @3 = 1290x2796 (6.9"). play: 432x768 @2.5 = 1080x1920 (9:16). fg: 512x250 @2 = 1024x500.
+const DIMS = { ios: [430, 932], play: [432, 768], fg: [512, 250] };
+const PLAT = MODE === "fg" ? "fg" : (q.get("p") || "ios");
+const [W, H] = DIMS[PLAT];
+const SCR = "../../../PRD/v2-mobile-first/figma/screens/";
+const ICON = "../../../PRD/v2-mobile-first/design-kit/svg/icons/";
+
+const C = {
+  navy: "#0E2340", navy950: "#071A30", ivory: "#FDFBF7", sky: "#238BCA", skyN: "#4FA8E0",
+  dawn: "#F9DDB4", dawn500: "#F2B866", muted: "#5E6E83", noirMuted: "#8E8E93",
+};
+const TONES = {
+  light: { head: C.navy, accent: C.sky, card: "#FFFFFF", cardT: C.navy, cardB: C.muted, border: "1px solid #E3E7EC", icBg: "#E1F1FA", ic: C.sky,
+    shadow: "0 1px 2px rgba(14,35,64,.06), 0 18px 40px rgba(14,35,64,.16)", ring: "0 0 0 1.5px #C5D7E8, 0 40px 70px rgba(14,35,64,.25)", logo: "logo.svg" },
+  dark: { head: C.ivory, accent: C.dawn, card: "#141416", cardT: "#F2EFEA", cardB: C.noirMuted, border: "1px solid #3A3A40", icBg: "#1A2233", ic: C.skyN,
+    shadow: "0 24px 60px rgba(0,0,0,.55)", ring: "0 0 0 1.5px rgba(255,255,255,.16), 0 40px 80px rgba(0,0,0,.55)", logo: "logo-inverse.svg" },
+};
+
+// Storyline: one benefit per screenshot, same order in every direction.
+const PANELS = [
+  { light: "M08-5_Home.png", dark: "M08-5_Home_Dark.png",
+    head: { en: ["Your life,", "well kept"], fr: ["Votre vie,", "bien gardée"] },
+    callout: { kind: "chip", icon: "lock", t: { en: "Encrypted on your phone", fr: "Chiffré sur votre téléphone" } }, node: "shield-check" },
+  { light: "M07-1_Add_to_Keeplas_bottom_sheet_.png",
+    head: { en: ["Everything", "important, together"], fr: ["Tout l'essentiel,", "réuni"] },
+    callout: { kind: "types" }, node: "folder" },
+  { light: "M07-2_Scan_document_on-device_encryption_.png", dark: "M07-2_Scan_document_on-device_encryption_.png",
+    head: { en: ["Private", "before upload"], fr: ["Chiffré", "avant l'envoi"] },
+    callout: { kind: "card", icon: "lock", t: { en: "Encrypted on this phone", fr: "Chiffré sur ce téléphone" }, b: { en: "Keeplas never sees the file.", fr: "Keeplas ne voit jamais le fichier." } }, node: "lock" },
+  { light: "M06-6_Access_management.png",
+    head: { en: ["Your people,", "your rules"], fr: ["Vos proches,", "vos règles"] },
+    callout: { kind: "people" }, node: "people" },
+  { light: "M02-5_Life_check_EN_.png", lightFr: "M02-6_Life_check_FR_.png",
+    head: { en: ["Check in", "your way"], fr: ["Le Life check,", "à votre rythme"] },
+    callout: { kind: "seg", opts: { en: ["Weekly", "Monthly", "Quarterly"], fr: ["Hebdo", "Mensuel", "Trimestriel"] } }, node: "check-circle" },
+  // Figma frame is 1120 px tall: drop the access-scope block and the empty space above the tab bar so the
+  // "Create private access" button fits the 852 px screen. Rows [from, to) of the 393 px wide image.
+  { light: "M06-4_Share_content.png", slices: [[0, 465], [590, 889], [1032, 1120]],
+    head: { en: ["Continuity,", "prepared"], fr: ["Demain,", "préparé"] },
+    callout: { kind: "card", icon: "clock", t: { en: "After verification + 72 h", fr: "Après vérification + 72 h" }, b: { en: "2 contacts confirm, then a grace period.", fr: "2 contacts confirment, puis un délai de grâce." } }, node: "sun" },
+];
+const N = MODE === "fg" ? 1 : PANELS.length, SW = W * N;
+const K = H / 932; // vertical scale for landscape elements
+
+// ---------- shared drawing helpers ----------
+let seed = 11;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+function ridge(base, amp, waves, step = 10) {
+  const ph = waves.map(() => rnd() * Math.PI * 2);
+  let d = `M0 ${H}`;
+  for (let x = 0; x <= SW + step; x += step) {
+    let y = base;
+    waves.forEach((w, i) => (y -= amp * w[1] * Math.sin((x / w[0]) * Math.PI * 2 + ph[i])));
+    d += ` L${x} ${y.toFixed(1)}`;
+  }
+  return d + ` L${SW + step} ${H} Z`;
+}
+function pines(y0, count, hMin, hMax, fill) {
+  let s = "";
+  for (let i = 0; i < count; i++) {
+    const x = rnd() * SW, h = (hMin + rnd() * (hMax - hMin)) * K, w = h * 0.36, yb = y0 + rnd() * 16 * K;
+    for (let k = 0; k < 4; k++) {
+      const top = yb - h + k * h * 0.2, bw = w * (0.45 + k * 0.2);
+      s += `<path d="M${x} ${top} L${x + bw} ${top + h * 0.34} L${x - bw} ${top + h * 0.34} Z" fill="${fill}"/>`;
+    }
+  }
+  return s;
+}
+function stars(n, fadeAt) {
+  let s = "";
+  for (let i = 0; i < n; i++) {
+    const x = rnd() * SW, y = rnd() * H * 0.6, o = (0.3 + rnd() * 0.7) * Math.max(0, 1 - x / (SW * fadeAt));
+    if (o > 0.02) s += `<circle cx="${x}" cy="${y}" r="${0.6 + rnd() * 1.3}" fill="#fff" opacity="${o.toFixed(2)}"/>`;
+  }
+  return s;
+}
+// Smooth curve through points (Catmull-Rom to cubic Bézier)
+function smooth(pts) {
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6} ${p1[1] + (p2[1] - p0[1]) / 6}, ${p2[0] - (p3[0] - p1[0]) / 6} ${p2[1] - (p3[1] - p1[1]) / 6}, ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
+const hgrad = (id, stops) => `<linearGradient id="${id}" x1="0" y1="0" x2="${SW}" y2="0" gradientUnits="userSpaceOnUse">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</linearGradient>`;
+
+// ---------- directions ----------
+const DIRECTIONS = {
+  // 1. Continuous horizon, night to day: dark screens at night, light ones by day.
+  horizon: {
+    tone: (i) => (i < 4 ? "dark" : "light"),
+    screen: (i) => (i < 3 ? "dark" : "light"),
+    tilt: () => 0,
+    back() {
+      const hz = H * 0.8, sunX = MODE === "fg" ? SW * 0.62 : W * 3.05;
+      return `<defs>
+        ${MODE === "fg" // feature graphic: night to dawn only, so the white title stays readable
+          ? hgrad("top", [[0, "#06162B"], [0.6, C.navy], [1, "#2F567F"]]) + hgrad("low", [[0, "#1B3A63"], [0.5, "#3E5F8C"], [0.85, "#F2B866"], [1, "#FDEFD4"]])
+          : hgrad("top", [[0, "#06162B"], [0.42, C.navy], [0.58, "#2F567F"], [0.72, "#9DBAD6"], [0.86, "#EEF5FA"], [1, C.ivory]]) +
+            hgrad("low", [[0, "#1B3A63"], [0.4, "#3E5F8C"], [0.52, "#F2B866"], [0.66, "#FDEFD4"], [0.85, "#FDFBF7"], [1, C.ivory]])}
+        <linearGradient id="vm" x1="0" y1="0" x2="0" y2="1"><stop offset=".15" stop-color="#fff" stop-opacity="0"/><stop offset=".8" stop-color="#fff" stop-opacity="1"/></linearGradient>
+        <mask id="m"><rect width="${SW}" height="${H}" fill="url(#vm)"/></mask>
+        <radialGradient id="glow" cx="${sunX}" cy="${hz - 120 * K}" r="${MODE === "fg" ? 220 : W * 1.4}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FDEFD4" stop-opacity="${MODE === "fg" ? 0.5 : 0.9}"/><stop offset="1" stop-color="#FDEFD4" stop-opacity="0"/></radialGradient>
+        ${hgrad("r1", [[0, "#2F567F"], [0.5, "#4B6E95"], [0.75, "#C5D7E8"], [1, "#DCE8F2"]])}
+        ${hgrad("r2", [[0, "#1E3B5E"], [0.5, "#2F567F"], [0.75, "#9DBAD6"], [1, "#C5D7E8"]])}
+        ${hgrad("lake", [[0, "#2F567F"], [0.5, "#7493B3"], [0.8, "#DCE8F2"], [1, "#EEF5FA"]])}
+        ${hgrad("p1", [[0, "#1E3B5E"], [0.6, "#2F567F"], [1, "#7493B3"]])}
+        ${hgrad("p2", [[0, C.navy950], [0.6, "#102844"], [1, "#2F567F"]])}
+      </defs>
+      <rect width="${SW}" height="${H}" fill="url(#top)"/>
+      <rect width="${SW}" height="${H}" fill="url(#low)" mask="url(#m)"/>
+      <rect width="${SW}" height="${H}" fill="url(#glow)"/>
+      ${stars(MODE === "fg" ? 60 : 300, 0.5)}
+      <circle cx="${sunX}" cy="${hz - 120 * K}" r="${62 * K}" fill="#FDEFD4"/>
+      <path d="${ridge(hz - 70 * K, 70 * K, [[700, 0.7], [260, 0.3], [90, 0.07]])}" fill="url(#r1)"/>
+      <path d="${ridge(hz - 25 * K, 50 * K, [[520, 0.6], [180, 0.35], [70, 0.06]])}" fill="url(#r2)"/>
+      <rect y="${hz}" width="${SW}" height="${H - hz}" fill="url(#lake)"/>
+      ${[0, 14, 28].map((dy, j) => `<rect x="${sunX - (30 + j * 12) * K}" y="${hz + (8 + dy) * K}" width="${(60 + j * 24) * K}" height="${3 * K}" rx="1.5" fill="#FDEFD4" opacity="${0.7 - j * 0.2}"/>`).join("")}
+      ${pines(hz + 2 * K, MODE === "fg" ? 14 : 90, 26, 54, "url(#p1)")}
+      <path d="${ridge(H - 46 * K, 24 * K, [[640, 0.7], [210, 0.3]])}" fill="url(#p2)"/>
+      ${pines(H - 64 * K, MODE === "fg" ? 12 : 70, 60, 120, "url(#p2)")}`;
+    },
+  },
+
+  // 2. Secure thread: one glowing sky line joins every feature; a navy wave alternates light and dark panels.
+  fil: {
+    tone: (i) => (i % 2 ? "light" : "dark"),
+    screen: (i) => (i % 2 ? "light" : "dark"),
+    tilt: (i) => (i % 2 ? 5 : -5),
+    back() {
+      // Wave top edge: above the panel (all navy) on dark panels, low on light ones.
+      const pts = [[-40, MODE === "fg" ? -20 : -20]];
+      for (let i = 0; i < N; i++) {
+        const dark = this.tone(i) === "dark";
+        pts.push([i * W + W * 0.2, dark ? -30 : H * 0.7], [i * W + W * 0.8, dark ? -30 : H * 0.62]);
+      }
+      pts.push([SW + 40, -20]);
+      const d = smooth(pts) + ` L${SW + 40} ${H} L-40 ${H} Z`;
+      return `<defs><linearGradient id="nv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#102844"/><stop offset="1" stop-color="${C.navy950}"/></linearGradient></defs>
+        <rect width="${SW}" height="${H}" fill="${C.ivory}"/>
+        <path d="${d}" fill="url(#nv)"/>
+        ${stars(MODE === "fg" ? 30 : 120, 1.2)}`;
+    },
+    // Thread overlay drawn above the phones, with icon nodes; two nodes sit on panel seams.
+    front(icons) {
+      if (MODE === "fg") return "";
+      const y = (i) => H * (PLAT === "play" ? 0.5 : 0.47) + (i % 2 ? 26 : -26);
+      const nodes = [[W * 0.8, y(0), 0], [W * 2, y(1), 1], [W * 2.6, y(2), 2], [W * 3, y(3) + 40, 3], [W * 4.55, y(4), 4], [W * 5.5, y(5), 5]];
+      const pts = [[-30, H * 0.3], [W * 0.3, H * 0.42], ...nodes.map(([x, yy]) => [x, yy]), [SW + 30, H * 0.45]];
+      const d = smooth(pts);
+      const svg = `<svg class="layer" width="${SW}" height="${H}" viewBox="0 0 ${SW} ${H}" style="pointer-events:none">
+        <defs><filter id="g1" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="10"/></filter><filter id="g2" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>
+        <path d="${d}" fill="none" stroke="${C.skyN}" stroke-width="16" opacity=".55" filter="url(#g1)"/>
+        <path d="${d}" fill="none" stroke="#7CC4F0" stroke-width="5" opacity=".9" filter="url(#g2)"/>
+        <path d="${d}" fill="none" stroke="#E6F5FF" stroke-width="2"/></svg>`;
+      const nodeHtml = nodes.map(([x, yy, i]) => `<div class="node" style="left:${x}px;top:${yy}px;background:${C.ivory};color:${C.sky};box-shadow:0 0 0 6px rgba(79,168,224,.35), 0 0 36px 10px rgba(79,168,224,.55)">${icons[PANELS[i].node]}</div>`).join("");
+      return svg + nodeHtml;
+    },
+  },
+};
+const D = DIRECTIONS[DIR];
+
+// ---------- build ----------
+const strip = document.getElementById("strip");
+strip.style.width = SW + "px"; strip.style.height = H + "px";
+// ?i=<n> renders a single screenshot: the strip shifts so panel n fills the viewport.
+if (q.has("i")) strip.style.transform = `translateX(${-q.get("i") * W}px)`;
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+const svgLayer = (inner) => `<svg class="layer" width="${SW}" height="${H}" viewBox="0 0 ${SW} ${H}">${inner}</svg>`;
+
+function phoneEl(i, left, top, pw) {
+  const p = PANELS[i], mode = D.screen(i);
+  let src = (LANG === "fr" && p.lightFr) || p.light, sim = false;
+  if (mode === "dark") { if (p.dark) src = p.dark; else sim = true; }
+  const ph = Math.round((pw - 18) * 852 / 393) + 18;
+  const tilt = D.tilt(i);
+  return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;transform:rotate(${tilt}deg);box-shadow:${TONES[D.tone(i)].ring}">
+    <div class="scr ${sim ? "sim-dark" : ""}">${p.slices
+      ? p.slices.map(([a, b]) => `<div style="height:${(b - a) / 393 * 100}cqw;background:url('${SCR}${src}') 0 ${-a / 393 * 100}cqw / 100% auto no-repeat"></div>`).join("")
+      : `<img src="${SCR}${src}"/>`}</div><div class="island"></div></div>`) };
+}
+
+async function callout(i, top, vis) {
+  const c = PANELS[i].callout, T = TONES[D.tone(i)], ic = (n) => `<div class="ic" style="background:${T.icBg};color:${T.ic}">${ICONS[n]}</div>`;
+  const box = `background:${T.card};border:${T.border};box-shadow:${T.shadow};`;
+  const side = i % 2 ? "right:16px" : "left:16px";
+  const at = (f) => Math.min(top + vis * f, H - 110);
+  switch (c.kind) {
+    case "chip": return el(`<div class="card" style="${box}left:50%;transform:translateX(-50%);top:${at(0.8)}px;border-radius:999px;padding:10px 22px 10px 10px;white-space:nowrap">${ic(c.icon)}<div class="t" style="color:${T.cardT}">${c.t[LANG]}</div></div>`);
+    case "card": return el(`<div class="card" style="${box}${side};top:${at(0.62)}px;width:310px">${ic(c.icon)}<div><div class="t" style="color:${T.cardT}">${c.t[LANG]}</div><div class="b" style="color:${T.cardB}">${c.b[LANG]}</div></div></div>`);
+    case "types": return el(`<div class="card" style="${box}left:50%;transform:translateX(-50%);top:${at(0.74)}px;border-radius:999px;padding:10px;gap:8px">${["document", "photo", "mic", "note", "video"].map(ic).join("")}</div>`);
+    case "people": {
+      const rows = [["M", "#7C5CD6", "Marie", { en: "Active now", fr: "Accès actif" }, "#3FB68B"], ["P", "#4B6E95", "Paul", { en: "After verification", fr: "Après vérification" }, C.dawn500]];
+      return el(`<div class="card" style="${box}${side};top:${at(0.5)}px;width:300px;flex-direction:column;align-items:stretch;gap:12px">${rows.map(([a, bg, n, s, dc]) => `<div class="row"><div class="av" style="background:${bg}">${a}</div><div><div class="t" style="color:${T.cardT}">${n}</div><div class="b" style="color:${T.cardB};margin:0"><span class="dot" style="background:${dc}"></span>${s[LANG]}</div></div></div>`).join("")}</div>`);
+    }
+    case "seg": return el(`<div class="seg" style="${box}position:absolute;left:50%;transform:translateX(-50%);top:${at(0.6)}px;white-space:nowrap">${c.opts[LANG].map((o, k) => `<div style="${k === 1 ? `background:${C.navy};color:#fff` : `color:${T.cardB}`}">${o}</div>`).join("")}</div>`);
+  }
+}
+
+const ICONS = {};
+async function build() {
+  const names = ["lock", "document", "photo", "mic", "note", "video", "clock", "shield-check", "folder", "people", "check-circle"];
+  await Promise.all(names.map(async (n) => (ICONS[n] = await (await fetch(ICON + n + ".svg")).text())));
+  ICONS.sun = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M5 17a7 7 0 0 1 14 0M3 17h18M12 5v2M5.6 8.6l1.4 1.4M18.4 8.6 17 10M2.5 13H4M20 13h1.5"/></svg>`;
+
+  strip.appendChild(el(svgLayer(D.back())));
+
+  if (MODE === "fg") {
+    // Play feature graphic: brand lockup left, phone right.
+    const T = TONES[DIR === "horizon" ? "dark" : D.tone(0)];
+    strip.appendChild(el(`<div style="position:absolute;left:40px;top:62px;width:260px">
+      <div class="brand" style="color:${T.head}"><img src="../../web/public/assets/logo/${T.logo}"/>Keeplas</div>
+      <div class="head" style="position:static;text-align:left;margin-top:18px;font-size:38px;line-height:42px"><span class="l" style="color:${T.head}">${PANELS[0].head[LANG][0]}</span><span class="l" style="color:${T.accent}">${PANELS[0].head[LANG][1]}</span></div></div>`));
+    const { node } = phoneEl(0, 318, 34, 170);
+    node.style.borderRadius = "30px"; node.style.padding = "6px"; node.firstElementChild.style.borderRadius = "24px";
+    node.lastElementChild.style.cssText += "top:12px;width:52px;height:15px;margin-left:-26px";
+    strip.appendChild(node);
+    if (D.front) { const f = el(`<div class="layer"></div>`); f.innerHTML = D.front(ICONS); strip.appendChild(f); }
+  } else {
+    for (let i = 0; i < N; i++) {
+      const p = PANELS[i], T = TONES[D.tone(i)];
+      const panel = el(`<div class="panel" style="left:${i * W}px;width:${W}px;height:${H}px"></div>`);
+      strip.appendChild(panel);
+      const head = el(`<div class="head" style="top:${PLAT === "play" ? 46 : 70}px"><span class="l" style="color:${T.head}">${p.head[LANG][0]}</span><span class="l" style="color:${T.accent}">${p.head[LANG][1]}</span></div>`);
+      panel.appendChild(head);
+      // Fit headline to width
+      let fs = PLAT === "play" ? 48 : 54;
+      const fit = () => { head.style.fontSize = fs + "px"; head.style.lineHeight = Math.round(fs * 1.08) + "px"; };
+      fit();
+      while ([...head.children].some((l) => l.scrollWidth > W - 40) && fs > 30) { fs--; fit(); }
+      const top = head.offsetTop + head.offsetHeight + (PLAT === "play" ? 30 : 46);
+      const pw = PLAT === "play" ? 292 : 312;
+      const { ph, node } = phoneEl(i, (W - pw) / 2, top, pw);
+      panel.appendChild(node);
+      panel.appendChild(await callout(i, top, Math.min(ph, H - top)));
+    }
+    if (D.front) { const f = el(`<div class="layer"></div>`); f.innerHTML = D.front(ICONS); strip.appendChild(f); }
+  }
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => (im.onload = im.onerror = r)))));
+  document.title = "ready";
+}
+build();
+</script>
+</body>
+</html>

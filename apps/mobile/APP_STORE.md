@@ -134,7 +134,7 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 
 1. ASC → the app → iOS App → **+** (new version), or open the version that is waiting ("Prepare for Submission").
 2. Fill in the listing:
-   - Screenshots: the 6.9" iPhone size is required. `supportsTablet: false`, so no iPad screenshots.
+   - Screenshots: the 6.9" iPhone size is required. `supportsTablet: false`, so no iPad screenshots. Generate them (and the Google Play set) with [`store-screenshots/render.sh`](store-screenshots/render.sh).
    - Description, keywords, support URL, privacy policy URL.
    - "What's New" (from the second version on).
 3. App Information and App Privacy:
