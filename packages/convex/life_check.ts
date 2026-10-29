@@ -15,7 +15,7 @@ import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
-import { isLifeCheckPaused } from "./lib/pause";
+import { isEscalationPaused } from "./lib/pause";
 import { countQuorumVotes } from "./lib/quorum";
 
 const FREQUENCY_DAYS: Record<string, number> = {
@@ -87,7 +87,7 @@ export const getConfig = query({
       .query("life_check_configs")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    return config ? { ...config, paused: isLifeCheckPaused() } : null;
+    return config ? { ...config, paused: isEscalationPaused() } : null;
   },
 });
 
@@ -473,7 +473,8 @@ export const initiateCycle = internalMutation({
 });
 
 /**
- * Kill switch for the escalation timeline (`LIFE_CHECK_PAUSED`). When set,
+ * Kill switch for the escalation timeline (`LIFE_CHECK_PAUSED`, or
+ * `NOTIFICATIONS_PAUSED`: see lib/pause). When set,
  * a scheduled timeline step re-schedules itself instead of running, so the
  * cycle keeps its state and resumes where it stopped once the flag is cleared.
  * Returns true when the step was deferred and the caller must bail.
@@ -484,7 +485,7 @@ async function deferWhilePaused<F extends SchedulableFunctionReference>(
   fn: F,
   args: FunctionArgs<F>,
 ): Promise<boolean> {
-  if (!isLifeCheckPaused()) return false;
+  if (!isEscalationPaused()) return false;
   const id = await ctx.scheduler.runAfter(PAUSE_RECHECK_MS, fn, args);
   await ctx.db.patch(cycle._id, {
     pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), id],
@@ -775,7 +776,7 @@ export const evaluateAllConfigs = internalMutation({
   args: {},
   handler: async (ctx) => {
     // Kill switch: the inactivity counting is frozen — no new cycle starts.
-    if (isLifeCheckPaused()) return { evaluated: 0, initiated: 0 };
+    if (isEscalationPaused()) return { evaluated: 0, initiated: 0 };
 
     const now = Date.now();
     const configs = await ctx.db

@@ -8,6 +8,7 @@ import { activePushTokens } from "./devices";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 import { verifiedChannels } from "./lib/identity";
 import { countQuorumVotes } from "./lib/quorum";
+import { isEscalationPaused } from "./lib/pause";
 
 /**
  * Get pending access requests for the vault owner.
@@ -111,6 +112,13 @@ export const markUserUnreachable = auditedMutation({
     if (!cycle) {
       throw new ConvexError(
         "This vault owner's Life Check has not requested contact confirmation.",
+      );
+    }
+    // While the timeline is frozen (operator kill switch) a vote would open a
+    // grace whose alert can't reach the owner. Votes resume with it.
+    if (isEscalationPaused()) {
+      throw new ConvexError(
+        "Life Check is paused for maintenance. Try again later.",
       );
     }
 

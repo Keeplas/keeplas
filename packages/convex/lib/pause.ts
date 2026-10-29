@@ -10,6 +10,10 @@
  * - `LIFE_CHECK_PAUSED` — the inactivity counting stops: no new Life Check
  *   cycle is started and in-flight cycles stop progressing through their
  *   escalation timeline until the flag is cleared.
+ *
+ * NOTIFICATIONS_PAUSED also freezes the escalation timeline (see
+ * `isEscalationPaused`): an owner who is never asked to check in, and never
+ * gets the 72h grace alert, must not be escalated toward a release.
  */
 function flag(key: string): boolean {
   const value = process.env[key];
@@ -22,4 +26,9 @@ export function isNotificationsPaused(): boolean {
 
 export function isLifeCheckPaused(): boolean {
   return flag("LIFE_CHECK_PAUSED");
+}
+
+/** Whether the Life Check timeline (cycles, Stage 2, votes, release) is frozen. */
+export function isEscalationPaused(): boolean {
+  return isLifeCheckPaused() || isNotificationsPaused();
 }
