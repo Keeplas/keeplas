@@ -125,22 +125,29 @@ export const getItemRecipients = query({
 
     const result: Array<{
       contactId: Id<"trusted_contacts">;
+      contactUserId?: Id<"users">;
       contactPublicKey: string;
       // Identity material for verify-before-wrap (finding #2). These are the
       // owner's own rows, so the pin (if any) travels with them.
       contactIdentityPublicKey?: string;
       contactPublicKeySignature?: string;
       pinnedIdentityFingerprint?: string;
+      pinnedIdentityMac?: string;
+      // Every recipient here holds a wrap of this item.
+      hasWraps: true;
     }> = [];
     for (const row of rows) {
       const contact = await ctx.db.get(row.contactId);
       if (contact && contact.userId === userId && contact.contactPublicKey) {
         result.push({
           contactId: row.contactId,
+          contactUserId: contact.contactUserId,
           contactPublicKey: contact.contactPublicKey,
           contactIdentityPublicKey: contact.contactIdentityPublicKey,
           contactPublicKeySignature: contact.contactPublicKeySignature,
           pinnedIdentityFingerprint: contact.pinnedIdentityFingerprint,
+          pinnedIdentityMac: contact.pinnedIdentityMac,
+          hasWraps: true,
         });
       }
     }

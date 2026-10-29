@@ -17,6 +17,7 @@ import {
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { activePushTokens } from "./devices";
 import { requireSessionProof } from "./session_proofs";
+import { contactHasWraps } from "./lib/contact_key";
 
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3, D3, D4).
@@ -99,14 +100,19 @@ export const getSetupTargets = query({
     const envelope = await currentEnvelope(ctx, userId);
     return {
       nextGeneration: (envelope?.generation ?? 0) + 1,
-      contacts: contacts.map((c) => ({
-        contactId: c._id,
-        name: c.name,
-        publicKey: c.contactPublicKey!,
-        identityPublicKey: c.contactIdentityPublicKey,
-        publicKeySignature: c.contactPublicKeySignature,
-        pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
-      })),
+      contacts: await Promise.all(
+        contacts.map(async (c) => ({
+          contactId: c._id,
+          contactUserId: c.contactUserId,
+          name: c.name,
+          publicKey: c.contactPublicKey!,
+          identityPublicKey: c.contactIdentityPublicKey,
+          publicKeySignature: c.contactPublicKeySignature,
+          pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
+          pinnedIdentityMac: c.pinnedIdentityMac,
+          hasWraps: await contactHasWraps(ctx, c._id),
+        })),
+      ),
     };
   },
 });
