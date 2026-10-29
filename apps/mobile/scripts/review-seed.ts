@@ -53,10 +53,8 @@ import {
 import { openSealedItem } from "@/features/vault/open-sealed-item";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 
-const OWNER = { phone: "+447700900101", name: "Demo Owner" };
-const ALEX = { phone: "+447700900102", name: "Alex Demo" };
-const SAM = { phone: "+447700900103", name: "Sam Demo" };
-const KIT = "REVIEW_KIT";
+import { ALEX, KIT, KIT_PATH, OWNER, readKit, SAM } from "./review-demo";
+
 const ASSETS = resolve("apps/mobile/scripts/review-seed");
 const DAY_MS = 86_400_000;
 
@@ -98,12 +96,6 @@ function admin(fn: string, args: Record<string, unknown>): unknown {
   ]).trim();
   return out ? JSON.parse(out) : null;
 }
-
-const KIT_PATH = ["--env=prod", "--path=/keeplas_mobile", "--silent"];
-const readKit = () =>
-  run("infisical", ["secrets", "get", KIT, ...KIT_PATH, "--plain"])
-    .trim()
-    .split(/\s+/);
 
 /** REVIEW_KIT from the last run, or new words stored before any vault. */
 async function sharedKit(): Promise<string[]> {
