@@ -5,6 +5,7 @@ import {
   asUserSession,
   clearTotp,
   makeT,
+  seedPasswordAccount,
   seedSession,
   seedUser,
   seedVerifiedTotp,
@@ -144,6 +145,21 @@ describe("totp.verifyAndEnable", () => {
       as: asUserSession(t, userId, await seedSession(t, userId)),
     };
   }
+
+  it("needs every step-up gate: a password alone cannot enroll", async () => {
+    const { t, userId, as } = await pendingEnrollment();
+    await seedPasswordAccount(t, userId);
+    await expect(
+      as.mutation(api.totp.startEnrollment, { label: "attacker" }),
+    ).rejects.toThrow("LOGIN_OTP_REQUIRED");
+    await expect(
+      as.mutation(api.totp.verifyAndEnable, {
+        code: totpCode(),
+        recoveryVerifierHash: "attacker-verifier",
+      }),
+    ).rejects.toThrow("LOGIN_OTP_REQUIRED");
+    expect((await totpRow(t))?.verifiedAt).toBeUndefined();
+  });
 
   it("counts wrong codes and locks after 10, like every code check", async () => {
     const { t, as } = await pendingEnrollment();

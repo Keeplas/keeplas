@@ -282,10 +282,15 @@ export const getMyTotpGate = query({
   },
 });
 
+/**
+ * Enrolling an authenticator (and its reset verifier) gates every later
+ * session, so it needs a fully stepped-up one: a password alone must not
+ * lock the owner behind an attacker's authenticator.
+ */
 export const startEnrollment = mutation({
   args: { label: v.optional(v.string()) },
   handler: async (ctx, { label }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
@@ -328,7 +333,7 @@ export const verifyAndEnable = mutation({
     recoveryVerifierHash: v.optional(v.string()),
   },
   handler: async (ctx, { code, recoveryVerifierHash }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const row = await ctx.db
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))
