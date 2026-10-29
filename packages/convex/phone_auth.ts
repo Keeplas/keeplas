@@ -52,8 +52,12 @@ function fixedCode(phone: string): string | null {
  * Rate-limited to 3 per rolling hour per number. The code is consumed by the
  * `phone-otp` ConvexCredentials provider's authorize() at signIn.
  *
- * Returns `{ sent: true }` even for an unknown number on signin so the
- * endpoint does not leak account existence (the subsequent signIn fails).
+ * Account existence is never told to an anonymous caller:
+ * - signin on an unknown number returns `{ sent: true }` and sends nothing
+ *   (no WhatsApp message to a number without an account);
+ * - signup first needs the app's attestation grant (M09-9), so only a
+ *   genuine app on a real device, once per number, learns that a number is
+ *   taken ("already exists", which the app turns into "Sign in instead").
  */
 export const requestPhoneAuthOtp = mutation({
   args: {
@@ -65,26 +69,20 @@ export const requestPhoneAuthOtp = mutation({
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new Error("Invalid phone number");
 
+    // Mobile-only sign-up: the app must have attested first (M09-9).
+    if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
+
     const existing = await ctx.db
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
+    // ConvexError so the message survives Convex's prod error redaction.
     if (args.intent === "signup" && existing) {
       throw new ConvexError(
         "An account with this phone number already exists. Sign in instead.",
       );
     }
-    // Signin: refuse early so we never send an OTP to a number with no account
-    // (saves a WhatsApp message and avoids a confusing post-code failure).
-    // ConvexError so the message survives Convex's prod error redaction.
-    if (args.intent === "signin" && !existing) {
-      throw new ConvexError(
-        "No account found for this phone number. Sign up to create one.",
-      );
-    }
-
-    // Mobile-only sign-up: the app must have attested first (M09-9).
-    if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
+    if (args.intent === "signin" && !existing) return { sent: true };
 
     const now = Date.now();
     const recent = await ctx.db

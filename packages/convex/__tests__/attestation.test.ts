@@ -127,6 +127,7 @@ describe("mobile-only sign-up", () => {
       t.mutation(api.email_auth.requestEmailAuthOtp, {
         email: "new@example.com",
         intent: "signup",
+        _audit: await signedAudit(),
       }),
     ).rejects.toThrow(MOBILE_ONLY_SIGNUP);
     expect(() => refuseNonMobileSignUp("signUp")).toThrow(MOBILE_ONLY_SIGNUP);
