@@ -130,13 +130,15 @@ export async function requireFullAuth(ctx: QueryCtx) {
 }
 
 /**
- * Back-office guard for the keeplas-admin analytics console. Requires an
- * authenticated user whose `role` is "admin". Throws "FORBIDDEN" otherwise so
- * the admin client can distinguish a denied (non-admin) session from an
- * unauthenticated one. Every `admin/*` query starts with this.
+ * Back-office guard for the keeplas-admin analytics console. Requires a fully
+ * stepped-up session (`requireFullAuth`: an admin's password alone must not
+ * approve a lost-number request) whose user `role` is "admin". Throws
+ * "FORBIDDEN" otherwise so the admin client can distinguish a denied
+ * (non-admin) session from an unauthenticated one. Every `admin/*` function
+ * starts with this.
  */
 export async function requireAdmin(ctx: QueryCtx) {
-  const userId = await requireAuth(ctx);
+  const userId = await requireFullAuth(ctx);
   const user = await ctx.db.get(userId);
   if (user?.role !== "admin") throw new Error("FORBIDDEN");
   return userId;
