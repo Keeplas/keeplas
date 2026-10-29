@@ -16,6 +16,7 @@ import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
 import { isLifeCheckPaused } from "./lib/pause";
+import { countQuorumVotes } from "./lib/quorum";
 
 const FREQUENCY_DAYS: Record<string, number> = {
   weekly: 7,
@@ -42,6 +43,8 @@ const REMINDER_DAYS = [3, 7, 10] as const;
 export const DEFAULT_CONFIRMATION_THRESHOLD = 2;
 /** Stage-2: how long trusted contacts have to confirm before the fallback. */
 const CONFIRMATION_WINDOW_DAYS = 7;
+/** How long after a quorum's grace the window re-checks the cycle ended. */
+const RESOLVE_RECHECK_MS = 60 * 60 * 1000;
 
 /**
  * Resolve the inactivity threshold for a config. Falls back to the legacy
@@ -995,10 +998,11 @@ export const enterConfirmationStage = internalMutation({
 
 /**
  * Confirmation window elapsed. If contacts reached the confirmation threshold,
- * a release is already pending behind its owner-cancel grace — do nothing.
- * Otherwise close the cycle without releasing anything and notify the owner:
- * a missed Life Check alone must never cause disclosure (v2 F5 — the former
- * "release_anyway" fallback is gone).
+ * a release is already pending behind its owner-cancel grace: check back once
+ * that grace is over, so a release that did not fire (its quorum fell apart)
+ * still ends the cycle. Otherwise close the cycle without releasing anything
+ * and notify the owner: a missed Life Check alone must never cause disclosure
+ * (v2 F5 — the former "release_anyway" fallback is gone).
  */
 export const resolveConfirmationWindow = internalMutation({
   args: { cycleId: v.id("life_check_cycles") },
@@ -1015,6 +1019,7 @@ export const resolveConfirmationWindow = internalMutation({
     )
       return;
 
+    const now = Date.now();
     const confirmed = await ctx.db
       .query("access_requests")
       .withIndex("by_status", (q) =>
@@ -1022,11 +1027,22 @@ export const resolveConfirmationWindow = internalMutation({
       )
       .filter((q) => q.eq(q.field("quorumReached"), true))
       .first();
-    if (confirmed) return; // release will fire after its grace window
+    if (confirmed) {
+      const recheckAt =
+        Math.max(confirmed.gracePeriodEndsAt ?? now, now) + RESOLVE_RECHECK_MS;
+      const id = await ctx.scheduler.runAt(
+        recheckAt,
+        internal.life_check.resolveConfirmationWindow,
+        args,
+      );
+      await ctx.db.patch(cycle._id, {
+        pendingScheduleIds: [...(cycle.pendingScheduleIds ?? []), id],
+      });
+      return;
+    }
 
     // No human quorum → no release. An attacker who suppresses the owner's
     // check-ins must not be able to force a release purely on cron timers.
-    const now = Date.now();
     await ctx.db.patch(cycle._id, {
       status: "cancelled",
       cancelledAt: now,
@@ -1073,7 +1089,10 @@ export const resolveConfirmationWindow = internalMutation({
  * Fired after the owner-cancel grace window once enough trusted contacts have
  * confirmed unreachability (scheduled by access_requests.markUserUnreachable).
  * Re-checks state, then releases. Bails if the user came back (cycle no longer
- * `awaiting_confirmation`) or the request was cancelled during grace.
+ * `awaiting_confirmation`) or the request was cancelled during grace. Votes
+ * are re-counted: if a voter was revoked during the grace and the quorum no
+ * longer holds, nothing is released and the request goes back to collecting
+ * votes (a new quorum opens a fresh 72h grace).
  */
 export const releaseAfterConfirmation = internalMutation({
   args: {
@@ -1102,6 +1121,16 @@ export const releaseAfterConfirmation = internalMutation({
       return;
 
     const now = Date.now();
+    const votes = await countQuorumVotes(ctx, request.contactsInitiated ?? []);
+    if (votes < (request.quorumRequired ?? DEFAULT_CONFIRMATION_THRESHOLD)) {
+      await ctx.db.patch(request._id, {
+        quorumReached: false,
+        gracePeriodEndsAt: undefined,
+        updatedAt: now,
+      });
+      return;
+    }
+
     await ctx.db.patch(request._id, {
       status: "approved",
       respondedAt: now,

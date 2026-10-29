@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { query, type MutationCtx } from "./_generated/server";
+import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { createNotification, requireAuth, requireFullAuth } from "./helpers";
@@ -7,27 +7,7 @@ import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 import { verifiedChannels } from "./lib/identity";
-
-/**
- * Count the number of DISTINCT humans behind a set of trusted-contact rows.
- * Quorum (and any participation count) must dedup by `contactUserId`, never by
- * row id (C1): the same person invited via two channels gets two rows but must
- * count as a single vote. A row with no `contactUserId` (not yet accepted)
- * cannot have voted, so it is ignored.
- */
-async function countDistinctContactPeople(
-  ctx: MutationCtx,
-  contactIds: Id<"trusted_contacts">[],
-): Promise<number> {
-  const people = new Set<string>();
-  for (const contactId of contactIds) {
-    const contact = await ctx.db.get(contactId);
-    if (contact?.contactUserId) {
-      people.add(contact.contactUserId);
-    }
-  }
-  return people.size;
-}
+import { countQuorumVotes } from "./lib/quorum";
 
 /**
  * Get pending access requests for the vault owner.
@@ -174,14 +154,13 @@ export const markUserUnreachable = auditedMutation({
       });
     };
 
+    // Join this cycle's quorum request: the only pending one (every way out of
+    // Stage 2 denies, expires or approves it). An "approved" row is a past
+    // release; appending to it would never schedule a release again.
     const existing = await ctx.db
       .query("access_requests")
-      .withIndex("by_vault_user", (q) => q.eq("vaultUserId", contact.userId))
-      .filter((q) =>
-        q.or(
-          q.eq(q.field("status"), "pending"),
-          q.eq(q.field("status"), "approved"),
-        ),
+      .withIndex("by_status", (q) =>
+        q.eq("vaultUserId", contact.userId).eq("status", "pending"),
       )
       .first();
 
@@ -193,16 +172,10 @@ export const markUserUnreachable = auditedMutation({
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
-      // C1: quorum is reached by DISTINCT HUMANS, not distinct rows. Two rows
-      // backed by the same `contactUserId` (same person invited via two
-      // channels) count as ONE vote — otherwise one person could reach the
-      // unreachability quorum alone. Resolve every initiating row to its
-      // person and count the unique set.
-      const distinctPeople = await countDistinctContactPeople(
-        ctx,
-        updatedContacts,
-      );
-      const quorumReached = distinctPeople >= threshold;
+      // Quorum counts distinct, still-accepted people (lib/quorum): one person
+      // holding two rows, or a voter revoked since, can't tip it.
+      const votes = await countQuorumVotes(ctx, updatedContacts);
+      const quorumReached = votes >= threshold;
       const newlyReached = quorumReached && !existing.quorumReached;
 
       await ctx.db.patch(existing._id, {
