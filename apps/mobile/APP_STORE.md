@@ -73,16 +73,18 @@ pnpm --filter @keeplas/mobile release:ios
 - ASC processes the build for another 5–15 min, then sends an email.
 - To retry only the upload: open the archive in Xcode (Window → Organizer) → **Distribute App** → App Store Connect.
 
-Export compliance: `app.json` declares non-exempt encryption, so ASC asks the encryption questions on each build until it has an export compliance code. See [Export compliance](#export-compliance).
+Export compliance: `app.json` sets `ITSAppUsesNonExemptEncryption: false`, so ASC asks no encryption question per build. Don't set it to `true` without an export compliance code: the upload fails with ITMS-90592. See [Export compliance](#export-compliance).
 
 ## Export compliance
 
-Keeplas encrypts data itself with standard algorithms, on top of the TLS that iOS provides, so it is not exempt: `app.json` sets `ITSAppUsesNonExemptEncryption: true`. Each new build shows "Missing Compliance" in ASC until the encryption questions are answered. Two things to know before answering:
+Keeplas encrypts data itself with standard algorithms, on top of the TLS that iOS provides. The ASC encryption questionnaire was answered **standard algorithms, not distributed in France**: for that answer Apple requires no documentation and has the app declare `ITSAppUsesNonExemptEncryption: false` (#228). France is therefore off in Pricing and Availability.
 
-- **United States (EAR).** Answer that the app uses standard encryption algorithms instead of, or in addition to, the operating system's. Mass-market encryption items usually need a self-classification report to BIS; publicly available open-source encryption code can follow a different route. Confirm which one applies with counsel, then upload the documentation ASC asks for.
-- **France (ANSSI).** Apple names "Secure Storage" among the encryption uses France controls. Distributing in France needs a declaration of the cryptology means to ANSSI, whose acknowledgment ASC asks for. Filed and accepted on 27 October 2026 (dossier 34982065 on demarche.numerique.gouv.fr): answer that the app is available in France and upload the attestation PDF. The founders keep it; it isn't in this public repo.
+`true` is only valid together with an `ITSEncryptionExportComplianceCode`, which ASC issues once it approves uploaded encryption documentation. Without the code, the upload is refused with ITMS-90592 ("Invalid Export Compliance Code"), even when no documentation exists.
 
-Once ASC approves the documentation, it gives an export compliance code. Add it to `app.json` as `ITSEncryptionExportComplianceCode` (in `expo.ios.infoPlist`), so later builds skip the questions.
+- **United States (EAR).** Mass-market encryption items usually need a self-classification report to BIS; publicly available open-source encryption code can follow a different route. Confirm which one applies with counsel.
+- **France (ANSSI).** Apple names "Secure Storage" among the encryption uses France controls. Distributing in France needs the acknowledgment of a declaration of the cryptology means to ANSSI (dossier 34982065 on demarche.numerique.gouv.fr). The founders keep it; it isn't in this public repo.
+
+To open France once the ANSSI acknowledgment is in hand: upload it in ASC → App Information → App Encryption Documentation, redo the questionnaire with France = yes, set `ITSAppUsesNonExemptEncryption: true` and the issued `ITSEncryptionExportComplianceCode` in `app.json` (`expo.ios.infoPlist`), then turn France back on.
 
 Technical annex for these declarations (all in `packages/crypto/`, used by the web and mobile apps):
 
