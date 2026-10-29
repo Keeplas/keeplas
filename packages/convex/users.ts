@@ -10,7 +10,7 @@ import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { vaultGroupValidator } from "./validators";
 import { auditedMutation, createAuditLog } from "./audit";
 import {
-  claimBlob,
+  claimUpload,
   deleteBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
@@ -149,8 +149,8 @@ export const updateProfile = auditedMutation({
 export const generateAvatarUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireAuth(ctx);
-    return await generateBlobUploadUrl(ctx);
+    const userId = await requireAuth(ctx);
+    return await generateBlobUploadUrl(ctx, userId);
   },
 });
 
@@ -170,7 +170,7 @@ export const setAvatarImage = auditedMutation({
     if (!user) throw new Error("User not found");
 
     const url = await getBlobDownloadUrl(ctx, args.storageId);
-    if (!url || !(await claimBlob(ctx, args.storageId, userId))) {
+    if (!url || !(await claimUpload(ctx, args.storageId, userId))) {
       throw new Error("Uploaded image could not be resolved");
     }
 

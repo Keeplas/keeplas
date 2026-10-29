@@ -38,4 +38,15 @@ crons.interval(
   internal.trusted_contacts.runAvailabilityReconfirm,
 );
 
+/**
+ * Daily delete of uploads nobody attached within the upload window
+ * (lib/storage.ts UNCLAIMED_BLOB_TTL_MS). They count toward no quota.
+ */
+crons.interval(
+  "sweep_unclaimed_uploads",
+  { hours: 24 },
+  internal.vault_items.sweepUnclaimedUploads,
+  {},
+);
+
 export default crons;
