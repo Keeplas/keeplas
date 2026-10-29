@@ -996,8 +996,7 @@
       "encrypted": "Encrypted",
       "download": "Download",
       "decrypting": "Decrypting…",
-      "documentReady": "Document ready. Open or download to view.",
-      "open": "Open",
+      "documentReady": "Document ready. Download it to view.",
       "enlarge": "Enlarge",
       "close": "Close"
     }

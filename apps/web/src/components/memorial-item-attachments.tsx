@@ -244,6 +244,8 @@ function AttachmentCard({
         />
       )}
 
+      {/* Downloaded only (header link), never opened: the owner chose the
+          file's type, and a blob: page runs on the Keeplas origin. */}
       {plainUrl && file.kind === "document" && (
         <div className="flex items-center gap-3 bg-surface rounded-xs px-4 py-3 text-body-md text-on-surface-variant">
           <Icon
@@ -251,14 +253,6 @@ function AttachmentCard({
             className="w-4 h-4 text-secondary"
           />
           {t("attachments.documentReady")}
-          <a
-            href={plainUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="ml-auto font-bold text-secondary hover:underline"
-          >
-            {t("attachments.open")}
-          </a>
         </div>
       )}
     </article>

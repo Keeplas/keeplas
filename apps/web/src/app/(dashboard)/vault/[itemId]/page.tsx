@@ -53,6 +53,7 @@ import {
   itemMetaJson,
   type CategoryChoice,
 } from "@/lib/item-meta";
+import { safeLinkHref } from "@/lib/link-payload";
 import { normalizeContentForRichText } from "@/lib/normalize-content-for-rich-text";
 import { useParams, useRouter } from "@/lib/navigation";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -273,18 +274,25 @@ export default function VaultItemPage() {
           )}
           {opened.links.length > 0 ? (
             <ul className="mt-[16px] flex flex-col gap-[6px]">
-              {opened.links.map((url) => (
-                <li key={url}>
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="break-all text-text-link underline"
-                  >
-                    {url}
-                  </a>
-                </li>
-              ))}
+              {opened.links.map((url) => {
+                const href = safeLinkHref(url);
+                return (
+                  <li key={url}>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="break-all text-text-link underline"
+                      >
+                        {url}
+                      </a>
+                    ) : (
+                      <span className="break-all">{url}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </article>

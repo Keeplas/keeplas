@@ -1,6 +1,20 @@
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 
+/** Types a browser only ever renders as media, never as a document. */
+const INERT_TYPE = /^(application\/pdf|image\/(png|jpeg|gif|webp|avif|heic)|audio\/[\w.+-]+|video\/[\w.+-]+)$/;
+
+/**
+ * Blob type for decrypted bytes whose MIME type the item owner chose. A
+ * blob: URL is same-origin with the app, so text/html or image/svg+xml opened
+ * from it would run as a Keeplas page: anything not plainly media is stored
+ * as opaque bytes (downloads keep their file name).
+ */
+export function inertBlobType(mimeType: string | undefined): string {
+  const type = mimeType?.trim().toLowerCase() ?? "";
+  return INERT_TYPE.test(type) ? type : "application/octet-stream";
+}
+
 /**
  * Downloads an encrypted attachment from its signed URL, decrypts it client-side
  * and exposes a blob URL for rendering/download. Shared by the vault (owner) and
@@ -44,7 +58,7 @@ export function useDecryptedAttachmentUrl({
         const cipherBlob = await res.blob();
         const plainBlob = await decrypt(cipherBlob, iv);
         const typedBlob = new Blob([plainBlob], {
-          type: mimeType || plainBlob.type || "application/octet-stream",
+          type: inertBlobType(mimeType || plainBlob.type),
         });
         createdUrl = URL.createObjectURL(typedBlob);
         if (!cancelled) setPlainUrl(createdUrl);
