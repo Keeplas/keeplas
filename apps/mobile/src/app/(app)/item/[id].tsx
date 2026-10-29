@@ -46,6 +46,7 @@ import { contactSupport } from "@/lib/support";
 import { NoteView } from "@/features/notes/note-view";
 import { isEmptyNote } from "@keeplas/export/rich-text";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -65,6 +66,7 @@ import { outboxLabel } from "@/features/outbox/outbox";
 import { usePendingAttachments } from "@/features/vault/use-pending-attachments";
 
 export default function ItemDetails() {
+  useNoScreenCapture();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();

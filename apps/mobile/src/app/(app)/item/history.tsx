@@ -26,6 +26,7 @@ import {
 } from "@/lib/files";
 import { formatBytes, formatDate, formatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
@@ -51,6 +52,7 @@ const KIND_ICON = {
 } as const;
 
 export default function ItemHistory() {
+  useNoScreenCapture();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = id as Id<"vault_items">;
   const router = useRouter();

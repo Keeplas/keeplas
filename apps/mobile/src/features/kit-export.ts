@@ -108,6 +108,9 @@ export async function shareKitImage(
     format: "png",
     quality: 1,
     result: "tmpfile",
+    // iOS: the words screen blocks screenshots (useNoScreenCapture), which
+    // blanks the default system snapshot; drawing the layer still works.
+    useRenderInContext: true,
   });
   await shareThenDelete(uri, {
     mimeType: "image/png",

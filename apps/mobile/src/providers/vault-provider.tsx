@@ -8,7 +8,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AppState, View } from "react-native";
+import { AppState, Platform, View } from "react-native";
+import * as ScreenCapture from "expo-screen-capture";
 
 import { importMasterKey } from "@/crypto/vault-keys";
 import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
@@ -126,6 +127,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
   }, [masterKey, armIdleTimer, lock]);
+
+  // iOS blurs the app whenever it leaves the foreground while the vault is
+  // open, so the app switcher snapshot shows nothing of it (also once the
+  // vault has locked). Android blanks Recents on the screens that block
+  // screen capture (FLAG_SECURE, useNoScreenCapture).
+  useEffect(() => {
+    if (!masterKey || Platform.OS !== "ios") return;
+    ScreenCapture.enableAppSwitcherProtectionAsync(1).catch(() => undefined);
+    return () => {
+      ScreenCapture.disableAppSwitcherProtectionAsync().catch(() => undefined);
+    };
+  }, [masterKey]);
 
   const value = useMemo<VaultValue>(
     () => ({

@@ -32,6 +32,7 @@ import { keepUnlockedWhile } from "@/lib/auto-lock";
 import { formatBytes } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { toast } from "@/lib/toast";
+import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
@@ -39,6 +40,7 @@ import { radius } from "@/theme";
 
 /** An item a trusted person left me: read-only, opened on this phone. */
 export default function SharedItem() {
+  useNoScreenCapture();
   const params = useLocalSearchParams<{ contactId: string; itemId: string }>();
   const contactId = params.contactId as Id<"trusted_contacts">;
   const itemId = params.itemId as Id<"vault_items">;
