@@ -15,15 +15,11 @@
   .head { position: absolute; left: 0; right: 0; text-align: center; font-family: "Source Serif 4", serif; font-weight: 600; letter-spacing: -0.015em; }
   .head .l { display: block; white-space: nowrap; }
   .phone { position: absolute; border-radius: 50px; padding: 9px; background: #0b0b0c; }
-  .phone .scr { position: relative; width: 100%; height: 100%; border-radius: 41px; overflow: hidden; container-type: inline-size; }
-  .phone .scr img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
-  .phone .scr .sim-dark { filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(.92); }
+  .phone .scr { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  .phone .scr iframe { width: 393px; height: 852px; border: 0; transform-origin: 0 0; display: block; }
+  .phone .scr.sim-dark { filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(.92); }
   .phone .island { position: absolute; top: 19px; left: 50%; width: 86px; height: 25px; margin-left: -43px; background: #000; border-radius: 14px; }
   .phone .cam { position: absolute; left: 50%; border-radius: 50%; background: #000; }
-  /* Android status bar drawn over the iOS one baked into the Figma screens; sizes in cqw of the 393 px screen. */
-  .sbar { position: absolute; left: 0; right: 0; top: 0; height: 13.2cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 6.4cqw 0 7cqw; font: 500 3.8cqw/1 "Inter", sans-serif; }
-  .sbar .ics { display: flex; align-items: center; gap: 1.4cqw; }
-  .sbar svg { height: 3.6cqw; width: auto; fill: currentColor; }
   .card, .seg { z-index: 2; } /* callouts sit above the front decoration layer */
   .card { position: absolute; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
   .ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -53,7 +49,6 @@ const MODE = q.get("mode") || "strip"; // strip | fg (Play feature graphic)
 const DIMS = { ios: [430, 932], play: [432, 768], fg: [512, 250] };
 const PLAT = MODE === "fg" ? "fg" : (q.get("p") || "ios");
 const [W, H] = DIMS[PLAT];
-const SCR = "../../../PRD/v2-mobile-first/figma/screens/";
 const ICON = "../../../PRD/v2-mobile-first/design-kit/svg/icons/";
 
 const C = {
@@ -69,26 +64,27 @@ const TONES = {
 
 // Storyline: one benefit per screenshot, same order in every direction.
 const PANELS = [
-  { light: "M08-5_Home.png", dark: "M08-5_Home_Dark.png",
+  { light: "M08-5_Home", dark: "M08-5_Home_Dark",
     head: { en: ["Your life,", "well kept"], fr: ["Votre vie,", "bien gardée"] },
     callout: { kind: "chip", icon: "lock", t: { en: "Encrypted on your phone", fr: "Chiffré sur votre téléphone" } }, node: "shield-check" },
-  { light: "M07-1_Add_to_Keeplas_bottom_sheet_.png",
+  { light: "M07-1_Add_to_Keeplas_bottom_sheet_",
     head: { en: ["Everything", "important, together"], fr: ["Tout l'essentiel,", "réuni"] },
     callout: { kind: "types" }, node: "folder" },
-  { light: "M07-2_Scan_document_on-device_encryption_.png", dark: "M07-2_Scan_document_on-device_encryption_.png",
+  { light: "M07-2_Scan_document_on-device_encryption_", dark: "M07-2_Scan_document_on-device_encryption_",
     head: { en: ["Private", "before upload"], fr: ["Chiffré", "avant l'envoi"] },
     callout: { kind: "card", icon: "lock", t: { en: "Encrypted on this phone", fr: "Chiffré sur ce téléphone" }, b: { en: "Keeplas never sees the file.", fr: "Keeplas ne voit jamais le fichier." } }, node: "lock" },
-  { light: "M06-6_Access_management.png",
+  // The revoke note would sit under the tab bar on the 852 px screen.
+  { light: "M06-6_Access_management", hide: "12:2277",
     head: { en: ["Your people,", "your rules"], fr: ["Vos proches,", "vos règles"] },
     callout: { kind: "people" }, node: "people" },
-  { light: "M02-5_Life_check_EN_.png", lightFr: "M02-6_Life_check_FR_.png",
+  { light: "M02-5_Life_check_EN_",
     head: { en: ["Check in", "your way"], fr: ["Le Life check,", "à votre rythme"] },
     callout: { kind: "seg", opts: { en: ["Weekly", "Monthly", "Quarterly"], fr: ["Hebdo", "Mensuel", "Trimestriel"] } }, node: "check-circle" },
-  // Figma frame is 1120 px tall: drop the access-scope block and the empty space above the tab bar so the
-  // "Create private access" button fits the 852 px screen. Rows [from, to) of the 393 px wide image.
-  { light: "M06-4_Share_content.png", slices: [[0, 465], [590, 889], [1032, 1120]],
+  // Figma frame is 1120 px tall: hide the access-scope block (label, dropdown, hint) and the callout that repeats
+  // the radio hint, so "Create private access" stays above the tab bar on the 852 px screen.
+  { light: "M06-4_Share_content", hide: "12:2010,12:2011,12:2017,12:2029",
     head: { en: ["Continuity,", "prepared"], fr: ["Demain,", "préparé"] },
-    callout: { kind: "card", icon: "clock", t: { en: "After verification + 72 h", fr: "Après vérification + 72 h" }, b: { en: "2 contacts confirm, then a grace period.", fr: "2 contacts confirment, puis un délai de grâce." } }, node: "sun" },
+    callout: { kind: "card", y: 0.47, icon: "clock", t: { en: "After verification + 72 h", fr: "Après vérification + 72 h" }, b: { en: "2 contacts confirm, then a grace period.", fr: "2 contacts confirment, puis un délai de grâce." } }, node: "sun" },
 ];
 const N = MODE === "fg" ? 1 : PANELS.length, SW = W * N;
 const K = H / 932; // vertical scale for landscape elements
@@ -222,22 +218,18 @@ const svgLayer = (inner) => `<svg class="layer" width="${SW}" height="${H}" view
 
 function phoneEl(i, left, top, pw) {
   const p = PANELS[i], mode = D.screen(i);
-  let src = (LANG === "fr" && p.lightFr) || p.light, sim = false;
-  if (mode === "dark") { if (p.dark) src = p.dark; else sim = true; }
-  // Google Play shows an Android phone: flatter corners, thin bezel, punch-hole camera, Android status bar.
+  let spec = p.light, sim = false;
+  if (mode === "dark") { if (p.dark) spec = p.dark; else sim = true; }
+  // Google Play shows an Android phone: flatter corners, thin bezel, punch-hole camera (status bar: screen.html).
   const android = PLAT !== "ios";
   const pad = android ? Math.round(pw * 0.024) : 9, r = android ? Math.round(pw * 0.12) : 50;
   const ph = Math.round((pw - 2 * pad) * 852 / 393) + 2 * pad;
   const tilt = D.tilt(i);
-  // The status bar keeps the screen's own background: its top-left pixel, scaled up to fill the bar.
-  // Under sim-dark the bar is inverted with the screen, so it keeps the light-mode ink.
-  const ink = mode === "dark" && p.dark ? "#F2EFEA" : "#1C1B1F";
-  const sbar = `<div class="sbar" style="color:${ink};background:url('${SCR}${src}') -200cqw -200cqw / 39300cqw auto"><span>9:41</span><span class="ics">${STATUS_ICONS}</span></div>`;
+  // The app screen is rendered live from its Figma spec, in the gallery language, at the 393x852 viewport.
+  const url = `screen.html?s=${spec}&lang=${LANG}&os=${android ? "android" : "ios"}&h=852${p.hide ? `&hide=${p.hide}` : ""}`;
   const cam = Math.round(pw * 0.034);
   return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;border-radius:${r}px;padding:${pad}px;transform:rotate(${tilt}deg);box-shadow:${TONES[D.tone(i)].ring}">
-    <div class="scr ${sim ? "sim-dark" : ""}" style="border-radius:${r - pad}px">${p.slices
-      ? p.slices.map(([a, b]) => `<div style="height:${(b - a) / 393 * 100}cqw;background:url('${SCR}${src}') 0 ${-a / 393 * 100}cqw / 100% auto no-repeat"></div>`).join("")
-      : `<img src="${SCR}${src}"/>`}${android ? sbar : ""}</div>${android
+    <div class="scr ${sim ? "sim-dark" : ""}" style="border-radius:${r - pad}px"><iframe src="${url}" style="transform:scale(${(pw - 2 * pad) / 393})"></iframe></div>${android
       ? `<div class="cam" style="top:${pad + Math.round(pw * 0.03)}px;width:${cam}px;height:${cam}px;margin-left:${-cam / 2}px"></div>`
       : `<div class="island"></div>`}</div>`) };
 }
@@ -249,7 +241,7 @@ async function callout(i, top, vis) {
   const at = (f) => Math.min(top + vis * f, H - 110);
   switch (c.kind) {
     case "chip": return el(`<div class="card" style="${box}left:50%;transform:translateX(-50%);top:${at(0.8)}px;border-radius:999px;padding:10px 22px 10px 10px;white-space:nowrap">${ic(c.icon)}<div class="t" style="color:${T.cardT}">${c.t[LANG]}</div></div>`);
-    case "card": return el(`<div class="card" style="${box}${side};top:${at(0.62)}px;width:310px">${ic(c.icon)}<div><div class="t" style="color:${T.cardT}">${c.t[LANG]}</div><div class="b" style="color:${T.cardB}">${c.b[LANG]}</div></div></div>`);
+    case "card": return el(`<div class="card" style="${box}${side};top:${at(c.y ?? 0.62)}px;width:310px">${ic(c.icon)}<div><div class="t" style="color:${T.cardT}">${c.t[LANG]}</div><div class="b" style="color:${T.cardB}">${c.b[LANG]}</div></div></div>`);
     case "types": return el(`<div class="card" style="${box}left:50%;transform:translateX(-50%);top:${at(0.74)}px;border-radius:999px;padding:10px;gap:8px">${["document", "photo", "mic", "note", "video"].map(ic).join("")}</div>`);
     case "people": {
       const rows = [["M", "#7C5CD6", "Marie", { en: "Active now", fr: "Accès actif" }, "#3FB68B"], ["P", "#4B6E95", "Paul", { en: "After verification", fr: "Après vérification" }, C.dawn500]];
@@ -260,8 +252,6 @@ async function callout(i, top, vis) {
 }
 
 const ICONS = {};
-// Android status icons: Wi-Fi, cellular, battery.
-const STATUS_ICONS = `<svg viewBox="0 0 24 20"><path d="M12 19.5 0 5.6C3.3 2.7 7.5 1 12 1s8.7 1.7 12 4.6z"/></svg><svg viewBox="0 0 20 20"><path d="M1 19 19 1v18z"/></svg><svg viewBox="0 0 11 20"><rect x="3.5" width="4" height="2" rx=".5"/><rect x=".5" y="1.5" width="10" height="18.5" rx="1.6"/></svg>`;
 async function build() {
   const names = ["lock", "document", "photo", "mic", "note", "video", "clock", "shield-check", "folder", "people", "check-circle"];
   await Promise.all(names.map(async (n) => (ICONS[n] = await (await fetch(ICON + n + ".svg")).text())));

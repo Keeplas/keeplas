@@ -1,0 +1,247 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<!--
+  Renders one Figma screen from its spec JSON (PRD/v2-mobile-first/figma/specs/), so the store screenshots
+  get the app's copy in each language (app i18n files first, then FR_DEMO), the real logo and sharp text.
+  usage: screen.html?s=<spec name without .json>&lang=en|fr[&os=ios|android][&h=<viewport height>][&hide=<node ids>]
+  h crops a tall screen to the phone viewport; nodes resting on the bottom edge (tab bar) stay at the bottom.
+-->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("../assets/fonts/Inter-Variable.woff2"); }
+  @font-face { font-family: "Source Serif 4"; font-weight: 600; src: url("../assets/fonts/SourceSerif4-SemiBold.ttf"); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  #root { position: relative; overflow: hidden; }
+  .ic svg, .ic img { width: 100%; height: 100%; display: block; }
+  .ic.row svg { width: auto; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const SPEC = q.get("s"), LANG = q.get("lang") || "en", OS = q.get("os") || "ios";
+const HIDE = new Set((q.get("hide") || "").split(",").filter(Boolean));
+let ROOT, VIEW_H;
+const PRD = "../../../PRD/v2-mobile-first/";
+
+// FR copy for Figma demo data and screens that have no i18n key in the app yet.
+const FR_DEMO = {
+  EN: "FR",
+  "Good morning, Alex": "Bonjour, Alex",
+  "2 of 3 ready": "2 sur 3 prêts",
+  "Encrypted inbox": "Boîte de réception chiffrée",
+  "3 items to organize": "3 éléments à classer",
+  "Will and estate plan": "Testament et succession",
+  "House account": "Compte de la maison",
+  "Home Insurance Policy": "Assurance habitation",
+  "Policy number": "N° de contrat",
+  "Insured name": "Assuré",
+  "Property address": "Adresse du bien",
+  "Coverage period": "Couverture",
+  "Jan 1 to Dec 31, 2026": "1er janv. au 31 déc. 2026",
+  "Jordan Taylor": "Camille Martin",
+  "123 Maple Grove": "12 rue des Lilas",
+  "Encrypted on your device": "Chiffré sur votre appareil",
+  "Your document is encrypted before it leaves your device.": "Votre document est chiffré avant de quitter votre appareil.",
+  "Access management": "Gestion des accès",
+  "Manage who can access this folder.": "Choisissez qui peut ouvrir ce dossier.",
+  "Family documents": "Documents de famille",
+  "3 files · 12 MB": "3 fichiers · 12 Mo",
+  "People with access": "Personnes ayant accès",
+  "Access available now.": "Accès disponible maintenant.",
+  "Active now": "Actif",
+  Revoke: "Retirer",
+  "Access after verification.": "Accès après vérification.",
+  "Access after verification": "Accès après vérification",
+  Scheduled: "Programmé",
+  "+  Add another person": "+  Ajouter une personne",
+  "Add another person": "Ajouter une personne",
+  "Two trust contacts must confirm, followed by a 72-hour grace period.": "Deux contacts de confiance doivent confirmer, puis un délai de grâce de 72 heures s'applique.",
+  "Revoking a contact prevents future access. Copies already saved cannot be removed.": "Retirer un contact bloque ses accès futurs. Les copies déjà enregistrées ne peuvent pas être supprimées.",
+  "Share content": "Partager du contenu",
+  "Give specific people access to a folder.": "Donnez accès à un dossier aux personnes de votre choix.",
+  "Access scope": "Portée de l'accès",
+  "This folder only": "Ce dossier uniquement",
+  "They will only see the items in this folder.": "Ils ne verront que les éléments de ce dossier.",
+  "Access timing": "Moment de l'accès",
+  Now: "Maintenant",
+  "Give access as soon as they accept.": "Accès dès qu'ils acceptent.",
+  "After verification & waiting period": "Après vérification et délai d'attente",
+  "Create private access": "Créer l'accès privé",
+};
+const FR_PATTERNS = [
+  [/^(\d+) items$/, "$1 éléments"],
+  [/^Updated (\d+) days ago$/, "Mis à jour il y a $1 jours"],
+];
+
+// Icon instances that carry a generic layer name ("Icon", "Chevron"), by Figma component id.
+const ICON_BY_COMPONENT = { "2:4": "home", "2:22": "chevron-right", "2:52": "shield-check", "2:64": "document", "2:67": "folder", "2:106": "mail", "2:160": "info" };
+const ILLUSTRATIONS = { "Illustration/branch": "branch", "Illustration/landscape": "landscape" };
+const ANDROID_STATUS_ICONS = `<svg viewBox="0 0 24 20"><path d="M12 19.5 0 5.6C3.3 2.7 7.5 1 12 1s8.7 1.7 12 4.6z"/></svg><svg viewBox="0 0 20 20"><path d="M1 19 19 1v18z"/></svg><svg viewBox="0 0 11 20"><rect x="3.5" width="4" height="2" rx=".5"/><rect x=".5" y="1.5" width="10" height="18.5" rx="1.6"/></svg>`;
+const IOS_STATUS_ICONS = `<svg viewBox="0 0 70 13" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3.5" width="3" height="8.5" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M31 3.2a9.6 9.6 0 0 1 6.6 2.6l1.3-1.3a11.4 11.4 0 0 0-15.8 0l1.3 1.3A9.6 9.6 0 0 1 31 3.2Zm0 3.6a6 6 0 0 1 4.1 1.6l1.3-1.3a7.8 7.8 0 0 0-10.8 0l1.3 1.3A6 6 0 0 1 31 6.8Zm0 3.6c.6 0 1.2.2 1.6.6L31 12.6 29.4 11c.4-.4 1-.6 1.6-.6Z"/><rect x="44.5" y=".5" width="22" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="46.5" y="2.5" width="18" height="8" rx="2"/><path d="M68 4.5v4a2 2 0 0 0 0-4Z" opacity=".45"/></svg>`;
+
+const rgba = (c, o = 1) => `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${+(c.a * o).toFixed(3)})`;
+const visible = (arr) => (arr || []).filter((f) => f.visible !== false);
+const flat = (o, p = "", acc = {}) => {
+  for (const [k, v] of Object.entries(o)) typeof v === "object" ? flat(v, p + k + ".", acc) : (acc[p + k] = v);
+  return acc;
+};
+const missing = new Set();
+let APP_FR = {};
+
+function tr(t) {
+  if (LANG === "en") return t;
+  if (FR_DEMO[t]) return FR_DEMO[t];
+  if (APP_FR[t.trim().toLowerCase()]) return APP_FR[t.trim().toLowerCase()];
+  for (const [re, out] of FR_PATTERNS) if (re.test(t)) return t.replace(re, out);
+  if (/[a-z]{3}/i.test(t)) missing.add(t);
+  return t;
+}
+
+function paint(fills, box) {
+  return visible(fills).reverse().map((f) => {
+    if (f.type === "SOLID") { const c = rgba(f.color, f.opacity ?? 1); return `linear-gradient(${c},${c})`; }
+    if (f.type === "GRADIENT_LINEAR") {
+      const [a, b] = f.gradientHandlePositions;
+      const deg = (Math.atan2((b.x - a.x) * box.w, -(b.y - a.y) * box.h) * 180) / Math.PI;
+      return `linear-gradient(${deg}deg,${f.gradientStops.map((s) => `${rgba(s.color, f.opacity ?? 1)} ${s.position * 100}%`).join(",")})`;
+    }
+    return null;
+  }).filter(Boolean).join(",");
+}
+// First solid stroke or fill in the subtree; `only` restricts it to one node type (icon glyphs are VECTORs).
+const firstColor = (n, only) => {
+  const f = (!only || n.type === only) && (visible(n.strokes)[0] || visible(n.fills)[0]);
+  if (f?.type === "SOLID") return rgba(f.color, f.opacity ?? 1);
+  for (const c of n.children || []) { const r = firstColor(c, only); if (r) return r; }
+};
+
+const solid = (n) => visible(n?.fills).filter((f) => f.type === "SOLID").pop();
+// Some icon instances (dark theme) carry no glyph in the spec: use the category tint of a translucent tile,
+// else a light or navy ink depending on the background behind the icon.
+function iconInk(parent, bg) {
+  const tile = solid(parent);
+  if (tile && (tile.opacity ?? 1) < 0.5) return rgba(tile.color);
+  return 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.5 ? "#F2EFEA" : "#0E2340";
+}
+
+async function asset(path) { return (await fetch(path)).text(); }
+
+async function node(n, parent, dark, bg) {
+  if (n.visible === false || n.type === "VECTOR" || HIDE.has(n.id)) return null;
+  if (n.componentProperties?.Theme) dark = n.componentProperties.Theme.value === "Dark";
+  const own = solid(n);
+  if (own && (own.opacity ?? 1) * own.color.a > 0.9) bg = own.color;
+  const d = document.createElement("div"), s = d.style, b = n.box;
+  const pl = parent?.layoutMode && parent.layoutMode !== "NONE" ? parent.layoutMode : null;
+  const isText = n.type === "TEXT", auto = n.layoutMode && n.layoutMode !== "NONE";
+  // Auto-layout frames grow with longer copy: HUG sets no size, a FIXED height becomes a minimum.
+  const setH = () => (auto ? (s.minHeight = b.h + "px") : (s.height = b.h + "px"));
+
+  // Position and size: absolute inside free frames, flex item inside auto-layout.
+  if (!parent) Object.assign(s, { position: "relative", width: b.w + "px", height: VIEW_H + "px" });
+  else if (!pl || n.layoutPositioning === "ABSOLUTE") {
+    const onBottom = parent === ROOT && b.y + b.h >= ROOT.box.h - 0.5;
+    Object.assign(s, { position: "absolute", left: b.x - parent.box.x + "px" });
+    onBottom ? (s.bottom = "0px") : (s.top = b.y - parent.box.y + "px");
+    if (!(isText || auto) || n.layoutSizingHorizontal !== "HUG") s.width = b.w + "px";
+    if (!isText && !(auto && n.layoutSizingVertical === "HUG")) setH();
+  } else {
+    Object.assign(s, { position: "relative", flex: "none" });
+    const row = pl === "HORIZONTAL", H = n.layoutSizingHorizontal, V = n.layoutSizingVertical;
+    if (H === "FIXED") s.width = b.w + "px";
+    if (H === "FILL") row ? Object.assign(s, { flex: "1 1 0", minWidth: 0 }) : (s.alignSelf = "stretch");
+    if (V === "FIXED" && !isText) setH();
+    if (V === "FILL") row ? (s.alignSelf = "stretch") : (s.flex = "1 1 0");
+  }
+
+  if (isText) {
+    const st = n.style, f = visible(n.fills)[0];
+    Object.assign(s, {
+      fontFamily: `"${st.fontFamily}"`, fontWeight: st.fontWeight, fontSize: st.fontSize + "px", lineHeight: st.lineHeightPx + "px",
+      letterSpacing: (st.letterSpacing || 0) + "px", textAlign: (st.textAlignHorizontal || "LEFT").toLowerCase(),
+      color: f ? rgba(f.color, f.opacity ?? 1) : "inherit", whiteSpace: n.layoutSizingHorizontal === "HUG" ? "pre" : "pre-wrap",
+    });
+    d.textContent = tr(n.characters);
+    return d;
+  }
+
+  if (n.opacity !== undefined) s.opacity = n.opacity;
+  if (n.cornerRadius) s.borderRadius = n.cornerRadius + "px";
+  if (n.rectangleCornerRadii) s.borderRadius = n.rectangleCornerRadii.map((r) => r + "px").join(" ");
+  if (n.type === "ELLIPSE") s.borderRadius = "50%";
+  const fill = paint(n.fills, b);
+  if (fill) s.backgroundImage = fill;
+  const stroke = visible(n.strokes)[0];
+  if (stroke?.type === "SOLID") {
+    const w = n.strokeWeight || 1;
+    Object.assign(s, { outline: `${w}px solid ${rgba(stroke.color, stroke.opacity ?? 1)}`, outlineOffset: { INSIDE: -w, CENTER: -w / 2, OUTSIDE: 0 }[n.strokeAlign] + "px" });
+  }
+  const shadows = visible(n.effects).filter((e) => e.type.endsWith("SHADOW"))
+    .map((e) => `${e.type === "INNER_SHADOW" ? "inset " : ""}${e.offset.x}px ${e.offset.y}px ${e.radius}px ${e.spread || 0}px ${rgba(e.color)}`);
+  if (shadows.length) s.boxShadow = shadows.join(",");
+  const blur = visible(n.effects).find((e) => e.type === "BACKGROUND_BLUR");
+  if (blur) s.backdropFilter = `blur(${blur.radius / 2}px)`;
+
+  // Instances swapped for code-ready assets.
+  if (n.name === "Status Bar") {
+    const ink = firstColor(n);
+    d.innerHTML = OS === "android"
+      ? `<div style="position:absolute;inset:0 26px 0 30px;display:flex;align-items:center;justify-content:space-between;color:${ink};font:500 15px Inter">9:41<span class="ic row" style="display:flex;gap:5px;height:14px;fill:currentColor">${ANDROID_STATUS_ICONS}</span></div>`
+      : `<div style="position:absolute;left:32px;top:15px;font:600 15px/20px Inter;color:${ink}">9:41</div><div class="ic" style="position:absolute;right:24px;top:16px;width:70px;height:13px;color:${ink}">${IOS_STATUS_ICONS}</div>`;
+    return d;
+  }
+  const icon = n.name.startsWith("icon/") ? n.name.slice(5) : n.type === "INSTANCE" && ICON_BY_COMPONENT[n.componentId];
+  if (icon) {
+    d.className = "ic"; s.color = firstColor(n, "VECTOR") || iconInk(parent, bg);
+    d.innerHTML = await asset(`${PRD}design-kit/svg/icons/${icon}.svg`);
+    return d;
+  }
+  if (n.name.startsWith("Logo/Mark")) {
+    d.className = "ic";
+    d.innerHTML = `<img src="../assets/logo/${dark ? "mark-inverse" : "mark"}.svg"/>`;
+    return d;
+  }
+  if (ILLUSTRATIONS[n.name]) {
+    d.className = "ic";
+    d.innerHTML = `<img style="object-fit:fill" src="${PRD}figma/svg/illustrations/${ILLUSTRATIONS[n.name]}.svg"/>`;
+    return d;
+  }
+
+  if (n.clipsContent) s.overflow = "hidden";
+  if (n.layoutMode && n.layoutMode !== "NONE") {
+    Object.assign(s, {
+      display: "flex", flexDirection: n.layoutMode === "HORIZONTAL" ? "row" : "column", gap: (n.itemSpacing || 0) + "px",
+      padding: `${n.paddingTop || 0}px ${n.paddingRight || 0}px ${n.paddingBottom || 0}px ${n.paddingLeft || 0}px`,
+      justifyContent: { MIN: "flex-start", CENTER: "center", MAX: "flex-end", SPACE_BETWEEN: "space-between" }[n.primaryAxisAlignItems || "MIN"],
+      alignItems: { MIN: "flex-start", CENTER: "center", MAX: "flex-end", BASELINE: "baseline" }[n.counterAxisAlignItems || "MIN"],
+      flexWrap: n.layoutWrap === "WRAP" ? "wrap" : "nowrap",
+    });
+  }
+  for (const c of n.children || []) { const e = await node(c, n, dark, bg); if (e) d.appendChild(e); }
+  return d;
+}
+
+(async () => {
+  const [spec, en, fr] = await Promise.all([
+    fetch(`${PRD}figma/specs/${SPEC}.json`).then((r) => r.json()),
+    fetch("../src/i18n/en.json").then((r) => r.json()),
+    fetch("../src/i18n/fr.json").then((r) => r.json()),
+  ]);
+  const enFlat = flat(en), frFlat = flat(fr);
+  for (const [k, v] of Object.entries(enFlat)) if (typeof frFlat[k] === "string") APP_FR[String(v).trim().toLowerCase()] ??= frFlat[k];
+  ROOT = spec; VIEW_H = +q.get("h") || spec.box.h;
+  const root = document.getElementById("root");
+  root.appendChild(await node(spec, null, false, { r: 1, g: 1, b: 1 }));
+  await document.fonts.ready;
+  await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => (im.onload = im.onerror = r)))));
+  // Untranslated strings, read by render.sh through --dump-dom.
+  root.dataset.missing = [...missing].join(" | ");
+  document.title = "ready";
+})();
+</script>
+</body>
+</html>
