@@ -35,6 +35,61 @@ async function seedInvite(
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
+describe("invitation deliveries are rate-limited per owner (finding 4)", () => {
+  it("refuses the 11th delivery within an hour, across invite and resend", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const invite = async (n: number) =>
+      await asUser(t, owner).mutation(api.trusted_contacts.inviteContact, {
+        name: `Contact ${n}`,
+        email: `c${n}@example.com`,
+        role: "friend",
+        _audit: await signedAudit(),
+      });
+
+    const { contactId } = await invite(0);
+    for (let n = 1; n < 9; n++) await invite(n);
+    // Resending re-delivers too, so it draws from the same budget.
+    await asUser(t, owner).mutation(api.trusted_contacts.resendInvitation, {
+      contactId,
+      _audit: await signedAudit(),
+    });
+
+    await expect(invite(10)).rejects.toThrow(/Too many requests/);
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.resendInvitation, {
+        contactId,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/Too many requests/);
+  });
+
+  it("keeps each owner's budget separate", async () => {
+    const t = makeT();
+    const busy = await seedUser(t);
+    const other = await seedUser(t);
+    for (let n = 0; n < 10; n++) {
+      await asUser(t, busy).mutation(api.trusted_contacts.inviteContact, {
+        name: `Contact ${n}`,
+        email: `c${n}@example.com`,
+        role: "friend",
+        _audit: await signedAudit(),
+      });
+    }
+
+    const { contactId } = await asUser(t, other).mutation(
+      api.trusted_contacts.inviteContact,
+      {
+        name: "Contact",
+        email: "c0@example.com",
+        role: "friend",
+        _audit: await signedAudit(),
+      },
+    );
+    expect(contactId).toBeDefined();
+  });
+});
+
 describe("declineInvitation is bound to the invitee (finding 5)", () => {
   it("refuses an account that is not the invited recipient", async () => {
     const t = makeT();

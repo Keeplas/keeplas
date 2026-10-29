@@ -22,6 +22,7 @@ import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 import { isNotificationsPaused } from "./lib/pause";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { resolveLocale, type Locale } from "./lib/locale";
 import {
   formatSenderIdentity,
@@ -443,10 +444,20 @@ function newInvitationToken(): string {
     .join("");
 }
 
+// Every delivery sends a Keeplas-branded email and/or a paid WhatsApp template
+// to an address the owner typed (invite, resend, or a pending contact's
+// changed channel). Cap them per owner so an account can't turn invitations
+// into a spam or harassment channel. Far above what setting up a few contacts
+// and fixing a typo needs.
+const INVITE_DELIVERIES_PER_HOUR = 10;
+const INVITE_DELIVERIES_PER_DAY = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Send the accept link on every channel on file. Email is the canonical
  * channel; WhatsApp carries the same link and is the only one for phone-only
- * contacts.
+ * contacts. Throws once the owner exceeded their delivery budget, which rolls
+ * the whole invite / resend / edit back.
  */
 async function deliverInvitation(
   ctx: MutationCtx,
@@ -458,6 +469,21 @@ async function deliverInvitation(
     invitationToken: string;
   },
 ) {
+  // Keyed by the authenticated owner, not the caller's IP.
+  await enforceIpRateLimit(
+    ctx,
+    "invite_delivery_hour",
+    userId,
+    INVITE_DELIVERIES_PER_HOUR,
+  );
+  await enforceIpRateLimit(
+    ctx,
+    "invite_delivery_day",
+    userId,
+    INVITE_DELIVERIES_PER_DAY,
+    DAY_MS,
+  );
+
   if (invite.email) {
     await ctx.scheduler.runAfter(
       0,
