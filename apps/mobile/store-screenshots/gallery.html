@@ -15,10 +15,15 @@
   .head { position: absolute; left: 0; right: 0; text-align: center; font-family: "Source Serif 4", serif; font-weight: 600; letter-spacing: -0.015em; }
   .head .l { display: block; white-space: nowrap; }
   .phone { position: absolute; border-radius: 50px; padding: 9px; background: #0b0b0c; }
-  .phone .scr { width: 100%; height: 100%; border-radius: 41px; overflow: hidden; container-type: inline-size; }
+  .phone .scr { position: relative; width: 100%; height: 100%; border-radius: 41px; overflow: hidden; container-type: inline-size; }
   .phone .scr img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
   .phone .scr .sim-dark { filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(.92); }
   .phone .island { position: absolute; top: 19px; left: 50%; width: 86px; height: 25px; margin-left: -43px; background: #000; border-radius: 14px; }
+  .phone .cam { position: absolute; left: 50%; border-radius: 50%; background: #000; }
+  /* Android status bar drawn over the iOS one baked into the Figma screens; sizes in cqw of the 393 px screen. */
+  .sbar { position: absolute; left: 0; right: 0; top: 0; height: 13.2cqw; display: flex; align-items: center; justify-content: space-between; padding: 0 6.4cqw 0 7cqw; font: 500 3.8cqw/1 "Inter", sans-serif; }
+  .sbar .ics { display: flex; align-items: center; gap: 1.4cqw; }
+  .sbar svg { height: 3.6cqw; width: auto; fill: currentColor; }
   .card, .seg { z-index: 2; } /* callouts sit above the front decoration layer */
   .card { position: absolute; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
   .ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -219,12 +224,22 @@ function phoneEl(i, left, top, pw) {
   const p = PANELS[i], mode = D.screen(i);
   let src = (LANG === "fr" && p.lightFr) || p.light, sim = false;
   if (mode === "dark") { if (p.dark) src = p.dark; else sim = true; }
-  const ph = Math.round((pw - 18) * 852 / 393) + 18;
+  // Google Play shows an Android phone: flatter corners, thin bezel, punch-hole camera, Android status bar.
+  const android = PLAT !== "ios";
+  const pad = android ? Math.round(pw * 0.024) : 9, r = android ? Math.round(pw * 0.12) : 50;
+  const ph = Math.round((pw - 2 * pad) * 852 / 393) + 2 * pad;
   const tilt = D.tilt(i);
-  return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;transform:rotate(${tilt}deg);box-shadow:${TONES[D.tone(i)].ring}">
-    <div class="scr ${sim ? "sim-dark" : ""}">${p.slices
+  // The status bar keeps the screen's own background: its top-left pixel, scaled up to fill the bar.
+  // Under sim-dark the bar is inverted with the screen, so it keeps the light-mode ink.
+  const ink = mode === "dark" && p.dark ? "#F2EFEA" : "#1C1B1F";
+  const sbar = `<div class="sbar" style="color:${ink};background:url('${SCR}${src}') -200cqw -200cqw / 39300cqw auto"><span>9:41</span><span class="ics">${STATUS_ICONS}</span></div>`;
+  const cam = Math.round(pw * 0.034);
+  return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;border-radius:${r}px;padding:${pad}px;transform:rotate(${tilt}deg);box-shadow:${TONES[D.tone(i)].ring}">
+    <div class="scr ${sim ? "sim-dark" : ""}" style="border-radius:${r - pad}px">${p.slices
       ? p.slices.map(([a, b]) => `<div style="height:${(b - a) / 393 * 100}cqw;background:url('${SCR}${src}') 0 ${-a / 393 * 100}cqw / 100% auto no-repeat"></div>`).join("")
-      : `<img src="${SCR}${src}"/>`}</div><div class="island"></div></div>`) };
+      : `<img src="${SCR}${src}"/>`}${android ? sbar : ""}</div>${android
+      ? `<div class="cam" style="top:${pad + Math.round(pw * 0.03)}px;width:${cam}px;height:${cam}px;margin-left:${-cam / 2}px"></div>`
+      : `<div class="island"></div>`}</div>`) };
 }
 
 async function callout(i, top, vis) {
@@ -245,6 +260,8 @@ async function callout(i, top, vis) {
 }
 
 const ICONS = {};
+// Android status icons: Wi-Fi, cellular, battery.
+const STATUS_ICONS = `<svg viewBox="0 0 24 20"><path d="M12 19.5 0 5.6C3.3 2.7 7.5 1 12 1s8.7 1.7 12 4.6z"/></svg><svg viewBox="0 0 20 20"><path d="M1 19 19 1v18z"/></svg><svg viewBox="0 0 11 20"><rect x="3.5" width="4" height="2" rx=".5"/><rect x=".5" y="1.5" width="10" height="18.5" rx="1.6"/></svg>`;
 async function build() {
   const names = ["lock", "document", "photo", "mic", "note", "video", "clock", "shield-check", "folder", "people", "check-circle"];
   await Promise.all(names.map(async (n) => (ICONS[n] = await (await fetch(ICON + n + ".svg")).text())));
@@ -258,10 +275,7 @@ async function build() {
     strip.appendChild(el(`<div style="position:absolute;left:40px;top:62px;width:260px">
       <div class="brand" style="color:${T.head}"><img src="../../web/public/assets/logo/${T.logo}"/>Keeplas</div>
       <div class="head" style="position:static;text-align:left;margin-top:18px;font-size:38px;line-height:42px"><span class="l" style="color:${T.head}">${PANELS[0].head[LANG][0]}</span><span class="l" style="color:${T.accent}">${PANELS[0].head[LANG][1]}</span></div></div>`));
-    const { node } = phoneEl(0, 318, 34, 170);
-    node.style.borderRadius = "30px"; node.style.padding = "6px"; node.firstElementChild.style.borderRadius = "24px";
-    node.lastElementChild.style.cssText += "top:12px;width:52px;height:15px;margin-left:-26px";
-    strip.appendChild(node);
+    strip.appendChild(phoneEl(0, 318, 34, 170).node);
     if (D.front) { const f = el(`<div class="layer"></div>`); f.innerHTML = D.front(ICONS); strip.appendChild(f); }
   } else {
     for (let i = 0; i < N; i++) {
