@@ -16,6 +16,7 @@ import { TextField } from "@/components/text-field";
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 import { colors as palette, radius } from "@/theme";
+import { kitWords } from "./kit-open";
 import { decodeKitQr } from "./kit-qr";
 
 export function KitWordsField({
@@ -79,6 +80,9 @@ export function KitWordsField({
         autoCorrect={false}
         autoComplete="off"
       />
+      <Text variant="body-sm" color="text.muted" align="right">
+        {t("recoveryKit.count", { n: kitWords(value).length })}
+      </Text>
       <View style={styles.actions}>
         <Button
           variant="secondary"

@@ -55,6 +55,18 @@ export class DevicePinError extends Error {
   }
 }
 
+/**
+ * The screen lock didn't take the device wrap key: the Android prompt was
+ * cancelled, or the phone has no screen lock (iOS refuses the Keychain item).
+ * Never a sign that the secret that opened the vault was wrong.
+ */
+export class DeviceLockError extends Error {
+  constructor() {
+    super("The screen lock didn't keep the vault key");
+    this.name = "DeviceLockError";
+  }
+}
+
 async function seal(raw: Uint8Array, key: CryptoKey): Promise<Sealed> {
   const iv = randomBytes(12);
   const ct = await crypto.subtle.encrypt(
@@ -106,8 +118,13 @@ export async function saveDeviceVault(
       },
     };
   }
-  await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
-  dwk.fill(0);
+  try {
+    await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
+  } catch {
+    throw new DeviceLockError();
+  } finally {
+    dwk.fill(0);
+  }
   await SecureStore.setItemAsync(
     wrappedKey(userId),
     JSON.stringify(stored),

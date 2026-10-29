@@ -12,8 +12,10 @@ import {
   useCloudRestore,
   useRestorableBackup,
 } from "@/features/cloud-backup";
+import { vaultOpenErrorKey } from "@/features/kit-open";
 import { OtherOptions } from "@/features/other-options";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
+import { useScreenLock } from "@/features/screen-lock";
 import { useI18n } from "@/providers/i18n-provider";
 import * as CloudKey from "../../modules/cloud-key";
 
@@ -30,6 +32,7 @@ export default function CloudRestore() {
   const restorable = useRestorableBackup();
   const ensurePhoneProof = useEnsurePhoneProof();
   const restore = useCloudRestore();
+  const screenLock = useScreenLock();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const provider = restorable ?? providerName(CloudKey.provider);
@@ -37,7 +40,7 @@ export default function CloudRestore() {
   if (restorable === null) return <Redirect href="/lost-access" />;
 
   async function run() {
-    if (!ensurePhoneProof()) return;
+    if (!screenLock.ensure() || !ensurePhoneProof()) return;
     setBusy(true);
     setError(null);
     try {
@@ -46,7 +49,7 @@ export default function CloudRestore() {
       setError(
         e instanceof CloudKeyMissing
           ? t("cloudRestore.noKey", { provider })
-          : t("cloudRestore.failed"),
+          : t(vaultOpenErrorKey(e, "cloudRestore.failed")),
       );
     } finally {
       setBusy(false);
@@ -85,6 +88,7 @@ export default function CloudRestore() {
           },
         ]}
       />
+      {screenLock.sheet}
     </Screen>
   );
 }

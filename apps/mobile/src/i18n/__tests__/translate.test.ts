@@ -75,6 +75,8 @@ describe("translate", () => {
       "upgrade.account.ios",
       "upgrade.account.android",
       "backup.notEncrypted", // Android only: iCloud Keychain is always E2EE.
+      "passkey.keychainOff", // iOS only (passkey-step.tsx)
+      "passkey.passwordManagerOff", // Android only (passkey-step.tsx)
     ]);
     const brand =
       /iCloud|iPhone|Apple|Face ID|Screen Time|Temps d.écran|App Store|Google|Android/;

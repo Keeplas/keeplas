@@ -56,7 +56,9 @@ export default function PhoneScreen() {
         },
       });
     } catch (err) {
-      if (err instanceof AttestationFailed) {
+      if (err instanceof AttestationFailed && err.transient) {
+        setError(t("attestation.unavailable"));
+      } else if (err instanceof AttestationFailed) {
         router.push({
           pathname: "/device-check",
           params: { ref: attestationReference() },

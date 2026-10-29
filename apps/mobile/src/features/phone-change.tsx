@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter, type Href } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -28,11 +28,13 @@ export function PhoneNumberStep({
   body,
   verifyPath,
   beforeRequest,
+  footer,
 }: {
   title: string;
   body?: string;
   verifyPath: Href & string;
   beforeRequest?: () => Promise<void>;
+  footer?: ReactNode;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -92,6 +94,7 @@ export function PhoneNumberStep({
         onPress={submit}
       />
       <Callout icon="whatsapp" text={t("verify.note")} />
+      {footer}
     </Screen>
   );
 }

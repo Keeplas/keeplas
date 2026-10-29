@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 
 import * as DeviceLock from "../../../modules/device-lock";
 import {
+  DeviceLockError,
   DevicePinError,
   forgetDeviceVault,
   devicePinLength,
@@ -103,6 +104,21 @@ describe("device vault", () => {
     await expect(unlockDeviceVault("u3", "Unlock")).rejects.toThrow(
       "No vault key on this device",
     );
+  });
+
+  it("reports a screen lock that refused the key as a DeviceLockError", async () => {
+    (DeviceLock.setItem as jest.Mock).mockRejectedValueOnce(
+      new Error("Authentication canceled"),
+    );
+
+    await expect(
+      saveDeviceVault(
+        "u4",
+        { masterKey: masterKey(), rootKey: null },
+        "Unlock",
+      ),
+    ).rejects.toBeInstanceOf(DeviceLockError);
+    expect(await hasDeviceVault("u4")).toBe(false);
   });
 });
 

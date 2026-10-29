@@ -1,5 +1,11 @@
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  Clipboard,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 
 import { useTheme } from "@/providers/theme-provider";
 import { type, withAlpha } from "@/theme";
@@ -9,7 +15,9 @@ export const OTP_LENGTH = 6;
 
 /**
  * Six (or `length`) Figma `OTP Box`es (52×56, radius 12, 8 pt gap) over one hidden input,
- * so iOS / Android one-time-code autofill and paste work. Boxes shrink to
+ * so iOS / Android one-time-code autofill works. The hidden input has no
+ * paste menu, so a long press on the boxes pastes a code copied from
+ * WhatsApp (one-time codes only, not a secure PIN). Boxes shrink to
  * fit narrow screens (iPhone SE: 335 pt of content for 352 pt of boxes).
  */
 export function OtpInput({
@@ -42,8 +50,20 @@ export function OtpInput({
     if (digits.length === length) onComplete?.(digits);
   }
 
+  // Only a whole code: a copied phone number must not be cut into one.
+  // React Native's own Clipboard (deprecated, still shipped in 0.86) avoids
+  // a new native dependency; move to expo-clipboard once React Native drops it.
+  async function paste() {
+    const digits = (await Clipboard.getString()).replace(/\D/g, "");
+    if (digits.length === length) handleChange(digits);
+  }
+
   return (
-    <Pressable onPress={() => input.current?.focus()} style={styles.row}>
+    <Pressable
+      onPress={() => input.current?.focus()}
+      onLongPress={secure ? undefined : () => void paste()}
+      style={styles.row}
+    >
       {Array.from({ length }, (_, index) => {
         const isActive = focused && index === active;
         const borderColor = invalid

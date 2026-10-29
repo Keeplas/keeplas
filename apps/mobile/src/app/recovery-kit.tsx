@@ -9,9 +9,15 @@ import { Screen } from "@/components/screen";
 import { Callout, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { useRestorableBackup } from "@/features/cloud-backup";
-import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
+import {
+  isFullKit,
+  takeRememberedKit,
+  useKitOpen,
+  vaultOpenErrorKey,
+} from "@/features/kit-open";
 import { KitWordsField } from "@/features/kit-words-field";
 import { OtherOptions } from "@/features/other-options";
+import { useScreenLock } from "@/features/screen-lock";
 import { needsCloudBackup } from "@/lib/backup-policy";
 import { useI18n } from "@/providers/i18n-provider";
 import * as CloudKey from "../../modules/cloud-key";
@@ -25,12 +31,13 @@ export default function RecoveryKitEntry() {
   const router = useRouter();
   const { t } = useI18n();
   const kitOpen = useKitOpen();
+  const screenLock = useScreenLock();
   const cloud = useRestorableBackup();
   const backup = useQuery(api.cloud_backup.status);
   const health = useQuery(api.recovery.getHealth);
   const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
-  const [invalid, setInvalid] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [encrypted, setEncrypted] = useState(false);
 
   useEffect(() => {
@@ -40,12 +47,13 @@ export default function RecoveryKitEntry() {
   }, []);
 
   async function open() {
+    setError(null);
+    if (!screenLock.ensure()) return;
     setBusy(true);
-    setInvalid(false);
     try {
       await kitOpen(words);
-    } catch {
-      setInvalid(true);
+    } catch (e) {
+      setError(t(vaultOpenErrorKey(e)));
     } finally {
       setBusy(false);
     }
@@ -80,9 +88,9 @@ export default function RecoveryKitEntry() {
         />
       ) : null}
       <KitWordsField value={words} onChangeText={setWords} />
-      {invalid ? (
+      {error ? (
         <Text variant="body-sm" color="status.revoked">
-          {t("recoveryKit.invalid")}
+          {error}
         </Text>
       ) : null}
       <Button
@@ -106,6 +114,7 @@ export default function RecoveryKitEntry() {
             : []
         }
       />
+      {screenLock.sheet}
     </Screen>
   );
 }

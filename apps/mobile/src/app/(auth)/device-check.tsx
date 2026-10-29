@@ -1,5 +1,5 @@
 import { Alert, StyleSheet, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -10,14 +10,23 @@ import { useI18n } from "@/providers/i18n-provider";
 import { contactSupport } from "@/lib/support";
 import { useTheme } from "@/providers/theme-provider";
 
-/** M09-9 Device check failed (App Attest / Play Integrity refused). */
+/**
+ * M09-9 Device check failed (App Attest / Play Integrity refused). "Try
+ * again" goes back to the number, whose button runs a new check.
+ */
 export default function DeviceCheckFailed() {
+  const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
   const { ref = "" } = useLocalSearchParams<{ ref: string }>();
+  const back = router.canGoBack() ? router.back : undefined;
 
   return (
-    <Screen header={<AppHeader />} center contentStyle={styles.content}>
+    <Screen
+      header={<AppHeader onBack={back} />}
+      center
+      contentStyle={styles.content}
+    >
       <IconBadge icon="phone" tone="neutral" />
       <Text variant="h1" align="center">
         {t("attestation.title")}
@@ -30,6 +39,13 @@ export default function DeviceCheckFailed() {
           {t("attestation.hint")}
         </Text>
       </View>
+      {back ? (
+        <Button
+          label={t("common.tryAgain")}
+          style={styles.full}
+          onPress={back}
+        />
+      ) : null}
       <Button
         variant="secondary"
         label={t("attestation.contactSupport")}

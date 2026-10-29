@@ -11,7 +11,7 @@ import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { isFullKit, rememberKit } from "@/features/kit-open";
+import { isFullKit, kitWords, rememberKit } from "@/features/kit-open";
 import { KitWordsField } from "@/features/kit-words-field";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { usePhoneField } from "@/lib/use-phone-field";
@@ -42,7 +42,7 @@ export default function LostNumberKit() {
     try {
       const salt = await phraseSalt({ phoneNumber });
       if (!salt) throw new Error("No recovery kit for this number");
-      const phrase = words.trim().toLowerCase().split(/\s+/);
+      const phrase = kitWords(words);
       const phraseHash = await derivePhraseVerifier(
         phrase,
         base64ToUint8(salt.phraseSalt),

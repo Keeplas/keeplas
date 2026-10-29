@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
@@ -19,7 +19,9 @@ import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { vaultOpenErrorKey } from "@/features/kit-open";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
+import { useScreenLock } from "@/features/screen-lock";
 import { formatDate, formatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -49,6 +51,7 @@ export default function ContactRecovery() {
   const { adopt } = useVault();
   const { refreshDeviceVault } = useSession();
   const replaceKit = useReplaceKit();
+  const screenLock = useScreenLock();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const ensurePhoneProof = useEnsurePhoneProof();
@@ -85,7 +88,7 @@ export default function ContactRecovery() {
   }
 
   async function finish() {
-    if (!request || !releasePackage) return;
+    if (!request || !releasePackage || !screenLock.ensure()) return;
     setBusy(true);
     try {
       const stored = await SecureStore.getItemAsync(secretKey(viewer._id));
@@ -108,11 +111,29 @@ export default function ContactRecovery() {
       await SecureStore.deleteItemAsync(secretKey(viewer._id));
       refreshDeviceVault();
       router.replace("/vault-restored");
-    } catch {
-      toast({ variant: "error", title: t("common.genericError") });
+    } catch (error) {
+      toast({ variant: "error", title: t(vaultOpenErrorKey(error)) });
     } finally {
       setBusy(false);
     }
+  }
+
+  function confirmCancel() {
+    Alert.alert(
+      t("socialRecovery.cancelTitle"),
+      t("socialRecovery.cancelBody"),
+      [
+        { text: t("socialRecovery.keep"), style: "cancel" },
+        {
+          text: t("socialRecovery.cancel"),
+          style: "destructive",
+          onPress: () =>
+            cancel({}).catch(() =>
+              toast({ variant: "error", title: t("common.genericError") }),
+            ),
+        },
+      ],
+    );
   }
 
   const closed =
@@ -156,11 +177,7 @@ export default function ContactRecovery() {
           <Button
             variant="danger"
             label={t("socialRecovery.cancel")}
-            onPress={() =>
-              cancel({}).catch(() =>
-                toast({ variant: "error", title: t("common.genericError") }),
-              )
-            }
+            onPress={confirmCancel}
           />
         )
       }
@@ -295,6 +312,7 @@ export default function ContactRecovery() {
           </View>
         </>
       )}
+      {screenLock.sheet}
     </Screen>
   );
 }

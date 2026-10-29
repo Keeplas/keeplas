@@ -23,13 +23,22 @@ import {
   keepUnlockedWhile,
   shouldLockOnResume,
 } from "../auto-lock";
-import { classifyCodeError, passkeyFailure } from "../errors";
+import { ConvexError } from "convex/values";
+
+import {
+  classifyCodeError,
+  isAttestationRejection,
+  isPasskeyUnavailable,
+  passkeyFailure,
+} from "../errors";
 import { formatBytes, relativeDay } from "../format";
 import {
   examplePlaceholder,
   flagEmoji,
   formatPhone,
   isTooLong,
+  listCountries,
+  searchCountries,
   toE164,
 } from "../phone";
 import { resolveStage, type StageInputs } from "../session-stage";
@@ -192,6 +201,73 @@ describe("passkey errors", () => {
       passkeyFailure(new Error("Passkey registration failed verification")),
     ).toBe("Passkey registration failed verification");
   });
+
+  it("spots a phone with no passkey provider turned on", () => {
+    // Android: no Google account / Password Manager; either OS: unsupported.
+    expect(
+      isPasskeyUnavailable({ error: "NoCreateOption", message: "x" }),
+    ).toBe(true);
+    expect(isPasskeyUnavailable({ error: "NotSupported", message: "x" })).toBe(
+      true,
+    );
+    // iOS 26: iCloud Keychain off (ASAuthorizationError 1010), any language.
+    for (const message of [
+      "The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1010.)",
+      "L’opération n’a pas pu s’achever. (com.apple.AuthenticationServices.AuthorizationError erreur 1010.)",
+    ]) {
+      expect(isPasskeyUnavailable({ error: "Unknown error", message })).toBe(
+        true,
+      );
+    }
+    expect(
+      isPasskeyUnavailable({
+        error: "RequestFailed",
+        message: "not associated",
+      }),
+    ).toBe(false);
+    expect(isPasskeyUnavailable({ error: "UserCancelled", message: "" })).toBe(
+      false,
+    );
+    expect(isPasskeyUnavailable(new Error("NotSupported"))).toBe(false);
+  });
+});
+
+describe("attestation errors", () => {
+  it("treats the server verdict and a phone that can't attest as a rejection", () => {
+    expect(
+      isAttestationRejection(
+        new ConvexError("Attestation rejected: device integrity"),
+      ),
+    ).toBe(true);
+    const unsupported = Object.assign(new Error("Not supported"), {
+      code: "ERR_APP_INTEGRITY_FEATURE_UNSUPPORTED",
+    });
+    expect(isAttestationRejection(unsupported)).toBe(true);
+    const noPlayStore = Object.assign(new Error("No Play Store"), {
+      code: "ERR_APP_INTEGRITY_PLAY_STORE_NOT_FOUND",
+    });
+    expect(isAttestationRejection(noPlayStore)).toBe(true);
+  });
+
+  it("lets network and server hiccups be tried again", () => {
+    const offline = Object.assign(new Error("Network error"), {
+      code: "ERR_APP_INTEGRITY_NETWORK_ERROR",
+    });
+    expect(isAttestationRejection(offline)).toBe(false);
+    const appleBusy = Object.assign(new Error("Server unavailable"), {
+      code: "ERR_APP_INTEGRITY_SERVER_UNAVAILABLE",
+    });
+    expect(isAttestationRejection(appleBusy)).toBe(false);
+    // Redacted plain Error (e.g. "Google token exchange failed") on prod.
+    expect(
+      isAttestationRejection(
+        new Error("[CONVEX A(attestation_node:verify)] Server Error"),
+      ),
+    ).toBe(false);
+    expect(
+      isAttestationRejection(new ConvexError("Invalid or expired challenge")),
+    ).toBe(false);
+  });
 });
 
 describe("formatters", () => {
@@ -215,6 +291,21 @@ describe("formatters", () => {
     expect(toE164("GB", "7700 9001")).toBeNull();
     expect(formatPhone("+14165550123")).toBe("+1 416 555 0123");
     expect(flagEmoji("FR")).toBe("🇫🇷");
+  });
+
+  it("finds a country by name, dial code, ISO code or common alias", () => {
+    const countries = listCountries("en");
+    const search = (query: string) =>
+      searchCountries(countries, query).map((country) => country.code);
+    // "uk" also matches Ukraine by name: the United Kingdom comes first.
+    expect(search("uk")[0]).toBe("GB");
+    expect(search("UK ")).toContain("UA");
+    expect(search("gb")).toEqual(["GB"]);
+    expect(search("united king")).toEqual(["GB"]);
+    expect(search("+44")).toContain("GB");
+    expect(search("44")).toContain("GB");
+    expect(search("us")[0]).toBe("US");
+    expect(search("")).toHaveLength(countries.length);
   });
 
   it("drops the national trunk prefix from the placeholder", () => {
