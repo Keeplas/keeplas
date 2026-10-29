@@ -15,6 +15,7 @@ import { UpgradeCard } from "@/features/billing/upgrade-card";
 import { formatBytes } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { openSitePage } from "@/lib/site";
+import { useSecurityAlerts } from "@/lib/use-push-notifications";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { APPEARANCES, useTheme } from "@/providers/theme-provider";
@@ -45,6 +46,7 @@ export default function Settings() {
   );
   const usage = useQuery(api.vaults.getUsageStats, focused ? {} : "skip");
   const lifeCheck = useQuery(api.life_check.getConfig, focused ? {} : "skip");
+  const alerts = useSecurityAlerts();
 
   const lifetime = viewer.plan === "lifetime";
   const planLabel = t(lifetime ? "settings.planLifetime" : "settings.planFree");
@@ -153,6 +155,12 @@ export default function Settings() {
         title={t("privacy.devices")}
         description={t("privacy.devicesBody")}
         onPress={() => router.push("/devices")}
+      />
+      <ListRow
+        icon="bell"
+        title={t("push.title")}
+        description={alerts.state && t(`push.${alerts.state}`)}
+        onPress={() => void alerts.change()}
       />
       {lifeCheck ? (
         <ListRow

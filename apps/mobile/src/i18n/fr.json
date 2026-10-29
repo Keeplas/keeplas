@@ -123,9 +123,13 @@
     "rule3": "Keeplas ne vous les demandera jamais. Un nouveau kit remplace celui-ci.",
     "pdf": "Télécharger le PDF",
     "image": "Enregistrer l'image",
-    "pdfSaved": "PDF enregistré",
-    "imageSaved": "Image enregistrée",
+    "pdfShared": "PDF créé. Vérifiez que vous l'avez bien enregistré.",
+    "imageShared": "Image créée. Vérifiez que vous l'avez bien enregistrée.",
     "exportFailed": "Keeplas n'a pas pu créer le fichier. Réessayez.",
+    "leaveTitle": "Partir sans enregistrer ces mots ?",
+    "leaveBody": "Votre ancien kit ne fonctionne plus, et ces mots ne pourront plus être affichés. Si vous partez, vous devrez créer un nouveau kit.",
+    "stay": "Rester",
+    "leave": "Partir",
     "fileWarning": "Quiconque possède ces mots peut ouvrir votre coffre. Le mieux : imprimez le PDF, puis supprimez le fichier. Une copie dans vos photos ou votre cloud peut être lue par quiconque accède à ce compte.",
     "qr": "Scannez ce code avec l’app Keeplas pour ouvrir votre coffre sans taper les mots. Gardez-le aussi secret que les mots."
   },
@@ -419,10 +423,10 @@
     "agreeAfter": "."
   },
   "push": {
-    "title": "Activer les alertes de sécurité ?",
-    "body": "Keeplas vous prévient quand un nouvel appareil se connecte, quand quelqu'un demande à récupérer votre compte et quand un Life check attend votre réponse.",
-    "allow": "Activer",
-    "notNow": "Plus tard"
+    "title": "Alertes de sécurité",
+    "on": "Activées pour les nouvelles connexions, les demandes de récupération et les Life checks",
+    "off": "Désactivées. Touchez pour être alerté des nouvelles connexions, des demandes de récupération et des Life checks.",
+    "blocked": "Désactivées. Autorisez les notifications de Keeplas dans les réglages de votre téléphone."
   },
   "upgrade": {
     "title": "Passer à Lifetime",
@@ -583,7 +587,9 @@
     "stillDifferent": "Toujours différent ? Refusez",
     "stillDifferentBody": "{name} reçoit une alerte de sécurité et la demande s'arrête.",
     "decline": "Refuser la demande",
-    "compareAgain": "Comparer à nouveau"
+    "compareAgain": "Comparer à nouveau",
+    "goneTitle": "Cette demande n'est plus ouverte",
+    "goneBody": "Elle a déjà reçu une réponse, a été annulée ou a expiré. Vous n'avez rien à faire."
   },
   "devices": {
     "title": "Appareils",
@@ -958,6 +964,8 @@
     "orManual": "ou saisir manuellement",
     "whichNumber": "Quel numéro utiliser ?",
     "sendInvite": "Envoyer l'invitation",
+    "invitePreview": "Keeplas enverra à {name} un message WhatsApp : « {inviter} vous a désigné comme contact de confiance sur Keeplas », avec un lien vers l'invitation.",
+    "invitePreviewEmail": "Keeplas enverra à {name} un message WhatsApp et un e-mail : « {inviter} vous a désigné comme contact de confiance sur Keeplas », avec un lien vers l'invitation.",
     "status": {
       "pending": "Invité",
       "accepted": "Actif",
@@ -971,15 +979,18 @@
     "quorumWarning": "Rien ne peut encore être transmis : {count} personnes de confiance doivent confirmer. Ont accepté pour l'instant : {available}. Ajoutez quelqu'un de confiance.",
     "replace": "Remplacer",
     "replaceTitle": "Remplacer {name} ?",
-    "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte. Vous pourrez ensuite inviter quelqu'un d'autre.",
+    "replaceBody": "{name} ne pourra plus vous aider à récupérer votre compte ni recevoir les éléments que vous partagez avec lui. Vous pourrez ensuite inviter quelqu'un d'autre.",
+    "moreFor": "Plus d'options pour {name}",
     "resend": "Renvoyer l'invitation",
     "resent": "Invitation renvoyée.",
     "remove": "Retirer",
     "removeTitle": "Retirer {name} ?",
-    "removeBody": "{name} ne pourra plus vous aider à récupérer votre compte.",
+    "removeBody": "{name} ne pourra plus vous aider à récupérer votre compte ni recevoir les éléments que vous partagez avec lui.",
     "addTrust": "Ajouter un contact de confiance",
     "emailInvalid": "Saisissez une adresse e-mail valide, par exemple nom@exemple.com.",
     "alreadyInvited": "Cette personne fait déjà partie de vos contacts.",
+    "selfInvite": "Vous ne pouvez pas vous ajouter vous-même. Invitez une personne de confiance.",
+    "tooManyInvites": "Vous avez déjà envoyé assez d'invitations à cette personne aujourd'hui. Réessayez demain.",
     "inviteFailed": "L'invitation n'a pas pu être envoyée. Vérifiez votre connexion et réessayez.",
     "continue": "Continuer",
     "edit": "Modifier les informations",
@@ -1176,7 +1187,7 @@
     "why1": "C'est elle qui vous connecte à Keeplas. Votre compte en a toujours besoin.",
     "why2": "Elle se synchronise avec votre compte {account} : sur un nouveau téléphone, vous vous connectez et votre coffre revient avec votre sauvegarde cloud.",
     "why3": "Sans elle, un code envoyé sur votre WhatsApp suffirait pour se connecter.",
-    "stop": "Pour arrêter d'utiliser Keeplas, supprimez votre compte dans Réglages › Compte."
+    "stop": "Pour arrêter d'utiliser Keeplas, allez dans Réglages › Supprimer mon compte."
   },
   "activity": {
     "subtitle": "Connexions, appareils et modifications de votre coffre, les plus récentes en premier.",
@@ -1304,6 +1315,8 @@
     "scheduledTitle": "Votre compte va être supprimé",
     "scheduledBody": "Tout sera définitivement effacé le {date}. D’ici là, vous pouvez continuer à utiliser Keeplas et annuler la suppression.",
     "cancel": "Annuler la suppression",
+    "cancelled": "Suppression annulée. Votre compte est conservé.",
+    "verifyFailed": "Keeplas n’a pas pu confirmer que c’est bien vous : rien n’a été supprimé. Réessayez.",
     "failed": "Keeplas n’a pas pu enregistrer votre demande. Vérifiez votre connexion et réessayez."
   },
   "pin": {

@@ -1,5 +1,7 @@
-import { useCallback, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
+import { useNavigation } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
 import QRCode from "react-native-qrcode-svg";
 
 import { Button } from "@/components/button";
@@ -8,6 +10,7 @@ import { Callout, Card } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { openDeviceVault } from "@/crypto/device-vault";
 import { useWithPin } from "@/features/pin/use-pin-gate";
+import { holdLock } from "@/lib/auto-lock";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useReplaceKit } from "@/lib/use-replace-kit";
@@ -41,6 +44,47 @@ export function useCreateKit() {
   }, [withPin, t, viewer._id, replaceKit]);
 }
 
+/**
+ * While new kit words are `shown`, they exist nowhere else and the previous
+ * kit already stopped working: keep the vault from auto-locking, and ask
+ * before any way out that removes the screen (back, swipe, hardware back,
+ * tab bar). Returns the same question for an in-screen exit:
+ * `confirmLeave(leave)`.
+ */
+export function useGuardKitWords(shown: boolean) {
+  const { t } = useI18n();
+  const navigation = useNavigation();
+  // One question at a time: a tab tap tries to leave twice.
+  const asking = useRef(false);
+
+  const confirmLeave = useCallback(
+    (leave: () => void) => {
+      if (asking.current) return;
+      asking.current = true;
+      const answer = (leaving: boolean) => () => {
+        asking.current = false;
+        if (leaving) leave();
+      };
+      Alert.alert(
+        t("kit.leaveTitle"),
+        t("kit.leaveBody"),
+        [
+          { text: t("kit.stay"), style: "cancel", onPress: answer(false) },
+          { text: t("kit.leave"), style: "destructive", onPress: answer(true) },
+        ],
+        { cancelable: true, onDismiss: answer(false) },
+      );
+    },
+    [t],
+  );
+
+  useEffect(() => (shown ? holdLock() : undefined), [shown]);
+  usePreventRemove(shown, ({ data }) =>
+    confirmLeave(() => navigation.dispatch(data.action)),
+  );
+  return confirmLeave;
+}
+
 function WordGrid({
   phrase,
   inverse,
@@ -70,7 +114,8 @@ function WordGrid({
 
 /**
  * The 24 words with "Download PDF" / "Save image" actions. `onExported`
- * fires once a file went through the share sheet.
+ * fires once the share sheet closes: the OS doesn't say whether the file was
+ * saved or the sheet cancelled, so the screen never claims it was saved.
  */
 export function KitWords({
   phrase,
@@ -82,7 +127,7 @@ export function KitWords({
   const { t, language } = useI18n();
   const card = useRef<View>(null);
   const [busy, setBusy] = useState<"pdf" | "image" | null>(null);
-  const [saved, setSaved] = useState<"pdf" | "image" | null>(null);
+  const [shared, setShared] = useState<"pdf" | "image" | null>(null);
   // When these words were shown: the kit's creation date on the files.
   const [createdAt] = useState(() => Date.now());
   const created = t("kit.created", { date: formatDate(createdAt, language) });
@@ -100,7 +145,7 @@ export function KitWords({
       } else {
         await shareKitImage(card, t("kit.title"));
       }
-      setSaved(kind);
+      setShared(kind);
       onExported?.();
     } catch {
       toast({ variant: "error", title: t("kit.exportFailed") });
@@ -134,11 +179,11 @@ export function KitWords({
           style={styles.flex}
         />
       </View>
-      {saved ? (
-        <View style={styles.saved}>
-          <Icon name="check" size={16} color="status.active" />
-          <Text variant="body-sm-strong" color="status.active">
-            {t(saved === "pdf" ? "kit.pdfSaved" : "kit.imageSaved")}
+      {shared ? (
+        <View style={styles.shared}>
+          <Icon name="info" size={16} color="accent" />
+          <Text variant="body-sm-strong" style={styles.flex}>
+            {t(shared === "pdf" ? "kit.pdfShared" : "kit.imageShared")}
           </Text>
         </View>
       ) : null}
@@ -182,7 +227,7 @@ const styles = StyleSheet.create({
   word: { width: "50%", flexDirection: "row", gap: 8, alignItems: "baseline" },
   index: { width: 22 },
   actions: { flexDirection: "row", gap: 10 },
-  saved: { flexDirection: "row", alignItems: "center", gap: 6 },
+  shared: { flexDirection: "row", alignItems: "center", gap: 6 },
   offscreen: { position: "absolute", left: -10000, top: 0 },
   imageCard: {
     width: 390,

@@ -10,13 +10,13 @@ import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { errorText } from "@/lib/errors";
 import { toPhoneField } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { deviceCountry } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
 
+import { inviteErrorKey } from "./invite-error";
 import { PersonFields, usePersonForm } from "./person-form";
 
 type Contact = FunctionReturnType<
@@ -88,11 +88,7 @@ function EditPersonForm({
       toast({ variant: "success", title: t("people.saved") });
       router.back();
     } catch (failure) {
-      setError(
-        errorText(failure).includes("already")
-          ? t("people.alreadyInvited")
-          : t("people.saveFailed"),
-      );
+      setError(t(inviteErrorKey(failure, "people.saveFailed")));
     } finally {
       setBusy(false);
     }

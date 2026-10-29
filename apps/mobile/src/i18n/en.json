@@ -129,9 +129,13 @@
     "rule3": "Keeplas will never ask for them. A new kit replaces this one.",
     "pdf": "Download PDF",
     "image": "Save image",
-    "pdfSaved": "PDF saved",
-    "imageSaved": "Image saved",
+    "pdfShared": "PDF created. Check that you saved it.",
+    "imageShared": "Image created. Check that you saved it.",
     "exportFailed": "Keeplas could not create the file. Try again.",
+    "leaveTitle": "Leave without saving these words?",
+    "leaveBody": "Your previous kit no longer works, and these words can't be shown again. If you leave, you'll need to create a new kit.",
+    "stay": "Stay",
+    "leave": "Leave",
     "fileWarning": "Anyone with these words can open your vault. Best: print the PDF, then delete the file. A copy in your photos or cloud drive can be read by anyone who gets into that account.",
     "qr": "Scan this code with the Keeplas app to open your vault without typing the words. Keep it as private as the words."
   },
@@ -422,10 +426,10 @@
     "agreeAfter": "."
   },
   "push": {
-    "title": "Turn on security alerts?",
-    "body": "Keeplas tells you when a new device signs in, when someone asks to recover your account, and when a Life check needs your answer.",
-    "allow": "Turn on",
-    "notNow": "Not now"
+    "title": "Security alerts",
+    "on": "On for new sign-ins, recovery requests and Life checks",
+    "off": "Off. Tap to get alerts about new sign-ins, recovery requests and Life checks.",
+    "blocked": "Off. Allow notifications for Keeplas in your phone's settings."
   },
   "upgrade": {
     "title": "Upgrade to Lifetime",
@@ -587,7 +591,9 @@
     "stillDifferent": "Still different? Decline",
     "stillDifferentBody": "{name} gets a security alert and the request stops.",
     "decline": "Decline request",
-    "compareAgain": "Compare again"
+    "compareAgain": "Compare again",
+    "goneTitle": "This request is no longer open",
+    "goneBody": "It was already answered, cancelled or has expired. There's nothing for you to do."
   },
   "devices": {
     "title": "Devices",
@@ -962,6 +968,8 @@
     "orManual": "or enter manually",
     "whichNumber": "Which number?",
     "sendInvite": "Send invitation",
+    "invitePreview": "Keeplas will send {name} a WhatsApp message saying \"{inviter} invited you as a trusted contact on Keeplas\", with a link to the invitation.",
+    "invitePreviewEmail": "Keeplas will send {name} a WhatsApp message and an email saying \"{inviter} invited you as a trusted contact on Keeplas\", with a link to the invitation.",
     "status": {
       "pending": "Invited",
       "accepted": "Active",
@@ -974,15 +982,18 @@
     "quorumWarning": "Nothing can be passed on yet: {count} trusted people must confirm, and {available} accepted so far. Add someone you trust.",
     "replace": "Replace",
     "replaceTitle": "Replace {name}?",
-    "replaceBody": "{name} will no longer be able to help you recover your account. You can then invite someone new.",
+    "replaceBody": "{name} will no longer be able to help you recover your account or receive the items you share with them. You can then invite someone new.",
+    "moreFor": "More options for {name}",
     "resend": "Resend invitation",
     "resent": "Invitation sent again.",
     "remove": "Remove",
     "removeTitle": "Remove {name}?",
-    "removeBody": "{name} will no longer be able to help you recover your account.",
+    "removeBody": "{name} will no longer be able to help you recover your account or receive the items you share with them.",
     "addTrust": "Add a trusted contact",
     "emailInvalid": "Enter a valid email address, like name@example.com.",
     "alreadyInvited": "This person is already one of your contacts.",
+    "selfInvite": "You can't add yourself. Invite someone you trust.",
+    "tooManyInvites": "You've sent this person enough invitations for today. Try again tomorrow.",
     "inviteFailed": "The invitation couldn't be sent. Check your connection and try again.",
     "continue": "Continue",
     "edit": "Edit details",
@@ -1186,7 +1197,7 @@
     "why1": "It's how you sign in to Keeplas. Your account always needs one.",
     "why2": "It syncs with your {account} account, so on a new phone you sign in and your vault comes back with your cloud backup.",
     "why3": "Without it, a code sent to your WhatsApp would be enough to sign in.",
-    "stop": "To stop using Keeplas, delete your account in Settings › Account."
+    "stop": "To stop using Keeplas, go to Settings › Delete my account."
   },
   "activity": {
     "subtitle": "Sign-ins, devices and changes to your vault, newest first.",
@@ -1314,6 +1325,8 @@
     "scheduledTitle": "Your account will be deleted",
     "scheduledBody": "Everything will be erased for good on {date}. Until then you can still use Keeplas and cancel the deletion.",
     "cancel": "Cancel the deletion",
+    "cancelled": "Deletion cancelled. Your account stays.",
+    "verifyFailed": "Keeplas couldn't confirm it's you, so nothing was deleted. Try again.",
     "failed": "Keeplas could not save your request. Check your connection and try again."
   },
   "pin": {

@@ -19,6 +19,7 @@ import {
 import { auditedMutation } from "./audit";
 import { contactRoleValidator } from "./validators";
 import { normalizeE164 } from "./lib/phone";
+import { takeRateLimitSlot } from "./lib/rate_limit";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
 import { isNotificationsPaused } from "./lib/pause";
@@ -395,6 +396,15 @@ async function checkContactChannels(
     throw new Error("Please enter a valid email");
   }
 
+  // The owner can't vouch for their own recovery, and could never accept.
+  const owner = await ctx.db.get(userId);
+  if (
+    (email && owner?.email && normalizeEmail(owner.email) === email) ||
+    (phoneNumber && owner?.phoneNumber === phoneNumber)
+  ) {
+    throw new ConvexError("You can't add yourself as a trusted contact");
+  }
+
   const others = (
     await ctx.db
       .query("trusted_contacts")
@@ -439,10 +449,16 @@ function newInvitationToken(): string {
     .join("");
 }
 
+/** Invitations one owner may send to the same email or number per day. */
+const INVITATIONS_PER_DAY = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Send the accept link on every channel on file. Email is the canonical
  * channel; WhatsApp carries the same link and is the only one for phone-only
- * contacts.
+ * contacts. Each channel takes at most INVITATIONS_PER_DAY from one owner
+ * (first invitation, resends, re-invitations after removal or an edit), so a
+ * number can't be flooded; the throw rolls the whole mutation back.
  */
 async function deliverInvitation(
   ctx: MutationCtx,
@@ -454,6 +470,21 @@ async function deliverInvitation(
     invitationToken: string;
   },
 ) {
+  for (const channel of [invite.email, invite.phoneNumber]) {
+    if (
+      channel &&
+      !(await takeRateLimitSlot(
+        ctx,
+        `invite:${userId}:${channel}`,
+        INVITATIONS_PER_DAY,
+        DAY_MS,
+      ))
+    ) {
+      throw new ConvexError(
+        "Too many invitations to this person today. Try again tomorrow.",
+      );
+    }
+  }
   if (invite.email) {
     await ctx.scheduler.runAfter(
       0,

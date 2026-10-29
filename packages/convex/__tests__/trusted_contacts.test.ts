@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import {
   makeT,
@@ -59,6 +59,127 @@ describe("inviteContact", () => {
       undefined,
       undefined,
     ]);
+  });
+
+  it("refuses the owner's own phone number or email", async () => {
+    const t = makeT();
+    const owner = await t.run((ctx) =>
+      ctx.db.insert("users", {
+        email: "me@example.com",
+        phoneNumber: "+33612345678",
+        phoneNumberVerifiedAt: Date.now(),
+      }),
+    );
+
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.inviteContact, {
+        name: "Me",
+        phoneNumber: "+33612345678",
+        role: "friend",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/yourself/);
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.inviteContact, {
+        name: "Me",
+        email: " Me@Example.com ",
+        role: "friend",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/yourself/);
+  });
+
+  it("refuses editing a contact to the owner's own number", async () => {
+    const t = makeT();
+    const owner = await t.run((ctx) =>
+      ctx.db.insert("users", { phoneNumber: "+33612345678" }),
+    );
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+
+    await expect(
+      asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+        contactId,
+        name: "Contact 1",
+        phoneNumber: "+33612345678",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/yourself/);
+  });
+});
+
+describe("invitation rate limit", () => {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function invite(t: ReturnType<typeof makeT>, owner: Id<"users">) {
+    const { contactId } = await asUser(t, owner).mutation(
+      api.trusted_contacts.inviteContact,
+      {
+        name: "Ada",
+        phoneNumber: "+33612345678",
+        role: "friend",
+        _audit: await signedAudit(),
+      },
+    );
+    return contactId;
+  }
+
+  async function resend(
+    t: ReturnType<typeof makeT>,
+    owner: Id<"users">,
+    contactId: Id<"trusted_contacts">,
+  ) {
+    return asUser(t, owner).mutation(api.trusted_contacts.resendInvitation, {
+      contactId,
+      _audit: await signedAudit(),
+    });
+  }
+
+  it("sends one person at most 3 invitations a day", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const contactId = await invite(t, owner);
+    await resend(t, owner, contactId);
+    await resend(t, owner, contactId);
+
+    await expect(resend(t, owner, contactId)).rejects.toThrow(
+      /Too many invitations/,
+    );
+
+    vi.setSystemTime(Date.now() + DAY_MS + 1);
+    await expect(resend(t, owner, contactId)).resolves.toBeDefined();
+  });
+
+  it("counts invitations sent again after removing the person", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    for (let sent = 0; sent < 3; sent++) {
+      const contactId = await invite(t, owner);
+      await asUser(t, owner).mutation(api.trusted_contacts.revokeContact, {
+        contactId,
+        _audit: await signedAudit(),
+      });
+    }
+
+    await expect(invite(t, owner)).rejects.toThrow(/Too many invitations/);
+  });
+
+  it("limits each owner separately", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const other = await seedUser(t);
+    const contactId = await invite(t, owner);
+    await resend(t, owner, contactId);
+    await resend(t, owner, contactId);
+
+    await expect(invite(t, other)).resolves.toBeDefined();
   });
 });
 

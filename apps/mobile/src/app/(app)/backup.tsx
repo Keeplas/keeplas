@@ -18,7 +18,11 @@ import {
   useSealCloudBackup,
 } from "@/features/cloud-backup";
 import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
-import { KitWords, useCreateKit } from "@/features/recovery-kit";
+import {
+  KitWords,
+  useCreateKit,
+  useGuardKitWords,
+} from "@/features/recovery-kit";
 import { serverMessage } from "@/lib/errors";
 import { writePreference } from "@/lib/preferences";
 import { toast } from "@/lib/toast";
@@ -50,14 +54,32 @@ export default function CloudBackup() {
   const [exported, setExported] = useState(false);
   const [understood, setUnderstood] = useState(false);
   const { account } = cloudNames;
+  const confirmLeave = useGuardKitWords(phrase !== null && off !== null);
+
+  /** A reason this phone can't back up, shown as is (not a server error). */
+  function cannotBackUp(reason: string) {
+    toast({
+      variant: "error",
+      title: t("common.genericError"),
+      description: reason,
+    });
+  }
 
   async function enable() {
     setBusy(true);
     try {
+      // Checked before the screen lock, so nobody unlocks for nothing.
+      if (!(await CloudKey.isEndToEndEncrypted())) {
+        cannotBackUp(t("backup.notEncrypted"));
+        return;
+      }
       const rootKey = await withPin((pin) =>
         readDeviceRootKey(viewer._id, t("backup.auth"), pin),
       );
-      if (!rootKey) throw new Error(t("backup.noRootKey"));
+      if (!rootKey) {
+        cannotBackUp(t("backup.noRootKey"));
+        return;
+      }
       try {
         await seal(rootKey);
       } finally {
@@ -80,6 +102,12 @@ export default function CloudBackup() {
     setPhrase(null);
     setExported(false);
     setUnderstood(false);
+  }
+
+  /** Cancelling the last check keeps the new words on screen. */
+  function backToWords() {
+    setUnderstood(false);
+    setOff("kit");
   }
 
   async function saveWords() {
@@ -115,7 +143,12 @@ export default function CloudBackup() {
   if (phrase && off !== null) {
     return (
       <Screen
-        header={<NavBar title={t("backup.title")} onBack={stopTurningOff} />}
+        header={
+          <NavBar
+            title={t("backup.title")}
+            onBack={() => confirmLeave(stopTurningOff)}
+          />
+        }
         footer={
           <Button
             label={t("common.continue")}
@@ -138,7 +171,7 @@ export default function CloudBackup() {
         />
         <StateSheet
           visible={off === "confirm"}
-          onDismiss={stopTurningOff}
+          onDismiss={backToWords}
           icon="alert-triangle"
           tone="danger"
           title={t("backupOff.confirmTitle")}
@@ -149,7 +182,7 @@ export default function CloudBackup() {
             disabled: !understood,
             onPress: () => void turnOff(),
           }}
-          secondary={{ label: t("common.cancel"), onPress: stopTurningOff }}
+          secondary={{ label: t("common.cancel"), onPress: backToWords }}
         >
           <View style={styles.check}>
             <Checkbox

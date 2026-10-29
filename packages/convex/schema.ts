@@ -570,7 +570,8 @@ export default defineSchema({
   // Per-IP throttle for unauthenticated, enumeration-prone endpoints (e.g. the
   // recovery-phrase salt lookups). One row per hit, keyed `${scope}:${ip}`;
   // `enforceIpRateLimit` (lib/rate_limit.ts) counts rows in the trailing
-  // window and prunes expired ones opportunistically.
+  // window and prunes expired ones opportunistically. Also holds the
+  // per-owner invitation cap (`invite:${userId}:${channel}`).
   ip_rate_limits: defineTable({
     key: v.string(),
     createdAt: v.number(),
