@@ -530,6 +530,9 @@ export default defineSchema({
     // Rows without verifiedAt are pending enrollments and may be replaced.
     verifiedAt: v.optional(v.number()),
     lastUsedAt: v.optional(v.number()),
+    // Time step (30 s counter) of the last accepted code: a code at or before
+    // it is refused, so each code works once. Unset on rows that predate it.
+    lastUsedCounter: v.optional(v.number()),
     // Wrong codes in the current lockout window (reset on success).
     failedAttempts: v.optional(v.number()),
     lastFailedAt: v.optional(v.number()),

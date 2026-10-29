@@ -84,13 +84,18 @@ async function hotp(secretBytes: Uint8Array, counter: number): Promise<string> {
   return (code % 10 ** DIGITS).toString().padStart(DIGITS, "0");
 }
 
-async function verifyTotp(
+/**
+ * The time step `code` matches within the drift window, or null. Steps at or
+ * before `lastUsedCounter` are skipped: an accepted code never works again.
+ */
+async function matchTotpStep(
   secretBase32: string,
   code: string,
   now: number,
-): Promise<boolean> {
+  lastUsedCounter: number | undefined,
+): Promise<number | null> {
   const cleaned = code.replace(/\s/g, "");
-  if (!/^\d{6}$/.test(cleaned)) return false;
+  if (!/^\d{6}$/.test(cleaned)) return null;
   const secret = base32ToBytes(secretBase32);
   const counter = Math.floor(now / 1000 / STEP_SECONDS);
   for (
@@ -98,10 +103,12 @@ async function verifyTotp(
     drift <= VERIFICATION_WINDOW;
     drift++
   ) {
-    const candidate = await hotp(secret, counter + drift);
-    if (timingSafeEquals(candidate, cleaned)) return true;
+    const step = counter + drift;
+    if (lastUsedCounter !== undefined && step <= lastUsedCounter) continue;
+    const candidate = await hotp(secret, step);
+    if (timingSafeEquals(candidate, cleaned)) return step;
   }
-  return false;
+  return null;
 }
 
 function timingSafeEquals(a: string, b: string): boolean {
@@ -143,10 +150,11 @@ const TOTP_LOCKOUT_MS = 15 * 60 * 1000;
 const INVALID_CODE = "Invalid or expired code. Try again.";
 
 /**
- * Check a code against an enrolled authenticator, with the shared lockout:
- * 10 wrong codes lock it for 15 minutes. A wrong code is counted and
- * reported as `false`, never thrown: Convex rolls back the writes of a
- * mutation that throws, and the failure must be counted (lib/otp.ts).
+ * Check a code against an authenticator (enrolled or pending), with the
+ * shared lockout: 10 wrong codes lock it for 15 minutes. A wrong or reused
+ * code is counted and reported as `false`, never thrown: Convex rolls back
+ * the writes of a mutation that throws, and the failure must be counted
+ * (lib/otp.ts). An accepted code's time step is recorded so it is single-use.
  */
 async function consumeTotpCode(
   ctx: MutationCtx,
@@ -161,7 +169,13 @@ async function consumeTotpCode(
   if (recentFailures >= TOTP_MAX_FAILURES) {
     throw new ConvexError("Too many attempts. Try again in 15 minutes.");
   }
-  if (!(await verifyTotp(totp.secret, code, now))) {
+  const step = await matchTotpStep(
+    totp.secret,
+    code,
+    now,
+    totp.lastUsedCounter,
+  );
+  if (step === null) {
     await ctx.db.patch(totp._id, {
       failedAttempts: recentFailures + 1,
       lastFailedAt: now,
@@ -170,6 +184,7 @@ async function consumeTotpCode(
   }
   await ctx.db.patch(totp._id, {
     lastUsedAt: now,
+    lastUsedCounter: step,
     failedAttempts: undefined,
     lastFailedAt: undefined,
   });
@@ -322,11 +337,11 @@ export const verifyAndEnable = mutation({
     if (row.verifiedAt) {
       throw new Error("Authenticator already verified");
     }
-    const ok = await verifyTotp(row.secret, code, Date.now());
-    if (!ok) throw new Error(INVALID_CODE);
-
     const now = Date.now();
-    await ctx.db.patch(row._id, { verifiedAt: now, lastUsedAt: now });
+    if (!(await consumeTotpCode(ctx, row, code, now))) {
+      return { success: false as const, error: INVALID_CODE };
+    }
+    await ctx.db.patch(row._id, { verifiedAt: now });
 
     const user = await ctx.db.get(userId);
     if (user) {
@@ -358,7 +373,7 @@ export const verifyAndEnable = mutation({
         });
       }
     }
-    return { success: true };
+    return { success: true as const };
   },
 });
 
