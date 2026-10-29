@@ -42,10 +42,7 @@ async function seed(
   return { owner, lastActivityAt, ...ids };
 }
 
-async function tokenFor(
-  owner: Id<"users">,
-  cycleId: Id<"life_check_cycles">,
-) {
+async function tokenFor(owner: Id<"users">, cycleId: Id<"life_check_cycles">) {
   return await signLifeCheckToken({
     cycleId,
     userId: owner,

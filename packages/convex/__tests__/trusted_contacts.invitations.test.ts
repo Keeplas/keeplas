@@ -172,9 +172,12 @@ describe("getInvitationByToken exposes no personal data (finding 6)", () => {
     });
     const row = await t.run((ctx) => ctx.db.get(contactId));
 
-    const invitation = await t.query(api.trusted_contacts.getInvitationByToken, {
-      token: "tok-lookup",
-    });
+    const invitation = await t.query(
+      api.trusted_contacts.getInvitationByToken,
+      {
+        token: "tok-lookup",
+      },
+    );
 
     expect(invitation).toEqual({
       invitationStatus: "pending",

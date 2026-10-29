@@ -99,7 +99,9 @@ describe("verifyAuditContext shape checks", () => {
   it("rejects a country that is not a 2-letter code, even when signed", async () => {
     // A pre-v2 Life Check link re-read as {ip: cycleId, country: userId}.
     const ts = Date.now();
-    const token = await legacyToken(`cycle1|k57userid0000000000000000000|${ts}`);
+    const token = await legacyToken(
+      `cycle1|k57userid0000000000000000000|${ts}`,
+    );
     const sig = b64urlToB64(token.split(".")[1]);
 
     await expect(

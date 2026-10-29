@@ -2,12 +2,16 @@ import { v, ConvexError } from "convex/values";
 import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { createNotification, requireAuth, requireFullAuth } from "./helpers";
+import {
+  countQuorumVotes,
+  createNotification,
+  requireAuth,
+  requireFullAuth,
+} from "./helpers";
 import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
 import { verifiedChannels } from "./lib/identity";
-import { countQuorumVotes } from "./lib/quorum";
 import { isEscalationPaused } from "./lib/pause";
 
 /**
@@ -180,7 +184,7 @@ export const markUserUnreachable = auditedMutation({
       }
 
       const updatedContacts = [...contactsInitiated, args.contactId];
-      // Quorum counts distinct, still-accepted people (lib/quorum): one person
+      // Quorum counts distinct, still-accepted people (countQuorumVotes): one person
       // holding two rows, or a voter revoked since, can't tip it.
       const votes = await countQuorumVotes(ctx, updatedContacts);
       const quorumReached = votes >= threshold;

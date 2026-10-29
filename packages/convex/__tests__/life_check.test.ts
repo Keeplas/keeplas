@@ -434,7 +434,9 @@ describe("NOTIFICATIONS_PAUSED also freezes the escalation (finding 37)", () => 
     await seedAwaitingConfirmation(t, owner);
     const contactUser = await seedUser(t);
     const contactId = await seedTrustContact(t, owner, { n: 1 });
-    await t.run((ctx) => ctx.db.patch(contactId, { contactUserId: contactUser }));
+    await t.run((ctx) =>
+      ctx.db.patch(contactId, { contactUserId: contactUser }),
+    );
 
     await expect(
       asUser(t, contactUser).mutation(api.access_requests.markUserUnreachable, {

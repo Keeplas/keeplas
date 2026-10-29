@@ -36,7 +36,10 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   // millisecond timestamp. Refusing anything else keeps a signature made for
   // another message of the same `a|b|<number>` shape (e.g. a pre-v2 Life
   // Check link, see lib/life_check_token.ts) from passing as a seal.
-  if (!/^[A-Z]{2}$/.test(payload.country) || !Number.isSafeInteger(payload.ts)) {
+  if (
+    !/^[A-Z]{2}$/.test(payload.country) ||
+    !Number.isSafeInteger(payload.ts)
+  ) {
     throw new Error("Invalid audit context");
   }
 
