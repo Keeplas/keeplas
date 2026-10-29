@@ -9,7 +9,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { optionalAuth, requireAuth } from "./helpers";
+import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 import { maskPhone } from "./lib/phone";
@@ -89,6 +89,20 @@ export async function requireSessionProof(
       ? `${kinds[0].toUpperCase()}_PROOF_REQUIRED`
       : "PROOF_REQUIRED",
   );
+}
+
+/**
+ * Replacing what proves the account's owner (recovery verifier, key bundle,
+ * key material): every step-up gate, plus a "phone" or "vault" proof from
+ * this session. A password or a synced passkey alone can pass
+ * `requireFullAuth`; neither proves the number nor opens the vault.
+ */
+export async function requireProvenFullAuth(
+  ctx: QueryCtx,
+): Promise<Id<"users">> {
+  const userId = await requireFullAuth(ctx);
+  await requireSessionProof(ctx, "phone", "vault");
+  return userId;
 }
 
 /**

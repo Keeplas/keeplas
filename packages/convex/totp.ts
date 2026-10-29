@@ -5,7 +5,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
 import { constantTimeStringEquals } from "./lib/crypto";
-import { requireSessionProof } from "./session_proofs";
+import { requireProvenFullAuth, requireSessionProof } from "./session_proofs";
 
 const ISSUER = "Keeplas";
 const STEP_SECONDS = 30;
@@ -365,14 +365,15 @@ export const verifyAndEnable = mutation({
 /**
  * Bind (or replace) the seed-derived recovery verifier on an already-enrolled
  * TOTP. Called from settings when the user wants to add the recovery path
- * after the fact, or rebind to a new recovery phrase.
+ * after the fact, or rebind to a new recovery phrase. The verifier resets
+ * TOTP (`submitTotpRecovery`), so binding one needs a proven session.
  */
 export const bindRecoveryReset = auditedMutation({
   action: "totp_recovery_bound",
   resourceType: "totp",
   args: { recoveryVerifierHash: v.string() },
   handler: async (ctx, { recoveryVerifierHash }) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireProvenFullAuth(ctx);
     const totp = await ctx.db
       .query("totp_secrets")
       .withIndex("by_user", (q) => q.eq("userId", userId))

@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
-import { makeT, seedUser, asUser, signedAudit } from "./test.helpers";
+import {
+  makeT,
+  seedUser,
+  asUser,
+  asPhoneProvenUser,
+  signedAudit,
+} from "./test.helpers";
 
 describe("rotateKeyMaterial", () => {
   it("overwrites existing key material and stores the previous owner secret", async () => {
@@ -17,7 +23,10 @@ describe("rotateKeyMaterial", () => {
       }),
     );
 
-    await asUser(t, owner).mutation(api.rotation.rotateKeyMaterial, {
+    // Rotation runs on the owner's phone, on a session that proved the number
+    // or the vault (session_proofs.ts).
+    const as = await asPhoneProvenUser(t, owner);
+    await as.mutation(api.rotation.rotateKeyMaterial, {
       encryptedKeyBundle: "new-bundle",
       publicKey: "new-public-key",
       publicKeySignature: "new-signature",

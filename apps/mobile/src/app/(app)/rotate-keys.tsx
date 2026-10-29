@@ -18,6 +18,7 @@ import { readDeviceRootKey, saveDeviceVault } from "@/crypto/device-vault";
 import { encryptText, exportRawKey } from "@/crypto/envelope";
 import { buildKeyBundle, createPublicKeyMaterial } from "@/crypto/vault-keys";
 import { useVaultData } from "@/features/vault/vault-data";
+import { useEnsureSessionProof } from "@/features/vault-proof";
 import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -35,8 +36,9 @@ export default function RotateKeys() {
   const convex = useConvex();
   const { t } = useI18n();
   const viewer = useViewer();
-  const { adopt } = useVault();
+  const { adopt, masterKey } = useVault();
   const { ownerKeys, itemKey } = useVaultData();
+  const ensureSessionProof = useEnsureSessionProof();
   const rotate = useAuditedMutation(api.rotation.rotateKeyMaterial);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const finalize = useAuditedMutation(api.rotation.finalizeRotation);
@@ -78,6 +80,9 @@ export default function RotateKeys() {
       rootKey = pinned.rootKey;
       devicePin = pinned.pin;
       if (!rootKey) throw new Error(t("rotation.noRoot"));
+      // Rotation replaces the identity key: it needs a proven session.
+      if (!masterKey) throw new Error("Vault is locked");
+      await ensureSessionProof(masterKey);
       const oldKeys = await ownerKeys();
       const newMaster = await generateMasterKey();
       rawNew = await exportRawKey(newMaster);

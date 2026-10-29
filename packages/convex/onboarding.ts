@@ -9,6 +9,7 @@ import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireAuth, optionalAuth, getActiveItems } from "./helpers";
 import { createAuditLog } from "./audit";
+import { requireProvenFullAuth } from "./session_proofs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -211,6 +212,21 @@ export const advanceOnboardingStep = mutation({
 });
 
 /**
+ * Who may write the recovery kit (verifier, salt, key bundle). Until the
+ * vault exists (onboarding) a plain session does. Replacing the kit of an
+ * existing vault (contact recovery, a new kit in Settings) needs a proven,
+ * fully stepped-up session: otherwise a weaker one (a password alone, a
+ * synced passkey) could plant its own verifier, clear every step-up gate and
+ * recovery sign-in with it, or brick the owner's kit.
+ */
+async function requireKitWriter(ctx: MutationCtx) {
+  const userId = await requireAuth(ctx);
+  const user = await ctx.db.get(userId);
+  if (user?.encryptedKeyBundle) await requireProvenFullAuth(ctx);
+  return { userId, user };
+}
+
+/**
  * Store the salted recovery-phrase verifier after the user verifies their
  * words. The verifier is a salted Argon2id digest (derivePhraseVerifier),
  * computed client-side — NEVER the phrase itself. The `phraseSalt` is the
@@ -224,7 +240,7 @@ export const storeRecoveryPhraseHash = mutation({
     phraseSalt: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const { userId } = await requireKitWriter(ctx);
 
     await ctx.db.patch(userId, {
       recoveryPhraseHash: args.recoveryPhraseHash,
@@ -248,9 +264,8 @@ export const storeKeyBundle = mutation({
     phraseSalt: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const { userId, user } = await requireKitWriter(ctx);
 
-    const user = await ctx.db.get(userId);
     // Send the welcome message only on the first time onboarding completes —
     // `welcomeSentAt` is the idempotency guard against a re-invoked storeKeyBundle.
     const sendWelcome = user != null && !user.welcomeSentAt;

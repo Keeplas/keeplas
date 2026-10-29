@@ -3,8 +3,9 @@ import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { saveDeviceVault } from "@/crypto/device-vault";
-import { createKitMaterial } from "@/crypto/vault-keys";
+import { createKitMaterial, importMasterKey } from "@/crypto/vault-keys";
 import { useEnsureCloudBackup } from "@/features/cloud-backup";
+import { useEnsureSessionProof } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
 
 /**
@@ -18,9 +19,12 @@ export function useReplaceKit() {
   const storePhraseHash = useMutation(api.onboarding.storeRecoveryPhraseHash);
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const ensureCloudBackup = useEnsureCloudBackup();
+  const ensureSessionProof = useEnsureSessionProof();
 
   return useCallback(
     async (userId: string, masterKey: Uint8Array, pin?: string) => {
+      // Replacing the kit of an existing vault needs a proven session.
+      await ensureSessionProof(await importMasterKey(masterKey));
       const kit = await createKitMaterial(masterKey);
       try {
         await storePhraseHash({
@@ -44,6 +48,6 @@ export function useReplaceKit() {
       void ensureCloudBackup(kit.rawRootKey);
       return kit.phrase;
     },
-    [t, storePhraseHash, storeKeyBundle, ensureCloudBackup],
+    [t, storePhraseHash, storeKeyBundle, ensureCloudBackup, ensureSessionProof],
   );
 }
