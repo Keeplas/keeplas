@@ -32,8 +32,11 @@ export default function InvitationPage() {
   }
 
   const name = invitation?.inviterName;
+  const expired =
+    invitation?.invitationStatus === "pending" &&
+    Date.now() > invitation.expiresAt;
   let message;
-  if (!invitation || invitation.invitationStatus === "revoked") {
+  if (!invitation || invitation.invitationStatus === "revoked" || expired) {
     message = (
       <StateMessage
         icon={ICON_PATHS.clock}
