@@ -7,11 +7,14 @@ import {
   getActiveVaultFiles,
   getStorageUsage,
 } from "./helpers";
+import { createAuditLog } from "./audit";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import { sizeBucket, storedFileBytes } from "./lib/storage";
 
 /**
- * Get or create the user's vault.
+ * Get or create the user's vault. A plain mutation, not `auditedMutation`:
+ * clients call it before every upload, and installed apps send no `_audit`.
+ * Only an actual creation is a state change, so only it writes the entry.
  */
 export const getOrCreateVault = mutation({
   args: {},
@@ -22,13 +25,22 @@ export const getOrCreateVault = mutation({
     if (existing) return existing._id;
 
     const now = Date.now();
-    return await ctx.db.insert("vaults", {
+    const vaultId = await ctx.db.insert("vaults", {
       userId,
       encryptedItemsCount: 0,
       lastVerifiedAt: now,
       createdAt: now,
       updatedAt: now,
     });
+    await createAuditLog(ctx, {
+      userId,
+      actorType: "user",
+      actorId: userId,
+      action: "vault.created",
+      resourceType: "vault",
+      resourceId: vaultId,
+    });
+    return vaultId;
   },
 });
 
