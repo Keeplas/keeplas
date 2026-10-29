@@ -350,7 +350,7 @@
     "title": "Récupérer avec mes contacts",
     "body": "Deux contacts doivent approuver. Keeplas attend ensuite 72 heures avant de libérer la clé protégée.",
     "start": "Démarrer la récupération",
-    "codeBody": "Comparez ce code avec vos contacts par téléphone ou en appel vidéo. Ne l’envoyez jamais par message.",
+    "codeBody": "Chaque contact a son propre code. Lisez-le-lui par téléphone ou en appel vidéo. Ne l’envoyez jamais par message.",
     "waiting": "En attente",
     "restore": "Restaurer mon coffre",
     "cancel": "Annuler la demande",
@@ -369,7 +369,11 @@
     "expired": "Votre dernière demande a expiré avant d'être validée. Vous pouvez en lancer une nouvelle.",
     "rejected": "{name} a refusé votre demande, la récupération est donc arrêtée. Appelez cette personne pour confirmer que c'était bien vous, puis lancez une nouvelle demande.",
     "notReady": "Vous n’avez pas encore 2 contacts de confiance prêts : ils ne peuvent pas ouvrir votre coffre. Utilisez plutôt votre kit de récupération.",
-    "useKit": "Utiliser mon kit de récupération"
+    "useKit": "Utiliser mon kit de récupération",
+    "codeWaiting": "Votre code pour {name} s’affiche quand cette personne ouvre la demande.",
+    "otherPhone": "Cette demande a été lancée sur un autre téléphone. Les codes s’affichent sur celui-ci.",
+    "keyMismatch": "Cette demande ne correspond plus à la clé créée par ce téléphone : aucun code n’est affiché. Si vous ne l’avez pas lancée depuis un autre téléphone, annulez-la maintenant.",
+    "codeTampered": "Un code de cette demande n’a pas été créé par ce téléphone. Ne laissez personne la valider : annulez la demande et lancez-en une nouvelle."
   },
   "home": {
     "greetingMorning": "Bonjour",
@@ -578,7 +582,10 @@
     "stillDifferent": "Toujours différent ? Refusez",
     "stillDifferentBody": "{name} reçoit une alerte de sécurité et la demande s'arrête.",
     "decline": "Refuser la demande",
-    "compareAgain": "Comparer à nouveau"
+    "compareAgain": "Comparer à nouveau",
+    "waitingForPhone": "En attente du nouveau téléphone de {name}. Demandez à {name} d'y ouvrir Keeplas : votre code s'affiche ici quelques instants après.",
+    "openedElsewhere": "Vous avez ouvert cette demande sur un autre téléphone : le code s'affiche sur celui-ci. Si ce n'était pas vous, refusez la demande.",
+    "unverified": "Keeplas n'a pas pu vérifier le code de cette demande. Ne la validez pas : refusez-la, puis appelez {name} sur un numéro que vous aviez déjà."
   },
   "devices": {
     "title": "Appareils",

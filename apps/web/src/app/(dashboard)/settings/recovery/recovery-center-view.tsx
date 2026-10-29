@@ -10,8 +10,6 @@ const HOUR = 3_600_000;
 export interface RecoveryRequestStatus {
   /** Trust contacts who approved, of the 2 needed. */
   approved: number;
-  /** 6-digit code compared by call (D4). */
-  code: string;
   /** End of the 72 h protection window (D3). */
   windowEndsAt: number;
 }
@@ -33,7 +31,9 @@ const OPTIONS = [
 
 /**
  * W04-5 Recovery center, status only: recovery starts on the phone; the web
- * shows the ways back in and follows (or cancels) a request in progress.
+ * shows the ways back in and follows (or cancels) a request in progress. The
+ * 6-digit codes (D4) exist only on the phone that started the request: a
+ * code computed here would come from what Keeplas relays.
  */
 export function RecoveryCenterView({
   identifier,
@@ -102,11 +102,13 @@ export function RecoveryCenterView({
               description={t("request.approved", { count: request.approved })}
             />
           </div>
-          <div className="flex flex-col gap-[2px]">
+          <div className="flex max-w-[260px] flex-col gap-[2px]">
             <span className="text-caption text-text-muted">
               {t("request.code")}
             </span>
-            <span className="text-code text-text-primary">{request.code}</span>
+            <span className="text-body-sm text-text-primary">
+              {t("request.codeOnPhone")}
+            </span>
           </div>
           <span className="flex items-center gap-[8px] text-body text-text-primary">
             <Icon

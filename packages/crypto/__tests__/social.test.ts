@@ -10,8 +10,10 @@ import {
   approveRecovery,
   createSocialRecovery,
   gateKeyAad,
+  newRecoveryNonce,
   openSocialRecovery,
   recoveryCode,
+  recoveryCommitment,
 } from "../src/social";
 
 // Phase 5 (F3): RS split 2-of-n between contacts, G held by Keeplas, social
@@ -138,13 +140,78 @@ describe("social recovery", () => {
     for (const s of setup.shares) expect(s.wrappedShare).not.toContain(mk);
     expect(setup.socialEnvelope).not.toContain(mk);
   });
+});
 
-  it("computes the same 6-digit code on both sides, and a new one if the device key changes", async () => {
-    const pk = serializePublicKey(generateRecipientKeyPair().publicKey);
-    const other = serializePublicKey(generateRecipientKeyPair().publicKey);
-    const code = await recoveryCode(REQUEST, pk);
+// D4 code compared by call, as a commit-then-reveal SAS: the device commits
+// to a secret nonce per contact, the contact answers with its own nonce, then
+// the device reveals. A server that swaps the device key must fix its fake
+// commitment before it sees the contact nonce, and the device nonce stays
+// hidden until the device pinned the contact nonce it got: one 1-in-10^6
+// guess, and a miss is a visible mismatch on the call.
+describe("recovery code (commit-then-reveal)", () => {
+  const CONTACT = "contact1";
+  const devicePublicKey = serializePublicKey(
+    generateRecipientKeyPair().publicKey,
+  );
+
+  async function exchange(pk = devicePublicKey) {
+    const deviceNonce = newRecoveryNonce();
+    const commitment = await recoveryCommitment(pk, deviceNonce);
+    const contactNonce = newRecoveryNonce();
+    const args = {
+      requestId: REQUEST,
+      contactId: CONTACT,
+      devicePublicKey: pk,
+      commitment,
+      deviceNonce,
+      contactNonce,
+    };
+    return { args, code: await recoveryCode(args) };
+  }
+
+  it("gives both sides the same 6-digit code", async () => {
+    const { args, code } = await exchange();
     expect(code).toMatch(/^\d{6}$/);
-    expect(await recoveryCode(REQUEST, pk)).toBe(code);
-    expect(await recoveryCode(REQUEST, other)).not.toBe(code);
+    expect(await recoveryCode({ ...args })).toBe(code);
+  });
+
+  it("gives a new code when either nonce changes", async () => {
+    const { args, code } = await exchange();
+    const codes = new Set([code]);
+    for (let i = 0; i < 4; i++) {
+      codes.add(
+        await recoveryCode({ ...args, contactNonce: newRecoveryNonce() }),
+      );
+    }
+    expect(codes.size).toBeGreaterThan(1);
+  });
+
+  it("refuses a swapped device key or nonce: the commitment does not open", async () => {
+    const { args } = await exchange();
+    const swapped = serializePublicKey(generateRecipientKeyPair().publicKey);
+    await expect(
+      recoveryCode({ ...args, devicePublicKey: swapped }),
+    ).rejects.toThrow("commitment");
+    await expect(
+      recoveryCode({ ...args, deviceNonce: newRecoveryNonce() }),
+    ).rejects.toThrow("commitment");
+  });
+
+  it("hashes canonical key bytes: a re-encoded key string is refused", async () => {
+    const { args } = await exchange();
+    const spaced = `${devicePublicKey.slice(0, 8)} ${devicePublicKey.slice(8)}`;
+    await expect(
+      recoveryCommitment(spaced, args.deviceNonce),
+    ).rejects.toThrow();
+    await expect(
+      recoveryCode({ ...args, devicePublicKey: spaced }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses malformed nonces", async () => {
+    const { args } = await exchange();
+    await expect(
+      recoveryCode({ ...args, contactNonce: "AAAA" }),
+    ).rejects.toThrow("nonce");
   });
 });

@@ -7,8 +7,10 @@ import { generateIdentityKeyPair } from "@keeplas/crypto/sig";
 import {
   approveRecovery,
   createSocialRecovery,
+  newRecoveryNonce,
   openSocialRecovery,
   recoveryCode,
+  recoveryCommitment,
 } from "@keeplas/crypto/social";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -95,7 +97,10 @@ async function setupOwner(t: TestConvex, contactCount = 3) {
   return { ownerId, owner, contacts, masterKey };
 }
 
-async function startRequest(t: TestConvex, ownerId: Id<"users">) {
+type Device = Awaited<ReturnType<typeof openRequest>>;
+
+/** New device, as an app without code commitments did (legacy shape). */
+async function openRequest(t: TestConvex, ownerId: Id<"users">) {
   const device = generateRecipientKeyPair();
   const devicePublicKey = serializePublicKey(device.publicKey);
   const newDevice = await asPhoneProvenUser(t, ownerId);
@@ -103,16 +108,90 @@ async function startRequest(t: TestConvex, ownerId: Id<"users">) {
     newDevicePublicKey: devicePublicKey,
     _audit: await signedAudit(),
   });
-  return { requestId, device, devicePublicKey, newDevice };
+  // What the device keeps locally: one secret nonce per contact.
+  const nonces = new Map<string, string>();
+  const commitCodes = async () => {
+    const mine = (await newDevice.query(api.recovery.getMyRequest, {}))!;
+    const commitments = [];
+    for (const contact of mine.contacts) {
+      const nonce = newRecoveryNonce();
+      nonces.set(contact.contactId, nonce);
+      commitments.push({
+        contactId: contact.contactId,
+        commitment: await recoveryCommitment(devicePublicKey, nonce),
+      });
+    }
+    await newDevice.mutation(api.recovery.commitCodes, {
+      requestId,
+      commitments,
+      _audit: await signedAudit(),
+    });
+  };
+  const reveal = async (contactId: Id<"trusted_contacts">) =>
+    newDevice.mutation(api.recovery.revealCode, {
+      requestId,
+      contactId,
+      deviceNonce: nonces.get(contactId)!,
+      _audit: await signedAudit(),
+    });
+  return {
+    requestId,
+    device,
+    devicePublicKey,
+    newDevice,
+    nonces,
+    commitCodes,
+    reveal,
+  };
 }
 
+/** New device, current app: opens the request and commits the codes. */
+async function startRequest(t: TestConvex, ownerId: Id<"users">) {
+  const request = await openRequest(t, ownerId);
+  await request.commitCodes();
+  return request;
+}
+
+/**
+ * Contact answers with its nonce, the device reveals, both compute the code
+ * (they must match), then the contact seals its share to the device key.
+ */
 async function contactApproves(
   t: TestConvex,
   ownerId: Id<"users">,
   contact: Contact,
+  device: Device,
 ) {
   const as = asUser(t, contact.userId);
+  const [seen] = await as.query(api.recovery.getRequestsForMe, {});
+  const contactNonce = newRecoveryNonce();
+  await as.mutation(api.recovery.sendCodeNonce, {
+    requestId: seen.requestId,
+    contactNonce,
+    _audit: await signedAudit(),
+  });
+  await device.reveal(seen.contactId);
   const [pending] = await as.query(api.recovery.getRequestsForMe, {});
+  const code = await recoveryCode({
+    requestId: pending.requestId,
+    contactId: pending.contactId,
+    devicePublicKey: pending.newDevicePublicKey,
+    commitment: seen.commitment!,
+    deviceNonce: pending.deviceNonce!,
+    contactNonce,
+  });
+  const mine = (await device.newDevice.query(api.recovery.getMyRequest, {}))!;
+  const slot = mine.contacts.find((c) => c.contactId === seen.contactId)!;
+  expect(
+    await recoveryCode({
+      requestId: device.requestId,
+      contactId: seen.contactId,
+      devicePublicKey: device.devicePublicKey,
+      commitment: slot.commitment!,
+      deviceNonce: device.nonces.get(seen.contactId)!,
+      contactNonce: slot.contactNonce!,
+    }),
+  ).toBe(code);
   const approval = await approveRecovery({
     wrappedShare: pending.wrappedShare,
     contactSecretKey: contact.kem.secretKey,
@@ -147,22 +226,14 @@ describe("owner recovery", () => {
   it("goes pending → approved_1 → approved_2 → released → rotated and restores the MasterKey", async () => {
     const t = makeT();
     const { ownerId, contacts, masterKey } = await setupOwner(t);
-    const { requestId, device, devicePublicKey, newDevice } =
-      await startRequest(t, ownerId);
+    const request = await startRequest(t, ownerId);
+    const { requestId, device, devicePublicKey, newDevice } = request;
     expect(await statusOf(t, requestId)).toBe("pending");
 
-    // Both sides compute the same code locally (D4).
-    const [forContact] = await asUser(t, contacts[0].userId).query(
-      api.recovery.getRequestsForMe,
-      {},
-    );
-    expect(
-      await recoveryCode(forContact.requestId, forContact.newDevicePublicKey),
-    ).toBe(await recoveryCode(requestId, devicePublicKey));
-
-    await contactApproves(t, ownerId, contacts[0]);
+    // Both sides compute the same code locally (D4), in contactApproves.
+    await contactApproves(t, ownerId, contacts[0], request);
     expect(await statusOf(t, requestId)).toBe("approved_1");
-    await contactApproves(t, ownerId, contacts[2]);
+    await contactApproves(t, ownerId, contacts[2], request);
     expect(await statusOf(t, requestId)).toBe("approved_2");
 
     // Nothing is released before the 72 h window.
@@ -233,11 +304,12 @@ describe("owner recovery", () => {
   it("releases at once when the 2nd approval comes after the window", async () => {
     const t = makeT();
     const { ownerId, contacts } = await setupOwner(t);
-    const { requestId } = await startRequest(t, ownerId);
-    await contactApproves(t, ownerId, contacts[0]);
+    const request = await startRequest(t, ownerId);
+    const { requestId } = request;
+    await contactApproves(t, ownerId, contacts[0], request);
     vi.advanceTimersByTime(RECOVERY_WINDOW_MS + 1);
     expect(await statusOf(t, requestId)).toBe("approved_1");
-    await contactApproves(t, ownerId, contacts[1]);
+    await contactApproves(t, ownerId, contacts[1], request);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     expect(await statusOf(t, requestId)).toBe("released");
   });
@@ -245,9 +317,10 @@ describe("owner recovery", () => {
   it("cancel from any owner device stops the release and requires a renewal", async () => {
     const t = makeT();
     const { ownerId, owner, contacts } = await setupOwner(t);
-    const { requestId } = await startRequest(t, ownerId);
-    await contactApproves(t, ownerId, contacts[0]);
-    await contactApproves(t, ownerId, contacts[1]);
+    const request = await startRequest(t, ownerId);
+    const { requestId } = request;
+    await contactApproves(t, ownerId, contacts[0], request);
+    await contactApproves(t, ownerId, contacts[1], request);
     await owner.mutation(api.recovery.cancel, { _audit: await signedAudit() });
     expect(await statusOf(t, requestId)).toBe("cancelled");
 
@@ -289,7 +362,8 @@ describe("owner recovery", () => {
   it("a contact's refusal or code mismatch rejects the request (M09-5)", async () => {
     const t = makeT();
     const { ownerId, owner, contacts } = await setupOwner(t);
-    const { requestId } = await startRequest(t, ownerId);
+    const request = await startRequest(t, ownerId);
+    const { requestId } = request;
     await asUser(t, contacts[1].userId).mutation(api.recovery.reject, {
       requestId,
       reason: "code_mismatch",
@@ -300,14 +374,17 @@ describe("owner recovery", () => {
     expect(
       mine?.contacts.find((c) => c.contactId === contacts[1].contactId),
     ).toMatchObject({ decision: "reject", rejectReason: "code_mismatch" });
-    await expect(contactApproves(t, ownerId, contacts[0])).rejects.toThrow();
+    await expect(
+      contactApproves(t, ownerId, contacts[0], request),
+    ).rejects.toThrow();
   });
 
   it("expires after 7 days without 2 approvals", async () => {
     const t = makeT();
     const { ownerId, contacts } = await setupOwner(t);
-    const { requestId } = await startRequest(t, ownerId);
-    await contactApproves(t, ownerId, contacts[0]);
+    const request = await startRequest(t, ownerId);
+    const { requestId } = request;
+    await contactApproves(t, ownerId, contacts[0], request);
     vi.advanceTimersByTime(RECOVERY_REQUEST_TTL_MS);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     expect(await statusOf(t, requestId)).toBe("expired");
@@ -338,11 +415,11 @@ describe("owner recovery", () => {
   it("allows one request at a time and one answer per contact", async () => {
     const t = makeT();
     const { ownerId, contacts } = await setupOwner(t);
-    await startRequest(t, ownerId);
+    const request = await startRequest(t, ownerId);
     await expect(startRequest(t, ownerId)).rejects.toThrow(
       "already in progress",
     );
-    await contactApproves(t, ownerId, contacts[0]);
+    await contactApproves(t, ownerId, contacts[0], request);
     // The request no longer shows up for a contact who answered.
     expect(
       await asUser(t, contacts[0].userId).query(
@@ -350,6 +427,163 @@ describe("owner recovery", () => {
         {},
       ),
     ).toEqual([]);
+  });
+
+  it("refuses an approval before the device revealed the code nonce", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    const as = asUser(t, contacts[0].userId);
+    const [pending] = await as.query(api.recovery.getRequestsForMe, {});
+    const approval = await approveRecovery({
+      wrappedShare: pending.wrappedShare,
+      contactSecretKey: contacts[0].kem.secretKey,
+      contactIdentitySecretKey: contacts[0].identity.secretKey,
+      ownerUserId: ownerId,
+      contactId: pending.contactId,
+      generation: pending.generation,
+      requestId,
+      devicePublicKey: pending.newDevicePublicKey,
+    });
+    await expect(
+      as.mutation(api.recovery.approve, {
+        requestId,
+        ...approval,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("RECOVERY_CODE_NOT_COMPARED");
+  });
+
+  it("keeps every code value write-once, in order", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const request = await startRequest(t, ownerId);
+    const contactId = contacts[0].contactId;
+    // The device reveals only after the contact answered.
+    await expect(request.reveal(contactId)).rejects.toThrow(
+      "RECOVERY_CODE_NOT_ANSWERED",
+    );
+    const as = asUser(t, contacts[0].userId);
+    const contactNonce = newRecoveryNonce();
+    const answer = async (nonce: string) =>
+      as.mutation(api.recovery.sendCodeNonce, {
+        requestId: request.requestId,
+        contactNonce: nonce,
+        _audit: await signedAudit(),
+      });
+    await answer(contactNonce);
+    await answer(contactNonce); // A retry is a no-op.
+    await expect(answer(newRecoveryNonce())).rejects.toThrow("already set");
+    await request.reveal(contactId);
+    await request.reveal(contactId);
+    await expect(
+      request.newDevice.mutation(api.recovery.revealCode, {
+        requestId: request.requestId,
+        contactId,
+        deviceNonce: newRecoveryNonce(),
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    // A commitment cannot be replaced either.
+    await expect(request.commitCodes()).rejects.toThrow("already set");
+  });
+
+  it("lets only the owner's phone-proven session commit and reveal", async () => {
+    const t = makeT();
+    const { ownerId, owner, contacts } = await setupOwner(t);
+    const request = await openRequest(t, ownerId);
+    const commitments = [
+      {
+        contactId: contacts[0].contactId,
+        commitment: await recoveryCommitment(
+          request.devicePublicKey,
+          newRecoveryNonce(),
+        ),
+      },
+    ];
+    await expect(
+      owner.mutation(api.recovery.commitCodes, {
+        requestId: request.requestId,
+        commitments,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("PHONE_PROOF_REQUIRED");
+    const stranger = await asPhoneProvenUser(
+      t,
+      await t.run((ctx) => ctx.db.insert("users", {})),
+    );
+    await expect(
+      stranger.mutation(api.recovery.commitCodes, {
+        requestId: request.requestId,
+        commitments,
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("Unknown recovery request");
+  });
+
+  it("upgrades a request opened before code commitments (legacy)", async () => {
+    const t = makeT();
+    const { ownerId, contacts, masterKey } = await setupOwner(t);
+    const legacy = await openRequest(t, ownerId);
+    // Contact 0 approved with the old code before the upgrade shipped.
+    const [old] = await asUser(t, contacts[0].userId).query(
+      api.recovery.getRequestsForMe,
+      {},
+    );
+    const oldApproval = await approveRecovery({
+      wrappedShare: old.wrappedShare,
+      contactSecretKey: contacts[0].kem.secretKey,
+      contactIdentitySecretKey: contacts[0].identity.secretKey,
+      ownerUserId: ownerId,
+      contactId: old.contactId,
+      generation: old.generation,
+      requestId: legacy.requestId,
+      devicePublicKey: legacy.devicePublicKey,
+    });
+    await t.run(async (ctx) => {
+      await ctx.db.insert("recovery_approvals", {
+        requestId: legacy.requestId,
+        contactId: contacts[0].contactId,
+        decision: "approve",
+        ...oldApproval,
+        createdAt: Date.now(),
+      });
+      await ctx.db.patch(legacy.requestId, { status: "approved_1" });
+    });
+
+    // No commitment yet: contact 1 sees the request but cannot answer.
+    const contact1 = asUser(t, contacts[1].userId);
+    const [seen] = await contact1.query(api.recovery.getRequestsForMe, {});
+    expect(seen.commitment).toBeNull();
+    await expect(
+      contact1.mutation(api.recovery.sendCodeNonce, {
+        requestId: legacy.requestId,
+        contactNonce: newRecoveryNonce(),
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("RECOVERY_CODE_NOT_COMMITTED");
+
+    // The updated device app commits when it opens; the request completes.
+    await legacy.commitCodes();
+    await contactApproves(t, ownerId, contacts[1], legacy);
+    expect(await statusOf(t, legacy.requestId)).toBe("approved_2");
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const pkg = (await legacy.newDevice.query(api.recovery.getReleasePackage, {
+      requestId: legacy.requestId,
+    }))!;
+    expect(
+      await openSocialRecovery({
+        ownerUserId: ownerId,
+        generation: pkg.generation,
+        requestId: legacy.requestId,
+        devicePublicKey: legacy.devicePublicKey,
+        deviceSecretKey: legacy.device.secretKey,
+        wrappedGateKey: pkg.wrappedGateKey,
+        socialEnvelope: pkg.socialEnvelope,
+        approvals: pkg.approvals,
+      }),
+    ).toEqual(masterKey);
   });
 
   it("refuses an approval from someone who is not a trust contact", async () => {

@@ -2130,11 +2130,12 @@
     "request": {
       "title": "Demande de récupération en cours",
       "approved": "{count} sur 2 validations",
-      "code": "Code de récupération",
+      "code": "Codes de récupération",
       "hoursLeft": "{hours} heures restantes",
       "hourLeft": "1 heure restante",
       "windowEnded": "Fenêtre de protection terminée",
-      "cancel": "Annuler la demande"
+      "cancel": "Annuler la demande",
+      "codeOnPhone": "Affichés sur le téléphone qui a lancé la récupération, un par contact."
     },
     "cancelDialog": {
       "title": "Annuler cette demande de récupération ?",

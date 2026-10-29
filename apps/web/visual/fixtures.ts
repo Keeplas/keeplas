@@ -48,8 +48,8 @@ export const hub: HubViewProps = {
 export const recovery: RecoveryCenterViewProps = {
   identifier: "+1 415 555 0123",
   ready: { anotherDevice: false, trustContacts: false, recoveryKit: false },
-  // D3 / D4: 72 h window and a 6-digit code (Figma shows 36 h and 4729).
-  request: { approved: 1, code: "472915", windowEndsAt: NOW + 36 * HOUR },
+  // D3: 72 h window (Figma shows 36 h). D4 codes are only on the phone.
+  request: { approved: 1, windowEndsAt: NOW + 36 * HOUR },
   onCancel: noop,
   cancelling: false,
 };

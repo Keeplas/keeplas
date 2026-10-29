@@ -2130,11 +2130,12 @@
     "request": {
       "title": "Recovery request in progress",
       "approved": "{count} of 2 approved",
-      "code": "Recovery code",
+      "code": "Recovery codes",
       "hoursLeft": "{hours} hours remaining",
       "hourLeft": "1 hour remaining",
       "windowEnded": "Protection window ended",
-      "cancel": "Cancel request"
+      "cancel": "Cancel request",
+      "codeOnPhone": "Shown on the phone that started the recovery, one per contact."
     },
     "cancelDialog": {
       "title": "Cancel this recovery request?",

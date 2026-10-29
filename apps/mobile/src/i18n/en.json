@@ -357,7 +357,7 @@
     "title": "Recover with contacts",
     "body": "Two trusted contacts must approve. Keeplas then waits 72 hours before releasing the protected key.",
     "start": "Start recovery",
-    "codeBody": "Compare this code with your contacts by phone or video call. Never send it by message.",
+    "codeBody": "Each contact gets their own code. Read it to them on a phone or video call. Never send it by message.",
     "waiting": "Waiting",
     "restore": "Restore my vault",
     "cancel": "Cancel request",
@@ -376,7 +376,11 @@
     "expired": "Your last request expired before it was approved. You can start a new one.",
     "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request.",
     "notReady": "You don’t have 2 trusted contacts ready yet, so they can’t open your vault. Use your recovery kit instead.",
-    "useKit": "Use my recovery kit"
+    "useKit": "Use my recovery kit",
+    "codeWaiting": "Your code for {name} shows up when they open the request.",
+    "otherPhone": "This request was started on another phone. The codes are shown there.",
+    "keyMismatch": "This request no longer matches the key this phone made, so no codes are shown. If you didn't start it on another phone, cancel it now.",
+    "codeTampered": "A code on this request wasn't made by this phone. Don't let anyone approve it: cancel the request and start a new one."
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -586,7 +590,10 @@
     "stillDifferent": "Still different? Decline",
     "stillDifferentBody": "{name} gets a security alert and the request stops.",
     "decline": "Decline request",
-    "compareAgain": "Compare again"
+    "compareAgain": "Compare again",
+    "waitingForPhone": "Waiting for {name}'s new phone. Ask {name} to open Keeplas on it: your code appears here a moment later.",
+    "openedElsewhere": "You opened this request on another phone, so the code is shown there. If it wasn't you, decline the request.",
+    "unverified": "Keeplas couldn't check the code of this request. Don't approve it: decline, then call {name} on a number you already had."
   },
   "devices": {
     "title": "Devices",
