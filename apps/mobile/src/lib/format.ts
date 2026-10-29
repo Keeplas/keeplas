@@ -119,3 +119,7 @@ export function placeName(
 export function ageInYears(birthday: number, now = Date.now()): number {
   return Math.floor((now - birthday) / (365.25 * 24 * 60 * 60 * 1000));
 }
+
+/** "123456" → "123 456": 6-digit codes people compare or read aloud. */
+export const spacedCode = (code: string) =>
+  code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code;

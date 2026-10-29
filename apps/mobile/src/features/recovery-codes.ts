@@ -273,7 +273,3 @@ export async function syncContactCode(args: {
 export async function forgetContactCode(store: CodeStore, requestId: string) {
   await store.remove(answerName(requestId));
 }
-
-/** "123456" → "123 456", as read aloud. */
-export const spacedCode = (code: string) =>
-  code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code;

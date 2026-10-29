@@ -20,11 +20,10 @@ import {
   loadRecoveryKey,
   secureCodeStore,
   serialQueue,
-  spacedCode,
   syncDeviceCodes,
   type CodeState,
 } from "@/features/recovery-codes";
-import { formatDate, formatTime } from "@/lib/format";
+import { formatDate, formatTime, spacedCode } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useReplaceKit } from "@/lib/use-replace-kit";

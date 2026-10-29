@@ -18,11 +18,11 @@ import {
   forgetContactCode,
   secureCodeStore,
   serialQueue,
-  spacedCode,
   syncContactCode,
   type ContactCodeState,
 } from "@/features/recovery-codes";
 import { useVaultData } from "@/features/vault/vault-data";
+import { spacedCode } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
