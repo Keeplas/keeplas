@@ -685,14 +685,19 @@ async function suspendInFlightCycle(
  * A mere read receipt is NOT routed here: only a deliberate reply counts as
  * liveness. No-ops silently when the phone maps to no user or there is no
  * cycle in flight.
+ *
+ * Only a VERIFIED number counts: a legacy account can carry an unverified
+ * number someone else chose, and a reply from that phone must not keep the
+ * account's dead-man's switch from firing.
  */
 export const validateFromWhatsApp = internalMutation({
   args: { phoneNumber: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    const candidates = await ctx.db
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", args.phoneNumber))
-      .first();
+      .take(10);
+    const user = candidates.find((u) => u.phoneNumberVerifiedAt !== undefined);
     if (!user) return { matched: false };
 
     const now = Date.now();

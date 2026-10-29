@@ -6,6 +6,7 @@ import { createNotification, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
+import { verifiedChannels } from "./lib/identity";
 
 /**
  * Count the number of DISTINCT humans behind a set of trusted-contact rows.
@@ -166,8 +167,7 @@ export const markUserUnreachable = auditedMutation({
       // so it must actually leave the building (createNotification is a no-op).
       const owner = await ctx.db.get(contact.userId);
       await ctx.scheduler.runAfter(0, internal.dispatch.notifyGraceCancel, {
-        email: owner?.email,
-        phoneNumber: owner?.phoneNumber,
+        ...verifiedChannels(owner),
         ownerName: owner?.name,
         language: owner?.language,
         pushTokens: await activePushTokens(ctx, contact.userId),
