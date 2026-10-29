@@ -17,6 +17,7 @@ import {
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { activePushTokens } from "./devices";
 import { requireSessionProof } from "./session_proofs";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3, D3, D4).
@@ -108,6 +109,31 @@ export const getSetupTargets = query({
         pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
       })),
     };
+  },
+});
+
+/** Setup attempts per account per hour: far above re-sealing after changes. */
+const SETUP_ATTEMPTS_PER_HOUR = 10;
+
+/**
+ * Gate `recovery_node.setup` runs BEFORE it calls the KMS: the same session and
+ * audit-seal checks as `storeSetup`, plus a per-account budget, so no account
+ * can drive unlimited outbound KMS requests (each one an Infisical login plus
+ * an encrypt call) and starve the releases of real recoveries.
+ */
+export const authorizeSetup = internalMutation({
+  args: { _audit: auditContextValidator },
+  handler: async (ctx, args): Promise<Id<"users">> => {
+    await verifyAuditContext(args._audit);
+    const userId = await requireFullAuth(ctx);
+    // Keyed by the authenticated account, not the caller's IP.
+    await enforceIpRateLimit(
+      ctx,
+      "recovery_setup",
+      userId,
+      SETUP_ATTEMPTS_PER_HOUR,
+    );
+    return userId;
   },
 });
 

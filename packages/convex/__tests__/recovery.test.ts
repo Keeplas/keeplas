@@ -412,3 +412,82 @@ describe("owner recovery", () => {
     );
   });
 });
+
+// Finding 36: setup used to reach the KMS before any step-up / audit check
+// and without a limit, and a failed KMS call stranded a recovery for good.
+describe("recovery_node hardening", () => {
+  const gateKey = Buffer.alloc(32, 1).toString("base64");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    process.env.GATE_KEY_KMS = "local";
+    process.env.GATE_KEY_LOCAL_KEK = Buffer.alloc(32, 9).toString("base64");
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it("checks the audit seal before calling the KMS", async () => {
+    const kmsCalls = vi.fn(
+      async () => new Response(JSON.stringify({ accessToken: "t" })),
+    );
+    vi.stubGlobal("fetch", kmsCalls);
+    process.env.GATE_KEY_KMS = "infisical";
+    process.env.INFISICAL_KMS_SITE_URL = "https://kms.test";
+    process.env.INFISICAL_KMS_CLIENT_ID = "id";
+    process.env.INFISICAL_KMS_CLIENT_SECRET = "secret";
+    process.env.INFISICAL_KMS_KEY_ID = "key";
+    const t = makeT();
+    const ownerId = await t.run((ctx) => ctx.db.insert("users", {}));
+
+    await expect(
+      asUser(t, ownerId).action(api.recovery_node.setup, {
+        generation: 1,
+        socialEnvelope: "x",
+        shares: [],
+        gateKey,
+        _audit: { ip: "", country: "", ts: 0, sig: "" },
+      }),
+    ).rejects.toThrow();
+    expect(kmsCalls).not.toHaveBeenCalled();
+  });
+
+  it("limits setup attempts per account", async () => {
+    const t = makeT();
+    const { owner } = await setupOwner(t); // 1st attempt
+    const stale = async () =>
+      await owner.action(api.recovery_node.setup, {
+        generation: 1,
+        socialEnvelope: "x",
+        shares: [],
+        gateKey,
+        _audit: await signedAudit(),
+      });
+    for (let i = 1; i < 10; i++) {
+      await expect(stale()).rejects.toThrow(/Stale recovery generation/);
+    }
+
+    await expect(stale()).rejects.toThrow(/Too many requests/);
+  });
+
+  it("retries the release when the KMS call fails", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[0]);
+    await contactApproves(t, ownerId, contacts[1]);
+
+    // KMS outage when the window closes: the scheduled release fails.
+    const kek = process.env.GATE_KEY_LOCAL_KEK;
+    process.env.GATE_KEY_LOCAL_KEK = Buffer.alloc(32, 7).toString("base64");
+    vi.advanceTimersByTime(RECOVERY_WINDOW_MS);
+    await t.finishInProgressScheduledFunctions();
+    expect(await statusOf(t, requestId)).toBe("approved_2");
+
+    // The KMS is back: the retry releases.
+    process.env.GATE_KEY_LOCAL_KEK = kek;
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(await statusOf(t, requestId)).toBe("released");
+  });
+});
