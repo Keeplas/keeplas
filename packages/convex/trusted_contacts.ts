@@ -557,6 +557,8 @@ export const acceptInvitation = auditedMutation({
   resourceType: "trusted_contact",
   args: {
     token: v.string(),
+    // Ignored: still accepted so shipped clients validate. The row gets the
+    // accepter's registered key (users row), never one the client picks.
     contactPublicKey: v.optional(v.string()),
   },
   resolveActor: async (ctx, args) => {
@@ -653,14 +655,14 @@ export const acceptInvitation = auditedMutation({
 
     const now = Date.now();
 
-    // Mirror the accepting contact's identity material onto the row so the
-    // owner can verify `contactPublicKey` before wrapping (finding #2). The
-    // accepter IS the contact user, so we copy from their own user record.
+    // Mirror the accepting contact's key material onto the row so the owner
+    // can verify `contactPublicKey` before wrapping (finding #2). The accepter
+    // IS the contact user, so we copy from their own user record.
     await ctx.db.patch(contact._id, {
       contactUserId,
       invitationStatus: "accepted",
       acceptedAt: now,
-      contactPublicKey: args.contactPublicKey,
+      contactPublicKey: accepter.publicKey,
       contactIdentityPublicKey: accepter.identityPublicKey,
       contactPublicKeySignature: accepter.publicKeySignature,
       updatedAt: now,
@@ -898,32 +900,34 @@ export const resendInvitation = auditedMutation({
 });
 
 /**
- * Re-publish the calling user's ML-KEM public key on every trusted_contacts
+ * Re-publish the calling user's registered key material (ML-KEM key, identity
+ * key, signature — all read from their users row) on every trusted_contacts
  * row where they are the contact (contactUserId === me). Used to backfill
  * rows accepted before the contact's crypto was ready, so the vault owner
  * can later wrap a verification envelope to them.
  *
- * Only patches rows whose contactPublicKey is missing or different from the
- * provided value — idempotent and safe to call repeatedly.
+ * Only patches rows whose material is missing or different — idempotent and
+ * safe to call repeatedly.
  */
 export const republishContactPublicKey = auditedMutation({
   action: "trusted_contact.public_key_republished",
   resourceType: "trusted_contact",
   getResourceId: () => "self",
-  args: { contactPublicKey: v.string() },
-  handler: async (ctx, args) => {
+  // Ignored: still accepted so existing clients validate. The server publishes
+  // the registered key, never one the client picks.
+  args: { contactPublicKey: v.optional(v.string()) },
+  handler: async (ctx) => {
     // Intentionally NOT step-up gated: this runs as part of a contact bringing
     // their crypto online right after accepting (often same session as signup),
-    // mirroring the acceptInvitation rationale. Gating it would block a fresh
-    // contact from publishing the public key the owner needs to wrap to them.
+    // mirroring the acceptInvitation rationale. It only copies the caller's own
+    // write-once material (users.setPublicKey), so it cannot change any key.
     const userId = await requireAuth(ctx);
-    // The republishing caller IS the contact user, so we mirror their identity
-    // material (finding #2) onto every owner's row alongside the ML-KEM key.
     const me = await ctx.db.get(userId);
+    if (!me?.publicKey) throw new Error("No public key to publish");
     const patched = await publishContactKeyToOwnerRows(ctx, userId, {
-      contactPublicKey: args.contactPublicKey,
-      contactIdentityPublicKey: me?.identityPublicKey,
-      contactPublicKeySignature: me?.publicKeySignature,
+      contactPublicKey: me.publicKey,
+      contactIdentityPublicKey: me.identityPublicKey,
+      contactPublicKeySignature: me.publicKeySignature,
     });
     return { patched };
   },

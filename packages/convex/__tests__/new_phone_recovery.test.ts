@@ -247,6 +247,32 @@ describe("I — attacker holding the owner's iCloud / Google account", () => {
     ).rejects.toThrow("PROOF_REQUIRED");
   });
 
+  it("nor swap in its own identity key to forge the vault proof", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    const owner = { publicKey: "owner-kem", encryptedAsymmetricSecretKey: "w" };
+    await t.run((ctx) => ctx.db.patch(userId, owner));
+    const { sessionId, as } = await passkeySession(t, userId);
+    const attacker = generateIdentityKeyPair();
+    await expect(
+      as.mutation(api.users.setPublicKey, {
+        ...owner,
+        identityPublicKey: attacker.publicKey,
+        publicKeySignature: "attacker-signature",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const { signature } = await proveVault(
+      t,
+      userId,
+      sessionId,
+      attacker.secretKey,
+    );
+    await expect(
+      as.action(api.session_proofs_node.proveVault, { signature }),
+    ).resolves.toEqual({ success: false });
+  });
+
   it("a first number (migration) is not gated", async () => {
     const t = makeT();
     const userId = await t.run((ctx) =>

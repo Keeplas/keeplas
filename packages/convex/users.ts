@@ -335,9 +335,11 @@ export const updateLegalResidence = auditedMutation({
  * stored in the dedicated `encryptedAsymmetricSecretKey` field — distinct
  * from `encryptedKeyBundle` which holds the MasterKey wrap itself.
  *
- * Idempotent: re-running with the same keypair is a no-op; calling with a
- * different public key is rejected to avoid silently invalidating prior
- * wrapped DEKs.
+ * Write-once: re-running with the exact same material is a no-op (a retried
+ * setup); any other change once a key is published is rejected. The identity
+ * key is what the "vault" session proof checks and what owners pin, so a
+ * weaker session must never swap it (or the wrapped secrets) behind an
+ * unchanged ML-KEM key. Deliberate changes go through `rotation.ts`.
  *
  * Identity-key fields (finding #2 — malicious-server key substitution) are
  * accepted alongside the ML-KEM keypair: `identityPublicKey` (ML-DSA-65 public
@@ -358,12 +360,20 @@ export const setPublicKey = auditedMutation({
     publicKeySignature: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
-    if (user.publicKey && user.publicKey !== args.publicKey) {
-      throw new Error("A different public key is already set for this account");
+    if (
+      user.publicKey &&
+      (user.publicKey !== args.publicKey ||
+        user.encryptedAsymmetricSecretKey !==
+          args.encryptedAsymmetricSecretKey ||
+        user.identityPublicKey !== args.identityPublicKey ||
+        user.encryptedIdentitySecretKey !== args.encryptedIdentitySecretKey ||
+        user.publicKeySignature !== args.publicKeySignature)
+    ) {
+      throw new Error("Key material is already set for this account");
     }
 
     await ctx.db.patch(userId, {
