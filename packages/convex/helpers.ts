@@ -233,8 +233,10 @@ export async function getStorageUsage(
     const item = itemById.get(file.itemId);
     if (!item) continue;
     counted.add(file.storageId);
+    // Release introductions count like any item: their flag is set by the
+    // client, so excluding them would let any upload skip the quota.
     if (item.status === "archived") archiveBytes += storedFileBytes(file);
-    else if (!item.isReleaseIntroduction) activeBytes += storedFileBytes(file);
+    else activeBytes += storedFileBytes(file);
   }
   const versions = await ctx.db
     .query("vault_item_versions")
