@@ -6,11 +6,18 @@ import { sha256Hex } from "./crypto";
 export const OTP_MAX_ATTEMPTS = 5;
 export const INVALID_CODE = "Invalid code";
 
-/** Uniform random 6-digit one-time code. */
+const OTP_SPACE = 1_000_000;
+// Largest multiple of OTP_SPACE a 32-bit word can hold: words at or above it
+// would make the low codes slightly more likely, so they are drawn again.
+const UNBIASED_LIMIT = 2 ** 32 - (2 ** 32 % OTP_SPACE);
+
+/** Uniform random 6-digit one-time code (rejection sampling). */
 export function generateOtp(): string {
   const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return (arr[0] % 1_000_000).toString().padStart(6, "0");
+  do {
+    crypto.getRandomValues(arr);
+  } while (arr[0] >= UNBIASED_LIMIT);
+  return (arr[0] % OTP_SPACE).toString().padStart(6, "0");
 }
 
 type OtpTable =

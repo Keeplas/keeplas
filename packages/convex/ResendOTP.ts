@@ -3,17 +3,9 @@ import { requireEnv } from "./lib/require_env";
 import { internal } from "./_generated/api";
 import type { ActionCtx } from "./_generated/server";
 import { resolveLocale, type Locale } from "./lib/locale";
+import { generateOtp } from "./lib/otp";
 
-const OTP_LENGTH = 6;
 const OTP_TTL_SECONDS = 60 * 15;
-
-function generateNumericOtp(length: number): string {
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  let out = "";
-  for (const byte of bytes) out += (byte % 10).toString();
-  return out;
-}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (c) =>
@@ -72,7 +64,7 @@ export const ResendOTP = Email({
   id: "resend-otp",
   maxAge: OTP_TTL_SECONDS,
   async generateVerificationToken() {
-    return generateNumericOtp(OTP_LENGTH);
+    return generateOtp();
   },
   // convex-auth passes the action ctx as a 2nd arg at runtime, but the Auth.js
   // Email type only declares the first param — capture ctx via a rest param so
