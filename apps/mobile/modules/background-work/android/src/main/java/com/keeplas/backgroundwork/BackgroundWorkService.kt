@@ -3,6 +3,7 @@
 // JS; this only holds the progress notification Android requires.
 package com.keeplas.backgroundwork
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -22,25 +23,44 @@ class BackgroundWorkService : Service() {
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val title = intent?.getStringExtra(EXTRA_TITLE).orEmpty()
     val subtitle = intent?.getStringExtra(EXTRA_SUBTITLE).orEmpty()
-    ServiceCompat.startForeground(
-      this,
-      NOTIFICATION_ID,
-      notification(this, title, subtitle, 0, 0),
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-      } else {
-        0
-      },
-    )
+    try {
+      ServiceCompat.startForeground(
+        this,
+        NOTIFICATION_ID,
+        notification(this, title, subtitle, 0, 0),
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+          ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        } else {
+          0
+        },
+      )
+    } catch (e: IllegalStateException) {
+      // Android 12+ can refuse the start, e.g. once Android 15's daily
+      // data-sync time is used up.
+      if (
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+          e !is ForegroundServiceStartNotAllowedException
+      ) {
+        throw e
+      }
+      expire()
+    }
     return START_NOT_STICKY
   }
 
   // Android 15+ caps data-sync services; the service must stop when told.
-  override fun onTimeout(startId: Int, fgsType: Int) {
+  override fun onTimeout(startId: Int, fgsType: Int) = expire()
+
+  /** Stopping removes the notification; the module then tells JS to cancel. */
+  private fun expire() {
     stopSelf()
+    onExpire?.invoke()
   }
 
   companion object {
+    /** Set by the module while it is alive. */
+    @Volatile var onExpire: (() -> Unit)? = null
+
     const val NOTIFICATION_ID = 7301
     const val EXTRA_TITLE = "title"
     const val EXTRA_SUBTITLE = "subtitle"
