@@ -1,9 +1,11 @@
 /**
- * Transient feedback ("Sent", "Something went wrong"), rendered by the single
- * <Toaster /> mounted in the root layout. Same variants and look as the web
+ * Transient feedback ("Sent", "Something went wrong"), rendered by the
+ * <Toaster /> of the root layout, and by a copy in each open bottom sheet
+ * (an RN Modal covers the root one). Same variants and look as the web
  * toast (@keeplas/ui). Confirmations and choices stay native `Alert`s.
  */
 import { useSyncExternalStore } from "react";
+import { AccessibilityInfo } from "react-native";
 
 export type ToastVariant = "default" | "success" | "error" | "info";
 
@@ -28,6 +30,12 @@ function set(message: ToastMessage | null) {
   current = message;
   if (message && !message.persistent) {
     timer = setTimeout(() => dismissToast(message.id), TOAST_DURATION_MS);
+  }
+  // Announced here, once, however many toasters show the message.
+  if (message) {
+    AccessibilityInfo.announceForAccessibility(
+      [message.title, message.description].filter(Boolean).join(". "),
+    );
   }
   for (const listener of listeners) listener();
 }

@@ -1,6 +1,7 @@
 import type { VaultCategory } from "@/crypto/item-meta";
 import {
   bucketOf,
+  builtInCategory,
   shownFiling,
   contentKind,
   greetingKey,
@@ -298,6 +299,17 @@ describe("home groups", () => {
     expect(
       listCounts([note, item("insurance_policy", "photos")]).documents,
     ).toBe(2);
+  });
+
+  it("names a web-only category after the built-in one of its group", () => {
+    expect(builtInCategory("legal_document")).toBe("personal_document");
+    expect(builtInCategory("insurance_policy")).toBe("personal_document");
+    expect(builtInCategory("subscription")).toBe("credential");
+    expect(builtInCategory("health_directive")).toBe("wishes");
+    expect(builtInCategory("contacts")).toBe("other");
+    expect(builtInCategory("mystery")).toBe("other");
+    expect(builtInCategory("inbox")).toBe("inbox");
+    expect(builtInCategory("credential")).toBe("credential");
   });
 
   it("maps a category to its tile", () => {

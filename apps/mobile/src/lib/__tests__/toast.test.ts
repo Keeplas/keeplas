@@ -1,3 +1,5 @@
+import { AccessibilityInfo } from "react-native";
+
 import { TOAST_DURATION_MS, dismissToast, toast, toastStore } from "../toast";
 
 describe("toast", () => {
@@ -65,5 +67,18 @@ describe("toast", () => {
     unsubscribe();
     toast({ title: "Again" });
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  // A copy of the toaster also renders inside each open sheet (an RN Modal
+  // covers the root one), so the store announces, not each toaster.
+  it("announces each new message once for screen readers", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => undefined);
+    announce.mockClear();
+    toast({ variant: "error", title: "Failed", description: "Try again" });
+    toast({ title: "Saved" });
+    dismissToast();
+    expect(announce.mock.calls).toEqual([["Failed. Try again"], ["Saved"]]);
   });
 });

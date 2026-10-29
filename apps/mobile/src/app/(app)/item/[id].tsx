@@ -558,7 +558,6 @@ export default function ItemDetails() {
           onPress={share}
         />
         {pendingBlock}
-        {pendingBlock}
         {historyRow}
         {categorySheet}
         {sheets}
@@ -639,6 +638,7 @@ export default function ItemDetails() {
           ))}
         </>
       ) : null}
+      {pendingBlock}
 
       <DetailRows
         rows={[

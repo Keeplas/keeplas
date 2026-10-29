@@ -15,6 +15,7 @@ import {
   type CategoryChoice,
 } from "@/crypto/item-meta";
 import {
+  builtInCategory,
   GROUP_CATEGORY,
   groupOf,
   shownFiling,
@@ -53,7 +54,7 @@ export function useCategoryLabel() {
       const { category, categoryId } = shown(choice);
       return (
         (categoryId && categories?.find((c) => c.id === categoryId)?.name) ||
-        t(`capture.category.${category}`)
+        t(`capture.category.${builtInCategory(category)}`)
       );
     },
     [categories, shown, t],

@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { useNavigation, useRouter } from "expo-router";
+import { usePreventRemove } from "expo-router/react-navigation";
 import { File } from "expo-file-system";
 import {
   RecordingPresets,
@@ -115,17 +116,38 @@ const LiveSection = memo(function LiveSection({
   recorder: AudioRecorder;
 }) {
   const router = useRouter();
+  const navigation = useNavigation();
   const { t } = useI18n();
   const { colors } = useTheme();
   const state = useAudioRecorderState(recorder, 120);
   const [levels, setLevels] = useState<number[]>(() => Array(BARS).fill(0.08));
   const [confirmReset, setConfirmReset] = useState(false);
   const [resumeAfter, setResumeAfter] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(
-    () => (state.isRecording ? holdLock() : undefined),
-    [state.isRecording],
-  );
+  // A paused recording counts too: an auto-lock would unmount the screen
+  // and lose it.
+  const hasRecording = state.isRecording || state.durationMillis > 0;
+  useEffect(() => (hasRecording ? holdLock() : undefined), [hasRecording]);
+
+  // Leaving (back, swipe) would drop an unsaved recording: ask first.
+  usePreventRemove(hasRecording && !saving, ({ data }) => {
+    Alert.alert(
+      t("capture.discardRecordingTitle"),
+      t("capture.discardRecordingBody", {
+        time: formatDuration(state.durationMillis / 1000),
+      }),
+      [
+        { text: t("capture.resetKeep"), style: "cancel" },
+        {
+          text: t("capture.discardRecording"),
+          style: "destructive",
+          onPress: () =>
+            void deleteRecording().then(() => navigation.dispatch(data.action)),
+        },
+      ],
+    );
+  });
 
   // dBFS (-60..0) → bar height ratio, newest bar on the right.
   const metering = state.metering;
@@ -139,23 +161,32 @@ const LiveSection = memo(function LiveSection({
   }, [metering, state.isRecording]);
 
   async function save() {
+    if (saving) return;
+    setSaving(true);
     await recorder.stop();
     await setAudioModeAsync({ allowsRecording: false });
     if (!recorder.uri) return;
-    const durationSec = Math.round(state.durationMillis / 1000);
-    draftStore.update({
-      files: [
-        ...draftStore.get().files,
-        {
-          uri: recorder.uri,
-          name: `${t("capture.voiceTitle")}.m4a`,
-          mimeType: "audio/mp4",
-          kind: "audio",
-          durationSec,
-        },
-      ],
-    });
+    // Moved into the draft's folder: deleted with the draft.
+    draftStore.addFiles([
+      {
+        uri: recorder.uri,
+        name: `${t("capture.voiceTitle")}.m4a`,
+        mimeType: "audio/mp4",
+        kind: "audio",
+        durationSec: Math.round(state.durationMillis / 1000),
+      },
+    ]);
     router.replace(draftHref("/capture/compose"));
+  }
+
+  /** Stops the recorder and deletes its file from the phone. */
+  async function deleteRecording() {
+    const uri = recorder.uri;
+    await recorder.stop();
+    if (uri) {
+      const file = new File(uri);
+      if (file.exists) file.delete();
+    }
   }
 
   function togglePause() {
@@ -171,12 +202,7 @@ const LiveSection = memo(function LiveSection({
 
   async function reset() {
     setConfirmReset(false);
-    const previous = recorder.uri;
-    await recorder.stop();
-    if (previous) {
-      const file = new File(previous);
-      if (file.exists) file.delete();
-    }
+    await deleteRecording();
     setLevels(Array(BARS).fill(0.08));
     await recorder.prepareToRecordAsync();
     recorder.record();
@@ -247,6 +273,7 @@ const LiveSection = memo(function LiveSection({
         <Button
           label={t("capture.save")}
           onPress={save}
+          loading={saving}
           disabled={state.durationMillis < 500}
           style={styles.flex}
         />

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,11 +8,18 @@ import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius, withAlpha } from "@/theme";
 import { Icon } from "./icon";
 import { Text } from "./text";
+import { Toaster } from "./toaster";
+
+/** Scrim left above the tallest sheet, below the status bar. */
+const TOP_GAP = 24;
 
 /**
  * Figma `Add menu / Sheet`: bottom sheet (radius 20 on top) over a
  * navy/950 35 % scrim, H3 title with a close button, 20 pt padding.
  * Rides above the keyboard so a focused field and its action stay visible.
+ * Never taller than the screen: the title stays put and the content
+ * scrolls. Its own Toaster shows toasts raised while it is open, which
+ * the Modal would otherwise hide.
  */
 export function BottomSheet({
   visible,
@@ -40,14 +47,16 @@ export function BottomSheet({
       onRequestClose={onDismiss}
     >
       <KeyboardAvoidingView behavior="padding" style={styles.scrim}>
-        <Pressable style={styles.backdrop} onPress={onDismiss}>
+        <Pressable
+          style={[styles.backdrop, { paddingTop: insets.top + TOP_GAP }]}
+          onPress={onDismiss}
+        >
           <Pressable
             style={[
               styles.sheet,
               {
                 backgroundColor: colors[background],
                 paddingTop: title ? 20 : 0,
-                paddingBottom: insets.bottom + 20,
               },
             ]}
           >
@@ -64,10 +73,21 @@ export function BottomSheet({
                 </Pressable>
               </View>
             ) : null}
-            {children}
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={[
+                styles.content,
+                { paddingBottom: insets.bottom + 20 },
+              ]}
+              keyboardShouldPersistTaps="handled"
+              alwaysBounceVertical={false}
+            >
+              {children}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+      <Toaster />
     </Modal>
   );
 }
@@ -79,17 +99,23 @@ const styles = StyleSheet.create({
     // here, not on the backdrop, so the keyboard padding is dimmed too.
     backgroundColor: withAlpha(palette.navy["950"], 0.35),
   },
+  // Its top padding caps the sheet's height; the keyboard padding above
+  // takes more room away while a field is focused.
   backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: {
+    flexShrink: 1,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    paddingHorizontal: 20,
     gap: 10,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 20,
     marginBottom: 4,
   },
+  // As tall as its content until the sheet runs out of room, then scrolls.
+  scroll: { flexGrow: 0 },
+  content: { paddingHorizontal: 20, gap: 10 },
 });

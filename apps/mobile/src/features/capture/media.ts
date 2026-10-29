@@ -15,7 +15,7 @@ import { fileKindOf } from "@/crypto/item-meta";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
 import type { CaptureFile } from "./seal";
 
-export type PermissionProblem = "camera" | "photos" | "microphone";
+export type PermissionProblem = "camera" | "microphone";
 
 export class PermissionDenied extends Error {
   constructor(readonly what: PermissionProblem) {
@@ -61,12 +61,14 @@ export async function shoot(
   return result.canceled ? null : toCaptureFile(result.assets[0]);
 }
 
-/** Photos / videos from the library (several at once). */
+/**
+ * Photos / videos from the library (several at once). The system picker
+ * (PHPicker on iOS, the Android photo picker) runs outside the app and
+ * needs no library access, so none is asked.
+ */
 export async function chooseFromLibrary(
   media: ("images" | "videos")[] = ["images"],
 ): Promise<CaptureFile[]> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) throw new PermissionDenied("photos");
   const result = await keepUnlockedWhile(() =>
     ImagePicker.launchImageLibraryAsync({
       mediaTypes: media,
