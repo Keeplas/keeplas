@@ -151,13 +151,17 @@ export const resolveTarget = internalQuery({
 export const seedQuorum = internalMutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const contacts = await ctx.db
-      .query("trusted_contacts")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .collect();
+    // Only votes releaseAfterConfirmation re-counts: accepted contacts with an
+    // account (countQuorumVotes).
+    const contacts = (
+      await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .collect()
+    ).filter((c) => c.invitationStatus === "accepted" && c.contactUserId);
     if (contacts.length === 0) {
       throw new Error(
-        "Owner has no trusted contacts — cannot simulate the confirmation quorum",
+        "Owner has no accepted trusted contacts — cannot simulate the confirmation quorum",
       );
     }
 
