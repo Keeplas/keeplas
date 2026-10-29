@@ -1,13 +1,19 @@
-import { query } from "../_generated/server";
+import { query, type QueryCtx } from "../_generated/server";
 import { requireAdmin } from "../helpers";
 import { seriesByDay } from "./lib";
+
+/** Payments still standing: a refunded one is no revenue. */
+async function paidPayments(ctx: QueryCtx) {
+  const payments = await ctx.db.query("payments").collect();
+  return payments.filter((p) => p.status === "paid");
+}
 
 /** Daily revenue series (summed cents per UTC day), ascending by day. */
 export const revenueOverTime = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const payments = await ctx.db.query("payments").collect();
+    const payments = await paidPayments(ctx);
     return seriesByDay(
       payments,
       (p) => p.createdAt,
@@ -21,7 +27,7 @@ export const revenueTotals = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const payments = await ctx.db.query("payments").collect();
+    const payments = await paidPayments(ctx);
     const byCurrency: Record<string, number> = {};
     for (const p of payments) {
       byCurrency[p.currency] = (byCurrency[p.currency] ?? 0) + p.amountCents;
