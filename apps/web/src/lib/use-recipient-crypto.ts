@@ -3,23 +3,27 @@ import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   generateRecipientKeyPair,
-  parsePublicKey,
   parseSecretKey,
   serializePublicKey,
   serializeSecretKey,
   unwrapDek,
+  verifiedOwnerPublicKey,
   wrapDek,
 } from "@keeplas/crypto/kem";
-import { generateIdentityKeyPair, signBytes } from "@keeplas/crypto/sig";
+import {
+  deriveContactTrust,
+  generateIdentityKeyPair,
+  signBytes,
+  signKemBinding,
+  verifyContactKey,
+  type BlockReason,
+  type ContactKeyMaterial,
+  type PinWrite,
+} from "@keeplas/crypto/sig";
 import { uint8ToBase64, base64ToUint8 } from "@keeplas/crypto/encoding";
 import { useMasterKey } from "./master-key-context";
 import { readInMemorySecrets, setInMemorySecrets } from "./in-memory-secrets";
 import { useAuditedMutation } from "./use-audited-mutation";
-import {
-  verifyContactKey,
-  type ContactKeyMaterial,
-  type BlockedContact,
-} from "./verify-contact-key";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 /**
@@ -43,6 +47,15 @@ interface RecipientWrap extends WrappedDek {
  * blocked as `unverifiable`, not silently skipped.
  */
 export type WrapRecipient = ContactKeyMaterial;
+
+/** A contact whose key could not be authenticated, for the blocking alert. */
+export interface BlockedContact {
+  contactId: string;
+  name?: string;
+  reason: BlockReason;
+  /** The pin to write if the owner explicitly re-trusts this identity. */
+  repin?: PinWrite;
+}
 
 /** JSON shape of a secret key wrapped under the MasterKey (AES-GCM). */
 interface WrappedSecret {
@@ -136,6 +149,9 @@ export function useRecipientCrypto() {
         masterKey,
       );
       const secretKey = parseSecretKey(secretKeyB64);
+      // Owner wraps go to the key the authenticated secret key embeds, never
+      // to a server-published copy that differs (finding #43).
+      const publicKeyB64 = verifiedOwnerPublicKey(secretKey, viewer.publicKey);
 
       // Unwrap the identity secret key in parallel, when present, into the same
       // in-memory holder so step 2 can sign/verify. Older accounts created
@@ -150,10 +166,10 @@ export function useRecipientCrypto() {
       }
 
       setInMemorySecrets({
-        ownerPublicKeyB64: viewer.publicKey,
+        ownerPublicKeyB64: publicKeyB64,
         ownerSecretKey: secretKey,
       });
-      return { publicKeyB64: viewer.publicKey, secretKey };
+      return { publicKeyB64, secretKey };
     }
 
     // First time: generate the ML-KEM encryption keypair AND the ML-DSA
@@ -172,11 +188,12 @@ export function useRecipientCrypto() {
       identity.secretKey,
       masterKey,
     );
-    // Sign the raw ML-KEM public-key bytes so verifiers can detect a
-    // server-substituted encryption key (step 2 enforces this).
-    const publicKeySignature = signBytes(
+    // Bind the ML-KEM key to this account so contacts can detect a
+    // server-substituted encryption key (v1 key binding).
+    const publicKeySignature = await signKemBinding(
       identity.secretKey,
-      parsePublicKey(publicKeyB64),
+      viewer._id,
+      publicKeyB64,
     );
 
     await setPublicKey({
@@ -198,11 +215,11 @@ export function useRecipientCrypto() {
   /**
    * Verify EVERY recipient's encryption key before wrapping (finding #2). For
    * each recipient: authenticate the ML-KEM key via the contact's identity
-   * signature and TOFU pin. Only on success do we wrap the DEK to it. A
-   * recipient that fails verification is reported in `blocked` — never silently
-   * skipped — so the caller can raise a blocking alert. On first successful
-   * verify (no pin yet) the contact's fingerprint is pinned via an audited
-   * mutation, establishing trust-on-first-use.
+   * signature and the owner's authenticated TOFU pin. Only on success do we
+   * wrap the DEK to it. A recipient that fails verification is reported in
+   * `blocked` — never silently skipped — so the caller can raise a blocking
+   * alert. On first use (or a legacy pin upgrade) the MACed pin is persisted
+   * via an audited mutation before the wrap counts.
    *
    * Shared by {@link generateDekAndWrap} and {@link wrapExistingDek} so the
    * verify-before-wrap gate has a single implementation.
@@ -217,25 +234,24 @@ export function useRecipientCrypto() {
     }> => {
       const recipientWraps: RecipientWrap[] = [];
       const blocked: BlockedContact[] = [];
+      if (recipients.length === 0) return { recipientWraps, blocked };
+      if (!masterKey || !viewer) throw new Error("Vault not unlocked");
+      const trust = await deriveContactTrust(viewer._id, masterKey);
       for (const r of recipients) {
-        const outcome = await verifyContactKey(r);
+        const outcome = await verifyContactKey(r, trust);
         if (outcome.status !== "ok") {
           blocked.push({
             contactId: r.contactId,
             name: r.name,
             reason: outcome.status,
-            newFingerprint:
-              outcome.status === "fingerprint_changed"
-                ? outcome.newFingerprint
-                : undefined,
+            repin: "repin" in outcome ? outcome.repin : undefined,
           });
           continue;
         }
-        // First-trust: persist the pin before treating the wrap as final.
-        if (outcome.pinFingerprint) {
+        if (outcome.pin) {
           await pinContactIdentity({
             contactId: r.contactId as Id<"trusted_contacts">,
-            fingerprint: outcome.pinFingerprint,
+            ...outcome.pin,
           });
         }
         recipientWraps.push({
@@ -245,7 +261,7 @@ export function useRecipientCrypto() {
       }
       return { recipientWraps, blocked };
     },
-    [pinContactIdentity],
+    [masterKey, viewer, pinContactIdentity],
   );
 
   /**
