@@ -30,9 +30,10 @@ export default function Invite() {
   const accept = useAuditedMutation(api.trusted_contacts.acceptInvitation);
   const decline = useAuditedMutation(api.trusted_contacts.declineInvitation);
   const [busy, setBusy] = useState(false);
+  const [openedAt] = useState(() => Date.now());
   const open =
     invitation?.invitationStatus === "pending" &&
-    Date.now() < invitation.expiresAt;
+    openedAt < invitation.expiresAt;
 
   async function answer(choice: "accept" | "decline") {
     if (!viewer) {
