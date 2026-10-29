@@ -122,10 +122,19 @@ describe("background export", () => {
     expect(folder.delete).toHaveBeenCalled();
   });
 
-  it("notifies a failure", async () => {
+  it("notifies a failure and logs its reason without storage URLs", async () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
     await startExport(async () => {
-      throw new Error("offline");
+      throw new Error(
+        "unexpected end of stream on https://x.convex.cloud/api/storage/abc",
+      );
     }, texts);
+
+    expect(warn).toHaveBeenCalledWith(
+      "Export failed",
+      "Error: unexpected end of stream on <url>",
+    );
+    warn.mockRestore();
 
     expect(getExportPhase()).toEqual({ kind: "failed" });
     expect(background.endBackgroundWork).toHaveBeenCalledWith(false);
