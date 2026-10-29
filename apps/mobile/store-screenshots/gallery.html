@@ -33,8 +33,6 @@
   .seg div { padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: 14px; }
   .node { position: absolute; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%; display: grid; place-items: center; }
   .node svg { width: 34px; height: 34px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-family: "Source Serif 4"; font-size: 26px; }
-  .brand img { width: 40px; height: 40px; }
 </style>
 </head>
 <body>
@@ -45,10 +43,15 @@ const DIR = q.get("d") || "horizon";
 const LANG = q.get("lang") || "en";
 const MODE = q.get("mode") || "strip"; // strip | fg (Play feature graphic)
 // CSS sizes; the render script applies the device scale factor.
-// ios: 430x932 @3 = 1290x2796 (6.9"). play: 432x768 @2.5 = 1080x1920 (9:16). fg: 512x250 @2 = 1024x500.
-const DIMS = { ios: [430, 932], play: [432, 768], fg: [512, 250] };
+// Per platform: canvas size, headline top and size, gap above the phone, phone width.
+const PLATS = {
+  ios: { size: [430, 932], headTop: 70, font: 54, gap: 46, pw: 312 }, // @3 = 1290x2796, iPhone Dynamic Island large (6.9")
+  "ios-6.3": { size: [402, 874], headTop: 62, font: 50, gap: 40, pw: 292 }, // @3 = 1206x2622, Dynamic Island medium (6.3")
+  play: { size: [432, 768], headTop: 46, font: 48, gap: 30, pw: 292 }, // @2.5 = 1080x1920, Google Play phone (9:16)
+  fg: { size: [512, 250] }, // @2 = 1024x500, Google Play feature graphic
+};
 const PLAT = MODE === "fg" ? "fg" : (q.get("p") || "ios");
-const [W, H] = DIMS[PLAT];
+const LAYOUT = PLATS[PLAT], [W, H] = LAYOUT.size;
 const ICON = "../../../PRD/v2-mobile-first/design-kit/svg/icons/";
 
 const C = {
@@ -57,9 +60,9 @@ const C = {
 };
 const TONES = {
   light: { head: C.navy, accent: C.sky, card: "#FFFFFF", cardT: C.navy, cardB: C.muted, border: "1px solid #E3E7EC", icBg: "#E1F1FA", ic: C.sky,
-    shadow: "0 1px 2px rgba(14,35,64,.06), 0 18px 40px rgba(14,35,64,.16)", ring: "0 0 0 1.5px #C5D7E8, 0 40px 70px rgba(14,35,64,.25)", logo: "logo.svg" },
+    shadow: "0 1px 2px rgba(14,35,64,.06), 0 18px 40px rgba(14,35,64,.16)", ring: "0 0 0 1.5px #C5D7E8, 0 40px 70px rgba(14,35,64,.25)" },
   dark: { head: C.ivory, accent: C.dawn, card: "#141416", cardT: "#F2EFEA", cardB: C.noirMuted, border: "1px solid #3A3A40", icBg: "#1A2233", ic: C.skyN,
-    shadow: "0 24px 60px rgba(0,0,0,.55)", ring: "0 0 0 1.5px rgba(255,255,255,.16), 0 40px 80px rgba(0,0,0,.55)", logo: "logo-inverse.svg" },
+    shadow: "0 24px 60px rgba(0,0,0,.55)", ring: "0 0 0 1.5px rgba(255,255,255,.16), 0 40px 80px rgba(0,0,0,.55)" },
 };
 
 // Storyline: one benefit per screenshot, same order in every direction.
@@ -140,7 +143,7 @@ const DIRECTIONS = {
     screen: (i) => (i < 3 ? "dark" : "light"),
     tilt: () => 0,
     back() {
-      const hz = H * 0.8, sunX = MODE === "fg" ? SW * 0.62 : W * 3.05;
+      const hz = H * 0.8, sunX = MODE === "fg" ? SW * 0.86 : W * 3.05;
       return `<defs>
         ${MODE === "fg" // feature graphic: night to dawn only, so the white title stays readable
           ? hgrad("top", [[0, "#06162B"], [0.6, C.navy], [1, "#2F567F"]]) + hgrad("low", [[0, "#1B3A63"], [0.5, "#3E5F8C"], [0.85, "#F2B866"], [1, "#FDEFD4"]])
@@ -221,7 +224,7 @@ function phoneEl(i, left, top, pw) {
   let spec = p.light, sim = false;
   if (mode === "dark") { if (p.dark) spec = p.dark; else sim = true; }
   // Google Play shows an Android phone: flatter corners, thin bezel, punch-hole camera (status bar: screen.html).
-  const android = PLAT !== "ios";
+  const android = PLAT === "play" || PLAT === "fg";
   const pad = android ? Math.round(pw * 0.024) : 9, r = android ? Math.round(pw * 0.12) : 50;
   const ph = Math.round((pw - 2 * pad) * 852 / 393) + 2 * pad;
   const tilt = D.tilt(i);
@@ -260,27 +263,26 @@ async function build() {
   strip.appendChild(el(svgLayer(D.back())));
 
   if (MODE === "fg") {
-    // Play feature graphic: brand lockup left, phone right.
+    // Play feature graphic: app name and tagline centred, clear of the cutoff edges. No device imagery and no
+    // icon-like logo, per the Play preview asset guidelines.
     const T = TONES[DIR === "horizon" ? "dark" : D.tone(0)];
-    strip.appendChild(el(`<div style="position:absolute;left:40px;top:62px;width:260px">
-      <div class="brand" style="color:${T.head}"><img src="../../web/public/assets/logo/${T.logo}"/>Keeplas</div>
-      <div class="head" style="position:static;text-align:left;margin-top:18px;font-size:38px;line-height:42px"><span class="l" style="color:${T.head}">${PANELS[0].head[LANG][0]}</span><span class="l" style="color:${T.accent}">${PANELS[0].head[LANG][1]}</span></div></div>`));
-    strip.appendChild(phoneEl(0, 318, 34, 170).node);
+    strip.appendChild(el(`<div class="head" style="top:50%;transform:translateY(-55%)">
+      <span class="l" style="font-size:22px;line-height:30px;letter-spacing:.04em;color:${T.head};opacity:.85">Keeplas</span>
+      <span class="l" style="font-size:46px;line-height:50px;margin-top:6px;color:${T.head}">${PANELS[0].head[LANG][0]}</span><span class="l" style="font-size:46px;line-height:50px;color:${T.accent}">${PANELS[0].head[LANG][1]}</span></div>`));
     if (D.front) { const f = el(`<div class="layer"></div>`); f.innerHTML = D.front(ICONS); strip.appendChild(f); }
   } else {
     for (let i = 0; i < N; i++) {
       const p = PANELS[i], T = TONES[D.tone(i)];
       const panel = el(`<div class="panel" style="left:${i * W}px;width:${W}px;height:${H}px"></div>`);
       strip.appendChild(panel);
-      const head = el(`<div class="head" style="top:${PLAT === "play" ? 46 : 70}px"><span class="l" style="color:${T.head}">${p.head[LANG][0]}</span><span class="l" style="color:${T.accent}">${p.head[LANG][1]}</span></div>`);
+      const head = el(`<div class="head" style="top:${LAYOUT.headTop}px"><span class="l" style="color:${T.head}">${p.head[LANG][0]}</span><span class="l" style="color:${T.accent}">${p.head[LANG][1]}</span></div>`);
       panel.appendChild(head);
       // Fit headline to width
-      let fs = PLAT === "play" ? 48 : 54;
+      let fs = LAYOUT.font;
       const fit = () => { head.style.fontSize = fs + "px"; head.style.lineHeight = Math.round(fs * 1.08) + "px"; };
       fit();
       while ([...head.children].some((l) => l.scrollWidth > W - 40) && fs > 30) { fs--; fit(); }
-      const top = head.offsetTop + head.offsetHeight + (PLAT === "play" ? 30 : 46);
-      const pw = PLAT === "play" ? 292 : 312;
+      const top = head.offsetTop + head.offsetHeight + LAYOUT.gap, pw = LAYOUT.pw;
       const { ph, node } = phoneEl(i, (W - pw) / 2, top, pw);
       panel.appendChild(node);
       panel.appendChild(await callout(i, top, Math.min(ph, H - top)));
