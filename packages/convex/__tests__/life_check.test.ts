@@ -356,6 +356,45 @@ describe("LIFE_CHECK_PAUSED kill switch freezes the counting", () => {
   });
 });
 
+describe("postponeCycle (finding 32)", () => {
+  it("postpones a Stage-1 check-in", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedConfig(t, owner);
+    const cycleId = await seedRunningCycle(t, owner, configId);
+
+    await asUser(t, owner).mutation(api.life_check.postponeCycle, {
+      duration: "48h",
+      _audit: await signedAudit(),
+    });
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("cancelled");
+  });
+
+  it("refuses during Stage 2 so it can't look like it stopped a release", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const cycleId = await seedAwaitingConfirmation(t, owner);
+    const before = await t.run(async (ctx) => {
+      const cycle = await ctx.db.get(cycleId);
+      return await ctx.db.get(cycle!.configId);
+    });
+
+    await expect(
+      asUser(t, owner).mutation(api.life_check.postponeCycle, {
+        duration: "48h",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow(/Confirm you're well/);
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId));
+    expect(cycle?.status).toBe("awaiting_confirmation");
+    const config = await t.run((ctx) => ctx.db.get(cycle!.configId));
+    expect(config?.nextCheckAt).toBe(before?.nextCheckAt);
+  });
+});
+
 describe("I'm okay", () => {
   it("resets the countdown and returns the next check date", async () => {
     const t = makeT();

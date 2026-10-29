@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import type { FunctionArgs, SchedulableFunctionReference } from "convex/server";
 import {
   action,
@@ -277,13 +277,16 @@ export const postponeCycle = auditedMutation({
       throw new Error("Custom date required for custom duration");
     }
 
-    // Cancel active cycle if any
-    const activeCycle = await ctx.db
-      .query("life_check_cycles")
-      .withIndex("by_status", (q) =>
-        q.eq("userId", userId).eq("status", "running"),
-      )
-      .first();
+    // Cancel active cycle if any. Stage 2 can't be postponed: contacts are
+    // already being asked to confirm, and a postpone that left their votes
+    // and the scheduled release running would only look like it stopped
+    // them. The owner confirms they're well instead (validateCycle).
+    const activeCycle = await findInFlightCycle(ctx, userId);
+    if (activeCycle?.status === "awaiting_confirmation") {
+      throw new ConvexError(
+        "Your trusted contacts are being asked to confirm your status. Confirm you're well instead of postponing.",
+      );
+    }
 
     if (activeCycle) {
       await ctx.db.patch(activeCycle._id, {
