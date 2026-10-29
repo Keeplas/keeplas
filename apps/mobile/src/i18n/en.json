@@ -274,6 +274,7 @@
     "sentBody": "We'll reply to {contact}.",
     "invalidContact": "Enter a valid email or WhatsApp number, with its country code (e.g. +33).",
     "tooShort": "Your message must be at least 10 characters.",
+    "tooLong": "Your message is too long. Keep it under 5,000 characters.",
     "missing": "Fill in every field."
   },
   "help": {

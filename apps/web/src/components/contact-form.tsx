@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import {
   Button,
@@ -12,6 +12,7 @@ import {
   Textarea,
 } from "@keeplas/ui";
 import { ICON_PATHS } from "@/lib/icons";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { getErrorMessage } from "@/lib/utils";
 import { useTranslations } from "@/lib/i18n";
 
@@ -41,7 +42,7 @@ interface ContactFormProps {
 export function ContactForm({ initialTopic = "general" }: ContactFormProps) {
   const t = useTranslations("settings");
   const user = useQuery(api.users.viewer);
-  const submitTicket = useMutation(api.support.submitTicket);
+  const submitTicket = useAuditedMutation(api.support.submitTicket);
 
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");

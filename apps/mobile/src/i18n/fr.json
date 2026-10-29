@@ -267,6 +267,7 @@
     "sentBody": "Nous vous répondrons à {contact}.",
     "invalidContact": "Saisissez un e-mail ou un numéro WhatsApp valide, avec l'indicatif (ex. +33).",
     "tooShort": "Votre message doit faire au moins 10 caractères.",
+    "tooLong": "Votre message est trop long. Restez sous 5 000 caractères.",
     "missing": "Remplissez tous les champs."
   },
   "help": {
