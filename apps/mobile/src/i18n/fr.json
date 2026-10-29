@@ -617,7 +617,15 @@
     "deviceOn": "{browser} sur {os}",
     "unknownLocation": "Lieu inconnu",
     "today": "Aujourd'hui à {time}",
-    "confirmTitle": "Confirmez que c'est vous pour connecter ce navigateur"
+    "confirmTitle": "Confirmez que c'est vous pour connecter ce navigateur",
+    "title": "Connecter ce navigateur ?",
+    "body": "Un navigateur demande à ouvrir votre coffre Keeplas. Approuver lui donne un accès complet.",
+    "codeLabel": "Code",
+    "codeOnComputer": "Code sur votre ordinateur",
+    "codeBody": "Votre ordinateur affiche un code à côté du QR code. Il doit être identique.",
+    "warning": "N'approuvez que si vous vous connectez sur cet ordinateur maintenant et qu'il affiche ce code. N'approuvez jamais un code ou un lien que quelqu'un vous a envoyé.",
+    "approve": "Approuver",
+    "decline": "Refuser"
   },
   "connected": {
     "title": "Vous êtes connecté",
@@ -1357,7 +1365,7 @@
     "body": "Votre autre téléphone envoie la clé de votre coffre à celui-ci, chiffrée de bout en bout. Keeplas ne la voit jamais.",
     "step1": "Ouvrez Keeplas sur le téléphone où vous êtes connecté.",
     "step2": "Allez dans Réglages → Appareils → {menu}.",
-    "step3": "Scannez ce code, puis approuvez.",
+    "step3": "Scannez ce code, vérifiez qu’il affiche le code ci-dessous, puis approuvez.",
     "expires": "Ce code est valable 2 minutes.",
     "preparing": "Préparation d’un code sécurisé…",
     "opening": "Ouverture de votre coffre sur ce téléphone…",
@@ -1365,7 +1373,8 @@
     "rejected": "L’autre téléphone a refusé. Si ce n’était pas vous, sécurisez votre compte depuis ce téléphone.",
     "failed": "Ce téléphone n’a pas pu être associé. Vérifiez votre connexion, puis générez un nouveau code.",
     "retry": "Générer un nouveau code",
-    "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code."
+    "note": "Seul un téléphone déjà connecté à votre compte peut approuver ce code.",
+    "codeDetail": "N’approuvez sur l’autre téléphone que s’il affiche ce même code."
   },
   "itemEdit": {
     "title": "Modifier",

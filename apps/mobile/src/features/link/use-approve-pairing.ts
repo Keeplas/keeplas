@@ -28,9 +28,10 @@ export class PairingKeyMismatch extends Error {
 }
 
 /**
- * M03-4 scan → M03-6: biometric step-up, re-check the browser key against the
- * QR, seal the MasterKey to it, sign with the identity key, then
- * `pairing.approve`. The raw MasterKey is wiped right after sealing.
+ * M03-5 Approve → M03-6: biometric step-up, re-check the browser key against
+ * the QR, seal the MasterKey (and the QR secret) to it, sign with the
+ * identity key, then `pairing.approve`. Only called from the explicit
+ * approval screen. The raw MasterKey is wiped right after sealing.
  */
 export function useApprovePairing() {
   const { t } = useI18n();
@@ -66,6 +67,7 @@ export function useApprovePairing() {
           browserPublicKey,
           sessionId: qr.sessionId,
           origin: qr.origin,
+          qrSecret: qr.qrSecret,
           identitySecretKey,
         });
       } finally {
