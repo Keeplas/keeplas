@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { MutationCtx } from "../_generated/server";
 
 const DEFAULT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -52,6 +53,6 @@ export async function enforceIpRateLimit(
   windowMs: number = DEFAULT_WINDOW_MS,
 ): Promise<void> {
   if (!(await takeRateLimitSlot(ctx, `${scope}:${ip}`, max, windowMs))) {
-    throw new Error("Too many requests. Try again later.");
+    throw new ConvexError("Too many requests. Try again later.");
   }
 }

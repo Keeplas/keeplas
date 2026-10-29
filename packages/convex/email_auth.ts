@@ -52,7 +52,7 @@ export const requestEmailAuthOtp = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
     for (const stale of recent) {
       if (stale.expiresAt > now)

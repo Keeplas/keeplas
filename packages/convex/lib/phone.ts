@@ -1,3 +1,5 @@
+import { ConvexError } from "convex/values";
+
 /**
  * Server-side E.164 phone number sanity check. Defense-in-depth against
  * malformed values reaching the database when bypassing the client UI.
@@ -13,7 +15,7 @@ export function normalizeE164(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   if (!trimmed) return undefined;
   if (!E164.test(trimmed)) {
-    throw new Error("Invalid phone number format");
+    throw new ConvexError("Invalid phone number format");
   }
   return trimmed;
 }

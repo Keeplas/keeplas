@@ -59,6 +59,7 @@
     "confirm": "Confirmer le numéro",
     "noCode": "Vous n'avez pas reçu le code ?",
     "resend": "Renvoyer le code",
+    "resendIn": "Renvoyer le code dans {seconds} s",
     "resent": "Nous vous avons envoyé un nouveau code.",
     "note": "WhatsApp ne sert qu'à vos codes et alertes. Rien de votre coffre n'y est envoyé."
   },

@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -34,7 +34,7 @@ async function assertEmailAvailable(
     .withIndex("email", (q) => q.eq("email", email))
     .first();
   if (owner && owner._id !== userId) {
-    throw new Error("This email is already linked to another account.");
+    throw new ConvexError("This email is already linked to another account.");
   }
 }
 
@@ -50,13 +50,13 @@ export const requestVerification = mutation({
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     const email = normalizeEmail(args.email);
-    if (!isValidEmail(email)) throw new Error("Invalid email address");
+    if (!isValidEmail(email)) throw new ConvexError("Invalid email address");
 
     // Block re-verifying the same address. Add (no current email) and change
     // (current verified, but new value differs) flows are both allowed.
     const user = await ctx.db.get(userId);
     if (user?.emailVerificationTime && user.email === email) {
-      throw new Error("New email is the same as the current one.");
+      throw new ConvexError("New email is the same as the current one.");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -67,7 +67,7 @@ export const requestVerification = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
     for (const stale of recent) {
       if (stale.expiresAt > now)
@@ -129,7 +129,7 @@ export const verifyCodeAndLink = auditedMutation({
     const previousEmail = user?.email ?? null;
     if (user?.emailVerificationTime && previousEmail === email) {
       await ctx.db.delete(active._id);
-      throw new Error("New email is the same as the current one.");
+      throw new ConvexError("New email is the same as the current one.");
     }
     await assertEmailAvailable(ctx, email, userId);
 
@@ -155,7 +155,9 @@ export const verifyCodeAndLink = auditedMutation({
           .first();
         if (clash && clash._id !== acc._id) {
           await ctx.db.delete(active._id);
-          throw new Error("This email is already linked to another account.");
+          throw new ConvexError(
+            "This email is already linked to another account.",
+          );
         }
         await ctx.db.patch(acc._id, {
           providerAccountId: email,

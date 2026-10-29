@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
@@ -13,6 +13,11 @@ import { useI18n } from "@/providers/i18n-provider";
 
 /** Server-side attempt budget per code (phone_auth / login_otp MAX_ATTEMPTS). */
 const MAX_ATTEMPTS = 5;
+/**
+ * Wait before asking for another code: WhatsApp can take a moment, each new
+ * code voids the previous one, and a number gets 3 codes an hour.
+ */
+const RESEND_COOLDOWN_S = 30;
 
 /**
  * M01-2 "Verify your number" layout, shared by phone sign-up / sign-in, the
@@ -47,6 +52,14 @@ export function CodeVerification({
   const [attempts, setAttempts] = useState(0);
   const [sheet, setSheet] = useState<CodeFailure | "notArriving" | null>(null);
   const [resent, setResent] = useState(false);
+  // Every caller sends a code right before showing this screen.
+  const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_S);
+
+  useEffect(() => {
+    if (cooldown === 0) return;
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   async function submit(value = code) {
     if (value.length !== OTP_LENGTH || busy) return;
@@ -69,6 +82,7 @@ export function CodeVerification({
       await onResend();
       setAttempts(0);
       setResent(true);
+      setCooldown(RESEND_COOLDOWN_S);
     } catch (error) {
       setSheet(
         classifyCodeError(error) === "tooMany" ? "tooMany" : "notArriving",
@@ -145,7 +159,12 @@ export function CodeVerification({
       </Text>
       <Button
         variant="text"
-        label={t("verify.resend")}
+        label={
+          cooldown > 0
+            ? t("verify.resendIn", { seconds: cooldown })
+            : t("verify.resend")
+        }
+        disabled={cooldown > 0}
         onPress={() => setSheet("notArriving")}
       />
       {note ? <Callout icon="whatsapp" text={note} /> : null}

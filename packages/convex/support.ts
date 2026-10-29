@@ -1,13 +1,13 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { internalAction, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { optionalAuth } from "./helpers";
 import { createAuditLog } from "./audit";
 import { requireEnv } from "./lib/require_env";
+import { isValidEmail } from "./lib/email";
 import { isE164 } from "./lib/phone";
 
 const CHANNEL = v.union(v.literal("email"), v.literal("whatsapp"));
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const TOPIC = v.union(
   v.literal("general"),
@@ -48,19 +48,19 @@ export const submitTicket = mutation({
     const message = args.message.trim();
 
     if (!name || !contact || !subject || !message) {
-      throw new Error("All fields are required");
+      throw new ConvexError("All fields are required");
     }
 
-    const channel = EMAIL_RE.test(contact)
+    const channel = isValidEmail(contact)
       ? "email"
       : isE164(contact)
         ? "whatsapp"
         : null;
     if (!channel) {
-      throw new Error("Enter a valid email address or WhatsApp number");
+      throw new ConvexError("Enter a valid email address or WhatsApp number");
     }
     if (message.length < 10) {
-      throw new Error("Message must be at least 10 characters");
+      throw new ConvexError("Message must be at least 10 characters");
     }
 
     const email = channel === "email" ? contact.toLowerCase() : undefined;

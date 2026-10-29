@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { api, internal } from "../_generated/api";
 import { SIGNUP_ATTESTATION_REQUIRED } from "../attestation";
+import { INVALID_CODE, OTP_MAX_ATTEMPTS } from "../lib/otp";
 import { makeT, type TestConvex } from "./test.helpers";
 
 const TEST_PHONE = "+33600000001";
@@ -119,6 +120,49 @@ describe("store review phone numbers", () => {
         intent: "signup",
       }),
     ).rejects.toThrow(SIGNUP_ATTESTATION_REQUIRED);
+  });
+
+  it("lets a reviewer request codes past the hourly cap, since none goes out on WhatsApp", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    for (let i = 0; i < 6; i++) await requestSignin(t, REVIEW_PHONE);
+    expect(await scheduledCount(t)).toBe(0);
+    await expect(
+      t.mutation(internal.phone_auth.consumePhoneAuthCode, {
+        phoneNumber: REVIEW_PHONE,
+        code: "482913",
+        intent: "signin",
+      }),
+    ).resolves.toEqual({ ok: true });
+  });
+
+  it("still caps wrong guesses at the fixed review code per hour", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    const guessWrong = () =>
+      t.mutation(internal.phone_auth.consumePhoneAuthCode, {
+        phoneNumber: REVIEW_PHONE,
+        code: "000001",
+        intent: "signin",
+      });
+    // Three codes' worth of wrong guesses, as for a WhatsApp number.
+    for (let code = 0; code < 3; code++) {
+      await requestSignin(t, REVIEW_PHONE);
+      for (let guess = 0; guess < OTP_MAX_ATTEMPTS; guess++) {
+        await expect(guessWrong()).resolves.toEqual({
+          ok: false,
+          error: INVALID_CODE,
+        });
+      }
+      await expect(guessWrong()).rejects.toThrow("Too many attempts");
+    }
+    await expect(requestSignin(t, REVIEW_PHONE)).rejects.toThrow(
+      "Too many verification attempts",
+    );
   });
 
   it("falls back to WhatsApp when REVIEW_CODE is missing or not 6 digits", async () => {

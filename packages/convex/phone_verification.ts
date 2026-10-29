@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import {
   mutation,
   query,
@@ -40,11 +40,11 @@ export const requestVerification = mutation({
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     const phone = normalizeE164(args.phoneNumber);
-    if (!phone) throw new Error("A valid phone number is required");
+    if (!phone) throw new ConvexError("A valid phone number is required");
 
     const user = await ctx.db.get(userId);
     if (user?.phoneNumberVerifiedAt && user.phoneNumber === phone) {
-      throw new Error("New phone number is the same as the current one.");
+      throw new ConvexError("New phone number is the same as the current one.");
     }
     if (user?.phoneNumberVerifiedAt) {
       await requireSessionProof(ctx, "phone", "vault");
@@ -58,7 +58,7 @@ export const requestVerification = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
 
     for (const stale of recent) {
@@ -102,7 +102,9 @@ export async function assertPhoneAvailable(
     .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
     .first();
   if (owner && owner._id !== userId) {
-    throw new Error("This phone number is already linked to another account.");
+    throw new ConvexError(
+      "This phone number is already linked to another account.",
+    );
   }
 }
 
@@ -132,7 +134,9 @@ export async function commitPhoneChange(
     )
     .first();
   if (clash && clash.userId !== userId) {
-    throw new Error("This phone number is already linked to another account.");
+    throw new ConvexError(
+      "This phone number is already linked to another account.",
+    );
   }
   if (existingPhoneOtp) {
     if (existingPhoneOtp.providerAccountId !== newPhone) {

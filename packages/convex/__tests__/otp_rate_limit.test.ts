@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import {
@@ -91,7 +92,14 @@ describe.each(flows)("$name OTP rate limit", ({ table, request }) => {
     const t = makeT();
     const send = await request(t);
     for (let i = 0; i < 3; i++) await send();
-    await expect(send()).rejects.toThrow("Too many");
+    // A ConvexError, so the message survives Convex's prod error redaction
+    // and the app can show "Try again in an hour".
+    const error = await send().then(
+      () => null,
+      (failure: unknown) => failure,
+    );
+    expect(error).toBeInstanceOf(ConvexError);
+    expect((error as ConvexError<string>).data).toContain("Too many");
   });
 
   it("leaves only the newest code usable", async () => {

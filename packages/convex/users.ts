@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import {
   internalQuery,
   mutation,
@@ -171,7 +171,7 @@ export const setAvatarImage = auditedMutation({
 
     const url = await getBlobDownloadUrl(ctx, args.storageId);
     if (!url || !(await claimBlob(ctx, args.storageId, userId))) {
-      throw new Error("Uploaded image could not be resolved");
+      throw new ConvexError("Uploaded image could not be resolved");
     }
 
     if (user.avatarStorageId && user.avatarStorageId !== args.storageId) {
@@ -215,14 +215,14 @@ export const removeAvatar = auditedMutation({
 
 function assertAdultBirthday(birthday: number, now: number) {
   if (!Number.isFinite(birthday)) {
-    throw new Error("Invalid birthday");
+    throw new ConvexError("Invalid birthday");
   }
   const ageMs = now - birthday;
   if (ageMs < EIGHTEEN_YEARS_MS) {
-    throw new Error("You must be at least 18 years old to use Keeplas");
+    throw new ConvexError("You must be at least 18 years old to use Keeplas");
   }
   if (ageMs > MAX_AGE_MS) {
-    throw new Error("Birthday is implausibly old");
+    throw new ConvexError("Birthday is implausibly old");
   }
 }
 
@@ -249,7 +249,7 @@ export const completeLegalInfo = auditedMutation({
 
     const country = args.country.trim().toUpperCase();
     if (!/^[A-Z]{2}$/.test(country)) {
-      throw new Error("Country must be a 2-letter ISO-3166-1 code");
+      throw new ConvexError("Country must be a 2-letter ISO-3166-1 code");
     }
 
     await ctx.db.patch(userId, {
@@ -307,12 +307,12 @@ export const updateLegalResidence = auditedMutation({
 
     const country = args.country.trim().toUpperCase();
     if (!/^[A-Z]{2}$/.test(country)) {
-      throw new Error("Country must be a 2-letter ISO-3166-1 code");
+      throw new ConvexError("Country must be a 2-letter ISO-3166-1 code");
     }
 
     const previousCountry = user.country ?? null;
     if (previousCountry === country) {
-      throw new Error("New country is the same as the current one");
+      throw new ConvexError("New country is the same as the current one");
     }
 
     await ctx.db.patch(userId, {

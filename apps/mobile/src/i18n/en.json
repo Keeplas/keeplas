@@ -64,6 +64,7 @@
     "confirm": "Confirm number",
     "noCode": "Didn't get the code?",
     "resend": "Resend code",
+    "resendIn": "Resend code in {seconds} s",
     "resent": "We sent you a new code.",
     "note": "WhatsApp only carries your codes and alerts. Nothing from your vault is sent there."
   },
