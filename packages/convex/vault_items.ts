@@ -269,8 +269,8 @@ export const getItemFiles = query({
 });
 
 /**
- * Return a short-lived signed URL that lets the client fetch a stored
- * ciphertext blob for in-browser decryption.
+ * Return the download URL of a stored ciphertext blob, for decryption on the
+ * client. It never expires (see lib/storage.ts getBlobDownloadUrl).
  */
 export const getItemFileUrl = query({
   args: { fileId: v.id("vault_item_files") },

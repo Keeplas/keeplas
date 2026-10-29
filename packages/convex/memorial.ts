@@ -206,9 +206,10 @@ export const getMemorialItemFiles = query({
 });
 
 /**
- * Short-lived signed URL for a released item's ciphertext blob. Verifies the
- * file belongs to an item released to this contact. Routes through the storage
- * abstraction (never ctx.storage.* directly).
+ * Download URL of a released item's ciphertext blob (it never expires: see
+ * lib/storage.ts getBlobDownloadUrl). Verifies the file belongs to an item
+ * still released to this contact. Routes through the storage abstraction
+ * (never ctx.storage.* directly).
  */
 export const getMemorialItemFileUrl = query({
   args: {

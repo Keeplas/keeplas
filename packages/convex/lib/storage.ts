@@ -58,6 +58,13 @@ export async function storeBlob(
   return storage.store(blob);
 }
 
+/**
+ * Download URL of a blob, or null once it is gone. It is a bearer URL that
+ * never expires (Convex `getUrl`): revoking a session or a contact does not
+ * cancel a URL already handed out, which is acceptable only because every
+ * vault blob is client-side ciphertext. docs/STORAGE_MIGRATION.md plans the
+ * expiring replacement.
+ */
 export async function getBlobDownloadUrl(
   ctx: QueryCtx | MutationCtx,
   ref: StorageRef,
