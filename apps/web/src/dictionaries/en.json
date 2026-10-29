@@ -1871,6 +1871,9 @@
   },
   "lifeCheckConfirm": {
     "badge": "Life Check",
+    "promptTitle": "Confirm you're well",
+    "promptBody": "Press the button below to answer your Life Check and reset your check-in countdown.",
+    "confirm": "I'm well",
     "okTitle": "Thanks, you're confirmed",
     "okBody": "We've recorded that you're well and reset your check-in countdown. You can safely close this tab.",
     "invalidTitle": "This link is invalid or expired",

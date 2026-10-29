@@ -712,8 +712,14 @@ export const validateFromWhatsApp = internalMutation({
 
 /**
  * Validate a cycle from the one-click email link. The HMAC token is verified
- * upstream in `confirmFromEmailToken`; here we just confirm the cycle belongs
- * to the user, then run the shared `confirmAlive`. Idempotent.
+ * upstream in `confirmFromEmailToken`. The link answers the ONE Stage-1
+ * check-in it was sent for:
+ *  - that cycle still `running` → confirm alive;
+ *  - already `validated` → nothing to do, report success (a second click);
+ *  - anything else (escalated to Stage 2, closed, or an old cycle) → refuse.
+ *    Cancelling a Stage-2 confirmation needs the owner signed in (step-up
+ *    gated `validateCycle`), never a link that sat in a mailbox.
+ * So a replayed or scanner-opened link can't reset the clock of a later cycle.
  */
 export const confirmFromEmail = internalMutation({
   args: {
@@ -723,31 +729,36 @@ export const confirmFromEmail = internalMutation({
   handler: async (ctx, args) => {
     const cycle = await ctx.db.get(args.cycleId);
     if (!cycle || cycle.userId !== args.userId) return { ok: false };
+    if (cycle.status === "validated") return { ok: true };
+    if (cycle.status !== "running") return { ok: false };
     await confirmAlive(ctx, args.userId, Date.now(), "email_link");
     return { ok: true };
   },
 });
 
 /**
- * Public unauthenticated action invoked from the Next.js confirm page when the
- * user clicks the "I am well" button in the check-in email. Verifies the
- * HMAC-signed token (proves the call came from a real check-in email) and
- * runs the shared confirmation mutation. Never exposes vault data — the token
- * only authorises resetting a liveness timer. Kept as an `action` (not a
- * mutation) because token verification uses WebCrypto, which is only available
- * in the action runtime.
+ * Public unauthenticated action invoked from the web confirm page when the
+ * user clicks its "I'm well" button (the page itself never calls it on load:
+ * mail scanners open links). Verifies the HMAC-signed token (proves the call
+ * came from a real check-in email) and runs the confirmation mutation. Never
+ * exposes vault data — the token only answers a check-in. Kept as an `action`
+ * (not a mutation) because token verification uses WebCrypto, which is only
+ * available in the action runtime.
  */
 export const confirmFromEmailToken = action({
   args: { token: v.string() },
   returns: v.union(v.literal("ok"), v.literal("invalid")),
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<"ok" | "invalid"> => {
     const payload = await verifyLifeCheckToken(args.token);
     if (!payload) return "invalid";
-    await ctx.runMutation(internal.life_check.confirmFromEmail, {
-      cycleId: payload.cycleId as Id<"life_check_cycles">,
-      userId: payload.userId as Id<"users">,
-    });
-    return "ok";
+    const result: { ok: boolean } = await ctx.runMutation(
+      internal.life_check.confirmFromEmail,
+      {
+        cycleId: payload.cycleId as Id<"life_check_cycles">,
+        userId: payload.userId as Id<"users">,
+      },
+    );
+    return result.ok ? "ok" : "invalid";
   },
 });
 

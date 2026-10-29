@@ -1871,6 +1871,9 @@
   },
   "lifeCheckConfirm": {
     "badge": "Life Check",
+    "promptTitle": "Confirmez que vous allez bien",
+    "promptBody": "Appuyez sur le bouton ci-dessous pour répondre à votre Life Check et réinitialiser votre compte à rebours.",
+    "confirm": "Je vais bien",
     "okTitle": "Merci, vous êtes confirmé",
     "okBody": "Nous avons enregistré que vous allez bien et réinitialisé votre compte à rebours. Vous pouvez fermer cet onglet en toute sécurité.",
     "invalidTitle": "Ce lien est invalide ou expiré",

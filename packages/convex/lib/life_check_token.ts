@@ -1,15 +1,17 @@
 /**
  * Stateless, HMAC-signed token for the one-click Life Check email confirmation.
  *
- * The "I'm well" button in the check-in email links to an UNAUTHENTICATED HTTP
- * action so the user can confirm from any device without logging in. The token
+ * The "I'm well" button in the check-in email opens the web confirm page, where
+ * an explicit click calls an UNAUTHENTICATED action so the user can confirm
+ * from any device without logging in. The token
  * encodes `{ cycleId, userId, exp }` and is signed with the existing
  * `KEEPLAS_CTX_SECRET` (the same secret used for the audit context HMAC — a
  * different message domain, no new secret to provision).
  *
- * Zero-knowledge: the token only authorises resetting a liveness timer; it
- * never carries or unlocks any vault data. Replay after the cycle resolves is a
- * harmless no-op, and `exp` bounds how long a leaked link stays usable.
+ * Zero-knowledge: the token only answers one check-in; it never carries or
+ * unlocks any vault data. `life_check.confirmFromEmail` honours it only while
+ * that cycle is still `running`, so once the check-in is answered, closed or
+ * escalated to Stage 2 the link is spent; `exp` bounds it further.
  */
 import { getAuditSecret } from "./audit_secret";
 
