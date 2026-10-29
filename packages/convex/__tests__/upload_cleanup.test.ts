@@ -3,6 +3,7 @@ import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import {
   getBlobSize,
+  type StorageRef,
   UNCLAIMED_BLOB_TTL_MS,
   UPLOAD_URLS_PER_HOUR,
 } from "../lib/storage";
@@ -124,7 +125,7 @@ describe("abandoned uploads", () => {
     t: TestConvex,
     userId: Id<"users">,
     vaultId: Id<"vaults">,
-    storageId: Id<"_storage">,
+    storageId: StorageRef,
   ) =>
     asUser(t, userId).mutation(api.vault_items.createItem, {
       vaultId,
@@ -200,7 +201,7 @@ describe("abandoned uploads", () => {
     await t.mutation(internal.vault_items.sweepUnclaimedUploads, {});
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const exists = (ref: Id<"_storage">) =>
+    const exists = (ref: StorageRef) =>
       t.run(async (ctx) => (await getBlobSize(ctx, ref)) !== null);
     expect(await exists(orphan)).toBe(false);
     expect(await exists(attached)).toBe(true);
