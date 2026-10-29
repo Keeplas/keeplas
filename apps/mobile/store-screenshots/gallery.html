@@ -14,11 +14,15 @@
   .panel { position: absolute; top: 0; overflow: hidden; }
   .head { position: absolute; left: 0; right: 0; text-align: center; font-family: "Source Serif 4", serif; font-weight: 600; letter-spacing: -0.015em; }
   .head .l { display: block; white-space: nowrap; }
-  .phone { position: absolute; border-radius: 50px; padding: 9px; background: #0b0b0c; }
-  .phone .scr { width: 100%; height: 100%; border-radius: 41px; overflow: hidden; container-type: inline-size; }
+  .phone { position: absolute; background: #0b0b0c; } /* radius, bezel and island scale with the phone width */
+  .phone .scr { width: 100%; height: 100%; overflow: hidden; }
   .phone .scr img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
-  .phone .scr .sim-dark { filter: invert(1) hue-rotate(180deg) brightness(1.05) contrast(.92); }
-  .phone .island { position: absolute; top: 19px; left: 50%; width: 86px; height: 25px; margin-left: -43px; background: #000; border-radius: 14px; }
+  .phone .island { position: absolute; left: 50%; background: #000; }
+  /* Loud on purpose: a store render must never ship with this. */
+  .missing { height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 38% 20px 0; text-align: center;
+    background: repeating-linear-gradient(-45deg, #FDE2E1 0 16px, #FFF5F5 16px 32px); color: #B42318; font-size: 16px; font-weight: 500; }
+  .missing b { font-size: 24px; font-weight: 600; letter-spacing: .04em; }
+  .missing code { font: 12px ui-monospace, Menlo, monospace; }
   .card, .seg { z-index: 2; } /* callouts sit above the front decoration layer */
   .card { position: absolute; border-radius: 18px; display: flex; align-items: center; gap: 12px; padding: 14px 18px; }
   .ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex: none; }
@@ -48,7 +52,9 @@ const MODE = q.get("mode") || "strip"; // strip | fg (Play feature graphic)
 const DIMS = { ios: [430, 932], play: [432, 768], fg: [512, 250] };
 const PLAT = MODE === "fg" ? "fg" : (q.get("p") || "ios");
 const [W, H] = DIMS[PLAT];
-const SCR = "../../../PRD/v2-mobile-first/figma/screens/";
+// Real device captures, 01.png … 06.png per panel (README.md). The Play strip and feature graphic use Android ones.
+const CAP = `captures/${PLAT === "ios" ? "ios" : "android"}/${LANG}/`;
+const FIGMA = "../../../PRD/v2-mobile-first/figma/screens/";
 const ICON = "../../../PRD/v2-mobile-first/design-kit/svg/icons/";
 
 const C = {
@@ -63,27 +69,28 @@ const TONES = {
 };
 
 // Storyline: one benefit per screenshot, same order in every direction.
+// `shot`: the screen to capture (README.md lists the exact state). `figma`: a stand-in frame for the English App
+// Store set while the capture is missing, kept only where the frame matches the shipped app. The other frames show
+// a Search tab, folder sharing and "Access now" the app doesn't have, so those panels render MISSING CAPTURE.
 const PANELS = [
-  { light: "M08-5_Home.png", dark: "M08-5_Home_Dark.png",
+  { shot: "Home tab",
     head: { en: ["Your life,", "well kept"], fr: ["Votre vie,", "bien gardée"] },
     callout: { kind: "chip", icon: "lock", t: { en: "Encrypted on your phone", fr: "Chiffré sur votre téléphone" } }, node: "shield-check" },
-  { light: "M07-1_Add_to_Keeplas_bottom_sheet_.png",
+  { shot: "Add sheet (+)", figma: "M07-1_Add_to_Keeplas_bottom_sheet_.png",
     head: { en: ["Everything", "important, together"], fr: ["Tout l'essentiel,", "réuni"] },
     callout: { kind: "types" }, node: "folder" },
-  { light: "M07-2_Scan_document_on-device_encryption_.png", dark: "M07-2_Scan_document_on-device_encryption_.png",
+  { shot: "Scan document, Manual", figma: "M07-2_Scan_document_on-device_encryption_.png",
     head: { en: ["Private", "before upload"], fr: ["Chiffré", "avant l'envoi"] },
     callout: { kind: "card", icon: "lock", t: { en: "Encrypted on this phone", fr: "Chiffré sur ce téléphone" }, b: { en: "Keeplas never sees the file.", fr: "Keeplas ne voit jamais le fichier." } }, node: "lock" },
-  { light: "M06-6_Access_management.png",
+  { shot: "People tab",
     head: { en: ["Your people,", "your rules"], fr: ["Vos proches,", "vos règles"] },
     callout: { kind: "people" }, node: "people" },
-  { light: "M02-5_Life_check_EN_.png", lightFr: "M02-6_Life_check_FR_.png",
+  { shot: "Settings → Life check",
     head: { en: ["Check in", "your way"], fr: ["Le Life check,", "à votre rythme"] },
     callout: { kind: "seg", opts: { en: ["Weekly", "Monthly", "Quarterly"], fr: ["Hebdo", "Mensuel", "Trimestriel"] } }, node: "check-circle" },
-  // Figma frame is 1120 px tall: drop the access-scope block and the empty space above the tab bar so the
-  // "Create private access" button fits the 852 px screen. Rows [from, to) of the 393 px wide image.
-  { light: "M06-4_Share_content.png", slices: [[0, 465], [590, 889], [1032, 1120]],
+  { shot: "Item → Who can see it",
     head: { en: ["Continuity,", "prepared"], fr: ["Demain,", "préparé"] },
-    callout: { kind: "card", icon: "clock", t: { en: "After verification + 72 h", fr: "Après vérification + 72 h" }, b: { en: "2 contacts confirm, then a grace period.", fr: "2 contacts confirment, puis un délai de grâce." } }, node: "sun" },
+    callout: { kind: "card", icon: "clock", t: { en: "2 contacts confirm + 72&nbsp;h", fr: "2 contacts confirment + 72&nbsp;h" }, b: { en: "Then each item opens only for the people you chose.", fr: "Puis chaque élément ne s'ouvre que pour les personnes choisies." } }, node: "sun" },
 ];
 const N = MODE === "fg" ? 1 : PANELS.length, SW = W * N;
 const K = H / 932; // vertical scale for landscape elements
@@ -215,16 +222,39 @@ if (q.has("i")) strip.style.transform = `translateX(${-q.get("i") * W}px)`;
 const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
 const svgLayer = (inner) => `<svg class="layer" width="${SW}" height="${H}" viewBox="0 0 ${SW} ${H}">${inner}</svg>`;
 
-function phoneEl(i, left, top, pw) {
-  const p = PANELS[i], mode = D.screen(i);
-  let src = (LANG === "fr" && p.lightFr) || p.light, sim = false;
-  if (mode === "dark") { if (p.dark) src = p.dark; else sim = true; }
-  const ph = Math.round((pw - 18) * 852 / 393) + 18;
-  const tilt = D.tilt(i);
-  return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;transform:rotate(${tilt}deg);box-shadow:${TONES[D.tone(i)].ring}">
-    <div class="scr ${sim ? "sim-dark" : ""}">${p.slices
-      ? p.slices.map(([a, b]) => `<div style="height:${(b - a) / 393 * 100}cqw;background:url('${SCR}${src}') 0 ${-a / 393 * 100}cqw / 100% auto no-repeat"></div>`).join("")
-      : `<img src="${SCR}${src}"/>`}</div><div class="island"></div></div>`) };
+const loadImage = (src) => new Promise((resolve) => {
+  const im = new Image();
+  im.onload = () => resolve(im);
+  im.onerror = () => resolve(null);
+  im.src = src;
+});
+
+// Phone screen of panel i: the real capture (its -dark variant first when the direction shows this panel dark),
+// else the Figma stand-in (English App Store set only: the frames are in English with an iPhone status bar), else
+// MISSING CAPTURE. `ratio` (height / width) follows the capture, so any phone's screenshot fits without cropping.
+async function screen(i) {
+  const p = PANELS[i], file = `${CAP}0${i + 1}`;
+  for (const src of D.screen(i) === "dark" ? [`${file}-dark.png`, `${file}.png`] : [`${file}.png`]) {
+    const im = await loadImage(src);
+    if (im) return { html: `<img src="${src}"/>`, ratio: im.naturalHeight / im.naturalWidth };
+  }
+  if (PLAT === "ios" && LANG === "en" && p.figma) return { html: `<img src="${FIGMA}${p.figma}"/>`, ratio: 852 / 393 };
+  return { html: `<div class="missing"><b>MISSING CAPTURE</b><span>${p.shot}</span><code>${file}.png</code></div>`, ratio: 852 / 393 };
+}
+
+// App Store: iPhone with the Dynamic Island. Google Play (strip and feature graphic): a plain slim frame, no Apple
+// hardware. Sizes are fractions of the phone width.
+const FRAME = PLAT === "ios" ? { radius: 0.16, bezel: 0.029, island: true } : { radius: 0.1, bezel: 0.02, island: false };
+
+async function phoneEl(i, left, top, pw) {
+  const { html, ratio } = await screen(i);
+  const b = pw * FRAME.bezel, r = pw * FRAME.radius;
+  const ph = Math.round((pw - 2 * b) * ratio + 2 * b);
+  const island = FRAME.island
+    ? `<div class="island" style="top:${pw * 0.061}px;width:${pw * 0.276}px;height:${pw * 0.08}px;margin-left:${-pw * 0.138}px;border-radius:${pw * 0.045}px"></div>`
+    : "";
+  return { ph, node: el(`<div class="phone" style="left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;padding:${b}px;border-radius:${r}px;transform:rotate(${D.tilt(i)}deg);box-shadow:${TONES[D.tone(i)].ring}">
+    <div class="scr" style="border-radius:${r - b}px">${html}</div>${island}</div>`) };
 }
 
 async function callout(i, top, vis) {
@@ -237,8 +267,10 @@ async function callout(i, top, vis) {
     case "card": return el(`<div class="card" style="${box}${side};top:${at(0.62)}px;width:310px">${ic(c.icon)}<div><div class="t" style="color:${T.cardT}">${c.t[LANG]}</div><div class="b" style="color:${T.cardB}">${c.b[LANG]}</div></div></div>`);
     case "types": return el(`<div class="card" style="${box}left:50%;transform:translateX(-50%);top:${at(0.74)}px;border-radius:999px;padding:10px;gap:8px">${["document", "photo", "mic", "note", "video"].map(ic).join("")}</div>`);
     case "people": {
-      const rows = [["M", "#7C5CD6", "Marie", { en: "Active now", fr: "Accès actif" }, "#3FB68B"], ["P", "#4B6E95", "Paul", { en: "After verification", fr: "Après vérification" }, C.dawn500]];
-      return el(`<div class="card" style="${box}${side};top:${at(0.5)}px;width:300px;flex-direction:column;align-items:stretch;gap:12px">${rows.map(([a, bg, n, s, dc]) => `<div class="row"><div class="av" style="background:${bg}">${a}</div><div><div class="t" style="color:${T.cardT}">${n}</div><div class="b" style="color:${T.cardB};margin:0"><span class="dot" style="background:${dc}"></span>${s[LANG]}</div></div></div>`).join("")}</div>`);
+      // The demo owner's contacts (APP_REVIEW.md), avatar colors as on the People tab: Alex receives all 6 items, Sam 3.
+      const rows = [["A", C.sky, "Alex", 6], ["S", "#6E56CF", "Sam", 3]];
+      const gets = (n) => ({ en: `${n} items, after you're gone`, fr: `${n} éléments, après votre départ` })[LANG];
+      return el(`<div class="card" style="${box}${side};top:${at(0.5)}px;width:300px;flex-direction:column;align-items:stretch;gap:12px">${rows.map(([a, bg, n, count]) => `<div class="row"><div class="av" style="background:${bg}">${a}</div><div><div class="t" style="color:${T.cardT}">${n}</div><div class="b" style="color:${T.cardB};margin:0"><span class="dot" style="background:${C.dawn500}"></span>${gets(count)}</div></div></div>`).join("")}</div>`);
     }
     case "seg": return el(`<div class="seg" style="${box}position:absolute;left:50%;transform:translateX(-50%);top:${at(0.6)}px;white-space:nowrap">${c.opts[LANG].map((o, k) => `<div style="${k === 1 ? `background:${C.navy};color:#fff` : `color:${T.cardB}`}">${o}</div>`).join("")}</div>`);
   }
@@ -258,10 +290,7 @@ async function build() {
     strip.appendChild(el(`<div style="position:absolute;left:40px;top:62px;width:260px">
       <div class="brand" style="color:${T.head}"><img src="../../web/public/assets/logo/${T.logo}"/>Keeplas</div>
       <div class="head" style="position:static;text-align:left;margin-top:18px;font-size:38px;line-height:42px"><span class="l" style="color:${T.head}">${PANELS[0].head[LANG][0]}</span><span class="l" style="color:${T.accent}">${PANELS[0].head[LANG][1]}</span></div></div>`));
-    const { node } = phoneEl(0, 318, 34, 170);
-    node.style.borderRadius = "30px"; node.style.padding = "6px"; node.firstElementChild.style.borderRadius = "24px";
-    node.lastElementChild.style.cssText += "top:12px;width:52px;height:15px;margin-left:-26px";
-    strip.appendChild(node);
+    strip.appendChild((await phoneEl(0, 318, 34, 170)).node);
     if (D.front) { const f = el(`<div class="layer"></div>`); f.innerHTML = D.front(ICONS); strip.appendChild(f); }
   } else {
     for (let i = 0; i < N; i++) {
@@ -277,7 +306,7 @@ async function build() {
       while ([...head.children].some((l) => l.scrollWidth > W - 40) && fs > 30) { fs--; fit(); }
       const top = head.offsetTop + head.offsetHeight + (PLAT === "play" ? 30 : 46);
       const pw = PLAT === "play" ? 292 : 312;
-      const { ph, node } = phoneEl(i, (W - pw) / 2, top, pw);
+      const { ph, node } = await phoneEl(i, (W - pw) / 2, top, pw);
       panel.appendChild(node);
       panel.appendChild(await callout(i, top, Math.min(ph, H - top)));
     }

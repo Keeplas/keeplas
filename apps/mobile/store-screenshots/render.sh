@@ -1,5 +1,6 @@
 #!/bin/sh
 # Render store screenshots with headless Chrome. Output goes to out/ (gitignored).
+# Phones show real device captures from captures/<ios|android>/<lang>/: see README.md for the six screens to take.
 # usage: render.sh <horizon|fil> <en|fr> <ios|play|fg|preview>
 #   ios     -> out/<d>/ios/<lang>/01..06.png           1290x2796 (App Store 6.9")
 #   play    -> out/<d>/play/<lang>/01..06.png          1080x1920 (Google Play phone, 9:16)
