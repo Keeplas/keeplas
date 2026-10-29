@@ -209,7 +209,7 @@ export default function ComposeCapture() {
       toast({
         variant: "error",
         title: blocked
-          ? t("capture.contactKeyTitle")
+          ? t("capture.contactKeyTitle", { name: error.contactName ?? "" })
           : t("common.genericError"),
         description: blocked
           ? t("capture.contactKeyBody", { name: error.contactName ?? "" })
