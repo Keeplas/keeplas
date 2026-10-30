@@ -84,20 +84,25 @@ interface UploadQueueContextValue {
   cancel: (jobId: string) => void;
   /** The screen stops watching: progress moves to a toast. */
   background: (jobId: string) => void;
+  /**
+   * A save refused because storage is full (a text edit, a restore…): shows
+   * the storage-full dialog and returns true; false for any other error.
+   */
+  showIfStorageFull: (error: unknown) => Promise<boolean>;
 }
 
 const UploadQueueContext = createContext<UploadQueueContextValue | null>(null);
 
 /**
- * The server refuses an upload past the plan quota with
- * `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })`; production redacts plain
- * error messages, so the message check is only a fallback.
+ * The server refuses a write past the plan quota (uploads and text alike)
+ * with `ConvexError({ code: "STORAGE_QUOTA_EXCEEDED" })`; production redacts
+ * plain error messages, so the message check is only a fallback.
  */
-function isQuotaError(err: Error): boolean {
+export function isQuotaError(err: unknown): boolean {
   if (err instanceof ConvexError) {
     return (err.data as { code?: string } | null)?.code === QUOTA_CODE;
   }
-  return err.message.includes(QUOTA_CODE);
+  return err instanceof Error && err.message.includes(QUOTA_CODE);
 }
 
 const QUOTA_CODE = "STORAGE_QUOTA_EXCEEDED";
@@ -230,19 +235,31 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
     [generateUploadUrl],
   );
 
+  const showIfStorageFull = useCallback(
+    async (error: unknown) => {
+      if (!isQuotaError(error)) return false;
+      const stats = await convex
+        .query(api.vaults.getUsageStats, {})
+        .catch(() => null);
+      if (!stats) return false;
+      setFailure({
+        kind: "full",
+        quotaBytes: stats.quotaBytes,
+        plan: stats.plan,
+      });
+      return true;
+    },
+    [convex],
+  );
+
   /** The upload failed: offer a retry, or an upgrade when storage is full. */
   const fail = useCallback(
     async (error: Error, name: string, retry: () => void) => {
-      const stats = isQuotaError(error)
-        ? await convex.query(api.vaults.getUsageStats, {}).catch(() => null)
-        : null;
-      setFailure(
-        stats
-          ? { kind: "full", quotaBytes: stats.quotaBytes, plan: stats.plan }
-          : { kind: "failed", name, retry },
-      );
+      if (!(await showIfStorageFull(error))) {
+        setFailure({ kind: "failed", name, retry });
+      }
     },
-    [convex],
+    [showIfStorageFull],
   );
 
   const progressText = useCallback(
@@ -491,8 +508,22 @@ export function UploadQueueProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ enqueueAttachments, enqueueNewItem, jobs, cancel, background }),
-    [enqueueAttachments, enqueueNewItem, jobs, cancel, background],
+    () => ({
+      enqueueAttachments,
+      enqueueNewItem,
+      jobs,
+      cancel,
+      background,
+      showIfStorageFull,
+    }),
+    [
+      enqueueAttachments,
+      enqueueNewItem,
+      jobs,
+      cancel,
+      background,
+      showIfStorageFull,
+    ],
   );
 
   return (

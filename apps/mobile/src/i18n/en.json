@@ -432,6 +432,11 @@
     "allow": "Turn on",
     "notNow": "Not now"
   },
+  "storageFull": {
+    "title": "Storage full",
+    "body": "This change does not fit in your 100 MB. Nothing was lost. Upgrade to Lifetime for 10 GB.",
+    "bodyLifetime": "This change does not fit in your 10 GB. Nothing was lost."
+  },
   "upgrade": {
     "title": "Upgrade to Lifetime",
     "titleWithPrice": "Upgrade to Lifetime · {price}",

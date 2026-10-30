@@ -82,7 +82,7 @@ function EditItem({
   const { encryptContentWithKey } = useVaultCrypto();
   const { wrap, announcePending } = useItemSharing();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
-  const { enqueueAttachments } = useUploadQueue();
+  const { enqueueAttachments, showIfStorageFull } = useUploadQueue();
   const voice = useVoiceAttach();
   // "Scan with phone": the scan is saved as its own item (W06-7).
   const capture = useVaultCapture();
@@ -168,6 +168,7 @@ function EditItem({
       });
       router.replace(`/vault/${itemId}`);
     } catch (error) {
+      if (await showIfStorageFull(error)) return;
       toast({
         variant: "error",
         title: getErrorMessage(error, t("saveFailed")),

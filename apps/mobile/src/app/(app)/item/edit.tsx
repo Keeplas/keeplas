@@ -30,6 +30,7 @@ import type { OpenedItem } from "@/features/vault/open-sealed-item";
 import { useOpenedItem } from "@/features/vault/use-opened-item";
 import { formatBytes, formatDuration } from "@/lib/format";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
 import { useNoScreenCapture } from "@/lib/use-no-screen-capture";
 import { useFormDraft } from "@/lib/form-drafts";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -97,6 +98,7 @@ function EditForm({
   const showSecuring = useShowSecuring();
   const prepare = usePrepareMedia();
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
+  const storageFull = useStorageFullPrompt();
   const [draft, updateDraft, clearDraft] = useFormDraft<EditDraft>(
     editDraftKey(itemId),
     () => ({ title: opened.title, note: opened.note, removed: [], added: [] }),
@@ -175,12 +177,14 @@ function EditForm({
       }
       forgetDraft();
       onDone();
-    } catch {
-      toast({
-        variant: "error",
-        title: t("itemEdit.failedTitle"),
-        description: t("itemEdit.failedBody"),
-      });
+    } catch (error) {
+      if (!storageFull.handle(error)) {
+        toast({
+          variant: "error",
+          title: t("itemEdit.failedTitle"),
+          description: t("itemEdit.failedBody"),
+        });
+      }
       setSaving(false);
     }
   }
@@ -295,6 +299,7 @@ function EditForm({
       </View>
       <Callout icon="clock" text={t("itemEdit.historyNote")} />
       <PermissionSheet problem={denied} onDismiss={() => setDenied(null)} />
+      {storageFull.sheet}
     </Screen>
   );
 }

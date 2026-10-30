@@ -8,6 +8,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { BottomSheet } from "@/components/sheet";
 import { ListRow } from "@/components/surfaces";
 import { toast } from "@/lib/toast";
+import { useStorageFullPrompt } from "@/features/billing/storage-full";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { SHEET_CLOSE_MS } from "@/features/capture/add-sheet";
@@ -26,6 +27,7 @@ export function ItemActionsSheet({
   const { items } = useVaultData();
   const rawItems = useQuery(api.vault_items.getItemSummaries);
   const recategorize = useRecategorize();
+  const storageFull = useStorageFullPrompt();
   const archiveItem = useAuditedMutation(api.vault_items.archiveItem);
   // The item being filed elsewhere, kept once this sheet has closed.
   const [filing, setFiling] = useState<VaultItemSummary | null>(null);
@@ -98,17 +100,21 @@ export function ItemActionsSheet({
         value={filing ?? { category: "inbox" }}
         onChange={(choice) => {
           if (!filing || !filingRaw) return;
-          void recategorize(filingRaw, filing, choice).catch(() =>
-            toast({
-              variant: "error",
-              title: t("itemActions.moveFailed", {
-                title: filing.title ?? t("capture.untitled"),
-              }),
-            }),
+          void recategorize(filingRaw, filing, choice).catch(
+            (error: unknown) => {
+              if (storageFull.handle(error)) return;
+              toast({
+                variant: "error",
+                title: t("itemActions.moveFailed", {
+                  title: filing.title ?? t("capture.untitled"),
+                }),
+              });
+            },
           );
         }}
         onDismiss={() => setFiling(null)}
       />
+      {storageFull.sheet}
     </>
   );
 }
