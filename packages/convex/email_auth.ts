@@ -17,6 +17,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 // Per server-attested IP, across addresses; mirrors the phrase-salt lookup.
 const IP_RATE_LIMIT_MAX = 20;
+// Password sign-in attempts per server-attested IP and hour, across accounts.
+const PASSWORD_SIGN_IN_IP_MAX = 20;
 
 /**
  * Issue + dispatch a pre-auth email OTP for an existing account. `signup` is
@@ -86,6 +88,26 @@ export const requestEmailAuthOtp = mutation({
     });
 
     return { sent: true };
+  },
+});
+
+/**
+ * Count a password sign-in attempt against the caller's server-attested IP
+ * (the `password` provider in auth.ts calls it first). The library only
+ * limits failures per account, so without it one client could try passwords
+ * across every account. It commits in its own transaction, so the hit counts
+ * even when the sign-in then fails.
+ */
+export const throttlePasswordSignIn = internalMutation({
+  args: { _audit: auditContextValidator },
+  handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
+    await enforceIpRateLimit(
+      ctx,
+      "password_sign_in",
+      args._audit.ip,
+      PASSWORD_SIGN_IN_IP_MAX,
+    );
   },
 });
 
