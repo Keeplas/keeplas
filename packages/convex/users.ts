@@ -30,23 +30,38 @@ export const viewer = query({
 
     const user = await ctx.db.get(userId);
     if (!user) return null;
-    // lastSeenAt is a write-only analytics heartbeat. Omitting it keeps this
-    // subscription stable (Convex only pushes when the result changes), so a
-    // heartbeat no longer re-sends the multi-KB key bundle to every client.
-    // The 24-word verifiers never leave the server: the recovery sign-ins and
-    // step-up escape hatches compare them, so they work like passwords.
-    const {
-      lastSeenAt: _lastSeenAt,
-      recoveryPhraseHash: _recoveryPhraseHash,
-      totpResetVerifierHash: _totpResetVerifierHash,
-      ...viewerDoc
-    } = user;
+    // An allowlist, not a spread: a field added to `users` stays on the
+    // server until a client needs it. Left out on purpose: the 24-word
+    // verifiers (they work like passwords), and `lastSeenAt` (a heartbeat
+    // that would re-send the multi-KB key bundle to every client).
     return {
-      ...viewerDoc,
+      _id: user._id,
+      _creationTime: user._creationTime,
+      email: user.email,
+      emailVerificationTime: user.emailVerificationTime,
+      name: user.name,
       // Resolved on every read, never stored (see `avatarStorageId`).
       avatarUrl: user.avatarStorageId
         ? ((await getBlobDownloadUrl(ctx, user.avatarStorageId)) ?? undefined)
         : user.avatarUrl,
+      phoneNumber: user.phoneNumber,
+      phoneNumberVerifiedAt: user.phoneNumberVerifiedAt,
+      timezone: user.timezone,
+      language: user.language,
+      hiddenCategoryGroups: user.hiddenCategoryGroups,
+      publicKey: user.publicKey,
+      encryptedKeyBundle: user.encryptedKeyBundle,
+      encryptedAsymmetricSecretKey: user.encryptedAsymmetricSecretKey,
+      encryptedAsymmetricSecretKeyPrev: user.encryptedAsymmetricSecretKeyPrev,
+      identityPublicKey: user.identityPublicKey,
+      encryptedIdentitySecretKey: user.encryptedIdentitySecretKey,
+      publicKeySignature: user.publicKeySignature,
+      phraseSalt: user.phraseSalt,
+      recoveryVerified: user.recoveryVerified,
+      masterKeyRotationRequired: user.masterKeyRotationRequired,
+      birthday: user.birthday,
+      country: user.country,
+      plan: user.plan,
     };
   },
 });
