@@ -3,6 +3,7 @@ import { query, type QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireFullAuth, requireItemOwnership } from "./helpers";
+import { patchCountedItem } from "./lib/storage_usage";
 
 /**
  * Former v2 folders. Folders became categories (who can open an item is set
@@ -104,7 +105,7 @@ export const migrateItem = auditedMutation({
     const userId = await requireFullAuth(ctx);
     const item = await requireItemOwnership(ctx, args.itemId, userId);
     if (!item.folderId) throw new ConvexError("Item is not in a folder");
-    await ctx.db.patch(args.itemId, {
+    await patchCountedItem(ctx, item, {
       encryptedMeta: args.encryptedMeta,
       folderId: undefined,
       updatedAt: Date.now(),

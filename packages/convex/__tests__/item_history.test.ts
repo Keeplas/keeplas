@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { getBlobSize } from "../lib/storage";
+import { versionBytes } from "../lib/storage_usage";
 import {
   asUser,
   makeT,
@@ -328,7 +329,20 @@ describe("item archive", () => {
     });
 
     const after = await owner.query(api.vaults.getUsageStats, {});
-    expect(after.storageBytes).toBe(before.storageBytes);
-    expect(after.archiveBytes).toBe(before.storageBytes);
+    const [version] = await t.run((ctx) =>
+      ctx.db
+        .query("vault_item_versions")
+        .withIndex("by_item", (q) => q.eq("itemId", edited.itemId))
+        .collect(),
+    );
+    const editedItem = await t.run((ctx) => ctx.db.get(edited.itemId));
+    // Nothing is freed: the removed file and the previous text become history.
+    expect(after.storageBytes).toBe(
+      before.storageBytes + versionBytes(version),
+    );
+    // Only the edited item's own row is still active.
+    expect(after.storageBytes - after.archiveBytes).toBe(
+      editedItem!.storedBytes,
+    );
   });
 });

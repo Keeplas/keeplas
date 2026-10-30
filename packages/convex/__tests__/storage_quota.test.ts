@@ -165,6 +165,9 @@ describe("storage quota enforcement", () => {
     ).rejects.toThrow("STORAGE_QUOTA_EXCEEDED");
 
     // Turning the intro into a normal item keeps the same usage.
+    const before = await asUser(t, userId).query(api.vaults.canStore, {
+      bytes: 1,
+    });
     await asUser(t, userId).mutation(api.vault_items.updateItem, {
       itemId,
       isReleaseIntroduction: false,
@@ -174,19 +177,20 @@ describe("storage quota enforcement", () => {
     const usage = await asUser(t, userId).query(api.vaults.canStore, {
       bytes: 1,
     });
-    expect(usage.usedBytes).toBe(sizeBucket(60 * MB));
+    expect(before.usedBytes).toBeGreaterThan(sizeBucket(60 * MB));
+    expect(usage.usedBytes).toBe(before.usedBytes);
   });
 
   it("rejects an addItemFiles upload that would cross the free quota", async () => {
     const t = makeT();
     const userId = await seedUser(t);
     const vaultId = await seedVault(t, userId);
+    await seedUsage(t, userId, vaultId, 100 * MB - 5000);
     const itemId = (await createItemWithFile(
       t,
       userId,
       vaultId,
     )) as Id<"vault_items">;
-    await seedUsage(t, userId, vaultId, 100 * MB - 5000);
 
     const storageId = await seedStorageRef(t, 2);
     await expect(

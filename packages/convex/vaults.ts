@@ -5,11 +5,11 @@ import {
   getUserVault,
   getActiveItems,
   getActiveVaultFiles,
-  getStorageUsage,
 } from "./helpers";
 import { createAuditLog } from "./audit";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import { sizeBucket, storedFileBytes } from "./lib/storage";
+import { readStorageUsage } from "./lib/storage_usage";
 
 /**
  * Get or create the user's vault. A plain mutation, not `auditedMutation`:
@@ -62,9 +62,10 @@ export const getVault = query({
  * "Usage" settings page. Category and file-kind breakdowns are computed on
  * the client from the decrypted metadata (F4).
  *
- * Storage sums the files' size buckets (the quota's unit) and counts only
- * files attached to non-archived items so archived data does not inflate the
- * displayed total.
+ * `storageBytes` is everything counted against the quota (item text, edit
+ * history, recipient keys, file size buckets — lib/storage_usage.ts);
+ * `archiveBytes` is the part held by archived items and the history. The
+ * per-kind breakdown covers the attachments of non-archived items.
  */
 export const getUsageStats = query({
   args: {},
@@ -82,7 +83,7 @@ export const getUsageStats = query({
       bytesByKind[file.kind ?? "document"] += storedFileBytes(file);
     }
 
-    const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
+    const { activeBytes, archiveBytes } = await readStorageUsage(ctx, userId);
 
     return {
       storageBytes: activeBytes + archiveBytes,
@@ -103,7 +104,7 @@ export const canStore = query({
     const user = await ctx.db.get(userId);
     const quotaBytes =
       PLAN_QUOTA_BYTES[getUserPlan(user ?? { plan: undefined })];
-    const { activeBytes, archiveBytes } = await getStorageUsage(ctx, userId);
+    const { activeBytes, archiveBytes } = await readStorageUsage(ctx, userId);
     const usedBytes = activeBytes + archiveBytes;
     return {
       fits: usedBytes + sizeBucket(args.bytes) <= quotaBytes,
