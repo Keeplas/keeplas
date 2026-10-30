@@ -178,54 +178,15 @@ function assertAdultBirthday(birthday: number, now: number) {
 }
 
 /**
- * Persist the legal identity collected during the `legal_info` onboarding
- * step. Birthday is validated server-side (>= 18 years, plausible upper
- * bound) and the country is normalized to ISO-3166-1 alpha-2. The audit
- * entry produced here is the user's signed declaration of identity — keep
- * the entry's metadata stable, it will be the anchor of the chain in any
- * future succession proceeding.
+ * Correct the birthday from Settings. Needs a stepped-up session, like every
+ * other edit of the legal identity.
  */
-export const completeLegalInfo = auditedMutation({
-  action: "user.legal_info.confirmed",
-  resourceType: "user",
-  args: {
-    birthday: v.number(),
-    country: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-    const now = Date.now();
-
-    assertAdultBirthday(args.birthday, now);
-
-    const country = args.country.trim().toUpperCase();
-    if (!/^[A-Z]{2}$/.test(country)) {
-      throw new Error("Country must be a 2-letter ISO-3166-1 code");
-    }
-
-    await ctx.db.patch(userId, {
-      birthday: args.birthday,
-      country,
-      legalInfoConfirmedAt: now,
-      onboardingStep: "recovery_phrase",
-      updatedAt: now,
-    });
-  },
-  getMetadata: (args) => ({
-    country: args.country.toUpperCase(),
-    // Store year-of-birth only (not full timestamp) in metadata to keep the
-    // audit entry's PII surface minimal — the full birthday lives on the
-    // user record itself.
-    birthYear: new Date(args.birthday).getUTCFullYear(),
-  }),
-});
-
 export const updateBirthday = auditedMutation({
   action: "user.birthday.updated",
   resourceType: "user",
   args: { birthday: v.number() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
     assertAdultBirthday(args.birthday, now);
     await ctx.db.patch(userId, { birthday: args.birthday, updatedAt: now });
@@ -241,9 +202,6 @@ export const updateBirthday = auditedMutation({
  * `legalInfoConfirmedAt` timestamp is preserved — it remains the anchor
  * of the audit chain — and a new `user.legal_info.updated` entry records
  * the previous and new country so the succession trail stays auditable.
- *
- * Birthday is intentionally not editable: it is a fact, not a preference,
- * and changing it would invalidate the original signed declaration.
  */
 export const updateLegalResidence = auditedMutation({
   action: "user.legal_info.updated",
@@ -252,7 +210,7 @@ export const updateLegalResidence = auditedMutation({
     country: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
