@@ -214,6 +214,9 @@ async function committedSecret(
   );
 }
 
+// Real ML-KEM / ML-DSA / AES on every item: slow on shared CI runners.
+jest.setTimeout(30_000);
+
 describe("rotateVault", () => {
   it("re-keys every wrap, name and pin, then retires the old RootKey", async () => {
     const s = await setup();

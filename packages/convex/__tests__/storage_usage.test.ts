@@ -595,7 +595,7 @@ describe("existing accounts (no counter yet)", () => {
     expect((await as.query(api.vaults.canStore, { bytes: 1 })).fits).toBe(true);
     await editContent(t, a.userId, a.itemId, "edited");
     await expectCounterMatches(t, a.userId);
-  });
+  }, 30_000); // ~21 MB of history under real limits
 
   it("restarts a build an edit lands in the middle of, and still converges", async () => {
     const t = makeT();

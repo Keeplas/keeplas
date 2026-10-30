@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import {
   asUser,
@@ -8,6 +8,10 @@ import {
   type TestConvex,
 } from "./test.helpers";
 import type { Id } from "../_generated/dataModel";
+
+// Seeds hundreds of accounts / thousands of contacts on purpose: far above
+// the 5 s default on shared CI runners.
+vi.setConfig({ testTimeout: 30_000 });
 
 // The hourly / weekly cron jobs must not run as one transaction over every
 // account: past the Convex limits (16 MiB / 32k documents read, 1000
