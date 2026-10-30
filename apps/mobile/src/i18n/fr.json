@@ -1534,7 +1534,8 @@
       "uploadFailed": "La photo n'a pas pu être envoyée. Réessayez.",
       "imageTooLarge": "Cette image est trop lourde. Choisissez-en une de moins de 5 Mo.",
       "tooYoung": "Vous devez avoir au moins 18 ans pour utiliser Keeplas.",
-      "invalidBirthday": "Cette date de naissance n'est pas valide."
+      "invalidBirthday": "Cette date de naissance n'est pas valide.",
+      "reviewAccount": "Ce compte sert à la vérification de l'app : son numéro et son e-mail ne peuvent pas être modifiés."
     }
   },
   "setupPin": {

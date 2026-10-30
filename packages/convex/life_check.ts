@@ -7,6 +7,7 @@ import {
   internalMutation,
   internalQuery,
   MutationCtx,
+  QueryCtx,
 } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
@@ -156,6 +157,27 @@ export const saveConfig = auditedMutation({
   },
 });
 
+/** The longest travel mode an owner can set. */
+export const TRAVEL_MODE_MAX_DAYS = 180;
+
+/**
+ * Put a Life check in travel mode until `until` and suspend any cycle already
+ * in flight. Shared by `toggleTravelMode` and `store_review.clearDrift`.
+ */
+export async function enterTravelMode(
+  ctx: MutationCtx,
+  config: Doc<"life_check_configs">,
+  until: number | undefined,
+  now: number,
+) {
+  await ctx.db.patch(config._id, {
+    travelModeEnabled: true,
+    travelModeUntil: until,
+    updatedAt: now,
+  });
+  await suspendInFlightCycle(ctx, config.userId, "travel_mode", now);
+}
+
 /**
  * Toggle travel mode.
  */
@@ -180,22 +202,15 @@ export const toggleTravelMode = auditedMutation({
     if (!config) throw new Error("Life Check not configured");
 
     const now = Date.now();
-    // Max 180 days
     if (args.enabled && args.until) {
-      const maxUntil = now + 180 * DAY_MS;
+      const maxUntil = now + TRAVEL_MODE_MAX_DAYS * DAY_MS;
       if (args.until > maxUntil) {
-        throw new Error("Travel mode maximum is 180 days");
+        throw new Error(`Travel mode maximum is ${TRAVEL_MODE_MAX_DAYS} days`);
       }
     }
 
     if (args.enabled) {
-      // Entering travel mode — suspend any cycle already in flight.
-      await ctx.db.patch(config._id, {
-        travelModeEnabled: true,
-        travelModeUntil: args.until,
-        updatedAt: now,
-      });
-      await suspendInFlightCycle(ctx, userId, "travel_mode", now);
+      await enterTravelMode(ctx, config, args.until, now);
     } else {
       // Returning early — clear travel mode and start a fresh window.
       await ctx.db.patch(config._id, {
@@ -547,7 +562,7 @@ export async function cancelPendingSchedules(
 /**
  * Find the user's in-flight Life Check cycle, if any.
  */
-async function findInFlightCycle(ctx: MutationCtx, userId: Id<"users">) {
+export async function findInFlightCycle(ctx: QueryCtx, userId: Id<"users">) {
   const statuses = ["running", "awaiting_confirmation"] as const;
   for (const status of statuses) {
     const cycle = await ctx.db

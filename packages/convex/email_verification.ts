@@ -7,6 +7,7 @@ import { requireAuth } from "./helpers";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { refuseOnReviewAccount } from "./store_review";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -49,6 +50,7 @@ export const requestVerification = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
+    await refuseOnReviewAccount(ctx, userId);
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new ConvexError("Invalid email address");
 

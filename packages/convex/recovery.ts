@@ -73,7 +73,7 @@ async function sharesOf(
     .collect();
 }
 
-async function activeRequest(ctx: QueryCtx, userId: Id<"users">) {
+export async function activeRequest(ctx: QueryCtx, userId: Id<"users">) {
   const requests = await ctx.db
     .query("recovery_requests")
     .withIndex("by_user", (q) => q.eq("userId", userId))

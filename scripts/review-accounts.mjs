@@ -22,6 +22,7 @@ import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { RED, YELLOW, GREEN, RESET } from "./_env-keys.mjs";
 import {
+  CONTACT_SEED,
   DEMO_PEOPLE,
   OWNER,
   kitOpens,
@@ -74,9 +75,16 @@ function run(fn, fnArgs) {
   }
 }
 
+const day = (ms) => new Date(ms).toISOString().slice(0, 10);
+
 function describe(account) {
+  const travel = account.lifeCheck?.travelModeUntil
+    ? `, travel mode until ${day(account.lifeCheck.travelModeUntil)}`
+    : account.lifeCheck?.travelMode
+      ? ", travel mode"
+      : "";
   const lifeCheck = account.lifeCheck
-    ? `${account.lifeCheck.frequency}${account.lifeCheck.travelMode ? ", travel mode" : ""}`
+    ? `${account.lifeCheck.frequency}${travel}`
     : "not set";
   return [
     account.name ?? "(no name)",
@@ -98,16 +106,31 @@ function phoneFromArgs(example) {
 }
 
 /**
- * What earlier reviewers left on a demo account. `clear` undoes the first
- * list; the second needs a re-seed (APP_REVIEW.md → Demo accounts).
+ * What earlier reviewers, or time, left on a demo account: anything that
+ * could show "Are you okay?", a recovery or a release during a review counts.
+ * `clear` undoes the first list; the second needs a re-seed (APP_REVIEW.md →
+ * Demo accounts).
  */
 async function drift(person, account, kit) {
   const english = !account.language || account.language.startsWith("en");
+  const { lifeCheck, accessRequests } = account;
   const clearable = [
     account.devicesPending > 0 &&
       `${account.devicesPending} device(s) waiting for "It was me"`,
-    account.cloudBackup && "cloud backup on",
+    account.cloudBackup && "cloud backup on (or never turned off)",
     !english && `language ${account.language}`,
+    account.email && `email ${account.email} added`,
+    lifeCheck?.canStartSoon &&
+      (lifeCheck.travelMode && lifeCheck.travelModeUntil
+        ? `travel mode ends ${day(lifeCheck.travelModeUntil)}, so a Life check can start`
+        : "Life check on without travel mode, so a check-in can start"),
+    lifeCheck?.cycle === "running" && `Life check "Are you okay?" in progress`,
+    lifeCheck?.cycle === "awaiting_confirmation" &&
+      "Life check asking the contacts to confirm",
+    accessRequests.pending > 0 &&
+      `${accessRequests.pending} contact access request(s) open`,
+    account.recoveryRequest &&
+      `recovery request open (${account.recoveryRequest})`,
   ];
   const kitOk =
     kit === null || // Reported once, as a problem of its own.
@@ -121,6 +144,12 @@ async function drift(person, account, kit) {
       account.plan !== "free" &&
       `on ${account.plan}: reviewers cannot test the purchase`,
     account.deletionScheduled && "deletion scheduled",
+    accessRequests.approved > 0 && "vault released to its contacts",
+    person !== OWNER &&
+      (account.items !== CONTACT_SEED.items ||
+        account.contacts !== CONTACT_SEED.contacts) &&
+      `${account.items} item(s) and ${account.contacts} contact(s), ` +
+        `seeded with ${CONTACT_SEED.items} and ${CONTACT_SEED.contacts}`,
   ];
   return {
     clearable: clearable.filter(Boolean),
@@ -219,7 +248,10 @@ if (command === "clear") {
   console.log(
     `\n${GREEN}✓ ${phone}: ${cleared.devicesConfirmed} device(s) confirmed` +
       `${cleared.backupTurnedOff ? ", cloud backup turned off" : ""}` +
-      `${cleared.languageReset ? ", language set back to English" : ""}.${RESET}\n`,
+      `${cleared.languageReset ? ", language set back to English" : ""}` +
+      `${cleared.lifeCheckPaused ? ", Life check paused with travel mode for 180 days" : ""}` +
+      `${cleared.recoveryCancelled ? ", recovery request cancelled" : ""}` +
+      `${cleared.emailRemoved ? ", email removed" : ""}.${RESET}\n`,
   );
 }
 

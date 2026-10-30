@@ -7,7 +7,7 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
-import { listedPhones, normalizeE164 } from "./lib/phone";
+import { isReviewPhone, listedPhones, normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { consumeSignupGrant } from "./attestation";
@@ -42,10 +42,7 @@ function fixedCode(phone: string): string | null {
     return DEV_TEST_CODE;
   }
   const reviewCode = process.env.REVIEW_CODE ?? "";
-  if (
-    /^\d{6}$/.test(reviewCode) &&
-    listedPhones(process.env.REVIEW_PHONES).includes(phone)
-  ) {
+  if (/^\d{6}$/.test(reviewCode) && isReviewPhone(phone)) {
     return reviewCode;
   }
   return null;

@@ -36,6 +36,11 @@ export function listedPhones(list: string | undefined): string[] {
     .filter(Boolean);
 }
 
+/** Whether REVIEW_PHONES lists `phone`: an App Store / Play review account. */
+export function isReviewPhone(phone: string | undefined): boolean {
+  return !!phone && listedPhones(process.env.REVIEW_PHONES).includes(phone);
+}
+
 /** E.164 for display to its owner: country-ish prefix + last 2 digits. */
 export function maskPhone(phone: string): string {
   return `${phone.slice(0, 3)}•••${phone.slice(-2)}`;

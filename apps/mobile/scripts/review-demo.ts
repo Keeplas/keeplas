@@ -10,6 +10,8 @@ export const OWNER = { phone: "+447700900101", name: "Demo Owner" };
 export const ALEX = { phone: "+447700900102", name: "Alex Demo" };
 export const SAM = { phone: "+447700900103", name: "Sam Demo" };
 export const DEMO_PEOPLE = [OWNER, ALEX, SAM];
+/** What review-seed.ts gives Alex and Sam each: a vault of their own. */
+export const CONTACT_SEED = { items: 2, contacts: 0 };
 
 export const KIT = "REVIEW_KIT";
 export const KIT_PATH = ["--env=prod", "--path=/keeplas_mobile", "--silent"];

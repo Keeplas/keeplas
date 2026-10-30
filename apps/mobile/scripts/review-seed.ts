@@ -56,7 +56,6 @@ import { generatePhrase } from "@keeplas/crypto/recovery";
 import { ALEX, KIT, KIT_PATH, OWNER, readKit, SAM } from "./review-demo";
 
 const ASSETS = resolve("apps/mobile/scripts/review-seed");
-const DAY_MS = 86_400_000;
 
 type Person = typeof OWNER;
 
@@ -463,7 +462,8 @@ async function seed() {
     },
   ]);
   // The contacts' own vaults: a reviewer signed in as one sees a few items
-  // too. They have no trusted contacts, so nothing is shared.
+  // too. They have no trusted contacts, so nothing is shared. Keep
+  // CONTACT_SEED (review-demo.ts) in step: `pnpm review:status` checks it.
   await fillVault(alex, [
     {
       title: "Holiday photo",
@@ -495,7 +495,7 @@ async function seed() {
     },
   ]);
 
-  console.log("Life check quarterly with travel mode, cloud backup off…");
+  console.log("Life check paused, cloud backup off…");
   const _audit = await auditContext();
   await owner.client.mutation(api.life_check.saveConfig, {
     frequency: "quarterly",
@@ -506,17 +506,16 @@ async function seed() {
     ],
     _audit,
   });
-  await owner.client.mutation(api.life_check.toggleTravelMode, {
-    enabled: true,
-    until: Date.now() + 30 * DAY_MS,
-    _audit,
-  });
-  // Off for good, so reviewers' phones never seal a backup the next
-  // reviewer can't open (lib/backup-policy.ts): each one gets the kit.
-  await owner.client.mutation(api.cloud_backup.disable, { _audit });
-
-  for (const account of [owner, alex, sam])
+  for (const account of [owner, alex, sam]) {
+    // Off for good, so reviewers' phones never seal a backup the next
+    // reviewer can't open (lib/backup-policy.ts): each one gets the kit.
+    await account.client.mutation(api.cloud_backup.disable, { _audit });
+    // Travel mode for the server maximum on every account, as
+    // `pnpm review:clear` re-arms it: no "Are you okay?" check-in during a
+    // review, on the owner or on a contact.
+    admin("store_review:clearDrift", { phoneNumber: account.person.phone });
     await account.client.action(api.auth.signOut, {});
+  }
 }
 
 const sha256 = (bytes: Uint8Array) =>
