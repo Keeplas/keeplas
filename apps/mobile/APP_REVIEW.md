@@ -308,19 +308,27 @@ Every row is linked to the user.
   - In the app: Settings → Delete my account.
   - On the web: `https://www.keeplas.com/delete-account` (French: `/fr/delete-account`). Paste this URL in the Data safety form's delete-account field.
 
+## Play pre-launch report
+
+Google runs it on lab devices (in the US) after every upload to a track, and it reuses the App access credentials. The robot can't receive WhatsApp codes and won't get past the sign-in screens, so it mostly crawls Welcome, Help and Support.
+
+- Play Console → Testing → Pre-launch report → Settings: leave "Provide credentials" empty, so the robot doesn't try the demo account.
+- After each upload, read the report (crashes, accessibility, security warnings) and fix any crash before sending for review.
+- Then run `pnpm review:status`: it flags device alerts or requests a lab device may have left on a demo account.
+
 ## App Store accessibility
 
 ASC → App Accessibility (Accessibility Nutrition Labels, voluntary for now). Apple asks that users can complete the app's common tasks (first launch, sign-in, purchase, settings) with each feature you claim.
 
-| Feature                           | Claim                                                                                        |
-| --------------------------------- | -------------------------------------------------------------------------------------------- |
-| Dark Interface                    | Yes: light and dark themes follow the system, or Settings → Appearance.                      |
-| Differentiate Without Color Alone | Yes, after a check on a phone: errors have text, chips have labels, selections have a shape. |
-| Reduced Motion                    | Yes, after a check with Reduce Motion on: the ambient animations stop.                       |
-| VoiceOver, Voice Control          | Not yet: claim them only after a full pass with VoiceOver on a phone.                        |
-| Larger Text                       | Not yet: some fixed-height fields don't grow at the largest sizes.                           |
-| Sufficient Contrast               | Not yet: status chips, placeholders and checkbox rings are below Apple's ratios.             |
-| Captions, Audio Descriptions      | Not applicable: the app has no media of its own.                                             |
+| Feature                           | Claim                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| Dark Interface                    | Not yet: the onboarding and recovery illustrations have no dark version.         |
+| Differentiate Without Color Alone | Not yet: the selected tab and the security activity dots rely on colour.         |
+| Reduced Motion                    | Yes, after a check with Reduce Motion on: the ambient animations stop.           |
+| VoiceOver, Voice Control          | Not yet: claim them only after a full pass with VoiceOver on a phone.            |
+| Larger Text                       | Not yet: some fixed-height fields don't grow at the largest sizes.               |
+| Sufficient Contrast               | Not yet: status chips, placeholders and checkbox rings are below Apple's ratios. |
+| Captions, Audio Descriptions      | Not applicable: the app has no media of its own.                                 |
 
 ## Account deletion requests from the web
 
@@ -354,6 +362,7 @@ Payment records stay after deletion. The security log (with its IP addresses and
 - [ ] Video of the multi-day flows, linked in the notes.
 - [ ] ASC → Business: Paid Apps Agreement Active, tax forms (W-8BEN-E) and bank account Active, no agreement waiting for the Account Holder. On the TestFlight build, Settings → Upgrade shows the price. A pending agreement already broke the purchase once (RevenueCat "code 23").
 - [ ] Trader status verified: Apple (DSA) and Google Play.
+- [ ] Play pre-launch report of the AAB read: no crash ([above](#play-pre-launch-report)).
 - [ ] ASC → App Accessibility: claim only what the app supports ([below](#app-store-accessibility)).
 
 Your own testers (TestFlight, Play closed and internal tracks) need none of this: they sign up with their real number and WhatsApp, like any user.
