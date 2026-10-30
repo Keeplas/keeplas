@@ -37,6 +37,12 @@ describe("links that open Keeplas from outside", () => {
     );
   });
 
+  it("opens the devices screen from a new-device alert, without parameters", () => {
+    expect(open(`${ORIGIN}/devices`)).toBe("/devices");
+    expect(open(`${ORIGIN}/devices?id=x`)).toBe("/devices");
+    expect(open("keeplas://devices")).toBe("/devices");
+  });
+
   it("opens the start screen for every other screen and its parameters", () => {
     for (const path of [
       "keeplas://account-phone-verify?phone=%2B15550100",

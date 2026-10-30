@@ -22,7 +22,8 @@ function routeOf(url: string): string {
  *   URL fragment, which routing drops: stash the whole URL and open the
  *   scanner, which processes it like a scanned QR. A pairing link only opens
  *   the M03-5 approval screen: it never logs a browser in by itself;
- * - an invitation opens invite/[token], with no other parameter.
+ * - an invitation opens invite/[token], with no other parameter;
+ * - the new-device alert button opens the device list, with no parameter.
  * Any other URL opens the start screen: a link must never land on an inner
  * screen with parameters it chose (a spoofed security screen, a code resent
  * to the sender's number).
@@ -38,7 +39,7 @@ export function redirectSystemPath({
     return "/scan";
   }
   const route = routeOf(path);
-  if (INVITE.test(route)) return `/${route}`;
+  if (INVITE.test(route) || route === "devices") return `/${route}`;
   // `keeplas://self-test?autorun=1` runs the crypto self-test (simulator).
   if (__DEV__ && route === "self-test") return path;
   return "/";

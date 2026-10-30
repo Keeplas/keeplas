@@ -13,7 +13,7 @@ const env = {
 };
 
 describe("app association files", () => {
-  it("links QR and invitation paths and passkeys to the iOS app", () => {
+  it("links QR, invitation and alert paths and passkeys to the iOS app", () => {
     expect(appleAppSiteAssociation(env)).toEqual({
       applinks: {
         details: [
@@ -24,6 +24,7 @@ describe("app association files", () => {
               { "/": "/link/*" },
               { "/": "/capture" },
               { "/": "/invite/*" },
+              { "/": "/devices" },
             ],
           },
         ],

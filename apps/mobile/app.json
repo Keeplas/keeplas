@@ -59,6 +59,11 @@
               "scheme": "https",
               "host": "app.keeplas.com",
               "pathPrefix": "/invite/"
+            },
+            {
+              "scheme": "https",
+              "host": "app.keeplas.com",
+              "path": "/devices"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
