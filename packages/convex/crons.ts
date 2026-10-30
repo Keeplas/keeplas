@@ -49,4 +49,15 @@ crons.interval(
   {},
 );
 
+/**
+ * Daily delete of expired passkey challenges: sign-in challenges are
+ * requested signed out and only removed when consumed.
+ */
+crons.interval(
+  "sweep_expired_webauthn_challenges",
+  { hours: 24 },
+  internal.webauthn.sweepExpiredChallenges,
+  {},
+);
+
 export default crons;
