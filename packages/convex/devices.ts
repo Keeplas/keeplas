@@ -10,10 +10,14 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { auditedMutation } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { endSession, endSessions } from "./lib/sessions";
 import { cancelActiveRecovery } from "./recovery";
 
 const MAX_LABEL_LENGTH = 100;
+// Every device after the first alerts the owner (push, email, WhatsApp).
+// Each device registers once, so this only stops a registration loop.
+const REGISTRATIONS_PER_HOUR = 10;
 
 /**
  * Record the current device after sign-up or a QR link (workflow 8, step 16).
@@ -30,6 +34,12 @@ export const register = auditedMutation({
   },
   handler: async (ctx, args, audit) => {
     const userId = await requireAuth(ctx);
+    await enforceIpRateLimit(
+      ctx,
+      "device_register",
+      userId,
+      REGISTRATIONS_PER_HOUR,
+    );
     const now = Date.now();
     const isFirst =
       (await ctx.db

@@ -185,6 +185,23 @@ describe("account deletion", () => {
     ).toBeNull();
   });
 
+  // Each fresh schedule emails and WhatsApps the owner, and cancel undoes it
+  // at once: a request → cancel loop must not burn the shared send quotas.
+  it("caps fresh deletion schedules at 3 per day", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    for (let i = 0; i < 3; i++) {
+      await requestDeletion(t, userId);
+      await asUser(t, userId).mutation(api.account_deletion.cancel, {
+        _audit: await signedAudit(),
+      });
+    }
+
+    await expect(requestDeletion(t, userId)).rejects.toThrow(
+      "Too many requests",
+    );
+  });
+
   it("erases everything after the grace period and keeps legal records", async () => {
     const t = makeT();
     const owner = await seedVaultOwner(t);
