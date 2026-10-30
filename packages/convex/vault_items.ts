@@ -57,6 +57,31 @@ const recipientKeyValidator = v.object({
   wrappedDek: v.string(),
 });
 
+/** Longest wrap accepted: an ML-KEM-768 + AES-GCM envelope is ~1.6 KB. */
+const MAX_WRAPPED_DEK_LENGTH = 16 * 1024;
+
+type RecipientKey = { contactId: Id<"trusted_contacts">; wrappedDek: string };
+
+/**
+ * The wraps to store: one per contact, each of an envelope's size. Every wrap
+ * is its own row, outside the storage quota, so repeated contacts or
+ * oversized "wraps" would let one call write thousands of rows / megabytes.
+ * A repeated contact keeps its first wrap (all wrap the same DEK to the same
+ * key) rather than failing: rotation re-sends the rows an item already has.
+ */
+function boundedRecipientKeys(recipientKeys: RecipientKey[]): RecipientKey[] {
+  if (
+    recipientKeys.some((rk) => rk.wrappedDek.length > MAX_WRAPPED_DEK_LENGTH)
+  ) {
+    throw new ConvexError("Recipient key too large");
+  }
+  const byContact = new Map<Id<"trusted_contacts">, RecipientKey>();
+  for (const rk of recipientKeys) {
+    if (!byContact.has(rk.contactId)) byContact.set(rk.contactId, rk);
+  }
+  return [...byContact.values()];
+}
+
 // ─── Queries ────────────────────────────────────────────
 
 /**
@@ -475,6 +500,7 @@ export const createItem = auditedMutation({
     if (!vault || vault.userId !== userId) {
       throw new Error("Vault not found");
     }
+    const recipientKeys = boundedRecipientKeys(args.recipientKeys ?? []);
 
     const files = await measureFiles(ctx, userId, args.files ?? []);
     await assertWithinStorageQuota(ctx, userId, files);
@@ -495,7 +521,7 @@ export const createItem = auditedMutation({
       contacts: [
         ...sharedWithContacts,
         ...pendingRecipients,
-        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+        ...recipientKeys.map((rk) => rk.contactId),
       ],
       groups: sharedWithGroups,
     });
@@ -532,9 +558,9 @@ export const createItem = auditedMutation({
       updatedAt: now,
     });
 
-    if (args.recipientKeys && args.recipientKeys.length > 0) {
+    if (recipientKeys.length > 0) {
       await Promise.all(
-        args.recipientKeys.map((rk) =>
+        recipientKeys.map((rk) =>
           ctx.db.insert("vault_item_recipient_keys", {
             itemId,
             contactId: rk.contactId,
@@ -636,16 +662,22 @@ export const updateItem = auditedMutation({
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
     const item = await requireItemOwnership(ctx, args.itemId, userId);
+    const {
+      itemId,
+      recipientKeys: sentKeys,
+      removeFileIds = [],
+      ...updates
+    } = args;
+    const recipientKeys = sentKeys && boundedRecipientKeys(sentKeys);
     await requireOwnRecipients(ctx, userId, {
       contacts: [
         ...(args.sharedWithContacts ?? []),
         ...(args.pendingRecipients ?? []),
-        ...(args.recipientKeys ?? []).map((rk) => rk.contactId),
+        ...(recipientKeys ?? []).map((rk) => rk.contactId),
       ],
       groups: args.sharedWithGroups ?? [],
     });
 
-    const { itemId, recipientKeys, removeFileIds = [], ...updates } = args;
     const now = Date.now();
     const editsContent =
       removeFileIds.length > 0 ||
@@ -820,7 +852,7 @@ export const addRecipientKeys = auditedMutation({
     const now = Date.now();
     const added = new Set<Id<"trusted_contacts">>();
 
-    for (const rk of args.recipientKeys) {
+    for (const rk of boundedRecipientKeys(args.recipientKeys)) {
       // Only a contact owed a wrap: deferred on this item, or any of the
       // owner's live contacts when the item is shared with everyone.
       if (!pending.has(rk.contactId)) {
