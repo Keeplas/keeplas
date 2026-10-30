@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
   modeActive: { backgroundColor: palette.white },
   camera: {
     height: 520,
+    flexShrink: 1,
     marginTop: 8,
     backgroundColor: palette.navy["700"],
     justifyContent: "flex-end",
@@ -317,6 +318,7 @@ const styles = StyleSheet.create({
   bannerText: { flex: 1, gap: 2 },
   controls: {
     flex: 1,
+    minHeight: 104,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
