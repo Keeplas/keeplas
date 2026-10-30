@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { accountLanguageTag } from "@/i18n/translate";
@@ -27,13 +28,15 @@ export class AttestationFailed extends Error {
  * Send the WhatsApp sign-up / sign-in code. A sign-up code is only issued
  * after this phone attested itself (createChallenge → App Attest / Play
  * Integrity → attestation_node.verify), and each grant is single use, so a
- * resend attests again.
+ * resend attests again. A number with no account (sign-in) or already taken
+ * (sign-up) comes back as `{ sent: false, error }` and is thrown here, as the
+ * screens expect.
  */
 export function useRequestPhoneCode() {
   const { language } = useI18n();
   const createChallenge = useAuditedMutation(api.attestation.createChallenge);
   const verifyAttestation = useAction(api.attestation_node.verify);
-  const requestOtp = useMutation(api.phone_auth.requestPhoneAuthOtp);
+  const requestOtp = useAuditedMutation(api.phone_auth.requestPhoneAuthOtp);
 
   return useCallback(
     async (phoneNumber: string, intent: PhoneIntent) => {
@@ -49,11 +52,12 @@ export function useRequestPhoneCode() {
           );
         }
       }
-      await requestOtp({
+      const result = await requestOtp({
         phoneNumber,
         intent,
         language: accountLanguageTag(language),
       });
+      if (!result.sent) throw new ConvexError(result.error);
     },
     [createChallenge, verifyAttestation, requestOtp, language],
   );

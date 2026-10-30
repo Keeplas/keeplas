@@ -131,6 +131,10 @@ async function drift(person, account, kit) {
       `${accessRequests.pending} contact access request(s) open`,
     account.recoveryRequest &&
       `recovery request open (${account.recoveryRequest})`,
+    account.numberChangeRequest &&
+      `"Lost your number?" request open (${account.numberChangeRequest})`,
+    account.contacts > account.contactsAccepted &&
+      `${account.contacts - account.contactsAccepted} invitation(s) never accepted`,
   ];
   const kitOk =
     kit === null || // Reported once, as a problem of its own.
@@ -147,8 +151,8 @@ async function drift(person, account, kit) {
     accessRequests.approved > 0 && "vault released to its contacts",
     person !== OWNER &&
       (account.items !== CONTACT_SEED.items ||
-        account.contacts !== CONTACT_SEED.contacts) &&
-      `${account.items} item(s) and ${account.contacts} contact(s), ` +
+        account.contactsAccepted !== CONTACT_SEED.contacts) &&
+      `${account.items} item(s) and ${account.contactsAccepted} accepted contact(s), ` +
         `seeded with ${CONTACT_SEED.items} and ${CONTACT_SEED.contacts}`,
   ];
   return {
@@ -199,10 +203,10 @@ if (command === "status") {
     }
     if (
       person === OWNER &&
-      (row.account.items === 0 || row.account.contactsAccepted < 2)
+      (row.account.items === 0 || row.account.contactsAccepted !== 2)
     ) {
       problems.push(
-        `${label} needs vault items and 2 accepted contacts: re-seed it.`,
+        `${label} needs vault items and exactly 2 accepted contacts (Alex and Sam): re-seed it.`,
       );
     }
     const { clearable, reseed } = await drift(person, row.account, kit);
@@ -251,6 +255,8 @@ if (command === "clear") {
       `${cleared.languageReset ? ", language set back to English" : ""}` +
       `${cleared.lifeCheckPaused ? ", Life check paused with travel mode for 180 days" : ""}` +
       `${cleared.recoveryCancelled ? ", recovery request cancelled" : ""}` +
+      `${cleared.numberChangeCancelled ? ', "Lost your number?" request cancelled' : ""}` +
+      `${cleared.invitationsRevoked > 0 ? `, ${cleared.invitationsRevoked} invitation(s) revoked` : ""}` +
       `${cleared.emailRemoved ? ", email removed" : ""}.${RESET}\n`,
   );
 }

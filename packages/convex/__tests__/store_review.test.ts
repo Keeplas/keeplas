@@ -8,6 +8,7 @@ import {
   runDueJobs,
   seedTrustContact,
   seedUser,
+  signedAudit,
   type TestConvex,
 } from "./test.helpers";
 
@@ -149,6 +150,37 @@ async function seedSuccessionLeftovers(t: TestConvex, userId: Id<"users">) {
   });
 }
 
+/**
+ * What a reviewer trying "Lost your number?" and an invitation on the demo
+ * owner leaves: an open number change and a contact who never accepted.
+ */
+async function seedInvitationLeftovers(t: TestConvex, userId: Id<"users">) {
+  const now = Date.now();
+  return await t.run(async (ctx) => ({
+    numberChangeId: await ctx.db.insert("number_change_requests", {
+      userId,
+      oldPhone: DEMO_PHONE,
+      newPhone: REAL_PHONE,
+      declaredName: "Reviewer",
+      status: "pending",
+      claimHash: "hash",
+      createdAt: now,
+      windowEndsAt: now + 3 * DAY_MS,
+    }),
+    invitedId: await ctx.db.insert("trusted_contacts", {
+      userId,
+      name: "Someone real",
+      phoneNumber: REAL_PHONE,
+      role: "friend",
+      invitationStatus: "pending",
+      invitationToken: "tok-invited",
+      invitedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    }),
+  }));
+}
+
 describe("store review status", () => {
   afterEach(() => {
     delete process.env.REVIEW_PHONES;
@@ -185,6 +217,7 @@ describe("store review status", () => {
             },
             accessRequests: { pending: 0, approved: 0 },
             recoveryRequest: null,
+            numberChangeRequest: null,
             deletionScheduled: false,
             devicesPending: 0,
             masterKeyRotationRequired: false,
@@ -267,6 +300,22 @@ describe("store review status", () => {
       },
       accessRequests: { pending: 1, approved: 1 },
       recoveryRequest: "approved_1",
+    });
+  });
+
+  it("reports an open number change and an invitation a reviewer left", async () => {
+    process.env.REVIEW_PHONES = DEMO_PHONE;
+    const t = makeT();
+    const userId = await seedDemoOwner(t);
+    await seedInvitationLeftovers(t, userId);
+
+    const [{ account }] = (await t.query(internal.store_review.status, {}))
+      .accounts;
+
+    expect(account).toMatchObject({
+      numberChangeRequest: "pending",
+      contacts: 3,
+      contactsAccepted: 2,
     });
   });
 
@@ -392,6 +441,8 @@ describe("store review drift clearing", () => {
       lifeCheckPaused: false,
       recoveryCancelled: false,
       emailRemoved: false,
+      numberChangeCancelled: false,
+      invitationsRevoked: 0,
     });
 
     const after = await t.run(async (ctx) => ({
@@ -492,6 +543,38 @@ describe("store review drift clearing", () => {
     });
   });
 
+  it("cancels an open number change and revokes invitations never accepted", async () => {
+    process.env.REVIEW_PHONES = DEMO_PHONE;
+    const t = makeT();
+    const userId = await seedDemoOwner(t);
+    const { numberChangeId, invitedId } = await seedInvitationLeftovers(
+      t,
+      userId,
+    );
+
+    await expect(
+      t.mutation(internal.store_review.clearDrift, { phoneNumber: DEMO_PHONE }),
+    ).resolves.toMatchObject({
+      numberChangeCancelled: true,
+      invitationsRevoked: 1,
+    });
+
+    const after = await t.run(async (ctx) => ({
+      numberChange: await ctx.db.get(numberChangeId),
+      invited: await ctx.db.get(invitedId),
+    }));
+    expect(after.numberChange?.status).toBe("cancelled");
+    expect(after.invited?.invitationStatus).toBe("revoked");
+    // The seeded contacts, who accepted, stay.
+    const [{ account }] = (await t.query(internal.store_review.status, {}))
+      .accounts;
+    expect(account).toMatchObject({
+      numberChangeRequest: null,
+      contacts: 2,
+      contactsAccepted: 2,
+    });
+  });
+
   it("turns off a cloud backup that was never turned off", async () => {
     // A contact seeded before the seed turned it off: no backup yet, but the
     // next reviewer's phone would make one (mobile lib/backup-policy.ts).
@@ -523,6 +606,8 @@ describe("store review drift clearing", () => {
       lifeCheckPaused: false,
       recoveryCancelled: false,
       emailRemoved: false,
+      numberChangeCancelled: false,
+      invitationsRevoked: 0,
     });
   });
 
@@ -585,6 +670,27 @@ describe("review accounts keep their number and email", () => {
     expect(codes).toHaveLength(0);
   });
 
+  it("refuses a signed-out number change request and alerts no one", async () => {
+    process.env.REVIEW_PHONES = DEMO_PHONE;
+    const t = makeT();
+    await seedDemoOwner(t);
+
+    await expectRefused(
+      t.mutation(api.number_change.submit, {
+        oldPhone: DEMO_PHONE,
+        newPhone: REAL_PHONE,
+        name: "Reviewer",
+        _audit: await signedAudit(),
+      }),
+    );
+    const left = await t.run(async (ctx) => ({
+      requests: await ctx.db.query("number_change_requests").collect(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+    }));
+    expect(left.requests).toHaveLength(0);
+    expect(left.jobs).toHaveLength(0);
+  });
+
   it("still lets other accounts add an email", async () => {
     process.env.REVIEW_PHONES = DEMO_PHONE;
     const t = makeT();
@@ -595,5 +701,55 @@ describe("review accounts keep their number and email", () => {
         email: "someone@example.com",
       }),
     ).resolves.toEqual({ sent: true });
+  });
+});
+
+describe("invitations from review accounts", () => {
+  afterEach(() => {
+    delete process.env.REVIEW_PHONES;
+  });
+
+  async function inviteSomeone(t: TestConvex, ownerId: Id<"users">) {
+    await asUser(t, ownerId).mutation(api.trusted_contacts.inviteContact, {
+      name: "Someone real",
+      email: "someone@example.com",
+      phoneNumber: "+33698765432",
+      role: "friend",
+      _audit: await signedAudit(),
+    });
+    const contacts = await t.run((ctx) =>
+      ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", ownerId))
+        .collect(),
+    );
+    const jobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    return {
+      invited: contacts.find((c) => c.name === "Someone real"),
+      sent: jobs.filter((job) => job.name.includes("Invitation")),
+    };
+  }
+
+  it("stay in the app: no WhatsApp or email reaches the person", async () => {
+    process.env.REVIEW_PHONES = DEMO_PHONE;
+    const t = makeT();
+    const userId = await seedDemoOwner(t);
+
+    const { invited, sent } = await inviteSomeone(t, userId);
+
+    expect(invited?.invitationStatus).toBe("pending");
+    expect(sent).toHaveLength(0);
+  });
+
+  it("are still delivered for every other account", async () => {
+    process.env.REVIEW_PHONES = DEMO_PHONE;
+    const t = makeT();
+    const userId = await seedPhoneUser(t, REAL_PHONE);
+
+    const { sent } = await inviteSomeone(t, userId);
+
+    expect(sent).toHaveLength(2);
   });
 });

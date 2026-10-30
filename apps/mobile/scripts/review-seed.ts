@@ -153,6 +153,7 @@ async function session(
     phoneNumber,
     intent: flow === "signUp" ? "signup" : "signin",
     language: "en-US",
+    _audit: await auditContext(),
   });
   const { tokens } = await anonymous.action(api.auth.signIn, {
     provider: "phone-otp",

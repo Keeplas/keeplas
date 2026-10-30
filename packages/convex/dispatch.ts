@@ -7,7 +7,11 @@ import { Doc, Id } from "./_generated/dataModel";
 import { formatSenderIdentity } from "./lib/identity";
 import { requireEnv } from "./lib/require_env";
 import { signLifeCheckToken } from "./lib/life_check_token";
-import { type Locale, resolveLocale } from "./lib/locale";
+import {
+  type Locale,
+  resolveLocale,
+  userLanguageForLocale,
+} from "./lib/locale";
 import { isNotificationsPaused } from "./lib/pause";
 
 const CHANNEL_TYPE = v.union(
@@ -1276,6 +1280,10 @@ async function sendExpoPush(
       sound: "default",
       // Security alerts and Life Check: Android must not hold them in Doze.
       priority: "high",
+      // The "Keeplas" channel the app creates before it registers a token
+      // (apps/mobile lib/use-push-notifications.ts); without it Android
+      // files them under "Miscellaneous".
+      channelId: "default",
     })),
   )) as ExpoPushStatus[];
   const dead = tokens.filter((_, i) => isUnregistered(tickets[i]));
@@ -1450,13 +1458,30 @@ const DELETION_SCHEDULED_COPY = {
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
+/**
+ * "November 6, 2026" / "6 novembre 2026". In UTC: the server doesn't know
+ * the owner's time zone.
+ */
+function formatDay(timestamp: number, locale: Locale): string {
+  return new Intl.DateTimeFormat(userLanguageForLocale(locale), {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(timestamp);
+}
+
 export const notifyDeletionScheduled = internalAction({
-  args: { ...alertArgs, ownerName: v.optional(v.string()), date: v.string() },
+  args: {
+    ...alertArgs,
+    ownerName: v.optional(v.string()),
+    scheduledAt: v.number(),
+  },
   handler: (ctx, args) =>
     sendAlert(ctx, {
       ...args,
       greetingName: args.ownerName,
-      bodyName: args.date,
+      bodyName: formatDay(args.scheduledAt, resolveLocale(args.language)),
       copy: DELETION_SCHEDULED_COPY,
       path: "/terminate",
       appPath: "/delete-account",

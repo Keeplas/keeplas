@@ -59,7 +59,7 @@ async function scheduleDeletion(
     ownerName: user.name,
     language: user.language,
     pushTokens: await activePushTokens(ctx, user._id),
-    date: new Date(scheduledAt).toISOString().slice(0, 10),
+    scheduledAt,
   });
   return { scheduledAt, alreadyScheduled: false };
 }

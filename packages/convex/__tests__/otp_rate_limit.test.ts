@@ -6,6 +6,7 @@ import {
   asUserSession,
   makeT,
   seedSession,
+  signedAudit,
   type TestConvex,
 } from "./test.helpers";
 
@@ -29,8 +30,9 @@ const flows: Flow[] = [
     table: "phone_auth_codes",
     request: async (t) => {
       await t.run((ctx) => ctx.db.insert("users", { phoneNumber: PHONE }));
-      return () =>
+      return async () =>
         t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+          _audit: await signedAudit(),
           phoneNumber: PHONE,
           intent: "signin",
         });

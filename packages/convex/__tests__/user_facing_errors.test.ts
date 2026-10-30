@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { sha256Hex } from "../lib/crypto";
+import { SUPPORT_TICKETS_PER_IP } from "../support";
 import {
   asUser,
   makeT,
@@ -68,8 +69,40 @@ describe("support form errors", () => {
   ])("%o → %s", async (change, text) => {
     const t = makeT();
     await expectConvexError(
-      t.mutation(api.support.submitTicket, { ...ticket, ...change }),
+      t.mutation(api.support.submitTicket, {
+        ...ticket,
+        ...change,
+        _audit: await signedAudit(),
+      }),
       text,
+    );
+  });
+
+  it.each([
+    ["name", 101],
+    ["subject", 201],
+    ["message", 5001],
+  ])("refuses a %s of %i characters", async (field, length) => {
+    const t = makeT();
+    await expectConvexError(
+      t.mutation(api.support.submitTicket, {
+        ...ticket,
+        [field]: "a".repeat(length),
+        _audit: await signedAudit(),
+      }),
+      "too long",
+    );
+  });
+
+  it("caps tickets per IP, since each one emails the team", async () => {
+    const t = makeT();
+    const _audit = await signedAudit();
+    for (let i = 0; i < SUPPORT_TICKETS_PER_IP; i++) {
+      await t.mutation(api.support.submitTicket, { ...ticket, _audit });
+    }
+    await expectConvexError(
+      t.mutation(api.support.submitTicket, { ...ticket, _audit }),
+      "Too many requests",
     );
   });
 });
@@ -79,6 +112,7 @@ describe("phone sign-in code errors", () => {
     const t = makeT();
     await expectConvexError(
       t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+        _audit: await signedAudit(),
         phoneNumber: "0612345678",
         intent: "signin",
       }),

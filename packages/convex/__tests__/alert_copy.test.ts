@@ -159,6 +159,36 @@ describe("French alerts", () => {
   });
 });
 
+describe("account deletion alert", () => {
+  // 2026-11-06 10:00 UTC.
+  const scheduledAt = Date.UTC(2026, 10, 6, 10);
+
+  it.each([
+    ["en-US", "November 6, 2026"],
+    ["fr-FR", "6 novembre 2026"],
+  ])(
+    "gives the date in words in %s on every channel",
+    async (language, day) => {
+      const sent = capture();
+      await makeT().action(internal.dispatch.notifyDeletionScheduled, {
+        ...OWNER_CHANNELS,
+        ownerName: OWNER.name,
+        language,
+        scheduledAt,
+      });
+      expect(sent.push[0].body).toContain(day);
+      expect(sent.email[0].text).toContain(day);
+      expect(sent.whatsapp).toEqual([[day]]);
+      const texts = [
+        sent.push[0].body,
+        sent.email[0].text,
+        ...sent.whatsapp[0],
+      ];
+      for (const text of texts) expect(text).not.toContain("2026-11-06");
+    },
+  );
+});
+
 describe("email codes", () => {
   it("confirm an added email without mentioning a sign-in or a password", async () => {
     const sent = capture();

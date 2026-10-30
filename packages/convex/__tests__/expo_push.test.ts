@@ -9,7 +9,12 @@ import { makeT, seedUser, type TestConvex } from "./test.helpers";
 const EXPO_SEND = "https://exp.host/--/api/v2/push/send";
 const EXPO_RECEIPTS = "https://exp.host/--/api/v2/push/getReceipts";
 
-type ExpoMessage = { to: string; data: { url: string }; priority?: string };
+type ExpoMessage = {
+  to: string;
+  data: { url: string };
+  priority?: string;
+  channelId?: string;
+};
 type Ticket = { status: "ok"; id: string } | ExpoError;
 type ExpoError = { status: "error"; details: { error: string } };
 
@@ -105,6 +110,15 @@ describe("Expo push", () => {
       deviceLabel: "Chrome on macOS",
     });
     expect(sent[0]?.priority).toBe("high");
+  });
+
+  it('posts to the app\'s "Keeplas" Android channel, not Miscellaneous', async () => {
+    // The channel apps/mobile lib/use-push-notifications.ts creates.
+    const { sent } = mockExpo(() => ({ status: "ok", id: "r1" }));
+    await makeT().action(internal.dispatch.notifyRecoveryStarted, {
+      pushTokens: ["ExponentPushToken[a]"],
+    });
+    expect(sent[0]?.channelId).toBe("default");
   });
 
   it("authenticates with EXPO_ACCESS_TOKEN when set", async () => {

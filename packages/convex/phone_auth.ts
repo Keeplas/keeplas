@@ -23,6 +23,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
+/** Code requests one IP may make per hour, across numbers (carrier NAT). */
+export const CODE_REQUESTS_PER_IP = 20;
 
 const DEV_TEST_CODE = "000000";
 
@@ -52,44 +54,64 @@ function fixedCode(phone: string): string | null {
  * Issue + dispatch a pre-auth WhatsApp OTP for a passwordless phone account.
  * `intent` distinguishes signup (must NOT already exist) from signin.
  * Rate-limited to 3 per rolling hour per number (a fixed-code number: 15
- * wrong guesses per hour instead). The code is consumed by the
- * `phone-otp` ConvexCredentials provider's authorize() at signIn.
+ * wrong guesses per hour instead) and to CODE_REQUESTS_PER_IP per hour per
+ * IP. The code is consumed by the `phone-otp` ConvexCredentials provider's
+ * authorize() at signIn.
  *
- * Returns `{ sent: true }` even for an unknown number on signin so the
- * endpoint does not leak account existence (the subsequent signIn fails).
+ * It does tell whether a number has an account: the app needs it to offer
+ * "Sign in instead" / "Create account" before any code is sent. That answer
+ * is returned (`{ sent: false, error }`), not thrown, so the IP slot it took
+ * is kept: a throw would roll it back and leave probing unthrottled.
  */
 export const requestPhoneAuthOtp = mutation({
   args: {
     phoneNumber: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
     language: v.optional(v.string()),
+    _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new ConvexError("Invalid phone number");
+
+    // A fixed-code number sends no WhatsApp and its account is no secret
+    // (review notes, dev numbers): reviewers sharing one network must not
+    // lock each other out.
+    const fixed = fixedCode(phone);
+    if (fixed === null) {
+      await enforceIpRateLimit(
+        ctx,
+        "phone_otp",
+        args._audit.ip,
+        CODE_REQUESTS_PER_IP,
+      );
+    }
 
     const existing = await ctx.db
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
     if (args.intent === "signup" && existing) {
-      throw new ConvexError(
-        "An account with this phone number already exists. Sign in instead.",
-      );
+      return {
+        sent: false as const,
+        error:
+          "An account with this phone number already exists. Sign in instead.",
+      };
     }
-    // Signin: refuse early so we never send an OTP to a number with no account
-    // (saves a WhatsApp message and avoids a confusing post-code failure).
-    // ConvexError so the message survives Convex's prod error redaction.
+    // Signin: answer early so we never send an OTP to a number with no
+    // account (saves a WhatsApp message and avoids a confusing post-code
+    // failure).
     if (args.intent === "signin" && !existing) {
-      throw new ConvexError(
-        "No account found for this phone number. Sign up to create one.",
-      );
+      return {
+        sent: false as const,
+        error: "No account found for this phone number. Sign up to create one.",
+      };
     }
 
     // Mobile-only sign-up: the app must have attested first (M09-9).
     if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
 
-    const fixed = fixedCode(phone);
     const now = Date.now();
     const recent = await ctx.db
       .query("phone_auth_codes")
@@ -131,7 +153,7 @@ export const requestPhoneAuthOtp = mutation({
       });
     }
 
-    return { sent: true };
+    return { sent: true as const };
   },
 });
 

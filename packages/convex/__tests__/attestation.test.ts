@@ -26,8 +26,9 @@ async function attestAsSimulator(t: TestConvex, phoneNumber = PHONE) {
   });
 }
 
-function requestSignupOtp(t: TestConvex, phoneNumber = PHONE) {
+async function requestSignupOtp(t: TestConvex, phoneNumber = PHONE) {
   return t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+    _audit: await signedAudit(),
     phoneNumber,
     intent: "signup",
   });

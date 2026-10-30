@@ -14,6 +14,7 @@ import {
   TRAVEL_MODE_MAX_DAYS,
 } from "./life_check";
 import { isReviewPhone, listedPhones, normalizeE164 } from "./lib/phone";
+import { cancelOpenRequest, openRequest } from "./number_change";
 import { activeRequest, cancelActiveRecovery } from "./recovery";
 
 /**
@@ -48,8 +49,9 @@ function requireReviewPhone(phoneNumber: string): string {
 }
 
 /**
- * Refuse a number or email change on a review account (phone_verification /
- * email_verification). The demo accounts are shared by every reviewer, and a
+ * Refuse a number or email change on a review account (phone_verification,
+ * email_verification and the signed-out "Lost your number?" request in
+ * number_change). The demo accounts are shared by every reviewer, and a
  * sign-up account must keep its number so `pnpm review:reset` can erase it.
  * The app matches this message (mobile features/account/errors.ts).
  */
@@ -101,7 +103,7 @@ async function countAccessRequests(
  * pending key rotation, the cloud backup turned on, another language, an
  * email, items or contacts) and the succession state: whether the Life check
  * can start a check-in soon or has one in flight, the contacts' access
- * requests and an open recovery request. Reports
+ * requests and an open recovery or number change request. Reports
  * the code as "set", "missing" or "invalid", never its value. `kitVerifier`
  * lets the script check, without the words leaving the operator's machine,
  * that REVIEW_KIT still opens the account.
@@ -147,6 +149,7 @@ export const status = internalQuery({
         .first();
       const cycle = await findInFlightCycle(ctx, user._id);
       const recovery = await activeRequest(ctx, user._id);
+      const numberChange = await openRequest(ctx, user._id);
       accounts.push({
         phoneNumber,
         account: {
@@ -183,6 +186,8 @@ export const status = internalQuery({
             approved: await countAccessRequests(ctx, user._id, "approved"),
           },
           recoveryRequest: recovery?.status ?? null,
+          // "Lost your number?" on the demo number: a banner on Home.
+          numberChangeRequest: numberChange?.status ?? null,
           deletionScheduled: Boolean(user.deletionScheduledAt),
           devicesPending: devices.filter(isPendingDevice).length,
           masterKeyRotationRequired: Boolean(user.masterKeyRotationRequired),
@@ -210,7 +215,8 @@ function isPendingDevice(device: {
  * the seed does, so the next reviewer's phone goes straight to the recovery
  * kit), set the language back to English, pause the Life check with travel
  * mode for the maximum (ending a check-in or a contacts' confirmation in
- * flight), cancel a recovery request and remove an added email. The seed
+ * flight), cancel a recovery or number change request, revoke invitations
+ * nobody accepted (the seeded contacts did) and remove an added email. The seed
  * runs it too, to pause the Life check. A new kit, a pending key rotation, a
  * purchase, a deletion request or a released vault need a re-seed instead.
  * Refuses any number outside REVIEW_PHONES.
@@ -264,6 +270,27 @@ export const clearDrift = internalMutation({
 
     // As the owner's "It wasn't me, cancel it" does.
     const recoveryCancelled = await cancelActiveRecovery(ctx, user._id);
+    const numberChangeCancelled =
+      (await cancelOpenRequest(ctx, user._id)) !== null;
+
+    // Someone a reviewer invited: the next reviewer would see them on the
+    // People tab. As the app's "Remove" does.
+    const invited = (
+      await ctx.db
+        .query("trusted_contacts")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .collect()
+    ).filter(
+      (contact) =>
+        contact.invitationStatus === "pending" ||
+        contact.invitationStatus === "declined",
+    );
+    for (const contact of invited) {
+      await ctx.db.patch(contact._id, {
+        invitationStatus: "revoked",
+        updatedAt: now,
+      });
+    }
 
     // A reviewer's own address: it would get the next reviewers' alerts and
     // could sign in to the demo account by email.
@@ -287,6 +314,8 @@ export const clearDrift = internalMutation({
       lifeCheckPaused,
       recoveryCancelled,
       emailRemoved,
+      numberChangeCancelled,
+      invitationsRevoked: invited.length,
     };
     if (backupTurnedOff || languageReset || emailRemoved) {
       await ctx.db.patch(user._id, {
