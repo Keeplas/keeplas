@@ -54,6 +54,7 @@ export const viewer = query({
       encryptedKeyBundle: user.encryptedKeyBundle,
       encryptedAsymmetricSecretKey: user.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: user.encryptedAsymmetricSecretKeyPrev,
+      encryptedRetiredSecretKeys: user.encryptedRetiredSecretKeys,
       identityPublicKey: user.identityPublicKey,
       encryptedIdentitySecretKey: user.encryptedIdentitySecretKey,
       publicKeySignature: user.publicKeySignature,
