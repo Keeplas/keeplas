@@ -20,6 +20,9 @@ export function instantNow(): Instant {
   return { wall: Date.now(), uptime: performance.now() };
 }
 
+const elapsed = (from: Instant, to: Instant) =>
+  Math.max(to.wall - from.wall, to.uptime - from.uptime);
+
 /**
  * Lock when the app comes back after more than the background grace. The
  * time away is the larger of the two clocks, so neither changing the clock
@@ -31,26 +34,29 @@ export function shouldLockOnResume(
   held = false,
 ): boolean {
   if (!backgroundedAt) return false;
-  const away = Math.max(
-    now.wall - backgroundedAt.wall,
-    now.uptime - backgroundedAt.uptime,
+  return (
+    elapsed(backgroundedAt, now) > (held ? HELD_GRACE_MS : BACKGROUND_GRACE_MS)
   );
-  return away > (held ? HELD_GRACE_MS : BACKGROUND_GRACE_MS);
 }
 
-let holds = 0;
+export function idleExpired(lastActive: Instant, now: Instant): boolean {
+  return elapsed(lastActive, now) > IDLE_LOCK_MS;
+}
 
-export function isLockHeld(): boolean {
-  return holds > 0;
+const holds = new Set<Instant>();
+
+export function isLockHeld(now: Instant = instantNow()): boolean {
+  for (const since of holds) {
+    if (elapsed(since, now) <= HELD_GRACE_MS) return true;
+  }
+  return false;
 }
 
 export function holdLock(): () => void {
-  holds += 1;
-  let released = false;
+  const since = instantNow();
+  holds.add(since);
   return () => {
-    if (released) return;
-    released = true;
-    holds -= 1;
+    holds.delete(since);
   };
 }
 
