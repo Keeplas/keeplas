@@ -33,6 +33,22 @@ export async function seedUser(t: TestConvex): Promise<Id<"users">> {
   return await t.run((ctx) => ctx.db.insert("users", {}));
 }
 
+/** Insert a user with a verified email and/or phone. */
+export async function seedVerifiedUser(
+  t: TestConvex,
+  opts: { email?: string; phoneNumber?: string },
+): Promise<Id<"users">> {
+  const now = Date.now();
+  return await t.run((ctx) =>
+    ctx.db.insert("users", {
+      email: opts.email,
+      emailVerificationTime: opts.email ? now : undefined,
+      phoneNumber: opts.phoneNumber,
+      phoneNumberVerifiedAt: opts.phoneNumber ? now : undefined,
+    }),
+  );
+}
+
 /** Mint a real storage handle for fixtures, routed through the wrapper. */
 export async function seedStorageRef(
   t: TestConvex,

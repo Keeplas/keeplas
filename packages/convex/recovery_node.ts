@@ -2,11 +2,11 @@
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { v, ConvexError } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { wrapBytes } from "@keeplas/crypto/kem";
 import { gateKeyAad } from "@keeplas/crypto/social";
 import { action, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { auditContextValidator } from "./audit";
 import { requireEnv } from "./lib/require_env";
 
@@ -142,8 +142,12 @@ export const setup = action({
     _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new ConvexError("Not authenticated");
+    // Step-up, audit seal and rate limit first: nothing reaches the KMS for a
+    // caller who could not store the result anyway.
+    const userId: Id<"users"> = await ctx.runMutation(
+      internal.recovery.authorizeSetup,
+      { _audit: args._audit },
+    );
     const gateKey = Buffer.from(args.gateKey, "base64");
     if (gateKey.length !== 32) throw new ConvexError("Invalid gate key");
     const gateKeyCiphertext = await kms().encrypt(gateKey, userId);
@@ -156,34 +160,57 @@ export const setup = action({
   },
 });
 
+// Release retries after a failure: 1, 4, 16, 64, 256 and 1024 minutes.
+const RELEASE_RETRY_BASE_MS = 60 * 1000;
+const RELEASE_MAX_RETRIES = 6;
+
 /**
  * Scheduled at windowEndsAt, and right after the 2nd approval if the window
  * is already over. Releases G sealed to the new device key, only when 2
  * approvals exist, the window elapsed and nothing was cancelled.
+ *
+ * Nothing else re-triggers a release, so a failure (KMS outage or rate
+ * limit) is retried with backoff instead of stranding the recovery in
+ * approved_2. Each retry re-checks the request through getReleasable.
  */
 export const release = internalAction({
-  args: { requestId: v.id("recovery_requests") },
+  args: {
+    requestId: v.id("recovery_requests"),
+    attempt: v.optional(v.number()),
+  },
   handler: async (ctx, args): Promise<boolean> => {
     const releasable = await ctx.runQuery(internal.recovery.getReleasable, {
       requestId: args.requestId,
     });
     if (!releasable) return false;
-    const g = await kmsFor(releasable.kmsCiphertext).decrypt(
-      releasable.kmsCiphertext,
-      releasable.userId,
-    );
     try {
-      const wrappedGateKey = await wrapBytes(
-        new Uint8Array(g),
-        releasable.newDevicePublicKey,
-        gateKeyAad(args.requestId),
+      const g = await kmsFor(releasable.kmsCiphertext).decrypt(
+        releasable.kmsCiphertext,
+        releasable.userId,
       );
-      return await ctx.runMutation(internal.recovery.markReleased, {
-        requestId: args.requestId,
-        wrappedGateKey,
-      });
-    } finally {
-      g.fill(0);
+      try {
+        const wrappedGateKey = await wrapBytes(
+          new Uint8Array(g),
+          releasable.newDevicePublicKey,
+          gateKeyAad(args.requestId),
+        );
+        return await ctx.runMutation(internal.recovery.markReleased, {
+          requestId: args.requestId,
+          wrappedGateKey,
+        });
+      } finally {
+        g.fill(0);
+      }
+    } catch (error) {
+      const attempt = args.attempt ?? 0;
+      if (attempt < RELEASE_MAX_RETRIES) {
+        await ctx.scheduler.runAfter(
+          RELEASE_RETRY_BASE_MS * 4 ** attempt,
+          internal.recovery_node.release,
+          { requestId: args.requestId, attempt: attempt + 1 },
+        );
+      }
+      throw error;
     }
   },
 });

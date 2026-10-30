@@ -3,28 +3,13 @@ import { api } from "../_generated/api";
 import {
   makeT,
   seedUser,
+  seedVerifiedUser,
   asUser,
   signedAudit,
   seedTrustContact,
   type TestConvex,
 } from "./test.helpers";
 import type { Id } from "../_generated/dataModel";
-
-/** Insert a user with a verified email and/or phone. */
-async function seedVerifiedUser(
-  t: TestConvex,
-  opts: { email?: string; phoneNumber?: string },
-): Promise<Id<"users">> {
-  const now = Date.now();
-  return await t.run((ctx) =>
-    ctx.db.insert("users", {
-      email: opts.email,
-      emailVerificationTime: opts.email ? now : undefined,
-      phoneNumber: opts.phoneNumber,
-      phoneNumberVerifiedAt: opts.phoneNumber ? now : undefined,
-    }),
-  );
-}
 
 /**
  * Open an awaiting_confirmation life-check cycle (with its config) so

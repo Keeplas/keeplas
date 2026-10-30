@@ -32,6 +32,16 @@ export async function verifyAuditContext(payload: AuditContext): Promise<void> {
   if (age < -60_000 || age > AUDIT_CONTEXT_MAX_AGE_MS) {
     throw new Error("Audit context expired or clock-skewed");
   }
+  // The web seal always carries a 2-letter country (or "XX") and an integer
+  // millisecond timestamp. Refusing anything else keeps a signature made for
+  // another message of the same `a|b|<number>` shape (e.g. a pre-v2 Life
+  // Check link, see lib/life_check_token.ts) from passing as a seal.
+  if (
+    !/^[A-Z]{2}$/.test(payload.country) ||
+    !Number.isSafeInteger(payload.ts)
+  ) {
+    throw new Error("Invalid audit context");
+  }
 
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
