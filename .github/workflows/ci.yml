@@ -32,6 +32,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Zero-knowledge invariants
+        run: |
+          node --test "scripts/__tests__/*.test.mjs"
+          pnpm check:zk --all
+
   test:
     name: Test
     runs-on: ubuntu-latest
