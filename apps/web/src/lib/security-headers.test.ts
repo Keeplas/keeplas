@@ -4,52 +4,51 @@ import {
   buildSecurityHeaders,
 } from "./security-headers";
 
-const HASH = "'sha256-AbC123='";
+const NONCE = "abc123";
+const PROD_CONVEX_URL = "https://energetic-pony-179.convex.cloud";
+
+/** The value list of one CSP directive. */
+function directive(csp: string, name: string): string[] {
+  const entry = csp
+    .split(";")
+    .map((part) => part.trim().split(/\s+/))
+    .find(([key]) => key === name);
+  return entry ? entry.slice(1) : [];
+}
 
 describe("buildContentSecurityPolicy", () => {
-  const originalConvexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-
   beforeEach(() => {
-    delete process.env.NEXT_PUBLIC_CONVEX_URL;
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", PROD_CONVEX_URL);
   });
 
   afterEach(() => {
-    if (originalConvexUrl === undefined) {
-      delete process.env.NEXT_PUBLIC_CONVEX_URL;
-    } else {
-      process.env.NEXT_PUBLIC_CONVEX_URL = originalConvexUrl;
-    }
+    vi.unstubAllEnvs();
   });
 
-  it("allow-lists inline scripts by their SHA-256 hash in script-src", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toMatch(new RegExp(`script-src [^;]*${HASH}`));
+  it("allow-lists the framework's script elements by the response nonce", () => {
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "script-src")).toContain(`'nonce-${NONCE}'`);
+    expect(directive(csp, "script-src-elem")).toContain(`'nonce-${NONCE}'`);
   });
 
-  it("allow-lists inline script elements by their SHA-256 hash", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toMatch(new RegExp(`script-src-elem [^;]*${HASH}`));
-  });
-
-  it("allow-lists script elements by nonce in production", () => {
-    const csp = buildContentSecurityPolicy([], ["abc123"]);
-    expect(csp).toMatch(/script-src [^;]*'nonce-abc123'/);
-    expect(csp).toMatch(/script-src-elem [^;]*'nonce-abc123'/);
+  it("never allow-lists inline scripts by hash (an injected one would pass)", () => {
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(csp).not.toContain("'sha256-");
   });
 
   it("serves bundled scripts from same-origin via 'self'", () => {
-    const csp = buildContentSecurityPolicy([]);
-    expect(csp).toMatch(/script-src [^;]*'self'/);
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "script-src")).toContain("'self'");
   });
 
   it("allows WASM execution required by hash-wasm (Argon2id)", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
+    const csp = buildContentSecurityPolicy(NONCE);
     expect(csp).toContain("'wasm-unsafe-eval'");
-    expect(csp).toMatch(/worker-src [^;]*blob:/);
+    expect(directive(csp, "worker-src")).toContain("blob:");
   });
 
   it("locks down dangerous directives", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
+    const csp = buildContentSecurityPolicy(NONCE);
     expect(csp).toContain("default-src 'self'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'none'");
@@ -57,76 +56,83 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).toContain("form-action 'self'");
   });
 
-  it("never permits unsafe-eval in production (only the scoped wasm variant)", () => {
-    const original = process.env.NODE_ENV;
-    vi.stubEnv("NODE_ENV", "production");
-    try {
-      const csp = buildContentSecurityPolicy([HASH]);
-      expect(csp).toContain("'wasm-unsafe-eval'");
-      // The standalone token never appears (the wasm-scoped variant does not
-      // contain a leading-quote "'unsafe-eval'").
-      expect(csp).not.toContain("'unsafe-eval'");
-    } finally {
-      vi.stubEnv("NODE_ENV", original ?? "test");
-    }
-  });
-
-  it("permits unsafe-eval in development (React dev build needs eval)", () => {
-    const original = process.env.NODE_ENV;
+  it("stays strict in a build made with NODE_ENV=development (repo .env default)", () => {
     vi.stubEnv("NODE_ENV", "development");
-    try {
-      const csp = buildContentSecurityPolicy([HASH]);
-      expect(csp).toMatch(/script-src [^;]*'unsafe-eval'/);
-    } finally {
-      vi.stubEnv("NODE_ENV", original ?? "test");
-    }
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "script-src")).not.toContain("'unsafe-eval'");
+    expect(directive(csp, "script-src")).not.toContain("'unsafe-inline'");
+    expect(directive(csp, "script-src")).toContain(`'nonce-${NONCE}'`);
   });
 
-  it("always scopes connect-src to the Convex wildcard hosts", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toContain("https://*.convex.cloud");
-    expect(csp).toContain("wss://*.convex.cloud");
+  it("relaxes script-src only under the Vite dev server (HMR needs inline + eval)", () => {
+    vi.stubEnv("TSS_DEV_SERVER", "true");
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "script-src")).toContain("'unsafe-eval'");
+    expect(directive(csp, "script-src")).toContain("'unsafe-inline'");
+    // A nonce would make browsers ignore 'unsafe-inline' and block Vite's
+    // own inline scripts.
+    expect(csp).not.toContain("'nonce-");
+  });
+
+  it("pins connect-src to the configured Convex deployment (https + wss)", () => {
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "connect-src")).toEqual([
+      "'self'",
+      PROD_CONVEX_URL,
+      "wss://energetic-pony-179.convex.cloud",
+    ]);
+  });
+
+  it("never allows an arbitrary *.convex.cloud host once the URL is known", () => {
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(csp).not.toContain("*.convex.cloud");
+  });
+
+  it("supports a self-hosted Convex backend over plain HTTP (ws://)", () => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "http://127.0.0.1:3210");
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "connect-src")).toEqual([
+      "'self'",
+      "http://127.0.0.1:3210",
+      "ws://127.0.0.1:3210",
+    ]);
+  });
+
+  it("allows no Convex host in a build without a valid Convex URL", () => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "not a url");
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "connect-src")).toEqual(["'self'"]);
+  });
+
+  it("keeps the Convex wildcard for the dev server without a Convex URL", () => {
+    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "");
+    vi.stubEnv("TSS_DEV_SERVER", "true");
+    const csp = buildContentSecurityPolicy();
+    expect(directive(csp, "connect-src")).toContain("https://*.convex.cloud");
+    expect(directive(csp, "connect-src")).toContain("wss://*.convex.cloud");
   });
 
   it("allows data URL fonts generated by Vite asset inlining", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toMatch(/font-src [^;]*data:/);
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "font-src")).toContain("data:");
   });
 
   it("allows images served by Convex storage, like an uploaded avatar", () => {
-    process.env.NEXT_PUBLIC_CONVEX_URL =
-      "https://energetic-pony-179.convex.cloud";
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toMatch(
-      /img-src [^;]*https:\/\/energetic-pony-179\.convex\.cloud/,
-    );
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "img-src")).toContain(PROD_CONVEX_URL);
     expect(csp).not.toMatch(/img-src [^;]*wss:/);
   });
 
   it("allows blob: media so decrypted audio/video attachments can play", () => {
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toMatch(/media-src [^;]*blob:/);
-  });
-
-  it("adds the configured Convex origin to connect-src when present", () => {
-    process.env.NEXT_PUBLIC_CONVEX_URL =
-      "https://energetic-pony-179.convex.cloud";
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toContain("https://energetic-pony-179.convex.cloud");
-  });
-
-  it("ignores a malformed Convex URL without throwing", () => {
-    process.env.NEXT_PUBLIC_CONVEX_URL = "not a url";
-    expect(() => buildContentSecurityPolicy([HASH])).not.toThrow();
-    const csp = buildContentSecurityPolicy([HASH]);
-    expect(csp).toContain("https://*.convex.cloud");
+    const csp = buildContentSecurityPolicy(NONCE);
+    expect(directive(csp, "media-src")).toContain("blob:");
   });
 });
 
 describe("buildSecurityHeaders", () => {
   it("returns the CSP plus all hardening headers", () => {
-    const headers = buildSecurityHeaders([HASH]);
-    expect(headers["Content-Security-Policy"]).toContain(HASH);
+    const headers = buildSecurityHeaders(NONCE);
+    expect(headers["Content-Security-Policy"]).toContain(`'nonce-${NONCE}'`);
     expect(headers["X-Content-Type-Options"]).toBe("nosniff");
     expect(headers["Referrer-Policy"]).toBe("no-referrer");
     expect(headers["Strict-Transport-Security"]).toBe(
@@ -135,8 +141,14 @@ describe("buildSecurityHeaders", () => {
     expect(headers["X-Frame-Options"]).toBe("DENY");
   });
 
+  it("isolates the document from cross-origin openers and embedders", () => {
+    const headers = buildSecurityHeaders(NONCE);
+    expect(headers["Cross-Origin-Opener-Policy"]).toBe("same-origin");
+    expect(headers["Cross-Origin-Resource-Policy"]).toBe("same-origin");
+  });
+
   it("disables sensitive features but keeps WebAuthn get + same-origin media", () => {
-    const headers = buildSecurityHeaders([HASH]);
+    const headers = buildSecurityHeaders(NONCE);
     const policy = headers["Permissions-Policy"];
     expect(policy).toContain("camera=(self)");
     expect(policy).toContain("microphone=(self)");

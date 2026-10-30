@@ -30,6 +30,7 @@ import type * as billing from "../billing.js";
 import type * as capture_handoffs from "../capture_handoffs.js";
 import type * as cloud_backup from "../cloud_backup.js";
 import type * as crons from "../crons.js";
+import type * as device_pins from "../device_pins.js";
 import type * as devices from "../devices.js";
 import type * as dispatch from "../dispatch.js";
 import type * as email_auth from "../email_auth.js";
@@ -117,6 +118,7 @@ declare const fullApi: ApiFromModules<{
   capture_handoffs: typeof capture_handoffs;
   cloud_backup: typeof cloud_backup;
   crons: typeof crons;
+  device_pins: typeof device_pins;
   devices: typeof devices;
   dispatch: typeof dispatch;
   email_auth: typeof email_auth;

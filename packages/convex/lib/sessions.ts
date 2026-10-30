@@ -2,9 +2,10 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 
 /**
- * Delete one Convex Auth session with its refresh tokens and step-up
- * markers, so no client can refresh into it again (`requireAuth` also
- * rejects its live JWT).
+ * Delete one Convex Auth session with its refresh tokens, step-up markers
+ * and device PIN secrets, so no client can refresh into it again
+ * (`requireAuth` also rejects its live JWT) and its browser's PIN wraps open
+ * nothing.
  */
 export async function endSession(
   ctx: MutationCtx,
@@ -20,6 +21,7 @@ export async function endSession(
     "auth_session_login_otp",
     "auth_session_proofs",
     "session_vault_challenges",
+    "device_pins",
   ] as const) {
     const markers = await ctx.db
       .query(table)

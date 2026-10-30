@@ -92,6 +92,20 @@ describe("useIdleTimer", () => {
     expect(onIdle).not.toHaveBeenCalled();
   });
 
+  it("reports genuine activity, throttled, so it can be persisted", () => {
+    const onActivity = vi.fn();
+    renderHook(() =>
+      useIdleTimer({ onIdle: vi.fn(), onActivity, enabled: true }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+      window.dispatchEvent(new Event(IDLE_ACTIVITY_EVENTS[0]));
+      window.dispatchEvent(new Event(IDLE_ACTIVITY_EVENTS[1]));
+    });
+    expect(onActivity).toHaveBeenCalledTimes(1);
+  });
+
   it("uses a one-hour default timeout", () => {
     expect(AUTO_LOCK_TIMEOUT_MS).toBe(60 * 60 * 1000);
   });

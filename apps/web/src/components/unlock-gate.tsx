@@ -13,7 +13,7 @@ import {
 } from "@keeplas/ui";
 import { DeviceUnlockEntry, PIN_LENGTH } from "@/lib/device-unlock";
 import { useMasterKey } from "@/lib/master-key-context";
-import { useDeviceUnlock } from "@/lib/use-device-unlock";
+import { isRemovedEntry, useDeviceUnlock } from "@/lib/use-device-unlock";
 import { classifyKeyBundle, parseKeyBundle } from "@/lib/key-bundle";
 import { Link } from "@/lib/navigation";
 import { getErrorMessage } from "@/lib/utils";
@@ -80,10 +80,18 @@ export function UnlockGate({ children }: UnlockGateProps) {
     setBusy(true);
     setError("");
     try {
-      setMasterKey(await unlock(entry.id, secret));
+      const { key, trusted } = await unlock(entry.id, secret);
+      // Same lifetime as the phone link: a browser linked without "Keep me
+      // logged in" stays unlocked an hour, PIN or not.
+      setMasterKey(key, { trusted });
       setPin("");
     } catch (err) {
       setError(getErrorMessage(err, t("unlock.couldNotUnlock")));
+      if (isRemovedEntry(err)) {
+        // Back to the list, which now offers linking with the phone.
+        setPinEntry(null);
+        setPin("");
+      }
     } finally {
       setBusy(false);
     }

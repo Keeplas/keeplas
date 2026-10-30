@@ -256,6 +256,7 @@ const SIMPLE_TABLES = [
   "social_envelopes",
   "cloud_backup_envelopes",
   "devices",
+  "device_pins",
   "storage_blobs",
   "totp_secrets",
   "auth_session_totp",
