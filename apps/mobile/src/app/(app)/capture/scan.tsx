@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
   },
   bannerText: { flex: 1, gap: 2 },
   controls: {
-    flexGrow: 1,
-    minHeight: 100,
+    flex: 1,
+    minHeight: 104,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

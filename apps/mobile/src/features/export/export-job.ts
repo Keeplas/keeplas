@@ -67,6 +67,12 @@ function set(next: ExportPhase) {
   for (const listener of listeners) listener();
 }
 
+const errorReason = (error: unknown) =>
+  (error instanceof Error
+    ? `${error.name}: ${error.message}`
+    : String(error)
+  ).replace(/https?:\/\/\S+/g, "<url>");
+
 const inView = () => watched && AppState.currentState === "active";
 
 function notify(title: string, body: string) {
@@ -117,6 +123,7 @@ export async function startExport(
       clearFolder();
       set({ kind: "idle" });
     } else {
+      console.warn("Export failed", errorReason(error));
       set({ kind: "failed" });
       notify(texts.title, texts.failed);
     }

@@ -1,6 +1,7 @@
 // Foreground service that keeps the Keeplas process running while the vault
 // export works in the background. It does no work itself: the export runs in
-// JS; this only holds the progress notification Android requires.
+// JS; this only holds the progress notification Android requires and a CPU
+// wake lock so a locked screen does not pause the export.
 package com.keeplas.backgroundwork
 
 import android.app.ForegroundServiceStartNotAllowedException
@@ -14,11 +15,28 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 
 class BackgroundWorkService : Service() {
+  private var wakeLock: PowerManager.WakeLock? = null
+
   override fun onBind(intent: Intent?): IBinder? = null
+
+  override fun onCreate() {
+    super.onCreate()
+    wakeLock =
+      getSystemService(PowerManager::class.java)
+        .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "keeplas:background-work")
+        .apply { acquire(WAKE_LOCK_TIMEOUT_MS) }
+  }
+
+  override fun onDestroy() {
+    wakeLock?.takeIf { it.isHeld }?.release()
+    wakeLock = null
+    super.onDestroy()
+  }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     val title = intent?.getStringExtra(EXTRA_TITLE).orEmpty()
@@ -64,6 +82,7 @@ class BackgroundWorkService : Service() {
     const val NOTIFICATION_ID = 7301
     const val EXTRA_TITLE = "title"
     const val EXTRA_SUBTITLE = "subtitle"
+    private const val WAKE_LOCK_TIMEOUT_MS = 2 * 60 * 60 * 1000L
     private const val CHANNEL_ID = "background-work"
 
     fun notification(
