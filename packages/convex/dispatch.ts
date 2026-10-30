@@ -1377,7 +1377,7 @@ const NEW_DEVICE_COPY = {
     subject: "Keeplas: a new device was linked to your account",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (device?: string) =>
-      `${device ?? "A new device"} was just linked to your Keeplas account. If it was you, there is nothing to do. If not, open Keeplas on your phone and tap "It wasn't me": we remove the device, end its sessions and rotate your keys.`,
+      `${device ?? "A new device"} was just linked to your Keeplas account. If it was you, there is nothing to do. If not, open Keeplas on a device you were already using and tap "It wasn't me": we remove the new device, end its sessions and rotate your keys.`,
     button: "Review devices",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
   },
@@ -1385,7 +1385,7 @@ const NEW_DEVICE_COPY = {
     subject: "Keeplas : un nouvel appareil a été associé à votre compte",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (device?: string) =>
-      `${device ?? "Un nouvel appareil"} vient d'être associé à votre compte Keeplas. Si c'était vous, rien à faire. Sinon, ouvrez Keeplas sur votre téléphone et touchez « Ce n'était pas moi » : nous retirons l'appareil, fermons ses sessions et changeons vos clés.`,
+      `${device ?? "Un nouvel appareil"} vient d'être associé à votre compte Keeplas. Si c'était vous, rien à faire. Sinon, ouvrez Keeplas sur un appareil que vous utilisiez déjà et touchez « Ce n'était pas moi » : nous retirons le nouvel appareil, fermons ses sessions et changeons vos clés.`,
     button: "Voir les appareils",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
