@@ -1,5 +1,6 @@
 import { ImageManipulator } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import { Platform } from "react-native";
 
 import { PermissionDenied } from "@/features/capture/media";
 import { isLockHeld } from "@/lib/auto-lock";
@@ -165,6 +166,18 @@ describe("pickAvatar", () => {
     } as never);
     await expect(pickAvatar("camera")).resolves.toBeNull();
     expect(manipulate).not.toHaveBeenCalled();
+  });
+
+  it("opens the Android photo picker without asking for storage access", async () => {
+    jest.replaceProperty(Platform, "OS", "android");
+    picker.launchImageLibraryAsync.mockResolvedValue({
+      canceled: true,
+      assets: null,
+    } as never);
+
+    await expect(pickAvatar("library")).resolves.toBeNull();
+    expect(picker.requestMediaLibraryPermissionsAsync).not.toHaveBeenCalled();
+    jest.restoreAllMocks();
   });
 
   it("throws PermissionDenied when photo access is off", async () => {
