@@ -260,6 +260,55 @@ describe("owner recovery", () => {
     expect(health?.trustContacts.renewalRequired).toBe(true);
   });
 
+  it("the owner's unlocked phone sees the request and cancels it", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    const { requestId } = await startRequest(t, ownerId);
+    await contactApproves(t, ownerId, contacts[0]);
+    const phoneSession = await seedSession(t, ownerId);
+    await t.run((ctx) =>
+      ctx.db.insert("devices", {
+        userId: ownerId,
+        kind: "ios",
+        label: "iPhone",
+        trusted: true,
+        sessionId: phoneSession,
+        lastSeenAt: 0,
+        createdAt: 0,
+      }),
+    );
+    const phone = asUserSession(t, ownerId, phoneSession);
+
+    const mine = await phone.query(api.recovery.getMyRequest, {});
+    expect(mine).toMatchObject({ requestId, status: "approved_1" });
+    expect(mine!.windowEndsAt - mine!.createdAt).toBe(RECOVERY_WINDOW_MS);
+    expect(mine!.contacts.map((c) => c.decision)).toEqual([
+      "approve",
+      null,
+      null,
+    ]);
+
+    await phone.mutation(api.recovery.cancel, { _audit: await signedAudit() });
+    expect(await statusOf(t, requestId)).toBe("cancelled");
+  });
+
+  it("asks each contact for help in the contact's own language", async () => {
+    const t = makeT();
+    const { ownerId, contacts } = await setupOwner(t);
+    await t.run(async (ctx) => {
+      await ctx.db.patch(ownerId, { language: "en-US" });
+      await ctx.db.patch(contacts[0].userId, { language: "fr-FR" });
+    });
+    await startRequest(t, ownerId);
+    const jobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    const languages = jobs
+      .filter((job) => job.name === "dispatch:notifyRecoveryContact")
+      .map((job) => (job.args[0] as { language?: string }).language);
+    expect(languages).toEqual(["fr-FR", undefined, undefined]);
+  });
+
   it("'It wasn't me' cancels a recovery in progress", async () => {
     const t = makeT();
     const { ownerId } = await setupOwner(t);

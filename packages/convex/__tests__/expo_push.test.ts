@@ -77,16 +77,16 @@ describe("Expo push", () => {
     await t.action(internal.dispatch.notifyRecoveryStarted, { pushTokens });
     await t.action(internal.dispatch.notifyRecoveryContact, {
       pushTokens,
-      ownerName: "Ada",
+      owner: { name: "Ada" },
     });
     await t.action(internal.dispatch.notifyGraceCancel, { pushTokens });
     await t.action(internal.dispatch.notifyConfirmationRequest, {
       pushTokens,
-      ownerName: "Ada",
+      owner: { name: "Ada" },
     });
     await t.action(internal.dispatch.notifyRelease, {
       pushTokens,
-      ownerName: "Ada",
+      owner: { name: "Ada" },
     });
     expect(sent.map((m) => m.data)).toEqual([
       { url: "/devices" },

@@ -127,10 +127,8 @@ export const restore = auditedMutation({
       email: user?.email,
       phoneNumber: user?.phoneNumber,
       ownerName: user?.name,
-      deviceLabel:
-        row.provider === "icloud"
-          ? "A phone restored from iCloud"
-          : "A phone restored from Google",
+      deviceKind:
+        row.provider === "icloud" ? "icloud_restore" : "google_restore",
       language: user?.language,
       pushTokens: await activePushTokens(
         ctx,

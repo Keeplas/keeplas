@@ -73,7 +73,9 @@ function notify(title: string, body: string) {
   if (inView()) return;
   void Notifications.scheduleNotificationAsync({
     content: { title, body, data: { url: "/export" } },
-    trigger: null,
+    // Android: the app's "Keeplas" channel (allowPushNotifications creates it
+    // at every unlocked launch); without one, Expo posts to "Miscellaneous".
+    trigger: { channelId: "default" },
   });
 }
 

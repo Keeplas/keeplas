@@ -162,6 +162,10 @@ export const requestLoginOtp = mutation({
       await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
         email: resolved.destination,
         code,
+        // The password sentence only for accounts that have one.
+        purpose: (await hasPasswordAccount(ctx, userId))
+          ? "password_login"
+          : "sign_in",
         language: user.language,
       });
     }

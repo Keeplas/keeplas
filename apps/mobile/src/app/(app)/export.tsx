@@ -1,6 +1,7 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { StyleSheet, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import * as Notifications from "expo-notifications";
 import * as Sharing from "expo-sharing";
 import type { File } from "expo-file-system";
 
@@ -35,6 +36,14 @@ export default function ExportData() {
   const { t, language } = useI18n();
   const exportVault = useExportVault();
   const phase = useSyncExternalStore(subscribeExport, getExportPhase);
+  // The end-of-export notice only shows when this phone allows notifications.
+  const [notified, setNotified] = useState(false);
+
+  useEffect(() => {
+    void Notifications.getPermissionsAsync().then(({ granted }) =>
+      setNotified(granted),
+    );
+  }, []);
 
   useFocusEffect(useCallback(() => watchExport(), []));
 
@@ -115,7 +124,7 @@ export default function ExportData() {
             }
           />
           <Text variant="body-sm" color="text.muted">
-            {t("export.background")}
+            {t(notified ? "export.background" : "export.backgroundComeBack")}
           </Text>
         </View>
       ) : null}

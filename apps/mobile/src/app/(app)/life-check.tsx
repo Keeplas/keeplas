@@ -22,6 +22,13 @@ import { useTheme } from "@/providers/theme-provider";
 
 const FREQUENCIES = ["weekly", "monthly", "quarterly"] as const;
 
+// A first setup turns every channel on; the web can then turn some off.
+const DEFAULT_CHANNELS = [
+  { type: "push", order: 0, isEnabled: true },
+  { type: "whatsapp", order: 1, isEnabled: true },
+  { type: "email", order: 2, isEnabled: true },
+] as const;
+
 const PLAN: { key: string; icon: IconName }[] = [
   { key: "reminders", icon: "bell" },
   { key: "contacts", icon: "people" },
@@ -148,13 +155,10 @@ export default function LifeCheck() {
 
   async function choose(frequency: (typeof FREQUENCIES)[number]) {
     try {
+      // Only the frequency changes: the per-channel choices stay.
       await save({
         frequency,
-        activeChannels: [
-          { type: "push", order: 0, isEnabled: true },
-          { type: "whatsapp", order: 1, isEnabled: true },
-          { type: "email", order: 2, isEnabled: true },
-        ],
+        activeChannels: config?.activeChannels ?? [...DEFAULT_CHANNELS],
       });
     } catch {
       failed();

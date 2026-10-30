@@ -306,7 +306,7 @@ export const complete = internalMutation({
       email: user?.email,
       phoneNumber: row.newPhone,
       ownerName: user?.name,
-      deviceLabel: "A phone using your new number",
+      deviceKind: "new_number",
       language: user?.language,
     });
     return { ok: true as const, userId: row.userId };

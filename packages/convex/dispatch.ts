@@ -1,9 +1,10 @@
 "use node";
 
-import { v } from "convex/values";
+import { type ObjectType, v } from "convex/values";
 import { type ActionCtx, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
+import { formatSenderIdentity } from "./lib/identity";
 import { requireEnv } from "./lib/require_env";
 import { signLifeCheckToken } from "./lib/life_check_token";
 import { type Locale, resolveLocale } from "./lib/locale";
@@ -349,15 +350,21 @@ export const sendReconfirmWhatsApp = internalAction({
 });
 
 /**
- * Out-of-band delivery of a 6-digit login OTP via email (Resend). Sibling of
- * `sendWhatsAppOtp` for the email-keyed channel of the always-on login
- * step-up. No-ops with a console log in dev when Resend is unconfigured so
- * manual testing remains possible.
+ * Out-of-band delivery of a 6-digit OTP via email (Resend). `purpose` picks
+ * the copy: a passwordless sign-in (email_auth), the login step-up of a
+ * password account (login_otp) or an email added in Settings
+ * (email_verification). No-ops with a console log in dev when Resend is
+ * unconfigured so manual testing remains possible.
  */
 export const sendEmailOtp = internalAction({
   args: {
     email: v.string(),
     code: v.string(),
+    purpose: v.union(
+      v.literal("sign_in"),
+      v.literal("password_login"),
+      v.literal("verify_email"),
+    ),
     language: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
@@ -369,8 +376,7 @@ export const sendEmailOtp = internalAction({
       return "resend_not_configured";
     }
     const from = requireEnv("RESEND_FROM_EMAIL");
-    const locale = resolveLocale(args.language);
-    const copy = EMAIL_OTP_COPY[locale];
+    const copy = EMAIL_OTP_COPY[resolveLocale(args.language)][args.purpose];
     const code = escapeHtml(args.code);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -382,7 +388,7 @@ export const sendEmailOtp = internalAction({
         from,
         to: [args.email],
         subject: copy.subject,
-        html: otpEmailHtml(code, locale),
+        html: otpEmailHtml(code, copy),
         text: copy.text(args.code),
       }),
     });
@@ -421,12 +427,19 @@ const LIFE_CHECK_PUSH_COPY = {
   },
 } satisfies Record<Locale, { title: string; body: (name?: string) => string }>;
 
-const EMAIL_OTP_COPY = {
+interface OtpEmailCopy {
+  subject: string;
+  intro: string;
+  expiry: string;
+  text: (code: string) => string;
+}
+
+const SIGN_IN_OTP_COPY = {
   en: {
     subject: "Your Keeplas login code",
     intro: "Use this code to finish signing in to Keeplas:",
     expiry:
-      "This code expires in 10 minutes. If you didn't try to sign in, change your password.",
+      "This code expires in 10 minutes. If you didn't try to sign in, you can ignore this email.",
     text: (code: string) =>
       `Your Keeplas login code is ${code}. It expires in 10 minutes.`,
   },
@@ -434,18 +447,49 @@ const EMAIL_OTP_COPY = {
     subject: "Votre code de connexion Keeplas",
     intro: "Utilisez ce code pour terminer votre connexion à Keeplas :",
     expiry:
-      "Ce code expire dans 10 minutes. Si vous n'avez pas tenté de vous connecter, changez votre mot de passe.",
+      "Ce code expire dans 10 minutes. Si vous n'avez pas tenté de vous connecter, ignorez cet e-mail.",
     text: (code: string) =>
       `Votre code de connexion Keeplas est ${code}. Il expire dans 10 minutes.`,
   },
+} satisfies Record<Locale, OtpEmailCopy>;
+
+const EMAIL_OTP_COPY = {
+  en: {
+    sign_in: SIGN_IN_OTP_COPY.en,
+    password_login: {
+      ...SIGN_IN_OTP_COPY.en,
+      expiry:
+        "This code expires in 10 minutes. If you didn't try to sign in, change your password.",
+    },
+    verify_email: {
+      subject: "Confirm your email for Keeplas",
+      intro: "Use this code to confirm this email address in Keeplas:",
+      expiry:
+        "This code expires in 10 minutes. If you didn't add this address, you can ignore this email.",
+      text: (code: string) =>
+        `Your Keeplas code to confirm this email address is ${code}. It expires in 10 minutes.`,
+    },
+  },
+  fr: {
+    sign_in: SIGN_IN_OTP_COPY.fr,
+    password_login: {
+      ...SIGN_IN_OTP_COPY.fr,
+      expiry:
+        "Ce code expire dans 10 minutes. Si vous n'avez pas tenté de vous connecter, changez votre mot de passe.",
+    },
+    verify_email: {
+      subject: "Confirmez votre adresse e-mail pour Keeplas",
+      intro:
+        "Utilisez ce code pour confirmer cette adresse e-mail dans Keeplas :",
+      expiry:
+        "Ce code expire dans 10 minutes. Si vous n'avez pas ajouté cette adresse, ignorez cet e-mail.",
+      text: (code: string) =>
+        `Votre code Keeplas pour confirmer cette adresse e-mail est ${code}. Il expire dans 10 minutes.`,
+    },
+  },
 } satisfies Record<
   Locale,
-  {
-    subject: string;
-    intro: string;
-    expiry: string;
-    text: (code: string) => string;
-  }
+  Record<"sign_in" | "password_login" | "verify_email", OtpEmailCopy>
 >;
 
 const LIFE_CHECK_EMAIL_COPY = {
@@ -482,8 +526,7 @@ const LIFE_CHECK_EMAIL_COPY = {
   }
 >;
 
-function otpEmailHtml(code: string, locale: Locale) {
-  const copy = EMAIL_OTP_COPY[locale];
+function otpEmailHtml(code: string, copy: OtpEmailCopy) {
   return `<!DOCTYPE html><html><body style="font-family:system-ui;line-height:1.5;color:#1a1a1a;max-width:480px;margin:auto;padding:24px"><p>${copy.intro}</p><p style="font-size:28px;font-weight:700;letter-spacing:0.4em;text-align:center;margin:32px 0;padding:16px;background:#f5f5f7;border-radius:12px">${code}</p><p style="color:#666;font-size:13px">${copy.expiry}</p></body></html>`;
 }
 
@@ -674,9 +717,6 @@ export const sendWelcomeWhatsApp = internalAction({
   handler: async (_ctx, args) => {
     if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
-    // The template body greets "{{1}}" — WhatsApp rejects an empty placeholder,
-    // so fall back to a neutral word when the name is missing.
-    const name = args.name?.trim() || (locale === "fr" ? "à vous" : "there");
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
       templateName: localizedTemplateName(
@@ -685,10 +725,18 @@ export const sendWelcomeWhatsApp = internalAction({
         locale,
       ),
       language: locale,
-      placeholders: [name],
+      placeholders: [greetedName(args.name, locale)],
     });
   },
 });
+
+/**
+ * Templates that greet "{{1}}": WhatsApp rejects an empty placeholder, so
+ * fall back to a neutral word in the recipient's language.
+ */
+function greetedName(name: string | undefined, locale: Locale): string {
+  return name?.trim() || (locale === "fr" ? "à vous" : "there");
+}
 
 // ---------------------------------------------------------------------------
 // Setup-completion reminders — fired at day 3 and day 10 after onboarding by
@@ -897,7 +945,6 @@ export const sendSetupReminderWhatsApp = internalAction({
   handler: async (_ctx, args) => {
     if (isNotificationsPaused()) return "paused";
     const locale = resolveLocale(args.language);
-    const name = args.name?.trim() || (locale === "fr" ? "à vous" : "there");
     return sendWhatsAppTemplate({
       to: args.phoneNumber,
       templateName: localizedTemplateName(
@@ -906,7 +953,7 @@ export const sendSetupReminderWhatsApp = internalAction({
         locale,
       ),
       language: locale,
-      placeholders: [name],
+      placeholders: [greetedName(args.name, locale)],
     });
   },
 });
@@ -930,7 +977,19 @@ interface CtaEmailCopy {
   body: (name?: string) => string;
   button: string;
   fallback: string;
+  /**
+   * Lock-screen text when the email body is too personal for it (alerts to
+   * trusted contacts, App Review 4.5.4): no email, phone or situation, at
+   * most the owner's first name. Without it the push shows subject + body.
+   */
+  push?: { title: string; body: (firstName?: string) => string };
 }
+
+/** How a contact's push names an owner without a name. */
+const SOMEONE_WHO_CHOSE_YOU = {
+  en: "Someone who chose you as a contact",
+  fr: "Une personne qui vous a choisi comme contact",
+} satisfies Record<Locale, string>;
 
 /** Shared CTA email body — greeting + paragraph + button + plain-link fallback. */
 function ctaEmailHtml(args: {
@@ -1036,18 +1095,28 @@ const TC_CONFIRM_COPY = {
     subject: "Action needed: confirm a Keeplas contact's status",
     greeting: (name?: string) => (name ? `Hi ${name},` : "Hi,"),
     body: (owner?: string) =>
-      `${owner ?? "A Keeplas user"} has stopped responding to their Keeplas check-ins. If you cannot reach them either, confirm they are unavailable from your Keeplas account. Once enough trusted contacts confirm, ${owner ?? "they"} get a final 72-hour window to cancel. After that, you'll be invited to help unlock their vault.`,
+      `${owner ?? "A Keeplas user"} has stopped responding to their Keeplas check-ins. If you cannot reach them either, confirm they are unavailable from your Keeplas account. Once enough trusted contacts confirm, they get a final 72-hour window to cancel. After that, you'll be invited to help unlock their vault.`,
     button: "Open Keeplas",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
+    push: {
+      title: "Keeplas: action needed",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.en} needs your answer in Keeplas.`,
+    },
   },
   fr: {
     subject: "Action requise : confirmer le statut d'un contact Keeplas",
     greeting: (name?: string) => (name ? `Bonjour ${name},` : "Bonjour,"),
     body: (owner?: string) =>
-      `${owner ?? "Un utilisateur Keeplas"} ne répond plus à ses vérifications Keeplas. Si vous ne parvenez pas à le/la joindre non plus, confirmez son indisponibilité depuis votre compte Keeplas. Une fois qu'assez de contacts de confiance ont confirmé, ${owner ?? "la personne"} dispose d'un dernier délai de 72 heures pour annuler. Ensuite, vous serez invité à aider à déverrouiller son coffre.`,
+      `${owner ?? "Un utilisateur Keeplas"} ne répond plus à ses vérifications Keeplas. Si vous ne parvenez pas à le/la joindre non plus, confirmez son indisponibilité depuis votre compte Keeplas. Une fois qu'assez de contacts de confiance ont confirmé, cette personne dispose d'un dernier délai de 72 heures pour annuler. Ensuite, vous serez invité à aider à déverrouiller son coffre.`,
     button: "Ouvrir Keeplas",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+    push: {
+      title: "Keeplas : action requise",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.fr} attend votre réponse dans Keeplas.`,
+    },
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
@@ -1079,6 +1148,11 @@ const TC_RELEASE_COPY = {
       `The 72-hour cancellation window has elapsed. ${owner ?? "A Keeplas user"} left items for you. Open Keeplas to see what they assigned to you.`,
     button: "Open Keeplas",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
+    push: {
+      title: "Keeplas",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.en} shared items with you. Open Keeplas to see them.`,
+    },
   },
   fr: {
     subject: "Vous pouvez désormais accéder à un coffre Keeplas",
@@ -1088,13 +1162,18 @@ const TC_RELEASE_COPY = {
     button: "Ouvrir Keeplas",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+    push: {
+      title: "Keeplas",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.fr} a partagé des éléments avec vous. Ouvrez Keeplas pour les voir.`,
+    },
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
 /**
  * Push + email + WhatsApp alert with localized copy; each channel
  * best-effort. `path` is the web page the email links to, `appPath` the
- * phone route the push opens.
+ * phone route the push opens. `pushName` fills the copy's `push` text.
  */
 async function sendAlert(
   ctx: ActionCtx,
@@ -1103,6 +1182,7 @@ async function sendAlert(
     phoneNumber?: string;
     greetingName: string | undefined;
     bodyName: string;
+    pushName?: string;
     language?: string;
     copy: Record<Locale, CtaEmailCopy>;
     path: string;
@@ -1114,17 +1194,19 @@ async function sendAlert(
 ): Promise<string> {
   if (isNotificationsPaused()) return "paused";
   const locale = resolveLocale(args.language);
+  const copy = args.copy[locale];
   const push = await safeSend(() =>
     sendExpoPush(ctx, args.pushTokens ?? [], {
-      title: args.copy[locale].subject,
-      body: args.copy[locale].body(args.bodyName),
+      ...(copy.push
+        ? { title: copy.push.title, body: copy.push.body(args.pushName) }
+        : { title: copy.subject, body: copy.body(args.bodyName) }),
       url: args.appPath,
     }),
   );
   const email = await safeSend(() =>
     sendCtaEmail({
       to: args.email,
-      copy: args.copy[locale],
+      copy,
       greetingName: args.greetingName,
       bodyName: args.bodyName,
       path: args.path,
@@ -1239,6 +1321,44 @@ const alertArgs = {
   pushTokens: v.optional(v.array(v.string())),
 };
 
+/** Alerts to a trusted contact about the owner who chose them. */
+const contactAlertArgs = {
+  ...alertArgs,
+  contactName: v.optional(v.string()),
+  owner: v.object({
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phoneNumber: v.optional(v.string()),
+  }),
+};
+
+const UNNAMED_OWNER = {
+  en: "A Keeplas user",
+  fr: "Un utilisateur Keeplas",
+} satisfies Record<Locale, string>;
+
+/**
+ * Email and WhatsApp name the owner in full ("Name (email · phone)") so the
+ * contact can tell homonyms apart; the push shows the first name at most.
+ */
+function sendContactAlert(
+  ctx: ActionCtx,
+  args: ObjectType<typeof contactAlertArgs>,
+  alert: Pick<
+    Parameters<typeof sendAlert>[1],
+    "copy" | "path" | "appPath" | "templateEnv" | "templateBase"
+  >,
+): Promise<string> {
+  const locale = resolveLocale(args.language);
+  return sendAlert(ctx, {
+    ...args,
+    ...alert,
+    greetingName: args.contactName,
+    bodyName: formatSenderIdentity(args.owner, UNNAMED_OWNER[locale]),
+    pushName: args.owner.name?.trim().split(/\s+/)[0] || undefined,
+  });
+}
+
 const NEW_DEVICE_COPY = {
   en: {
     subject: "Keeplas: a new device was linked to your account",
@@ -1259,22 +1379,49 @@ const NEW_DEVICE_COPY = {
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
+/** Phones the server names itself, in the owner's language. */
+const SERVER_DEVICE_LABELS = {
+  en: {
+    icloud_restore: "A phone restored from iCloud",
+    google_restore: "A phone restored from Google",
+    new_number: "A phone using your new number",
+  },
+  fr: {
+    icloud_restore: "Un téléphone restauré depuis iCloud",
+    google_restore: "Un téléphone restauré depuis Google",
+    new_number: "Un téléphone utilisant votre nouveau numéro",
+  },
+} satisfies Record<
+  Locale,
+  Record<"icloud_restore" | "google_restore" | "new_number", string>
+>;
+
 /**
  * New-device alert (M08-4) to the owner: every new link or sign-in is
  * announced on the other channels. The in-app alert is the
- * `devices.pendingAlerts` query.
+ * `devices.pendingAlerts` query. A registered device brings its own label
+ * (its model); a restore or a number change passes a `deviceKind` instead.
  */
 export const notifyNewDevice = internalAction({
   args: {
     ...alertArgs,
     ownerName: v.optional(v.string()),
-    deviceLabel: v.string(),
+    deviceLabel: v.optional(v.string()),
+    deviceKind: v.optional(
+      v.union(
+        v.literal("icloud_restore"),
+        v.literal("google_restore"),
+        v.literal("new_number"),
+      ),
+    ),
   },
   handler: (ctx, args) =>
     sendAlert(ctx, {
       ...args,
       greetingName: args.ownerName,
-      bodyName: args.deviceLabel,
+      bodyName: args.deviceKind
+        ? SERVER_DEVICE_LABELS[resolveLocale(args.language)][args.deviceKind]
+        : (args.deviceLabel ?? ""),
       copy: NEW_DEVICE_COPY,
       path: "/devices",
       appPath: "/devices",
@@ -1403,6 +1550,11 @@ const RECOVERY_CONTACT_COPY = {
       `${owner ?? "Someone"} is trying to get back into their Keeplas account and named you as a trust contact. Call them first and compare the 6-digit code shown in your Keeplas app. Approve only if you recognise them and the codes match. You will not see their files.`,
     button: "Open Keeplas",
     fallback: "If the button doesn't work, open {{url}} in your browser.",
+    push: {
+      title: "Keeplas: someone needs your help",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.en} needs your help. Open Keeplas.`,
+    },
   },
   fr: {
     subject: "Keeplas : quelqu'un a besoin de votre aide",
@@ -1412,21 +1564,19 @@ const RECOVERY_CONTACT_COPY = {
     button: "Ouvrir Keeplas",
     fallback:
       "Si le bouton ne fonctionne pas, ouvrez {{url}} dans votre navigateur.",
+    push: {
+      title: "Keeplas : quelqu'un a besoin de votre aide",
+      body: (name?: string) =>
+        `${name ?? SOMEONE_WHO_CHOSE_YOU.fr} a besoin de votre aide. Ouvrez Keeplas.`,
+    },
   },
 } satisfies Record<Locale, CtaEmailCopy>;
 
 /** Trust-contact notice: the owner needs help recovering access (M02-3). */
 export const notifyRecoveryContact = internalAction({
-  args: {
-    ...alertArgs,
-    contactName: v.optional(v.string()),
-    ownerName: v.string(),
-  },
+  args: contactAlertArgs,
   handler: (ctx, args) =>
-    sendAlert(ctx, {
-      ...args,
-      greetingName: args.contactName,
-      bodyName: args.ownerName,
+    sendContactAlert(ctx, args, {
       copy: RECOVERY_CONTACT_COPY,
       path: "/shared-with-me",
       appPath: "/recovery",
@@ -1441,16 +1591,9 @@ export const notifyRecoveryContact = internalAction({
  * is invited to help unlock the vault. Push, email + WhatsApp.
  */
 export const notifyConfirmationRequest = internalAction({
-  args: {
-    ...alertArgs,
-    contactName: v.optional(v.string()),
-    ownerName: v.string(),
-  },
+  args: contactAlertArgs,
   handler: (ctx, args) =>
-    sendAlert(ctx, {
-      ...args,
-      greetingName: args.contactName,
-      bodyName: args.ownerName,
+    sendContactAlert(ctx, args, {
       copy: TC_CONFIRM_COPY,
       path: "/shared-with-me",
       appPath: "/shared",
@@ -1471,7 +1614,7 @@ export const notifyGraceCancel = internalAction({
     sendAlert(ctx, {
       ...args,
       greetingName: args.ownerName,
-      bodyName: args.ownerName ?? "there",
+      bodyName: greetedName(args.ownerName, resolveLocale(args.language)),
       copy: LC_GRACE_COPY,
       path: "/life-check",
       appPath: "/life-check",
@@ -1486,16 +1629,9 @@ export const notifyGraceCancel = internalAction({
  * after they confirmed. Push, email + WhatsApp.
  */
 export const notifyRelease = internalAction({
-  args: {
-    ...alertArgs,
-    contactName: v.optional(v.string()),
-    ownerName: v.string(),
-  },
+  args: contactAlertArgs,
   handler: (ctx, args) =>
-    sendAlert(ctx, {
-      ...args,
-      greetingName: args.contactName,
-      bodyName: args.ownerName,
+    sendContactAlert(ctx, args, {
       copy: TC_RELEASE_COPY,
       path: "/shared-with-me",
       appPath: "/shared",

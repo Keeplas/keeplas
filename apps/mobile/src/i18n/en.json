@@ -580,7 +580,16 @@
     "ofTwo": "{n} of 2",
     "active": "Active",
     "addContact": "Add a trusted contact",
-    "contactsBody": "Two trusted contacts can help you get back in if every other way is gone."
+    "contactsBody": "Two trusted contacts can help you get back in if every other way is gone.",
+    "request": {
+      "title": "Someone asked to recover your account",
+      "waiting": "Asked on {asked} from a new phone. Nothing is released before {deadline}, and only if 2 of your trusted contacts approve.",
+      "released": "Asked on {asked} from a new phone. Two trusted contacts approved and the 72 hours are over: that phone can now open your vault.",
+      "notMe": "It wasn't me, cancel it",
+      "cancelTitle": "Cancel this recovery?",
+      "cancelBody": "The request stops now and the new phone gets nothing more. If it was you, you can start a new one from that phone.",
+      "cancelled": "Recovery request cancelled"
+    }
   },
   "vaultRestored": {
     "title": "Vault restored",
@@ -1307,6 +1316,7 @@
     "progress": "Preparing files: {done} of {total}",
     "keepOpen": "Keep Keeplas open until it finishes.",
     "background": "You can leave this screen or Keeplas: you’ll get a notification when the archive is ready.",
+    "backgroundComeBack": "You can leave this screen or Keeplas: come back to Keeplas to get your archive.",
     "notifyRunning": "Decrypting your vault on this phone",
     "notifyReady": "Your archive is ready. Open Keeplas to save or share it.",
     "notifyFailed": "The export stopped before the end. Open Keeplas to try again.",

@@ -17,12 +17,12 @@ import { Button } from "@/components/button";
 import { ProgressBar } from "@/components/controls";
 import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
-import { Callout, Card, StatusChip } from "@/components/surfaces";
+import { Callout, Card } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { vaultOpenErrorKey } from "@/features/kit-open";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
+import { RecoveryDecisions } from "@/features/recovery-request";
 import { useScreenLock } from "@/features/screen-lock";
-import { formatDate, formatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useReplaceKit } from "@/lib/use-replace-kit";
@@ -30,14 +30,14 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
-import { colors as palette, radius } from "@/theme";
+import { radius } from "@/theme";
 
 const secretKey = (userId: string) => `keeplas.recovery-device.${userId}`;
 
 /** M02-1 / M02-2 / M02-4: start, monitor and finish 2-of-3 recovery. */
 export default function ContactRecovery() {
   const router = useRouter();
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { colors } = useTheme();
   const viewer = useViewer();
   const request = useQuery(api.recovery.getMyRequest);
@@ -230,47 +230,7 @@ export default function ContactRecovery() {
             </Text>
           </Card>
           <Card>
-            {request.contacts.map((contact, index) => (
-              <View key={contact.contactId} style={styles.contact}>
-                <View
-                  style={[
-                    styles.avatar,
-                    {
-                      backgroundColor:
-                        AVATAR_COLORS[index % AVATAR_COLORS.length],
-                    },
-                  ]}
-                >
-                  <Text variant="label" color="text.inverse">
-                    {(contact.name || "?").trim().charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.flex}>
-                  <Text variant="label">{contact.name}</Text>
-                  {contact.decidedAt ? (
-                    <Text variant="body-sm" color="text.muted">
-                      {`${formatDate(contact.decidedAt, language)} · ${formatTime(contact.decidedAt, language)}`}
-                    </Text>
-                  ) : null}
-                </View>
-                <StatusChip
-                  label={
-                    contact.decision === "approve"
-                      ? t("socialRecovery.approved")
-                      : contact.decision === "reject"
-                        ? t("socialRecovery.declined")
-                        : t("socialRecovery.waiting")
-                  }
-                  tone={
-                    contact.decision === "approve"
-                      ? "success"
-                      : contact.decision === "reject"
-                        ? "danger"
-                        : "warning"
-                  }
-                />
-              </View>
-            ))}
+            <RecoveryDecisions contacts={request.contacts} />
           </Card>
           <View style={[styles.window, { backgroundColor: colors["bg.info"] }]}>
             <View style={styles.contact}>
@@ -317,18 +277,9 @@ export default function ContactRecovery() {
   );
 }
 
-const AVATAR_COLORS = Object.values(palette.category);
-
 const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   contact: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   window: { gap: 10, padding: 16, borderRadius: radius.md },
   codeRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   codeBox: {

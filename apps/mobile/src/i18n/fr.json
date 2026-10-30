@@ -576,7 +576,16 @@
     "ofTwo": "{n} sur 2",
     "active": "Actif",
     "addContact": "Ajouter un contact de confiance",
-    "contactsBody": "Deux contacts de confiance peuvent vous aider à revenir si tous vos autres moyens ont disparu."
+    "contactsBody": "Deux contacts de confiance peuvent vous aider à revenir si tous vos autres moyens ont disparu.",
+    "request": {
+      "title": "Quelqu'un a demandé à récupérer votre compte",
+      "waiting": "Demande faite le {asked} depuis un nouveau téléphone. Rien n'est libéré avant le {deadline}, et seulement si 2 de vos contacts de confiance approuvent.",
+      "released": "Demande faite le {asked} depuis un nouveau téléphone. Deux contacts de confiance ont approuvé et les 72 heures sont écoulées : ce téléphone peut maintenant ouvrir votre coffre.",
+      "notMe": "Ce n'était pas moi, annuler",
+      "cancelTitle": "Annuler cette récupération ?",
+      "cancelBody": "La demande s'arrête tout de suite et le nouveau téléphone n'obtient rien de plus. Si c'était vous, vous pourrez en lancer une nouvelle depuis ce téléphone.",
+      "cancelled": "Demande de récupération annulée"
+    }
   },
   "vaultRestored": {
     "title": "Coffre restauré",
@@ -1297,6 +1306,7 @@
     "progress": "Préparation des fichiers : {done} sur {total}",
     "keepOpen": "Gardez Keeplas ouvert jusqu’à la fin.",
     "background": "Vous pouvez quitter cet écran ou Keeplas : une notification vous prévient quand l’archive est prête.",
+    "backgroundComeBack": "Vous pouvez quitter cet écran ou Keeplas : revenez dans Keeplas pour récupérer votre archive.",
     "notifyRunning": "Déchiffrement de votre coffre sur ce téléphone",
     "notifyReady": "Votre archive est prête. Ouvrez Keeplas pour l’enregistrer ou la partager.",
     "notifyFailed": "L’export s’est arrêté avant la fin. Ouvrez Keeplas pour réessayer.",

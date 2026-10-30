@@ -17,6 +17,7 @@ import {
   StatusChip,
 } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { RecoveryRequestCard } from "@/features/recovery-request";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
 import { useSealSocialRecovery } from "@/features/social-recovery";
 import { serverMessage } from "@/lib/errors";
@@ -56,6 +57,7 @@ export default function RecoveryCenter() {
     >
       <Text variant="h1">{t("recoveryCenter.title")}</Text>
       <Text color="text.muted">{t("recoveryCenter.body")}</Text>
+      <RecoveryRequestCard />
       <View style={styles.chip}>
         <StatusChip
           label={t(ways.covered ? "waysBack.covered" : "waysBack.notCovered")}

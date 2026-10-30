@@ -89,6 +89,7 @@ export const requestVerification = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
       email,
       code,
+      purpose: "verify_email",
       language: user?.language,
     });
 

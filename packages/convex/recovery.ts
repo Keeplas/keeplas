@@ -16,6 +16,7 @@ import {
 } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { activePushTokens } from "./devices";
+import { ownerIdentity } from "./lib/identity";
 import { requireSessionProof } from "./session_proofs";
 
 /**
@@ -292,8 +293,8 @@ export const start = auditedMutation({
         email: contact.email,
         phoneNumber: contact.phoneNumber,
         contactName: contact.name,
-        ownerName: user?.name ?? "A Keeplas user",
-        language: user?.language,
+        owner: ownerIdentity(user),
+        language: contactUser?.language,
       });
     }
     return requestId;

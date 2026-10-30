@@ -72,6 +72,7 @@ export const requestEmailAuthOtp = mutation({
     await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
       email,
       code,
+      purpose: "sign_in",
       language: args.language,
     });
 

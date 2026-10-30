@@ -72,7 +72,7 @@ beforeEach(() => {
 });
 
 describe("background export", () => {
-  it("keeps the app running and notifies when it ends out of view", async () => {
+  it("keeps the app running and notifies on Keeplas's own channel when it ends out of view", async () => {
     await startExport(succeeds, texts);
 
     expect(background.beginBackgroundWork).toHaveBeenCalledWith(
@@ -88,7 +88,8 @@ describe("background export", () => {
         body: "Ready",
         data: { url: "/export" },
       },
-      trigger: null,
+      // Android: the "Keeplas" channel, not Expo's "Miscellaneous" fallback.
+      trigger: { channelId: "default" },
     });
   });
 

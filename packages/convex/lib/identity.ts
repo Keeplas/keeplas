@@ -28,3 +28,15 @@ export function ownerDisplay(
     owner?.name?.trim() || email.split("@")[0] || phone || "Keeplas user";
   return { name, email, phone };
 }
+
+// The owner's identity fields for a trusted-contact alert (dispatch.ts),
+// without the rest of the user row.
+export function ownerIdentity(
+  owner: { name?: string; email?: string; phoneNumber?: string } | null,
+) {
+  return {
+    name: owner?.name,
+    email: owner?.email,
+    phoneNumber: owner?.phoneNumber,
+  };
+}

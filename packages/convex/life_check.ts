@@ -11,7 +11,7 @@ import {
 } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { createNotification, requireFullAuth } from "./helpers";
-import { formatSenderIdentity } from "./lib/identity";
+import { formatSenderIdentity, ownerIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
@@ -974,7 +974,7 @@ export const enterConfirmationStage = internalMutation({
           email: contact.email,
           phoneNumber: contact.phoneNumber,
           contactName: contact.name,
-          ownerName,
+          owner: ownerIdentity(owner),
           language: contactUser?.language,
           pushTokens: await activePushTokens(ctx, contact.contactUserId),
         },
