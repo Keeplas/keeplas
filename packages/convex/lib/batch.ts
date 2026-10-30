@@ -20,7 +20,7 @@ const BATCH_MAX_BYTES_READ = 4 * 1024 * 1024;
 /** Args of a batch job: the page to read, absent on the cron's first run. */
 export const batchArgs = { cursor: v.optional(v.string()) };
 
-/** Pagination options for one page of a batch job. */
+/** Pagination options for one page, capped in rows and in bytes read. */
 export function batchPage(numItems: number, cursor: string | undefined) {
   return {
     numItems,

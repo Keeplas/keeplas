@@ -1160,7 +1160,9 @@ export const archiveItems = auditedMutation({
       await archiveOwnedItem(ctx, itemId, userId);
     }
   },
-  getMetadata: (args) => ({ itemIds: args.itemIds }),
+  // A count, not the ids: the list is caller-sized (up to 8192 ids) and the
+  // audit log is read back by the admin console.
+  getMetadata: (args) => ({ count: args.itemIds.length }),
 });
 
 export const unarchiveItem = auditedMutation({
