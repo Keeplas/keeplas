@@ -1,5 +1,12 @@
 # Keeplas Code Ownership
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# GitHub applies the LAST matching pattern, so the catch-all must stay at the
+# top and the founders-only rules below it. Enforced only when branch
+# protection has "Require review from Code Owners" enabled.
+
+# All other code — open to community
+* @princenocode
 
 # Crypto package — founders only (security-critical)
 /packages/crypto/ @princenocode @GhislainMitahi
@@ -7,5 +14,13 @@
 # Security audits — founders only
 /security/ @princenocode @GhislainMitahi
 
-# All other code — open to community
-* @princenocode
+# CI, workflows, CODEOWNERS itself and repo tooling (incl. check:zk) — founders only
+/.github/ @princenocode @GhislainMitahi
+/scripts/ @princenocode @GhislainMitahi
+
+# Backend auth, guards, audit log and schema — founders only
+/packages/convex/auth.ts @princenocode @GhislainMitahi
+/packages/convex/helpers.ts @princenocode @GhislainMitahi
+/packages/convex/lib/ @princenocode @GhislainMitahi
+/packages/convex/audit.ts @princenocode @GhislainMitahi
+/packages/convex/schema.ts @princenocode @GhislainMitahi
