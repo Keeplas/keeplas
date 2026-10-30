@@ -95,6 +95,7 @@
       ],
       "./plugins/with-ios-scene",
       "./plugins/with-android-restricted-resizability",
+      "./plugins/with-android-device-reach",
       "expo-secure-store",
       ["expo-camera", { "recordAudioAndroid": true }],
       "expo-image-picker",

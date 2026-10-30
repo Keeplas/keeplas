@@ -11,7 +11,8 @@ const SIZE = splash.logoWidth;
 
 /**
  * The native splash, brought to life. Same background, logo and size as
- * app.json's `expo-splash-screen` (both follow the system scheme), so the
+ * app.json's `expo-splash-screen` (both start on the system scheme; this one
+ * then follows Settings → Appearance once ThemeProvider has loaded it), so the
  * hand-off is seamless: once laid out it hides the native splash, then the
  * shield breathes and a sky halo ripples out while `visible`. Still under
  * Reduce Motion. Fades out, then unmounts, when `visible` turns false.
