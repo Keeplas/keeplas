@@ -19,6 +19,7 @@ import {
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
 import {
   IDLE_LOCK_MS,
+  idleExpired,
   instantNow,
   isLockHeld,
   shouldLockOnResume,
@@ -68,6 +69,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backgroundedAt = useRef<Instant | null>(null);
   const backgroundHeld = useRef(false);
+  const lastActive = useRef<Instant>(instantNow());
 
   const lock = useCallback(() => {
     setMasterKey(null);
@@ -108,6 +110,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [masterKey]);
 
   const armIdleTimer = useCallback(() => {
+    lastActive.current = instantNow();
     if (idleTimer.current) clearTimeout(idleTimer.current);
     const fire = () => {
       if (isLockHeld()) idleTimer.current = setTimeout(fire, IDLE_LOCK_MS);
@@ -121,8 +124,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     armIdleTimer();
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") {
-        const held = backgroundHeld.current || isLockHeld();
-        if (shouldLockOnResume(backgroundedAt.current, instantNow(), held)) {
+        const now = instantNow();
+        const held = backgroundHeld.current || isLockHeld(now);
+        if (
+          shouldLockOnResume(backgroundedAt.current, now, held) ||
+          (!held && idleExpired(lastActive.current, now))
+        ) {
           lock();
         }
         backgroundedAt.current = null;

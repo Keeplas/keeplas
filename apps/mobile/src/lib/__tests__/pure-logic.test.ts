@@ -19,6 +19,8 @@ import {
   BACKGROUND_GRACE_MS,
   HELD_GRACE_MS,
   holdLock,
+  IDLE_LOCK_MS,
+  idleExpired,
   isLockHeld,
   keepUnlockedWhile,
   shouldLockOnResume,
@@ -183,6 +185,28 @@ describe("auto-lock", () => {
     release();
     release();
     expect(isLockHeld()).toBe(false);
+  });
+
+  it("stops honouring a hold whose system screen never came back", () => {
+    const release = holdLock();
+    const later = (ms: number) => ({
+      wall: Date.now() + ms,
+      uptime: performance.now() + ms,
+    });
+    expect(isLockHeld(later(HELD_GRACE_MS - 1000))).toBe(true);
+    expect(isLockHeld(later(HELD_GRACE_MS + 1000))).toBe(false);
+    release();
+  });
+
+  it("locks on resume after five idle minutes, even without a background event", () => {
+    expect(idleExpired(at(0), at(IDLE_LOCK_MS))).toBe(false);
+    expect(idleExpired(at(0), at(IDLE_LOCK_MS + 1))).toBe(true);
+    expect(
+      idleExpired(
+        { wall: 0, uptime: 0 },
+        { wall: IDLE_LOCK_MS + 1, uptime: 5 },
+      ),
+    ).toBe(true);
   });
 });
 
