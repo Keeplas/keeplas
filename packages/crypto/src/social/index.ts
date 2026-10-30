@@ -1,8 +1,9 @@
 import { decrypt, encrypt } from "../aes";
 import { base64ToUint8, uint8ToBase64 } from "../encoding";
-import { unwrapBytes, wrapBytes } from "../kem";
+import { parsePublicKey, unwrapBytes, wrapBytes } from "../kem";
 import { reconstruct, split } from "../shamir";
 import { signBytes, verifyBytes } from "../sig";
+import { hashTranscript, sixDigitCode, utf8 } from "../transcript";
 
 /**
  * Owner recovery with trust contacts (v2 workflow 7, F3).
@@ -19,8 +20,9 @@ export const RECOVERY_THRESHOLD = 2;
 const SECRET_BYTES = 32;
 const HKDF_INFO = "keeplas/social-envelope/v1";
 const APPROVAL_CONTEXT = "keeplas-recovery-approval-v1";
-
-const utf8 = (s: string) => new TextEncoder().encode(s);
+const CODE_NONCE_BYTES = 32;
+const COMMITMENT_CONTEXT = "keeplas/recovery-commitment/v2";
+const CODE_CONTEXT = "keeplas/recovery-code/v2";
 
 /** AAD of a contact's share of RS. */
 const shareAad = (userId: string, contactId: string, generation: number) =>
@@ -131,24 +133,79 @@ export async function createSocialRecovery(args: {
 }
 
 /**
- * 6-digit code compared by phone between the owner (new device) and each
- * contact (D4). Both compute it locally: if Keeplas swapped the device key,
- * the codes differ.
+ * The 6-digit code the owner and each contact compare on a call (D4) is a
+ * commit-then-reveal short authentication string, one per contact:
+ *
+ *   1. recovering device: secret nonce r, commitment H(device key ‖ r)
+ *   2. contact: sees (device key, commitment), keeps the commitment, sends
+ *      its own nonce s
+ *   3. device: keeps the s it received, then reveals r
+ *   4. both: code(requestId, contactId, device key, r, s); the contact first
+ *      checks that r opens the commitment it kept
+ *
+ * Keeplas relays every step. To swap the device key it must commit to its
+ * own nonce before it sees s, and pick the s the device gets before it sees
+ * r: the two codes then match with a 1-in-10^6 chance, and a miss shows up on
+ * the call. Each side must keep what it received (commitment, s) on the
+ * device: a server that could change them after the reveal could grind a
+ * matching code.
  */
-export async function recoveryCode(
-  requestId: string,
-  devicePublicKey: string,
-): Promise<string> {
-  const digest = new Uint8Array(
-    await crypto.subtle.digest(
-      "SHA-256",
-      utf8(`keeplas/recovery-code|${requestId}|${devicePublicKey}`),
-    ),
+
+/** Device or contact: a fresh nonce (base64, 32 bytes) for one code. */
+export function newRecoveryNonce(): string {
+  return uint8ToBase64(
+    crypto.getRandomValues(new Uint8Array(CODE_NONCE_BYTES)),
   );
-  const n =
-    ((digest[0] << 24) | (digest[1] << 16) | (digest[2] << 8) | digest[3]) >>>
-    0;
-  return (n % 1_000_000).toString().padStart(6, "0");
+}
+
+function parseNonce(nonce: string): Uint8Array {
+  const bytes = base64ToUint8(nonce);
+  if (bytes.length !== CODE_NONCE_BYTES || uint8ToBase64(bytes) !== nonce) {
+    throw new Error("Invalid recovery code nonce");
+  }
+  return bytes;
+}
+
+/** Recovering device: commitment to `deviceNonce` for one contact. */
+export async function recoveryCommitment(
+  devicePublicKey: string,
+  deviceNonce: string,
+): Promise<string> {
+  return uint8ToBase64(
+    await hashTranscript(COMMITMENT_CONTEXT, [
+      parsePublicKey(devicePublicKey),
+      parseNonce(deviceNonce),
+    ]),
+  );
+}
+
+/**
+ * The code for one contact, on either side. Throws when `deviceNonce` does
+ * not open `commitment` for `devicePublicKey` (a swapped key or nonce).
+ */
+export async function recoveryCode(args: {
+  requestId: string;
+  contactId: string;
+  devicePublicKey: string;
+  commitment: string;
+  deviceNonce: string;
+  contactNonce: string;
+}): Promise<string> {
+  const opened = await recoveryCommitment(
+    args.devicePublicKey,
+    args.deviceNonce,
+  );
+  if (opened !== args.commitment) {
+    throw new Error("Recovery code commitment does not match");
+  }
+  const digest = await hashTranscript(CODE_CONTEXT, [
+    utf8(args.requestId),
+    utf8(args.contactId),
+    parsePublicKey(args.devicePublicKey),
+    parseNonce(args.deviceNonce),
+    parseNonce(args.contactNonce),
+  ]);
+  return sixDigitCode(digest);
 }
 
 function approvalMessage(args: {

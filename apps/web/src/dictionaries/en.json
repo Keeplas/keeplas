@@ -69,17 +69,19 @@
       "step1Detail": "on your phone",
       "step2": "Scan the QR code",
       "step2Detail": "with the app",
-      "step3": "You are in",
-      "step3Detail": "this browser opens your vault",
+      "step3": "Check the code",
+      "step3Detail": "then approve on your phone",
       "expiresIn": "Expires in",
       "trust": "Keep me logged in",
       "trustDetail": "On a shared computer, leave this off.",
       "expired": "This code has expired.",
       "newCode": "Generate a new code",
-      "rejected": "Your phone blocked this login because the code didn't match this browser. Refresh the page to get a new code.",
+      "rejected": "This login was declined on your phone, or the code didn't match this browser. Refresh the page to get a new code.",
       "error": "Something went wrong while linking this browser.",
       "retry": "Try again",
-      "linking": "Linking this browser…"
+      "linking": "Linking this browser…",
+      "codeLabel": "Code",
+      "codeDetail": "Approve only if your phone shows the same code."
     }
   },
   "chrome": {
@@ -2132,11 +2134,12 @@
     "request": {
       "title": "Recovery request in progress",
       "approved": "{count} of 2 approved",
-      "code": "Recovery code",
+      "code": "Recovery codes",
       "hoursLeft": "{hours} hours remaining",
       "hourLeft": "1 hour remaining",
       "windowEnded": "Protection window ended",
-      "cancel": "Cancel request"
+      "cancel": "Cancel request",
+      "codeOnPhone": "Shown on the phone that started the recovery, one per contact."
     },
     "cancelDialog": {
       "title": "Cancel this recovery request?",

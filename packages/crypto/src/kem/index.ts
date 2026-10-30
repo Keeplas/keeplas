@@ -3,6 +3,7 @@ export {
   generateRecipientKeyPair,
   serializePublicKey,
   parsePublicKey,
+  publicKeyFromSecretKey,
   serializeSecretKey,
   parseSecretKey,
   verifiedOwnerPublicKey,

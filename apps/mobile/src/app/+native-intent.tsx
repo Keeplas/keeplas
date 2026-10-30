@@ -20,7 +20,8 @@ function routeOf(url: string): string {
  * Keeplas hands out open a screen:
  * - the pairing and capture (W06-7) universal links keep their data in the
  *   URL fragment, which routing drops: stash the whole URL and open the
- *   scanner, which processes it like a scanned QR;
+ *   scanner, which processes it like a scanned QR. A pairing link only opens
+ *   the M03-5 approval screen: it never logs a browser in by itself;
  * - an invitation opens invite/[token], with no other parameter.
  * Any other URL opens the start screen: a link must never land on an inner
  * screen with parameters it chose (a spoofed security screen, a code resent

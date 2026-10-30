@@ -34,12 +34,20 @@ export const RECOVERY_WINDOW_MS = 72 * 60 * 60 * 1000;
 export const RECOVERY_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const RECOVERY_THRESHOLD = 2;
 const ML_KEM_768_PUBLIC_KEY_LENGTH = 1580; // base64 of 1184 bytes
+// Code exchange values: base64 of 32 bytes (nonces, SHA-256 commitments).
+const CODE_VALUE_LENGTH = 44;
 
 const ACTIVE = ["pending", "approved_1", "approved_2", "released"] as const;
 const OPEN_FOR_APPROVAL = ["pending", "approved_1"] as const;
 type Status = Doc<"recovery_requests">["status"];
+type CodeSlot = NonNullable<Doc<"recovery_requests">["codeExchange"]>[number];
 const isOneOf = (status: Status, list: readonly Status[]) =>
   list.includes(status);
+
+const codeSlotOf = (
+  request: Doc<"recovery_requests">,
+  contactId: Id<"trusted_contacts">,
+) => request.codeExchange?.find((s) => s.contactId === contactId);
 
 /** Accepted trust contacts that own a key pair (eligible for an RS share). */
 async function eligibleTrustContacts(ctx: QueryCtx, ownerId: Id<"users">) {
@@ -335,8 +343,8 @@ export const start = auditedMutation({
 
 /**
  * Owner side, any session (M02-2, M09-4): the latest request with its
- * approvals. The new device computes the 6-digit code from
- * (requestId, newDevicePublicKey) locally.
+ * approvals and each contact's code exchange. Only the device that started
+ * the request can compute the codes: it holds the device nonces.
  */
 export const getMyRequest = query({
   args: {},
@@ -355,12 +363,16 @@ export const getMyRequest = query({
       shares.map(async (share) => {
         const contact = await ctx.db.get(share.contactId);
         const decision = approvals.find((a) => a.contactId === share.contactId);
+        const slot = codeSlotOf(request, share.contactId);
         return {
           contactId: share.contactId,
           name: contact?.name ?? "",
           decision: decision?.decision ?? null,
           rejectReason: decision?.rejectReason ?? null,
           decidedAt: decision?.createdAt ?? null,
+          commitment: slot?.commitment ?? null,
+          contactNonce: slot?.contactNonce ?? null,
+          revealed: slot?.deviceNonce !== undefined,
         };
       }),
     );
@@ -438,6 +450,7 @@ export const getRequestsForMe = query({
       );
       if (decided) continue;
       const owner = await ctx.db.get(contact.userId);
+      const slot = codeSlotOf(request, contact._id);
       out.push({
         requestId: request._id,
         contactId: contact._id,
@@ -447,6 +460,9 @@ export const getRequestsForMe = query({
         generation: request.generation,
         wrappedShare: share.wrappedShare,
         createdAt: request.createdAt,
+        commitment: slot?.commitment ?? null,
+        contactNonce: slot?.contactNonce ?? null,
+        deviceNonce: slot?.deviceNonce ?? null,
       });
     }
     return out;
@@ -501,9 +517,144 @@ async function requireUndecided(
   if (decided) throw new ConvexError("You already answered this request");
 }
 
+// ─── Code exchange (D4, commit-then-reveal per contact) ─────────────────
+
+/** The caller's own request, still open, from a phone-proven session. */
+async function requireOwnOpenRequest(
+  ctx: MutationCtx,
+  requestId: Id<"recovery_requests">,
+) {
+  const userId = await requireAuth(ctx);
+  // Same gate as `start`: only the phone-proven new device runs the codes.
+  await requireSessionProof(ctx, "phone");
+  const request = await ctx.db.get(requestId);
+  if (request?.userId !== userId) {
+    throw new ConvexError("Unknown recovery request");
+  }
+  if (!isOneOf(request.status, OPEN_FOR_APPROVAL)) {
+    throw new ConvexError("This recovery request is closed");
+  }
+  return request;
+}
+
+/**
+ * Set a write-once value of the code exchange. A retry with the same value
+ * is a no-op; a different one is refused, so no side can be made to compute
+ * a code from a value swapped after the fact.
+ */
+async function setCodeValue(
+  ctx: MutationCtx,
+  request: Doc<"recovery_requests">,
+  contactId: Id<"trusted_contacts">,
+  field: "commitment" | "contactNonce" | "deviceNonce",
+  value: string,
+  prerequisite?: { field: keyof CodeSlot; error: string },
+) {
+  if (value.length !== CODE_VALUE_LENGTH) {
+    throw new ConvexError("Invalid recovery code value");
+  }
+  const slots = request.codeExchange ?? [];
+  const slot = slots.find((s) => s.contactId === contactId);
+  if (prerequisite && slot?.[prerequisite.field] === undefined) {
+    throw new ConvexError(prerequisite.error);
+  }
+  if (slot?.[field] !== undefined) {
+    if (slot[field] === value) return;
+    throw new ConvexError("Recovery code already set");
+  }
+  request.codeExchange = slot
+    ? slots.map((s) => (s === slot ? { ...s, [field]: value } : s))
+    : [...slots, { contactId, commitment: value }];
+  await ctx.db.patch(request._id, { codeExchange: request.codeExchange });
+}
+
+/**
+ * New device: one commitment per trust contact. Called right after `start`,
+ * and on open for a request started before codes were committed (legacy).
+ */
+export const commitCodes = auditedMutation({
+  action: "recovery.code.committed",
+  resourceType: "recovery_request",
+  args: {
+    requestId: v.id("recovery_requests"),
+    commitments: v.array(
+      v.object({
+        contactId: v.id("trusted_contacts"),
+        commitment: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const request = await requireOwnOpenRequest(ctx, args.requestId);
+    const shared = new Set(
+      (await sharesOf(ctx, request.userId, request.generation)).map(
+        (s) => s.contactId,
+      ),
+    );
+    for (const { contactId, commitment } of args.commitments) {
+      if (!shared.has(contactId)) {
+        throw new ConvexError("You are not a trust contact for this request");
+      }
+      await setCodeValue(ctx, request, contactId, "commitment", commitment);
+    }
+  },
+  getResourceId: (args) => args.requestId,
+});
+
+/** Contact, on opening the request: its nonce, after the commitment. */
+export const sendCodeNonce = auditedMutation({
+  action: "recovery.code.answered",
+  resourceType: "recovery_request",
+  args: {
+    requestId: v.id("recovery_requests"),
+    contactNonce: v.string(),
+  },
+  resolveActor: contactActor,
+  handler: async (ctx, args) => {
+    const { request, contact } = await requireContactForRequest(
+      ctx,
+      args.requestId,
+    );
+    await requireUndecided(ctx, request, contact._id);
+    await setCodeValue(
+      ctx,
+      request,
+      contact._id,
+      "contactNonce",
+      args.contactNonce,
+      { field: "commitment", error: "RECOVERY_CODE_NOT_COMMITTED" },
+    );
+  },
+  getResourceId: (args) => args.requestId,
+});
+
+/** New device, once it kept the contact's nonce: open its commitment. */
+export const revealCode = auditedMutation({
+  action: "recovery.code.revealed",
+  resourceType: "recovery_request",
+  args: {
+    requestId: v.id("recovery_requests"),
+    contactId: v.id("trusted_contacts"),
+    deviceNonce: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const request = await requireOwnOpenRequest(ctx, args.requestId);
+    await setCodeValue(
+      ctx,
+      request,
+      args.contactId,
+      "deviceNonce",
+      args.deviceNonce,
+      { field: "contactNonce", error: "RECOVERY_CODE_NOT_ANSWERED" },
+    );
+  },
+  getResourceId: (args) => args.requestId,
+});
+
 /**
  * Contact approves after comparing the code on a call: posts its RS share
- * re-sealed to the device key, signed with its identity key.
+ * re-sealed to the device key, signed with its identity key. The code must
+ * have been exchanged first (an older app that skips it is refused).
  */
 export const approve = auditedMutation({
   action: "recovery.request.approved",
@@ -520,6 +671,9 @@ export const approve = auditedMutation({
       args.requestId,
     );
     await requireUndecided(ctx, request, contact._id);
+    if (codeSlotOf(request, contact._id)?.deviceNonce === undefined) {
+      throw new ConvexError("RECOVERY_CODE_NOT_COMPARED");
+    }
     const now = Date.now();
     await ctx.db.insert("recovery_approvals", {
       requestId: request._id,

@@ -6,6 +6,7 @@ import {
   buildPairingQr,
   generateBrowserPairingKeys,
   openPairingEnvelope,
+  pairingCode,
   pairingKeyHash,
 } from "@keeplas/crypto/pairing";
 import { clearMethods as clearDevicePins } from "@/lib/device-unlock";
@@ -20,6 +21,7 @@ import { deviceLabelFromUserAgent } from "@/lib/user-agent";
 interface PairingSecrets {
   secretKey: Uint8Array;
   loginSecret: string;
+  qrSecret: string;
 }
 
 /**
@@ -73,6 +75,7 @@ export function useConnectWithPhone() {
         secrets.current = {
           secretKey: keys.secretKey,
           loginSecret: keys.loginSecret,
+          qrSecret: keys.qrSecret,
         };
         const { sessionId, expiresAt } = await createSession({
           browserPublicKey: keys.publicKey,
@@ -80,12 +83,19 @@ export function useConnectWithPhone() {
           userAgent: navigator.userAgent,
           _audit: audit,
         });
-        const qrUrl = buildPairingQr({
+        const qr = {
           sessionId,
           keyHash: await pairingKeyHash(keys.publicKey),
           origin: window.location.origin,
+          qrSecret: keys.qrSecret,
+        };
+        dispatch({
+          type: "created",
+          sessionId,
+          expiresAt,
+          qrUrl: buildPairingQr(qr),
+          code: await pairingCode(qr),
         });
-        dispatch({ type: "created", sessionId, expiresAt, qrUrl });
       } catch {
         dispatch({ type: "failed" });
       }
@@ -139,6 +149,7 @@ export function useConnectWithPhone() {
           secretKey: secrets.current!.secretKey,
           sessionId: state.sessionId,
           origin: window.location.origin,
+          qrSecret: secrets.current!.qrSecret,
           identityPublicKey: viewer.identityPublicKey,
           userId: viewer._id,
         });

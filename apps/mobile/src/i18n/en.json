@@ -358,7 +358,7 @@
     "title": "Recover with contacts",
     "body": "Two trusted contacts must approve. Keeplas then waits 72 hours before releasing the protected key.",
     "start": "Start recovery",
-    "codeBody": "Compare this code with your contacts by phone or video call. Never send it by message.",
+    "codeBody": "Each contact gets their own code. Read it to them on a phone or video call. Never send it by message.",
     "waiting": "Waiting",
     "restore": "Restore my vault",
     "cancel": "Cancel request",
@@ -377,7 +377,11 @@
     "expired": "Your last request expired before it was approved. You can start a new one.",
     "rejected": "{name} declined your request, so this recovery stopped. Call them to check it was really you, then start a new request.",
     "notReady": "You don’t have 2 trusted contacts ready yet, so they can’t open your vault. Use your recovery kit instead.",
-    "useKit": "Use my recovery kit"
+    "useKit": "Use my recovery kit",
+    "codeWaiting": "Your code for {name} shows up when they open the request.",
+    "otherPhone": "This request was started on another phone. The codes are shown there.",
+    "keyMismatch": "This request no longer matches the key this phone made, so no codes are shown. If you didn't start it on another phone, cancel it now.",
+    "codeTampered": "A code on this request wasn't made by this phone. Don't let anyone approve it: cancel the request and start a new one."
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -587,7 +591,10 @@
     "stillDifferent": "Still different? Decline",
     "stillDifferentBody": "{name} gets a security alert and the request stops.",
     "decline": "Decline request",
-    "compareAgain": "Compare again"
+    "compareAgain": "Compare again",
+    "waitingForPhone": "Waiting for {name}'s new phone. Ask {name} to open Keeplas on it: your code appears here a moment later.",
+    "openedElsewhere": "You opened this request on another phone, so the code is shown there. If it wasn't you, decline the request.",
+    "unverified": "Keeplas couldn't check the code of this request. Don't approve it: decline, then call {name} on a number you already had."
   },
   "devices": {
     "title": "Devices",
@@ -619,7 +626,15 @@
     "deviceOn": "{browser} on {os}",
     "unknownLocation": "Unknown location",
     "today": "Today at {time}",
-    "confirmTitle": "Confirm it's you to log this browser in"
+    "confirmTitle": "Confirm it's you to log this browser in",
+    "title": "Log this browser in?",
+    "body": "A browser is asking to open your Keeplas vault. Approving gives it full access.",
+    "codeLabel": "Code",
+    "codeOnComputer": "Code on your computer",
+    "codeBody": "Your computer shows a code next to the QR code. It must be the same.",
+    "warning": "Approve only if you are logging in on this computer right now and it shows this code. Never approve a code or link someone sent you.",
+    "approve": "Approve",
+    "decline": "Decline"
   },
   "connected": {
     "title": "You're logged in",
@@ -1366,7 +1381,7 @@
     "body": "Your other phone sends your vault key to this one, encrypted end to end. Keeplas never sees it.",
     "step1": "Open Keeplas on the phone where you’re signed in.",
     "step2": "Go to Settings → Devices → {menu}.",
-    "step3": "Scan this code, then approve.",
+    "step3": "Scan this code, check it shows the code below, then approve.",
     "expires": "This code works for 2 minutes.",
     "preparing": "Preparing a secure code…",
     "opening": "Opening your vault on this phone…",
@@ -1374,7 +1389,8 @@
     "rejected": "The other phone declined. If it wasn’t you, secure your account from that phone.",
     "failed": "This phone couldn’t be linked. Check your connection, then generate a new code.",
     "retry": "Generate a new code",
-    "note": "Only a phone already signed in to your account can approve this code."
+    "note": "Only a phone already signed in to your account can approve this code.",
+    "codeDetail": "Approve on the other phone only if it shows this same code."
   },
   "itemEdit": {
     "title": "Edit",

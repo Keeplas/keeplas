@@ -373,6 +373,21 @@ export default defineSchema({
     windowEndsAt: v.number(),
     // createdAt + 7 days: pending / approved_1 expire.
     expiresAt: v.number(),
+    // D4 code exchange, one entry per contact (commit-then-reveal, see
+    // recoveryCode in @keeplas/crypto/social). Every field is write-once.
+    // Absent on requests opened before it: the device adds it on open.
+    codeExchange: v.optional(
+      v.array(
+        v.object({
+          contactId: v.id("trusted_contacts"),
+          // H(device key ‖ device nonce), from the recovering device.
+          commitment: v.string(),
+          contactNonce: v.optional(v.string()),
+          // Revealed by the device once it holds `contactNonce`.
+          deviceNonce: v.optional(v.string()),
+        }),
+      ),
+    ),
     // G sealed to `newDevicePublicKey`, set at release.
     wrappedGateKey: v.optional(v.string()),
     releasedAt: v.optional(v.number()),

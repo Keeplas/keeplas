@@ -10,6 +10,7 @@ import {
   parsePublicKey,
   serializeSecretKey,
   parseSecretKey,
+  publicKeyFromSecretKey,
   wrapDek,
   unwrapDek,
   wrapBytes,
@@ -68,6 +69,25 @@ describe("ML-KEM-768 (post-quantum)", () => {
 
     it("rejects malformed secret keys", () => {
       expect(() => parseSecretKey("AAAA")).toThrow(/2400 bytes/);
+    });
+
+    it("rejects a public key in non-canonical base64", () => {
+      // atob ignores whitespace and missing padding: such strings decode to
+      // the same key but hash differently, so they must never be accepted.
+      const pkB64 = serializePublicKey(generateRecipientKeyPair().publicKey);
+      const spaced = `${pkB64.slice(0, 40)}\n${pkB64.slice(40)}`;
+      expect(() => parsePublicKey(spaced)).toThrow(/canonical/);
+      expect(() => parsePublicKey(pkB64.replace(/=+$/, ""))).toThrow(
+        /canonical/,
+      );
+    });
+
+    it("reads the public key back from the expanded secret key", () => {
+      const { publicKey, secretKey } = generateRecipientKeyPair();
+      expect(publicKeyFromSecretKey(secretKey)).toEqual(publicKey);
+      expect(() => publicKeyFromSecretKey(new Uint8Array(32))).toThrow(
+        /2400 bytes/,
+      );
     });
   });
 
