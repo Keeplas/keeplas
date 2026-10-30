@@ -333,9 +333,13 @@ describe("I — attacker holding the owner's iCloud / Google account", () => {
         encryptedIdentitySecretKey: "attacker-wrapped",
         encryptedAsymmetricSecretKey: "attacker-wrapped",
         encryptedAsymmetricSecretKeyPrev: "attacker-wrapped",
+        encryptedRetiredSecretKeys: "attacker-wrapped",
+        categoryNames: [],
+        folderNames: [],
+        contactPins: [],
         _audit: await signedAudit(),
       }),
-    ).rejects.toThrow("PROOF_REQUIRED");
+    ).rejects.toThrow("VAULT_PROOF_REQUIRED");
   });
 
   it("a first number (migration) is not gated", async () => {

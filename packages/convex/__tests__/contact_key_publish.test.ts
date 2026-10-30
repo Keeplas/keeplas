@@ -5,7 +5,7 @@ import {
   makeT,
   seedUser,
   asUser,
-  asPhoneProvenUser,
+  asProvenUser,
   signedAudit,
   type TestConvex,
 } from "./test.helpers";
@@ -126,7 +126,7 @@ describe("rotation.rotateKeyMaterial", () => {
       }),
     );
 
-    const as = await asPhoneProvenUser(t, contact);
+    const as = await asProvenUser(t, contact, "vault");
     await as.mutation(api.rotation.rotateKeyMaterial, {
       encryptedKeyBundle: "new-bundle",
       publicKey: "rotated-ml-kem",
@@ -135,6 +135,10 @@ describe("rotation.rotateKeyMaterial", () => {
       encryptedIdentitySecretKey: "rotated-identity-secret",
       encryptedAsymmetricSecretKey: "rotated-secret",
       encryptedAsymmetricSecretKeyPrev: "old-secret-rewrapped",
+      encryptedRetiredSecretKeys: "retired",
+      categoryNames: [],
+      folderNames: [],
+      contactPins: [],
       _audit: await signedAudit(),
     });
 

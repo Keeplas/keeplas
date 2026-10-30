@@ -4,6 +4,8 @@ import { deriveDeviceWrapKey } from "@keeplas/crypto/kdf";
 
 import * as DeviceLock from "../../modules/device-lock";
 import { fresh, importAesKey, randomBytes } from "./envelope";
+import { opensOwnerKey, type OwnerKeyFields } from "./owner-keys";
+import { openKeyBundleWithRootKey } from "./vault-keys";
 
 /**
  * Per-device unlock (M08-6). The MasterKey (and the RootKey, when known) is
@@ -211,6 +213,55 @@ export async function openDeviceVault(
   } finally {
     dwk.fill(0);
   }
+}
+
+/**
+ * This phone's keys predate a master-key rotation made on another device:
+ * neither its MasterKey nor its RootKey opens the account's keys any more.
+ * The vault must be opened again (cloud backup, 24 words or a QR link).
+ */
+export class StaleDeviceVault extends Error {
+  constructor() {
+    super("This phone holds keys from before a key rotation");
+    this.name = "StaleDeviceVault";
+  }
+}
+
+/**
+ * {@link openDeviceVault}, checked against the account. When the stored
+ * MasterKey no longer opens the owner key (rotated elsewhere, or this phone
+ * lost the rotation's response), the stored RootKey may still open the new
+ * bundle: the current MasterKey is then stored instead. Otherwise throws
+ * {@link StaleDeviceVault}, so a retired key is never used (nor re-sealed
+ * into a new kit).
+ */
+export async function openCurrentDeviceVault(
+  user: Pick<OwnerKeyFields, "_id" | "encryptedAsymmetricSecretKey"> & {
+    encryptedKeyBundle?: string;
+  },
+  prompt: string,
+  pin?: string,
+): Promise<{ masterKey: Uint8Array; rootKey: Uint8Array | null }> {
+  const keys = await openDeviceVault(user._id, prompt, pin);
+  const opens = async (raw: Uint8Array) =>
+    opensOwnerKey(user, await importAesKey(raw));
+  if (await opens(keys.masterKey)) return keys;
+  keys.masterKey.fill(0);
+  const current =
+    keys.rootKey && user.encryptedKeyBundle
+      ? await openKeyBundleWithRootKey(
+          user.encryptedKeyBundle,
+          keys.rootKey,
+        ).catch(() => null)
+      : null;
+  if (current && (await opens(current))) {
+    const caughtUp = { masterKey: current, rootKey: keys.rootKey };
+    await saveDeviceVault(user._id, caughtUp, prompt, pin);
+    return caughtUp;
+  }
+  current?.fill(0);
+  keys.rootKey?.fill(0);
+  throw new StaleDeviceVault();
 }
 
 export async function setDevicePin(

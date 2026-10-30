@@ -161,7 +161,9 @@
     "cta": "Continuer avec le passe-clé",
     "lost": "Accès perdu ?",
     "lostBody": "Votre sauvegarde, vos 24 mots ou vos contacts de confiance",
-    "failed": "Impossible de déverrouiller votre coffre. Réessayez."
+    "failed": "Impossible de déverrouiller votre coffre. Réessayez.",
+    "staleTitle": "Vos clés ont changé",
+    "staleBody": "Les clés de votre coffre ont été renouvelées sur un autre appareil : celles de ce téléphone ne fonctionnent plus. Rouvrez votre coffre avec votre sauvegarde cloud, vos 24 mots ou un QR code depuis votre autre appareil."
   },
   "otherOptions": {
     "title": "Autres options",
@@ -516,15 +518,17 @@
     "noRoot": "Ce téléphone ne détient pas la Root Key. Créez d'abord un nouveau kit.",
     "legacy": "Certains anciens fichiers utilisent encore directement l'ancienne Master Key. Ouvrez-les une fois pour les migrer.",
     "failed": "Le renouvellement n'a pas pu finir",
-    "note": "Gardez Keeplas ouvert et connecté jusqu'à 100 %.",
+    "contactKey": "Keeplas n'a pas pu vérifier le code de sécurité de {name}, rien n'a donc été modifié. Vérifiez-le dans Contacts, puis réessayez.",
+    "note": "Gardez Keeplas ouvert et connecté jusqu'à 100 %. S'il s'arrête, relancez-le : il reprend là où il s'était arrêté.",
     "whenTitle": "Quand le faire",
     "when1": "Un téléphone ou un ordinateur où votre coffre était ouvert a été perdu ou volé.",
     "when2": "Vous avez retiré un appareil en qui vous n'avez pas confiance.",
     "when3": "Le support Keeplas vous l'a demandé.",
     "whatTitle": "Ce qui se passe",
-    "what1": "Ce téléphone crée de nouvelles clés et reverrouille chaque élément et chaque partage.",
-    "what2": "Les anciennes clés ne peuvent plus ouvrir votre coffre.",
-    "what3": "Rien d'autre ne change : vos éléments, contacts, passe-clé, 24 mots et sauvegarde cloud restent les mêmes.",
+    "what1": "Ce téléphone crée de nouvelles clés et reverrouille avec elles chaque élément et chaque partage.",
+    "what2": "Les anciennes clés et vos anciens 24 mots ne fonctionnent plus. Vos autres téléphones et navigateurs sont déconnectés jusqu'à ce que vous y rouvriez le coffre.",
+    "what3": "Vos éléments et contacts restent les mêmes, et votre sauvegarde cloud est renouvelée. Si vous gardez un kit de récupération papier, refaites-en un dans les Réglages.",
+    "what4": "Le contenu de chaque élément n'est pas rechiffré : quelqu'un qui a déjà ouvert un élément avec les anciennes clés pourrait encore le lire s'il en obtenait une copie. Les nouveaux éléments sont protégés.",
     "confirmTitle": "Renouveler vos clés maintenant ?",
     "confirmBody": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total). Cela prend en général environ une minute.",
     "confirmBodyShared": "Keeplas va reverrouiller chaque élément de votre coffre ({items} au total) et ce que vous partagez avec vos contacts ({contacts}). Cela prend en général environ une minute.",
@@ -1002,6 +1006,7 @@
     "notFound": "Ce contact n'existe plus."
   },
   "categories": {
+    "unnamed": "Catégorie sans nom",
     "new": "Nouvelle catégorie",
     "newBody": "Les noms de catégorie sont chiffrés comme les éléments qu'elles contiennent.",
     "name": "Nom de la catégorie",

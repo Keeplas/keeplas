@@ -142,7 +142,7 @@ export default function Home() {
             key={category.id}
             icon="document"
             tint={palette.category.other}
-            label={category.name ?? t("item.decrypting")}
+            label={category.name ?? t("categories.unnamed")}
             count={byCategory.get(category.id) ?? 0}
             onPress={() => openCategory(category.id)}
           />
