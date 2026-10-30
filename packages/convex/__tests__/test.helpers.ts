@@ -16,8 +16,16 @@ const modules = import.meta.glob("../**/*.*s");
 
 export type TestConvex = ReturnType<typeof convexTest>;
 
-export function makeT(): TestConvex {
-  return convexTest(schema, modules);
+/**
+ * `enforceLimits` makes every transaction fail like production does past the
+ * Convex limits (16 MiB / 32k documents read, 1000 scheduled functions…).
+ */
+export function makeT(opts: { enforceLimits?: boolean } = {}): TestConvex {
+  return convexTest({
+    schema,
+    modules,
+    transactionLimits: opts.enforceLimits ?? false,
+  });
 }
 
 /**

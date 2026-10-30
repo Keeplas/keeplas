@@ -20,6 +20,7 @@ import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
 import { verifyLifeCheckToken } from "./lib/life_check_token";
 import { isEscalationPaused } from "./lib/pause";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
 
 const FREQUENCY_DAYS: Record<string, number> = {
   weekly: 7,
@@ -50,6 +51,12 @@ export const DEFAULT_CONFIRMATION_THRESHOLD = 2;
 const CONFIRMATION_WINDOW_DAYS = 7;
 /** How long after a quorum's grace the window re-checks the cycle ended. */
 const RESOLVE_RECHECK_MS = 60 * 60 * 1000;
+/**
+ * Configs the evaluator reads per run. A cycle start schedules at most 7
+ * functions (3 channels + 3 reminders + the handoff), so a full page stays
+ * well under the 1000 scheduled functions a mutation may create.
+ */
+const EVALUATOR_BATCH_SIZE = 100;
 
 /**
  * Resolve the inactivity threshold for a config. Falls back to the legacy
@@ -124,6 +131,12 @@ export const saveConfig = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
+    // One entry per channel: every enabled entry is a send at each reminder,
+    // so a repeated one would multiply the check-in messages.
+    const types = new Set(args.activeChannels.map((c) => c.type));
+    if (types.size !== args.activeChannels.length) {
+      throw new ConvexError("Each channel can only be listed once");
+    }
     const now = Date.now();
     const thresholdDays = FREQUENCY_DAYS[args.frequency];
     const nextCheckAt = now + thresholdDays * DAY_MS;
@@ -365,8 +378,19 @@ type ChannelEntry = {
   isEnabled: boolean;
 };
 
+/**
+ * The enabled channels, once each. Configs saved before `saveConfig` refused
+ * repeated entries may list a channel many times: each must still be one send.
+ */
 function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
-  return channels.filter((c) => c.isEnabled);
+  const seen = new Set<ChannelEntry["type"]>();
+  const enabled: ChannelEntry[] = [];
+  for (const channel of channels) {
+    if (!channel.isEnabled || seen.has(channel.type)) continue;
+    seen.add(channel.type);
+    enabled.push(channel);
+  }
+  return enabled;
 }
 
 /**
@@ -470,13 +494,14 @@ async function startCycleForConfig(
 }
 
 /**
- * Internal: Initiate a new Life Check cycle (legacy entry, kept for
- * backwards compatibility with any caller scheduling cycles directly).
+ * Internal: Initiate a new Life Check cycle. The evaluator runs it as a
+ * subtransaction per config, so one config that fails to start rolls back
+ * alone. Returns the new cycle ID, or null when none was started.
  */
 export const initiateCycle = internalMutation({
   args: { configId: v.id("life_check_configs") },
   handler: async (ctx, args) => {
-    await startCycleForConfig(ctx, args.configId);
+    return await startCycleForConfig(ctx, args.configId);
   },
 });
 
@@ -778,23 +803,29 @@ export const confirmFromEmailToken = action({
  * Cron-driven evaluator. For every active config, decide whether the user
  * has crossed their inactivity threshold. If yes and no cycle is in flight,
  * initiate a new cycle. Travel mode skips evaluation (and auto-disables
- * once expired). Escalation timing across channels is handled in PR2.
+ * once expired).
+ *
+ * Reads one page of configs per run and schedules itself on the next page
+ * (lib/batch.ts), so the work per transaction stays bounded however many
+ * accounts there are. Each cycle starts in its own subtransaction: a config
+ * that can't start fails alone instead of halting every user's Life Check.
+ * Re-running a page is harmless: a config with a cycle in flight is skipped.
  */
 export const evaluateAllConfigs = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: batchArgs,
+  handler: async (ctx, args) => {
     // Kill switch: the inactivity counting is frozen — no new cycle starts.
     if (isEscalationPaused()) return { evaluated: 0, initiated: 0 };
 
     const now = Date.now();
-    const configs = await ctx.db
+    const page = await ctx.db
       .query("life_check_configs")
       .withIndex("by_active_activity", (q) => q.eq("isActive", true))
-      .collect();
+      .paginate(batchPage(EVALUATOR_BATCH_SIZE, args.cursor));
 
     let initiated = 0;
 
-    for (const config of configs) {
+    for (const config of page.page) {
       if (config.travelModeEnabled) {
         if (config.travelModeUntil === undefined) {
           // Legacy open-ended travel mode (before a return date was
@@ -824,11 +855,22 @@ export const evaluateAllConfigs = internalMutation({
       const inFlight = await findInFlightCycle(ctx, config.userId);
       if (inFlight) continue;
 
-      const cycleId = await startCycleForConfig(ctx, config._id);
-      if (cycleId) initiated++;
+      try {
+        const cycleId: Id<"life_check_cycles"> | null = await ctx.runMutation(
+          internal.life_check.initiateCycle,
+          { configId: config._id },
+        );
+        if (cycleId) initiated++;
+      } catch (error) {
+        console.error(
+          `Life Check evaluator: no cycle started for config ${config._id}`,
+          error,
+        );
+      }
     }
 
-    return { evaluated: configs.length, initiated };
+    await scheduleNextBatch(ctx, page, internal.life_check.evaluateAllConfigs);
+    return { evaluated: page.page.length, initiated };
   },
 });
 
