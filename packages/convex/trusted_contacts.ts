@@ -30,7 +30,10 @@ import {
   verifiedChannels,
 } from "./lib/identity";
 import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
-import { publishContactKeyToOwnerRows } from "./lib/contact_key";
+import {
+  contactHasWraps,
+  publishContactKeyToOwnerRows,
+} from "./lib/contact_key";
 import { trustContactsHealth } from "./recovery";
 
 /**
@@ -41,17 +44,24 @@ import { trustContactsHealth } from "./recovery";
 export const MIN_TRUST_CONTACTS_FOR_RECOVERY = 2;
 
 /**
- * Get all trusted contacts for the authenticated user.
+ * Get all trusted contacts for the authenticated user, each with `hasWraps`
+ * (already sealed to) for verify-before-wrap.
  */
 export const getContacts = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireFullAuth(ctx);
-    return await ctx.db
+    const contacts = await ctx.db
       .query("trusted_contacts")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) => q.neq(q.field("invitationStatus"), "revoked"))
       .collect();
+    return await Promise.all(
+      contacts.map(async (contact) => ({
+        ...contact,
+        hasWraps: await contactHasWraps(ctx, contact._id),
+      })),
+    );
   },
 });
 
@@ -911,12 +921,14 @@ export const republishContactPublicKey = auditedMutation({
 /**
  * TOFU pin (finding #2). The OWNER pins a contact's identity-key fingerprint
  * the first time the client successfully verifies it for wrapping. The
- * fingerprint is computed client-side (`identityKeyFingerprint`) so the server
- * never decides what is trusted — it only persists the owner's decision.
+ * fingerprint and its `mac` (HMAC under a MasterKey-derived key) are computed
+ * client-side, so the server never decides what is trusted and cannot forge a
+ * pin — it only persists the owner's decision.
  *
- * First-pin only: refuses if the row already carries a pin. A deliberate
- * key change goes through the separate, explicit `repinContactIdentity`, so a
- * silent server substitution can never overwrite an existing pin.
+ * First pin, or the same identity's MAC: a legacy unMACed pin being upgraded,
+ * or a pin re-MACed after a MasterKey rotation. A different identity goes
+ * through the separate, explicit `repinContactIdentity`. `mac` stays optional
+ * for older clients, which may only pin a contact that has no pin yet.
  */
 export const pinContactIdentity = auditedMutation({
   action: "trusted_contact.identity_pinned",
@@ -925,6 +937,7 @@ export const pinContactIdentity = auditedMutation({
   args: {
     contactId: v.id("trusted_contacts"),
     fingerprint: v.string(),
+    mac: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -932,11 +945,15 @@ export const pinContactIdentity = auditedMutation({
     if (!contact || contact.userId !== userId) {
       throw new Error("Contact not found");
     }
-    if (contact.pinnedIdentityFingerprint) {
+    if (
+      contact.pinnedIdentityFingerprint &&
+      (contact.pinnedIdentityFingerprint !== args.fingerprint || !args.mac)
+    ) {
       throw new Error("Contact identity is already pinned");
     }
     await ctx.db.patch(args.contactId, {
       pinnedIdentityFingerprint: args.fingerprint,
+      pinnedIdentityMac: args.mac,
       updatedAt: Date.now(),
     });
     return { pinned: true };
@@ -945,8 +962,8 @@ export const pinContactIdentity = auditedMutation({
 
 /**
  * Explicit re-pin (finding #2). Used ONLY when the owner deliberately accepts
- * a contact's identity-key change after the blocking alert — never automatic.
- * Overwrites the existing pin with the new fingerprint the owner reviewed.
+ * a contact's identity after the blocking alert — never automatic. Overwrites
+ * the existing pin with the fingerprint (and MAC) the owner reviewed.
  */
 export const repinContactIdentity = auditedMutation({
   action: "trusted_contact.identity_repinned",
@@ -955,6 +972,7 @@ export const repinContactIdentity = auditedMutation({
   args: {
     contactId: v.id("trusted_contacts"),
     fingerprint: v.string(),
+    mac: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
@@ -964,6 +982,7 @@ export const repinContactIdentity = auditedMutation({
     }
     await ctx.db.patch(args.contactId, {
       pinnedIdentityFingerprint: args.fingerprint,
+      pinnedIdentityMac: args.mac,
       updatedAt: Date.now(),
     });
     return { repinned: true };

@@ -21,6 +21,7 @@ import {
 import { auditedMutation } from "./audit";
 import { completeHandoff } from "./capture_handoffs";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
+import { contactHasWraps } from "./lib/contact_key";
 import {
   claimUpload,
   discardUnclaimedBlob,
@@ -746,14 +747,17 @@ export const getItemsNeedingRewrap = query({
     if (ready.length === 0) return [];
 
     // Items each ready contact already holds a wrap for (a handful of
-    // contacts, so one indexed read each).
+    // contacts, so one indexed read each), and whether it was sealed to at
+    // all (verify-before-wrap refuses a missing pin on such a contact).
     const wrapped = new Map<Id<"trusted_contacts">, Set<Id<"vault_items">>>();
+    const hasWraps = new Map<Id<"trusted_contacts">, boolean>();
     for (const contact of ready) {
       const keys = await ctx.db
         .query("vault_item_recipient_keys")
         .withIndex("by_contact", (q) => q.eq("contactId", contact._id))
         .collect();
       wrapped.set(contact._id, new Set(keys.map((k) => k.itemId)));
+      hasWraps.set(contact._id, await contactHasWraps(ctx, contact._id));
     }
 
     const result = [];
@@ -773,11 +777,14 @@ export const getItemsNeedingRewrap = query({
         encryptionType: item.encryptionType,
         readyContacts: owed.map((c) => ({
           _id: c._id,
+          contactUserId: c.contactUserId,
           name: c.name,
           contactPublicKey: c.contactPublicKey!,
           contactIdentityPublicKey: c.contactIdentityPublicKey!,
           contactPublicKeySignature: c.contactPublicKeySignature!,
           pinnedIdentityFingerprint: c.pinnedIdentityFingerprint,
+          pinnedIdentityMac: c.pinnedIdentityMac,
+          hasWraps: hasWraps.get(c._id)!,
         })),
       });
     }

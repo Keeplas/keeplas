@@ -327,6 +327,30 @@ describe("owner recovery", () => {
     expect(shares).toHaveLength(5);
   });
 
+  it("setup targets carry what verify-before-seal needs", async () => {
+    const t = makeT();
+    const { owner, contacts } = await setupOwner(t, 2);
+    await t.run((ctx) =>
+      ctx.db.patch(contacts[0].contactId, {
+        pinnedIdentityFingerprint: "fp",
+        pinnedIdentityMac: "mac",
+      }),
+    );
+    const { contacts: targets } = await owner.query(
+      api.recovery.getSetupTargets,
+      {},
+    );
+    expect(targets.map((c) => c.contactUserId).sort()).toEqual(
+      contacts.map((c) => c.userId).sort(),
+    );
+    expect(
+      targets.find((c) => c.contactId === contacts[0].contactId)
+        ?.pinnedIdentityMac,
+    ).toBe("mac");
+    // Shares are sealed now: a missing pin is not a first use any more.
+    expect(targets.every((c) => c.hasWraps)).toBe(true);
+  });
+
   it("refuses a request with fewer than 2 contacts set up (M09-6)", async () => {
     const t = makeT();
     const ownerId = await t.run((ctx) => ctx.db.insert("users", {}));

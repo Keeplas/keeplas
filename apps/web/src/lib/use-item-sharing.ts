@@ -2,12 +2,15 @@ import { useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { contactKeyMaterial } from "@keeplas/crypto/sig";
 import { toast } from "@keeplas/ui";
 import { useTranslations } from "./i18n";
 import { useMasterKey } from "./master-key-context";
 import { useBlockedWrapAlert } from "./use-blocked-wrap-alert";
-import { useRecipientCrypto } from "./use-recipient-crypto";
-import { toWrapRecipient, type BlockedContact } from "./verify-contact-key";
+import {
+  useRecipientCrypto,
+  type BlockedContact,
+} from "./use-recipient-crypto";
 
 type ContactId = Id<"trusted_contacts">;
 
@@ -37,16 +40,14 @@ export function sharingFields(contactIds: ContactId[]) {
       };
 }
 
-const isHard = (blocked: BlockedContact) =>
-  blocked.reason === "signature_invalid" ||
-  blocked.reason === "fingerprint_changed";
+const isHard = (blocked: BlockedContact) => blocked.reason !== "unverifiable";
 
 /**
  * Wrapping an item key to the contacts who can open it (verify before wrap,
- * finding #2). A possible key substitution (bad signature, changed
- * fingerprint) blocks: the owner may re-pin once, otherwise `wrap` returns
- * null and nothing is saved. A contact who hasn't published a key yet is
- * deferred, not blocking (useBackfillPendingShares wraps it later).
+ * finding #2). A possible key substitution (bad signature, changed or
+ * unconfirmed identity) blocks: the owner may re-trust once, otherwise `wrap`
+ * returns null and nothing is saved. A contact who hasn't published a key yet
+ * is deferred, not blocking (useBackfillPendingShares wraps it later).
  */
 export function useItemSharing() {
   const t = useTranslations("vaultItem.sharing");
@@ -69,7 +70,7 @@ export function useItemSharing() {
       const recipients = [...new Set(contactIds)]
         .map((id) => contacts?.find((contact) => contact._id === id))
         .filter((contact) => contact !== undefined)
-        .map(toWrapRecipient);
+        .map(contactKeyMaterial);
       const attempt = async () => {
         if (existingDek) {
           return {

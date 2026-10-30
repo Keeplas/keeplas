@@ -5,6 +5,11 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import { generateMasterKey } from "@keeplas/crypto/aes";
 import { serializeSecretKey, wrapDek } from "@keeplas/crypto/kem";
+import {
+  contactKeyMaterial,
+  deriveContactTrust,
+  type ContactKeyMaterial,
+} from "@keeplas/crypto/sig";
 
 import { Button } from "@/components/button";
 import { ProgressBar } from "@/components/controls";
@@ -13,10 +18,11 @@ import { Screen } from "@/components/screen";
 import { StateSheet } from "@/components/state-message";
 import { BulletCard, Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
+import { requireCarriedOverKey } from "@/crypto/contact-keys";
 import { readDeviceRootKey, saveDeviceVault } from "@/crypto/device-vault";
 import { encryptText, exportRawKey } from "@/crypto/envelope";
 import { buildKeyBundle, createPublicKeyMaterial } from "@/crypto/vault-keys";
+import { useContactTrust } from "@/features/vault/use-contact-trust";
 import { useVaultData } from "@/features/vault/vault-data";
 import { useEnsureSessionProof } from "@/features/vault-proof";
 import { serverMessage } from "@/lib/errors";
@@ -42,7 +48,7 @@ export default function RotateKeys() {
   const rotate = useAuditedMutation(api.rotation.rotateKeyMaterial);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const finalize = useAuditedMutation(api.rotation.finalizeRotation);
-  const pin = useAuditedMutation(api.trusted_contacts.pinContactIdentity);
+  const { trust, pin: persistPin } = useContactTrust();
   const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const [busy, setBusy] = useState(false);
   const [items, setItems] = useState<Items | null>(null);
@@ -81,12 +87,25 @@ export default function RotateKeys() {
       devicePin = pinned.pin;
       if (!rootKey) throw new Error(t("rotation.noRoot"));
       // Rotation replaces the identity key: it needs a proven session.
-      if (!masterKey) throw new Error("Vault is locked");
+      if (!masterKey || !trust) throw new Error("Vault is locked");
       await ensureSessionProof(masterKey);
       const oldKeys = await ownerKeys();
       const newMaster = await generateMasterKey();
       rawNew = await exportRawKey(newMaster);
-      const next = await createPublicKeyMaterial(newMaster);
+      const next = await createPublicKeyMaterial(newMaster, viewer._id);
+      // Contact pins are MACed under the MasterKey: each is verified under the
+      // current one and re-MACed under the new one, once per contact.
+      const from = await trust;
+      const to = await deriveContactTrust(viewer._id, newMaster);
+      const carried = new Map<string, Promise<string>>();
+      const carry = (contact: ContactKeyMaterial) => {
+        let key = carried.get(contact.contactId);
+        if (!key) {
+          key = requireCarriedOverKey(contact, from, to, persistPin);
+          carried.set(contact.contactId, key);
+        }
+        return key;
+      };
       await rotate({
         encryptedKeyBundle: await buildKeyBundle(
           rawNew,
@@ -104,33 +123,30 @@ export default function RotateKeys() {
           newMaster,
         ),
       });
-      // A contact's key only needs one ML-DSA verification per rotation, not
-      // one per item it is shared with.
-      const verifiedKeys = new Map<string, Promise<string>>();
+      // Every pinned contact, not only item recipients (e.g. trust contacts
+      // holding recovery shares). One that fails keeps its pin; if it is a
+      // recipient, its wrap below throws as before.
+      for (const contact of await convex.query(
+        api.trusted_contacts.getContacts,
+      )) {
+        if (!contact.pinnedIdentityFingerprint) continue;
+        await carry(contactKeyMaterial(contact)).catch(() => undefined);
+      }
       for (const [index, item] of items.entries()) {
         const dek = await itemKey(item);
         const recipients = await convex.query(api.rotation.getItemRecipients, {
           itemId: item._id,
         });
         const recipientKeys = await Promise.all(
-          recipients.map(async (recipient) => {
-            let verified = verifiedKeys.get(recipient.contactId);
-            if (!verified) {
-              verified = requireVerifiedKey(
+          recipients.map(async (recipient) => ({
+            contactId: recipient.contactId,
+            wrappedDek: await wrapDek(
+              dek,
+              await carry(
                 contactKeyMaterial({ _id: recipient.contactId, ...recipient }),
-                (contactId, fingerprint) =>
-                  pin({
-                    contactId: contactId as typeof recipient.contactId,
-                    fingerprint,
-                  }),
-              );
-              verifiedKeys.set(recipient.contactId, verified);
-            }
-            return {
-              contactId: recipient.contactId,
-              wrappedDek: await wrapDek(dek, await verified),
-            };
-          }),
+              ),
+            ),
+          })),
         );
         await updateItem({
           itemId: item._id,

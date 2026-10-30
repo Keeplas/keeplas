@@ -7,8 +7,7 @@ import {
   setArgon2idImplementation,
 } from "@keeplas/crypto/kdf";
 import { derivePhraseVerifier } from "@keeplas/crypto/recovery";
-import { parsePublicKey } from "@keeplas/crypto/kem";
-import { verifyBytes } from "@keeplas/crypto/sig";
+import { verifyKemBinding } from "@keeplas/crypto/sig";
 import { base64ToUint8, uint8ToHex } from "@keeplas/crypto/encoding";
 
 import { createArgon2idEngine, type Argon2Fn } from "../argon2";
@@ -93,7 +92,7 @@ describe("self-test (same checks as the on-device dev screen)", () => {
 
 describe("vault material matches the web onboarding format", () => {
   it("produces a v2 bundle, a salted verifier and signed public keys", async () => {
-    const m = await createVaultMaterial();
+    const m = await createVaultMaterial("u1");
     expect(m.phrase).toHaveLength(24);
     const bundle = JSON.parse(m.encryptedKeyBundle);
     expect(Object.keys(bundle).sort()).toEqual([
@@ -109,13 +108,15 @@ describe("vault material matches the web onboarding format", () => {
     );
 
     const { publicKeys } = m;
+    // v1 key binding: the ML-KEM key is signed for this account.
     expect(
-      verifyBytes(
-        publicKeys.identityPublicKey,
-        parsePublicKey(publicKeys.publicKey),
-        publicKeys.publicKeySignature,
-      ),
-    ).toBe(true);
+      await verifyKemBinding({
+        identityPublicKey: publicKeys.identityPublicKey,
+        kemPublicKey: publicKeys.publicKey,
+        signature: publicKeys.publicKeySignature,
+        userId: "u1",
+      }),
+    ).toBe(1);
 
     const masterKey = await importMasterKey(m.rawMasterKey);
     const identitySecret = await unwrapSecretUnderMasterKey(
@@ -136,7 +137,7 @@ describe("vault material matches the web onboarding format", () => {
   });
 
   it("refuses a wrong phrase and legacy v1 bundles", async () => {
-    const m = await createVaultMaterial();
+    const m = await createVaultMaterial("u1");
     const wrong = [...m.phrase].reverse();
     await expect(openKeyBundle(m.encryptedKeyBundle, wrong)).rejects.toThrow();
     await expect(
@@ -148,8 +149,8 @@ describe("vault material matches the web onboarding format", () => {
   });
 
   it("seals given words into separate vaults, each with its own salt", async () => {
-    const first = await createVaultMaterial();
-    const second = await createVaultMaterial(first.phrase);
+    const first = await createVaultMaterial("u1");
+    const second = await createVaultMaterial("u2", first.phrase);
     expect(second.phrase).toEqual(first.phrase);
     expect(second.phraseSalt).not.toBe(first.phraseSalt);
     expect(second.rawMasterKey).not.toEqual(first.rawMasterKey);

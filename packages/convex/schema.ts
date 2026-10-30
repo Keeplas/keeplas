@@ -939,6 +939,11 @@ export default defineSchema({
     // identity key later changes, the recomputed fingerprint differs from the
     // pin and the owner is blocked from wrapping until they explicitly re-pin.
     pinnedIdentityFingerprint: v.optional(v.string()),
+    // The owner's HMAC over the pin (key derived from their MasterKey, see
+    // packages/crypto/src/sig/contact-trust.ts). The server cannot forge it,
+    // so a rewritten pin is refused client-side. Absent on legacy pins, which
+    // clients upgrade on their next verify.
+    pinnedIdentityMac: v.optional(v.string()),
 
     invitationStatus: v.union(
       v.literal("pending"),

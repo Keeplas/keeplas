@@ -1,6 +1,7 @@
 /**
  * The owner's long-lived key pairs, unwrapped from `users` with the
- * MasterKey: ML-KEM-768 (item DEKs, folder names, shares sealed to me) and
+ * MasterKey (the ML-KEM public key is checked against its secret key):
+ * ML-KEM-768 (item DEKs, folder names, shares sealed to me) and
  * the ML-DSA-65 identity (signatures). During a master-key rotation the
  * previous ML-KEM secret is kept too, so items not yet re-encrypted still
  * open (apps/web/src/lib/use-recipient-crypto.ts).
@@ -8,7 +9,11 @@
  * Unwrapped secrets live in memory only, in one cache that the vault lock
  * clears ({@link forgetOwnerKeys}).
  */
-import { parseSecretKey, unwrapDek } from "@keeplas/crypto/kem";
+import {
+  parseSecretKey,
+  unwrapDek,
+  verifiedOwnerPublicKey,
+} from "@keeplas/crypto/kem";
 
 import { decryptText } from "./envelope";
 
@@ -50,9 +55,12 @@ async function unwrapAll(
   }
   const secret = (wrapped: string) =>
     decryptText(wrapped, masterKey).then(parseSecretKey);
+  const secretKey = await secret(user.encryptedAsymmetricSecretKey);
   return {
-    publicKey: user.publicKey,
-    secretKey: await secret(user.encryptedAsymmetricSecretKey),
+    // Owner wraps go to the key the authenticated secret key embeds, never to
+    // a server-published copy that differs.
+    publicKey: verifiedOwnerPublicKey(secretKey, user.publicKey),
+    secretKey,
     prevSecretKey: user.encryptedAsymmetricSecretKeyPrev
       ? await secret(user.encryptedAsymmetricSecretKeyPrev)
       : null,

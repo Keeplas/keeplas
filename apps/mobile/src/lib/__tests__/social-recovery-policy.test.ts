@@ -1,6 +1,7 @@
 import {
   contactsCanRecover,
   needsSocialRecoverySetup,
+  targetKeyMaterial,
 } from "../social-recovery-policy";
 
 const health = (configured: boolean, renewalRequired = false) => ({
@@ -16,11 +17,14 @@ const health = (configured: boolean, renewalRequired = false) => ({
 
 const contact = (id: string) => ({
   contactId: id as never,
+  contactUserId: undefined,
   name: id,
   publicKey: "pk",
   identityPublicKey: undefined,
   publicKeySignature: undefined,
   pinnedIdentityFingerprint: undefined,
+  pinnedIdentityMac: undefined,
+  hasWraps: false,
 });
 
 const targets = (n: number) => ({
@@ -67,5 +71,33 @@ describe("needsSocialRecoverySetup", () => {
 
   it("leaves current material alone", () => {
     expect(needsSocialRecoverySetup(health(true), targets(2))).toBe(false);
+  });
+});
+
+describe("targetKeyMaterial", () => {
+  it("hands the verifier the target's keys under the names it reads", () => {
+    expect(
+      targetKeyMaterial({
+        contactId: "c1" as never,
+        contactUserId: "u1" as never,
+        name: "Ada",
+        publicKey: "kem",
+        identityPublicKey: "id",
+        publicKeySignature: "sig",
+        pinnedIdentityFingerprint: "fp",
+        pinnedIdentityMac: "mac",
+        hasWraps: true,
+      }),
+    ).toEqual({
+      contactId: "c1",
+      contactUserId: "u1",
+      name: "Ada",
+      contactPublicKey: "kem",
+      contactIdentityPublicKey: "id",
+      contactPublicKeySignature: "sig",
+      pinnedIdentityFingerprint: "fp",
+      pinnedIdentityMac: "mac",
+      hasWraps: true,
+    });
   });
 });
