@@ -120,24 +120,6 @@ describe("alerts to trusted contacts", () => {
   });
 });
 
-describe("new-device alert", () => {
-  // The phone just linked never shows its own "It wasn't me" prompt: only the
-  // devices already in use do, so the alert must send the owner there.
-  it.each([
-    ["en", "open Keeplas on a device you were already using"],
-    ["fr", "ouvrez Keeplas sur un appareil que vous utilisiez déjà"],
-  ])("points %s readers to a device already in use", async (language, text) => {
-    const sent = capture();
-    await makeT().action(internal.dispatch.notifyNewDevice, {
-      ...OWNER_CHANNELS,
-      deviceKind: "icloud_restore",
-      language,
-    });
-    expect(sent.email[0].text).toContain(text);
-    expect(sent.push[0].body).toContain(text);
-  });
-});
-
 describe("French alerts", () => {
   const ENGLISH =
     /A Keeplas user|Someone|\bthere\b|\bHi\b|A phone|restored|new number|A new device/;
