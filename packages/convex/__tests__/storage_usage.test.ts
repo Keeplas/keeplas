@@ -275,7 +275,7 @@ describe("storage quota on text writes", () => {
     ).rejects.toThrow("STORAGE_QUOTA_EXCEEDED");
   });
 
-  it("refuses recipient keys past the quota", async () => {
+  it("counts recipient keys but never refuses them past the quota", async () => {
     const t = makeT();
     const owner = await seedOwner(t);
     const contactId = await seedTrustContact(t, owner.userId, { n: 1 });
@@ -285,13 +285,27 @@ describe("storage quota on text writes", () => {
     );
     await setActiveBytes(t, owner.userId, 100 * MB - 100);
 
-    await expect(
-      asUser(t, owner.userId).mutation(api.vault_items.addRecipientKeys, {
-        itemId,
-        recipientKeys: [{ contactId, wrappedDek: WRAP }],
-        _audit: await signedAudit(),
-      }),
-    ).rejects.toThrow("STORAGE_QUOTA_EXCEEDED");
+    await asUser(t, owner.userId).mutation(api.vault_items.addRecipientKeys, {
+      itemId,
+      recipientKeys: [{ contactId, wrappedDek: WRAP }],
+      _audit: await signedAudit(),
+    });
+    const keys = await t.run((ctx) =>
+      ctx.db
+        .query("vault_item_recipient_keys")
+        .withIndex("by_item_contact", (q) =>
+          q.eq("itemId", itemId).eq("contactId", contactId),
+        )
+        .collect(),
+    );
+    expect(keys).toHaveLength(1);
+    const usage = await t.run((ctx) =>
+      ctx.db
+        .query("storage_usage")
+        .withIndex("by_user", (q) => q.eq("userId", owner.userId))
+        .first(),
+    );
+    expect(usage!.activeBytes).toBeGreaterThan(100 * MB - 100);
   });
 
   it("lets an owner over quota read, archive, restore from archive, re-share and re-key", async () => {

@@ -935,7 +935,8 @@ export const addRecipientKeys = auditedMutation({
       added.add(rk.contactId);
     }
 
-    await assertWithinStorageQuota(ctx, userId, keysBytes(inserts));
+    // Counted but never refused: a recipient's key is how a chosen heir gets
+    // access, and a full vault must not silently cut them off.
     for (const rk of inserts) {
       await ctx.db.insert("vault_item_recipient_keys", {
         itemId: args.itemId,
