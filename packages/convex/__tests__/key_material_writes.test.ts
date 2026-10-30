@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { api } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { verifierDigest } from "../lib/crypto";
 import {
   makeT,
   seedUser,
@@ -64,7 +65,9 @@ describe("onboarding — first vault", () => {
     });
     await as.mutation(api.onboarding.storeKeyBundle, BUNDLE);
     const user = await t.run((ctx) => ctx.db.get(userId));
-    expect(user?.recoveryPhraseHash).toBe("retried-verifier");
+    expect(user?.recoveryPhraseHash).toBe(
+      await verifierDigest("retried-verifier"),
+    );
     expect(user?.encryptedKeyBundle).toBe("new-bundle");
     expect(user?.onboardingStep).toBe("complete");
   });
@@ -78,7 +81,7 @@ describe("onboarding — replacing the kit of an existing vault", () => {
     await as.mutation(api.onboarding.storeRecoveryPhraseHash, KIT);
     await as.mutation(api.onboarding.storeKeyBundle, BUNDLE);
     const user = await t.run((ctx) => ctx.db.get(userId));
-    expect(user?.recoveryPhraseHash).toBe("new-verifier");
+    expect(user?.recoveryPhraseHash).toBe(await verifierDigest("new-verifier"));
     expect(user?.encryptedKeyBundle).toBe("new-bundle");
     expect(user?.onboardingStep).toBe("complete");
   });
@@ -90,7 +93,7 @@ describe("onboarding — replacing the kit of an existing vault", () => {
     await as.mutation(api.onboarding.storeRecoveryPhraseHash, KIT);
     await as.mutation(api.onboarding.storeKeyBundle, BUNDLE);
     const user = await t.run((ctx) => ctx.db.get(userId));
-    expect(user?.recoveryPhraseHash).toBe("new-verifier");
+    expect(user?.recoveryPhraseHash).toBe(await verifierDigest("new-verifier"));
   });
 
   it("still needs the step-up gates on a proven session", async () => {
@@ -156,6 +159,8 @@ describe("totp.bindRecoveryReset", () => {
       _audit: await signedAudit(),
     });
     const user = await t.run((ctx) => ctx.db.get(userId));
-    expect(user?.totpResetVerifierHash).toBe("owner-verifier");
+    expect(user?.totpResetVerifierHash).toBe(
+      await verifierDigest("owner-verifier"),
+    );
   });
 });

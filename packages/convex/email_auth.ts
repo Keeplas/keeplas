@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { auditContextValidator, verifyAuditContext } from "./audit";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { MOBILE_ONLY_SIGNUP } from "./attestation";
@@ -149,7 +149,7 @@ export const verifyEmailRecovery = internalQuery({
       .withIndex("email", (q) => q.eq("email", email))
       .first();
     if (!user || !user.recoveryPhraseHash) return null;
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, args.phraseHash))) {
       return null;
     }
     return user._id;

@@ -6,7 +6,7 @@ import {
   internalQuery,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { listedPhones, normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
@@ -201,7 +201,7 @@ export const verifyPhoneRecovery = internalQuery({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
     if (!user || !user.recoveryPhraseHash) return null;
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, args.phraseHash))) {
       return null;
     }
     return user._id;

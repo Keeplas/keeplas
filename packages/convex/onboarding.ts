@@ -10,6 +10,7 @@ import { internal } from "./_generated/api";
 import { requireAuth, optionalAuth, getActiveItems } from "./helpers";
 import { createAuditLog } from "./audit";
 import { requireProvenFullAuth } from "./session_proofs";
+import { verifierDigest } from "./lib/crypto";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -243,7 +244,7 @@ export const storeRecoveryPhraseHash = mutation({
     const { userId } = await requireKitWriter(ctx);
 
     await ctx.db.patch(userId, {
-      recoveryPhraseHash: args.recoveryPhraseHash,
+      recoveryPhraseHash: await verifierDigest(args.recoveryPhraseHash),
       phraseSalt: args.phraseSalt,
       recoveryVerified: true,
       onboardingStep: "verification",
