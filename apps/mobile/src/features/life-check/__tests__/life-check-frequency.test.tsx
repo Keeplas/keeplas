@@ -19,15 +19,26 @@ const mockConfig = {
   paused: false,
 };
 let mockQueried: typeof mockConfig | null = mockConfig;
+let mockPending: { quorumReached?: boolean; gracePeriodEndsAt?: number }[] = [];
 const mockSave = jest.fn(async (_args: unknown) => ({ configId: "c1" }));
 
-jest.mock("convex/react", () => ({ useQuery: () => mockQueried }));
+jest.mock("convex/react", () => ({
+  useQuery: (ref: unknown) =>
+    jest.requireActual("convex/server").getFunctionName(ref) ===
+    "access_requests:getPendingRequests"
+      ? mockPending
+      : mockQueried,
+}));
 jest.mock("@/lib/use-audited-mutation", () => ({
   useAuditedMutation: () => mockSave,
 }));
 jest.mock("expo-router", () => ({ useRouter: () => ({ back: jest.fn() }) }));
 jest.mock("@/providers/i18n-provider", () => ({
-  useI18n: () => ({ t: (key: string) => key, language: "en" }),
+  useI18n: () => ({
+    t: (key: string, params?: object) =>
+      params ? `${key} ${JSON.stringify(params)}` : key,
+    language: "en",
+  }),
 }));
 jest.mock("@/providers/theme-provider", () => ({
   useTheme: () => ({ colors: {} }),
@@ -79,6 +90,7 @@ jest.mock("@/components/button", () => {
 
 beforeEach(() => {
   mockSave.mockClear();
+  mockPending = [];
   // Confirm the change at once.
   jest
     .spyOn(Alert, "alert")
@@ -117,5 +129,41 @@ describe("Life check frequency", () => {
         { type: "email", order: 2, isEnabled: true },
       ],
     });
+  });
+});
+
+describe("Life check during an emergency access grace window", () => {
+  const endsAt = Date.now() + 48 * 3_600_000;
+
+  it("shows that emergency access is in progress and when it opens", () => {
+    mockQueried = { ...mockConfig, nextCheckAt: Date.now() - 86_400_000 };
+    mockPending = [{ quorumReached: true, gracePeriodEndsAt: endsAt }];
+    rtl.render(<LifeCheck />);
+
+    expect(rtl.screen.getByText("lifeCheck.grace.title")).toBeTruthy();
+    expect(
+      rtl.screen.getByText(/^lifeCheck\.grace\.body \{"date":/),
+    ).toBeTruthy();
+    expect(rtl.screen.queryByText("lifeCheck.nextCheckIn")).toBeNull();
+  });
+
+  it("cancels it with the I'm okay check-in", async () => {
+    mockQueried = mockConfig;
+    mockPending = [{ quorumReached: true, gracePeriodEndsAt: endsAt }];
+    rtl.render(<LifeCheck />);
+
+    rtl.fireEvent.press(rtl.screen.getByText("lifeCheck.grace.cancel"));
+    await rtl.waitFor(() =>
+      expect(mockSave).toHaveBeenCalledWith({ method: "tap" }),
+    );
+  });
+
+  it("keeps the regular countdown while contacts have not reached quorum", () => {
+    mockQueried = mockConfig;
+    mockPending = [{ quorumReached: false }];
+    rtl.render(<LifeCheck />);
+
+    expect(rtl.screen.getByText("lifeCheck.nextCheckIn")).toBeTruthy();
+    expect(rtl.screen.queryByText("lifeCheck.grace.title")).toBeNull();
   });
 });

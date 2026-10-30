@@ -5,7 +5,7 @@ import { internal } from "./_generated/api";
 import { createNotification, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
 import { activePushTokens } from "./devices";
-import { DEFAULT_CONFIRMATION_THRESHOLD } from "./life_check";
+import { DEFAULT_CONFIRMATION_THRESHOLD, clockResetFields } from "./life_check";
 
 /**
  * Count the number of DISTINCT humans behind a set of trusted-contact rows.
@@ -339,6 +339,22 @@ export const revokeReleasedAccess = auditedMutation({
       const contact = await ctx.db.get(req.requestedBy);
       if (contact?.contactUserId) {
         affectedContactUsers.add(contact.contactUserId);
+      }
+    }
+
+    // The owner is back: re-arm the Life check (it stays quiet while a release
+    // is in force) with a full fresh window, so the stale pre-release clock
+    // can't start a cycle on the next evaluator tick.
+    if (approved.length > 0) {
+      const config = await ctx.db
+        .query("life_check_configs")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first();
+      if (config) {
+        await ctx.db.patch(config._id, {
+          updatedAt: now,
+          ...clockResetFields(config, now),
+        });
       }
     }
 

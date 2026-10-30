@@ -240,13 +240,13 @@ Sign-up checks that the app is genuine (App Attest on iPhone and iPad, Play Inte
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
-- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both.
-- The contacts' side: Alex (07700 900102) and Sam (07700 900103) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a confirmed death (two contacts confirm, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
+- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a release: Family items go to Alex, the others to both.
+- The contacts' side: Alex (07700 900102) and Sam (07700 900103) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a release (two contacts confirm they can't reach the owner, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
 - In-app purchase, on the account you created: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). New accounts are on the Free plan.
 - Account deletion, on the account you created: Settings > Delete my account (erased 7 days later, can be cancelled).
 
 WHAT TAKES DAYS
-The Life check (a periodic "are you OK?" check), succession (two contacts confirm a death, then a 72-hour grace period) and recovery through contacts (a 72-hour protection window) run over days, so they can't be completed during review. The demo account's Life check is paused. Video of these flows: <VIDEO_URL>
+The Life check (a periodic "are you OK?" check), succession (two contacts confirm they can't reach the owner, then a 72-hour grace period) and recovery through contacts (a 72-hour protection window) run over days, so they can't be completed during review. The demo account's Life check is paused. Video of these flows: <VIDEO_URL>
 ```
 
 - **Attachment**: optional, the same video.

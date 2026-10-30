@@ -14,7 +14,7 @@ import { Callout, Card, ListRow, StatusChip } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { Countdown } from "@/features/life-check/countdown";
 import { ReleaseQuorumWarning } from "@/features/people/release-quorum-warning";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
@@ -42,6 +42,11 @@ export default function LifeCheck() {
   const { t, language } = useI18n();
   const { colors } = useTheme();
   const config = useQuery(api.life_check.getConfig);
+  // Contacts reached the quorum: emergency access opens when the 72h ends,
+  // unless the owner checks in (confirmAlive denies the pending request).
+  const grace = useQuery(api.access_requests.getPendingRequests)?.find(
+    (request) => request.quorumReached && request.gracePeriodEndsAt,
+  );
   const save = useAuditedMutation(api.life_check.saveConfig);
   const validate = useAuditedMutation(api.life_check.validateCycle);
   const travel = useAuditedMutation(api.life_check.toggleTravelMode);
@@ -102,7 +107,9 @@ export default function LifeCheck() {
       const { nextCheckAt } = await validate({ method: "tap" });
       toast({
         variant: "success",
-        title: t("lifeCheck.confirmedTitle"),
+        title: grace
+          ? t("lifeCheck.grace.cancelled")
+          : t("lifeCheck.confirmedTitle"),
         description: nextCheckAt
           ? t("lifeCheck.confirmedBody", {
               date: formatDate(nextCheckAt, language),
@@ -172,28 +179,48 @@ export default function LifeCheck() {
       <Text variant="h1">{t("lifeCheck.title")}</Text>
       <Text color="text.muted">{t("lifeCheck.body")}</Text>
       {config ? (
-        <Card>
-          <Text variant="caption" color="text.muted">
-            {t("lifeCheck.nextCheckIn")}
-          </Text>
-          {config.paused ? (
-            <Text>{t("lifeCheck.paused")}</Text>
-          ) : (
-            <Countdown target={config.nextCheckAt} />
-          )}
-          <Text variant="body-sm" color="text.muted">
-            {config.lastCheckAt
-              ? t("lifeCheck.lastConfirmed", {
-                  date: formatDate(config.lastCheckAt, language),
-                })
-              : t("lifeCheck.resetBody")}
-          </Text>
-          <Button
-            label={t("lifeCheck.reset")}
-            loading={confirming}
-            onPress={() => void confirm()}
-          />
-        </Card>
+        grace?.gracePeriodEndsAt ? (
+          <Card>
+            <Text variant="h3">{t("lifeCheck.grace.title")}</Text>
+            <Text variant="body-sm" color="text.muted">
+              {t("lifeCheck.grace.body", {
+                date: `${formatDate(grace.gracePeriodEndsAt, language)} · ${formatTime(grace.gracePeriodEndsAt, language)}`,
+              })}
+            </Text>
+            <Text variant="caption" color="text.muted">
+              {t("lifeCheck.grace.endsIn")}
+            </Text>
+            <Countdown target={grace.gracePeriodEndsAt} />
+            <Button
+              label={t("lifeCheck.grace.cancel")}
+              loading={confirming}
+              onPress={() => void confirm()}
+            />
+          </Card>
+        ) : (
+          <Card>
+            <Text variant="caption" color="text.muted">
+              {t("lifeCheck.nextCheckIn")}
+            </Text>
+            {config.paused ? (
+              <Text>{t("lifeCheck.paused")}</Text>
+            ) : (
+              <Countdown target={config.nextCheckAt} />
+            )}
+            <Text variant="body-sm" color="text.muted">
+              {config.lastCheckAt
+                ? t("lifeCheck.lastConfirmed", {
+                    date: formatDate(config.lastCheckAt, language),
+                  })
+                : t("lifeCheck.resetBody")}
+            </Text>
+            <Button
+              label={t("lifeCheck.reset")}
+              loading={confirming}
+              onPress={() => void confirm()}
+            />
+          </Card>
+        )
       ) : null}
       <Card>
         {FREQUENCIES.map((frequency) => (

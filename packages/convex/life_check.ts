@@ -61,7 +61,7 @@ export function resolveThresholdDays(config: {
  * resuming after a pause or coming back from travel mode — so a stale
  * `lastActivityAt` can't fire a cycle immediately on the next evaluator tick.
  */
-function clockResetFields(
+export function clockResetFields(
   config: {
     frequency: "weekly" | "monthly" | "quarterly";
     inactivityThresholdDays?: number;
@@ -371,6 +371,26 @@ function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
 }
 
 /**
+ * The switch already fired: an approved access request exists, so contacts
+ * hold access to the owner's vault. The Life check stays quiet until the owner
+ * comes back and revokes it (`access_requests.revokeReleasedAccess`, which
+ * re-arms the clock) — otherwise every elapsed threshold would ask the
+ * contacts to confirm again.
+ */
+async function hasReleaseInForce(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const approved = await ctx.db
+    .query("access_requests")
+    .withIndex("by_status", (q) =>
+      q.eq("vaultUserId", userId).eq("status", "approved"),
+    )
+    .first();
+  return approved !== null;
+}
+
+/**
  * Insert a new Life Check cycle for a config and notify the user. Shared
  * by `initiateCycle` (legacy entry) and the cron evaluator. Fans out every
  * enabled channel at once, schedules reminders across the check-in window,
@@ -402,6 +422,7 @@ async function startCycleForConfig(
 
   const enabled = enabledChannels(config.activeChannels);
   if (enabled.length === 0) return null;
+  if (await hasReleaseInForce(ctx, config.userId)) return null;
 
   const now = Date.now();
   const windowMs = (config.checkInWindowDays ?? CHECK_IN_WINDOW_DAYS) * DAY_MS;
@@ -938,6 +959,29 @@ export const enterConfirmationStage = internalMutation({
     if (!config) return;
 
     const now = Date.now();
+    // A cycle started before a release was in force (or by the pre-fix
+    // evaluator, which restarted after a release): close it instead of asking
+    // the contacts to confirm again.
+    if (await hasReleaseInForce(ctx, cycle.userId)) {
+      await ctx.db.patch(cycle._id, {
+        status: "cancelled",
+        cancelledAt: now,
+        cancelledReason: "release_in_force",
+        completedAt: now,
+      });
+      await cancelPendingSchedules(ctx, cycle._id);
+      await createAuditLog(ctx, {
+        userId: cycle.userId,
+        actorType: "system",
+        actorId: "life_check_scheduler",
+        action: "life_check_cycle_suspended",
+        resourceType: "life_check_cycle",
+        resourceId: cycle._id,
+        metadata: JSON.stringify({ reason: "release_in_force" }),
+      });
+      return;
+    }
+
     await ctx.db.patch(cycle._id, {
       status: "awaiting_confirmation",
     });
