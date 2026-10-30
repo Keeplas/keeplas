@@ -3,8 +3,10 @@
  */
 import type { secureDb as SecureDb } from "../secure-db";
 
+const mockDelete = jest.fn();
 const mockOpen = jest.fn((_: { name: string; encryptionKey: string }) => ({
   execute: jest.fn(async () => ({ rows: [] })),
+  delete: mockDelete,
 }));
 const mockStore = new Map<string, string>();
 const mockGetItem = jest.fn((key: string) => mockStore.get(key) ?? null);
@@ -33,6 +35,7 @@ function load(): typeof SecureDb {
 beforeEach(() => {
   mockStore.clear();
   mockOpen.mockClear();
+  mockDelete.mockClear();
   mockGetItem.mockClear();
 });
 
@@ -47,9 +50,18 @@ describe("secure database", () => {
     });
   });
 
+  it("drops a database file left without its key (restored from a backup)", async () => {
+    // The key never leaves the phone but the file may come back from an
+    // iPhone backup or a transfer: unreadable, so start a fresh one.
+    await load()();
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+    expect(mockOpen).toHaveBeenCalledTimes(2);
+  });
+
   it("reopens an existing install's database with its key", async () => {
     mockStore.set("keeplas.outbox.dbkey", "ab".repeat(32));
     await load()();
+    expect(mockDelete).not.toHaveBeenCalled();
     expect(mockOpen).toHaveBeenCalledWith({
       name: "keeplas-outbox.sqlite",
       encryptionKey: "ab".repeat(32),

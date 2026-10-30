@@ -17,20 +17,25 @@ import { deviceStore } from "./device-store";
 
 const KEY_NAME = "keeplas.outbox.dbkey";
 
-async function databaseKey(): Promise<string> {
+async function databaseKey(): Promise<{ key: string; created: boolean }> {
   const existing = deviceStore.getItem(KEY_NAME);
-  if (existing) return existing;
+  if (existing) return { key: existing, created: false };
   const key = uint8ToHex(randomBytes(32));
   deviceStore.setItem(KEY_NAME, key);
-  return key;
+  return { key, created: true };
 }
 
 let database: Promise<DB> | null = null;
 
 export function secureDb(): Promise<DB> {
   if (database) return database;
-  database = databaseKey().then(async (encryptionKey) => {
-    const handle = open({ name: "keeplas-outbox.sqlite", encryptionKey });
+  database = databaseKey().then(async ({ key: encryptionKey, created }) => {
+    const options = { name: "keeplas-outbox.sqlite", encryptionKey };
+    // The key never leaves this phone, but the file can come back from an
+    // iPhone backup or a phone transfer. Without its key it is unreadable:
+    // drop it so a new key starts a fresh database.
+    if (created) open(options).delete();
+    const handle = open(options);
     await handle.execute(
       `CREATE TABLE IF NOT EXISTS outbox (
         id TEXT PRIMARY KEY NOT NULL,
