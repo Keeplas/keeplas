@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { api, internal } from "../_generated/api";
 import { SIGNUP_ATTESTATION_REQUIRED } from "../attestation";
-import { makeT, type TestConvex } from "./test.helpers";
+import { LEGACY_HOURLY_MAX } from "../phone_auth";
+import { makeT, signedAuditFrom, type TestConvex } from "./test.helpers";
 
 const TEST_PHONE = "+33600000001";
 const REAL_PHONE = "+33612345678";
@@ -131,5 +132,77 @@ describe("store review phone numbers", () => {
       await requestSignin(t, REVIEW_PHONE);
       expect(await scheduledCount(t)).toBe(1);
     }
+  });
+});
+
+// The sign-in code request is public. Current app builds seal the caller's
+// IP (`_audit`): they are throttled per IP and per (number, IP), so nobody
+// can make every number receive codes or use up the owner's own budget.
+// Builds that predate `_audit` keep working on a per-number budget under a
+// global hourly ceiling.
+describe("sign-in code request limits", () => {
+  const TOO_MANY = "Too many verification attempts";
+
+  function requestFrom(t: TestConvex, phoneNumber: string, ip: string) {
+    return signedAuditFrom(ip).then((_audit) =>
+      t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+        phoneNumber,
+        intent: "signin",
+        _audit,
+      }),
+    );
+  }
+
+  it("throttles one caller across numbers, unknown ones included", async () => {
+    const t = makeT();
+    for (let n = 0; n < 10; n++) {
+      await requestFrom(t, `+3361234560${n}`, "10.0.0.1");
+    }
+
+    await expect(requestFrom(t, "+33612345699", "10.0.0.1")).rejects.toThrow(
+      "Too many requests",
+    );
+  });
+
+  it("does not let one caller use up a number's codes", async () => {
+    const t = makeT();
+    await seedPhoneUser(t, REAL_PHONE);
+    for (let i = 0; i < 3; i++) await requestFrom(t, REAL_PHONE, "10.0.0.1");
+    await expect(requestFrom(t, REAL_PHONE, "10.0.0.1")).rejects.toThrow(
+      TOO_MANY,
+    );
+
+    // The owner, from their own connection, still gets a code.
+    await expect(requestFrom(t, REAL_PHONE, "10.0.0.2")).resolves.toEqual({
+      sent: true,
+    });
+  });
+
+  it("keeps the owner's current app working when old builds flood the number", async () => {
+    const t = makeT();
+    await seedPhoneUser(t, REAL_PHONE);
+    for (let i = 0; i < 3; i++) await requestSignin(t, REAL_PHONE);
+    await expect(requestSignin(t, REAL_PHONE)).rejects.toThrow(TOO_MANY);
+
+    await expect(requestFrom(t, REAL_PHONE, "10.0.0.2")).resolves.toEqual({
+      sent: true,
+    });
+  });
+
+  it("caps codes sent to old builds across all numbers per hour", async () => {
+    const t = makeT();
+    const phone = (n: number) => `+336${String(n).padStart(8, "0")}`;
+    await t.run(async (ctx) => {
+      for (let n = 0; n <= LEGACY_HOURLY_MAX; n++) {
+        await ctx.db.insert("users", { phoneNumber: phone(n) });
+      }
+    });
+    for (let n = 0; n < LEGACY_HOURLY_MAX; n++) {
+      await requestSignin(t, phone(n));
+    }
+
+    await expect(requestSignin(t, phone(LEGACY_HOURLY_MAX))).rejects.toThrow(
+      TOO_MANY,
+    );
   });
 });

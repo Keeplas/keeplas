@@ -5,7 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import { accountLanguageTag } from "@/i18n/translate";
 import { useI18n } from "@/providers/i18n-provider";
 import { attestDevice } from "./attestation";
-import { useAuditedMutation } from "./use-audited-mutation";
+import { auditContext, useAuditedMutation } from "./use-audited-mutation";
 
 export type PhoneIntent = "signup" | "signin";
 
@@ -16,7 +16,9 @@ export class AttestationFailed extends Error {}
  * Send the WhatsApp sign-up / sign-in code. A sign-up code is only issued
  * after this phone attested itself (createChallenge → App Attest / Play
  * Integrity → attestation_node.verify), and each grant is single use, so a
- * resend attests again.
+ * resend attests again. The request carries the sealed context when it can
+ * be fetched, so the server throttles per connection rather than sharing one
+ * budget per number with whoever else asks for it.
  */
 export function useRequestPhoneCode() {
   const { language } = useI18n();
@@ -41,6 +43,7 @@ export function useRequestPhoneCode() {
         phoneNumber,
         intent,
         language: accountLanguageTag(language),
+        _audit: await auditContext.get().catch(() => undefined),
       });
     },
     [createChallenge, verifyAttestation, requestOtp, language],
