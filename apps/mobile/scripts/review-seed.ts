@@ -22,6 +22,7 @@ import { ConvexHttpClient } from "convex/browser";
 import type { FunctionArgs } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { listedPhones } from "@keeplas/backend/lib/phone";
 
 import { contactKeyMaterial, requireVerifiedKey } from "@/crypto/contact-keys";
 import {
@@ -53,14 +54,14 @@ import {
 import { openSealedItem } from "@/features/vault/open-sealed-item";
 import { generatePhrase } from "@keeplas/crypto/recovery";
 
-const OWNER = { phone: "+447700900101", name: "Demo Owner" };
-const ALEX = { phone: "+447700900102", name: "Alex Demo" };
-const SAM = { phone: "+447700900103", name: "Sam Demo" };
 const KIT = "REVIEW_KIT";
 const ASSETS = resolve("apps/mobile/scripts/review-seed");
 const DAY_MS = 86_400_000;
 
-type Person = typeof OWNER;
+interface Person {
+  phone: string;
+  name: string;
+}
 
 interface Account {
   person: Person;
@@ -129,6 +130,17 @@ if (!(process.env.CONVEX_DEPLOYMENT ?? "").startsWith("prod:")) {
 const CONVEX_URL = need("NEXT_PUBLIC_CONVEX_URL");
 const APP_URL = need("NEXT_PUBLIC_APP_URL");
 const REVIEW_CODE = need("REVIEW_CODE");
+// The demo accounts are the first three REVIEW_PHONES numbers (APP_REVIEW.md
+// → Review numbers): the numbers are kept out of this public repo.
+const [ownerPhone, alexPhone, samPhone] = listedPhones(need("REVIEW_PHONES"));
+if (!samPhone) {
+  throw new Error(
+    "REVIEW_PHONES must start with the owner, contact 1 and contact 2 numbers",
+  );
+}
+const OWNER: Person = { phone: ownerPhone, name: "Demo Owner" };
+const ALEX: Person = { phone: alexPhone, name: "Alex Demo" };
+const SAM: Person = { phone: samPhone, name: "Sam Demo" };
 
 interface AuditContext {
   ip: string;

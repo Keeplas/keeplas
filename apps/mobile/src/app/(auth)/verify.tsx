@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuthActions } from "@convex-dev/auth/react";
 
+import { Button } from "@/components/button";
 import { CodeVerification } from "@/features/code-verification";
 import { accountLanguageTag } from "@/i18n/translate";
 import { attestationReference } from "@/lib/attestation";
@@ -55,6 +56,22 @@ export default function VerifyScreen() {
           });
         }
       }}
+      footer={
+        // The server answers a sign-in for a number with no account like any
+        // other and sends nothing (no account enumeration), so offer sign-up.
+        intent === "signin" ? (
+          <Button
+            variant="text"
+            label={t("phone.createAccount")}
+            onPress={() =>
+              router.dismissTo({
+                pathname: "/phone",
+                params: { intent: "signup" },
+              })
+            }
+          />
+        ) : undefined
+      }
     />
   );
 }

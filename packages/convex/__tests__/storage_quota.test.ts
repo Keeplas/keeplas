@@ -140,6 +140,43 @@ describe("storage quota enforcement", () => {
     await expect(createItemWithFile(t, userId, vaultId)).resolves.toBeDefined();
   });
 
+  it("counts files on release introductions, so flipping an item in and out of intro mode frees nothing", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    const vaultId = await seedVault(t, userId);
+    const intro = await seedStorageRef(t, 60 * MB);
+    const itemId = (await asUser(t, userId).mutation(
+      api.vault_items.createItem,
+      {
+        vaultId,
+        encryptedMeta: META,
+        encryptedTitle: META,
+        encryptedContent: META,
+        accessLevel: "trusted_only",
+        isReleaseIntroduction: true,
+        files: [{ storageId: intro, iv: "aXY=", encryptedMeta: META }],
+        _audit: await signedAudit(),
+      },
+    )) as Id<"vault_items">;
+
+    // A second 60 MB upload no longer fits the free 100 MB.
+    await expect(
+      createItemWithFile(t, userId, vaultId, 60 * MB),
+    ).rejects.toThrow("STORAGE_QUOTA_EXCEEDED");
+
+    // Turning the intro into a normal item keeps the same usage.
+    await asUser(t, userId).mutation(api.vault_items.updateItem, {
+      itemId,
+      isReleaseIntroduction: false,
+      accessLevel: "private",
+      _audit: await signedAudit(),
+    });
+    const usage = await asUser(t, userId).query(api.vaults.canStore, {
+      bytes: 1,
+    });
+    expect(usage.usedBytes).toBe(sizeBucket(60 * MB));
+  });
+
   it("rejects an addItemFiles upload that would cross the free quota", async () => {
     const t = makeT();
     const userId = await seedUser(t);

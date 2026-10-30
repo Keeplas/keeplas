@@ -64,12 +64,15 @@ http.route({
 });
 
 /**
- * RevenueCat webhook. Fulfils an in-app (App Store / Play) Lifetime purchase:
- * a `NON_RENEWING_PURCHASE` carrying the Lifetime entitlement flips the buyer
- * (`app_user_id` = Convex user id) to `lifetime` idempotently — see
- * `billing.fulfillStorePurchase`. A `TRANSFER` (purchase restored onto another
- * account) grants the receiving account. All other event types, including the
- * dashboard's `TEST`, are acknowledged with 200 so RevenueCat does not retry.
+ * RevenueCat webhook. Keeps the Lifetime plan in step with the store
+ * (`app_user_id` = Convex user id), each event idempotent — see billing.ts:
+ * - `NON_RENEWING_PURCHASE` with the Lifetime entitlement grants the buyer;
+ * - `CANCELLATION` (a refund, for a one-time purchase) or `EXPIRATION` of it
+ *   revokes it, and `REFUND_REVERSED` grants it again;
+ * - `TRANSFER` (purchase restored onto another account) moves it from
+ *   `transferred_from` to `transferred_to`.
+ * All other event types, including the dashboard's `TEST`, are acknowledged
+ * with 200 so RevenueCat does not retry.
  *
  * Amounts are stored in USD (`price`, RevenueCat's converted price) so the
  * admin revenue totals stay comparable across storefront currencies. Sandbox
@@ -96,6 +99,7 @@ http.route({
       entitlement_ids?: string[] | null;
       price?: number;
       environment?: string;
+      transferred_from?: string[];
       transferred_to?: string[];
     };
     try {
@@ -104,24 +108,33 @@ http.route({
       return new Response("bad request", { status: 400 });
     }
 
-    if (
-      event.type === "NON_RENEWING_PURCHASE" &&
+    const lifetime =
       event.entitlement_ids?.includes(LIFETIME_ENTITLEMENT_ID) &&
       event.app_user_id &&
       event.transaction_id
-    ) {
+        ? { appUserId: event.app_user_id, transactionId: event.transaction_id }
+        : null;
+
+    if (event.type === "NON_RENEWING_PURCHASE" && lifetime) {
       await ctx.runMutation(internal.billing.fulfillStorePurchase, {
-        appUserId: event.app_user_id,
-        transactionId: event.transaction_id,
+        ...lifetime,
         amountCents:
           event.environment === "SANDBOX"
             ? 0
             : Math.round((event.price ?? 0) * 100),
         currency: "usd",
       });
+    } else if (
+      (event.type === "CANCELLATION" || event.type === "EXPIRATION") &&
+      lifetime
+    ) {
+      await ctx.runMutation(internal.billing.refundStorePurchase, lifetime);
+    } else if (event.type === "REFUND_REVERSED" && lifetime) {
+      await ctx.runMutation(internal.billing.reinstateStorePurchase, lifetime);
     } else if (event.type === "TRANSFER" && event.transferred_to?.length) {
-      await ctx.runMutation(internal.billing.grantStoreTransfer, {
-        appUserIds: event.transferred_to,
+      await ctx.runMutation(internal.billing.transferStorePurchase, {
+        fromAppUserIds: event.transferred_from ?? [],
+        toAppUserIds: event.transferred_to,
       });
     }
 

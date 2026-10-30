@@ -8,7 +8,7 @@ import {
 } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
-import { accessLevelValidator } from "./validators";
+import { writableAccessLevelValidator } from "./validators";
 import {
   requireFullAuth,
   getUserVault,
@@ -22,15 +22,17 @@ import { auditedMutation } from "./audit";
 import { completeHandoff } from "./capture_handoffs";
 import { PLAN_QUOTA_BYTES, getUserPlan } from "./lib/plans";
 import {
-  claimBlob,
+  claimUpload,
   discardUnclaimedBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
   getBlobSize,
   sizeBucket,
   storageRefValidator,
+  sweepUnclaimedBlobs,
   type StorageRef,
 } from "./lib/storage";
+import { internal } from "./_generated/api";
 
 const triggerTypeValidator = v.union(
   v.literal("life_check_failure"),
@@ -267,8 +269,8 @@ export const getItemFiles = query({
 });
 
 /**
- * Return a short-lived signed URL that lets the client fetch a stored
- * ciphertext blob for in-browser decryption.
+ * Return the download URL of a stored ciphertext blob, for decryption on the
+ * client. It never expires (see lib/storage.ts getBlobDownloadUrl).
  */
 export const getItemFileUrl = query({
   args: { fileId: v.id("vault_item_files") },
@@ -293,8 +295,8 @@ export const generateUploadUrl = auditedMutation({
   resourceType: "vault",
   args: {},
   handler: async (ctx) => {
-    await requireFullAuth(ctx);
-    return await generateBlobUploadUrl(ctx);
+    const userId = await requireFullAuth(ctx);
+    return await generateBlobUploadUrl(ctx, userId);
   },
 });
 
@@ -310,6 +312,25 @@ export const discardUploads = auditedMutation({
       if (await discardUnclaimedBlob(ctx, ref)) discarded += 1;
     }
     return { discarded };
+  },
+});
+
+/**
+ * Daily sweep (crons.ts) of uploads never attached to an item or avatar.
+ * They count toward no quota, so an abandoned or abusive upload would
+ * otherwise stay in storage for good. Reschedules itself until done.
+ */
+export const sweepUnclaimedUploads = internalMutation({
+  args: { after: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const next = await sweepUnclaimedBlobs(ctx, args.after);
+    if (next !== null) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.vault_items.sweepUnclaimedUploads,
+        { after: next },
+      );
+    }
   },
 });
 
@@ -344,7 +365,7 @@ async function measureFiles(
   const measured = [];
   for (const file of files) {
     const size = await getBlobSize(ctx, file.storageId);
-    if (size === null || !(await claimBlob(ctx, file.storageId, userId))) {
+    if (size === null || !(await claimUpload(ctx, file.storageId, userId))) {
       throw new Error("Uploaded file not found");
     }
     measured.push({ ...file, sizeBucket: sizeBucket(size) });
@@ -426,7 +447,7 @@ export const createItem = auditedMutation({
     encryptedTitle: v.string(),
     encryptedContent: v.string(),
     encryptedLinks: v.optional(v.string()),
-    accessLevel: accessLevelValidator,
+    accessLevel: writableAccessLevelValidator,
     encryptionType: v.optional(
       v.union(v.literal("aes_256_gcm"), v.literal("zero_knowledge")),
     ),
@@ -599,7 +620,7 @@ export const updateItem = auditedMutation({
     encryptedContent: v.optional(v.string()),
     encryptedLinks: v.optional(v.string()),
     encryptedMeta: v.optional(v.string()),
-    accessLevel: v.optional(accessLevelValidator),
+    accessLevel: v.optional(writableAccessLevelValidator),
     recipientMode: v.optional(recipientModeValidator),
     sharedWithContacts: v.optional(v.array(v.id("trusted_contacts"))),
     sharedWithGroups: v.optional(v.array(v.id("recipient_groups"))),

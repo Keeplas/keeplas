@@ -5,6 +5,7 @@ import {
   asUserSession,
   makeT,
   seedSession,
+  signedAudit,
   type TestConvex,
 } from "./test.helpers";
 
@@ -40,10 +41,12 @@ const flows: Flow[] = [
     table: "email_auth_codes",
     request: async (t) => {
       await t.run((ctx) => ctx.db.insert("users", { email: EMAIL }));
+      const _audit = await signedAudit();
       return () =>
         t.mutation(api.email_auth.requestEmailAuthOtp, {
           email: EMAIL,
           intent: "signin",
+          _audit,
         });
     },
   },

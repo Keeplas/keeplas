@@ -141,10 +141,10 @@ export default defineSchema({
     // Cleared if the phone number is changed afterward.
     phoneNumberVerifiedAt: v.optional(v.number()),
 
-    // Billing tier. Absent = "free". Flipped to "lifetime" only by the
-    // RevenueCat webhook (`billing.fulfillStorePurchase`) after a successful
-    // in-app purchase; never set client-side. Drives the storage quota (see
-    // lib/plans.ts).
+    // Billing tier. Absent = "free". Written only by the RevenueCat webhook
+    // (billing.ts): "lifetime" after an in-app purchase, back to "free" when
+    // it is refunded or restored onto another account; never set
+    // client-side. Drives the storage quota (see lib/plans.ts).
     plan: v.optional(planValidator),
     // Legacy: Stripe Customer id of buyers from the former web Checkout. No
     // longer written; kept so existing rows still validate.
@@ -178,7 +178,9 @@ export default defineSchema({
     amountCents: v.number(),
     currency: v.string(),
     plan: planValidator,
-    status: v.literal("paid"),
+    // "refunded" once the store refunds it (RevenueCat CANCELLATION), back to
+    // "paid" if Apple reverses the refund.
+    status: v.union(v.literal("paid"), v.literal("refunded")),
     createdAt: v.number(),
   })
     .index("by_revenuecat_transaction", ["revenueCatTransactionId"])

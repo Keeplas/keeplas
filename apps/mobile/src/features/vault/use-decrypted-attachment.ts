@@ -26,7 +26,7 @@ export interface AttachmentSource {
   name: string;
 }
 
-/** Short-lived signed URL of a file's ciphertext; null when not allowed. */
+/** Download URL of a file's ciphertext (never expires); null when not allowed. */
 export type FileUrl = (
   fileId: Id<"vault_item_files">,
 ) => Promise<string | null>;

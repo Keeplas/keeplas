@@ -1,13 +1,23 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalAction, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { optionalAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import {
+  auditContextValidator,
+  createAuditLog,
+  verifyAuditContext,
+} from "./audit";
 import { requireEnv } from "./lib/require_env";
 import { isE164 } from "./lib/phone";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 const CHANNEL = v.union(v.literal("email"), v.literal("whatsapp"));
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Each ticket emails the team through the transactional Resend account (the
+// one OTP and Life Check mail use), so it is throttled and its fields capped.
+const TICKETS_PER_HOUR = 5;
+const MAX_LENGTH = { name: 100, contact: 254, subject: 200, message: 5000 };
 
 const TOPIC = v.union(
   v.literal("general"),
@@ -29,7 +39,9 @@ const TOPIC_LABELS: Record<string, string> = {
 
 /**
  * Submit a contact/support ticket. Authentication is optional so logged-out
- * visitors can reach out too (not currently exposed, but the mutation tolerates it).
+ * visitors can reach out too (the mobile support screen allows it). The
+ * sealed `_audit` envelope gives the server-attested IP that throttles
+ * signed-out senders; a signed-in one is throttled per account.
  */
 export const submitTicket = mutation({
   args: {
@@ -40,8 +52,10 @@ export const submitTicket = mutation({
     topic: TOPIC,
     subject: v.string(),
     message: v.string(),
+    _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
     const name = args.name.trim();
     const contact = args.contact.trim();
     const subject = args.subject.trim();
@@ -49,6 +63,12 @@ export const submitTicket = mutation({
 
     if (!name || !contact || !subject || !message) {
       throw new Error("All fields are required");
+    }
+    const fields = { name, contact, subject, message };
+    for (const [field, max] of Object.entries(MAX_LENGTH)) {
+      if (fields[field as keyof typeof fields].length > max) {
+        throw new ConvexError(`The ${field} must be at most ${max} characters`);
+      }
     }
 
     const channel = EMAIL_RE.test(contact)
@@ -70,6 +90,12 @@ export const submitTicket = mutation({
     // (logged-out visitors may submit a ticket), so it stays on optionalAuth.
     // It writes only a support ticket — no vault content / metadata is read.
     const userId = await optionalAuth(ctx);
+    await enforceIpRateLimit(
+      ctx,
+      "support_ticket",
+      userId ?? args._audit.ip,
+      TICKETS_PER_HOUR,
+    );
     const now = Date.now();
 
     const ticketId = await ctx.db.insert("support_tickets", {

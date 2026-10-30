@@ -1,8 +1,10 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { auditContextValidator, verifyAuditContext } from "./audit";
 import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { MOBILE_ONLY_SIGNUP } from "./attestation";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 
@@ -13,21 +15,27 @@ import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
+// Per server-attested IP, across addresses; mirrors the phrase-salt lookup.
+const IP_RATE_LIMIT_MAX = 20;
 
 /**
  * Issue + dispatch a pre-auth email OTP for an existing account. `signup` is
  * refused (mobile-only sign-up, F8). The code is consumed by the `email-otp`
  * ConvexCredentials provider's authorize().
- * Rate-limited to 3 per rolling hour per address. ConvexError on existence
- * mismatches so the message survives prod error redaction.
+ * Rate-limited to 3 per rolling hour per address and 20 per IP. An unknown
+ * address gets the same `{ sent: true }` and no email, so the endpoint does
+ * not tell whether an account exists (misses still count toward the IP
+ * limit, as they do not throw).
  */
 export const requestEmailAuthOtp = mutation({
   args: {
     email: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
     language: v.optional(v.string()),
+    _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
     const email = normalizeEmail(args.email);
     if (!isValidEmail(email)) throw new Error("Invalid email address");
 
@@ -35,15 +43,17 @@ export const requestEmailAuthOtp = mutation({
     // email account.
     if (args.intent === "signup") throw new ConvexError(MOBILE_ONLY_SIGNUP);
 
+    await enforceIpRateLimit(
+      ctx,
+      "email_auth_otp",
+      args._audit.ip,
+      IP_RATE_LIMIT_MAX,
+    );
     const existing = await ctx.db
       .query("users")
       .withIndex("email", (q) => q.eq("email", email))
       .first();
-    if (args.intent === "signin" && !existing) {
-      throw new ConvexError(
-        "No account found for this email. Sign up to create one.",
-      );
-    }
+    if (!existing) return { sent: true };
 
     const now = Date.now();
     const recent = await ctx.db

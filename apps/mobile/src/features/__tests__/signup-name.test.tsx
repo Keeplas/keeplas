@@ -8,9 +8,14 @@ import VerifyScreen from "@/app/(auth)/verify";
 const rtl = jest.requireActual<typeof Rtl>("@testing-library/react-native");
 
 const mockPush = jest.fn();
+const mockDismissTo = jest.fn();
 let mockParams: Record<string, string> = {};
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: mockPush, canGoBack: () => false }),
+  useRouter: () => ({
+    push: mockPush,
+    dismissTo: mockDismissTo,
+    canGoBack: () => false,
+  }),
   useLocalSearchParams: () => mockParams,
 }));
 const mockSignIn = jest.fn();
@@ -57,12 +62,17 @@ jest.mock("@/features/code-verification", () => {
   return {
     CodeVerification: ({
       onSubmit,
+      footer,
     }: {
       onSubmit: (code: string) => Promise<void>;
+      footer?: React.ReactNode;
     }) => (
-      <Pressable onPress={() => onSubmit("123456")}>
-        <Text>submit-code</Text>
-      </Pressable>
+      <>
+        <Pressable onPress={() => onSubmit("123456")}>
+          <Text>submit-code</Text>
+        </Pressable>
+        {footer}
+      </>
     ),
   };
 });
@@ -114,5 +124,20 @@ describe("sign-up asks for the first name", () => {
       "phone-otp",
       expect.objectContaining({ flow: "signUp", name: "Marie" }),
     );
+    expect(rtl.screen.queryByText("phone.createAccount")).toBeNull();
+  });
+
+  // A sign-in for a number with no account gets no code and no error (the
+  // server does not tell who has an account): the code screen offers sign-up.
+  it("offers to create an account from the sign-in code screen", async () => {
+    mockParams = { phone: "+14165550123", intent: "signin" };
+    rtl.render(<VerifyScreen />);
+    await rtl.act(() =>
+      rtl.fireEvent.press(rtl.screen.getByText("phone.createAccount")),
+    );
+    expect(mockDismissTo).toHaveBeenCalledWith({
+      pathname: "/phone",
+      params: { intent: "signup" },
+    });
   });
 });

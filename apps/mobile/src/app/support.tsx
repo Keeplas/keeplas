@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
@@ -11,6 +10,7 @@ import { Callout, Card, IconBadge, Note } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { errorText } from "@/lib/errors";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { SUPPORT_TOPICS, type SupportTopic } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
@@ -25,7 +25,7 @@ export default function Support() {
   const { t } = useI18n();
   const { viewer } = useSession();
   const params = useLocalSearchParams<{ topic?: SupportTopic; ref?: string }>();
-  const submit = useMutation(api.support.submitTicket);
+  const submit = useAuditedMutation(api.support.submitTicket);
   const [topic, setTopic] = useState<SupportTopic>(
     SUPPORT_TOPICS.includes(params.topic as SupportTopic)
       ? (params.topic as SupportTopic)
@@ -59,9 +59,11 @@ export default function Support() {
           ? t("support.invalidContact")
           : text.includes("at least 10")
             ? t("support.tooShort")
-            : text.includes("required")
-              ? t("support.missing")
-              : t("common.genericError"),
+            : text.includes("at most")
+              ? t("support.tooLong")
+              : text.includes("required")
+                ? t("support.missing")
+                : t("common.genericError"),
       );
     } finally {
       setBusy(false);
