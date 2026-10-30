@@ -5,6 +5,7 @@ import {
   asUserSession,
   clearTotp,
   makeT,
+  seedPasswordAccount,
   seedSession,
   seedUser,
   seedVerifiedTotp,
@@ -95,5 +96,95 @@ describe("totp.disable", () => {
       }),
     ).rejects.toThrow("TOTP_REQUIRED");
     expect(await totpRow(t)).not.toBeNull();
+  });
+});
+
+describe("totp codes are single-use (RFC 6238 §5.2)", () => {
+  it("a second session cannot replay a code the first one used", async () => {
+    const t = makeT();
+    const userId = await seedUser(t);
+    await seedVerifiedTotp(t, userId);
+    const first = asUserSession(t, userId, await seedSession(t, userId));
+    const second = asUserSession(t, userId, await seedSession(t, userId));
+    const code = totpCode();
+
+    await expect(
+      first.mutation(api.totp.submitTotpForSession, { code }),
+    ).resolves.toMatchObject({ success: true });
+    await expect(
+      second.mutation(api.totp.submitTotpForSession, { code }),
+    ).resolves.toMatchObject({ success: false });
+    expect(await second.query(api.totp.getMyTotpGate, {})).toMatchObject({
+      required: true,
+    });
+
+    // The next 30 s step still works.
+    await expect(
+      second.mutation(api.totp.submitTotpForSession, {
+        code: totpCode(Date.now() + 30_000),
+      }),
+    ).resolves.toMatchObject({ success: true });
+  });
+});
+
+describe("totp.verifyAndEnable", () => {
+  /** A pending (unverified) enrollment of the seeded secret. */
+  async function pendingEnrollment() {
+    const t = makeT();
+    const userId = await seedUser(t);
+    await t.run((ctx) =>
+      ctx.db.insert("totp_secrets", {
+        userId,
+        secret: "JBSWY3DPEHPK3PXP",
+        createdAt: Date.now(),
+      }),
+    );
+    return {
+      t,
+      userId,
+      as: asUserSession(t, userId, await seedSession(t, userId)),
+    };
+  }
+
+  it("needs every step-up gate: a password alone cannot enroll", async () => {
+    const { t, userId, as } = await pendingEnrollment();
+    await seedPasswordAccount(t, userId);
+    await expect(
+      as.mutation(api.totp.startEnrollment, { label: "attacker" }),
+    ).rejects.toThrow("LOGIN_OTP_REQUIRED");
+    await expect(
+      as.mutation(api.totp.verifyAndEnable, {
+        code: totpCode(),
+        recoveryVerifierHash: "attacker-verifier",
+      }),
+    ).rejects.toThrow("LOGIN_OTP_REQUIRED");
+    expect((await totpRow(t))?.verifiedAt).toBeUndefined();
+  });
+
+  it("counts wrong codes and locks after 10, like every code check", async () => {
+    const { t, as } = await pendingEnrollment();
+    for (let i = 0; i < 10; i++) {
+      await expect(
+        as.mutation(api.totp.verifyAndEnable, { code: "000000" }),
+      ).resolves.toMatchObject({ success: false });
+    }
+    expect((await totpRow(t))?.failedAttempts).toBe(10);
+    await expect(
+      as.mutation(api.totp.verifyAndEnable, { code: totpCode() }),
+    ).rejects.toThrow("Too many attempts");
+    expect((await totpRow(t))?.verifiedAt).toBeUndefined();
+  });
+
+  it("spends the code it enrolls with", async () => {
+    const { t, userId, as } = await pendingEnrollment();
+    const code = totpCode();
+    await expect(
+      as.mutation(api.totp.verifyAndEnable, { code }),
+    ).resolves.toMatchObject({ success: true });
+    expect((await totpRow(t))?.verifiedAt).toBeDefined();
+    const other = asUserSession(t, userId, await seedSession(t, userId));
+    await expect(
+      other.mutation(api.totp.submitTotpForSession, { code }),
+    ).resolves.toMatchObject({ success: false });
   });
 });

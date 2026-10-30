@@ -10,7 +10,9 @@ import type { MutationCtx } from "../_generated/server";
  * the owner cannot wrap a DEK to them. The moment the contact finalizes
  * their keypair (`users.setPublicKey`) — or re-publishes from `/shared-with-me`
  * (`republishContactPublicKey`) — this backfills every owner's row so the
- * owner's reactive re-wrap (`getItemsNeedingRewrap`) can grant access.
+ * owner's reactive re-wrap (`getItemsNeedingRewrap`) can grant access. A key
+ * rotation (`rotation.rotateKeyMaterial`) publishes the new material the same
+ * way.
  *
  * Idempotent: a row already holding the same three fields is skipped, so it is
  * safe to call on every key set / rotation. Returns the number of rows patched.

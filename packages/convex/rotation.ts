@@ -3,6 +3,8 @@ import { query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { requireFullAuth } from "./helpers";
 import { auditedMutation } from "./audit";
+import { requireProvenFullAuth } from "./session_proofs";
+import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 /**
  * Master-key rotation (return-after-release flow). When a vault owner comes
@@ -24,6 +26,8 @@ import { auditedMutation } from "./audit";
  * Atomically swap the user's key material to a freshly generated master key
  * and owner ML-KEM keypair. Unlike `users.setPublicKey`, this deliberately
  * OVERWRITES an existing public key — rotation is the one place that must.
+ * It replaces the identity key the "vault" proof checks, so it needs a
+ * session that already proved the number or the vault.
  */
 export const rotateKeyMaterial = auditedMutation({
   action: "vault.key_material_rotated",
@@ -47,7 +51,7 @@ export const rotateKeyMaterial = auditedMutation({
     encryptedAsymmetricSecretKeyPrev: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireFullAuth(ctx);
+    const userId = await requireProvenFullAuth(ctx);
     await ctx.db.patch(userId, {
       encryptedKeyBundle: args.encryptedKeyBundle,
       publicKey: args.publicKey,
@@ -57,6 +61,14 @@ export const rotateKeyMaterial = auditedMutation({
       encryptedAsymmetricSecretKey: args.encryptedAsymmetricSecretKey,
       encryptedAsymmetricSecretKeyPrev: args.encryptedAsymmetricSecretKeyPrev,
       updatedAt: Date.now(),
+    });
+    // Where this user is someone's trusted contact, the owner wraps to the
+    // key on their row: publish the new one, so owners review the identity
+    // change instead of sealing to a key whose secret finalize drops.
+    await publishContactKeyToOwnerRows(ctx, userId, {
+      contactPublicKey: args.publicKey,
+      contactIdentityPublicKey: args.identityPublicKey,
+      contactPublicKeySignature: args.publicKeySignature,
     });
     return { success: true };
   },

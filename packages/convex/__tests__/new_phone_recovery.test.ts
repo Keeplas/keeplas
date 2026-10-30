@@ -247,6 +247,97 @@ describe("I — attacker holding the owner's iCloud / Google account", () => {
     ).rejects.toThrow("PROOF_REQUIRED");
   });
 
+  it("nor swap in its own identity key to forge the vault proof", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    const owner = { publicKey: "owner-kem", encryptedAsymmetricSecretKey: "w" };
+    await t.run((ctx) => ctx.db.patch(userId, owner));
+    const { sessionId, as } = await passkeySession(t, userId);
+    const attacker = generateIdentityKeyPair();
+    await expect(
+      as.mutation(api.users.setPublicKey, {
+        ...owner,
+        identityPublicKey: attacker.publicKey,
+        publicKeySignature: "attacker-signature",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("already set");
+    const { signature } = await proveVault(
+      t,
+      userId,
+      sessionId,
+      attacker.secretKey,
+    );
+    await expect(
+      as.action(api.session_proofs_node.proveVault, { signature }),
+    ).resolves.toEqual({ success: false });
+  });
+
+  it("nor read or plant the 24-word verifier to clear the step-up gates", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(userId, {
+        encryptedKeyBundle: "owner-bundle",
+        phraseSalt: "owner-salt",
+        recoveryPhraseHash: "owner-verifier",
+        totpResetVerifierHash: "owner-totp-verifier",
+      }),
+    );
+    const { as } = await passkeySession(t, userId);
+    const viewer = await as.query(api.users.viewer, {});
+    expect(viewer).not.toHaveProperty("recoveryPhraseHash");
+    expect(viewer).not.toHaveProperty("totpResetVerifierHash");
+    await expect(
+      as.mutation(api.onboarding.storeRecoveryPhraseHash, {
+        recoveryPhraseHash: "attacker-verifier",
+        phraseSalt: "owner-salt",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+    await expect(
+      as.mutation(api.onboarding.storeKeyBundle, {
+        encryptedKeyBundle: "junk",
+        phraseSalt: "owner-salt",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.recoveryPhraseHash).toBe("owner-verifier");
+    expect(user?.encryptedKeyBundle).toBe("owner-bundle");
+  });
+
+  it("nor swap the account's email for their own", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(userId, { emailVerificationTime: Date.now() }),
+    );
+    const { as } = await passkeySession(t, userId);
+    await expect(
+      as.mutation(api.email_verification.requestVerification, {
+        email: "attacker@example.com",
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+  });
+
+  it("nor rotate in its own keys", async () => {
+    const t = makeT();
+    const { userId } = await seedOwner(t);
+    const { as } = await passkeySession(t, userId);
+    const attacker = generateIdentityKeyPair();
+    await expect(
+      as.mutation(api.rotation.rotateKeyMaterial, {
+        encryptedKeyBundle: "junk",
+        publicKey: "attacker-kem",
+        publicKeySignature: "attacker-signature",
+        identityPublicKey: attacker.publicKey,
+        encryptedIdentitySecretKey: "attacker-wrapped",
+        encryptedAsymmetricSecretKey: "attacker-wrapped",
+        encryptedAsymmetricSecretKeyPrev: "attacker-wrapped",
+        _audit: await signedAudit(),
+      }),
+    ).rejects.toThrow("PROOF_REQUIRED");
+  });
+
   it("a first number (migration) is not gated", async () => {
     const t = makeT();
     const userId = await t.run((ctx) =>
