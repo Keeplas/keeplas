@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
@@ -8,7 +8,11 @@ import { useVaultCrypto } from "@/lib/use-vault-crypto";
 import { useDecryptedAttachmentUrl } from "@/lib/use-decrypted-attachment-url";
 import { useTranslations } from "@/lib/i18n";
 import { AttachmentThumbnail } from "@/components/attachment-thumbnail";
+import { DocumentPages } from "@/components/vault/preview/document-pages";
+import { Pager, ZoomControl } from "@/components/vault/preview/preview-panel";
+import { usePdfPages } from "@/components/vault/preview/use-pdf-pages";
 import { useOpenedFiles, type OpenedFile } from "@/lib/use-opened-files";
+import { extensionOf } from "@/lib/vault-list";
 
 // Contact-facing copy of VaultItemAttachments. Reads files through the
 // memorial-authorized queries (gated on the contact's approved release) and
@@ -165,7 +169,7 @@ function AttachmentCard({
     fileId: file._id,
   });
   const { decrypt, enabled } = useMemorialDecrypt(itemDek);
-  const { plainUrl, decrypting, error } = useDecryptedAttachmentUrl({
+  const { plainUrl, plainBlob, decrypting, error } = useDecryptedAttachmentUrl({
     signedUrl,
     iv: file.iv,
     mimeType: file.mimeType,
@@ -174,6 +178,9 @@ function AttachmentCard({
     errorFallback: t("attachments.decryptFailed"),
   });
 
+  const isPdf =
+    file.kind === "document" &&
+    (file.mimeType === "application/pdf" || extensionOf(file.name) === "pdf");
   const duration = formatDuration(file.durationSec);
   const meta = useMemo(() => {
     const parts: string[] = [formatFileSize(file.size)];
@@ -244,9 +251,11 @@ function AttachmentCard({
         />
       )}
 
+      {plainBlob && isPdf && <PdfPreview file={plainBlob} />}
+
       {/* Downloaded only (header link), never opened: the owner chose the
           file's type, and a blob: page runs on the Keeplas origin. */}
-      {plainUrl && file.kind === "document" && (
+      {plainUrl && file.kind === "document" && !isPdf && (
         <div className="flex items-center gap-3 bg-surface rounded-xs px-4 py-3 text-body-md text-on-surface-variant">
           <Icon
             path={ICON_PATHS.pictureAsPdf}
@@ -256,5 +265,52 @@ function AttachmentCard({
         </div>
       )}
     </article>
+  );
+}
+
+/**
+ * A PDF drawn page by page in this browser, as in the owner's vault (pdf.js
+ * renders each page to an image): the file is never opened as a blob: page,
+ * so nothing in it runs on the Keeplas origin.
+ */
+function PdfPreview({ file }: { file: Blob }) {
+  const t = useTranslations("vaultItem.preview");
+  const [page, setPage] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const pdf = usePdfPages(file, page, zoom);
+
+  if (pdf.error) {
+    return (
+      <p className="text-body-md text-error bg-error-container/30 rounded-xs px-3 py-2">
+        {t("pdfError")}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <Pager
+          label={t("pageOf", {
+            page: page + 1,
+            total: Math.max(1, pdf.thumbnails.length),
+          })}
+          onPrevious={page > 0 ? () => setPage(page - 1) : undefined}
+          onNext={
+            page < pdf.thumbnails.length - 1
+              ? () => setPage(page + 1)
+              : undefined
+          }
+        />
+        <ZoomControl zoom={zoom} onZoom={setZoom} />
+      </div>
+      <DocumentPages
+        thumbnails={pdf.thumbnails}
+        current={page}
+        onSelect={setPage}
+        page={pdf.page}
+        zoom={zoom}
+      />
+    </div>
   );
 }

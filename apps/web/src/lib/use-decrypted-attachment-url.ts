@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 
 /** Types a browser only ever renders as media, never as a document. */
-const INERT_TYPE = /^(application\/pdf|image\/(png|jpeg|gif|webp|avif|heic)|audio\/[\w.+-]+|video\/[\w.+-]+)$/;
+const INERT_TYPE =
+  /^(application\/pdf|image\/(png|jpeg|gif|webp|avif|heic)|audio\/[\w.+-]+|video\/[\w.+-]+)$/;
 
 /**
  * Blob type for decrypted bytes whose MIME type the item owner chose. A
@@ -17,7 +18,7 @@ export function inertBlobType(mimeType: string | undefined): string {
 
 /**
  * Downloads an encrypted attachment from its signed URL, decrypts it client-side
- * and exposes a blob URL for rendering/download. Shared by the vault (owner) and
+ * and exposes the plaintext blob and its URL for rendering/download. Shared by the vault (owner) and
  * memorial (contact) attachment views — the only differences (which signed-URL
  * query, which key to decrypt with, when decryption may start) are injected by
  * the caller so the fetch + decrypt + object-URL lifecycle lives here once.
@@ -39,8 +40,13 @@ export function useDecryptedAttachmentUrl({
   decrypt: (cipher: Blob, iv: string) => Promise<Blob>;
   enabled: boolean;
   errorFallback: string;
-}): { plainUrl: string | null; decrypting: boolean; error: string } {
-  const [plainUrl, setPlainUrl] = useState<string | null>(null);
+}): {
+  plainUrl: string | null;
+  plainBlob: Blob | null;
+  decrypting: boolean;
+  error: string;
+} {
+  const [plain, setPlain] = useState<{ url: string; blob: Blob } | null>(null);
   const [decrypting, setDecrypting] = useState(false);
   const [error, setError] = useState<string>("");
 
@@ -49,7 +55,7 @@ export function useDecryptedAttachmentUrl({
     let createdUrl: string | null = null;
 
     async function run() {
-      if (!signedUrl || !enabled || plainUrl || decrypting) return;
+      if (!signedUrl || !enabled || plain || decrypting) return;
       setDecrypting(true);
       setError("");
       try {
@@ -61,7 +67,7 @@ export function useDecryptedAttachmentUrl({
           type: inertBlobType(mimeType || plainBlob.type),
         });
         createdUrl = URL.createObjectURL(typedBlob);
-        if (!cancelled) setPlainUrl(createdUrl);
+        if (!cancelled) setPlain({ url: createdUrl, blob: typedBlob });
       } catch (err) {
         if (!cancelled) setError(getErrorMessage(err, errorFallback));
       } finally {
@@ -78,5 +84,10 @@ export function useDecryptedAttachmentUrl({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedUrl, enabled, iv, mimeType, decrypt, errorFallback]);
 
-  return { plainUrl, decrypting, error };
+  return {
+    plainUrl: plain?.url ?? null,
+    plainBlob: plain?.blob ?? null,
+    decrypting,
+    error,
+  };
 }
