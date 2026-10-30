@@ -4,10 +4,13 @@
     "slug": "keeplas",
     "owner": "keeplas",
     "scheme": "keeplas",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "locales": {
+      "fr": "./languages/fr.json"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.keeplas.app",
@@ -136,7 +139,7 @@
         }
       ],
       "expo-sharing",
-      "expo-localization",
+      ["expo-localization", { "supportedLocales": ["en", "fr"] }],
       "react-native-quick-crypto"
     ],
     "extra": {

@@ -170,6 +170,7 @@
   "recoveryKit": {
     "title": "Ouvrir votre coffre avec votre kit",
     "body": "Ce téléphone ne détient pas encore la clé de votre coffre. Saisissez les 24 mots de votre kit de récupération, séparés par des espaces.",
+    "placeholder": "mot1 mot2 mot3 …",
     "cta": "Ouvrir mon coffre",
     "invalid": "Ces mots n'ouvrent pas votre coffre. Vérifiez chaque mot et leur ordre.",
     "contactsCta": "Demander à mes contacts",
