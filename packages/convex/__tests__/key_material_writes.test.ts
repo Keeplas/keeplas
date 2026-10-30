@@ -74,6 +74,7 @@ describe("onboarding — first vault", () => {
 });
 
 describe("onboarding — replacing the kit of an existing vault", () => {
+  // Legacy shape: no identity key, so the vault can't be proved.
   it("works on a phone sign-in session (contact recovery, Settings kit)", async () => {
     const t = makeT();
     const userId = await seedOnboardedUser(t);
@@ -94,6 +95,32 @@ describe("onboarding — replacing the kit of an existing vault", () => {
     await as.mutation(api.onboarding.storeKeyBundle, BUNDLE);
     const user = await t.run((ctx) => ctx.db.get(userId));
     expect(user?.recoveryPhraseHash).toBe(await verifierDigest("new-verifier"));
+  });
+
+  // A phone proof only shows the number: an app on a stale phone, still
+  // holding the MasterKey from before a rotation, could write a bundle that
+  // seals the old key. Once the account has an identity key, the bundle needs
+  // this session to have opened the current vault.
+  it("refuses a new key bundle on a phone-only session once the account has an identity key", async () => {
+    const t = makeT();
+    const userId = await seedOnboardedUser(t);
+    await t.run((ctx) => ctx.db.patch(userId, { identityPublicKey: "ipk" }));
+    const as = await asPhoneProvenUser(t, userId);
+    await expect(
+      as.mutation(api.onboarding.storeKeyBundle, BUNDLE),
+    ).rejects.toThrow("VAULT_PROOF_REQUIRED");
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.encryptedKeyBundle).toBe("old-bundle");
+  });
+
+  it("accepts a new key bundle once the session proved the vault", async () => {
+    const t = makeT();
+    const userId = await seedOnboardedUser(t);
+    await t.run((ctx) => ctx.db.patch(userId, { identityPublicKey: "ipk" }));
+    const as = await asVaultProvenUser(t, userId);
+    await as.mutation(api.onboarding.storeKeyBundle, BUNDLE);
+    const user = await t.run((ctx) => ctx.db.get(userId));
+    expect(user?.encryptedKeyBundle).toBe("new-bundle");
   });
 
   it("still needs the step-up gates on a proven session", async () => {

@@ -6,7 +6,7 @@ import { saveDeviceVault, StaleDeviceVault } from "@/crypto/device-vault";
 import { opensOwnerKey } from "@/crypto/owner-keys";
 import { createKitMaterial, importMasterKey } from "@/crypto/vault-keys";
 import { useEnsureCloudBackup } from "@/features/cloud-backup";
-import { useEnsureSessionProof } from "@/features/vault-proof";
+import { useEnsureSessionProof, useProveVault } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
 
 /**
@@ -26,6 +26,7 @@ export function useReplaceKit() {
   const storeKeyBundle = useMutation(api.onboarding.storeKeyBundle);
   const ensureCloudBackup = useEnsureCloudBackup();
   const ensureSessionProof = useEnsureSessionProof();
+  const proveVault = useProveVault();
 
   return useCallback(
     async (userId: string, masterKey: Uint8Array, pin?: string) => {
@@ -34,8 +35,11 @@ export function useReplaceKit() {
       if (!user || !(await opensOwnerKey(user, key))) {
         throw new StaleDeviceVault();
       }
-      // Replacing the kit of an existing vault needs a proven session.
-      await ensureSessionProof(key);
+      // Replacing the kit of an existing vault needs a proven session, and
+      // the key bundle a vault proof once the account has an identity key
+      // (a phone proof alone could come from a phone with a stale MasterKey).
+      if (user.identityPublicKey) await proveVault(key);
+      else await ensureSessionProof(key);
       const kit = await createKitMaterial(masterKey);
       try {
         await storePhraseHash({
@@ -66,6 +70,7 @@ export function useReplaceKit() {
       storeKeyBundle,
       ensureCloudBackup,
       ensureSessionProof,
+      proveVault,
     ],
   );
 }

@@ -9,7 +9,7 @@ import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireAuth, optionalAuth, getActiveItems } from "./helpers";
 import { createAuditLog } from "./audit";
-import { requireProvenFullAuth } from "./session_proofs";
+import { requireProvenFullAuth, requireSessionProof } from "./session_proofs";
 import { verifierDigest } from "./lib/crypto";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -266,6 +266,15 @@ export const storeKeyBundle = mutation({
   },
   handler: async (ctx, args) => {
     const { userId, user } = await requireKitWriter(ctx);
+    // A phone proof only shows the number: an app on a stale phone, still
+    // holding the MasterKey from before a rotation, would seal the old key
+    // into the bundle. Replacing it needs this session to have opened the
+    // current vault (its identity key is wrapped under the current
+    // MasterKey). Accounts without an identity key can't prove the vault and
+    // keep the phone proof.
+    if (user?.encryptedKeyBundle && user.identityPublicKey) {
+      await requireSessionProof(ctx, "vault");
+    }
 
     // Send the welcome message only on the first time onboarding completes —
     // `welcomeSentAt` is the idempotency guard against a re-invoked storeKeyBundle.
