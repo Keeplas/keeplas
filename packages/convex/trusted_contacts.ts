@@ -24,6 +24,7 @@ import { requireEnv } from "./lib/require_env";
 import { isNotificationsPaused } from "./lib/pause";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { resolveLocale, type Locale } from "./lib/locale";
+import { cleanName } from "./lib/text";
 import {
   formatSenderIdentity,
   ownerDisplay,
@@ -265,6 +266,7 @@ export const inviteContact = auditedMutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
+    const name = cleanName(args.name);
     const { email, phoneNumber } = await checkContactChannels(
       ctx,
       userId,
@@ -275,7 +277,7 @@ export const inviteContact = auditedMutation({
 
     const baseFields = {
       userId,
-      name: args.name,
+      name,
       email,
       phoneNumber,
       role: args.role,
@@ -309,7 +311,7 @@ export const inviteContact = auditedMutation({
       userId,
       type: "contact_invited",
       title: "Invitation sent",
-      body: `You invited ${args.name} as a trusted contact.`,
+      body: `You invited ${name} as a trusted contact.`,
       actionUrl: "/trusted-contacts",
       relatedId: contactId,
       relatedType: "trusted_contact",
@@ -354,7 +356,7 @@ export const updateContact = auditedMutation({
     ) {
       throw new Error("Contact not found");
     }
-    const name = args.name.trim();
+    const name = cleanName(args.name);
     if (!name) throw new Error("Add a name");
 
     const { email, phoneNumber } = await checkContactChannels(
@@ -1051,8 +1053,14 @@ export const getVaultsWhereIAmContact = query({
             .length
         : 0;
 
+      // Only what the contact's screens use: the row is the owner's, and its
+      // label, pins and reminder state are none of the contact's business.
       result.push({
-        ...contact,
+        _id: contact._id,
+        invitationStatus: contact.invitationStatus,
+        lastVerifiedAt: contact.lastVerifiedAt,
+        // The contact's own key, so their client can publish a missing one.
+        contactPublicKey: contact.contactPublicKey,
         ownerName: owner.name,
         ownerEmail: owner.email,
         ownerPhone: owner.phone,

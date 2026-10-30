@@ -18,6 +18,7 @@ import { verifyAssertionAndGetUserId } from "./webauthn";
 import { normalizeE164 } from "./lib/phone";
 import { normalizeEmail } from "./lib/email";
 import { normalizeUserLanguage } from "./lib/locale";
+import { cleanName } from "./lib/text";
 import { assertStrongPassword } from "./lib/password";
 import { refuseNonMobileSignUp } from "./attestation";
 
@@ -152,7 +153,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!check.ok) throw new ConvexError(check.error);
 
         if (credentials.flow === "signUp") {
-          const name = (credentials.name as string | undefined)?.trim();
+          const name = cleanName(String(credentials.name ?? ""));
           const language = normalizeUserLanguage(
             credentials.language as string | undefined,
           );

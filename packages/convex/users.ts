@@ -17,6 +17,7 @@ import {
   storageRefValidator,
 } from "./lib/storage";
 import { normalizeUserLanguage } from "./lib/locale";
+import { cleanName } from "./lib/text";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
@@ -101,7 +102,7 @@ export const updateProfile = auditedMutation({
     const userId = await requireAuth(ctx);
 
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.name !== undefined) patch.name = args.name.trim() || undefined;
+    if (args.name !== undefined) patch.name = cleanName(args.name) || undefined;
 
     await ctx.db.patch(userId, patch);
   },

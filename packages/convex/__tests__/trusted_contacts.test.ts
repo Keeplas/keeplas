@@ -9,6 +9,36 @@ import {
 } from "./test.helpers";
 import type { Id } from "../_generated/dataModel";
 
+describe("contact names", () => {
+  it("caps the name on invite and on edit", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const long = "y".repeat(10_000);
+    const { contactId } = await asUser(t, owner).mutation(
+      api.trusted_contacts.inviteContact,
+      {
+        name: long,
+        email: "c@example.com",
+        role: "friend",
+        _audit: await signedAudit(),
+      },
+    );
+    expect((await t.run((ctx) => ctx.db.get(contactId)))?.name).toHaveLength(
+      100,
+    );
+
+    await asUser(t, owner).mutation(api.trusted_contacts.updateContact, {
+      contactId,
+      name: `z${long}`,
+      email: "c@example.com",
+      _audit: await signedAudit(),
+    });
+    expect((await t.run((ctx) => ctx.db.get(contactId)))?.name).toBe(
+      `z${long}`.slice(0, 100),
+    );
+  });
+});
+
 describe("confirmAvailability", () => {
   it("stamps lastVerifiedAt for an accepted trust contact", async () => {
     const t = makeT();
@@ -289,6 +319,41 @@ describe("getVaultsWhereIAmContact", () => {
       ownerPhone: "+33612345678",
       confirmationThreshold: 3,
     });
+  });
+
+  it("keeps the owner's private row fields from the contact", async () => {
+    const t = makeT();
+    const { contactUser } = await seedLink(t, { name: "Ada" });
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    for (const field of [
+      "name",
+      "role",
+      "invitationToken",
+      "pinnedIdentityFingerprint",
+      "reconfirmReminders",
+      "ownerNotifiedUnavailableAt",
+    ]) {
+      expect(vault).not.toHaveProperty(field);
+    }
+  });
+
+  it("caps the owner's name its contacts see", async () => {
+    const t = makeT();
+    const { ownerId, contactUser } = await seedLink(t, {});
+    await asUser(t, ownerId).mutation(api.users.updateProfile, {
+      name: "x".repeat(10_000),
+      _audit: await signedAudit(),
+    });
+
+    const [vault] = await asUser(t, contactUser).query(
+      api.trusted_contacts.getVaultsWhereIAmContact,
+      {},
+    );
+    expect(vault?.ownerName).toHaveLength(100);
   });
 
   it("defaults the confirmation threshold to 2", async () => {
