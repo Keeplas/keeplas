@@ -83,6 +83,29 @@ export async function uploadFile(
   }
 }
 
+export const DOWNLOAD_ATTEMPTS = 3;
+
+export async function downloadWithRetry(
+  url: string,
+  to: File,
+  onProgress?: (ratio: number) => void,
+): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    const task = File.createDownloadTask(url, to, {
+      onProgress: ({ bytesWritten, totalBytes }) => {
+        if (totalBytes > 0) onProgress?.(bytesWritten / totalBytes);
+      },
+    });
+    try {
+      await task.downloadAsync();
+      return;
+    } catch (error) {
+      if (to.exists) to.delete();
+      if (attempt === DOWNLOAD_ATTEMPTS) throw error;
+    }
+  }
+}
+
 /**
  * Download a ciphertext blob and decrypt it into `into` (by default the
  * cache folder cleared on lock) under its real name (for the viewer / share
@@ -105,12 +128,7 @@ export async function downloadDecrypted(
     onProgress?.(1);
   } else {
     const download = new File(cache, `${Date.now()}.bin`);
-    const task = File.createDownloadTask(url, download, {
-      onProgress: ({ bytesWritten, totalBytes }) => {
-        if (totalBytes > 0) onProgress?.(bytesWritten / totalBytes);
-      },
-    });
-    await task.downloadAsync();
+    await downloadWithRetry(url, download, onProgress);
     if (kept) download.move(kept);
     cipher = kept ?? download;
   }
