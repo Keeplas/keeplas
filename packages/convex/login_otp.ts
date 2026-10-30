@@ -3,7 +3,7 @@ import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { hasPasswordAccount, optionalAuth, requireAuth } from "./helpers";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 import { maskPhone } from "./lib/phone";
@@ -239,7 +239,7 @@ export const submitLoginOtpRecovery = mutation({
     if (!user || !user.recoveryPhraseHash) {
       throw new Error("Recovery via seed is not configured for this account.");
     }
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, verifierHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, verifierHash))) {
       throw new Error("Recovery phrase did not match. Try again.");
     }
 

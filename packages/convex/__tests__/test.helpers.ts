@@ -195,7 +195,11 @@ export async function clearTotp(
 
 /** Build a fresh, HMAC-signed audit envelope accepted by `verifyAuditContext`. */
 export async function signedAudit(city?: string) {
-  const ip = "127.0.0.1";
+  return signedAuditFrom("127.0.0.1", city);
+}
+
+/** {@link signedAudit} sealed for another caller IP. */
+export async function signedAuditFrom(ip: string, city?: string) {
   const country = "FR";
   const ts = Date.now();
   const enc = new TextEncoder();

@@ -128,6 +128,11 @@ export const getSetupTargets = query({
 
 /** Setup attempts per account per hour: far above re-sealing after changes. */
 const SETUP_ATTEMPTS_PER_HOUR = 10;
+// Each request alerts the owner and every contact (WhatsApp + email), and a
+// request can be cancelled at once: cap the starts so a start → cancel loop
+// can't relay spam through the contacts' channels.
+const REQUEST_STARTS_PER_DAY = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Gate `recovery_node.setup` runs BEFORE it calls the KMS: the same session and
@@ -287,6 +292,13 @@ export const start = auditedMutation({
     if (await activeRequest(ctx, userId)) {
       throw new ConvexError("A recovery request is already in progress");
     }
+    await enforceIpRateLimit(
+      ctx,
+      "recovery_start",
+      userId,
+      REQUEST_STARTS_PER_DAY,
+      DAY_MS,
+    );
 
     const now = Date.now();
     const requestId = await ctx.db.insert("recovery_requests", {

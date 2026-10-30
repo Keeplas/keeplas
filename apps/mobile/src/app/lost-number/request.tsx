@@ -19,8 +19,8 @@ const ERRORS: Record<string, string> = {
   NO_ACCOUNT: "phone.noAccount",
   SAME_NUMBER: "lostNumber.sameNumber",
   REQUEST_IN_PROGRESS: "lostNumber.inProgress",
+  NUMBER_TAKEN: "lostNumber.newTaken",
   INVALID_EMAIL: "lostNumber.invalidEmail",
-  "already linked": "lostNumber.newTaken",
   "Too many": "codeErrors.tooManyBody",
 };
 
@@ -49,20 +49,23 @@ export default function LostNumberRequest() {
     if (!name.trim()) return setError(t("lostNumber.nameRequired"));
     setBusy(true);
     setError(null);
+    const showError = (text: string) => {
+      const key = Object.keys(ERRORS).find((k) => text.includes(k));
+      setError(t(key ? ERRORS[key] : "common.genericError"));
+    };
     try {
-      const { requestId, claimToken } = await submit({
+      const result = await submit({
         oldPhone: from,
         newPhone: to,
         name,
         email: email.trim() || undefined,
         message: message.trim() || undefined,
       });
-      saveClaim({ requestId, claimToken });
+      if (!result.ok) return showError(result.error);
+      saveClaim({ requestId: result.requestId, claimToken: result.claimToken });
       router.replace("/lost-number/status");
     } catch (err) {
-      const text = errorText(err);
-      const key = Object.keys(ERRORS).find((k) => text.includes(k));
-      setError(t(key ? ERRORS[key] : "common.genericError"));
+      showError(errorText(err));
     } finally {
       setBusy(false);
     }

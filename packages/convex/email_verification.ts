@@ -8,6 +8,7 @@ import { requireSessionProof } from "./session_proofs";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 // Settings-side add OR change of the user's email. On success it links a
 // passwordless `email-otp` auth account to the CURRENT user and, when the
@@ -78,6 +79,14 @@ export const requestVerification = mutation({
     if (recent.length >= RATE_LIMIT_MAX) {
       throw new Error("Too many verification attempts. Try again later.");
     }
+    // Per destination too, across accounts: farmed accounts must not send a
+    // stream of codes to someone else's address.
+    await enforceIpRateLimit(
+      ctx,
+      "email_verification_to",
+      email,
+      RATE_LIMIT_MAX,
+    );
     for (const stale of recent) {
       if (stale.expiresAt > now)
         await ctx.db.patch(stale._id, { expiresAt: now });

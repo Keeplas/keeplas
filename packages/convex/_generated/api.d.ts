@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as ResendOTP from "../ResendOTP.js";
 import type * as access_requests from "../access_requests.js";
 import type * as account_deletion from "../account_deletion.js";
 import type * as account_migration from "../account_migration.js";
@@ -57,6 +56,7 @@ import type * as lib_rate_limit from "../lib/rate_limit.js";
 import type * as lib_require_env from "../lib/require_env.js";
 import type * as lib_sessions from "../lib/sessions.js";
 import type * as lib_storage from "../lib/storage.js";
+import type * as lib_text from "../lib/text.js";
 import type * as lib_vault_groups from "../lib/vault_groups.js";
 import type * as lib_vault_proof from "../lib/vault_proof.js";
 import type * as life_check from "../life_check.js";
@@ -97,7 +97,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  ResendOTP: typeof ResendOTP;
   access_requests: typeof access_requests;
   account_deletion: typeof account_deletion;
   account_migration: typeof account_migration;
@@ -146,6 +145,7 @@ declare const fullApi: ApiFromModules<{
   "lib/require_env": typeof lib_require_env;
   "lib/sessions": typeof lib_sessions;
   "lib/storage": typeof lib_storage;
+  "lib/text": typeof lib_text;
   "lib/vault_groups": typeof lib_vault_groups;
   "lib/vault_proof": typeof lib_vault_proof;
   life_check: typeof life_check;

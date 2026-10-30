@@ -61,15 +61,9 @@ function sharedVault(
 ): SharedVault {
   return {
     _id: id as SharedVault["_id"],
-    _creationTime: NOW - 30 * DAY,
-    userId: `owner-${id}` as SharedVault["userId"],
-    name: "Alex",
-    role: "family",
     invitationStatus: "accepted",
-    invitationToken: id,
-    invitedAt: NOW - 30 * DAY,
-    createdAt: NOW - 30 * DAY,
-    updatedAt: NOW - DAY,
+    lastVerifiedAt: NOW - DAY,
+    contactPublicKey: "pk",
     ownerEmail: "",
     confirmationThreshold: 2,
     ownerCycleStatus: "running",

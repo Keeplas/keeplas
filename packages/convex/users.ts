@@ -10,13 +10,14 @@ import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { vaultGroupValidator } from "./validators";
 import { auditedMutation, createAuditLog } from "./audit";
 import {
-  claimUpload,
+  claimNewUpload,
   deleteBlob,
   generateBlobUploadUrl,
   getBlobDownloadUrl,
   storageRefValidator,
 } from "./lib/storage";
 import { normalizeUserLanguage } from "./lib/locale";
+import { cleanName } from "./lib/text";
 import { publishContactKeyToOwnerRows } from "./lib/contact_key";
 
 const EIGHTEEN_YEARS_MS = 18 * 365.25 * 24 * 60 * 60 * 1000;
@@ -30,23 +31,38 @@ export const viewer = query({
 
     const user = await ctx.db.get(userId);
     if (!user) return null;
-    // lastSeenAt is a write-only analytics heartbeat. Omitting it keeps this
-    // subscription stable (Convex only pushes when the result changes), so a
-    // heartbeat no longer re-sends the multi-KB key bundle to every client.
-    // The 24-word verifiers never leave the server: the recovery sign-ins and
-    // step-up escape hatches compare them, so they work like passwords.
-    const {
-      lastSeenAt: _lastSeenAt,
-      recoveryPhraseHash: _recoveryPhraseHash,
-      totpResetVerifierHash: _totpResetVerifierHash,
-      ...viewerDoc
-    } = user;
+    // An allowlist, not a spread: a field added to `users` stays on the
+    // server until a client needs it. Left out on purpose: the 24-word
+    // verifiers (they work like passwords), and `lastSeenAt` (a heartbeat
+    // that would re-send the multi-KB key bundle to every client).
     return {
-      ...viewerDoc,
+      _id: user._id,
+      _creationTime: user._creationTime,
+      email: user.email,
+      emailVerificationTime: user.emailVerificationTime,
+      name: user.name,
       // Resolved on every read, never stored (see `avatarStorageId`).
       avatarUrl: user.avatarStorageId
         ? ((await getBlobDownloadUrl(ctx, user.avatarStorageId)) ?? undefined)
         : user.avatarUrl,
+      phoneNumber: user.phoneNumber,
+      phoneNumberVerifiedAt: user.phoneNumberVerifiedAt,
+      timezone: user.timezone,
+      language: user.language,
+      hiddenCategoryGroups: user.hiddenCategoryGroups,
+      publicKey: user.publicKey,
+      encryptedKeyBundle: user.encryptedKeyBundle,
+      encryptedAsymmetricSecretKey: user.encryptedAsymmetricSecretKey,
+      encryptedAsymmetricSecretKeyPrev: user.encryptedAsymmetricSecretKeyPrev,
+      identityPublicKey: user.identityPublicKey,
+      encryptedIdentitySecretKey: user.encryptedIdentitySecretKey,
+      publicKeySignature: user.publicKeySignature,
+      phraseSalt: user.phraseSalt,
+      recoveryVerified: user.recoveryVerified,
+      masterKeyRotationRequired: user.masterKeyRotationRequired,
+      birthday: user.birthday,
+      country: user.country,
+      plan: user.plan,
     };
   },
 });
@@ -70,62 +86,6 @@ export const getLanguageByEmail = internalQuery({
 });
 
 /**
- * Whether a password (email) account exists for `email`. The login form calls
- * this after a failed sign-in to tell apart "no account" (point the user to
- * signup) from "wrong password" (keep the generic credentials error). Queries
- * the exact email string — no normalization — to mirror the Password
- * provider's case-sensitive `account: { id: email }` lookup.
- */
-export const accountExistsByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    if (!args.email) return false;
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", args.email))
-      .first();
-    return user !== null;
-  },
-});
-
-/**
- * Resolve how an email signs in: `"password"` (email + password account),
- * `"email-otp"` (passwordless emailed-code account), or `null` (no account).
- * The login and recovery forms use this to show the right fields (password vs
- * emailed code). Account existence by email is already deliberately revealed
- * (see `accountExistsByEmail`), so this exposes nothing new. The `password`
- * provider keys its account id on the raw email (case-sensitive), so we probe
- * both the raw and normalized forms.
- */
-export const getEmailAuthMode = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const raw = args.email.trim();
-    if (!raw) return null;
-    const normalized = raw.toLowerCase();
-
-    const otp = await ctx.db
-      .query("authAccounts")
-      .withIndex("providerAndAccountId", (q) =>
-        q.eq("provider", "email-otp").eq("providerAccountId", normalized),
-      )
-      .first();
-    if (otp) return "email-otp" as const;
-
-    for (const id of raw === normalized ? [raw] : [raw, normalized]) {
-      const pwd = await ctx.db
-        .query("authAccounts")
-        .withIndex("providerAndAccountId", (q) =>
-          q.eq("provider", "password").eq("providerAccountId", id),
-        )
-        .first();
-      if (pwd) return "password" as const;
-    }
-    return null;
-  },
-});
-
-/**
  * Update mutable profile fields (currently only `name`). Email and phone are
  * identifiers — changes go through the OTP-gated flows in
  * `email_verification` / `phone_verification` so the auth accounts rotate
@@ -142,7 +102,7 @@ export const updateProfile = auditedMutation({
     const userId = await requireAuth(ctx);
 
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.name !== undefined) patch.name = args.name.trim() || undefined;
+    if (args.name !== undefined) patch.name = cleanName(args.name) || undefined;
 
     await ctx.db.patch(userId, patch);
   },
@@ -176,12 +136,18 @@ export const setAvatarImage = auditedMutation({
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 
+    // Same blob again = a retried save. Otherwise only a brand-new upload:
+    // the avatar deletes its blob later, so it must never take a vault file's.
+    const isCurrent = user.avatarStorageId === args.storageId;
     const url = await getBlobDownloadUrl(ctx, args.storageId);
-    if (!url || !(await claimUpload(ctx, args.storageId, userId))) {
+    if (
+      !url ||
+      (!isCurrent && !(await claimNewUpload(ctx, args.storageId, userId)))
+    ) {
       throw new Error("Uploaded image could not be resolved");
     }
 
-    if (user.avatarStorageId && user.avatarStorageId !== args.storageId) {
+    if (user.avatarStorageId && !isCurrent) {
       await deleteBlob(ctx, user.avatarStorageId, userId);
     }
 
@@ -234,54 +200,15 @@ function assertAdultBirthday(birthday: number, now: number) {
 }
 
 /**
- * Persist the legal identity collected during the `legal_info` onboarding
- * step. Birthday is validated server-side (>= 18 years, plausible upper
- * bound) and the country is normalized to ISO-3166-1 alpha-2. The audit
- * entry produced here is the user's signed declaration of identity — keep
- * the entry's metadata stable, it will be the anchor of the chain in any
- * future succession proceeding.
+ * Correct the birthday from Settings. Needs a stepped-up session, like every
+ * other edit of the legal identity.
  */
-export const completeLegalInfo = auditedMutation({
-  action: "user.legal_info.confirmed",
-  resourceType: "user",
-  args: {
-    birthday: v.number(),
-    country: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-    const now = Date.now();
-
-    assertAdultBirthday(args.birthday, now);
-
-    const country = args.country.trim().toUpperCase();
-    if (!/^[A-Z]{2}$/.test(country)) {
-      throw new Error("Country must be a 2-letter ISO-3166-1 code");
-    }
-
-    await ctx.db.patch(userId, {
-      birthday: args.birthday,
-      country,
-      legalInfoConfirmedAt: now,
-      onboardingStep: "recovery_phrase",
-      updatedAt: now,
-    });
-  },
-  getMetadata: (args) => ({
-    country: args.country.toUpperCase(),
-    // Store year-of-birth only (not full timestamp) in metadata to keep the
-    // audit entry's PII surface minimal — the full birthday lives on the
-    // user record itself.
-    birthYear: new Date(args.birthday).getUTCFullYear(),
-  }),
-});
-
 export const updateBirthday = auditedMutation({
   action: "user.birthday.updated",
   resourceType: "user",
   args: { birthday: v.number() },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const now = Date.now();
     assertAdultBirthday(args.birthday, now);
     await ctx.db.patch(userId, { birthday: args.birthday, updatedAt: now });
@@ -297,9 +224,6 @@ export const updateBirthday = auditedMutation({
  * `legalInfoConfirmedAt` timestamp is preserved — it remains the anchor
  * of the audit chain — and a new `user.legal_info.updated` entry records
  * the previous and new country so the succession trail stays auditable.
- *
- * Birthday is intentionally not editable: it is a fact, not a preference,
- * and changing it would invalidate the original signed declaration.
  */
 export const updateLegalResidence = auditedMutation({
   action: "user.legal_info.updated",
@@ -308,7 +232,7 @@ export const updateLegalResidence = auditedMutation({
     country: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
 

@@ -4,9 +4,10 @@ import {
   query,
   internalMutation,
   internalQuery,
+  type MutationCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { listedPhones, normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
 import { enforceIpRateLimit } from "./lib/rate_limit";
@@ -15,7 +16,20 @@ import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const RATE_LIMIT_MAX = 3;
+// Codes one number may receive per hour, whoever asks.
+const NUMBER_HOURLY_MAX = 10;
+// Per server-attested caller IP: requests across numbers (unknown numbers
+// included), and codes for one number, so no caller can flood every number
+// or use up the owner's own budget.
+const IP_HOURLY_MAX = 10;
+const IP_NUMBER_HOURLY_MAX = 3;
+// App builds that predate the `_audit` envelope have no IP to throttle on:
+// 3 codes per number (as before), and at most this many across all numbers
+// per hour, so a flood through that path has a fixed WhatsApp cost and
+// leaves current builds untouched.
+const LEGACY_NUMBER_HOURLY_MAX = 3;
+export const LEGACY_HOURLY_MAX = 200;
+const TOO_MANY_ATTEMPTS = "Too many verification attempts. Try again later.";
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
 
@@ -48,9 +62,14 @@ function fixedCode(phone: string): string | null {
 
 /**
  * Issue + dispatch a pre-auth WhatsApp OTP for a passwordless phone account.
- * `intent` distinguishes signup (must NOT already exist) from signin.
- * Rate-limited to 3 per rolling hour per number. The code is consumed by the
- * `phone-otp` ConvexCredentials provider's authorize() at signIn.
+ * `intent` distinguishes signup (must NOT already exist) from signin. The
+ * code is consumed by the `phone-otp` ConvexCredentials provider's
+ * authorize() at signIn.
+ *
+ * Rate limits: 10 codes per number and hour overall. With the sealed
+ * `_audit` envelope (current app builds), 10 requests per caller IP and 3
+ * codes per (number, IP); without it (older builds), 3 codes per number and
+ * a global hourly ceiling.
  *
  * Account existence is never told to an anonymous caller:
  * - signin on an unknown number returns `{ sent: true }` and sends nothing
@@ -64,13 +83,19 @@ export const requestPhoneAuthOtp = mutation({
     phoneNumber: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
     language: v.optional(v.string()),
+    // Optional: app builds released before it don't send it.
+    _audit: v.optional(auditContextValidator),
   },
   handler: async (ctx, args) => {
     const phone = normalizeE164(args.phoneNumber);
     if (!phone) throw new Error("Invalid phone number");
+    const ip = args._audit?.ip;
+    if (args._audit) await verifyAuditContext(args._audit);
 
     // Mobile-only sign-up: the app must have attested first (M09-9).
     if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
+    // Counted before the account lookup, so misses count too (they return).
+    if (ip) await enforceIpRateLimit(ctx, "phone_auth_otp", ip, IP_HOURLY_MAX);
 
     const existing = await ctx.db
       .query("users")
@@ -90,9 +115,9 @@ export const requestPhoneAuthOtp = mutation({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
-    if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
-    }
+    const numberMax = ip ? NUMBER_HOURLY_MAX : LEGACY_NUMBER_HOURLY_MAX;
+    if (recent.length >= numberMax) throw new Error(TOO_MANY_ATTEMPTS);
+    await throttleCaller(ctx, phone, ip);
     for (const stale of recent) {
       if (stale.expiresAt > now)
         await ctx.db.patch(stale._id, { expiresAt: now });
@@ -120,6 +145,31 @@ export const requestPhoneAuthOtp = mutation({
     return { sent: true };
   },
 });
+
+/**
+ * Charge one code to the caller: its (number, IP) budget, or for a build
+ * without `_audit`, the global ceiling. Hitting that ceiling means a flood
+ * (or real growth): it is logged as an alert for the ops log stream.
+ */
+async function throttleCaller(
+  ctx: MutationCtx,
+  phone: string,
+  ip: string | undefined,
+) {
+  const [scope, key, max] = ip
+    ? ["phone_auth_otp_number", `${phone}|${ip}`, IP_NUMBER_HOURLY_MAX]
+    : ["phone_auth_otp_legacy", "all", LEGACY_HOURLY_MAX];
+  try {
+    await enforceIpRateLimit(ctx, scope, key, max);
+  } catch {
+    if (!ip) {
+      console.error(
+        "ALERT phone_auth: hourly ceiling for codes without _audit reached",
+      );
+    }
+    throw new Error(TOO_MANY_ATTEMPTS);
+  }
+}
 
 /**
  * Verify + consume a pre-auth phone OTP. Called by the `phone-otp`
@@ -201,7 +251,7 @@ export const verifyPhoneRecovery = internalQuery({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
     if (!user || !user.recoveryPhraseHash) return null;
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, args.phraseHash))) {
       return null;
     }
     return user._id;

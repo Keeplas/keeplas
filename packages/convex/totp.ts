@@ -4,7 +4,7 @@ import { mutation, query, type MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { auditedMutation, createAuditLog } from "./audit";
-import { constantTimeStringEquals } from "./lib/crypto";
+import { verifierDigest, verifierMatches } from "./lib/crypto";
 import { requireProvenFullAuth, requireSessionProof } from "./session_proofs";
 
 const ISSUER = "Keeplas";
@@ -357,7 +357,8 @@ export const verifyAndEnable = mutation({
         updatedAt: now,
       };
       if (recoveryVerifierHash) {
-        patch.totpResetVerifierHash = recoveryVerifierHash;
+        patch.totpResetVerifierHash =
+          await verifierDigest(recoveryVerifierHash);
       }
       await ctx.db.patch(userId, patch);
     }
@@ -402,7 +403,7 @@ export const bindRecoveryReset = auditedMutation({
       throw new Error("Enable TOTP before binding a recovery phrase.");
     }
     await ctx.db.patch(userId, {
-      totpResetVerifierHash: recoveryVerifierHash,
+      totpResetVerifierHash: await verifierDigest(recoveryVerifierHash),
       updatedAt: Date.now(),
     });
     return { success: true };
@@ -530,7 +531,7 @@ export const submitTotpRecovery = mutation({
     if (!user || !user.totpResetVerifierHash) {
       throw new Error("Recovery via seed is not configured for this account.");
     }
-    if (!constantTimeStringEquals(user.totpResetVerifierHash, verifierHash)) {
+    if (!(await verifierMatches(user.totpResetVerifierHash, verifierHash))) {
       throw new Error("Recovery phrase did not match. Try again.");
     }
 

@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ResendOTP } from "../ResendOTP";
 import { generateOtp } from "../lib/otp";
 
 // 2^32 is not a multiple of 10^6: a plain modulo would favour the low codes.
@@ -26,11 +25,5 @@ describe("one-time code generation", () => {
     const spy = drawWords(0xffffffff, 4_294_000_000, 1_000_007);
     expect(generateOtp()).toBe("000007");
     expect(spy).toHaveBeenCalledTimes(3);
-  });
-
-  it("issues the email verification code from the same generator", async () => {
-    drawWords(0xffffffff, 123_456);
-    const generate = ResendOTP.options.generateVerificationToken!;
-    expect(await generate()).toBe("123456");
   });
 });

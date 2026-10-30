@@ -2,7 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { mutation, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { auditContextValidator, verifyAuditContext } from "./audit";
-import { constantTimeStringEquals, sha256Hex } from "./lib/crypto";
+import { sha256Hex, verifierMatches } from "./lib/crypto";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { MOBILE_ONLY_SIGNUP } from "./attestation";
@@ -17,6 +17,8 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_MAX = 3;
 // Per server-attested IP, across addresses; mirrors the phrase-salt lookup.
 const IP_RATE_LIMIT_MAX = 20;
+// Password sign-in attempts per server-attested IP and hour, across accounts.
+const PASSWORD_SIGN_IN_IP_MAX = 20;
 
 /**
  * Issue + dispatch a pre-auth email OTP for an existing account. `signup` is
@@ -90,6 +92,26 @@ export const requestEmailAuthOtp = mutation({
 });
 
 /**
+ * Count a password sign-in attempt against the caller's server-attested IP
+ * (the `password` provider in auth.ts calls it first). The library only
+ * limits failures per account, so without it one client could try passwords
+ * across every account. It commits in its own transaction, so the hit counts
+ * even when the sign-in then fails.
+ */
+export const throttlePasswordSignIn = internalMutation({
+  args: { _audit: auditContextValidator },
+  handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
+    await enforceIpRateLimit(
+      ctx,
+      "password_sign_in",
+      args._audit.ip,
+      PASSWORD_SIGN_IN_IP_MAX,
+    );
+  },
+});
+
+/**
  * Verify + consume a pre-auth email OTP. Called by the `email-otp`
  * ConvexCredentials provider from its action context (via runMutation).
  * Throws on any failure; deletes the code on success.
@@ -127,7 +149,7 @@ export const verifyEmailRecovery = internalQuery({
       .withIndex("email", (q) => q.eq("email", email))
       .first();
     if (!user || !user.recoveryPhraseHash) return null;
-    if (!constantTimeStringEquals(user.recoveryPhraseHash, args.phraseHash)) {
+    if (!(await verifierMatches(user.recoveryPhraseHash, args.phraseHash))) {
       return null;
     }
     return user._id;

@@ -6,6 +6,7 @@ import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { getUserByPhone, optionalAuth, requireFullAuth } from "./helpers";
 import { normalizeE164 } from "./lib/phone";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { deleteBlob } from "./lib/storage";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -18,6 +19,10 @@ export const SECURITY_LOG_RETENTION_MS = 30 * DAY_MS;
 /** Security-log action written when an account's erasure starts. */
 export const WIPE_ACTION = "account_wipe_executed";
 const BATCH = 200;
+// Each fresh schedule alerts the owner on every channel and cancel undoes it
+// at once: cap the schedules so a request/cancel loop can't burn the shared
+// email and WhatsApp quotas.
+const SCHEDULES_PER_DAY = 3;
 
 export const getStatus = query({
   args: {},
@@ -75,6 +80,15 @@ export const request = auditedMutation({
     const userId = await requireFullAuth(ctx);
     const user = await ctx.db.get(userId);
     if (!user) throw new Error("User not found");
+    if (!user.deletionScheduledAt) {
+      await enforceIpRateLimit(
+        ctx,
+        "deletion_request",
+        userId,
+        SCHEDULES_PER_DAY,
+        DAY_MS,
+      );
+    }
     const { scheduledAt } = await scheduleDeletion(ctx, user);
     return { scheduledAt };
   },
