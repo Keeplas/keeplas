@@ -7,6 +7,7 @@ import {
   internalMutation,
   internalQuery,
   MutationCtx,
+  QueryCtx,
 } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import {
@@ -14,7 +15,7 @@ import {
   createNotification,
   requireFullAuth,
 } from "./helpers";
-import { formatSenderIdentity } from "./lib/identity";
+import { formatSenderIdentity, ownerIdentity } from "./lib/identity";
 import { auditedMutation, createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { internal } from "./_generated/api";
@@ -32,7 +33,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** How often a paused cycle re-checks whether it may resume its timeline. */
 const PAUSE_RECHECK_MS = DAY_MS;
 /** Longest travel mode: it suspends the dead-man's switch, so it must end. */
-const TRAVEL_MODE_MAX_MS = 180 * DAY_MS;
+export const TRAVEL_MODE_MAX_DAYS = 180;
+const TRAVEL_MODE_MAX_MS = TRAVEL_MODE_MAX_DAYS * DAY_MS;
 
 /**
  * Stage-1 user check-in window: once the cadence elapses the user has this many
@@ -75,7 +77,7 @@ export function resolveThresholdDays(config: {
  * resuming after a pause or coming back from travel mode — so a stale
  * `lastActivityAt` can't fire a cycle immediately on the next evaluator tick.
  */
-function clockResetFields(
+export function clockResetFields(
   config: {
     frequency: "weekly" | "monthly" | "quarterly";
     inactivityThresholdDays?: number;
@@ -178,6 +180,24 @@ export const saveConfig = auditedMutation({
 });
 
 /**
+ * Put a Life check in travel mode until `until` and suspend any cycle already
+ * in flight. Shared by `toggleTravelMode` and `store_review.clearDrift`.
+ */
+export async function enterTravelMode(
+  ctx: MutationCtx,
+  config: Doc<"life_check_configs">,
+  until: number,
+  now: number,
+) {
+  await ctx.db.patch(config._id, {
+    travelModeEnabled: true,
+    travelModeUntil: until,
+    updatedAt: now,
+  });
+  await suspendInFlightCycle(ctx, config.userId, "travel_mode", now);
+}
+
+/**
  * Toggle travel mode.
  */
 export const toggleTravelMode = auditedMutation({
@@ -208,18 +228,11 @@ export const toggleTravelMode = auditedMutation({
         throw new ConvexError("Choose a return date for travel mode");
       }
       if (args.until > now + TRAVEL_MODE_MAX_MS) {
-        throw new ConvexError("Travel mode maximum is 180 days");
+        throw new ConvexError(
+          `Travel mode maximum is ${TRAVEL_MODE_MAX_DAYS} days`,
+        );
       }
-    }
-
-    if (args.enabled) {
-      // Entering travel mode — suspend any cycle already in flight.
-      await ctx.db.patch(config._id, {
-        travelModeEnabled: true,
-        travelModeUntil: args.until,
-        updatedAt: now,
-      });
-      await suspendInFlightCycle(ctx, userId, "travel_mode", now);
+      await enterTravelMode(ctx, config, args.until, now);
     } else {
       // Returning early — clear travel mode and start a fresh window.
       await ctx.db.patch(config._id, {
@@ -394,6 +407,26 @@ function enabledChannels(channels: ChannelEntry[]): ChannelEntry[] {
 }
 
 /**
+ * The switch already fired: an approved access request exists, so contacts
+ * hold access to the owner's vault. The Life check stays quiet until the owner
+ * comes back and revokes it (`access_requests.revokeReleasedAccess`, which
+ * re-arms the clock) — otherwise every elapsed threshold would ask the
+ * contacts to confirm again.
+ */
+async function hasReleaseInForce(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<boolean> {
+  const approved = await ctx.db
+    .query("access_requests")
+    .withIndex("by_status", (q) =>
+      q.eq("vaultUserId", userId).eq("status", "approved"),
+    )
+    .first();
+  return approved !== null;
+}
+
+/**
  * Insert a new Life Check cycle for a config and notify the user. Shared
  * by `initiateCycle` (legacy entry) and the cron evaluator. Fans out every
  * enabled channel at once, schedules reminders across the check-in window,
@@ -425,6 +458,7 @@ async function startCycleForConfig(
 
   const enabled = enabledChannels(config.activeChannels);
   if (enabled.length === 0) return null;
+  if (await hasReleaseInForce(ctx, config.userId)) return null;
 
   const now = Date.now();
   const windowMs = (config.checkInWindowDays ?? CHECK_IN_WINDOW_DAYS) * DAY_MS;
@@ -587,7 +621,7 @@ export async function cancelPendingSchedules(
 /**
  * Find the user's in-flight Life Check cycle, if any.
  */
-async function findInFlightCycle(ctx: MutationCtx, userId: Id<"users">) {
+export async function findInFlightCycle(ctx: QueryCtx, userId: Id<"users">) {
   const statuses = ["running", "awaiting_confirmation"] as const;
   for (const status of statuses) {
     const cycle = await ctx.db
@@ -1000,6 +1034,29 @@ export const enterConfirmationStage = internalMutation({
     if (!config) return;
 
     const now = Date.now();
+    // A cycle started before a release was in force (or by the pre-fix
+    // evaluator, which restarted after a release): close it instead of asking
+    // the contacts to confirm again.
+    if (await hasReleaseInForce(ctx, cycle.userId)) {
+      await ctx.db.patch(cycle._id, {
+        status: "cancelled",
+        cancelledAt: now,
+        cancelledReason: "release_in_force",
+        completedAt: now,
+      });
+      await cancelPendingSchedules(ctx, cycle._id);
+      await createAuditLog(ctx, {
+        userId: cycle.userId,
+        actorType: "system",
+        actorId: "life_check_scheduler",
+        action: "life_check_cycle_suspended",
+        resourceType: "life_check_cycle",
+        resourceId: cycle._id,
+        metadata: JSON.stringify({ reason: "release_in_force" }),
+      });
+      return;
+    }
+
     await ctx.db.patch(cycle._id, {
       status: "awaiting_confirmation",
     });
@@ -1036,7 +1093,7 @@ export const enterConfirmationStage = internalMutation({
           email: contact.email,
           phoneNumber: contact.phoneNumber,
           contactName: contact.name,
-          ownerName,
+          owner: ownerIdentity(owner),
           language: contactUser?.language,
           pushTokens: await activePushTokens(ctx, contact.contactUserId),
         },

@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useColorScheme } from "react-native";
+import { Appearance as NativeAppearance, useColorScheme } from "react-native";
 
 import { readPreference, writePreference } from "@/lib/preferences";
 import { semantic, type ColorScheme, type SemanticColors } from "@/theme";
@@ -35,6 +35,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       }
     });
   }, []);
+
+  // Native UI (alerts, keyboard, pickers) follows the in-app choice too;
+  // "unspecified" hands it back to the OS. The native splash before JS loads
+  // still follows the OS.
+  useEffect(() => {
+    NativeAppearance.setColorScheme(
+      appearance === "system" ? "unspecified" : appearance,
+    );
+  }, [appearance]);
 
   const value = useMemo<ThemeValue>(() => {
     const scheme: ColorScheme =

@@ -88,8 +88,7 @@ function LockedVaultCard({
     !vault.unreachableConfirmed;
 
   let detail = t("shared.trusted");
-  let body =
-    n === 1 ? t("shared.laterOne", { name }) : t("shared.later", { name, n });
+  let body = t("shared.later", { name, count: n });
   if (actionNeeded) {
     detail = t("shared.unreachable.detail");
     body = t("shared.unreachable.body", { n });
@@ -208,11 +207,7 @@ export default function SharedWithMe() {
               <OwnerIdentity
                 name={vault.ownerName}
                 phone={vault.ownerPhone}
-                detail={
-                  vault.releasedItemCount === 1
-                    ? t("shared.oneItem")
-                    : t("shared.items", { n: vault.releasedItemCount })
-                }
+                detail={t("shared.items", { count: vault.releasedItemCount })}
               />
               <Icon name="chevron-right" size={20} color="text.muted" />
             </Pressable>

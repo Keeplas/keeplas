@@ -37,8 +37,7 @@ async function launch(
       ImagePicker.launchCameraAsync(PICKER_OPTIONS),
     );
   }
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) throw new PermissionDenied("photos");
+  // The system photo picker runs outside the app: no library access needed.
   return keepUnlockedWhile(() =>
     ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS),
   );

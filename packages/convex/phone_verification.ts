@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import {
   mutation,
   query,
@@ -17,6 +17,7 @@ import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
 import { enforceIpRateLimit } from "./lib/rate_limit";
+import { refuseOnReviewAccount } from "./store_review";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -42,12 +43,13 @@ export const requestVerification = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireFullAuth(ctx);
+    await refuseOnReviewAccount(ctx, userId);
     const phone = normalizeE164(args.phoneNumber);
-    if (!phone) throw new Error("A valid phone number is required");
+    if (!phone) throw new ConvexError("A valid phone number is required");
 
     const user = await ctx.db.get(userId);
     if (user?.phoneNumberVerifiedAt && user.phoneNumber === phone) {
-      throw new Error("New phone number is the same as the current one.");
+      throw new ConvexError("New phone number is the same as the current one.");
     }
     if (user?.phoneNumberVerifiedAt) {
       await requireSessionProof(ctx, "phone", "vault");
@@ -61,7 +63,7 @@ export const requestVerification = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
     // Per destination too, across accounts: farmed accounts must not send a
     // stream of codes to someone else's number.
@@ -109,7 +111,9 @@ export async function assertPhoneAvailable(
   userId: Id<"users">,
 ): Promise<void> {
   if (await phoneTakenByOther(ctx, phone, userId)) {
-    throw new Error("This phone number is already linked to another account.");
+    throw new ConvexError(
+      "This phone number is already linked to another account.",
+    );
   }
 }
 
@@ -152,7 +156,9 @@ export async function commitPhoneChange(
     )
     .first();
   if (clash && clash.userId !== userId) {
-    throw new Error("This phone number is already linked to another account.");
+    throw new ConvexError(
+      "This phone number is already linked to another account.",
+    );
   }
   if (existingPhoneOtp) {
     if (existingPhoneOtp.providerAccountId !== newPhone) {

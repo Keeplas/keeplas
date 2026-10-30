@@ -12,7 +12,7 @@ Building and uploading: [`APP_STORE.md`](./APP_STORE.md) (iOS) and [`README.md`]
 
 ## Status
 
-As of 27 October 2026.
+As of 29 October 2026.
 
 **Done**
 
@@ -22,23 +22,32 @@ As of 27 October 2026.
   - `scheduleForPhone`, for deletion requests made on the website.
 - **Prod config:** `REVIEW_PHONES` (the five [review numbers](#review-numbers)) and `REVIEW_CODE` are set in Infisical `prod` → `/keeplas_app` and on prod Convex. `pnpm review:status` says `REVIEW_CODE: set`.
 - **No dev bypass on prod:** `DEV_TEST_PHONES`, `APP_ATTEST_ALLOW_DEVELOPMENT` and `ATTESTATION_SIMULATOR_BYPASS` are not set. The kill switches `NOTIFICATIONS_PAUSED` and `LIFE_CHECK_PAUSED` are off, so invitations go out and the Life check runs.
-- **Encryption:** `app.json` declares the app's own encryption. The export compliance answers and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
-- **France (ANSSI):** the declaration of the cryptology means was filed and accepted on 27 October 2026 (dossier 34982065 on demarche.numerique.gouv.fr). Its attestation is the document ASC asks for when the app is available in France. Keep the PDF out of this public repo: it holds personal details.
-- **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)).
+- **Encryption:** export compliance answered in ASC as standard algorithms, not distributed in France, so `app.json` sets `ITSAppUsesNonExemptEncryption: false`. Details and the algorithm list are in [`APP_STORE.md`](./APP_STORE.md#export-compliance).
+- **France (ANSSI):** the declaration of the cryptology means is dossier 34982065 on demarche.numerique.gouv.fr. Its acknowledgment is the document ASC asks for before the app can be available in France. Keep the PDF out of this public repo: it holds personal details.
+- **Website:** the deletion page shows the in-app steps, drawn from the app's own screens, and ends with a form that asks for the account's phone number ([keeplas-website#21](https://github.com/Keeplas/keeplas-website/pull/21), [#22](https://github.com/Keeplas/keeplas-website/pull/22)). The server-rendered routes, the lost-phone guide and the reviewed privacy policy and terms are live (#25 to #29, merged on 27 October 2026). On 30 October ([#30](https://github.com/Keeplas/keeplas-website/pull/30)) the false struck-through $199 was removed and the canonical URLs point to `https://www.keeplas.com` (they pointed to `localhost:3000`): `/privacy`, `/terms`, `/support`, `/delete-account` and `/lost-phone` (and their `/fr` versions) answer 200, and an unknown path answers 404.
+- **Store review audit (29 October 2026):** every screen, button, permission, store rule and URL was checked. The app fixes are in this branch; what is left is in the list below.
 - **[Demo accounts](#demo-accounts)**, seeded with `pnpm review:seed` on 27 October 2026: the owner and two accepted contacts, all on UK numbers and all opened with the same 24 words. The owner's vault holds six items, each contact's two. The command opens each account again like a new phone (review code, then the stored 24 words): every item and file decrypts, and `pnpm review:status` says **Ready for review**.
 
 **Left to do**
 
 - [ ] Record the video of the multi-day flows and put its link in the review notes.
+- [ ] Record the Play [foreground service video](#play-console-app-content-declarations) (vault export, about 30 seconds).
 - [ ] US export documentation: confirm the route with counsel, either the BIS self-classification report or the open-source notification.
-- [ ] Upload a new iOS build: the encryption declaration only applies to builds made after it. It must also include the UK review numbers fix and the store review fixes (Android contact picker, copy, error messages).
+- [ ] Upload a new iOS build, version 1.0.0. It must include the UK review numbers fix and the store review audit fixes.
 - [ ] Android: upload the launch AAB (it must include the same fixes), then create the `keeplas_lifetime` product in the Play Console. Play refuses the product until an AAB with billing is on a track.
-- [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL ([checklist](#before-each-submission)).
-- [ ] Website, before submitting (reviewers open these pages):
-  - merge [keeplas-website#26](https://github.com/Keeplas/keeplas-website/pull/26) first: every server-rendered route returns 500 on prod, including the support and delete-account forms (`POST /api/contact`);
-  - merge [#25](https://github.com/Keeplas/keeplas-website/pull/25): the lost or new phone guide that Help → "Full guide on keeplas.com" opens (`/lost-phone`, a 500 today);
-  - review and merge [#27](https://github.com/Keeplas/keeplas-website/pull/27): the privacy policy and terms still start with "This document is a template" and contradict the app (5 GB, 30-day refund, Stripe, email sign-up).
+- [ ] Deploy the backend of the store review audit fixes (`pnpm deploy:convex`) before the new builds reach reviewers: error messages, review-number limits and the review tooling depend on it. Upload the new builds the same day: after this deploy, older builds (TestFlight, internal track) can't request a sign-in code or send a support request until they update, because the server now requires the audit envelope with the IP.
+- [ ] Right after that deploy, run `pnpm review:clear` on `<OWNER_NUMBER>`, `<CONTACT_1_NUMBER>` and `<CONTACT_2_NUMBER>`: it pauses Alex's and Sam's Life check and turns their cloud backup off, which the first seed missed. Then `pnpm review:status`.
+- [ ] Capture the six store screenshots on a real phone, in English and French, and render them ([`store-screenshots/`](./store-screenshots/)). The old set showed Figma mockups with screens the app doesn't have (Apple 2.3.3).
+- [ ] Fix the store descriptions in AFFiNE before pasting them: sharing is chosen per item, not per category. EN "• For each item, choose who receives it."; FR "• Pour chaque élément, choisissez qui le recevra."
+- [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL, Play App content declarations ([checklist](#before-each-submission)).
+- [ ] ASC → Pricing and Availability: clear "Make this app available" for Apple silicon Macs, and check Apple Vision Pro availability. Sign-up can't pass App Attest on a Mac.
+- [ ] Choose the countries on purpose, in ASC and in Play → Production → Countries/regions (both are set to all today). Untick China mainland (no ICP filing, and WhatsApp, the only code channel, is blocked there), and any market where WhatsApp codes can't be delivered (Russia), until an SMS fallback exists. Record the choice in [`APP_STORE.md`](./APP_STORE.md#release-to-the-app-store).
+- [ ] Apple: Digital Services Act trader status (ASC → Business → Digital Services Act → trader): PRINC CODE SARLU LTD, 20 Wenlock Road, London N1 7GU, support@keeplas.com, with a current Companies House document (company 14930093). Without a verified status the app isn't offered in the EU, France included, and verification can take weeks.
+- [ ] Google Play: declare the trader status (Play Console → Account details → About you → Trader), then confirm it for `com.keeplas.app` in App content with the terms URL `https://www.keeplas.com/terms`. Required from November 2026 for EEA and UK users; the D-U-N-S number and contact details become public on the listing from 1 March 2027.
+- [ ] Age: record the decision for the US state (Texas, Utah, Louisiana) and Brazil age-assurance rules, with counsel. The app is 18+ by its terms, but sign-up has no age check, so an 18+ age check (Declared Age Range on iOS, Play Age Signals) may be required in those regions.
+- [ ] Test the TestFlight build on an iPad mini and an 11" or 13" iPad: reviewers often use one, and an iPhone app runs there in a 375 × 667 or 390 × 844 window ([iPad pass](./APP_STORE.md#ipad-pass)).
 - [ ] Replace the `keeplas_lifetime` review screenshot in ASC: it is still the blank placeholder RevenueCat uploaded. Take it on a phone: Settings → Upgrade, with the sheet open.
+- [ ] Record the date the `migrations:purgeErasedAccountsSecurityLogs` backfill ran on prod, or run it.
 
 ## What the stores check
 
@@ -47,14 +56,17 @@ Both stores can reject a version. A rejection cites the rule: fix the problem an
 | Check                               | Rule                                                                                                         | Keeplas                                                                                                                                                                                                                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Reviewers can sign in               | Apple 2.1; Play **App access**                                                                               | Review numbers and code, with notes to paste (below)                                                                                                                                                                                                                           |
-| The app works without another app   | Apple 4.2.3(i): "Your app should work on its own without requiring installation of another app to function." | Users get their codes on WhatsApp, but reviewers don't need it, and the copy doesn't present WhatsApp as a requirement. If Apple still cites this rule, the fix is an SMS fallback for codes, which isn't built.                                                               |
-| Encryption is declared              | Apple export compliance; France (ANSSI)                                                                      | `ITSAppUsesNonExemptEncryption: true`; ANSSI declaration accepted; answers in [`APP_STORE.md`](./APP_STORE.md#export-compliance)                                                                                                                                               |
+| The app works without another app   | Apple 4.2.3(i): "Your app should work on its own without requiring installation of another app to function." | Codes are sent only on WhatsApp, and the sign-in screens say so ("Verify with WhatsApp"). Reviewers don't need WhatsApp: the review numbers take the review code. If Apple cites this rule, the fix is an SMS fallback for codes, which isn't built.                           |
+| Encryption is declared              | Apple export compliance; France (ANSSI)                                                                      | Questionnaire answered (standard algorithms, no France), `ITSAppUsesNonExemptEncryption: false`; see [`APP_STORE.md`](./APP_STORE.md#export-compliance)                                                                                                                        |
 | Paid features use in-app purchase   | Apple 3.1.1                                                                                                  | Lifetime is the in-app product `keeplas_lifetime` (RevenueCat), with Restore. The iOS app shows no web price and no link to pay elsewhere.                                                                                                                                     |
 | Users can delete their account      | Apple 5.1.1(v); Play also asks for a web link                                                                | Settings → Delete my account; on the web, `https://www.keeplas.com/delete-account`                                                                                                                                                                                             |
 | Privacy is disclosed                | Apple 5.1.1(i) and App Privacy; Play Data safety                                                             | The app links the privacy policy at sign-up and in Settings; add its URL to both listings. Proposed answers: [Store privacy answers](#store-privacy-answers).                                                                                                                  |
 | Contacts access is minimal          | Play permissions policy and Data safety                                                                      | No contacts permission on either platform. iOS's picker hands over the picked contact; on Android the user picks one phone number in the contacts app (`modules/contact-picker`) and `app.json` blocks `READ_CONTACTS`. The contacts users add are still declared as Contacts. |
-| Testing before production (Android) | Play: personal developer accounts created after 13 Nov 2023                                                  | A closed test with at least 12 testers for 14 days in a row. An organization account is exempt.                                                                                                                                                                                |
-| Target API (Android)                | Play: Android 16 (API 36) since 31 Aug 2026                                                                  | React Native 0.86 (Expo SDK 57) targets API 36                                                                                                                                                                                                                                 |
+| Permissions are asked in context    | Apple 5.1.1(iv); Play permissions policy                                                                     | Camera, microphone and notifications are asked by the system dialog when the feature needs them, with no custom "Not now / Allow" pre-prompt. Photos come through the system picker, which needs no permission. A denied permission leaves the rest of the app usable.         |
+| Screenshots show the real app       | Apple 2.3.3; Play metadata policy                                                                            | Captured on a phone from the shipped build ([`store-screenshots/`](./store-screenshots/)), not Figma mockups.                                                                                                                                                                  |
+| Foreground service is declared      | Play: foreground service permissions (apps targeting Android 14+)                                            | The vault export runs a `dataSync` foreground service: declare it in App content, with a video ([below](#play-console-app-content-declarations)).                                                                                                                              |
+| Testing before production (Android) | Play: personal developer accounts created after 13 Nov 2023                                                  | Not required: the developer account belongs to the organization PRINC CODE SARLU LTD.                                                                                                                                                                                          |
+| Target and minimum API (Android)    | Play: Android 16 (API 36) since 31 Aug 2026                                                                  | Targets API 36 (React Native 0.86). Minimum Android 9 (API 28), the first with passkeys, which sign-up needs. Camera and microphone are optional hardware (`plugins/with-android-device-reach.js`).                                                                            |
 
 Not a problem:
 
@@ -68,7 +80,7 @@ Keeplas has no email and password. An account is a phone number verified with a 
 
 - Numbers listed in `REVIEW_PHONES` accept the secret 6-digit `REVIEW_CODE` instead of a WhatsApp code, for sign-in and for sign-up (`packages/convex/phone_auth.ts`). No WhatsApp message is sent for them.
 - Nothing else is bypassed. Sign-up still needs the App Attest / Play Integrity attestation of the genuine app. A new device still needs the 24-word recovery kit to open the vault.
-- The usual limits apply: 3 code requests per hour and 5 attempts per code. `pnpm review:reset` refuses any number outside `REVIEW_PHONES`.
+- Limits: 5 attempts per code, and at most 15 wrong codes per hour for a review number. Review numbers can request codes without the usual 3-per-hour cap, since no WhatsApp message is sent. `pnpm review:clear` and `pnpm review:reset` refuse any number outside `REVIEW_PHONES`.
 
 Both stores accept this:
 
@@ -79,15 +91,17 @@ Both stores accept this:
 
 All the review numbers are British, from the range Ofcom keeps for drama (07700 900000 to 900999): nobody can own them, so no message ever reaches a real person. The app's phone check accepts them (`toE164` in `apps/mobile/src/lib/phone.ts` lets the range through, since libphonenumber rejects it).
 
-The numbers themselves are not in this public repo: anyone who knows them can request codes for them and lock reviewers out (3 requests per hour per number). They live only in `REVIEW_PHONES` (Infisical `prod` → `/keeplas_app`, and prod Convex), in this order:
+The numbers themselves are not in this public repo: anyone who knows them can request codes for them and use up their hourly budget of wrong guesses at the fixed code, locking reviewers out. They live only in `REVIEW_PHONES` (Infisical `prod` → `/keeplas_app`, and prod Convex), in this order:
 
-| Position in `REVIEW_PHONES` | Role           | Account                                                      |
-| --------------------------- | -------------- | ------------------------------------------------------------ |
-| 1st (`<OWNER_NUMBER>`)      | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan   |
-| 2nd (`<CONTACT_1_NUMBER>`)  | Demo contact 1 | Seeded vault, recovery kit; accepted the owner's invitation  |
-| 3rd (`<CONTACT_2_NUMBER>`)  | Demo contact 2 | Seeded vault, recovery kit; accepted the owner's invitation  |
-| 4th (`<SIGNUP_NUMBER>`)     | Sign-up test   | No account: reviewers create one; reset it after each review |
-| 5th (`<SPARE_NUMBER>`)      | Sign-up test   | Same, spare                                                  |
+| Position in `REVIEW_PHONES`    | Role           | Account                                                       |
+| ------------------------------ | -------------- | ------------------------------------------------------------- |
+| 1st (`<OWNER_NUMBER>`)         | Demo owner     | Seeded vault, recovery kit, 2 accepted contacts, Free plan    |
+| 2nd (`<CONTACT_1_NUMBER>`)     | Demo contact 1 | Seeded vault, recovery kit; accepted the owner's invitation   |
+| 3rd (`<CONTACT_2_NUMBER>`)     | Demo contact 2 | Seeded vault, recovery kit; accepted the owner's invitation   |
+| 4th (`<APPLE_SIGNUP_NUMBER>`)  | Sign-up test   | Apple's: no account, reviewers create one; reset after review |
+| 5th (`<GOOGLE_SIGNUP_NUMBER>`) | Sign-up test   | Google's: same                                                |
+
+Each store gets its own sign-up number, so a reviewer never lands on the other store's account ("Sign in with this number", then "Lost access to your vault?"). The demo owner is shared: the notes ask reviewers to leave it as it is and to try the irreversible actions (purchase, deletion, new recovery kit) on the account they create.
 
 WhatsApp messages to these numbers fail quietly. Push notifications reach the phones signed in to the account, such as a reviewer's.
 
@@ -161,8 +175,9 @@ The contacts have vaults of their own, shared with nobody (they have no trusted 
 
 - **Settings:**
   - Free plan, so reviewers can try the Lifetime purchase in the sandbox;
-  - Life check quarterly, with travel mode on until 26 November 2026;
-  - cloud backup turned off, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit.
+  - Life check quarterly (owner), and travel mode on all three accounts for 180 days (the maximum), so no check-in or "Are you okay?" screen appears during a review;
+  - cloud backup turned off on all three, so reviewers' phones don't turn it on and each new reviewer goes straight to the recovery kit;
+  - number and email locked: the server refuses a number change or an added email on every `REVIEW_PHONES` account, sign-up numbers included.
 - **Contacts:**
   - invited by phone only, so no message reached anyone;
   - they accepted, and their keys are pinned on the owner's side.
@@ -183,16 +198,20 @@ To seed again, for example after a reviewer changed the demo vault:
 ## Every submission
 
 1. `pnpm review:status` → **Ready for review**.
-   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset <SIGNUP_NUMBER>` (or `<SPARE_NUMBER>`).
-   - The owner's travel mode pauses the Life check, so no check-in or escalation runs during the review. It lasts 30 days: after 26 November 2026, sign in to the demo account and turn it on again (Settings → Life check).
-2. Paste the notes below into ASC and the Play Console, with the current numbers, code and words from Infisical. Write each number the way the app's form takes it (United Kingdom, then the national number, e.g. 07700 900xxx).
-3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's.
+   - It also checks that no earlier reviewer changed the demo accounts: the 24 words still open them; no device alert is pending; no key rotation is flagged; cloud backup is off; no email was added; the language is English; travel mode lasts at least 14 more days; no Life check, contact access request or recovery request is in progress; the owner is still on the Free plan with no deletion scheduled; Alex and Sam still have their seeded items and no contacts. Each problem names its fix:
+     - `pnpm review:clear <number>` (only the `REVIEW_PHONES` numbers): device alerts, cloud backup, email, language, travel mode (set again for 180 days), open requests (recovery, contact access, "Lost your number?"), invitations never accepted;
+     - re-seed ([above](#demo-accounts)): a new kit, a key rotation, a purchase, a deletion, a released vault, or changed items or contacts on Alex or Sam.
+   - If a reviewer used a sign-up number last time, free it first: `pnpm review:reset <APPLE_SIGNUP_NUMBER>` (or `<GOOGLE_SIGNUP_NUMBER>`).
+   - Travel mode pauses the Life check on the three demo accounts. `status` warns 14 days before it ends; `pnpm review:clear` sets it again.
+2. Paste the notes below into ASC and the Play Console, with the current numbers, code and words from Infisical, and each store's own sign-up number. Write each number the way the app's form takes it (United Kingdom, then the national number, e.g. 07700 900xxx).
+3. Each new sign-in to the demo owner raises a new-device alert on the phones already signed in to it, such as an earlier reviewer's. The notes tell reviewers to tap "It was me".
    - If you sign in to the demo account yourself during a review, never answer "It wasn't me": that revokes the reviewer's session.
    - Never rotate the demo account's keys.
-4. After the review, run `pnpm review:reset <number>` on each sign-up number a reviewer created an account on.
-5. Rotate `REVIEW_CODE`: it sits in the review notes, and with the attestation it can create accounts on the listed numbers. Change it in Infisical and on Convex ([setup](#setup) steps 1 to 3); the next submission's notes use the new one.
+4. When Apple and Google review at the same time, run `pnpm review:status` again after the first review ends.
+5. After the review, run `pnpm review:reset <number>` on each sign-up number a reviewer created an account on.
+6. Keep `REVIEW_CODE` while the app is live on Google Play: Play's App access must stay valid between submissions, and Google reviews again at any time (policy checks, declarations). Rotate it only if it may have leaked: change it in Infisical and on Convex ([setup](#setup) steps 1 to 3), then in the same step update the ASC notes and Play Console → App content → App access.
 
-`pnpm review:status` and `pnpm review:reset` run on prod through `pnpm with-env --env=prod` ([`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)). `reset` asks you to type the number again; `--yes` skips that.
+`pnpm review:status`, `pnpm review:clear` and `pnpm review:reset` run on prod through `pnpm with-env --env=prod` ([`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs), run with `tsx`). `status` also reads `REVIEW_KIT` from Infisical `prod` → `/keeplas_mobile` to check that the 24 words still open the demo accounts; it never prints them or the code. `reset` asks you to type the number again; `--yes` skips that. They need the backend of 29 October 2026 or later on prod: before that, `clear` doesn't exist and `status` wrongly reports the kit as not opening.
 
 ### App Store Connect: App Review Information
 
@@ -204,25 +223,31 @@ To seed again, for example after a reviewer changed the demo vault:
 ```text
 Keeplas has no email and password: an account is a phone number verified with a code, normally sent on WhatsApp, then a passkey on the device. The numbers below accept a fixed code instead, without WhatsApp.
 
+The device needs a screen lock (passcode or PIN): Keeplas keeps the vault key behind it.
+
 SIGN IN TO THE DEMO ACCOUNT
 1. Tap "I already have an account".
-2. Choose United Kingdom and enter <OWNER_NUMBER>, then tap "Verify with WhatsApp".
+2. Choose United Kingdom (search "United Kingdom" or "UK") and enter <OWNER_NUMBER> (national format), or type the full number in E.164. Then tap "Verify with WhatsApp".
 3. Enter the code <REVIEW_CODE>, then tap "Confirm number".
-4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault". If the app first offers to restore from iCloud or Google, tap "Other ways back in", then "Use recovery kit".
+4. This device has no vault key yet: choose "Use recovery kit", paste the 24 words below, then tap "Open my vault". If the app first offers to restore a backup, tap "Other options", then "Other ways back in", then "Use recovery kit".
    <24 WORDS>
-5. The vault opens on Home. If the app asks to turn on security alerts, either answer works.
+5. The vault opens on Home. If the system asks to allow notifications, either answer works. If a "New device detected" screen appears, it is another reviewer's phone: tap "It was me".
+
+Other reviewers use this demo account too. Please leave it as it is: don't buy Lifetime, delete it, create a new recovery kit or turn cloud backup on. Try those on the account you create below. The review numbers can't change their number or email, including the account you create, and invitations sent from them are not delivered by WhatsApp or email.
 
 TRY SIGN-UP
-Tap "Get started" and use United Kingdom <SIGNUP_NUMBER> (or <SPARE_NUMBER>) with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
+Sign out first (Settings > Sign out). Tap "Get started" and use United Kingdom <SIGN-UP NUMBER> with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
+Sign-up checks that the app is genuine (App Attest on iPhone and iPad, Play Integrity on Android): it needs a real device, not a simulator or an emulator, with the app installed from the store. Creating the passkey needs iCloud Keychain turned on (iPhone, iPad), or a Google account (Android).
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
-- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both. Both contacts can sign in too, with the same code and the same 24 words: Alex on <CONTACT_1_NUMBER>, Sam on <CONTACT_2_NUMBER>.
-- In-app purchase: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). The demo account is on the Free plan.
-- Account deletion: Settings > Delete my account (erased 7 days later, can be cancelled).
+- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a release: Family items go to Alex, the others to both.
+- The contacts' side: Alex (<CONTACT_1_NUMBER>) and Sam (<CONTACT_2_NUMBER>) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a release (two contacts confirm they can't reach the owner, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
+- In-app purchase, on the account you created: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). New accounts are on the Free plan.
+- Account deletion, on the account you created: Settings > Delete my account (erased 7 days later, can be cancelled).
 
 WHAT TAKES DAYS
-The Life check (a periodic "are you OK?" check), succession (two contacts confirm a death, then a 72-hour grace period) and recovery through contacts (a 72-hour protection window) run over days, so they can't be completed during review. The demo account's Life check is paused. Video of these flows: <VIDEO_URL>
+The Life check (a periodic "are you OK?" check), succession (two contacts confirm they can't reach the owner, then a 72-hour grace period) and recovery through contacts (a 72-hour protection window) run over days, so they can't be completed during review. The demo account's Life check is paused. Video of these flows: <VIDEO_URL>
 ```
 
 - **Attachment**: optional, the same video.
@@ -233,7 +258,22 @@ The Life check (a periodic "are you OK?" check), succession (two contacts confir
 - **Instruction name**: "Demo account (phone number and code)".
 - **Username**: `<OWNER_NUMBER>` (E.164).
 - **Password**: the review code.
-- **Any other instructions**: the same notes as above.
+- **Any other instructions**: the same notes as above, with `<GOOGLE_SIGNUP_NUMBER>` as the sign-up number (ASC gets `<APPLE_SIGNUP_NUMBER>`).
+
+### Play Console: App content declarations
+
+Play blocks the release until each form is answered. Re-check the answers after any SDK change: a new SDK can add a permission (for example `AD_ID`).
+
+- **Foreground service permissions**: declare `dataSync`, use case "Local processing: import or export".
+  - Description: "The user starts a vault export in Settings → Export my data. The app downloads, decrypts and zips their files on the phone and shows a progress notification. If the export is interrupted, it stops and the user starts it again."
+  - Video, about 30 seconds, unlisted: Settings → Export my data → Export → leave the app → the progress notification → the archive is ready.
+- **Ads**: the app contains no ads.
+- **Advertising ID**: No. The merged manifest has no `com.google.android.gms.permission.AD_ID`.
+- **Content rating** (IARC): category All other app types; every content question No; users interact or exchange content: **Yes** (items, photos, voice notes and messages go to trusted contacts the user invites, nothing public); shares current location: No; digital purchases: **Yes**; unrestricted internet: No. Expected result: Everyone / PEGI 3, with "Users interact" and "In-app purchases".
+- **Target audience**: 18 and over only, so the Families policy doesn't apply. The terms require 18+; the app checks it only when the user enters a date of birth (see the age item in [Left to do](#status)).
+- **Trader status**: Trader (account level), then confirmed for the app, with the terms URL `https://www.keeplas.com/terms`.
+- **News app**: No. **Government app**: No. **Financial features**: None. **Health apps**: None.
+- **Data safety** and the delete-account URL: [Store privacy answers](#store-privacy-answers).
 
 ## Store privacy answers
 
@@ -244,27 +284,52 @@ Vault content (items, notes, files, voice notes) is end-to-end encrypted: Keepla
 - **Google** says data only the sender and recipient can read "does not need to be disclosed".
 - **Apple** defines "collect" as sending data off the device in a way that lets you access it, which Keeplas can't do for vault content.
 
-| Data (Apple · Google)                                | Why it leaves the device                                                                                      | Linked to the user |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------ |
-| Phone Number · Personal info → Phone number          | Account identity, codes and notifications (WhatsApp, run by Meta, via Infobip)                                | Yes                |
-| Name · Personal info → Name                          | Profile name shown to your contacts                                                                           | Yes                |
-| Email Address · Personal info → Email address        | Optional, plus the email addresses of contacts you invite                                                     | Yes                |
-| Contacts · Contacts                                  | The name, phone and email of each trusted contact you add (only the contact you pick, never the address book) | Yes                |
-| Photos or Videos · Photos and videos → Photos        | Optional profile photo (not end-to-end encrypted)                                                             | Yes                |
-| Other Data Types · Personal info → Other info        | Date of birth and country of residence, when the user gives them (My account)                                 | Yes                |
-| Coarse Location · Location → Approximate location    | Country and city derived from the IP address, kept with the IP in the security log and the device list        | Yes                |
-| Customer Support · Messages → Other in-app messages  | Support requests: name, reply-to contact, message                                                             | Yes                |
-| User ID · Personal info → User IDs                   | Account ID, also given to RevenueCat for purchases                                                            | Yes                |
-| Device ID · Device or other IDs                      | Device registry, push tokens (Expo, APNs, FCM)                                                                | Yes                |
-| Purchase History · Financial info → Purchase history | Lifetime purchase (RevenueCat)                                                                                | Yes                |
-| Product Interaction · App activity → Other actions   | Tamper-evident security log of account actions                                                                | Yes                |
+| Data (Apple · Google)                                | Why it leaves the device                                                                                      | Required | Google purposes                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| Phone Number · Personal info → Phone number          | Account identity, codes and notifications (WhatsApp, run by Meta, via Infobip)                                | Yes      | App functionality, Account management, Developer communications |
+| Name · Personal info → Name                          | Profile name shown to your contacts                                                                           | Yes      | App functionality, Account management                           |
+| Email Address · Personal info → Email address        | Optional, plus the email addresses of contacts you invite                                                     | No       | App functionality, Account management                           |
+| Contacts · Contacts                                  | The name, phone and email of each trusted contact you add (only the contact you pick, never the address book) | No       | App functionality                                               |
+| Photos or Videos · Photos and videos → Photos        | Optional profile photo (not end-to-end encrypted)                                                             | No       | App functionality, Account management                           |
+| Other Data Types · Personal info → Other info        | Date of birth and country of residence, when the user gives them (My account)                                 | No       | App functionality, Account management                           |
+| Coarse Location · Location → Approximate location    | Country and city derived from the IP address, kept with the IP in the security log and the device list        | Yes      | App functionality, Fraud prevention, security, and compliance   |
+| Customer Support · Messages → Other in-app messages  | Support requests: name, reply-to contact, message                                                             | No       | App functionality                                               |
+| User ID · Personal info → User IDs                   | Account ID, also given to RevenueCat for purchases                                                            | Yes      | App functionality, Account management                           |
+| Device ID · Device or other IDs                      | Device registry, push tokens (Expo, APNs, FCM)                                                                | Yes      | App functionality, Fraud prevention, security, and compliance   |
+| Purchase History · Financial info → Purchase history | Lifetime purchase (RevenueCat)                                                                                | No       | App functionality, Analytics                                    |
+| Product Interaction · App activity → Other actions   | Tamper-evident security log of account actions                                                                | Yes      | App functionality, Fraud prevention, security, and compliance   |
 
-- **Purposes**: App Functionality only: no advertising, no analytics SDK, no tracking. Apple tracking: **No**.
+Every row is linked to the user.
+
+- **Apple purposes**: App Functionality for every row, plus Analytics for Purchase History (RevenueCat's own guidance, for its purchase charts). No advertising, no analytics SDK, no tracking. Apple tracking: **No**.
+- **Google purposes**: the column above. The privacy policy (§3) names the same uses: account management, security alerts, and fraud and abuse prevention (security log, code limits, sign-up attestation).
 - **Google: shared with third parties**: None. Infobip, WhatsApp (Meta), Expo, RevenueCat and Resend are service providers acting for Keeplas.
 - **Google: encrypted in transit**: Yes.
 - **Google: users can request deletion**: Yes.
   - In the app: Settings → Delete my account.
   - On the web: `https://www.keeplas.com/delete-account` (French: `/fr/delete-account`). Paste this URL in the Data safety form's delete-account field.
+
+## Play pre-launch report
+
+Google runs it on lab devices (in the US) after every upload to a track, and it reuses the App access credentials. The robot can't receive WhatsApp codes and won't get past the sign-in screens, so it mostly crawls Welcome, Help and Support.
+
+- Play Console → Testing → Pre-launch report → Settings: leave "Provide credentials" empty, so the robot doesn't try the demo account.
+- After each upload, read the report (crashes, accessibility, security warnings) and fix any crash before sending for review.
+- Then run `pnpm review:status`: it flags device alerts or requests a lab device may have left on a demo account.
+
+## App Store accessibility
+
+ASC → App Accessibility (Accessibility Nutrition Labels, voluntary for now). Apple asks that users can complete the app's common tasks (first launch, sign-in, purchase, settings) with each feature you claim.
+
+| Feature                           | Claim                                                                            |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| Dark Interface                    | Not yet: the onboarding and recovery illustrations have no dark version.         |
+| Differentiate Without Color Alone | Not yet: the selected tab and the security activity dots rely on colour.         |
+| Reduced Motion                    | Yes, after a check with Reduce Motion on: the ambient animations stop.           |
+| VoiceOver, Voice Control          | Not yet: claim them only after a full pass with VoiceOver on a phone.            |
+| Larger Text                       | Not yet: some fixed-height fields don't grow at the largest sizes.               |
+| Sufficient Contrast               | Not yet: status chips, placeholders and checkbox rings are below Apple's ratios. |
+| Captions, Audio Descriptions      | Not applicable: the app has no media of its own.                                 |
 
 ## Account deletion requests from the web
 
@@ -283,15 +348,23 @@ Payment records stay after deletion. The security log (with its IP addresses and
 
 ## Before each submission
 
+- [ ] The backend the build calls is deployed on prod (`pnpm deploy:convex`).
 - [ ] `pnpm review:status` says **Ready for review**.
-- [ ] Notes pasted with the current code and words, in ASC and in the Play Console App access section.
+- [ ] Notes pasted with the current code and words, in ASC (sign-up number `<APPLE_SIGNUP_NUMBER>`) and in the Play Console App access section (`<GOOGLE_SIGNUP_NUMBER>`).
 - [ ] Export compliance answered for the build (see [`APP_STORE.md`](./APP_STORE.md#export-compliance)).
 - [ ] App Privacy (ASC) and Data safety (Play) match the table above.
 - [ ] The privacy policy URL is in both listings and opens from Settings in the app.
 - [ ] The account-deletion URL is in the Play Data safety form.
+- [ ] Play App content declarations answered, including the foreground service video ([above](#play-console-app-content-declarations)).
+- [ ] Screenshots captured from the build being submitted, and descriptions that match it (sharing is per item).
+- [ ] The build's version (`expo.version` in `app.json`) matches the version in ASC.
+- [ ] ASC: not offered on Apple silicon Macs.
 - [ ] `keeplas_lifetime` is attached to the version (ASC), with a real review screenshot.
 - [ ] Video of the multi-day flows, linked in the notes.
-- [ ] Android: if the Play developer account is a personal one created after 13 Nov 2023, a closed test ran with at least 12 testers opted in for 14 days in a row before production access.
+- [ ] ASC → Business: Paid Apps Agreement Active, tax forms (W-8BEN-E) and bank account Active, no agreement waiting for the Account Holder. On the TestFlight build, Settings → Upgrade shows the price. A pending agreement already broke the purchase once (RevenueCat "code 23").
+- [ ] Trader status verified: Apple (DSA) and Google Play.
+- [ ] Play pre-launch report of the AAB read: no crash ([above](#play-pre-launch-report)).
+- [ ] ASC → App Accessibility: claim only what the app supports ([below](#app-store-accessibility)).
 
 Your own testers (TestFlight, Play closed and internal tracks) need none of this: they sign up with their real number and WhatsApp, like any user.
 
@@ -301,7 +374,7 @@ Your own testers (TestFlight, Play closed and internal tracks) need none of this
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | The review code in place of the WhatsApp code                              | `packages/convex/phone_auth.ts` (`fixedCode`)                                                                                                                                                                                              |
 | Readiness check (never returns the code) and reset (refuses other numbers) | `packages/convex/store_review.ts`                                                                                                                                                                                                          |
-| `pnpm review:status` and `pnpm review:reset`                               | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs)                                                                                                                                                                         |
+| `pnpm review:status`, `pnpm review:clear` and `pnpm review:reset`          | [`scripts/review-accounts.mjs`](../../scripts/review-accounts.mjs), demo numbers and kit check in [`scripts/review-demo.ts`](./scripts/review-demo.ts)                                                                                     |
 | Demo accounts (`pnpm review:seed`) and their files                         | [`apps/mobile/scripts/review-seed.ts`](./scripts/review-seed.ts), `apps/mobile/scripts/review-seed/`                                                                                                                                       |
 | Deletion of an account after a confirmed web request                       | `packages/convex/account_deletion.ts` (`scheduleForPhone`)                                                                                                                                                                                 |
 | Tests                                                                      | `packages/convex/__tests__/`: `store_review.test.ts`, `phone_auth.test.ts`, `account_deletion.test.ts`                                                                                                                                     |

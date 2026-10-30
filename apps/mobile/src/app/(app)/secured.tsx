@@ -38,14 +38,7 @@ export default function Secured() {
           title={t("secured.deviceRemoved")}
           description={label}
         />
-        <InfoRow
-          leading={done}
-          title={
-            count === 1
-              ? t("secured.sessionEnded")
-              : t("secured.sessionsEnded", { count })
-          }
-        />
+        <InfoRow leading={done} title={t("secured.sessionsEnded", { count })} />
         <InfoRow
           leading={<Icon name="clock" size={22} color="status.pending" />}
           title={t("secured.keysPending")}

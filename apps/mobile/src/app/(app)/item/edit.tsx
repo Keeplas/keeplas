@@ -240,7 +240,7 @@ function EditForm({
           icon={KIND_ICON[file.kind]}
           title={file.name}
           description={formatBytes(file.size, language)}
-          trailing={
+          action={
             <RemoveButton
               label={t("itemEdit.removeFile", { name: file.name })}
               onPress={() =>
@@ -260,7 +260,7 @@ function EditForm({
           description={
             file.durationSec ? formatDuration(file.durationSec) : file.mimeType
           }
-          trailing={
+          action={
             <RemoveButton
               label={t("itemEdit.removeFile", { name: file.name })}
               onPress={() => {

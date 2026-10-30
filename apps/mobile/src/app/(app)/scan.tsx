@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { CameraView } from "expo-camera";
 import { useRouter } from "expo-router";
 import { useConvex } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -36,6 +30,7 @@ import {
   useApprovePairing,
 } from "@/features/link/use-approve-pairing";
 import { env } from "@/lib/env";
+import { useCameraAccess } from "@/lib/use-camera-access";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -54,7 +49,7 @@ export default function Scan() {
   const convex = useConvex();
   const { t } = useI18n();
   const { colors } = useTheme();
-  const [permission, requestPermission] = useCameraPermissions();
+  const camera = useCameraAccess();
   const reject = useAuditedMutation(api.pairing.reject);
   const claimHandoff = useAuditedMutation(api.capture_handoffs.claim);
   const [torch, setTorch] = useState(false);
@@ -177,12 +172,6 @@ export default function Scan() {
     if (link) void handle(link);
   }, [handle]);
 
-  useEffect(() => {
-    if (permission && !permission.granted && permission.canAskAgain) {
-      void requestPermission();
-    }
-  }, [permission, requestPermission]);
-
   const header = <AppHeader onBack={router.back} />;
 
   if (pending) {
@@ -199,7 +188,7 @@ export default function Scan() {
     );
   }
 
-  if (permission && !permission.granted && !permission.canAskAgain) {
+  if (camera.denied) {
     return (
       <Screen header={header}>
         <StateMessage
@@ -207,10 +196,7 @@ export default function Scan() {
           tone="neutral"
           title={t("scan.cameraOffTitle")}
           body={t("scan.cameraOffBody")}
-          primary={{
-            label: t("common.openSettings"),
-            onPress: () => Linking.openSettings(),
-          }}
+          primary={camera.allow}
           secondary={{ label: t("common.notNow"), onPress: router.back }}
         />
       </Screen>
@@ -224,7 +210,7 @@ export default function Scan() {
         {t("scan.body")}
       </Text>
       <View style={[styles.camera, { backgroundColor: palette.navy["700"] }]}>
-        {permission?.granted ? (
+        {camera.granted ? (
           <CameraView
             style={StyleSheet.absoluteFill}
             facing="back"
@@ -254,7 +240,7 @@ export default function Scan() {
           <Icon name="flash" size={22} tint={palette.white} />
         </Pressable>
       </View>
-      {permission?.granted ? (
+      {camera.granted ? (
         <View style={[styles.allowed, { backgroundColor: colors["bg.info"] }]}>
           <Icon name="camera" size={18} />
           <Text variant="body-sm">{t("scan.cameraAllowed")}</Text>

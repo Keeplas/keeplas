@@ -7,16 +7,19 @@ import { api } from "@keeplas/backend/_generated/api";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
 import { Radio } from "@/components/controls";
+import { SectionHeader } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { Card, ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { AccountAvatar } from "@/features/account/account-avatar";
 import { UpgradeCard } from "@/features/billing/upgrade-card";
+import { useConfirmSignOut } from "@/features/sign-out";
 import { formatBytes } from "@/lib/format";
 import { formatPhone } from "@/lib/phone";
 import { openSitePage } from "@/lib/site";
+import { useSecurityAlerts } from "@/lib/use-push-notifications";
 import { useI18n } from "@/providers/i18n-provider";
-import { useSession, useViewer } from "@/providers/session-provider";
+import { useViewer } from "@/providers/session-provider";
 import { APPEARANCES, useTheme } from "@/providers/theme-provider";
 import { colors as palette } from "@/theme";
 
@@ -32,7 +35,7 @@ export default function Settings() {
   const router = useRouter();
   const { t, language } = useI18n();
   const { appearance, setAppearance, colors } = useTheme();
-  const { signOut } = useSession();
+  const { confirmSignOut, signingOut } = useConfirmSignOut();
   const viewer = useViewer();
   // getUsageStats re-reads every item and file server-side on each vault
   // change; only subscribe while this tab is actually visible.
@@ -45,6 +48,7 @@ export default function Settings() {
   );
   const usage = useQuery(api.vaults.getUsageStats, focused ? {} : "skip");
   const lifeCheck = useQuery(api.life_check.getConfig, focused ? {} : "skip");
+  const alerts = useSecurityAlerts();
 
   const lifetime = viewer.plan === "lifetime";
   const planLabel = t(lifetime ? "settings.planLifetime" : "settings.planFree");
@@ -76,7 +80,7 @@ export default function Settings() {
         }
         onPress={() => router.push("/account")}
       />
-      <Text variant="label">{t("settings.storage")}</Text>
+      <SectionHeader title={t("settings.storage")} />
       {usage ? (
         <Card>
           <View style={styles.between}>
@@ -147,12 +151,18 @@ export default function Settings() {
           />
         </Card>
       )}
-      <Text variant="label">{t("settings.account")}</Text>
+      <SectionHeader title={t("settings.account")} />
       <ListRow
         icon="laptop"
         title={t("privacy.devices")}
         description={t("privacy.devicesBody")}
         onPress={() => router.push("/devices")}
+      />
+      <ListRow
+        icon="bell"
+        title={t("push.title")}
+        description={alerts.state && t(`push.${alerts.state}`)}
+        onPress={() => void alerts.change()}
       />
       {lifeCheck ? (
         <ListRow
@@ -206,7 +216,7 @@ export default function Settings() {
         description={t("importArchive.rowBody")}
         onPress={() => router.push("/import")}
       />
-      <Text variant="label">{t("settings.help")}</Text>
+      <SectionHeader title={t("settings.help")} />
       <ListRow
         icon="help"
         title={t("help.title")}
@@ -219,7 +229,7 @@ export default function Settings() {
         description={t("help.supportBody")}
         onPress={() => router.push("/support")}
       />
-      <Text variant="label">{t("settings.appearance")}</Text>
+      <SectionHeader title={t("settings.appearance")} />
       <Card>
         {APPEARANCES.map((mode) => (
           <Radio
@@ -262,7 +272,8 @@ export default function Settings() {
       <Button
         variant="secondary"
         label={t("settings.signOut")}
-        onPress={signOut}
+        loading={signingOut}
+        onPress={() => void confirmSignOut()}
       />
     </Screen>
   );

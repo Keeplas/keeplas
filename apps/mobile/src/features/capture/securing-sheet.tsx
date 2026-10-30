@@ -18,6 +18,7 @@ import { UpgradeSheet } from "@/features/billing/upgrade-sheet";
 import { useOutbox } from "@/features/outbox/outbox-provider";
 import { useVaultData } from "@/features/vault/vault-data";
 import { formatBytes } from "@/lib/format";
+import { contactSupport } from "@/lib/support";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
@@ -147,11 +148,13 @@ function SecuringSheet({
         {entry?.status === "quota" && !lifetime ? (
           <Button label={t("upgrade.cta")} onPress={() => setUpgrading(true)} />
         ) : entry?.status === "quota" ? (
+          // No in-app way to free space yet (archives still count): support
+          // makes room.
           <Button
-            label={t("capture.securing.manageStorage")}
+            label={t("support.title")}
             onPress={() => {
               onDismiss();
-              router.navigate("/settings");
+              contactSupport("storage_full", "billing");
             }}
           />
         ) : failed ? (

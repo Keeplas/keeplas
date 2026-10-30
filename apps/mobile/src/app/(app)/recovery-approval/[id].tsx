@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -12,6 +12,7 @@ import { Button } from "@/components/button";
 import { Checkbox } from "@/components/controls";
 import { Icon, type IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
+import { StateMessage } from "@/components/state-message";
 import { Callout, Card, IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
 import { withOwnerSecret } from "@/crypto/owner-keys";
@@ -49,6 +50,8 @@ export default function RecoveryApproval() {
   const [verified, setVerified] = useState(false);
   const [mismatch, setMismatch] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Answered: the request leaves getRequestsForMe while the screen closes.
+  const [answered, setAnswered] = useState(false);
   const name = request?.ownerName || t("recoveryCenter.owner");
   const code = exchange.kind === "ready" ? exchange.code : "";
 
@@ -89,6 +92,7 @@ export default function RecoveryApproval() {
       );
       await approve({ requestId: request.requestId, ...sealed });
       await forgetContactCode(secureCodeStore, request.requestId);
+      setAnswered(true);
       router.back();
     } catch {
       toast({
@@ -110,6 +114,7 @@ export default function RecoveryApproval() {
         reason: "code_mismatch",
       });
       await forgetContactCode(secureCodeStore, request.requestId);
+      setAnswered(true);
       router.back();
     } catch {
       toast({ variant: "error", title: t("common.genericError") });
@@ -121,6 +126,27 @@ export default function RecoveryApproval() {
   const header = (
     <AppHeader onBack={mismatch ? () => setMismatch(false) : router.back} />
   );
+
+  if (requests === undefined || answered) {
+    return (
+      <Screen header={header} center>
+        <ActivityIndicator color={colors["text.muted"]} />
+      </Screen>
+    );
+  }
+  if (!request) {
+    return (
+      <Screen header={header} center>
+        <StateMessage
+          icon="info"
+          tone="info"
+          title={t("approval.goneTitle")}
+          body={t("approval.goneBody")}
+          primary={{ label: t("common.back"), onPress: router.back }}
+        />
+      </Screen>
+    );
+  }
 
   if (mismatch) {
     const steps: { icon: IconName; title: string; body: string }[] = [

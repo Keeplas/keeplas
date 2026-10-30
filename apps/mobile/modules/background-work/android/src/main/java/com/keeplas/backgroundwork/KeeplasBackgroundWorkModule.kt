@@ -15,13 +15,19 @@ class KeeplasBackgroundWorkModule : Module() {
 
   private var title = ""
   private var subtitle = ""
-  private var running = false
+
+  // Cleared on the main thread when the system stops the service.
+  @Volatile private var running = false
 
   override fun definition() = ModuleDefinition {
     Name("KeeplasBackgroundWork")
 
-    // iOS only: the system stopped the job. Declared for a shared JS API.
+    // The system stopped the job before `end`: JS cancels it.
     Events("onExpire")
+
+    OnCreate { BackgroundWorkService.onExpire = { expire() } }
+
+    OnDestroy { BackgroundWorkService.onExpire = null }
 
     AsyncFunction("begin") { title: String, subtitle: String ->
       this@KeeplasBackgroundWorkModule.title = title
@@ -49,6 +55,15 @@ class KeeplasBackgroundWorkModule : Module() {
     AsyncFunction("end") { _: Boolean ->
       running = false
       context.stopService(Intent(context, BackgroundWorkService::class.java))
+      // A progress update racing an expiry may have re-posted it.
+      context
+        .getSystemService(NotificationManager::class.java)
+        .cancel(BackgroundWorkService.NOTIFICATION_ID)
     }
+  }
+
+  private fun expire() {
+    running = false
+    sendEvent("onExpire")
   }
 }

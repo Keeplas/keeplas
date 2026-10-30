@@ -16,6 +16,8 @@ const RULES: [needle: string, key: string][] = [
   ["could not be resolved", "uploadFailed"],
   ["at least 18", "tooYoung"],
   ["implausibly old", "invalidBirthday"],
+  // store_review.refuseOnReviewAccount
+  ["review accounts can't change", "reviewAccount"],
 ];
 
 export function accountErrorKey(

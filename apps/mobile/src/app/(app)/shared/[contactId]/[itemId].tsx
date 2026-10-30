@@ -8,7 +8,6 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { isEmptyNote } from "@keeplas/export/rich-text";
 
 import { Button } from "@/components/button";
-import { Icon } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
@@ -203,11 +202,7 @@ export default function SharedItem() {
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
-              trailing={
-                index === current ? (
-                  <Icon name="check" size={18} color="status.active" />
-                ) : undefined
-              }
+              selected={index === current}
               onPress={() => setSelected(index)}
             />
           ))}

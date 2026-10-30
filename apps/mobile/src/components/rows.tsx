@@ -138,7 +138,9 @@ export function Chip({
 export function SectionHeader({ title }: { title: string }) {
   return (
     <View style={styles.section}>
-      <Text variant="label">{title}</Text>
+      <Text accessibilityRole="header" variant="label">
+        {title}
+      </Text>
     </View>
   );
 }

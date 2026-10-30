@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
+import { formatSenderIdentity } from "@keeplas/backend/lib/identity";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { Icon, type IconName } from "@/components/icon";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
@@ -12,13 +14,15 @@ import { Screen } from "@/components/screen";
 import { BottomSheet } from "@/components/sheet";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { errorText } from "@/lib/errors";
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 import { formatPhone, toE164, type CountryCode } from "@/lib/phone";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
+import { useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { colors as palette, radius } from "@/theme";
 import type { ContactPhone } from "./device-contact";
+import { inviteErrorKey } from "./invite-error";
 import { PersonFields, usePersonForm } from "./person-form";
 import { pickContact } from "./pick-contact";
 
@@ -27,11 +31,13 @@ import { pickContact } from "./pick-contact";
  * People and from setup (M01-5), so it returns with `router.back()`.
  * The details can be prefilled from a contact picked in the phone's
  * address book (no contacts permission on either platform), then edited.
+ * The review step says what Keeplas sends them, on which channels.
  */
 export function AddPerson() {
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
+  const viewer = useViewer();
   const invite = useAuditedMutation(api.trusted_contacts.inviteContact);
   const form = usePersonForm("add-person", () => ({
     name: "",
@@ -58,7 +64,8 @@ export function AddPerson() {
   }
 
   async function fillFromContacts() {
-    const picked = await pickContact(phoneCountry);
+    // Android opens the contacts app: the vault must not lock meanwhile.
+    const picked = await keepUnlockedWhile(() => pickContact(phoneCountry));
     if (!picked) return;
     form.updateDraft({ name: picked.name, email: picked.email });
     form.setEmailError(false);
@@ -81,12 +88,7 @@ export function AddPerson() {
       form.clearDraft();
       router.back();
     } catch (failure) {
-      const text = errorText(failure);
-      setError(
-        text.includes("already")
-          ? t("people.alreadyInvited")
-          : t("people.inviteFailed"),
-      );
+      setError(t(inviteErrorKey(failure, "people.inviteFailed")));
     } finally {
       setBusy(false);
     }
@@ -168,7 +170,13 @@ export function AddPerson() {
     >
       <Text variant="h1">{t("people.addTitle")}</Text>
       <Text variant="body-lg" color="text.muted">
-        {t("people.addBody")}
+        {t(
+          details.email ? "people.invitePreviewEmail" : "people.invitePreview",
+          {
+            name: details.name,
+            inviter: formatSenderIdentity(viewer),
+          },
+        )}
       </Text>
       <View
         style={[
@@ -212,11 +220,7 @@ export function AddPerson() {
         <Permission icon="check-circle" text={t("people.permReceive")} />
         <Permission icon="revoke" text={t("people.permNoFiles")} />
       </View>
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
     </Screen>
   );
 }

@@ -3,6 +3,7 @@ import {
   internalMutation,
   mutation,
   query,
+  type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -23,6 +24,7 @@ import { enforceIpRateLimit } from "./lib/rate_limit";
 import { endSessions } from "./lib/sessions";
 import { commitPhoneChange, phoneTakenByOther } from "./phone_verification";
 import { RECOVERY_REQUEST_TTL_MS, RECOVERY_WINDOW_MS } from "./recovery";
+import { refuseOnReviewAccount } from "./store_review";
 
 /**
  * Lost number without the 24 words (cases B / D / F). Signed out, the user
@@ -56,12 +58,23 @@ const isExpired = (row: Doc<"number_change_requests">) =>
 const isOpen = (row: Doc<"number_change_requests">) =>
   OPEN_STATUSES.includes(row.status) && !isExpired(row);
 
-async function openRequest(ctx: QueryCtx, userId: Id<"users">) {
+export async function openRequest(ctx: QueryCtx, userId: Id<"users">) {
   const rows = await ctx.db
     .query("number_change_requests")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
   return rows.find(isOpen) ?? null;
+}
+
+/** "It wasn't me": cancel the open request, if any; returns its id. */
+export async function cancelOpenRequest(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+): Promise<Id<"number_change_requests"> | null> {
+  const row = await openRequest(ctx, userId);
+  if (!row) return null;
+  await ctx.db.patch(row._id, { status: "cancelled", closedAt: Date.now() });
+  return row._id;
 }
 
 /** The request, if `claimToken` is the secret its phone was given. */
@@ -131,6 +144,10 @@ export const submit = mutation({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", oldPhone))
       .first();
     if (!user) return refused("NO_ACCOUNT");
+    // A demo account is shared by every reviewer: one reviewer's request
+    // would alert the others' phones and leave a banner on Home. Thrown: a
+    // review number is public (review notes), so this tells nothing.
+    await refuseOnReviewAccount(ctx, user._id);
     await enforceIpRateLimit(
       ctx,
       "number_change_phone",
@@ -313,7 +330,7 @@ export const complete = internalMutation({
       email: user?.email,
       phoneNumber: row.newPhone,
       ownerName: user?.name,
-      deviceLabel: "A phone using your new number",
+      deviceKind: "new_number",
       language: user?.language,
     });
     return { ok: true as const, userId: row.userId };
@@ -345,10 +362,9 @@ export const cancel = auditedMutation({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
-    const row = await openRequest(ctx, userId);
-    if (!row) throw new ConvexError("NO_OPEN_REQUEST");
-    await ctx.db.patch(row._id, { status: "cancelled", closedAt: Date.now() });
-    return row._id;
+    const requestId = await cancelOpenRequest(ctx, userId);
+    if (!requestId) throw new ConvexError("NO_OPEN_REQUEST");
+    return requestId;
   },
   getResourceId: (_args, requestId) => requestId,
 });

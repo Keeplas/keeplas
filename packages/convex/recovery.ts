@@ -16,6 +16,7 @@ import {
 } from "./audit";
 import { optionalAuth, requireAuth, requireFullAuth } from "./helpers";
 import { activePushTokens } from "./devices";
+import { ownerIdentity } from "./lib/identity";
 import { requireSessionProof } from "./session_proofs";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { contactHasWraps } from "./lib/contact_key";
@@ -83,7 +84,7 @@ async function sharesOf(
     .collect();
 }
 
-async function activeRequest(ctx: QueryCtx, userId: Id<"users">) {
+export async function activeRequest(ctx: QueryCtx, userId: Id<"users">) {
   const requests = await ctx.db
     .query("recovery_requests")
     .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -344,8 +345,8 @@ export const start = auditedMutation({
         email: contact.email,
         phoneNumber: contact.phoneNumber,
         contactName: contact.name,
-        ownerName: user?.name ?? "A Keeplas user",
-        language: user?.language,
+        owner: ownerIdentity(user),
+        language: contactUser?.language,
       });
     }
     return requestId;

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { OtpInput } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
@@ -36,6 +37,7 @@ export default function PinCode() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const entry = useRef<View>(null);
 
   useEffect(() => {
     let alive = true;
@@ -107,7 +109,7 @@ export default function PinCode() {
       </Text>
 
       {step.kind === "current" && pinLength ? (
-        <View style={styles.entry}>
+        <View ref={entry} style={styles.entry}>
           <Text variant="label" align="center">
             {t("pin.enterCurrent")}
           </Text>
@@ -119,12 +121,9 @@ export default function PinCode() {
             invalid={error !== null}
             label={t("pin.enterCurrent")}
             secure
+            keepVisible={entry}
           />
-          {error ? (
-            <Text variant="body-sm" color="status.revoked" align="center">
-              {error}
-            </Text>
-          ) : null}
+          <ErrorText align="center">{error}</ErrorText>
           <Button
             variant="text"
             label={cancel.label}

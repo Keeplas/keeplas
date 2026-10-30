@@ -142,9 +142,13 @@ export function Screen({
               onLayout={(event) =>
                 setFooterHeight(event.nativeEvent.layout.height)
               }
+              // Clear over the landscape art behind it; opaque otherwise, so
+              // the content scrolling under it (branches included) is hidden.
               style={[
                 styles.footer,
-                decor ? null : { backgroundColor: colors["bg.app"] },
+                decor && decor !== "branches"
+                  ? null
+                  : { backgroundColor: colors["bg.app"] },
               ]}
             >
               {footer}

@@ -5,18 +5,19 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { LanguageDropdown } from "@/components/language";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { errorText } from "@/lib/errors";
 import { toPhoneField } from "@/lib/phone";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { deviceCountry } from "@/lib/use-phone-field";
 import { useI18n } from "@/providers/i18n-provider";
 
+import { inviteErrorKey } from "./invite-error";
 import { PersonFields, usePersonForm } from "./person-form";
 
 type Contact = FunctionReturnType<
@@ -88,11 +89,7 @@ function EditPersonForm({
       toast({ variant: "success", title: t("people.saved") });
       router.back();
     } catch (failure) {
-      setError(
-        errorText(failure).includes("already")
-          ? t("people.alreadyInvited")
-          : t("people.saveFailed"),
-      );
+      setError(t(inviteErrorKey(failure, "people.saveFailed")));
     } finally {
       setBusy(false);
     }
@@ -115,11 +112,7 @@ function EditPersonForm({
         <Callout icon="info" text={t("people.editReinvite")} />
       ) : null}
       <PersonFields form={form} onSubmit={save} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
     </Screen>
   );
 }

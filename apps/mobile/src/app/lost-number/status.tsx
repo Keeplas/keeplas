@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
@@ -62,10 +63,26 @@ export default function LostNumberStatus() {
     }
   }
 
-  async function cancel() {
+  function cancel() {
     if (args === "skip") return;
-    await withdraw(args).catch(() => undefined);
-    await startOver();
+    Alert.alert(t("lostNumber.withdrawTitle"), t("lostNumber.withdrawBody"), [
+      { text: t("lostNumber.keep"), style: "cancel" },
+      {
+        text: t("lostNumber.withdraw"),
+        style: "destructive",
+        onPress: async () => {
+          // Keep the claim until the request is really withdrawn: it is this
+          // phone's only way to follow (or withdraw) the request.
+          try {
+            await withdraw(args);
+          } catch {
+            toast({ variant: "error", title: t("common.genericError") });
+            return;
+          }
+          await startOver();
+        },
+      },
+    ]);
   }
 
   const header = (
@@ -129,7 +146,7 @@ export default function LostNumberStatus() {
       description: waited
         ? t("lostNumber.stepWaitDone")
         : t("lostNumber.stepWaitBody", {
-            n: hoursLeft,
+            count: hoursLeft,
             date: `${formatDate(request.windowEndsAt, language)} · ${formatTime(request.windowEndsAt, language)}`,
           }),
       done: waited,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
@@ -11,8 +11,9 @@ import { Button } from "@/components/button";
 import { ProgressBar } from "@/components/controls";
 import { Icon } from "@/components/icon";
 import { Screen } from "@/components/screen";
-import { Callout, Card, StatusChip } from "@/components/surfaces";
+import { Callout, Card } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { vaultOpenErrorKey } from "@/features/kit-open";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
 import {
   clearRecoveryKey,
@@ -23,7 +24,9 @@ import {
   syncDeviceCodes,
   type CodeState,
 } from "@/features/recovery-codes";
-import { formatDate, formatTime, spacedCode } from "@/lib/format";
+import { RecoveryDecisions } from "@/features/recovery-request";
+import { useScreenLock } from "@/features/screen-lock";
+import { spacedCode } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useReplaceKit } from "@/lib/use-replace-kit";
@@ -31,7 +34,7 @@ import { useI18n } from "@/providers/i18n-provider";
 import { useSession, useViewer } from "@/providers/session-provider";
 import { useTheme } from "@/providers/theme-provider";
 import { useVault } from "@/providers/vault-provider";
-import { colors as palette, radius } from "@/theme";
+import { radius } from "@/theme";
 
 // The code exchange runs while contacts can still answer.
 const EXCHANGING = ["pending", "approved_1"];
@@ -39,7 +42,7 @@ const EXCHANGING = ["pending", "approved_1"];
 /** M02-1 / M02-2 / M02-4: start, monitor and finish 2-of-3 recovery. */
 export default function ContactRecovery() {
   const router = useRouter();
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const { colors } = useTheme();
   const viewer = useViewer();
   const request = useQuery(api.recovery.getMyRequest);
@@ -55,6 +58,7 @@ export default function ContactRecovery() {
   const { adopt } = useVault();
   const { refreshDeviceVault } = useSession();
   const replaceKit = useReplaceKit();
+  const screenLock = useScreenLock();
   // Public half of the key this phone made (undefined while loading).
   const [deviceKey, setDeviceKey] = useState<string | null>();
   const [codes, setCodes] = useState<{
@@ -130,7 +134,7 @@ export default function ContactRecovery() {
   }
 
   async function finish() {
-    if (!request || !releasePackage) return;
+    if (!request || !releasePackage || !screenLock.ensure()) return;
     setBusy(true);
     try {
       const key = await loadRecoveryKey(secureCodeStore, viewer._id);
@@ -158,11 +162,29 @@ export default function ContactRecovery() {
       await clearRecoveryKey(secureCodeStore, viewer._id);
       refreshDeviceVault();
       router.replace("/vault-restored");
-    } catch {
-      toast({ variant: "error", title: t("common.genericError") });
+    } catch (error) {
+      toast({ variant: "error", title: t(vaultOpenErrorKey(error)) });
     } finally {
       setBusy(false);
     }
+  }
+
+  function confirmCancel() {
+    Alert.alert(
+      t("socialRecovery.cancelTitle"),
+      t("socialRecovery.cancelBody"),
+      [
+        { text: t("socialRecovery.keep"), style: "cancel" },
+        {
+          text: t("socialRecovery.cancel"),
+          style: "destructive",
+          onPress: () =>
+            cancel({}).catch(() =>
+              toast({ variant: "error", title: t("common.genericError") }),
+            ),
+        },
+      ],
+    );
   }
 
   const closed =
@@ -221,11 +243,7 @@ export default function ContactRecovery() {
           <Button
             variant="danger"
             label={t("socialRecovery.cancel")}
-            onPress={() =>
-              cancel({}).catch(() =>
-                toast({ variant: "error", title: t("common.genericError") }),
-              )
-            }
+            onPress={confirmCancel}
           />
         )
       }
@@ -266,65 +284,32 @@ export default function ContactRecovery() {
           </Text>
           <Card>
             <Text variant="label">
-              {t("socialRecovery.approvals", { n: Math.min(approvals, 2) })}
+              {t("socialRecovery.approvals", {
+                count: Math.min(approvals, 2),
+              })}
             </Text>
             <ProgressBar value={Math.min(approvals, 2) / 2} />
             <Text variant="body-sm" color="text.muted">
               {approvals >= 2
                 ? t("socialRecovery.approvalsDone")
-                : t("socialRecovery.approvalsLeft", { n: 2 - approvals })}
+                : t("socialRecovery.approvalsLeft", { count: 2 - approvals })}
             </Text>
           </Card>
           <Card>
-            {request.contacts.map((contact, index) => (
-              <View key={contact.contactId} style={styles.contact}>
-                <View
-                  style={[
-                    styles.avatar,
-                    {
-                      backgroundColor:
-                        AVATAR_COLORS[index % AVATAR_COLORS.length],
-                    },
-                  ]}
-                >
-                  <Text variant="label" color="text.inverse">
-                    {(contact.name || "?").trim().charAt(0).toUpperCase()}
+            <RecoveryDecisions
+              contacts={request.contacts}
+              pending={(contact) => {
+                const code = codeOf(contact.contactId);
+                if (code) {
+                  return <Text variant="digit">{spacedCode(code)}</Text>;
+                }
+                return keyMatches && !tampered ? (
+                  <Text variant="body-sm" color="text.muted">
+                    {t("socialRecovery.codeWaiting", { name: contact.name })}
                   </Text>
-                </View>
-                <View style={styles.flex}>
-                  <Text variant="label">{contact.name}</Text>
-                  {contact.decidedAt ? (
-                    <Text variant="body-sm" color="text.muted">
-                      {`${formatDate(contact.decidedAt, language)} · ${formatTime(contact.decidedAt, language)}`}
-                    </Text>
-                  ) : codeOf(contact.contactId) ? (
-                    <Text variant="digit">
-                      {spacedCode(codeOf(contact.contactId)!)}
-                    </Text>
-                  ) : keyMatches && !tampered ? (
-                    <Text variant="body-sm" color="text.muted">
-                      {t("socialRecovery.codeWaiting", { name: contact.name })}
-                    </Text>
-                  ) : null}
-                </View>
-                <StatusChip
-                  label={
-                    contact.decision === "approve"
-                      ? t("socialRecovery.approved")
-                      : contact.decision === "reject"
-                        ? t("socialRecovery.declined")
-                        : t("socialRecovery.waiting")
-                  }
-                  tone={
-                    contact.decision === "approve"
-                      ? "success"
-                      : contact.decision === "reject"
-                        ? "danger"
-                        : "warning"
-                  }
-                />
-              </View>
-            ))}
+                ) : null;
+              }}
+            />
           </Card>
           <View style={[styles.window, { backgroundColor: colors["bg.info"] }]}>
             <View style={styles.contact}>
@@ -339,7 +324,7 @@ export default function ContactRecovery() {
             <Text variant="h2">
               {windowLeft > 0
                 ? t("socialRecovery.hoursLeft", {
-                    n: Math.ceil(windowLeft / 3_600_000),
+                    count: Math.ceil(windowLeft / 3_600_000),
                   })
                 : t("socialRecovery.windowOver")}
             </Text>
@@ -367,21 +352,13 @@ export default function ContactRecovery() {
           ) : null}
         </>
       )}
+      {screenLock.sheet}
     </Screen>
   );
 }
 
-const AVATAR_COLORS = Object.values(palette.category);
-
 const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   contact: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   window: { gap: 10, padding: 16, borderRadius: radius.md },
 });

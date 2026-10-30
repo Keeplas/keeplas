@@ -8,11 +8,16 @@ import {
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { sha256Hex, verifierMatches } from "./lib/crypto";
-import { listedPhones, normalizeE164 } from "./lib/phone";
+import { isReviewPhone, listedPhones, normalizeE164 } from "./lib/phone";
 import { auditContextValidator, verifyAuditContext } from "./audit";
-import { enforceIpRateLimit } from "./lib/rate_limit";
+import { enforceIpRateLimit, takeRateLimitSlot } from "./lib/rate_limit";
 import { consumeSignupGrant } from "./attestation";
-import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import {
+  checkOtp,
+  generateOtp,
+  INVALID_CODE,
+  OTP_MAX_ATTEMPTS,
+} from "./lib/otp";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -21,14 +26,11 @@ const NUMBER_HOURLY_MAX = 10;
 // Per server-attested caller IP: requests across numbers (unknown numbers
 // included), and codes for one number, so no caller can flood every number
 // or use up the owner's own budget.
-const IP_HOURLY_MAX = 10;
+export const CODE_REQUESTS_PER_IP = 10;
 const IP_NUMBER_HOURLY_MAX = 3;
-// App builds that predate the `_audit` envelope have no IP to throttle on:
-// 3 codes per number (as before), and at most this many across all numbers
-// per hour, so a flood through that path has a fixed WhatsApp cost and
-// leaves current builds untouched.
-const LEGACY_NUMBER_HOURLY_MAX = 3;
-export const LEGACY_HOURLY_MAX = 200;
+// A fixed-code number sends no WhatsApp, so only its wrong guesses count:
+// the budget of 3 WhatsApp codes' worth of tries per hour.
+const FIXED_CODE_GUESSES_PER_HOUR = 3 * OTP_MAX_ATTEMPTS;
 const TOO_MANY_ATTEMPTS = "Too many verification attempts. Try again later.";
 // Generous per-IP cap for the salt lookup; mirrors passwordReset.
 const PHRASE_SALT_RATE_LIMIT_MAX = 20;
@@ -51,10 +53,7 @@ function fixedCode(phone: string): string | null {
     return DEV_TEST_CODE;
   }
   const reviewCode = process.env.REVIEW_CODE ?? "";
-  if (
-    /^\d{6}$/.test(reviewCode) &&
-    listedPhones(process.env.REVIEW_PHONES).includes(phone)
-  ) {
+  if (/^\d{6}$/.test(reviewCode) && isReviewPhone(phone)) {
     return reviewCode;
   }
   return null;
@@ -66,10 +65,11 @@ function fixedCode(phone: string): string | null {
  * code is consumed by the `phone-otp` ConvexCredentials provider's
  * authorize() at signIn.
  *
- * Rate limits: 10 codes per number and hour overall. With the sealed
- * `_audit` envelope (current app builds), 10 requests per caller IP and 3
- * codes per (number, IP); without it (older builds), 3 codes per number and
- * a global hourly ceiling.
+ * Rate limits, on the sealed `_audit` IP: CODE_REQUESTS_PER_IP requests per
+ * caller IP, 10 codes per number and hour overall and 3 per (number, IP).
+ * A fixed-code number (review / dev) sends no WhatsApp: it is exempt from
+ * those and capped on wrong guesses instead (15 per hour), so reviewers
+ * sharing one network can't lock each other out.
  *
  * Account existence is never told to an anonymous caller:
  * - signin on an unknown number returns `{ sent: true }` and sends nothing
@@ -77,37 +77,45 @@ function fixedCode(phone: string): string | null {
  * - signup first needs the app's attestation grant (M09-9), so only a
  *   genuine app on a real device, once per number, learns that a number is
  *   taken ("already exists", which the app turns into "Sign in instead").
+ *   That answer is returned (`{ sent: false, error }`), not thrown, so the
+ *   grant and IP slot it took are kept: a throw would roll them back.
  */
 export const requestPhoneAuthOtp = mutation({
   args: {
     phoneNumber: v.string(),
     intent: v.union(v.literal("signup"), v.literal("signin")),
     language: v.optional(v.string()),
-    // Optional: app builds released before it don't send it.
-    _audit: v.optional(auditContextValidator),
+    _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
     const phone = normalizeE164(args.phoneNumber);
-    if (!phone) throw new Error("Invalid phone number");
-    const ip = args._audit?.ip;
-    if (args._audit) await verifyAuditContext(args._audit);
+    if (!phone) throw new ConvexError("Invalid phone number");
+    const ip = args._audit.ip;
+    // A fixed-code number sends no WhatsApp and its account is no secret
+    // (review notes, dev numbers): reviewers sharing one network must not
+    // lock each other out.
+    const fixed = fixedCode(phone);
 
     // Mobile-only sign-up: the app must have attested first (M09-9).
     if (args.intent === "signup") await consumeSignupGrant(ctx, phone);
     // Counted before the account lookup, so misses count too (they return).
-    if (ip) await enforceIpRateLimit(ctx, "phone_auth_otp", ip, IP_HOURLY_MAX);
+    if (fixed === null) {
+      await enforceIpRateLimit(ctx, "phone_otp", ip, CODE_REQUESTS_PER_IP);
+    }
 
     const existing = await ctx.db
       .query("users")
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .first();
-    // ConvexError so the message survives Convex's prod error redaction.
     if (args.intent === "signup" && existing) {
-      throw new ConvexError(
-        "An account with this phone number already exists. Sign in instead.",
-      );
+      return {
+        sent: false as const,
+        error:
+          "An account with this phone number already exists. Sign in instead.",
+      };
     }
-    if (args.intent === "signin" && !existing) return { sent: true };
+    if (args.intent === "signin" && !existing) return { sent: true as const };
 
     const now = Date.now();
     const recent = await ctx.db
@@ -115,15 +123,26 @@ export const requestPhoneAuthOtp = mutation({
       .withIndex("by_phone", (q) => q.eq("phoneNumber", phone))
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
-    const numberMax = ip ? NUMBER_HOURLY_MAX : LEGACY_NUMBER_HOURLY_MAX;
-    if (recent.length >= numberMax) throw new Error(TOO_MANY_ATTEMPTS);
-    await throttleCaller(ctx, phone, ip);
+    if (fixed === null) {
+      if (recent.length >= NUMBER_HOURLY_MAX) {
+        throw new ConvexError(TOO_MANY_ATTEMPTS);
+      }
+      await throttleCaller(ctx, phone, ip);
+    } else {
+      // Asking again for a fixed code costs nothing and a reviewer's
+      // repeated sign-ins must not lock the number. Only its wrong guesses
+      // count: a new request must not buy fresh tries at a code that never
+      // changes.
+      const guesses = recent.reduce((sum, row) => sum + row.attempts, 0);
+      if (guesses >= FIXED_CODE_GUESSES_PER_HOUR) {
+        throw new ConvexError(TOO_MANY_ATTEMPTS);
+      }
+    }
     for (const stale of recent) {
       if (stale.expiresAt > now)
         await ctx.db.patch(stale._id, { expiresAt: now });
     }
 
-    const fixed = fixedCode(phone);
     const code = fixed ?? generateOtp();
     const codeHash = await sha256Hex(code);
     await ctx.db.insert("phone_auth_codes", {
@@ -142,33 +161,18 @@ export const requestPhoneAuthOtp = mutation({
       });
     }
 
-    return { sent: true };
+    return { sent: true as const };
   },
 });
 
-/**
- * Charge one code to the caller: its (number, IP) budget, or for a build
- * without `_audit`, the global ceiling. Hitting that ceiling means a flood
- * (or real growth): it is logged as an alert for the ops log stream.
- */
-async function throttleCaller(
-  ctx: MutationCtx,
-  phone: string,
-  ip: string | undefined,
-) {
-  const [scope, key, max] = ip
-    ? ["phone_auth_otp_number", `${phone}|${ip}`, IP_NUMBER_HOURLY_MAX]
-    : ["phone_auth_otp_legacy", "all", LEGACY_HOURLY_MAX];
-  try {
-    await enforceIpRateLimit(ctx, scope, key, max);
-  } catch {
-    if (!ip) {
-      console.error(
-        "ALERT phone_auth: hourly ceiling for codes without _audit reached",
-      );
-    }
-    throw new Error(TOO_MANY_ATTEMPTS);
-  }
+/** Charge one code to the caller's (number, IP) budget. */
+async function throttleCaller(ctx: MutationCtx, phone: string, ip: string) {
+  const charged = await takeRateLimitSlot(
+    ctx,
+    `phone_auth_otp_number:${phone}|${ip}`,
+    IP_NUMBER_HOURLY_MAX,
+  );
+  if (!charged) throw new ConvexError(TOO_MANY_ATTEMPTS);
 }
 
 /**
@@ -184,7 +188,7 @@ export const consumePhoneAuthCode = internalMutation({
   },
   handler: async (ctx, args) => {
     const phone = normalizeE164(args.phoneNumber);
-    if (!phone) throw new Error("Invalid phone number");
+    if (!phone) throw new ConvexError("Invalid phone number");
     // A sign-in code never creates an account: sign-up needs a code issued
     // against an attestation grant, so only codes of this flow count.
     const candidates = (

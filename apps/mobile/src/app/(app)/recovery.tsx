@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "convex/react";
@@ -16,9 +17,11 @@ import {
   StatusChip,
 } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { RecoveryRequestCard } from "@/features/recovery-request";
 import { useRecoveryWays, WaysBackCard } from "@/features/recovery-ways";
 import { useSealSocialRecovery } from "@/features/social-recovery";
 import { serverMessage } from "@/lib/errors";
+import { contactsCanRecover } from "@/lib/social-recovery-policy";
 import { toast } from "@/lib/toast";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -30,16 +33,21 @@ export default function RecoveryCenter() {
   const { targets, seal } = useSealSocialRecovery();
   const requests = useQuery(api.recovery.getRequestsForMe);
   const ways = useRecoveryWays();
+  const [busy, setBusy] = useState(false);
 
   async function configure() {
+    setBusy(true);
     try {
       await seal();
+      toast({ variant: "success", title: t("recoveryCenter.ready") });
     } catch (error) {
       toast({
         variant: "error",
         title: t("common.genericError"),
         description: serverMessage(error),
       });
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -49,6 +57,7 @@ export default function RecoveryCenter() {
     >
       <Text variant="h1">{t("recoveryCenter.title")}</Text>
       <Text color="text.muted">{t("recoveryCenter.body")}</Text>
+      <RecoveryRequestCard />
       <View style={styles.chip}>
         <StatusChip
           label={t(ways.covered ? "waysBack.covered" : "waysBack.notCovered")}
@@ -87,7 +96,7 @@ export default function RecoveryCenter() {
             tone="warning"
             icon="alert-triangle"
             text={t("recoveryCenter.needTwo", {
-              n: targets.contacts.length,
+              count: targets.contacts.length,
             })}
           />
           <Button
@@ -95,7 +104,9 @@ export default function RecoveryCenter() {
             onPress={() => router.push("/people/add")}
           />
         </>
-      ) : (
+      ) : health === undefined || contactsCanRecover(health) ? null : (
+        // Only while a setup is due: once contacts can recover, there is
+        // nothing to renew by hand (TrustUpkeep seals again when they change).
         <Button
           label={
             health?.trustContacts.configured
@@ -103,6 +114,7 @@ export default function RecoveryCenter() {
               : t("recoveryCenter.configure")
           }
           onPress={() => void configure()}
+          loading={busy}
           disabled={!targets}
         />
       )}

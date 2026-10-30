@@ -26,6 +26,7 @@ describe("phone code requests", () => {
       t.mutation(api.phone_auth.requestPhoneAuthOtp, {
         phoneNumber: PHONE,
         intent: "signin",
+        _audit: await signedAudit(),
       }),
     ).resolves.toEqual({ sent: true });
     expect(await pending(t)).toEqual({ codes: 0, scheduled: 0 });
@@ -38,6 +39,7 @@ describe("phone code requests", () => {
       t.mutation(api.phone_auth.requestPhoneAuthOtp, {
         phoneNumber: PHONE,
         intent: "signup",
+        _audit: await signedAudit(),
       }),
     ).rejects.toThrow(SIGNUP_ATTESTATION_REQUIRED);
   });

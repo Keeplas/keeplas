@@ -29,6 +29,7 @@ import {
   type FileUrl,
 } from "@/features/vault/use-decrypted-attachment";
 import {
+  contactKeyBlockedToast,
   useEveryoneRecipients,
   useWrapForContacts,
 } from "@/features/vault/use-recipients";
@@ -213,11 +214,13 @@ export default function ItemDetails() {
         });
       }
       setSheet(null);
-    } catch {
+    } catch (error) {
       toast({
         variant: "error",
-        title: t("item.shareFailedTitle"),
-        description: t("item.shareFailedBody"),
+        ...(contactKeyBlockedToast(error, t) ?? {
+          title: t("item.shareFailedTitle"),
+          description: t("item.shareFailedBody"),
+        }),
       });
     } finally {
       setSharing(false);
@@ -389,7 +392,7 @@ export default function ItemDetails() {
       title={t("item.history")}
       description={
         versions?.length
-          ? t("item.historyCount", { n: versions.length })
+          ? t("item.historyCount", { count: versions.length })
           : t("item.historyEmpty")
       }
       onPress={() =>
@@ -564,7 +567,6 @@ export default function ItemDetails() {
           onPress={share}
         />
         {pendingBlock}
-        {pendingBlock}
         {historyRow}
         {categorySheet}
         {sheets}
@@ -635,16 +637,13 @@ export default function ItemDetails() {
               icon={FILE_ICON[attachment.kind]}
               title={attachment.name}
               description={formatBytes(attachment.size, language)}
-              trailing={
-                index === current ? (
-                  <Icon name="check" size={18} color="status.active" />
-                ) : undefined
-              }
+              selected={index === current}
               onPress={() => setSelected(index)}
             />
           ))}
         </>
       ) : null}
+      {pendingBlock}
 
       <DetailRows
         rows={[
@@ -697,7 +696,7 @@ function summaryOf(
         .join(" · ");
     default:
       return pages > 0
-        ? `${extension} · ${pages === 1 ? t("item.onePage") : t("item.pages", { n: pages })}`
+        ? `${extension} · ${t("item.pages", { count: pages })}`
         : extension;
   }
 }

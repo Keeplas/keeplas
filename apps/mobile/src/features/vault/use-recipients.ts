@@ -6,6 +6,7 @@ import { wrapDek } from "@keeplas/crypto/kem";
 import { contactKeyMaterial } from "@keeplas/crypto/sig";
 
 import { ContactKeyBlocked } from "@/crypto/contact-keys";
+import type { TranslateParams } from "@/i18n/translate";
 import { useVerifiedKey } from "./use-contact-trust";
 
 export function useWrapForContacts() {
@@ -68,4 +69,20 @@ export function useEveryoneRecipients() {
     },
     [contacts, verifiedKey],
   );
+}
+
+/**
+ * Toast text for a contact Keeplas refused to encrypt an item for
+ * ({@link ContactKeyBlocked}), naming them; null for any other error.
+ */
+export function contactKeyBlockedToast(
+  error: unknown,
+  t: (key: string, params?: TranslateParams) => string,
+) {
+  if (!(error instanceof ContactKeyBlocked)) return null;
+  const name = error.contactName ?? "";
+  return {
+    title: t("capture.contactKeyTitle", { name }),
+    description: t("capture.contactKeyBody", { name }),
+  };
 }
