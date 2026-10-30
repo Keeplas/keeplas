@@ -16,6 +16,7 @@ import {
 import { normalizeE164 } from "./lib/phone";
 import { sha256Hex } from "./lib/crypto";
 import { checkOtp, generateOtp, INVALID_CODE } from "./lib/otp";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -62,6 +63,14 @@ export const requestVerification = mutation({
     if (recent.length >= RATE_LIMIT_MAX) {
       throw new Error("Too many verification attempts. Try again later.");
     }
+    // Per destination too, across accounts: farmed accounts must not send a
+    // stream of codes to someone else's number.
+    await enforceIpRateLimit(
+      ctx,
+      "phone_verification_to",
+      phone,
+      RATE_LIMIT_MAX,
+    );
 
     for (const stale of recent) {
       if (stale.expiresAt > now) {
