@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { buildCaptureQr } from "@keeplas/backend/lib/capture_qr";
+import { buildPairingQr } from "@keeplas/crypto/pairing";
 
 import { redirectSystemPath } from "@/app/+native-intent";
 import { takePendingLink } from "../pending-link";
@@ -14,7 +15,12 @@ describe("links that open Keeplas from outside", () => {
   afterEach(() => takePendingLink());
 
   it("opens the scanner for pairing and capture links", () => {
-    const pairing = `${ORIGIN}/link#s=session&h=${"0".repeat(32)}`;
+    const pairing = buildPairingQr({
+      origin: ORIGIN,
+      sessionId: "session",
+      keyHash: "0".repeat(32),
+      qrSecret: "A".repeat(22),
+    });
     expect(open(pairing)).toBe("/scan");
     expect(takePendingLink()).toBe(pairing);
 

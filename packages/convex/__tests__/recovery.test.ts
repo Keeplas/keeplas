@@ -732,9 +732,10 @@ describe("recovery_node hardening", () => {
   it("retries the release when the KMS call fails", async () => {
     const t = makeT();
     const { ownerId, contacts } = await setupOwner(t);
-    const { requestId } = await startRequest(t, ownerId);
-    await contactApproves(t, ownerId, contacts[0]);
-    await contactApproves(t, ownerId, contacts[1]);
+    const request = await startRequest(t, ownerId);
+    const { requestId } = request;
+    await contactApproves(t, ownerId, contacts[0], request);
+    await contactApproves(t, ownerId, contacts[1], request);
 
     // KMS outage when the window closes: the scheduled release fails.
     const kek = process.env.GATE_KEY_LOCAL_KEK;

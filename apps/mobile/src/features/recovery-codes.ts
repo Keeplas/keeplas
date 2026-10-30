@@ -1,4 +1,3 @@
-import * as SecureStore from "expo-secure-store";
 import {
   generateRecipientKeyPair,
   parseSecretKey,
@@ -12,6 +11,8 @@ import {
   recoveryCommitment,
 } from "@keeplas/crypto/social";
 
+import { deviceStore } from "@/lib/device-store";
+
 /**
  * D4 recovery codes on the phones (commit-then-reveal, see `recoveryCode` in
  * @keeplas/crypto/social). Each side keeps on the phone what it must never
@@ -19,7 +20,7 @@ import {
  * contact the commitment it answered and its own nonce.
  */
 
-/** Small key-value store: SecureStore in the app, a Map in tests. */
+/** Small key-value store: the device-only keychain in the app, a Map in tests. */
 export interface CodeStore {
   get(key: string): Promise<string | null>;
   set(key: string, value: string): Promise<void>;
@@ -27,9 +28,9 @@ export interface CodeStore {
 }
 
 export const secureCodeStore: CodeStore = {
-  get: (key) => SecureStore.getItemAsync(key),
-  set: (key, value) => SecureStore.setItemAsync(key, value),
-  remove: (key) => SecureStore.deleteItemAsync(key),
+  get: async (key) => deviceStore.getItem(key),
+  set: async (key, value) => deviceStore.setItem(key, value),
+  remove: (key) => deviceStore.removeItem(key),
 };
 
 async function readJson<T>(store: CodeStore, key: string): Promise<T | null> {

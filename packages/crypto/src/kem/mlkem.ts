@@ -154,9 +154,6 @@ export function parseSecretKey(serialized: string): Uint8Array {
   return bytes;
 }
 
-// FIPS 203 expanded decapsulation key: dk_PKE (384·k) ‖ ek ‖ H(ek) ‖ z.
-const EMBEDDED_PUBLIC_KEY_OFFSET = 1152;
-
 /**
  * The owner's own ML-KEM public key, read back from their secret key instead
  * of trusted from the server. The secret key was unwrapped under the
@@ -168,17 +165,7 @@ export function verifiedOwnerPublicKey(
   secretKey: Uint8Array,
   publishedPublicKeyB64: string,
 ): string {
-  if (secretKey.length !== ML_KEM_SECRET_KEY_BYTES) {
-    throw new Error(
-      `Secret key must be exactly ${ML_KEM_SECRET_KEY_BYTES} bytes`,
-    );
-  }
-  const own = serializePublicKey(
-    secretKey.slice(
-      EMBEDDED_PUBLIC_KEY_OFFSET,
-      EMBEDDED_PUBLIC_KEY_OFFSET + ML_KEM_PUBLIC_KEY_BYTES,
-    ),
-  );
+  const own = serializePublicKey(publicKeyFromSecretKey(secretKey));
   if (own !== publishedPublicKeyB64) {
     throw new Error("Published public key does not match the owner's key");
   }
