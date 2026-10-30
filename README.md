@@ -305,7 +305,7 @@ We welcome contributions! Please read:
 - [CONTRIBUTOR_LICENSE_AGREEMENT.md](./CONTRIBUTOR_LICENSE_AGREEMENT.md)
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
 
-Restricted areas (founder approval required): `packages/crypto/`, `security/`.
+Restricted areas (founder approval required): `packages/crypto/`, `security/`, `.github/`, `scripts/`, and the Convex auth, guard, audit and schema files — see [CODEOWNERS](./.github/CODEOWNERS).
 
 ## License
 
