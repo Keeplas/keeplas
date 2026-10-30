@@ -4,14 +4,14 @@ How the Keeplas iOS app gets from this repo to TestFlight and the App Store. iOS
 
 ## Identifiers
 
-| Item                      | Value                          | Where it lives                            |
-| ------------------------- | ------------------------------ | ----------------------------------------- |
-| Apple Team ID             | `67T9Q44562` (PRINCE CODE LTD) | developer.apple.com → Membership          |
-| Bundle ID                 | `com.keeplas.app` (explicit)   | `app.json` → `expo.ios.bundleIdentifier`  |
-| SKU                       | `keeplas-ios`                  | ASC → App Information (cannot be changed) |
-| ASC App ID (Apple ID)     | `6825985002`                   | ASC → App Information → Apple ID          |
-| EAS project               | `keeplas/keeplas`              | `app.json` → `expo.extra.eas.projectId`   |
-| Internal TestFlight group | `Team (Expo)`                  | ASC → TestFlight → Internal Testing       |
+| Item                      | Value                                                 | Where it lives                            |
+| ------------------------- | ----------------------------------------------------- | ----------------------------------------- |
+| Apple Team ID             | `67T9Q44562` (PRINC CODE SARLU LTD, company 14930093) | developer.apple.com → Membership          |
+| Bundle ID                 | `com.keeplas.app` (explicit)                          | `app.json` → `expo.ios.bundleIdentifier`  |
+| SKU                       | `keeplas-ios`                                         | ASC → App Information (cannot be changed) |
+| ASC App ID (Apple ID)     | `6825985002`                                          | ASC → App Information → Apple ID          |
+| EAS project               | `keeplas/keeplas`                                     | `app.json` → `expo.extra.eas.projectId`   |
+| Internal TestFlight group | `Team (Expo)`                                         | ASC → TestFlight → Internal Testing       |
 
 ## One-time setup
 
@@ -84,17 +84,25 @@ Keeplas encrypts data itself with standard algorithms, on top of the TLS that iO
 
 Once ASC approves the documentation, it gives an export compliance code. Add it to `app.json` as `ITSEncryptionExportComplianceCode` (in `expo.ios.infoPlist`), so later builds skip the questions.
 
-Technical annex for these declarations (all in `packages/crypto/`, used by the web and mobile apps):
+Technical annex for these declarations (in `packages/crypto/`, used by the web and mobile apps, unless noted):
 
-| Function                                                | Algorithm                          | Standard        | Where                       |
-| ------------------------------------------------------- | ---------------------------------- | --------------- | --------------------------- |
-| Item, file and key-bundle encryption                    | AES-256-GCM                        | NIST SP 800-38D | `src/aes/`                  |
-| Wrapping item keys to each recipient                    | ML-KEM-768                         | FIPS 203        | `src/kem/`                  |
-| Signing public keys (identity, key authenticity)        | ML-DSA-65                          | FIPS 204        | `src/sig/`                  |
-| Key derivation from the 24-word phrase                  | Argon2id                           | RFC 9106        | `src/kdf/`, `src/recovery/` |
-| Social-recovery envelope key                            | HKDF with SHA-256                  | RFC 5869        | `src/social/`               |
-| Splitting the recovery secret between contacts (2 of 3) | Shamir secret sharing over GF(256) | —               | `src/shamir/`               |
-| Hashing                                                 | SHA-256                            | FIPS 180-4      | throughout                  |
+| Function                                                  | Algorithm                          | Standard        | Where                       |
+| --------------------------------------------------------- | ---------------------------------- | --------------- | --------------------------- |
+| Item, file and key-bundle encryption                      | AES-256-GCM                        | NIST SP 800-38D | `src/aes/`                  |
+| Wrapping item keys to each recipient                      | ML-KEM-768                         | FIPS 203        | `src/kem/`                  |
+| Signing public keys (identity, key authenticity)          | ML-DSA-65                          | FIPS 204        | `src/sig/`                  |
+| Key derivation from the 24-word phrase and the device PIN | Argon2id                           | RFC 9106        | `src/kdf/`, `src/recovery/` |
+| Social-recovery envelope key                              | HKDF with SHA-256                  | RFC 5869        | `src/social/`               |
+| Splitting the recovery secret between contacts (2 of n)   | Shamir secret sharing over GF(256) | —               | `src/shamir/`               |
+| Hashing                                                   | SHA-256                            | FIPS 180-4      | throughout                  |
+
+Bundled in the mobile app, besides `packages/crypto/`:
+
+- **OpenSSL 3.6** (open source, through `react-native-quick-crypto`): the native implementation of AES-GCM, SHA-256, HKDF, Argon2id, ML-KEM-768 and ML-DSA-65 on the phone (`src/crypto/install.ts`).
+- **SQLCipher 4** (open source, through `op-sqlite`): encrypts the local outbox database with AES-256-CBC, HMAC-SHA512 and PBKDF2-HMAC-SHA512; its key stays in the Keychain or Keystore (`src/lib/secure-db.ts`).
+- The OS Keychain / Keystore and the OS TLS stack.
+
+Check that the ANSSI dossier and the US notification name these two open-source libraries.
 
 The purpose is confidentiality of the data users store and share with the people they choose. Keeplas holds no key that decrypts it on its own.
 
@@ -143,8 +151,22 @@ There is no OTA update channel (`expo-updates` is not installed). Every change, 
 4. **Build**: select the TestFlight build to ship.
 5. **In-App Purchases**: add `keeplas_lifetime` to the version. Apple requires the first in-app purchase to ship with an app version. Before that, replace its review screenshot, a blank placeholder uploaded by RevenueCat, with the Settings screen showing the Upgrade to Lifetime card.
 6. **App Review Information**: sign-in details, notes and the video link from [`APP_REVIEW.md`](./APP_REVIEW.md). Run `pnpm review:status` first. Without a working demo account, review is usually rejected for an app gated by sign-in.
-7. **Pricing and Availability**: under "iPhone and iPad Apps on Apple Silicon Mac", clear "Make this app available", and check the Apple Vision Pro availability on the same page. Sign-up can't pass App Attest on a Mac.
+7. **Pricing and Availability**:
+   - under "iPhone and iPad Apps on Apple Silicon Mac", clear "Make this app available", and check the Apple Vision Pro availability on the same page. Sign-up can't pass App Attest on a Mac;
+   - countries: untick China mainland (no ICP filing; WhatsApp is blocked) and any market where WhatsApp codes can't be delivered, until an SMS fallback exists.
+   - **Business → Digital Services Act**: trader status verified, or the app isn't offered in the EU.
 8. Release option: manual, automatic, or phased (7 days). Then **Add for Review** → **Submit**.
+
+## iPad pass
+
+`supportsTablet` is false, but reviewers often run the iPhone app on an iPad: an iPad mini shows it in a 375 × 667 window (iPhone SE size), a 13" iPad Pro in 390 × 844. Before submitting, on a real iPad mini and an 11" or 13" iPad (iPadOS 26), with the TestFlight build:
+
+1. Portrait, software keyboard: Welcome → Get started → name and review number → "Verify with WhatsApp" is visible above the keyboard → code → passkey → vault → PIN step (the boxes are visible) → Contacts → Skip → Done. Then Settings → Delete my account (the field and the red button stay above the keyboard), and Add → Note and Add → Document.
+2. With a hardware keyboard: Return on the phone field submits, the code submits itself, paste the 24 words → Open my vault, and the buttons pinned above the keyboard don't float or hide behind the shortcuts bar.
+3. Windowed apps: the window controls don't cover the back arrow or the EN/FR switch.
+4. iPad held in landscape: scan a page (Auto and Manual), take a photo and a video, scan a QR code. Previews and saved files are upright. The flash button may do nothing on iPads without a flash.
+
+Note the window size seen on each model here.
 
 ## Troubleshooting
 

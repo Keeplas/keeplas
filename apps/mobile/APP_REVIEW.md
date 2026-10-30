@@ -40,6 +40,11 @@ As of 29 October 2026.
 - [ ] Fix the store descriptions in AFFiNE before pasting them: sharing is chosen per item, not per category. EN "• For each item, choose who receives it."; FR "• Pour chaque élément, choisissez qui le recevra."
 - [ ] Fill in ASC and the Play Console: review notes, App Privacy, Data safety, deletion URL, Play App content declarations ([checklist](#before-each-submission)).
 - [ ] ASC → Pricing and Availability: clear "Make this app available" for Apple silicon Macs, and check Apple Vision Pro availability. Sign-up can't pass App Attest on a Mac.
+- [ ] Choose the countries on purpose, in ASC and in Play → Production → Countries/regions (both are set to all today). Untick China mainland (no ICP filing, and WhatsApp, the only code channel, is blocked there), and any market where WhatsApp codes can't be delivered (Russia), until an SMS fallback exists. Record the choice in [`APP_STORE.md`](./APP_STORE.md#release-to-the-app-store).
+- [ ] Apple: Digital Services Act trader status (ASC → Business → Digital Services Act → trader): PRINC CODE SARLU LTD, 20 Wenlock Road, London N1 7GU, support@keeplas.com, with a current Companies House document (company 14930093). Without a verified status the app isn't offered in the EU, France included, and verification can take weeks.
+- [ ] Google Play: declare the trader status (Play Console → Account details → About you → Trader), then confirm it for `com.keeplas.app` in App content with the terms URL `https://www.keeplas.com/terms`. Required from November 2026 for EEA and UK users; the D-U-N-S number and contact details become public on the listing from 1 March 2027.
+- [ ] Age: record the decision for the US state (Texas, Utah, Louisiana) and Brazil age-assurance rules, with counsel. The app is 18+ by its terms, but sign-up has no age check, so an 18+ age check (Declared Age Range on iOS, Play Age Signals) may be required in those regions.
+- [ ] Test the TestFlight build on an iPad mini and an 11" or 13" iPad: reviewers often use one, and an iPhone app runs there in a 375 × 667 or 390 × 844 window ([iPad pass](./APP_STORE.md#ipad-pass)).
 - [ ] Replace the `keeplas_lifetime` review screenshot in ASC: it is still the blank placeholder RevenueCat uploaded. Take it on a phone: Settings → Upgrade, with the sheet open.
 - [ ] Website ([keeplas-website](https://github.com/Keeplas/keeplas-website)):
   - remove the struck-through $199 on `/pricing` and the home page unless Lifetime was sold at that price: Apple 2.3.1(a) forbids a false reference price, and reviewers reach the site from Settings → Privacy policy;
@@ -62,7 +67,7 @@ Both stores can reject a version. A rejection cites the rule: fix the problem an
 | Permissions are asked in context    | Apple 5.1.1(iv); Play permissions policy                                                                     | Camera, microphone and notifications are asked by the system dialog when the feature needs them, with no custom "Not now / Allow" pre-prompt. Photos come through the system picker, which needs no permission. A denied permission leaves the rest of the app usable.         |
 | Screenshots show the real app       | Apple 2.3.3; Play metadata policy                                                                            | Captured on a phone from the shipped build ([`store-screenshots/`](./store-screenshots/)), not Figma mockups.                                                                                                                                                                  |
 | Foreground service is declared      | Play: foreground service permissions (apps targeting Android 14+)                                            | The vault export runs a `dataSync` foreground service: declare it in App content, with a video ([below](#play-console-app-content-declarations)).                                                                                                                              |
-| Testing before production (Android) | Play: personal developer accounts created after 13 Nov 2023                                                  | A closed test with at least 12 testers for 14 days in a row. An organization account is exempt.                                                                                                                                                                                |
+| Testing before production (Android) | Play: personal developer accounts created after 13 Nov 2023                                                  | Not required: the developer account belongs to the organization PRINC CODE SARLU LTD.                                                                                                                                                                                          |
 | Target API (Android)                | Play: Android 16 (API 36) since 31 Aug 2026                                                                  | React Native 0.86 (Expo SDK 57) targets API 36                                                                                                                                                                                                                                 |
 
 Not a problem:
@@ -227,11 +232,12 @@ Other reviewers use this demo account too. Please leave it as it is: don't buy L
 
 TRY SIGN-UP
 Sign out first (Settings > Sign out). Tap "Get started" and use United Kingdom <SIGN-UP NUMBER> with the same code <REVIEW_CODE>. Real users receive their code on WhatsApp.
-Sign-up checks that the app is genuine (App Attest on iPhone, Play Integrity on Android): it needs a real phone, not a simulator or an emulator, with the app installed from the store. Creating the passkey needs iCloud Keychain on iPhone, or a Google account on Android.
+Sign-up checks that the app is genuine (App Attest on iPhone and iPad, Play Integrity on Android): it needs a real device, not a simulator or an emulator, with the app installed from the store. Creating the passkey needs iCloud Keychain turned on (iPhone, iPad), or a Google account (Android).
 
 WHAT TO TRY
 - Add an item: scan a document, take a photo, record a voice note or write a note. Items are encrypted on the device before upload.
-- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both. Both contacts can sign in too, with the same code and the same 24 words: Alex on 07700 900102, Sam on 07700 900103.
+- Contacts and sharing: the demo account has two trusted contacts (People tab). Each item shows who receives it after a confirmed death: Family items go to Alex, the others to both.
+- The contacts' side: Alex (07700 900102) and Sam (07700 900103) sign in with steps 1 to 5, the same code and the same 24 words. As Alex, open Vault > Shared with me: Demo Owner's vault is listed and stays locked until a confirmed death (two contacts confirm, then 72 hours). Alex's own People tab is empty: Alex hasn't chosen contacts.
 - In-app purchase, on the account you created: Settings > Upgrade to Lifetime (non-consumable "keeplas_lifetime"). New accounts are on the Free plan.
 - Account deletion, on the account you created: Settings > Delete my account (erased 7 days later, can be cancelled).
 
@@ -258,8 +264,9 @@ Play blocks the release until each form is answered. Re-check the answers after 
   - Video, about 30 seconds, unlisted: Settings → Export my data → Export → leave the app → the progress notification → the archive is ready.
 - **Ads**: the app contains no ads.
 - **Advertising ID**: No. The merged manifest has no `com.google.android.gms.permission.AD_ID`.
-- **Content rating**: answer the IARC questionnaire (no violence, no user-to-user chat, no gambling; death and inheritance appear as subjects).
-- **Target audience**: 18 and over only, so the Families policy doesn't apply.
+- **Content rating** (IARC): category All other app types; every content question No; users interact or exchange content: **Yes** (items, photos, voice notes and messages go to trusted contacts the user invites, nothing public); shares current location: No; digital purchases: **Yes**; unrestricted internet: No. Expected result: Everyone / PEGI 3, with "Users interact" and "In-app purchases".
+- **Target audience**: 18 and over only, so the Families policy doesn't apply. The terms require 18+; the app checks it only when the user enters a date of birth (see the age item in [Left to do](#status)).
+- **Trader status**: Trader (account level), then confirmed for the app, with the terms URL `https://www.keeplas.com/terms`.
 - **News app**: No. **Government app**: No. **Financial features**: None. **Health apps**: None.
 - **Data safety** and the delete-account URL: [Store privacy answers](#store-privacy-answers).
 
@@ -297,6 +304,20 @@ Every row is linked to the user.
   - In the app: Settings → Delete my account.
   - On the web: `https://www.keeplas.com/delete-account` (French: `/fr/delete-account`). Paste this URL in the Data safety form's delete-account field.
 
+## App Store accessibility
+
+ASC → App Accessibility (Accessibility Nutrition Labels, voluntary for now). Apple asks that users can complete the app's common tasks (first launch, sign-in, purchase, settings) with each feature you claim.
+
+| Feature                           | Claim                                                                                        |
+| --------------------------------- | -------------------------------------------------------------------------------------------- |
+| Dark Interface                    | Yes: light and dark themes follow the system, or Settings → Appearance.                      |
+| Differentiate Without Color Alone | Yes, after a check on a phone: errors have text, chips have labels, selections have a shape. |
+| Reduced Motion                    | Yes, after a check with Reduce Motion on: the ambient animations stop.                       |
+| VoiceOver, Voice Control          | Not yet: claim them only after a full pass with VoiceOver on a phone.                        |
+| Larger Text                       | Not yet: some fixed-height fields don't grow at the largest sizes.                           |
+| Sufficient Contrast               | Not yet: status chips, placeholders and checkbox rings are below Apple's ratios.             |
+| Captions, Audio Descriptions      | Not applicable: the app has no media of its own.                                             |
+
 ## Account deletion requests from the web
 
 The website page `https://www.keeplas.com/delete-account` (keeplas-website repo) shows the in-app steps with the app screens. At the end, people who can't open the app send the support form; it reaches the support inbox by email with the subject "Delete my Keeplas account" ("Supprimer mon compte Keeplas" in French).
@@ -327,7 +348,9 @@ Payment records stay after deletion. The security log (with its IP addresses and
 - [ ] ASC: not offered on Apple silicon Macs.
 - [ ] `keeplas_lifetime` is attached to the version (ASC), with a real review screenshot.
 - [ ] Video of the multi-day flows, linked in the notes.
-- [ ] Android: if the Play developer account is a personal one created after 13 Nov 2023, a closed test ran with at least 12 testers opted in for 14 days in a row before production access.
+- [ ] ASC → Business: Paid Apps Agreement Active, tax forms (W-8BEN-E) and bank account Active, no agreement waiting for the Account Holder. On the TestFlight build, Settings → Upgrade shows the price. A pending agreement already broke the purchase once (RevenueCat "code 23").
+- [ ] Trader status verified: Apple (DSA) and Google Play.
+- [ ] ASC → App Accessibility: claim only what the app supports ([below](#app-store-accessibility)).
 
 Your own testers (TestFlight, Play closed and internal tracks) need none of this: they sign up with their real number and WhatsApp, like any user.
 
