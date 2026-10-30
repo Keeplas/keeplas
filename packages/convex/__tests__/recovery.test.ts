@@ -17,6 +17,7 @@ import type { Id } from "../_generated/dataModel";
 import { RECOVERY_REQUEST_TTL_MS, RECOVERY_WINDOW_MS } from "../recovery";
 import {
   asPhoneProvenUser,
+  asProvenUser,
   asUser,
   asUserSession,
   makeT,
@@ -627,8 +628,16 @@ describe("owner recovery", () => {
 
   it("a MasterKey rotation requires a renewal of the recovery material", async () => {
     const t = makeT();
-    const { ownerId, owner } = await setupOwner(t);
+    const { ownerId } = await setupOwner(t);
+    await t.run((ctx) =>
+      ctx.db.patch(ownerId, { encryptedAsymmetricSecretKeyPrev: "sk0" }),
+    );
+    const owner = await asProvenUser(t, ownerId, "vault");
     await owner.mutation(api.rotation.finalizeRotation, {
+      encryptedRetiredSecretKeys: "retired",
+      encryptedKeyBundle: "bundle",
+      phraseSalt: "salt",
+      recoveryPhraseHash: "verifier",
       _audit: await signedAudit(),
     });
     const user = await t.run((ctx) => ctx.db.get(ownerId));

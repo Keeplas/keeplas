@@ -242,7 +242,7 @@ export function CategorySheet({
             <ListRow
               key={category.id}
               icon="document"
-              title={category.name ?? t("item.decrypting")}
+              title={category.name ?? t("categories.unnamed")}
               trailing={current.categoryId === category.id ? check : undefined}
               onPress={() =>
                 choose({ category: CUSTOM_FALLBACK, categoryId: category.id })

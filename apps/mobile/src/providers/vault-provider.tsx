@@ -12,7 +12,10 @@ import { AppState, Platform, View } from "react-native";
 import * as ScreenCapture from "expo-screen-capture";
 
 import { importMasterKey } from "@/crypto/vault-keys";
-import { openDeviceVault, unlockDeviceVault } from "@/crypto/device-vault";
+import {
+  openCurrentDeviceVault,
+  unlockDeviceVault,
+} from "@/crypto/device-vault";
 import { forgetOwnerKeys } from "@/crypto/owner-keys";
 import {
   IDLE_LOCK_MS,
@@ -23,15 +26,18 @@ import {
 } from "@/lib/auto-lock";
 import { clearDecryptedCache } from "@/lib/files";
 
+type DeviceVaultUser = Parameters<typeof openCurrentDeviceVault>[0];
+
 interface VaultValue {
   /** Live MasterKey while unlocked; null when locked. */
   masterKey: CryptoKey | null;
   /**
    * Biometric unlock (M08-6). Resolves to the RootKey when this phone knows
    * it (the caller wipes it), so the cloud backup needs no second prompt.
+   * Throws `StaleDeviceVault` when the phone's keys predate a rotation.
    */
   unlock: (
-    userId: string,
+    user: DeviceVaultUser,
     prompt: string,
     pin?: string,
   ) => Promise<Uint8Array | null>;
@@ -77,8 +83,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unlock = useCallback(
-    async (userId: string, prompt: string, pin?: string) => {
-      const { masterKey, rootKey } = await openDeviceVault(userId, prompt, pin);
+    async (user: DeviceVaultUser, prompt: string, pin?: string) => {
+      const { masterKey, rootKey } = await openCurrentDeviceVault(
+        user,
+        prompt,
+        pin,
+      );
       await adopt(masterKey);
       return rootKey;
     },

@@ -64,9 +64,16 @@ export default defineSchema({
     // Transitional only — set during a master-key rotation (return-after-release
     // flow). The PREVIOUS owner ML-KEM secret key, re-wrapped under the NEW
     // MasterKey, so items still wrapped to the old keypair stay readable while
-    // they are re-encrypted item-by-item. Cleared by `rotation.finalizeRotation`
-    // once every item has migrated to the new keypair.
+    // their DEKs are re-wrapped item-by-item. Its presence marks a rotation in
+    // progress; `rotation.finalizeRotation` moves it into
+    // `encryptedRetiredSecretKeys` and clears it.
     encryptedAsymmetricSecretKeyPrev: v.optional(v.string()),
+    // JSON { ciphertext, iv } under the CURRENT MasterKey of a JSON array of
+    // every ML-KEM secret key retired by a rotation (base64). Kept for good:
+    // other owners' item wraps and recovery shares sealed to an older key,
+    // and wraps written late by a stale device, must still open. Re-sealed
+    // under each new MasterKey by `rotation.rotateKeyMaterial`.
+    encryptedRetiredSecretKeys: v.optional(v.string()),
     // Identity key (finding #2 — malicious-server key substitution). Base64
     // ML-DSA-65 public key (FIPS 204). The long-lived signing key that binds
     // this user's ML-KEM public key to their identity so contacts can detect a
@@ -90,8 +97,8 @@ export default defineSchema({
     recoveryVerified: v.optional(v.boolean()),
     // Set by the v2 shard purge (Oct 2026) for owners whose MasterKey was once
     // Shamir-split to trusted contacts: those shards may still sit on a
-    // contact's device, so the owner must rotate the MasterKey. Cleared by
-    // `rotation.finalizeRotation`.
+    // contact's device, so the owner must rotate the MasterKey. Also set by
+    // "It wasn't me" (devices.notMe). Cleared by `rotation.finalizeRotation`.
     masterKeyRotationRequired: v.optional(v.boolean()),
     // Set when the social-recovery material must be renewed (new generation):
     // after a MasterKey rotation, or a cancelled request that already

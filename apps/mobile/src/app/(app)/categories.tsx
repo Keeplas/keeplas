@@ -97,7 +97,7 @@ export default function Categories() {
         ),
       )}
       {(categories ?? []).map((category) => {
-        const name = category.name ?? t("item.decrypting");
+        const name = category.name ?? t("categories.unnamed");
         const itemIds = itemIdsOf(category.id);
         return (
           <ListRow

@@ -167,7 +167,9 @@
     "cta": "Continue with passkey",
     "lost": "Lost access?",
     "lostBody": "Your backup, your 24 words or your trusted contacts",
-    "failed": "We couldn't unlock your vault. Try again."
+    "failed": "We couldn't unlock your vault. Try again.",
+    "staleTitle": "Your keys were changed",
+    "staleBody": "Your vault's keys were rotated on another device, so this phone's keys no longer work. Open your vault again with your cloud backup, your 24 words or a QR code from your other device."
   },
   "otherOptions": {
     "title": "Other options",
@@ -524,15 +526,17 @@
     "noRoot": "This phone does not hold the Root Key. Create a new recovery kit first.",
     "legacy": "Some legacy files still use the old Master Key directly. Open them once to migrate before rotating.",
     "failed": "Key rotation could not finish",
-    "note": "Keep Keeplas open and connected until every item reaches 100%.",
+    "contactKey": "Keeplas couldn't verify {name}'s security code, so nothing was changed. Check it in People, then try again.",
+    "note": "Keep Keeplas open and connected until every item reaches 100%. If it stops, start it again: it picks up where it left off.",
     "whenTitle": "When to do it",
     "when1": "A phone or computer that had your vault open was lost or stolen.",
     "when2": "You removed a device you don't trust.",
     "when3": "Keeplas support asked you to.",
     "whatTitle": "What happens",
-    "what1": "This phone creates new keys and re-locks every item and every share.",
-    "what2": "The old keys can no longer open your vault.",
-    "what3": "Nothing else changes: your items, contacts, passkey, 24 words and cloud backup stay the same.",
+    "what1": "This phone creates new keys and re-locks every item and every share with them.",
+    "what2": "The old keys and your old 24 words stop working. Your other phones and browsers are signed out until you open the vault on them again.",
+    "what3": "Your items and contacts stay the same, and your cloud backup is renewed. If you keep a paper recovery kit, make a new one in Settings.",
+    "what4": "What's inside each item is not re-encrypted: someone who already opened an item with the old keys could still read it if they got a copy. New items are safe.",
     "confirmTitle": "Rotate your keys now?",
     "confirmBody": "Keeplas will re-lock every item in your vault ({items} in total). It usually takes about a minute.",
     "confirmBodyShared": "Keeplas will re-lock every item in your vault ({items} in total) and what you share with your contacts ({contacts}). It usually takes about a minute.",
@@ -1010,6 +1014,7 @@
     "notFound": "This contact no longer exists."
   },
   "categories": {
+    "unnamed": "Unnamed category",
     "new": "New category",
     "newBody": "Category names are encrypted like the items inside them.",
     "name": "Category name",

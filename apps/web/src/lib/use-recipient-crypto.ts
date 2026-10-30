@@ -125,8 +125,7 @@ export function useRecipientCrypto() {
   // Decrypted secret material lives in a module-scoped holder (not local
   // useRefs) so the vault lock chokepoint can wipe it on auto-lock / sign-out.
   // Fields: ownerSecretKey (ML-KEM), ownerPublicKeyB64, ownerIdentitySecretKeyB64
-  // (ML-DSA-65, for sign/verify), ownerPrevSecretKey (set only mid-rotation to
-  // read items not yet re-encrypted; see rotation.ts).
+  // (ML-DSA-65, for sign/verify).
 
   const ensureOwnerKeypair = useCallback(async (): Promise<{
     publicKeyB64: string;
@@ -136,7 +135,13 @@ export function useRecipientCrypto() {
     if (!viewer) throw new Error("Viewer not loaded");
 
     const cached = readInMemorySecrets();
-    if (cached.ownerPublicKeyB64 && cached.ownerSecretKey) {
+    // A key rotated on the phone replaces `viewer.publicKey`: never keep
+    // sealing to the cached, retired one (rotation.ts).
+    if (
+      cached.ownerPublicKeyB64 &&
+      cached.ownerSecretKey &&
+      cached.ownerPublicKeyB64 === viewer.publicKey
+    ) {
       return {
         publicKeyB64: cached.ownerPublicKeyB64,
         secretKey: cached.ownerSecretKey,
@@ -304,24 +309,34 @@ export function useRecipientCrypto() {
   );
 
   /**
-   * Decrypt and cache the previous owner secret key during a rotation. Returns
-   * null when no rotation is in flight. The previous secret is wrapped under
-   * the CURRENT (new) master key, so the live masterKey unwraps it.
+   * The ML-KEM secrets retired by master-key rotations, newest first: `…Prev`
+   * during one, then the archive (both sealed under the CURRENT master key).
+   * Only read when the current key fails, so not cached.
    */
-  const loadPrevSecretKey =
-    useCallback(async (): Promise<Uint8Array | null> => {
-      const cachedPrev = readInMemorySecrets().ownerPrevSecretKey;
-      if (cachedPrev) return cachedPrev;
-      if (!masterKey || !viewer?.encryptedAsymmetricSecretKeyPrev) return null;
-
-      const secretKeyB64 = await unwrapSecretB64UnderMasterKey(
-        viewer.encryptedAsymmetricSecretKeyPrev,
-        masterKey,
+  const loadRetiredSecretKeys = useCallback(async (): Promise<Uint8Array[]> => {
+    if (!masterKey || !viewer) return [];
+    const keys: Uint8Array[] = [];
+    if (viewer.encryptedAsymmetricSecretKeyPrev) {
+      keys.push(
+        parseSecretKey(
+          await unwrapSecretB64UnderMasterKey(
+            viewer.encryptedAsymmetricSecretKeyPrev,
+            masterKey,
+          ),
+        ),
       );
-      const secretKey = parseSecretKey(secretKeyB64);
-      setInMemorySecrets({ ownerPrevSecretKey: secretKey });
-      return secretKey;
-    }, [masterKey, viewer]);
+    }
+    if (viewer.encryptedRetiredSecretKeys) {
+      const list = JSON.parse(
+        await unwrapSecretB64UnderMasterKey(
+          viewer.encryptedRetiredSecretKeys,
+          masterKey,
+        ),
+      ) as string[];
+      keys.push(...list.map(parseSecretKey));
+    }
+    return keys;
+  }, [masterKey, viewer]);
 
   const unwrapOwnerDek = useCallback(
     async (wrap: WrappedDek): Promise<CryptoKey> => {
@@ -330,13 +345,21 @@ export function useRecipientCrypto() {
       try {
         return await unwrapDek(wrap.wrappedDek, secretKey);
       } catch (err) {
-        // Mid-rotation: the item may still be wrapped to the previous keypair.
-        const prev = await loadPrevSecretKey();
-        if (prev) return await unwrapDek(wrap.wrappedDek, prev);
+        // Sealed to a key a rotation retired: an item not re-wrapped yet, or
+        // one another owner shared with me before I rotated.
+        for (const retired of await loadRetiredSecretKeys()) {
+          try {
+            return await unwrapDek(wrap.wrappedDek, retired);
+          } catch {
+            // Try the next older key.
+          } finally {
+            retired.fill(0);
+          }
+        }
         throw err;
       }
     },
-    [ensureOwnerKeypair, loadPrevSecretKey],
+    [ensureOwnerKeypair, loadRetiredSecretKeys],
   );
 
   /**

@@ -8,7 +8,12 @@ import { Icon } from "@/components/icon";
 import { OtpInput } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
-import { DevicePinError, devicePinLength } from "@/crypto/device-vault";
+import {
+  DevicePinError,
+  devicePinLength,
+  forgetDeviceVault,
+  StaleDeviceVault,
+} from "@/crypto/device-vault";
 import { BiometricRing } from "@/features/biometric-ring";
 import { useEnsureCloudBackup } from "@/features/cloud-backup";
 import { OtherOptions } from "@/features/other-options";
@@ -53,7 +58,7 @@ export default function Unlock() {
     setFailed(null);
     try {
       const rootKey = await unlock(
-        viewer._id,
+        viewer,
         t("unlock.title"),
         needsPin ? pin : undefined,
       );
@@ -62,6 +67,11 @@ export default function Unlock() {
       setPin("");
       if (error instanceof DevicePinError && error.code === "wiped") {
         Alert.alert(t("pin.wipedTitle"), t("pin.wipedBody"));
+        refreshDeviceVault();
+      } else if (error instanceof StaleDeviceVault) {
+        // Keys rotated on another device: open the vault again from there.
+        await forgetDeviceVault(viewer._id);
+        Alert.alert(t("unlock.staleTitle"), t("unlock.staleBody"));
         refreshDeviceVault();
       } else {
         setFailed(
@@ -73,15 +83,7 @@ export default function Unlock() {
     } finally {
       setBusy(false);
     }
-  }, [
-    unlock,
-    ensureCloudBackup,
-    viewer._id,
-    t,
-    needsPin,
-    pin,
-    refreshDeviceVault,
-  ]);
+  }, [unlock, ensureCloudBackup, viewer, t, needsPin, pin, refreshDeviceVault]);
 
   const ready = !needsPin || pin.length === pinLength;
 

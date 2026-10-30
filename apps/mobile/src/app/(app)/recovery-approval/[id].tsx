@@ -14,6 +14,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { Screen } from "@/components/screen";
 import { Callout, Card, IconTile } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { withOwnerSecret } from "@/crypto/owner-keys";
 import {
   forgetContactCode,
   secureCodeStore,
@@ -70,18 +71,22 @@ export default function RecoveryApproval() {
     setBusy(true);
     try {
       const keys = await ownerKeys();
-      if (!keys.identitySecretKey) throw new Error("Identity key unavailable");
-      const sealed = await approveRecovery({
-        wrappedShare: request.wrappedShare,
-        ownerUserId: request.ownerUserId,
-        contactId: request.contactId,
-        generation: request.generation,
-        requestId: request.requestId,
-        // The key the code was checked against, not a later copy.
-        devicePublicKey: exchange.devicePublicKey,
-        contactSecretKey: keys.secretKey,
-        contactIdentitySecretKey: keys.identitySecretKey,
-      });
+      const identitySecretKey = keys.identitySecretKey;
+      if (!identitySecretKey) throw new Error("Identity key unavailable");
+      // The share may be sealed to a key I retired by rotating since.
+      const sealed = await withOwnerSecret(keys, (contactSecretKey) =>
+        approveRecovery({
+          wrappedShare: request.wrappedShare,
+          ownerUserId: request.ownerUserId,
+          contactId: request.contactId,
+          generation: request.generation,
+          requestId: request.requestId,
+          // The key the code was checked against, not a later copy.
+          devicePublicKey: exchange.devicePublicKey,
+          contactSecretKey,
+          contactIdentitySecretKey: identitySecretKey,
+        }),
+      );
       await approve({ requestId: request.requestId, ...sealed });
       await forgetContactCode(secureCodeStore, request.requestId);
       router.back();

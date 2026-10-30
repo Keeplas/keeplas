@@ -3,13 +3,6 @@ import { useRouter } from "expo-router";
 import { useConvex, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@keeplas/backend/_generated/api";
-import { generateMasterKey } from "@keeplas/crypto/aes";
-import { serializeSecretKey, wrapDek } from "@keeplas/crypto/kem";
-import {
-  contactKeyMaterial,
-  deriveContactTrust,
-  type ContactKeyMaterial,
-} from "@keeplas/crypto/sig";
 
 import { Button } from "@/components/button";
 import { ProgressBar } from "@/components/controls";
@@ -18,13 +11,16 @@ import { Screen } from "@/components/screen";
 import { StateSheet } from "@/components/state-message";
 import { BulletCard, Callout } from "@/components/surfaces";
 import { Text } from "@/components/text";
-import { requireCarriedOverKey } from "@/crypto/contact-keys";
+import { ContactKeyBlocked } from "@/crypto/contact-keys";
 import { readDeviceRootKey, saveDeviceVault } from "@/crypto/device-vault";
-import { encryptText, exportRawKey } from "@/crypto/envelope";
-import { buildKeyBundle, createPublicKeyMaterial } from "@/crypto/vault-keys";
+import { useEnsureCloudBackup } from "@/features/cloud-backup";
+import {
+  LegacyItemsError,
+  NoRootKeyError,
+  rotateVault,
+} from "@/features/vault/rotate-vault";
 import { useContactTrust } from "@/features/vault/use-contact-trust";
-import { useVaultData } from "@/features/vault/vault-data";
-import { useEnsureSessionProof } from "@/features/vault-proof";
+import { useProveVault } from "@/features/vault-proof";
 import { serverMessage } from "@/lib/errors";
 import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
@@ -35,7 +31,11 @@ import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 
 type Items = FunctionReturnType<typeof api.rotation.getRotatableItems>;
 
-/** On-phone key rotation. Existing item DEKs stay stable; every wrap changes. */
+/**
+ * On-phone key rotation (features/vault/rotate-vault.ts). Item DEKs stay;
+ * every key that opens them changes. Re-running it resumes a rotation that
+ * was interrupted.
+ */
 export default function RotateKeys() {
   const withPin = useWithPin();
   const router = useRouter();
@@ -43,17 +43,17 @@ export default function RotateKeys() {
   const { t } = useI18n();
   const viewer = useViewer();
   const { adopt, masterKey } = useVault();
-  const { ownerKeys, itemKey } = useVaultData();
-  const ensureSessionProof = useEnsureSessionProof();
+  const proveVault = useProveVault();
+  const ensureCloudBackup = useEnsureCloudBackup();
   const rotate = useAuditedMutation(api.rotation.rotateKeyMaterial);
   const updateItem = useAuditedMutation(api.vault_items.updateItem);
   const finalize = useAuditedMutation(api.rotation.finalizeRotation);
-  const { trust, pin: persistPin } = useContactTrust();
+  const { pin: persistPin } = useContactTrust();
   const contacts = useQuery(api.trusted_contacts.getContactSummaries);
   const [busy, setBusy] = useState(false);
   const [items, setItems] = useState<Items | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [done, setDone] = useState(0);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
 
   async function ask() {
     setItems(null);
@@ -70,115 +70,69 @@ export default function RotateKeys() {
 
   async function run(items: Items) {
     setConfirming(false);
-    if (!viewer.phraseSalt) return;
     setBusy(true);
-    setDone(0);
-    let rawNew: Uint8Array | null = null;
+    setProgress({ done: 0, total: items.length });
     let rootKey: Uint8Array | null = null;
-    let devicePin: string | undefined;
     try {
-      if (items.some((item) => !item.ownerWrappedDek))
-        throw new Error(t("rotation.legacy"));
+      if (!masterKey) throw new Error("Vault is locked");
       const pinned = await withPin(async (code) => ({
         pin: code,
         rootKey: await readDeviceRootKey(viewer._id, t("rotation.auth"), code),
       }));
       rootKey = pinned.rootKey;
-      devicePin = pinned.pin;
-      if (!rootKey) throw new Error(t("rotation.noRoot"));
-      // Rotation replaces the identity key: it needs a proven session.
-      if (!masterKey || !trust) throw new Error("Vault is locked");
-      await ensureSessionProof(masterKey);
-      const oldKeys = await ownerKeys();
-      const newMaster = await generateMasterKey();
-      rawNew = await exportRawKey(newMaster);
-      const next = await createPublicKeyMaterial(newMaster, viewer._id);
-      // Contact pins are MACed under the MasterKey: each is verified under the
-      // current one and re-MACed under the new one, once per contact.
-      const from = await trust;
-      const to = await deriveContactTrust(viewer._id, newMaster);
-      const carried = new Map<string, Promise<string>>();
-      const carry = (contact: ContactKeyMaterial) => {
-        let key = carried.get(contact.contactId);
-        if (!key) {
-          key = requireCarriedOverKey(contact, from, to, persistPin);
-          carried.set(contact.contactId, key);
-        }
-        return key;
-      };
-      await rotate({
-        encryptedKeyBundle: await buildKeyBundle(
-          rawNew,
-          rootKey,
-          viewer.phraseSalt,
-        ),
-        publicKey: next.publicKeys.publicKey,
-        publicKeySignature: next.publicKeys.publicKeySignature,
-        identityPublicKey: next.publicKeys.identityPublicKey,
-        encryptedIdentitySecretKey: next.publicKeys.encryptedIdentitySecretKey,
-        encryptedAsymmetricSecretKey:
-          next.publicKeys.encryptedAsymmetricSecretKey,
-        encryptedAsymmetricSecretKeyPrev: await encryptText(
-          serializeSecretKey(oldKeys.secretKey),
-          newMaster,
-        ),
+      // Replacing the identity key needs proof of the current one.
+      await proveVault(masterKey);
+      const newRootKey = await rotateVault({
+        user: viewer,
+        masterKey,
+        rootKey,
+        server: {
+          items: () => convex.query(api.rotation.getRotatableItems),
+          recipients: (itemId) =>
+            convex.query(api.rotation.getItemRecipients, { itemId }),
+          contacts: () => convex.query(api.trusted_contacts.getContacts),
+          categories: () => convex.query(api.vault_categories.list),
+          folders: () => convex.query(api.folders.list),
+          rotate,
+          updateItem,
+          finalize,
+          pin: persistPin,
+        },
+        keepKeys: async (keys) => {
+          await saveDeviceVault(
+            viewer._id,
+            keys,
+            t("unlock.title"),
+            pinned.pin,
+          );
+          await adopt(keys.masterKey);
+        },
+        onProgress: (done, total) => setProgress({ done, total }),
       });
-      // Every pinned contact, not only item recipients (e.g. trust contacts
-      // holding recovery shares). One that fails keeps its pin; if it is a
-      // recipient, its wrap below throws as before.
-      for (const contact of await convex.query(
-        api.trusted_contacts.getContacts,
-      )) {
-        if (!contact.pinnedIdentityFingerprint) continue;
-        await carry(contactKeyMaterial(contact)).catch(() => undefined);
-      }
-      for (const [index, item] of items.entries()) {
-        const dek = await itemKey(item);
-        const recipients = await convex.query(api.rotation.getItemRecipients, {
-          itemId: item._id,
-        });
-        const recipientKeys = await Promise.all(
-          recipients.map(async (recipient) => ({
-            contactId: recipient.contactId,
-            wrappedDek: await wrapDek(
-              dek,
-              await carry(
-                contactKeyMaterial({ _id: recipient.contactId, ...recipient }),
-              ),
-            ),
-          })),
-        );
-        await updateItem({
-          itemId: item._id,
-          ownerWrappedDek: await wrapDek(dek, next.publicKeys.publicKey),
-          recipientKeys,
-        });
-        setDone(index + 1);
-      }
-      await finalize({});
-      await saveDeviceVault(
-        viewer._id,
-        { masterKey: rawNew, rootKey },
-        t("unlock.title"),
-        devicePin,
-      );
-      await adopt(rawNew.slice());
+      void ensureCloudBackup(newRootKey);
       router.back();
     } catch (error) {
       if (isPinAbort(error)) return;
       toast({
         variant: "error",
         title: t("rotation.failed"),
-        description: serverMessage(error),
+        description:
+          error instanceof ContactKeyBlocked
+            ? t("rotation.contactKey", { name: error.contactName ?? "" })
+            : error instanceof LegacyItemsError
+              ? t("rotation.legacy")
+              : error instanceof NoRootKeyError
+                ? t("rotation.noRoot")
+                : serverMessage(error),
       });
     } finally {
-      rawNew?.fill(0);
       rootKey?.fill(0);
       setBusy(false);
     }
   }
 
-  const total = items?.length ?? 0;
+  const { done } = progress;
+  const total = busy ? progress.total : (items?.length ?? 0);
   const shared = contacts?.length ?? 0;
 
   return (
@@ -231,6 +185,7 @@ export default function RotateKeys() {
               t("rotation.what1"),
               t("rotation.what2"),
               t("rotation.what3"),
+              t("rotation.what4"),
             ]}
           />
         </>

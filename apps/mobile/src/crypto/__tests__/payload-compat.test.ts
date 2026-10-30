@@ -36,7 +36,11 @@ import {
   parseFileMeta,
   parseItemMeta,
 } from "../item-meta";
-import { loadOwnerKeys, unwrapOwnerDek } from "../owner-keys";
+import {
+  loadOwnerKeys,
+  sealRetiredSecretKeys,
+  unwrapOwnerDek,
+} from "../owner-keys";
 
 jest.setTimeout(60_000);
 
@@ -175,6 +179,40 @@ describe("owner keys and contact verification", () => {
     const opened = await unwrapOwnerDek(old, keys);
     const fresh = await wrapDek(opened, keys.publicKey);
     await expect(unwrapDek(fresh, current.secretKey)).resolves.toBeDefined();
+  });
+
+  it("still opens what others sealed to a key retired by a finished rotation", async () => {
+    // An owner who shared an item with me (or a recovery share) sealed it to
+    // my key of the time; my rotation must not cut me off from it.
+    const master = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"],
+    );
+    const current = generateRecipientKeyPair();
+    const retired = [generateRecipientKeyPair(), generateRecipientKeyPair()];
+    const keys = await loadOwnerKeys(
+      {
+        _id: "u-retired",
+        publicKey: serializePublicKey(current.publicKey),
+        encryptedAsymmetricSecretKey: await encryptText(
+          serializeSecretKey(current.secretKey),
+          master,
+        ),
+        encryptedRetiredSecretKeys: await sealRetiredSecretKeys(
+          retired.map((pair) => pair.secretKey),
+          master,
+        ),
+      },
+      master,
+    );
+    for (const pair of retired) {
+      const wrapped = await wrapDek(
+        await generateDek(),
+        serializePublicKey(pair.publicKey),
+      );
+      await expect(unwrapOwnerDek(wrapped, keys)).resolves.toBeDefined();
+    }
   });
 
   it("refuses a server-published owner key that is not the secret key's own", async () => {
