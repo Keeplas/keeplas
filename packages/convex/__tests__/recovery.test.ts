@@ -314,6 +314,21 @@ describe("owner recovery", () => {
     expect(await statusOf(t, requestId)).toBe("released");
   });
 
+  // Each start alerts every contact on WhatsApp and email: a start → cancel
+  // loop must not turn the contacts' channels into a spam relay.
+  it("caps how many requests an account starts per day", async () => {
+    const t = makeT();
+    const { ownerId, owner } = await setupOwner(t);
+    for (let i = 0; i < 3; i++) {
+      await openRequest(t, ownerId);
+      await owner.mutation(api.recovery.cancel, {
+        _audit: await signedAudit(),
+      });
+    }
+
+    await expect(openRequest(t, ownerId)).rejects.toThrow("Too many requests");
+  });
+
   it("cancel from any owner device stops the release and requires a renewal", async () => {
     const t = makeT();
     const { ownerId, owner, contacts } = await setupOwner(t);
