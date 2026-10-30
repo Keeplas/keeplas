@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { makeFunctionReference } from "convex/server";
 import { api } from "../_generated/api";
 import { SIGNUP_ATTESTATION_REQUIRED } from "../attestation";
 import { makeT, signedAudit, type TestConvex } from "./test.helpers";
@@ -68,4 +69,20 @@ describe("email code requests", () => {
 
     await expect(request(20)).rejects.toThrow("Too many requests");
   });
+});
+
+describe("anonymous account lookups", () => {
+  // No client uses them, and a query can't be throttled.
+  it.each(["accountExistsByEmail", "getEmailAuthMode"])(
+    "exposes no users.%s query",
+    async (name) => {
+      const t = makeT();
+      await t.run((ctx) => ctx.db.insert("users", { email: EMAIL }));
+      await expect(
+        t.query(makeFunctionReference<"query">(`users:${name}`), {
+          email: EMAIL,
+        }),
+      ).rejects.toThrow();
+    },
+  );
 });
