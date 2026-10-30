@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import VaultPhone from "../../../assets/illustrations/vault-phone.svg";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { RequiredSteps } from "@/components/stepper";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
@@ -51,11 +52,9 @@ export default function VaultScreen() {
           {t(`vault.${phase}`)}
         </Text>
       ) : null}
-      {failed ? (
-        <Text variant="body-sm" color="status.revoked" align="center">
-          {t("common.genericError")}
-        </Text>
-      ) : null}
+      <ErrorText align="center">
+        {failed ? t("common.genericError") : null}
+      </ErrorText>
       <Button
         label={t("vault.cta")}
         chevron

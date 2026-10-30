@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { Icon } from "@/components/icon";
 import { OtpInput } from "@/components/otp-input";
 import { Screen } from "@/components/screen";
@@ -146,11 +147,7 @@ export default function Unlock() {
           />
         </View>
       ) : null}
-      {failed ? (
-        <Text variant="body-sm" color="status.revoked" align="center">
-          {failed}
-        </Text>
-      ) : null}
+      <ErrorText align="center">{failed}</ErrorText>
       <OtherOptions
         options={[
           {

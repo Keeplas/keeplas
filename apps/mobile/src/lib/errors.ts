@@ -58,3 +58,42 @@ export function passkeyFailure(error: unknown): string | null {
   if (error.error === "UserCancelled") return null;
   return `${error.error}: ${error.message}`;
 }
+
+/**
+ * The phone has no passkey provider turned on, so the user can fix it in
+ * Settings: no Google account / Password Manager (Android "NoCreateOption"),
+ * passkeys unsupported, or iCloud Keychain off (iOS 26 reports
+ * ASAuthorizationError 1010, which react-native-passkey passes on as an
+ * unknown error whose message names the code, in the phone's language).
+ */
+export function isPasskeyUnavailable(error: unknown): boolean {
+  if (!isPasskeyError(error)) return false;
+  return (
+    error.error === "NoCreateOption" ||
+    error.error === "NotSupported" ||
+    /AuthorizationError\D+1010\b/.test(error.message)
+  );
+}
+
+/** @expo/app-integrity codes of a phone that can't attest at all. */
+const CANNOT_ATTEST = new Set([
+  "ERR_APP_INTEGRITY_FEATURE_UNSUPPORTED",
+  "ERR_APP_INTEGRITY_API_NOT_AVAILABLE",
+  "ERR_APP_INTEGRITY_PLAY_STORE_NOT_FOUND",
+  "ERR_APP_INTEGRITY_PLAY_SERVICES_NOT_FOUND",
+]);
+
+/**
+ * A sign-up device check that failed because of the device: the server's
+ * verdict ("Attestation rejected: …", attestation_node.ts) or a phone without
+ * App Attest / Play services. Anything else (offline, Apple or Google busy,
+ * an expired challenge) is worth trying again.
+ */
+export function isAttestationRejection(error: unknown): boolean {
+  if (errorText(error).startsWith("Attestation rejected")) return true;
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? error.code
+      : undefined;
+  return typeof code === "string" && CANNOT_ATTEST.has(code);
+}

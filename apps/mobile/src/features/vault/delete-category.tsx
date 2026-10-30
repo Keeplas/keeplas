@@ -34,10 +34,7 @@ export function useDeleteCategory() {
   const [busy, setBusy] = useState(false);
   const word = t("deleteAccount.confirmWord");
 
-  const itemsBody = (count: number) =>
-    count === 1
-      ? t("categories.deleteItemsOne")
-      : t("categories.deleteItems", { n: count });
+  const itemsBody = (count: number) => t("categories.deleteItems", { count });
 
   async function run(category: CategoryToDelete) {
     if (category.itemIds.length) {

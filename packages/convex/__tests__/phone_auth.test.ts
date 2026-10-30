@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { api, internal } from "../_generated/api";
 import { SIGNUP_ATTESTATION_REQUIRED } from "../attestation";
-import { makeT, type TestConvex } from "./test.helpers";
+import { INVALID_CODE, OTP_MAX_ATTEMPTS } from "../lib/otp";
+import { CODE_REQUESTS_PER_IP } from "../phone_auth";
+import { makeT, signedAudit, type TestConvex } from "./test.helpers";
 
 const TEST_PHONE = "+33600000001";
 const REAL_PHONE = "+33612345678";
@@ -10,8 +12,9 @@ async function seedPhoneUser(t: TestConvex, phoneNumber: string) {
   await t.run((ctx) => ctx.db.insert("users", { phoneNumber }));
 }
 
-function requestSignin(t: TestConvex, phoneNumber: string) {
+async function requestSignin(t: TestConvex, phoneNumber: string) {
   return t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+    _audit: await signedAudit(),
     phoneNumber,
     intent: "signin",
   });
@@ -23,6 +26,67 @@ function scheduledCount(t: TestConvex) {
       (await ctx.db.system.query("_scheduled_functions").collect()).length,
   );
 }
+
+describe("account existence and the per-IP cap", () => {
+  afterEach(() => {
+    delete process.env.REVIEW_PHONES;
+    delete process.env.REVIEW_CODE;
+  });
+
+  // Unknown numbers: one per request, so the per-number cap never applies.
+  const unknownPhone = (i: number) => `+3361000${String(i).padStart(4, "0")}`;
+
+  it("answers an unknown number on sign-in instead of throwing", async () => {
+    const t = makeT();
+    await expect(requestSignin(t, REAL_PHONE)).resolves.toEqual({
+      sent: false,
+      error: "No account found for this phone number. Sign up to create one.",
+    });
+    expect(await scheduledCount(t)).toBe(0);
+  });
+
+  it("answers a taken number on sign-up instead of throwing", async () => {
+    const t = makeT();
+    await seedPhoneUser(t, REAL_PHONE);
+    await expect(
+      t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+        phoneNumber: REAL_PHONE,
+        intent: "signup",
+        _audit: await signedAudit(),
+      }),
+    ).resolves.toEqual({
+      sent: false,
+      error:
+        "An account with this phone number already exists. Sign in instead.",
+    });
+  });
+
+  it("caps requests per IP, unknown numbers included", async () => {
+    const t = makeT();
+    for (let i = 0; i < CODE_REQUESTS_PER_IP; i++) {
+      await expect(requestSignin(t, unknownPhone(i))).resolves.toMatchObject({
+        sent: false,
+      });
+    }
+    await expect(
+      requestSignin(t, unknownPhone(CODE_REQUESTS_PER_IP)),
+    ).rejects.toThrow("Too many requests");
+  });
+
+  it("leaves review numbers out of the IP cap: they send no WhatsApp", async () => {
+    const REVIEW_PHONE = "+33600000009";
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    for (let i = 0; i < CODE_REQUESTS_PER_IP; i++) {
+      await requestSignin(t, unknownPhone(i));
+    }
+    await expect(requestSignin(t, REVIEW_PHONE)).resolves.toEqual({
+      sent: true,
+    });
+  });
+});
 
 describe("dev test phone numbers", () => {
   afterEach(() => {
@@ -96,6 +160,7 @@ describe("store review phone numbers", () => {
       }),
     );
     await t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+      _audit: await signedAudit(),
       phoneNumber: REVIEW_PHONE,
       intent: "signup",
     });
@@ -115,10 +180,54 @@ describe("store review phone numbers", () => {
     const t = makeT();
     await expect(
       t.mutation(api.phone_auth.requestPhoneAuthOtp, {
+        _audit: await signedAudit(),
         phoneNumber: REVIEW_PHONE,
         intent: "signup",
       }),
     ).rejects.toThrow(SIGNUP_ATTESTATION_REQUIRED);
+  });
+
+  it("lets a reviewer request codes past the hourly cap, since none goes out on WhatsApp", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    for (let i = 0; i < 6; i++) await requestSignin(t, REVIEW_PHONE);
+    expect(await scheduledCount(t)).toBe(0);
+    await expect(
+      t.mutation(internal.phone_auth.consumePhoneAuthCode, {
+        phoneNumber: REVIEW_PHONE,
+        code: "482913",
+        intent: "signin",
+      }),
+    ).resolves.toEqual({ ok: true });
+  });
+
+  it("still caps wrong guesses at the fixed review code per hour", async () => {
+    process.env.REVIEW_PHONES = REVIEW_PHONE;
+    process.env.REVIEW_CODE = "482913";
+    const t = makeT();
+    await seedPhoneUser(t, REVIEW_PHONE);
+    const guessWrong = () =>
+      t.mutation(internal.phone_auth.consumePhoneAuthCode, {
+        phoneNumber: REVIEW_PHONE,
+        code: "000001",
+        intent: "signin",
+      });
+    // Three codes' worth of wrong guesses, as for a WhatsApp number.
+    for (let code = 0; code < 3; code++) {
+      await requestSignin(t, REVIEW_PHONE);
+      for (let guess = 0; guess < OTP_MAX_ATTEMPTS; guess++) {
+        await expect(guessWrong()).resolves.toEqual({
+          ok: false,
+          error: INVALID_CODE,
+        });
+      }
+      await expect(guessWrong()).rejects.toThrow("Too many attempts");
+    }
+    await expect(requestSignin(t, REVIEW_PHONE)).rejects.toThrow(
+      "Too many verification attempts",
+    );
   });
 
   it("falls back to WhatsApp when REVIEW_CODE is missing or not 6 digits", async () => {

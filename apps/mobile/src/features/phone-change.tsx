@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter, type Href } from "expo-router";
 import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { PhoneInput } from "@/components/phone-input";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
@@ -28,11 +29,13 @@ export function PhoneNumberStep({
   body,
   verifyPath,
   beforeRequest,
+  footer,
 }: {
   title: string;
   body?: string;
   verifyPath: Href & string;
   beforeRequest?: () => Promise<void>;
+  footer?: ReactNode;
 }) {
   const router = useRouter();
   const { t } = useI18n();
@@ -80,11 +83,7 @@ export function PhoneNumberStep({
       ) : null}
       <Text variant="label">{t("phone.label")}</Text>
       <PhoneInput {...phone.inputProps} onSubmit={submit} />
-      {error ? (
-        <Text variant="body-sm" color="status.revoked">
-          {error}
-        </Text>
-      ) : null}
+      <ErrorText>{error}</ErrorText>
       <Button
         label={t("migration.sendCode")}
         chevron
@@ -92,6 +91,7 @@ export function PhoneNumberStep({
         onPress={submit}
       />
       <Callout icon="whatsapp" text={t("verify.note")} />
+      {footer}
     </Screen>
   );
 }

@@ -69,7 +69,7 @@ describe("WhatsApp alerts", () => {
     const sent = captureWhatsApp();
     await makeT().action(internal.dispatch.notifyRecoveryContact, {
       phoneNumber: "+33611111111",
-      ownerName: "Ada",
+      owner: { name: "Ada" },
     });
     expect(sent).toEqual([
       { templateName: "keeplas_recovery_contact_en", placeholders: ["Ada"] },

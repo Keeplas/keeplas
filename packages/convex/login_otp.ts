@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { getAuthSessionId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
@@ -134,7 +134,7 @@ export const requestLoginOtp = mutation({
       .filter((q) => q.gt(q.field("_creationTime"), now - RATE_LIMIT_WINDOW_MS))
       .collect();
     if (recent.length >= RATE_LIMIT_MAX) {
-      throw new Error("Too many verification attempts. Try again later.");
+      throw new ConvexError("Too many verification attempts. Try again later.");
     }
     for (const stale of recent) {
       if (stale.expiresAt > now)
@@ -162,6 +162,10 @@ export const requestLoginOtp = mutation({
       await ctx.scheduler.runAfter(0, internal.dispatch.sendEmailOtp, {
         email: resolved.destination,
         code,
+        // The password sentence only for accounts that have one.
+        purpose: (await hasPasswordAccount(ctx, userId))
+          ? "password_login"
+          : "sign_in",
         language: user.language,
       });
     }

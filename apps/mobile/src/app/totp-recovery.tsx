@@ -13,9 +13,15 @@ import {
   useCloudRestore,
   useRestorableBackup,
 } from "@/features/cloud-backup";
-import { isFullKit, takeRememberedKit, useKitOpen } from "@/features/kit-open";
+import {
+  isFullKit,
+  takeRememberedKit,
+  useKitOpen,
+  vaultOpenErrorKey,
+} from "@/features/kit-open";
 import { KitWordsField } from "@/features/kit-words-field";
 import { useEnsurePhoneProof } from "@/features/phone-proof";
+import { useScreenLock } from "@/features/screen-lock";
 import { useProveVault } from "@/features/vault-proof";
 import { useI18n } from "@/providers/i18n-provider";
 
@@ -31,15 +37,17 @@ export default function TotpRecovery() {
   const ensurePhoneProof = useEnsurePhoneProof();
   const cloudRestore = useCloudRestore();
   const kitOpen = useKitOpen();
+  const screenLock = useScreenLock();
   const proveVault = useProveVault();
   const reset = useMutation(api.totp.resetWithVaultProof);
   const [words, setWords] = useState(takeRememberedKit);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function finish(open: () => Promise<CryptoKey>, failure: string) {
-    setBusy(true);
+  async function finish(open: () => Promise<CryptoKey>, fallback: string) {
     setError(null);
+    if (!screenLock.ensure()) return;
+    setBusy(true);
     try {
       await proveVault(await open());
       await reset();
@@ -47,7 +55,7 @@ export default function TotpRecovery() {
       setError(
         e instanceof CloudKeyMissing
           ? t("cloudRestore.noKey", { provider: cloud ?? "" })
-          : failure,
+          : t(vaultOpenErrorKey(e, fallback)),
       );
     } finally {
       setBusy(false);
@@ -71,7 +79,7 @@ export default function TotpRecovery() {
           description={t("cloudRestore.option", { provider: cloud })}
           onPress={() => {
             if (ensurePhoneProof())
-              void finish(cloudRestore, t("cloudRestore.failed"));
+              void finish(cloudRestore, "cloudRestore.failed");
           }}
         />
       ) : null}
@@ -84,8 +92,9 @@ export default function TotpRecovery() {
         chevron
         loading={busy}
         disabled={!isFullKit(words)}
-        onPress={() => finish(() => kitOpen(words), t("recoveryKit.invalid"))}
+        onPress={() => finish(() => kitOpen(words), "common.genericError")}
       />
+      {screenLock.sheet}
     </Screen>
   );
 }

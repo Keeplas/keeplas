@@ -8,6 +8,7 @@ import {
 } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
+import { ErrorText } from "@/components/error-text";
 import { OtpInput } from "@/components/otp-input";
 import { BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
@@ -33,7 +34,7 @@ export function pinErrorText(
     return t("pin.locked", { seconds });
   }
   if (error.code === "wrong") {
-    return t("pin.wrong", { n: error.detail.remaining ?? 0 });
+    return t("pin.wrong", { count: error.detail.remaining ?? 0 });
   }
   return t("pin.required");
 }
@@ -137,11 +138,7 @@ export function PinGateProvider({ children }: { children: ReactNode }) {
           label={t("pin.label")}
           secure
         />
-        {error ? (
-          <Text variant="body-sm" color="status.revoked">
-            {error}
-          </Text>
-        ) : null}
+        <ErrorText>{error}</ErrorText>
       </View>
     </BottomSheet>
   );

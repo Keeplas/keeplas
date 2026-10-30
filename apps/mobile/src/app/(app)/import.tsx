@@ -105,7 +105,7 @@ export default function ImportArchive() {
         <Callout
           tone="success"
           icon="check-circle"
-          text={t("importArchive.done", { n: phase.result.imported })}
+          text={t("importArchive.done", { count: phase.result.imported })}
         />
       ) : null}
       {phase.kind === "done" && phase.result.skippedFiles > 0 ? (
@@ -113,7 +113,7 @@ export default function ImportArchive() {
           tone="warning"
           icon="alert-circle"
           text={t("importArchive.skippedFiles", {
-            n: phase.result.skippedFiles,
+            count: phase.result.skippedFiles,
           })}
         />
       ) : null}

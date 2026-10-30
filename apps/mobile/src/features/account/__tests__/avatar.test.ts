@@ -1,8 +1,6 @@
 import { ImageManipulator } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
 
-import { PermissionDenied } from "@/features/capture/media";
 import { isLockHeld } from "@/lib/auto-lock";
 import {
   AVATAR_PX,
@@ -48,9 +46,9 @@ jest.mock("expo-file-system", () => ({
 
 jest.mock("expo-device", () => ({ isDevice: true }));
 
+// No library permission API on purpose: the system photo picker needs none.
 jest.mock("expo-image-picker", () => ({
   requestCameraPermissionsAsync: jest.fn(),
-  requestMediaLibraryPermissionsAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
 }));
@@ -129,9 +127,6 @@ describe("pickAvatar", () => {
   }
 
   it("crops a library photo square and resizes it to a JPEG", async () => {
-    picker.requestMediaLibraryPermissionsAsync.mockResolvedValue({
-      granted: true,
-    } as never);
     let heldDuringPicker = false;
     picker.launchImageLibraryAsync.mockImplementation(async () => {
       heldDuringPicker = isLockHeld();
@@ -168,25 +163,12 @@ describe("pickAvatar", () => {
     expect(manipulate).not.toHaveBeenCalled();
   });
 
-  it("opens the Android photo picker without asking for storage access", async () => {
-    jest.replaceProperty(Platform, "OS", "android");
+  it("opens the library picker without asking for photo access", async () => {
     picker.launchImageLibraryAsync.mockResolvedValue({
       canceled: true,
       assets: null,
     } as never);
-
     await expect(pickAvatar("library")).resolves.toBeNull();
-    expect(picker.requestMediaLibraryPermissionsAsync).not.toHaveBeenCalled();
-    jest.restoreAllMocks();
-  });
-
-  it("throws PermissionDenied when photo access is off", async () => {
-    picker.requestMediaLibraryPermissionsAsync.mockResolvedValue({
-      granted: false,
-    } as never);
-    await expect(pickAvatar("library")).rejects.toBeInstanceOf(
-      PermissionDenied,
-    );
-    expect(picker.launchImageLibraryAsync).not.toHaveBeenCalled();
+    expect(picker.launchImageLibraryAsync).toHaveBeenCalled();
   });
 });

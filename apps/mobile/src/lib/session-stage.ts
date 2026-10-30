@@ -54,9 +54,12 @@ export interface StageInputs {
   migrationDeferred: boolean;
   hasDeviceVault: boolean | undefined;
   unlocked: boolean;
+  /** Sign-out started: leave now, the server sign-out may be slow or offline. */
+  signingOut: boolean;
 }
 
 export function resolveStage(i: StageInputs): Stage {
+  if (i.signingOut) return "signedOut";
   if (i.authLoading) return "loading";
   if (!i.authenticated || i.viewer === null) return "signedOut";
   if (

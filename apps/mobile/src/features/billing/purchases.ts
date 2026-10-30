@@ -4,6 +4,7 @@ import Purchases, {
 } from "react-native-purchases";
 import { LIFETIME_ENTITLEMENT_ID } from "@keeplas/backend/lib/plans";
 
+import { keepUnlockedWhile } from "@/lib/auto-lock";
 import { env } from "@/lib/env";
 
 /** The store has no Lifetime product for this build (key, offering, product). */
@@ -59,12 +60,13 @@ export async function getLifetimePrice(userId: string): Promise<string> {
  * Show the store sheet for the Lifetime package of the current offering.
  * Resolves `false` when the user cancels; throws on any other failure. A store
  * account that already owns Lifetime (Google reports it as an error) is
- * restored onto this account instead.
+ * restored onto this account instead. The vault stays unlocked while the
+ * sheet is up (store sign-in can take minutes), so the confirmation survives.
  */
 export async function purchaseLifetime(userId: string): Promise<boolean> {
   const lifetime = await lifetimePackage(userId);
   try {
-    await Purchases.purchasePackage(lifetime);
+    await keepUnlockedWhile(() => Purchases.purchasePackage(lifetime));
     return true;
   } catch (error) {
     const { userCancelled, code } = error as PurchasesError;
@@ -82,7 +84,7 @@ export async function purchaseLifetime(userId: string): Promise<boolean> {
  */
 export async function restoreLifetime(userId: string): Promise<boolean> {
   await identify(userId);
-  const info = await Purchases.restorePurchases();
+  const info = await keepUnlockedWhile(() => Purchases.restorePurchases());
   return LIFETIME_ENTITLEMENT_ID in info.entitlements.active;
 }
 

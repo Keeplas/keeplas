@@ -30,7 +30,10 @@ export function endBackgroundWork(success: boolean): void {
   void native.end(success);
 }
 
-/** iOS: the user or the system stopped the job; the caller should cancel it. */
+/**
+ * The user (iOS) or the system (iOS; Android's data-sync time limit) stopped
+ * the job; the caller should cancel it.
+ */
 export function onBackgroundWorkExpired(listener: () => void): {
   remove: () => void;
 } {

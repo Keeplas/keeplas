@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Ref } from "react";
 import {
   FlatList,
   Modal,
@@ -15,6 +15,7 @@ import {
   flagEmoji,
   isTooLong,
   listCountries,
+  searchCountries,
   type CountryCode,
 } from "@/lib/phone";
 import { useI18n } from "@/providers/i18n-provider";
@@ -35,6 +36,7 @@ export function PhoneInput({
   onChangeText,
   onSubmit,
   invalid = false,
+  ref,
 }: {
   country: CountryCode;
   onCountryChange: (country: CountryCode) => void;
@@ -42,6 +44,8 @@ export function PhoneInput({
   onChangeText: (value: string) => void;
   onSubmit?: () => void;
   invalid?: boolean;
+  /** The number field, so the previous field's "next" key can focus it. */
+  ref?: Ref<TextInput>;
 }) {
   const { colors } = useTheme();
   const { t, language } = useI18n();
@@ -49,14 +53,10 @@ export function PhoneInput({
   const [query, setQuery] = useState("");
   const countries = useMemo(() => listCountries(language), [language]);
   const selected = countries.find((c) => c.code === country);
-  const filtered = useMemo(() => {
-    if (!query) return countries;
-    const needle = query.toLowerCase();
-    return countries.filter(
-      (c) =>
-        c.name.toLowerCase().includes(needle) || c.dialCode.includes(query),
-    );
-  }, [countries, query]);
+  const filtered = useMemo(
+    () => searchCountries(countries, query),
+    [countries, query],
+  );
 
   return (
     <View
@@ -73,6 +73,11 @@ export function PhoneInput({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("phone.chooseCountry")}
+        accessibilityValue={
+          selected
+            ? { text: `${selected.name} ${selected.dialCode}` }
+            : undefined
+        }
         onPress={() => setPicking(true)}
         style={styles.country}
       >
@@ -86,6 +91,7 @@ export function PhoneInput({
         style={[styles.divider, { backgroundColor: colors["border.default"] }]}
       />
       <TextInput
+        ref={ref}
         accessibilityLabel={t("phone.label")}
         value={value}
         onChangeText={(next) => {
@@ -152,6 +158,8 @@ export function PhoneInput({
                 keyboardShouldPersistTaps="handled"
                 renderItem={({ item }) => (
                   <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: item.code === country }}
                     onPress={() => {
                       onCountryChange(item.code);
                       setPicking(false);

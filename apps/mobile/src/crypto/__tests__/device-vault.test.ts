@@ -5,14 +5,20 @@ import * as SecureStore from "expo-secure-store";
 
 import * as DeviceLock from "../../../modules/device-lock";
 import {
+  DeviceLockError,
   DevicePinError,
+  forgetDeviceId,
   forgetDeviceVault,
   devicePinLength,
   hasDeviceVault,
+  readDeviceId,
   readDeviceRootKey,
+  readReattachToken,
   saveDeviceVault,
   setDevicePin,
   unlockDeviceVault,
+  writeDeviceId,
+  writeReattachToken,
 } from "../device-vault";
 
 // In-memory stand-ins: the native stores only matter here as "where did the
@@ -103,6 +109,41 @@ describe("device vault", () => {
     await expect(unlockDeviceVault("u3", "Unlock")).rejects.toThrow(
       "No vault key on this device",
     );
+  });
+
+  it("reports a screen lock that refused the key as a DeviceLockError", async () => {
+    (DeviceLock.setItem as jest.Mock).mockRejectedValueOnce(
+      new Error("Authentication canceled"),
+    );
+
+    await expect(
+      saveDeviceVault(
+        "u4",
+        { masterKey: masterKey(), rootKey: null },
+        "Unlock",
+      ),
+    ).rejects.toBeInstanceOf(DeviceLockError);
+    expect(await hasDeviceVault("u4")).toBe(false);
+  });
+
+  it("keeps this phone's device row id across sign-outs", async () => {
+    await writeDeviceId("u4", "device-1");
+    await writeReattachToken("u4", "token-1");
+    await forgetDeviceVault("u4");
+
+    expect(await readDeviceId("u4")).toBe("device-1");
+    expect(await readReattachToken("u4")).toBe("token-1");
+    await writeReattachToken("u4", null);
+    expect(await readReattachToken("u4")).toBeNull();
+  });
+
+  it("forgets the device row id when the server could not keep it", async () => {
+    await writeDeviceId("u5", "device-1");
+    await writeReattachToken("u5", "token-1");
+    await forgetDeviceId("u5");
+
+    expect(await readDeviceId("u5")).toBeNull();
+    expect(await readReattachToken("u5")).toBeNull();
   });
 });
 

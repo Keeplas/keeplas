@@ -1,13 +1,18 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { internalAction, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { optionalAuth } from "./helpers";
-import { createAuditLog } from "./audit";
+import {
+  auditContextValidator,
+  createAuditLog,
+  verifyAuditContext,
+} from "./audit";
+import { enforceIpRateLimit } from "./lib/rate_limit";
 import { requireEnv } from "./lib/require_env";
+import { isValidEmail } from "./lib/email";
 import { isE164 } from "./lib/phone";
 
 const CHANNEL = v.union(v.literal("email"), v.literal("whatsapp"));
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const TOPIC = v.union(
   v.literal("general"),
@@ -27,9 +32,14 @@ const TOPIC_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+/** Tickets one IP may send per hour: each one emails the team inbox. */
+export const SUPPORT_TICKETS_PER_IP = 10;
+const MAX_LENGTH = { Name: 100, Subject: 200, Message: 5000 };
+
 /**
- * Submit a contact/support ticket. Authentication is optional so logged-out
- * visitors can reach out too (not currently exposed, but the mutation tolerates it).
+ * Submit a contact/support ticket. Authentication is optional so signed-out
+ * visitors can reach out too (the phone app's help screen, the web contact
+ * form). Rate-limited per IP on the sealed `_audit` envelope.
  */
 export const submitTicket = mutation({
   args: {
@@ -40,28 +50,49 @@ export const submitTicket = mutation({
     topic: TOPIC,
     subject: v.string(),
     message: v.string(),
+    _audit: auditContextValidator,
   },
   handler: async (ctx, args) => {
+    await verifyAuditContext(args._audit);
     const name = args.name.trim();
     const contact = args.contact.trim();
     const subject = args.subject.trim();
     const message = args.message.trim();
 
     if (!name || !contact || !subject || !message) {
-      throw new Error("All fields are required");
+      throw new ConvexError("All fields are required");
     }
 
-    const channel = EMAIL_RE.test(contact)
+    const channel = isValidEmail(contact)
       ? "email"
       : isE164(contact)
         ? "whatsapp"
         : null;
     if (!channel) {
-      throw new Error("Enter a valid email address or WhatsApp number");
+      throw new ConvexError("Enter a valid email address or WhatsApp number");
     }
     if (message.length < 10) {
-      throw new Error("Message must be at least 10 characters");
+      throw new ConvexError("Message must be at least 10 characters");
     }
+    for (const [field, value] of [
+      ["Name", name],
+      ["Subject", subject],
+      ["Message", message],
+    ] as const) {
+      if (value.length > MAX_LENGTH[field]) {
+        throw new ConvexError(
+          `${field} is too long (${MAX_LENGTH[field]} characters at most)`,
+        );
+      }
+    }
+    // After validation: a refused ticket sends nothing, and its throw would
+    // roll the slot back anyway.
+    await enforceIpRateLimit(
+      ctx,
+      "support_ticket",
+      args._audit.ip,
+      SUPPORT_TICKETS_PER_IP,
+    );
 
     const email = channel === "email" ? contact.toLowerCase() : undefined;
     const whatsapp = channel === "whatsapp" ? contact : undefined;

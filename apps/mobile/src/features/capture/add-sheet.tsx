@@ -271,7 +271,6 @@ export function PermissionSheet({
   const { t } = useI18n();
   const icon: Record<PermissionProblem, IconName> = {
     camera: "camera",
-    photos: "photo",
     microphone: "mic",
   };
   return (

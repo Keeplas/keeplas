@@ -13,10 +13,11 @@ import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { unlockDeviceVault } from "@/crypto/device-vault";
 import { formatDate } from "@/lib/format";
+import { toast } from "@/lib/toast";
 import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useViewer } from "@/providers/session-provider";
-import { useWithPin } from "@/features/pin/use-pin-gate";
+import { isPinAbort, useWithPin } from "@/features/pin/use-pin-gate";
 
 const LOSSES = ["items", "shares", "succession", "plan"] as const;
 
@@ -48,15 +49,27 @@ export default function DeleteAccount() {
   }
 
   async function confirmDeletion() {
+    // Busy from the identity check on, so Delete can't be tapped twice.
+    setBusy(true);
+    setError(null);
     try {
       const key = await withPin((pin) =>
         unlockDeviceVault(viewer._id, t("deleteAccount.verify"), pin),
       );
       key.fill(0);
-    } catch {
+    } catch (failure) {
+      // A closed PIN sheet needs no message; a failed screen lock does.
+      if (!isPinAbort(failure)) setError(t("deleteAccount.verifyFailed"));
+      setBusy(false);
       return;
     }
     await run(() => requestDeletion({ confirmation: "DELETE" }));
+  }
+
+  async function keepAccount() {
+    await cancelDeletion({});
+    toast({ variant: "success", title: t("deleteAccount.cancelled") });
+    router.back();
   }
 
   if (status) {
@@ -68,7 +81,7 @@ export default function DeleteAccount() {
           <Button
             label={t("deleteAccount.cancel")}
             loading={busy}
-            onPress={() => void run(() => cancelDeletion({}))}
+            onPress={() => void run(keepAccount)}
           />
         }
       >

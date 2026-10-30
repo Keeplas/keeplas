@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMutation } from "convex/react";
 import { api } from "@keeplas/backend/_generated/api";
+import { isValidEmail } from "@keeplas/backend/lib/email";
+import { isE164 } from "@keeplas/backend/lib/phone";
 
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
@@ -12,8 +13,21 @@ import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { errorText } from "@/lib/errors";
 import { SUPPORT_TOPICS, type SupportTopic } from "@/lib/support";
+import { useAuditedMutation } from "@/lib/use-audited-mutation";
 import { useI18n } from "@/providers/i18n-provider";
 import { useSession } from "@/providers/session-provider";
+
+/** support.submitTicket's refusals, matched on its message. */
+const ERRORS: Record<string, string> = {
+  "valid email": "support.invalidContact",
+  "at least 10": "support.tooShort",
+  required: "support.missing",
+  "too long": "support.tooLong",
+  "Too many": "support.tooMany",
+};
+
+/** support.submitTicket's minimum, before the "Ref:" line is added. */
+const MIN_MESSAGE_LENGTH = 10;
 
 /**
  * Write to the Keeplas team (support.submitTicket), signed in or not: from
@@ -25,7 +39,7 @@ export default function Support() {
   const { t } = useI18n();
   const { viewer } = useSession();
   const params = useLocalSearchParams<{ topic?: SupportTopic; ref?: string }>();
-  const submit = useMutation(api.support.submitTicket);
+  const submit = useAuditedMutation(api.support.submitTicket);
   const [topic, setTopic] = useState<SupportTopic>(
     SUPPORT_TOPICS.includes(params.topic as SupportTopic)
       ? (params.topic as SupportTopic)
@@ -41,12 +55,23 @@ export default function Support() {
   const [sent, setSent] = useState(false);
 
   async function send() {
+    // The server's own rules (support.submitTicket), checked here first so
+    // the form explains itself without a round trip.
+    const replyTo = contact.trim().startsWith("+")
+      ? contact.replace(/\s/g, "")
+      : contact.trim();
+    if (!isValidEmail(replyTo) && !isE164(replyTo)) {
+      return setError(t("support.invalidContact"));
+    }
+    if (message.trim().length < MIN_MESSAGE_LENGTH) {
+      return setError(t("support.tooShort"));
+    }
     setBusy(true);
     setError(null);
     try {
       await submit({
         name,
-        contact: contact.startsWith("+") ? contact.replace(/\s/g, "") : contact,
+        contact: replyTo,
         topic,
         subject: t(`support.topics.${topic}`),
         message: params.ref ? `${message}\n\nRef: ${params.ref}` : message,
@@ -54,15 +79,8 @@ export default function Support() {
       setSent(true);
     } catch (err) {
       const text = errorText(err);
-      setError(
-        text.includes("valid email")
-          ? t("support.invalidContact")
-          : text.includes("at least 10")
-            ? t("support.tooShort")
-            : text.includes("required")
-              ? t("support.missing")
-              : t("common.genericError"),
-      );
+      const key = Object.keys(ERRORS).find((k) => text.includes(k));
+      setError(t(key ? ERRORS[key] : "common.genericError"));
     } finally {
       setBusy(false);
     }

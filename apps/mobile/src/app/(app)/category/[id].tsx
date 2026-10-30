@@ -13,7 +13,7 @@ import type { Id } from "@keeplas/backend/_generated/dataModel";
 import { Icon, type IconName } from "@/components/icon";
 import { NavBar } from "@/components/nav-bar";
 import { Screen } from "@/components/screen";
-import { BottomSheet } from "@/components/sheet";
+import { Backdrop, BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
 import { SHEET_CLOSE_MS } from "@/features/capture/add-sheet";
 import { VAULT_GROUPS } from "@/features/home/vault-groups";
@@ -181,7 +181,10 @@ function MoreMenu({
         visible={anchor !== undefined}
         onRequestClose={() => setAnchor(undefined)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setAnchor(undefined)}>
+        <Backdrop
+          style={styles.backdrop}
+          onDismiss={() => setAnchor(undefined)}
+        >
           <View
             accessibilityRole="menu"
             style={[
@@ -217,7 +220,7 @@ function MoreMenu({
               );
             })}
           </View>
-        </Pressable>
+        </Backdrop>
       </Modal>
     </>
   );

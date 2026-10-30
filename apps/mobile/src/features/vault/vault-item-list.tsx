@@ -111,9 +111,7 @@ export function VaultItemList({
           return `${t("vaultList.note")} · ${
             item.attachments === 0
               ? ago
-              : item.attachments === 1
-                ? t("vaultList.attachment")
-                : t("vaultList.attachments", { n: item.attachments })
+              : t("vaultList.attachments", { count: item.attachments })
           }`;
         case "photos":
           return `${t("vaultList.photo")} · ${ago}`;
@@ -142,6 +140,11 @@ export function VaultItemList({
           icon={visual.icon}
           color={visual.color}
           access={accessIcon(item)}
+          accessLabel={
+            item.sharedWith.length === 0
+              ? t("item.onlyYou")
+              : t("vaultList.sharedWith", { count: item.sharedWith.length })
+          }
           onMore={openActions}
           first={index === 0}
           last={index === listItems.length - 1}
@@ -193,9 +196,7 @@ export function VaultItemList({
               {header}
               {count ? (
                 <View style={styles.listHeader}>
-                  <Text variant="label">
-                    {count === 1 ? t("home.item") : t("home.items", { count })}
-                  </Text>
+                  <Text variant="label">{t("home.items", { count })}</Text>
                   <Text variant="body-sm" color="text.muted">
                     {t("vaultList.lastUpdated")}
                   </Text>

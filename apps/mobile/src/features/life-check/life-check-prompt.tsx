@@ -5,6 +5,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import Branch from "../../../assets/illustrations/branch.svg";
 import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/button";
+import { ErrorText } from "@/components/error-text";
 import { Screen } from "@/components/screen";
 import { Callout } from "@/components/surfaces";
 import { TabBarVisibleContext } from "@/components/tab-bar";
@@ -80,11 +81,9 @@ export function LifeCheckPrompt({ missed }: { missed: boolean }) {
               missed ? "lifeCheck.prompt.missedBody" : "lifeCheck.prompt.body",
             )}
           </Text>
-          {error ? (
-            <Text variant="body-sm" color="status.revoked" align="center">
-              {t("lifeCheck.prompt.failed")}
-            </Text>
-          ) : null}
+          <ErrorText align="center">
+            {error ? t("lifeCheck.prompt.failed") : null}
+          </ErrorText>
         </Screen>
       </TabBarVisibleContext.Provider>
     </Modal>

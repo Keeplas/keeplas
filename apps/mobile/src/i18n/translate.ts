@@ -21,8 +21,30 @@ function lookup(dict: Dictionary, key: string): string | undefined {
 }
 
 /**
+ * CLDR plural category "one" for whole counts: English 1, French 0 and 1.
+ * Hand-written because Hermes ships no Intl.PluralRules.
+ */
+const isPluralOne: Record<Language, (count: number) => boolean> = {
+  en: (count) => count === 1,
+  fr: (count) => count === 0 || count === 1,
+};
+
+/** `key_one` when `count` is singular in `language` and it exists, else `key`. */
+function resolve(
+  language: Language,
+  key: string,
+  count: string | number | undefined,
+): string | undefined {
+  const dict = dictionaries[language];
+  const one = typeof count === "number" && isPluralOne[language](count);
+  return (one ? lookup(dict, `${key}_one`) : undefined) ?? lookup(dict, key);
+}
+
+/**
  * Resolve `key` in `language`, falling back to English for missing French
  * keys (D12), then to the key itself so a typo is visible, never blank.
+ * A numeric `params.count` picks the `key_one` form when the language
+ * reads it as singular; the plain `key` is the plural form.
  * `{name}` placeholders are replaced from `params`.
  */
 export function translate(
@@ -31,8 +53,8 @@ export function translate(
   params?: TranslateParams,
 ): string {
   const template =
-    lookup(dictionaries[language], key) ??
-    lookup(dictionaries[DEFAULT_LANGUAGE], key) ??
+    resolve(language, key, params?.count) ??
+    resolve(DEFAULT_LANGUAGE, key, params?.count) ??
     key;
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>

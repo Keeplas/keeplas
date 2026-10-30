@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/app-header";
 import { Screen } from "@/components/screen";
 import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
+import { cloudNames } from "@/features/cloud-backup";
 import { FaqSection, type FaqEntry } from "@/features/faq";
 import { openSitePage } from "@/lib/site";
 import { useI18n } from "@/providers/i18n-provider";
@@ -24,7 +25,7 @@ export default function Help() {
   const entries = (keys: readonly string[]): FaqEntry[] =>
     keys.map((key) => ({
       question: t(`help.q.${key}.question`),
-      answer: t(`help.q.${key}.answer`),
+      answer: t(`help.q.${key}.answer`, cloudNames),
     }));
 
   return (

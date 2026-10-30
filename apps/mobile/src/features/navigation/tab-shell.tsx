@@ -11,6 +11,7 @@ import { usePathname, useRouter } from "expo-router";
 import { TabBar, TabBarVisibleContext } from "@/components/tab-bar";
 import { useOpenAddSheet } from "@/features/capture/add-sheet";
 import { filterPreset } from "@/features/vault/vault-filter";
+import { useSession } from "@/providers/session-provider";
 import { categoryOfPath, showsTabBar, type TabName } from "./tab-routes";
 
 const ReportTabContext = createContext<(tab: TabName) => void>(() => undefined);
@@ -21,8 +22,11 @@ export function TabShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const openAdd = useOpenAddSheet();
+  const { settingUp } = useSession();
   const [active, setActive] = useState<TabName>("home");
-  const visible = showsTabBar(pathname);
+  // Setup opens Cloud backup, PIN code and Recovery kit from (app): no tabs
+  // there, the only way on is back to setup.
+  const visible = showsTabBar(pathname) && !settingUp;
   const category = categoryOfPath(pathname);
 
   const select = useCallback(

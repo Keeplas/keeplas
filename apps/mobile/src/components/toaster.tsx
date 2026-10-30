@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  AccessibilityInfo,
-  Animated,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { dismissToast, useToast, type ToastVariant } from "@/lib/toast";
@@ -25,7 +19,11 @@ const VARIANT_ICONS: Partial<
   info: { name: "info", color: "accent" },
 };
 
-/** Renders the current `toast()` message under the status bar. */
+/**
+ * Renders the current `toast()` message under the status bar. Mounted in
+ * the root layout and inside each open BottomSheet, whose Modal would
+ * otherwise cover it.
+ */
 export function Toaster() {
   const message = useToast();
   const { colors, scheme } = useTheme();
@@ -45,13 +43,6 @@ export function Toaster() {
       useNativeDriver: true,
     }).start();
   }, [visible, shown]);
-
-  useEffect(() => {
-    if (!message) return;
-    AccessibilityInfo.announceForAccessibility(
-      [message.title, message.description].filter(Boolean).join(". "),
-    );
-  }, [message]);
 
   if (!message) return null;
   const icon = VARIANT_ICONS[message.variant];

@@ -2,7 +2,6 @@ import * as Device from "expo-device";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
-import { Platform } from "react-native";
 
 import { CameraUnavailable, PermissionDenied } from "@/features/capture/media";
 import { keepUnlockedWhile } from "@/lib/auto-lock";
@@ -38,10 +37,7 @@ async function launch(
       ImagePicker.launchCameraAsync(PICKER_OPTIONS),
     );
   }
-  if (Platform.OS !== "android") {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) throw new PermissionDenied("photos");
-  }
+  // The system photo picker runs outside the app: no library access needed.
   return keepUnlockedWhile(() =>
     ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS),
   );

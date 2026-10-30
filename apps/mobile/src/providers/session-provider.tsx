@@ -11,10 +11,20 @@ import {
 import { useConvexAuth, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import type { FunctionReturnType } from "convex/server";
+import * as Notifications from "expo-notifications";
 import type { Href } from "expo-router";
 import { api } from "@keeplas/backend/_generated/api";
+import type { Id } from "@keeplas/backend/_generated/dataModel";
+import { uint8ToBase64 } from "@keeplas/crypto/encoding";
 
-import { forgetDeviceVault, hasDeviceVault } from "@/crypto/device-vault";
+import {
+  forgetDeviceId,
+  forgetDeviceVault,
+  hasDeviceVault,
+  readDeviceId,
+  writeReattachToken,
+} from "@/crypto/device-vault";
+import { randomBytes } from "@/crypto/envelope";
 import {
   deviceDraftFiles,
   sqliteDraftDb,
@@ -25,7 +35,7 @@ import { discardExport } from "@/features/export/export-job";
 import { clearItemSummaries } from "@/features/vault/summary-cache";
 import { attachFormDrafts, clearFormDrafts } from "@/lib/form-drafts";
 import { isNewNumberPending, setNewNumberPending } from "@/lib/lost-number";
-import { auditContext } from "@/lib/use-audited-mutation";
+import { auditContext, useAuditedMutation } from "@/lib/use-audited-mutation";
 import {
   readResumePoint,
   readSetupPending,
@@ -43,7 +53,11 @@ export type Viewer = NonNullable<FunctionReturnType<typeof api.users.viewer>>;
 
 interface SessionValue {
   stage: Stage;
-  /** Onboarding, or showing a renewed recovery kit: (setup) must finish. */
+  /**
+   * Onboarding, or showing a renewed recovery kit: (setup) must finish. Off
+   * while the vault is locked, so an auto-lock mid-setup goes to Unlock and
+   * the setup step resumes after it.
+   */
   settingUp: boolean;
   viewer: Viewer | null | undefined;
   /** Re-read whether this phone holds a wrapped vault key. */
@@ -59,9 +73,14 @@ interface SessionValue {
 
 const SessionContext = createContext<SessionValue | null>(null);
 
+/** Sign-out waits this long, at most, for the server to retire this phone. */
+const RETIRE_DEVICE_TIMEOUT_MS = 5_000;
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signOut: convexSignOut } = useAuthActions();
+  const signOutDevice = useAuditedMutation(api.devices.signOut);
+  const [signingOut, setSigningOut] = useState(false);
   const { masterKey, lock, finishingSetup, setFinishingSetup } = useVault();
   const skip = isAuthenticated ? {} : "skip";
   const viewer = useQuery(api.users.viewer, skip);
@@ -153,23 +172,63 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setNumberLost(expected);
   }, []);
 
+  /**
+   * Before the session ends: stop this account's alerts reaching this phone
+   * and keep its device row for the next sign-in. When the server can't be
+   * reached, the next sign-in registers the phone anew instead.
+   */
+  const retireDevice = useCallback(
+    async (userId: string) => {
+      const deviceId = await readDeviceId(userId);
+      if (!deviceId) return;
+      const reattachToken = uint8ToBase64(randomBytes(32));
+      try {
+        await Promise.race([
+          signOutDevice({
+            deviceId: deviceId as Id<"devices">,
+            reattachToken,
+          }),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Device sign-out timed out")),
+              RETIRE_DEVICE_TIMEOUT_MS,
+            ),
+          ),
+        ]);
+        await writeReattachToken(userId, reattachToken);
+      } catch {
+        await forgetDeviceId(userId);
+      }
+    },
+    [signOutDevice],
+  );
+
   const signOut = useCallback(async () => {
-    if (userId) await draftStore.detach(userId);
-    clearFormDrafts();
-    if (userId) {
-      await forgetDeviceVault(userId);
-      await clearItemSummaries(userId).catch(() => undefined);
-      clearKeptCiphers();
+    if (userId) await retireDevice(userId);
+    // Leave now: locking first would show Unlock until the server answers.
+    setSigningOut(true);
+    try {
+      // A tap on the old account's alert must not open in the next one.
+      Notifications.clearLastNotificationResponse();
+      if (userId) await draftStore.detach(userId);
+      clearFormDrafts();
+      if (userId) {
+        await forgetDeviceVault(userId);
+        await clearItemSummaries(userId).catch(() => undefined);
+        clearKeptCiphers();
+      }
+      lock();
+      setFinishingSetup(false);
+      discardExport();
+      auditContext.clear();
+      setMigrationDeferred(false);
+      setNewNumberPending(false);
+      setNumberLost(false);
+      await convexSignOut();
+    } finally {
+      setSigningOut(false);
     }
-    lock();
-    setFinishingSetup(false);
-    discardExport();
-    auditContext.clear();
-    setMigrationDeferred(false);
-    setNewNumberPending(false);
-    setNumberLost(false);
-    await convexSignOut();
-  }, [userId, lock, setFinishingSetup, convexSignOut]);
+  }, [userId, retireDevice, lock, setFinishingSetup, convexSignOut]);
 
   const stage = resolveStage({
     authLoading: isLoading,
@@ -190,12 +249,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     migrationDeferred,
     hasDeviceVault: deviceVault,
     unlocked: masterKey !== null,
+    signingOut,
   });
 
   const value = useMemo<SessionValue>(
     () => ({
       stage,
-      settingUp: stage === "setup" || finishingSetup,
+      settingUp: stage === "setup" || (stage === "ready" && finishingSetup),
       viewer,
       refreshDeviceVault: () => setVaultCheck((n) => n + 1),
       deferMigration: () => setMigrationDeferred(true),

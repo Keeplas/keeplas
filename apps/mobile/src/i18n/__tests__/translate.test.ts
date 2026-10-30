@@ -49,7 +49,110 @@ describe("translate", () => {
 
   it("has no French key that English lacks", () => {
     const english = new Set(keys(en as Dict));
-    expect(keys(fr as Dict).filter((k) => !english.has(k))).toEqual([]);
+    // French says "0 élément": it may need a `_one` form English doesn't.
+    const base = (k: string) => k.replace(/_one$/, "");
+    expect(
+      keys(fr as Dict).filter((k) => !english.has(k) && !english.has(base(k))),
+    ).toEqual([]);
+  });
+
+  it("uses one French word for passkey: clé d'accès", () => {
+    expect(
+      keys(fr as Dict).filter((k) =>
+        /passe-cl|passkey/i.test(translate("fr", k)),
+      ),
+    ).toEqual([]);
+    expect(translate("fr", "recoveryKit.placeholder")).toBe("mot1 mot2 mot3 …");
+  });
+
+  it("names no platform brand in strings both platforms show (2.3.10)", () => {
+    // Picked by Platform.OS / CloudKey.provider, so each OS shows only its own.
+    const perPlatform = new Set([
+      "recoveryKit.lastTimeIcloud",
+      "recoveryKit.lastTimeGoogle",
+      "upgrade.store.ios",
+      "upgrade.store.android",
+      "upgrade.account.ios",
+      "upgrade.account.android",
+      "backup.notEncrypted", // Android only: iCloud Keychain is always E2EE.
+      "passkey.keychainOff", // iOS only (passkey-step.tsx)
+      "passkey.passwordManagerOff", // Android only (passkey-step.tsx)
+    ]);
+    const brand =
+      /iCloud|iPhone|Apple|Face ID|Screen Time|Temps d.écran|App Store|Google|Android/;
+    for (const [language, dict] of [
+      ["en", en],
+      ["fr", fr],
+    ] as const) {
+      expect(
+        keys(dict as Dict).filter(
+          (k) => !perPlatform.has(k) && brand.test(translate(language, k)),
+        ),
+      ).toEqual([]);
+    }
+  });
+});
+
+describe("plurals", () => {
+  it("uses the _one form for 1 in English", () => {
+    expect(translate("en", "item.historyCount", { count: 1 })).toBe(
+      "1 earlier version",
+    );
+    expect(translate("en", "item.historyCount", { count: 0 })).toBe(
+      "0 earlier versions",
+    );
+    expect(translate("en", "item.historyCount", { count: 4 })).toBe(
+      "4 earlier versions",
+    );
+    expect(translate("en", "codeErrors.wrongBody", { count: 1 })).toBe(
+      "Check the 6 digits and try again. 1 try left.",
+    );
+  });
+
+  it("uses the _one form for 0 and 1 in French", () => {
+    expect(translate("fr", "categories.items", { count: 0 })).toBe("0 élément");
+    expect(translate("fr", "categories.items", { count: 1 })).toBe("1 élément");
+    expect(translate("fr", "categories.items", { count: 2 })).toBe(
+      "2 éléments",
+    );
+  });
+
+  it("falls back to the plain form when a language has no _one form", () => {
+    // English has no singular here ("1 of 2 approvals received").
+    expect(translate("en", "socialRecovery.approvals", { count: 1 })).toBe(
+      "1 of 2 approvals received",
+    );
+    expect(translate("fr", "socialRecovery.approvals", { count: 1 })).toBe(
+      "1 validation reçue sur 2",
+    );
+  });
+
+  it("gives every _one form a plain form, and French every English _one", () => {
+    for (const dict of [en, fr]) {
+      const all = new Set(keys(dict as Dict));
+      expect(
+        [...all].filter(
+          (k) => k.endsWith("_one") && !all.has(k.replace(/_one$/, "")),
+        ),
+      ).toEqual([]);
+    }
+    const french = new Set(keys(fr as Dict));
+    expect(
+      keys(en as Dict).filter((k) => k.endsWith("_one") && !french.has(k)),
+    ).toEqual([]);
+  });
+
+  it("uses no (s) shortcut for plurals", () => {
+    for (const [language, dict] of [
+      ["en", en],
+      ["fr", fr],
+    ] as const) {
+      expect(
+        keys(dict as Dict).filter((k) =>
+          /\w\((s|e|es)\)/.test(translate(language, k)),
+        ),
+      ).toEqual([]);
+    }
   });
 });
 

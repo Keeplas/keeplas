@@ -3,7 +3,7 @@ import { api } from "@keeplas/backend/_generated/api";
 import type { Id } from "@keeplas/backend/_generated/dataModel";
 
 import { Button } from "@/components/button";
-import { Icon } from "@/components/icon";
+import { ErrorText } from "@/components/error-text";
 import { BottomSheet } from "@/components/sheet";
 import { ListRow } from "@/components/surfaces";
 import { Text } from "@/components/text";
@@ -15,6 +15,7 @@ import {
   type CategoryChoice,
 } from "@/crypto/item-meta";
 import {
+  builtInCategory,
   GROUP_CATEGORY,
   groupOf,
   shownFiling,
@@ -53,7 +54,7 @@ export function useCategoryLabel() {
       const { category, categoryId } = shown(choice);
       return (
         (categoryId && categories?.find((c) => c.id === categoryId)?.name) ||
-        t(`capture.category.${category}`)
+        t(`capture.category.${builtInCategory(category)}`)
       );
     },
     [categories, shown, t],
@@ -145,11 +146,7 @@ export function CategoryNameForm({
       <Text variant="body-sm" color="text.muted">
         {t("categories.newBody")}
       </Text>
-      {failed ? (
-        <Text variant="body-sm" color="status.revoked">
-          {t("common.genericError")}
-        </Text>
-      ) : null}
+      <ErrorText>{failed ? t("common.genericError") : null}</ErrorText>
       <Button
         label={submitLabel}
         loading={busy}
@@ -209,8 +206,6 @@ export function CategorySheet({
     close();
   }
 
-  const check = <Icon name="check" size={18} color="status.active" />;
-
   return (
     <BottomSheet
       visible={visible}
@@ -230,11 +225,7 @@ export function CategorySheet({
               key={category}
               icon="document"
               title={t(`capture.category.${category}`)}
-              trailing={
-                !current.categoryId && current.category === category
-                  ? check
-                  : undefined
-              }
+              selected={!current.categoryId && current.category === category}
               onPress={() => choose({ category })}
             />
           ))}
@@ -243,7 +234,7 @@ export function CategorySheet({
               key={category.id}
               icon="document"
               title={category.name ?? t("item.decrypting")}
-              trailing={current.categoryId === category.id ? check : undefined}
+              selected={current.categoryId === category.id}
               onPress={() =>
                 choose({ category: CUSTOM_FALLBACK, categoryId: category.id })
               }

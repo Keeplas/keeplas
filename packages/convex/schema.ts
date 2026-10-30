@@ -446,6 +446,10 @@ export default defineSchema({
     sessionId: v.optional(v.id("authSessions")),
     // Expo push token of a phone, for security alerts (mobile only).
     pushToken: v.optional(v.string()),
+    // SHA-256 of the one-time token a phone kept when it signed out: signing
+    // in again with it takes this row back instead of registering a new
+    // device (devices.signOut / devices.register).
+    reattachTokenHash: v.optional(v.string()),
     // Set when the owner answered "It was me" (M08-4). The first device of
     // an account is acknowledged at registration.
     acknowledgedAt: v.optional(v.number()),
@@ -570,7 +574,8 @@ export default defineSchema({
   // Per-IP throttle for unauthenticated, enumeration-prone endpoints (e.g. the
   // recovery-phrase salt lookups). One row per hit, keyed `${scope}:${ip}`;
   // `enforceIpRateLimit` (lib/rate_limit.ts) counts rows in the trailing
-  // window and prunes expired ones opportunistically.
+  // window and prunes expired ones opportunistically. Also holds the
+  // per-owner invitation cap (`invite:${userId}:${channel}`).
   ip_rate_limits: defineTable({
     key: v.string(),
     createdAt: v.number(),

@@ -22,6 +22,8 @@ const ERRORS: Record<string, string> = {
   INVALID_EMAIL: "lostNumber.invalidEmail",
   "already linked": "lostNumber.newTaken",
   "Too many": "codeErrors.tooManyBody",
+  // store_review.refuseOnReviewAccount
+  "Review accounts can't change": "account.errors.reviewAccount",
 };
 
 /**

@@ -37,6 +37,32 @@ export function listCountries(locale: string): Country[] {
     .sort((a, b) => a.name.localeCompare(b.name, locale));
 }
 
+/** What people type for a country besides its name and ISO code. */
+const ALIASES: Partial<Record<CountryCode, string>> = { GB: "uk" };
+
+/**
+ * Countries matching a search: name, dial code ("+44", "44"), ISO code
+ * ("gb") or alias ("uk"). An exact code or alias comes first, so "uk" lists
+ * the United Kingdom before Ukraine.
+ */
+export function searchCountries(
+  countries: Country[],
+  query: string,
+): Country[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return countries;
+  const exact = (c: Country) =>
+    c.code.toLowerCase() === needle || ALIASES[c.code] === needle;
+  return countries
+    .filter(
+      (c) =>
+        exact(c) ||
+        c.name.toLowerCase().includes(needle) ||
+        c.dialCode.includes(needle),
+    )
+    .sort((a, b) => Number(exact(b)) - Number(exact(a)));
+}
+
 export function isCountryCode(
   value: string | null | undefined,
 ): value is CountryCode {

@@ -121,6 +121,11 @@ async function seedConfig(
     nextCheckAt: number;
     travelModeEnabled: boolean;
     travelModeUntil: number;
+    activeChannels: {
+      type: "push" | "email" | "whatsapp";
+      order: number;
+      isEnabled: boolean;
+    }[];
   }> = {},
 ): Promise<Id<"life_check_configs">> {
   const now = Date.now();
@@ -371,6 +376,176 @@ describe("I'm okay", () => {
     expect(config?.lastCheckAt).toBeTypeOf("number");
     expect(result.nextCheckAt).toBe(config?.nextCheckAt);
     expect(result.nextCheckAt).toBeGreaterThan(Date.now() + DAY_MS);
+  });
+
+  it("cancels emergency access in its 72h grace window", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedAwaitingConfirmation(t, owner);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    const requestId = await seedAccessRequest(t, owner, contactId, "pending", {
+      quorumReached: true,
+      gracePeriodEndsAt: Date.now() + 72 * 60 * 60 * 1000,
+    });
+
+    await asUser(t, owner).mutation(api.life_check.validateCycle, {
+      method: "tap",
+      _audit: await signedAudit(),
+    });
+
+    const request = await t.run((ctx) => ctx.db.get(requestId));
+    expect(request?.status).toBe("denied");
+    expect(request?.cancelledDuringGrace).toBe(true);
+  });
+});
+
+/** Insert an access request for `owner`'s vault, overridable per test. */
+async function seedAccessRequest(
+  t: TestConvex,
+  ownerId: Id<"users">,
+  contactId: Id<"trusted_contacts">,
+  status: "pending" | "approved",
+  extra: Partial<{
+    sectionsRequested: string[];
+    quorumReached: boolean;
+    gracePeriodEndsAt: number;
+  }> = {},
+): Promise<Id<"access_requests">> {
+  const now = Date.now();
+  return await t.run((ctx) =>
+    ctx.db.insert("access_requests", {
+      vaultUserId: ownerId,
+      requestedBy: contactId,
+      sectionsRequested: ["all"],
+      status,
+      autoResponseAt: now,
+      contactsInitiated: [contactId],
+      createdAt: now,
+      updatedAt: now,
+      ...extra,
+    }),
+  );
+}
+
+describe("no Life check loop after a release (post-release-life-check-loop)", () => {
+  const PUSH_ON = [{ type: "push" as const, order: 0, isEnabled: true }];
+
+  /** An overdue config with push on: the evaluator would start a cycle. */
+  async function seedOverdueConfig(t: TestConvex, owner: Id<"users">) {
+    const overdue = Date.now() - 60 * DAY_MS;
+    return await seedConfig(t, owner, {
+      activeChannels: PUSH_ON,
+      lastActivityAt: overdue,
+      nextCheckAt: overdue + 30 * DAY_MS,
+    });
+  }
+
+  it("control: an overdue config with no release starts a cycle", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    await seedOverdueConfig(t, owner);
+
+    const result = await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    expect(result.initiated).toBe(1);
+  });
+
+  it("the evaluator starts no new cycle once the quorum release fired", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedOverdueConfig(t, owner);
+    const cycleId = await t.run((ctx) =>
+      ctx.db.insert("life_check_cycles", {
+        userId: owner,
+        configId,
+        status: "awaiting_confirmation",
+        channelsAttempted: [],
+        pendingScheduleIds: [],
+        scheduledAt: Date.now(),
+        startedAt: Date.now(),
+      }),
+    );
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    const requestId = await seedAccessRequest(t, owner, contactId, "pending", {
+      quorumReached: true,
+    });
+
+    // The 72h grace ends: the request is approved and the cycle triggered.
+    await t.mutation(internal.life_check.releaseAfterConfirmation, {
+      userId: owner,
+      requestId,
+    });
+    expect((await t.run((ctx) => ctx.db.get(cycleId)))?.status).toBe(
+      "triggered",
+    );
+
+    const result = await t.mutation(internal.life_check.evaluateAllConfigs, {});
+
+    expect(result.initiated).toBe(0);
+    expect(await countCycles(t, owner)).toBe(1);
+  });
+
+  it("legacy account already looping: the running cycle never asks contacts again", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedOverdueConfig(t, owner);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    // Shipped state before the fix: an old triggered cycle, its release in
+    // force, and a new cycle the evaluator restarted after the release.
+    await t.run(async (ctx) => {
+      await ctx.db.insert("life_check_cycles", {
+        userId: owner,
+        configId,
+        status: "triggered",
+        channelsAttempted: [],
+        pendingScheduleIds: [],
+        scheduledAt: Date.now() - 40 * DAY_MS,
+        startedAt: Date.now() - 40 * DAY_MS,
+        completedAt: Date.now() - 30 * DAY_MS,
+      });
+    });
+    await seedAccessRequest(t, owner, contactId, "approved", {
+      sectionsRequested: ["item:abc"],
+    });
+    const loopCycleId = await seedRunningCycle(t, owner, configId);
+
+    await t.mutation(internal.life_check.enterConfirmationStage, {
+      cycleId: loopCycleId,
+    });
+
+    const loopCycle = await t.run((ctx) => ctx.db.get(loopCycleId));
+    expect(loopCycle?.status).toBe("cancelled");
+    expect(loopCycle?.cancelledReason).toBe("release_in_force");
+    const asked = await t.run(async (ctx) =>
+      (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+        (r) => r.name.includes("notifyConfirmationRequest"),
+      ),
+    );
+    expect(asked).toHaveLength(0);
+
+    const result = await t.mutation(internal.life_check.evaluateAllConfigs, {});
+    expect(result.initiated).toBe(0);
+  });
+
+  it("revoking the release re-arms the Life check with a fresh window", async () => {
+    const t = makeT();
+    const owner = await seedUser(t);
+    const configId = await seedOverdueConfig(t, owner);
+    const contactId = await seedTrustContact(t, owner, { n: 1 });
+    await seedAccessRequest(t, owner, contactId, "approved", {
+      sectionsRequested: ["item:abc"],
+    });
+
+    await asUser(t, owner).mutation(api.access_requests.revokeReleasedAccess, {
+      _audit: await signedAudit(),
+    });
+
+    const config = await t.run((ctx) => ctx.db.get(configId));
+    expect(config!.lastActivityAt!).toBeGreaterThan(Date.now() - DAY_MS);
+    expect(config!.nextCheckAt).toBeGreaterThan(Date.now() + 29 * DAY_MS);
+    // No stale-clock cycle right after the owner came back.
+    const result = await t.mutation(internal.life_check.evaluateAllConfigs, {});
+    expect(result.initiated).toBe(0);
   });
 });
 

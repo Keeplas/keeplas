@@ -1,11 +1,18 @@
-import { useEffect } from "react";
-import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
+import { useEffect, type ReactNode } from "react";
+import {
+  Stack,
+  useGlobalSearchParams,
+  usePathname,
+  type ErrorBoundaryProps,
+} from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { BootSplash } from "@/components/boot-splash";
+import { ErrorScreen } from "@/components/error-screen";
 import { Toaster } from "@/components/toaster";
+import { OfflineNotice } from "@/features/offline-notice";
 import { OutboxProvider } from "@/features/outbox/outbox-provider";
 import { isResumable } from "@/lib/resume-point";
 import { AccountLanguageSync } from "@/lib/use-change-language";
@@ -23,23 +30,42 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   return (
+    <DisplayProviders>
+      <ConvexProvider>
+        <VaultProvider>
+          <SessionProvider>
+            <OutboxProvider>
+              <AccountLanguageSync />
+              <ResumeTracker />
+              <Routes />
+              <Toaster />
+            </OutboxProvider>
+          </SessionProvider>
+        </VaultProvider>
+      </ConvexProvider>
+    </DisplayProviders>
+  );
+}
+
+/**
+ * A render error anywhere outside (app) lands here instead of closing the
+ * app. It replaces the whole tree, so it brings the providers it draws with;
+ * Try again starts the app over.
+ */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return (
+    <DisplayProviders>
+      <ErrorScreen {...props} />
+    </DisplayProviders>
+  );
+}
+
+function DisplayProviders({ children }: { children: ReactNode }) {
+  return (
     <SafeAreaProvider>
       <KeyboardProvider>
         <ThemeProvider>
-          <I18nProvider>
-            <ConvexProvider>
-              <VaultProvider>
-                <SessionProvider>
-                  <OutboxProvider>
-                    <AccountLanguageSync />
-                    <ResumeTracker />
-                    <Routes />
-                    <Toaster />
-                  </OutboxProvider>
-                </SessionProvider>
-              </VaultProvider>
-            </ConvexProvider>
-          </I18nProvider>
+          <I18nProvider>{children}</I18nProvider>
         </ThemeProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
@@ -133,6 +159,7 @@ function Routes() {
         </Stack.Protected>
       </Stack>
       <BootSplash visible={booting} />
+      {booting ? <OfflineNotice /> : null}
     </>
   );
 }

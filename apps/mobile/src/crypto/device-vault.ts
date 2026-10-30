@@ -15,6 +15,7 @@ import { fresh, importAesKey, randomBytes } from "./envelope";
 const dwkKey = (userId: string) => `keeplas.dwk.${userId}`;
 const wrappedKey = (userId: string) => `keeplas.mk.${userId}`;
 const deviceIdKey = (userId: string) => `keeplas.device.${userId}`;
+const reattachKey = (userId: string) => `keeplas.device.reattach.${userId}`;
 
 const LOCAL: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
@@ -52,6 +53,18 @@ export class DevicePinError extends Error {
   ) {
     super(`Device PIN ${code}`);
     this.name = "DevicePinError";
+  }
+}
+
+/**
+ * The screen lock didn't take the device wrap key: the Android prompt was
+ * cancelled, or the phone has no screen lock (iOS refuses the Keychain item).
+ * Never a sign that the secret that opened the vault was wrong.
+ */
+export class DeviceLockError extends Error {
+  constructor() {
+    super("The screen lock didn't keep the vault key");
+    this.name = "DeviceLockError";
   }
 }
 
@@ -106,8 +119,13 @@ export async function saveDeviceVault(
       },
     };
   }
-  await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
-  dwk.fill(0);
+  try {
+    await DeviceLock.setItem(dwkKey(userId), uint8ToBase64(dwk), prompt);
+  } catch {
+    throw new DeviceLockError();
+  } finally {
+    dwk.fill(0);
+  }
   await SecureStore.setItemAsync(
     wrappedKey(userId),
     JSON.stringify(stored),
@@ -256,10 +274,13 @@ export async function readDeviceRootKey(
   return rootKey;
 }
 
+/**
+ * Delete this phone's vault key. The device row id stays: the phone keeps one
+ * `devices` row across sign-ins.
+ */
 export async function forgetDeviceVault(userId: string): Promise<void> {
   await DeviceLock.deleteItem(dwkKey(userId));
   await SecureStore.deleteItemAsync(wrappedKey(userId), LOCAL);
-  await SecureStore.deleteItemAsync(deviceIdKey(userId), LOCAL);
 }
 
 /** Convex `devices` row id of this phone for `userId` (from devices.register). */
@@ -269,4 +290,27 @@ export function readDeviceId(userId: string): Promise<string | null> {
 
 export function writeDeviceId(userId: string, deviceId: string): Promise<void> {
   return SecureStore.setItemAsync(deviceIdKey(userId), deviceId, LOCAL);
+}
+
+/**
+ * One-time token from devices.signOut: the next sign-in hands it to
+ * devices.register to take the row back. Null once used.
+ */
+export function readReattachToken(userId: string): Promise<string | null> {
+  return SecureStore.getItemAsync(reattachKey(userId), LOCAL);
+}
+
+export function writeReattachToken(
+  userId: string,
+  token: string | null,
+): Promise<void> {
+  return token === null
+    ? SecureStore.deleteItemAsync(reattachKey(userId), LOCAL)
+    : SecureStore.setItemAsync(reattachKey(userId), token, LOCAL);
+}
+
+/** The next sign-in registers this phone as a new device. */
+export async function forgetDeviceId(userId: string): Promise<void> {
+  await SecureStore.deleteItemAsync(deviceIdKey(userId), LOCAL);
+  await writeReattachToken(userId, null);
 }

@@ -1,0 +1,10 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Keeplas utilise la caméra pour scanner des documents, prendre des photos et des vidéos pour votre coffre, prendre votre photo de profil et scanner les QR codes de votre kit de récupération ou de Keeplas sur un autre appareil.",
+    "NSMicrophoneUsageDescription": "Keeplas utilise le micro pour enregistrer des notes vocales et le son des vidéos que vous ajoutez à votre coffre. Tout est d’abord chiffré sur ce téléphone.",
+    "NSPhotoLibraryUsageDescription": "Keeplas vous permet de choisir des photos et des vidéos dans votre photothèque pour les ajouter à votre coffre, définir votre photo de profil ou lire le QR code de votre kit de récupération depuis une image.",
+    "NSPhotoLibraryAddUsageDescription": "Keeplas enregistre une photo ou une vidéo de votre coffre dans votre photothèque quand vous choisissez de l’enregistrer.",
+    "NSFaceIDUsageDescription": "Keeplas utilise Face ID pour déverrouiller votre coffre sur cet appareil.",
+    "NSContactsUsageDescription": "Keeplas lit uniquement le contact que vous choisissez, pour remplir le nom, l’e-mail et le numéro de téléphone d’une personne que vous ajoutez. Votre carnet d’adresses n’est envoyé nulle part."
+  }
+}
