@@ -776,7 +776,14 @@ export default defineSchema({
     .index("by_status", ["vaultId", "status"])
     .index("by_user", ["userId"])
     .index("by_user_status", ["userId", "status"])
-    .index("by_trigger", ["triggerType", "status"]),
+    .index("by_trigger", ["triggerType", "status"])
+    // Due time-based items only (release.processScheduledReleases): the range
+    // stops at now, so future-dated letters are never read by the cron.
+    .index("by_trigger_release_date", [
+      "triggerType",
+      "status",
+      "triggerConfig.releaseDate",
+    ]),
 
   vault_item_versions: defineTable({
     itemId: v.id("vault_items"),

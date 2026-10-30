@@ -12,6 +12,10 @@ import { createAuditLog } from "./audit";
 import { activePushTokens } from "./devices";
 import { createNotification } from "./helpers";
 import { formatSenderIdentity } from "./lib/identity";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
+
+/** Due time-based items read per cron run. */
+const RELEASE_BATCH_SIZE = 50;
 
 /** Every vault item a release hands out: neither archived nor private. */
 async function releasableItems(ctx: MutationCtx, userId: Id<"users">) {
@@ -241,38 +245,79 @@ export const getReleasePreview = query({
  * Cron entry point: release every active vault item with a time_based
  * trigger whose releaseDate has passed — THAT item, to its own recipients
  * (a dated letter), never the rest of the owner's vault. A private item has
- * no recipients, so nothing is released. Idempotent — flips status to
- * "released" so we never re-fire.
+ * no recipients, so nothing is released.
+ *
+ * The index range stops at now, so future-dated letters (and undated ones,
+ * which are never released) are never read. One page per run, then the next
+ * is scheduled (lib/batch.ts); each item is released in its own
+ * subtransaction, so one item that fails can't hold back the others.
  */
 export const processScheduledReleases = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const now = Date.now();
-
-    const due = await ctx.db
+  args: batchArgs,
+  handler: async (ctx, args) => {
+    const page = await ctx.db
       .query("vault_items")
-      .withIndex("by_trigger", (q) =>
-        q.eq("triggerType", "time_based").eq("status", "active"),
+      .withIndex("by_trigger_release_date", (q) =>
+        q
+          .eq("triggerType", "time_based")
+          .eq("status", "active")
+          .gt("triggerConfig.releaseDate", 0)
+          .lte("triggerConfig.releaseDate", Date.now()),
       )
-      .collect();
+      .paginate(batchPage(RELEASE_BATCH_SIZE, args.cursor));
 
     let released = 0;
-    for (const item of due) {
-      const releaseAt = item.triggerConfig?.releaseDate;
-      if (!releaseAt || releaseAt > now) continue;
-
-      if (item.accessLevel !== "private") {
-        await fanOutRelease(ctx, item.userId, [item], `time_based:${item._id}`);
+    for (const item of page.page) {
+      try {
+        const done: boolean = await ctx.runMutation(
+          internal.release.releaseScheduledItem,
+          { itemId: item._id },
+        );
+        if (done) released++;
+      } catch (error) {
+        console.error(`Scheduled release failed for item ${item._id}`, error);
       }
-
-      await ctx.db.patch(item._id, {
-        status: "released",
-        releasedAt: now,
-        updatedAt: now,
-      });
-      released++;
     }
 
-    return { scanned: due.length, released };
+    await scheduleNextBatch(
+      ctx,
+      page,
+      internal.release.processScheduledReleases,
+    );
+    return { scanned: page.page.length, released };
+  },
+});
+
+/**
+ * Release one due time-based item. Idempotent — re-checks that the item is
+ * still active and due, then flips it to "released", so a re-run or an
+ * overlapping tick never releases it twice. Returns whether it released.
+ */
+export const releaseScheduledItem = internalMutation({
+  args: { itemId: v.id("vault_items") },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const item = await ctx.db.get(args.itemId);
+    const releaseAt = item?.triggerConfig?.releaseDate;
+    if (
+      !item ||
+      item.triggerType !== "time_based" ||
+      item.status !== "active" ||
+      !releaseAt ||
+      releaseAt > now
+    ) {
+      return false;
+    }
+
+    if (item.accessLevel !== "private") {
+      await fanOutRelease(ctx, item.userId, [item], `time_based:${item._id}`);
+    }
+
+    await ctx.db.patch(item._id, {
+      status: "released",
+      releasedAt: now,
+      updatedAt: now,
+    });
+    return true;
   },
 });

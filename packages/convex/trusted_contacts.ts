@@ -21,6 +21,7 @@ import { contactRoleValidator } from "./validators";
 import { normalizeE164 } from "./lib/phone";
 import { isValidEmail, normalizeEmail } from "./lib/email";
 import { requireEnv } from "./lib/require_env";
+import { batchArgs, batchPage, scheduleNextBatch } from "./lib/batch";
 import { isNotificationsPaused } from "./lib/pause";
 import { enforceIpRateLimit } from "./lib/rate_limit";
 import { resolveLocale, type Locale } from "./lib/locale";
@@ -1229,6 +1230,7 @@ const RECONFIRM_STALE_MS = 30 * 24 * 60 * 60 * 1000; // verification considered 
 const RECONFIRM_THROTTLE_MS = 6 * 24 * 60 * 60 * 1000; // ≤ 1 nudge / weekly run
 const MAX_RECONFIRM_REMINDERS = 3; // then alert the owner to replace
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL + WhatsApp template (keeplas_invite_tc)
+const RECONFIRM_BATCH_SIZE = 200; // contacts per sweep run (≤ 1 WhatsApp each)
 
 /**
  * Weekly availability re-confirmation sweep (driven by crons.ts). Two gaps
@@ -1243,14 +1245,21 @@ const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // matches the accept-link TTL
  *
  * Reuses the existing notification + WhatsApp dispatch infrastructure; no
  * new messaging system. Idempotent via `ownerNotifiedUnavailableAt`.
+ *
+ * Reads one page of contacts per run and schedules the next (lib/batch.ts),
+ * so the sweep stays within the transaction limits however many contacts
+ * there are. Each page commits its own nudge stamps, so a re-run of a page
+ * is throttled by `lastReconfirmAt` instead of nudging twice.
  */
 export const runAvailabilityReconfirm = internalMutation({
-  args: {},
-  handler: async (ctx) => {
+  args: batchArgs,
+  handler: async (ctx, args) => {
     const now = Date.now();
-    const contacts = await ctx.db.query("trusted_contacts").collect();
+    const page = await ctx.db
+      .query("trusted_contacts")
+      .paginate(batchPage(RECONFIRM_BATCH_SIZE, args.cursor));
 
-    for (const c of contacts) {
+    for (const c of page.page) {
       if (
         c.invitationStatus === "revoked" ||
         c.invitationStatus === "declined"
@@ -1355,5 +1364,11 @@ export const runAvailabilityReconfirm = internalMutation({
         });
       }
     }
+
+    await scheduleNextBatch(
+      ctx,
+      page,
+      internal.trusted_contacts.runAvailabilityReconfirm,
+    );
   },
 });

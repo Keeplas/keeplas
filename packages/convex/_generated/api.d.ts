@@ -40,6 +40,7 @@ import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as hub from "../hub.js";
 import type * as lib_audit_secret from "../lib/audit_secret.js";
+import type * as lib_batch from "../lib/batch.js";
 import type * as lib_capture_qr from "../lib/capture_qr.js";
 import type * as lib_contact_key from "../lib/contact_key.js";
 import type * as lib_crypto from "../lib/crypto.js";
@@ -128,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   hub: typeof hub;
   "lib/audit_secret": typeof lib_audit_secret;
+  "lib/batch": typeof lib_batch;
   "lib/capture_qr": typeof lib_capture_qr;
   "lib/contact_key": typeof lib_contact_key;
   "lib/crypto": typeof lib_crypto;
